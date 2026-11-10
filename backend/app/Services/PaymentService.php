@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Payment;
@@ -22,6 +23,7 @@ class PaymentService
         protected SupplierBalanceService $supplierBalanceService,
         protected AuditLogService $auditLogService,
         protected TenantClock $tenantClock,
+        protected DocumentNumberService $documentNumbers,
     ) {}
 
     /**
@@ -81,13 +83,17 @@ class PaymentService
     public function recordCustomerPayment(array $data): Payment
     {
         return DB::transaction(function () use ($data) {
+            // Lock order: document -> party (same as cancel / update / returns).
+            $invoiceId = $data['invoice_id'] ?? null;
+            $invoice = $invoiceId ? Invoice::where('id', $invoiceId)->lockForUpdate()->firstOrFail() : null;
             $customer = Customer::where('id', $data['customer_id'])->lockForUpdate()->firstOrFail();
             $amount = $data['amount'];
 
-            $invoiceId = $data['invoice_id'] ?? null;
             $documentStoreId = null;
-            if ($invoiceId) {
-                $invoice = Invoice::where('id', $invoiceId)->lockForUpdate()->firstOrFail();
+            if ($invoice !== null) {
+                if ($invoice->status === 'cancelled') {
+                    throw BusinessRuleException::conflict('invoices.cannot_receive_payment_cancelled');
+                }
                 // SEC-1 (M4): before anything changes: the invoice is readable by the actor
                 // (else 404) and belongs to this customer (else 422).
                 $this->assertDocumentReadable($invoice->store_id, Invoice::class, (int) $invoice->id);
@@ -115,7 +121,7 @@ class PaymentService
             }
 
             $payment = Payment::create([
-                'payment_number' => $data['payment_number'] ?? 'PAY-CUST-'.strtoupper(uniqid()),
+                'payment_number' => $data['payment_number'] ?? $this->documentNumbers->nextDated('PAY-CUST', 6, Payment::class, 'payment_number'),
                 'customer_id' => $customer->id,
                 'supplier_id' => null,
                 'invoice_id' => $invoiceId,
@@ -182,7 +188,7 @@ class PaymentService
             }
 
             $payment = Payment::create([
-                'payment_number' => $data['payment_number'] ?? 'PAY-SUPP-'.strtoupper(uniqid()),
+                'payment_number' => $data['payment_number'] ?? $this->documentNumbers->nextDated('PAY-SUPP', 6, Payment::class, 'payment_number'),
                 'customer_id' => null,
                 'supplier_id' => $supplier->id,
                 'invoice_id' => null,

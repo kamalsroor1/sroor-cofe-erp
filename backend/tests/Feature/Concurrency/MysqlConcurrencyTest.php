@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Concurrency;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Item;
+use App\Models\Payment;
 use App\Models\StockMovement;
 use App\Models\Tenant;
+use App\Services\DocumentNumberService;
 use App\Services\StockService;
+use App\Services\TreasuryService;
 use Illuminate\Database\Connection;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -193,6 +197,161 @@ final class MysqlConcurrencyTest extends TenantTestCase
         $this->assertSame(['invoices' => 1, 'stock' => '8.500', 'movements' => 1], $state);
     }
 
+    public function test_treasury_transfer_blocks_on_the_store_row_lock(): void
+    {
+        $tenant = $this->createTenant();
+        $storeId = (int) $this->tenantStore($tenant)->id;
+
+        $holder = $this->tenantSideConnection($tenant, 'qa_treasury_holder');
+        $holder->beginTransaction();
+
+        try {
+            // Another transfer of the same branch is in flight: it holds the branch's store row.
+            $holder->selectOne('select id from stores where id = ? for update', [$storeId]);
+
+            $errorCode = $this->inTenant($tenant, function () use ($storeId): ?int {
+                DB::statement('SET SESSION innodb_lock_wait_timeout = 1');
+
+                try {
+                    app(TreasuryService::class)->transfer(['from_method' => 'cash', 'to_method' => 'instapay', 'amount' => '1.000', 'store_id' => $storeId]);
+
+                    return null;
+                } catch (QueryException $e) {
+                    return (int) ($e->errorInfo[1] ?? 0);
+                } catch (BusinessRuleException) {
+                    return null; // balance check ran without waiting for the lock
+                }
+            });
+        } finally {
+            $holder->rollBack();
+            DB::purge('qa_treasury_holder');
+        }
+
+        $this->assertSame(self::LOCK_WAIT_TIMEOUT, $errorCode, 'transfer() did not wait for the store row lock: the balance check is not serialised.');
+    }
+
+    public function test_document_number_allocation_blocks_on_the_sequence_row_lock(): void
+    {
+        $tenant = $this->createTenant();
+
+        // First use creates and commits the counter row (no surrounding transaction).
+        $first = $this->inTenant($tenant, fn (): string => app(DocumentNumberService::class)->next('QA-SEQ-20261110', 4));
+        $this->assertSame('QA-SEQ-20261110-0001', $first);
+
+        $holder = $this->tenantSideConnection($tenant, 'qa_seq_holder');
+        $holder->beginTransaction();
+
+        try {
+            $holder->selectOne('select id from document_sequences where scope = ? for update', ['QA-SEQ-20261110']);
+
+            $errorCode = $this->inTenant($tenant, function (): ?int {
+                DB::statement('SET SESSION innodb_lock_wait_timeout = 1');
+
+                try {
+                    app(DocumentNumberService::class)->next('QA-SEQ-20261110', 4);
+
+                    return null;
+                } catch (QueryException $e) {
+                    return (int) ($e->errorInfo[1] ?? 0);
+                }
+            });
+        } finally {
+            $holder->rollBack();
+            DB::purge('qa_seq_holder');
+        }
+
+        $this->assertSame(self::LOCK_WAIT_TIMEOUT, $errorCode, 'next() did not wait for the sequence row lock: lockForUpdate() is missing.');
+
+        $this->assertSame('QA-SEQ-20261110-0002', $this->inTenant($tenant, fn (): string => app(DocumentNumberService::class)->next('QA-SEQ-20261110', 4)));
+    }
+
+    public function test_parallel_checkouts_of_different_customers_get_distinct_consecutive_numbers(): void
+    {
+        $tenant = $this->createTenant();
+        $storeId = (int) $this->tenantStore($tenant)->getKey();
+
+        [$itemId, $customerIds] = $this->inTenant($tenant, function (): array {
+            $item = $this->makeItem('QA-SEQ-01', '100.000');
+            $customerIds = [];
+            for ($i = 1; $i <= self::WORKERS; $i++) {
+                $customerIds[] = (int) Customer::query()->create(['name' => 'عميل تزامن '.$i, 'current_balance' => '0.000', 'is_active' => true])->getKey();
+            }
+
+            return [(int) $item->getKey(), $customerIds];
+        });
+
+        $payloads = array_map(fn (int $customerId): array => [
+            'client_uuid' => (string) Str::uuid(),
+            'customer_id' => $customerId,
+            'store_id' => $storeId,
+            'payment_type' => 'cash',
+            'discount_type' => 'fixed',
+            'discount_value' => '0.000',
+            'items' => [['item_id' => $itemId, 'quantity' => '1.000', 'unit_price' => '150.000', 'discount_amount' => '0.000']],
+        ], $customerIds);
+
+        $results = $this->runWorkers('checkout', $tenant, $payloads);
+
+        foreach ($results as $result) {
+            $this->assertTrue($result['ok'], 'A concurrent checkout failed (duplicate number or deadlock?): '.json_encode($result, JSON_UNESCAPED_UNICODE));
+        }
+
+        $numbers = array_map(fn (array $r): string => (string) $r['invoice_number'], $results);
+        sort($numbers);
+        $this->assertCount(self::WORKERS, array_unique($numbers), 'Two concurrent invoices received the same number.');
+
+        $sequences = array_map(fn (string $n): int => (int) substr($n, (int) strrpos($n, '-') + 1), $numbers);
+        $this->assertSame(range(1, self::WORKERS), $sequences, 'Invoice numbers must be consecutive with no gap.');
+
+        $paymentNumbers = $this->inTenant($tenant, fn (): array => Payment::query()->orderBy('id')->pluck('payment_number')->all());
+        $this->assertCount(self::WORKERS, array_unique($paymentNumbers));
+    }
+
+    public function test_checkout_and_edit_of_a_paid_invoice_for_the_same_customer_do_not_deadlock(): void
+    {
+        $tenant = $this->createTenant();
+        $storeId = (int) $this->tenantStore($tenant)->getKey();
+
+        [$itemId, $customerId, $invoiceId] = $this->inTenant($tenant, function () use ($storeId): array {
+            $item = $this->makeItem('QA-ORDER-01', '100.000');
+            $customer = Customer::query()->create(['name' => 'عميل ترتيب الأقفال', 'current_balance' => '0.000', 'is_active' => true]);
+            $invoice = app(InvoiceService::class)->confirmInvoice($this->checkoutPayload((int) $customer->getKey(), (int) $item->getKey(), $storeId));
+
+            return [(int) $item->getKey(), (int) $customer->getKey(), (int) $invoice->getKey()];
+        });
+
+        // Lock order: customer -> items -> PAY-INV counter in both flows. An edit that took the
+        // counter before the customer lock would deadlock (1213) with a concurrent checkout.
+        for ($round = 1; $round <= 3; $round++) {
+            $payloads = [
+                ['__scenario' => 'update', 'invoice_id' => $invoiceId, 'data' => $this->checkoutPayload($customerId, $itemId, $storeId, (string) $round.'.000')],
+                $this->checkoutPayload($customerId, $itemId, $storeId),
+                $this->checkoutPayload($customerId, $itemId, $storeId),
+            ];
+
+            foreach ($this->runWorkers('checkout', $tenant, $payloads) as $result) {
+                $this->assertTrue($result['ok'], 'Round '.$round.': deadlock or duplicate number between checkout and edit: '.json_encode($result, JSON_UNESCAPED_UNICODE));
+            }
+        }
+
+        $paymentNumbers = $this->inTenant($tenant, fn (): array => Payment::withTrashed()->pluck('payment_number')->all());
+        $this->assertSame(count($paymentNumbers), count(array_unique($paymentNumbers)));
+    }
+
+    /** @return array<string, mixed> */
+    private function checkoutPayload(int $customerId, int $itemId, int $storeId, string $quantity = '1.000'): array
+    {
+        return [
+            'client_uuid' => (string) Str::uuid(),
+            'customer_id' => $customerId,
+            'store_id' => $storeId,
+            'payment_type' => 'cash',
+            'discount_type' => 'fixed',
+            'discount_value' => '0.000',
+            'items' => [['item_id' => $itemId, 'quantity' => $quantity, 'unit_price' => '150.000', 'discount_amount' => '0.000']],
+        ];
+    }
+
     private function makeItem(string $code, string $stock): Item
     {
         return Item::query()->create([
@@ -244,10 +403,13 @@ final class MysqlConcurrencyTest extends TenantTestCase
 
         try {
             foreach ($payloads as $payload) {
+                // A payload may pick its own scenario (checkout and update racing together).
+                $workerScenario = (string) ($payload['__scenario'] ?? $scenario);
+                unset($payload['__scenario']);
                 $stderr = (string) tempnam(sys_get_temp_dir(), 'qa-worker-');
                 $pipes = [];
                 $process = proc_open(
-                    [PHP_BINARY, $script, $scenario, $database, base64_encode((string) json_encode($payload))],
+                    [PHP_BINARY, $script, $workerScenario, $database, base64_encode((string) json_encode($payload))],
                     [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['file', $stderr, 'w']],
                     $pipes,
                     base_path(),

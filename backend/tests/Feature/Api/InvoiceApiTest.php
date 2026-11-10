@@ -8,10 +8,12 @@ use App\Models\CashShift;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Item;
+use App\Models\Payment;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\TenantClock;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Tests\TenantTestCase;
@@ -233,6 +235,39 @@ class InvoiceApiTest extends TenantTestCase
         // Stock deduction check
         $this->assertEquals(45.000, (float) Item::find($this->itemA->id)->current_stock);
         $this->assertEquals(28.000, (float) Item::find($this->itemB->id)->current_stock);
+    }
+
+    public function test_invoices_and_payments_get_distinct_consecutive_locked_numbers(): void
+    {
+        $other = Customer::create(['name' => 'عميل ثاني', 'balance' => '0.000', 'current_balance' => '0.000', 'price_tier' => 'retail', 'is_active' => true]);
+
+        $numbers = [];
+        foreach ([$this->customer->id, $other->id, $this->customer->id] as $customerId) {
+            $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+                ->postJson('/api/v1/invoices', [
+                    'customer_id' => $customerId,
+                    'store_id' => $this->mainStore->id,
+                    'payment_type' => 'cash',
+                    'payment_method' => 'cash',
+                    'discount_type' => 'fixed',
+                    'discount_value' => '0.000',
+                    'items' => [['item_id' => $this->itemA->id, 'quantity' => '1.000', 'unit_price' => '550.000']],
+                ])->assertStatus(201);
+
+            $numbers[] = (string) $response->json('data.invoice_number');
+        }
+
+        $date = str_replace('-', '', app(TenantClock::class)->businessDate());
+        $this->assertSame(
+            ["INV-MAIN001-{$date}-0001", "INV-MAIN001-{$date}-0002", "INV-MAIN001-{$date}-0003"],
+            $numbers,
+        );
+
+        // One cash voucher per sale, numbered by the day's locked PAY-INV sequence (no random suffix).
+        $this->assertSame(
+            ["PAY-INV-{$date}-000001", "PAY-INV-{$date}-000002", "PAY-INV-{$date}-000003"],
+            Payment::query()->where('payment_number', 'like', 'PAY-INV-%')->orderBy('id')->pluck('payment_number')->all(),
+        );
     }
 
     public function test_create_sales_invoice_fails_validation_on_missing_items(): void

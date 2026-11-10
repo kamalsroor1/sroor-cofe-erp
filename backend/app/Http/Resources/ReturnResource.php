@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\ReturnDocument;
+use App\Support\Money\Decimal;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -29,12 +30,25 @@ class ReturnResource extends JsonResource
             'store_name' => $this->store?->name ?? 'الفرع الرئيسي',
             'user_name' => $this->user?->name ?? 'المسؤول',
             'total_amount' => (float) $this->total_amount,
-            'refund_amount' => (float) $this->refund_amount,
+            // BE-10: null for purchase returns; legacy sales returns read as 'balance'.
+            'refund_method' => $this->return_type === 'sales_return'
+                ? ($this->refund_method ?? ReturnDocument::REFUND_BALANCE)
+                : null,
+            'refund_amount' => $this->refundAmount(),
             'return_date' => $this->return_date ? $this->return_date->toDateString() : $this->created_at?->toDateString(),
             'reason' => $this->reason,
             'items_count' => $this->relationLoaded('items') ? $this->items->count() : 0,
             'items' => $this->relationLoaded('items') ? ReturnItemResource::collection($this->items)->resolve() : [],
             'created_at' => $this->created_at?->toDateTimeString(),
         ];
+    }
+
+    /** Cash handed back through the return's refund voucher, as a positive scale-3 string. */
+    private function refundAmount(): string
+    {
+        // The list/show queries preload this with withSum(); otherwise one query for this row.
+        $paid = (string) ($this->resource->getAttribute('refund_payments_sum_amount') ?? $this->refundPayments()->sum('amount'));
+
+        return bcsub('0.000', Decimal::normalize($paid), 3);
     }
 }

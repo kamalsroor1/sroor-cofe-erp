@@ -30,6 +30,13 @@
         <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
       </div>
       <span class="text-[10px] text-slate-500 dark:text-slate-400 block">{{ $t('treasury.outflow_details_sub') }}</span>
+      <span
+        v-if="Number(summary.cash_refunds || 0) > 0"
+        class="text-[10px] text-slate-500 dark:text-slate-400 block"
+        data-testid="journal-cash-refunds"
+      >
+        {{ $t('treasury.cash_refunds_line') }}: {{ formatMoney(summary.cash_refunds) }} {{ currencyLabel }}
+      </span>
     </div>
 
     <!-- Net Cash Today -->

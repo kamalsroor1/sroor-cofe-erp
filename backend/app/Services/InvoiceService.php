@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Actions\Customers\ResolveWalkInCustomerAction;
+use App\Actions\Invoices\ReverseInvoicePaymentsAction;
 use App\Enums\PaymentMethod;
+use App\Exceptions\BusinessRuleException;
 use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Invoice;
@@ -16,7 +18,6 @@ use App\Services\Pricing\SaleDiscountGuard;
 use App\Services\Pricing\SalePriceGuard;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
-use Exception;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -175,7 +176,7 @@ class InvoiceService
                 $discreteUnits = ['قطعة', 'حبة', 'علبة', 'باكت', 'كرتونة', 'شيكارة', 'طرد', 'دستة', 'جوال', 'piece', 'pcs', 'box', 'carton', 'pack', 'unit'];
                 $itemUnit = trim(mb_strtolower((string) $item->unit));
                 if (in_array($itemUnit, $discreteUnits, true) && fmod((float) $qty, 1.0) != 0.0) {
-                    throw new \DomainException("الصنف '{$item->name}' بالقطعة/العلبة يقبل فقط أعداداً صحيحة، ولا يمكن بيع أجزاء أو كسور ({$qty} {$item->unit}).");
+                    throw BusinessRuleException::make('invoices.discrete_unit_integer_only', ['item' => $item->name, 'quantity' => $qty, 'unit' => $item->unit]);
                 }
 
                 $itemDiscount = Decimal::normalize((string) ($line['discount_amount'] ?? '0.000'));
@@ -290,7 +291,7 @@ class InvoiceService
                     $customerExpensesTotal = bcadd($customerExpensesTotal, $expAmount, 3);
                 } else {
                     $paymentMethod = str_replace('treasury_', '', $paidBy) ?: 'cash';
-                    $expenseNumber = 'EXP-'.str_replace('-', '', $this->tenantClock->businessDate()).'-'.strtoupper(substr(uniqid(), -4));
+                    $expenseNumber = app(DocumentNumberService::class)->nextDated('EXP', 4, Expense::class, 'expense_number');
                     $expense = Expense::create([
                         'expense_number' => $expenseNumber,
                         'category' => 'shipping',
@@ -352,9 +353,10 @@ class InvoiceService
 
             foreach ($checkout['lines'] as $line) {
                 Payment::create([
-                    'payment_number' => 'PAY-INV-'.strtoupper(uniqid()),
+                    'payment_number' => app(DocumentNumberService::class)->nextDated('PAY-INV', 6, Payment::class, 'payment_number'),
                     'customer_id' => $customer->id,
                     'invoice_id' => $invoice->id,
+                    'store_id' => $invoice->store_id,
                     'user_id' => $this->actorId($data),
                     'amount' => $line['amount'],
                     'payment_date' => $invoice->invoice_date,
@@ -560,17 +562,21 @@ class InvoiceService
     public function cancelInvoice(Invoice $invoice, string $reason): Invoice
     {
         if (auth()->check() && ! auth()->user()->hasRole('admin')) {
-            throw new Exception('عفواً، لا يملك صلاحية إلغاء الفواتير سوى المدير العام.');
+            throw BusinessRuleException::forbidden('invoices.cancel_admin_only');
         }
 
         return DB::transaction(function () use ($invoice, $reason) {
             $lockedInvoice = Invoice::where('id', $invoice->id)->lockForUpdate()->firstOrFail();
 
             if ($lockedInvoice->status === 'cancelled') {
-                throw new Exception('هذه الفاتورة ملغاة بالفعل مسبقاً.');
+                throw BusinessRuleException::conflict('invoices.already_cancelled');
             }
 
             ReturnSourceService::assertNoLiveReturns($lockedInvoice);
+            // BE-03 lock order: document -> party -> items -> number sequences.
+            if ($lockedInvoice->customer_id) {
+                Customer::query()->whereKey($lockedInvoice->customer_id)->lockForUpdate()->first();
+            }
 
             $oldState = $lockedInvoice->toArray();
 
@@ -595,6 +601,9 @@ class InvoiceService
                 'remaining_amount' => '0.000',
                 'notes' => ($lockedInvoice->notes ? $lockedInvoice->notes."\n" : '')."تم الإلغاء: {$reason}",
             ]);
+
+            // BE-03: give back what was paid (negative PAY-REF vouchers) before the balance is recomputed
+            app(ReverseInvoicePaymentsAction::class)->execute($lockedInvoice);
 
             // Recalculate customer balance
             $this->customerBalanceService->updateBalance($lockedInvoice->customer_id);
@@ -623,15 +632,47 @@ class InvoiceService
      */
     public function updateInvoice(Invoice $invoice, array $data): Invoice
     {
-        return DB::transaction(function () use ($invoice, $data) {
+        // BE-08 / POS-07: the same price floor, tier and discount-cap guards as confirmInvoice(). A manager PIN is
+        // verified here, before the transaction, so failed-PIN limiter hits are never rolled back.
+        $actor = Auth::user();
+        $priceGuard = new SalePriceGuard(
+            $actor instanceof User ? $actor : null,
+            isset($data['override']) && is_array($data['override']) ? $data['override'] : null,
+        );
+        $discountGuard = new SaleDiscountGuard($actor instanceof User ? $actor : null, $priceGuard);
+        $priceCustomer = Customer::query()->find($data['customer_id'] ?? 0);
+        $currentInvoice = Invoice::query()->find($invoice->id);
+        if ($priceCustomer instanceof Customer && $currentInvoice instanceof Invoice && $currentInvoice->status !== 'cancelled') {
+            $priceStoreId = $currentInvoice->store_id !== null ? (int) $currentInvoice->store_id : null;
+            $data['items'] = $discountGuard->resolveLineDiscounts($priceCustomer, $priceStoreId, (array) ($data['items'] ?? []));
+            $priceGuard->preflight($priceCustomer, $priceStoreId, $data['items']);
+            $discountGuard->preflight(
+                $priceCustomer,
+                $priceStoreId,
+                $data['items'],
+                (string) ($data['discount_type'] ?? 'fixed'),
+                (string) ($data['discount_value'] ?? '0.000'),
+            );
+        }
+
+        return DB::transaction(function () use ($invoice, $data, $priceGuard, $discountGuard) {
             $lockedInvoice = Invoice::where('id', $invoice->id)->lockForUpdate()->firstOrFail();
+            if ($lockedInvoice->status === 'cancelled') {
+                throw BusinessRuleException::conflict('invoices.cannot_edit_cancelled');
+            }
             ReturnSourceService::assertNoLiveReturns($lockedInvoice);
             $oldCustomerId = $lockedInvoice->customer_id;
             $newCustomerId = $data['customer_id'];
-            $this->assertWalkInPaidInFull(
-                Customer::query()->findOrFail($newCustomerId),
-                (string) ($data['payment_type'] ?? 'cash'),
-            );
+            // BE-09 lock order (same as persistConfirmedInvoice): parties first, in id order, before
+            // item locks and before any document-number allocation below.
+            Customer::query()
+                ->whereIn('id', array_values(array_unique(array_filter([(int) $oldCustomerId, (int) $newCustomerId]))))
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+            $customer = Customer::query()->findOrFail($newCustomerId);
+            $this->assertWalkInPaidInFull($customer, (string) ($data['payment_type'] ?? 'cash'));
+            $storeId = $lockedInvoice->store_id !== null ? (int) $lockedInvoice->store_id : null;
 
             // 1. If invoice was confirmed, reverse previous stock back to warehouse
             if ($lockedInvoice->status === 'confirmed') {
@@ -660,13 +701,24 @@ class InvoiceService
 
             // 2. Add new items, deduct new stock, calculate new subtotal and total cost
             $subtotal = '0.000';
+            $grossTotal = '0.000';
+            $lineDiscountsTotal = '0.000';
             $totalCost = '0.000';
 
             foreach ($data['items'] as $lineIndex => $line) {
                 $item = Item::where('id', $line['item_id'])->lockForUpdate()->firstOrFail();
                 $qty = (string) $line['quantity'];
-                $unitPrice = (string) $line['unit_price'];
-                $itemDiscount = (string) ($line['discount_amount'] ?? '0.000');
+                $itemDiscount = Decimal::normalize((string) ($line['discount_amount'] ?? '0.000'));
+                $priceAudit = $priceGuard->evaluate(
+                    $item,
+                    $customer,
+                    $storeId,
+                    $qty,
+                    isset($line['unit_price']) ? (string) $line['unit_price'] : null,
+                    $itemDiscount,
+                    (int) $lineIndex,
+                );
+                $unitPrice = $priceAudit['unit_price'];
 
                 $grossLineTotal = Decimal::mul($qty, $unitPrice);
                 $netLineTotal = bcsub($grossLineTotal, $itemDiscount, 3);
@@ -691,6 +743,9 @@ class InvoiceService
                     'quantity' => $qty,
                     'cost_price' => $effectiveCost,
                     'unit_price' => $unitPrice,
+                    'list_unit_price' => $priceAudit['list_unit_price'],
+                    'price_source' => $priceAudit['price_source'],
+                    'override_approved_by' => $priceAudit['override_approved_by'],
                     'discount_amount' => $itemDiscount,
                     'total_price' => $netLineTotal,
                 ]);
@@ -707,23 +762,18 @@ class InvoiceService
                 );
 
                 $subtotal = bcadd($subtotal, $netLineTotal, 3);
+                $grossTotal = bcadd($grossTotal, $grossLineTotal, 3);
+                $lineDiscountsTotal = bcadd($lineDiscountsTotal, $itemDiscount, 3);
             }
 
             // 3. Invoice-level discount calculation
             $discountType = $data['discount_type'] ?? 'fixed';
             $discountValue = (string) ($data['discount_value'] ?? '0.000');
-            $invoiceDiscountAmount = '0.000';
+            // Same computation as confirmInvoice (SETG-13 half-up percent, capped at the subtotal).
+            $invoiceDiscountAmount = SaleDiscountGuard::invoiceDiscountAmount($subtotal, (string) $discountType, $discountValue);
 
-            if ($discountType === 'percentage') {
-                // SETG-13: half-up, identical to dPercent().
-                $invoiceDiscountAmount = Decimal::percent($subtotal, $discountValue);
-            } else {
-                $invoiceDiscountAmount = $discountValue;
-            }
-
-            if (bccomp($invoiceDiscountAmount, $subtotal, 3) > 0) {
-                $invoiceDiscountAmount = $subtotal;
-            }
+            // POS-07: the cap on the exact totals (the approver, if any, was resolved before the transaction).
+            $discountGuard->assertWithinCap($storeId, $grossTotal, bcadd($lineDiscountsTotal, $invoiceDiscountAmount, 3));
 
             // 3.5. Dynamic additional expenses in edit
             $rawExpenses = $data['additional_expenses'] ?? [];
@@ -771,7 +821,7 @@ class InvoiceService
                     $customerExpensesTotal = bcadd($customerExpensesTotal, $expAmount, 3);
                 } else {
                     $paymentMethod = str_replace('treasury_', '', $paidBy) ?: 'cash';
-                    $expenseNumber = 'EXP-'.str_replace('-', '', $this->tenantClock->businessDate()).'-'.strtoupper(substr(uniqid(), -4));
+                    $expenseNumber = app(DocumentNumberService::class)->nextDated('EXP', 4, Expense::class, 'expense_number');
                     $expense = Expense::create([
                         'expense_number' => $expenseNumber,
                         'category' => 'shipping',
@@ -831,20 +881,22 @@ class InvoiceService
                 'remaining_amount' => $remainingAmount,
                 'payment_status' => $paymentStatus,
                 'total_cost' => $totalCost,
+                'discount_override_by' => $priceGuard->discountApproverId() ?? $priceGuard->invoiceDiscountFloorApproverId(),
                 'notes' => $data['notes'] ?? $lockedInvoice->notes,
             ]);
 
             // 6. Delete previous payments and re-create payment voucher(s) if paid
-            Payment::where('invoice_id', $lockedInvoice->id)->delete();
+            Payment::where('invoice_id', $lockedInvoice->id)->excludingRefunds()->delete();
 
             if (! empty($data['payments']) && is_array($data['payments'])) {
                 foreach ($data['payments'] as $p) {
                     $pAmount = (string) ($p['amount'] ?? '0.000');
                     if (bccomp($pAmount, '0.000', 3) > 0) {
                         Payment::create([
-                            'payment_number' => 'PAY-INV-'.strtoupper(uniqid()),
+                            'payment_number' => app(DocumentNumberService::class)->nextDated('PAY-INV', 6, Payment::class, 'payment_number'),
                             'customer_id' => $newCustomerId,
                             'invoice_id' => $lockedInvoice->id,
+                            'store_id' => $lockedInvoice->store_id,
                             'user_id' => $this->actorId($data),
                             'amount' => $pAmount,
                             'payment_date' => $lockedInvoice->invoice_date,
@@ -855,9 +907,10 @@ class InvoiceService
                 }
             } elseif (bccomp($paidAmount, '0.000', 3) > 0) {
                 Payment::create([
-                    'payment_number' => 'PAY-INV-'.strtoupper(uniqid()),
+                    'payment_number' => app(DocumentNumberService::class)->nextDated('PAY-INV', 6, Payment::class, 'payment_number'),
                     'customer_id' => $newCustomerId,
                     'invoice_id' => $lockedInvoice->id,
+                    'store_id' => $lockedInvoice->store_id,
                     'user_id' => $this->actorId($data),
                     'amount' => $paidAmount,
                     'payment_date' => $lockedInvoice->invoice_date,
@@ -899,7 +952,7 @@ class InvoiceService
     public function deleteInvoice(Invoice $invoice): bool
     {
         if (auth()->check() && ! auth()->user()->hasRole('admin')) {
-            throw new Exception('عفواً، لا يملك صلاحية حذف الفواتير سوى المدير العام.');
+            throw BusinessRuleException::forbidden('invoices.delete_admin_only');
         }
 
         return DB::transaction(function () use ($invoice) {
@@ -966,6 +1019,10 @@ class InvoiceService
         });
     }
 
+    /**
+     * Allocates the next number from the locked sequence: it CONSUMES a number (no previews).
+     * Call it inside the transaction that inserts the document, after the party/document locks.
+     */
     public function generateUniqueNumber(?int $storeId = null): string
     {
         $storeCode = null;
@@ -988,27 +1045,6 @@ class InvoiceService
         // SETG-2 ext: the date in the number is the business date (tenant clock + cutoff).
         $prefix = "INV-{$storeCode}-".str_replace('-', '', $this->tenantClock->businessDate());
 
-        $lastInvoice = Invoice::withTrashed()
-            ->where('invoice_number', 'LIKE', $prefix.'-%')
-            ->orderBy('invoice_number', 'desc')
-            ->first();
-
-        if ($lastInvoice) {
-            $parts = explode('-', $lastInvoice->invoice_number);
-            $lastSequence = (int) end($parts);
-            $nextSequence = $lastSequence + 1;
-        } else {
-            $nextSequence = 1;
-        }
-
-        do {
-            $candidate = $prefix.'-'.str_pad((string) $nextSequence, 4, '0', STR_PAD_LEFT);
-            $exists = Invoice::withTrashed()->where('invoice_number', $candidate)->exists();
-            if ($exists) {
-                $nextSequence++;
-            }
-        } while ($exists);
-
-        return $candidate;
+        return app(DocumentNumberService::class)->nextFor($prefix, 4, Invoice::class, 'invoice_number');
     }
 }

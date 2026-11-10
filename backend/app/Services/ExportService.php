@@ -71,15 +71,17 @@ class ExportService
         }
 
         // 2. Payments
-        $payments = Payment::where('customer_id', $customer->id)->get();
+        $payments = Payment::where('customer_id', $customer->id)->excludingCancelledInvoices()->get();
         foreach ($payments as $pay) {
+            // BE-10: a refund voucher (negative amount) is cash given back: a debit, same balance effect.
+            $isRefund = bccomp((string) $pay->amount, '0.000', 3) < 0;
             $entries->push([
                 'date' => $pay->payment_date->format('Y-m-d'),
-                'type' => __('contacts.collect_cash_payment'),
+                'type' => $isRefund ? __('treasury.customer_refund_label') : __('contacts.collect_cash_payment'),
                 'ref' => $pay->payment_number,
-                'debit' => '0.000',
-                'credit' => $pay->amount,
-                'notes' => $pay->notes ?? __('contacts.cash_receipt_voucher'),
+                'debit' => $isRefund ? bcsub('0.000', (string) $pay->amount, 3) : '0.000',
+                'credit' => $isRefund ? '0.000' : $pay->amount,
+                'notes' => $pay->notes ?? ($isRefund ? __('treasury.customer_refund_label') : __('contacts.cash_receipt_voucher')),
                 'timestamp' => $pay->created_at->timestamp,
             ]);
         }

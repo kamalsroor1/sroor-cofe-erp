@@ -144,6 +144,7 @@ final class StoreIsolationCashFlowTest extends TenantTestCase
             'total_cash_in' => '37.500',
             'supplier_paid' => '5.250',
             'cash_expenses' => '2.000',
+            'cash_refunds' => '0.000',
             'total_cash_out' => '7.250',
             'net_cash' => '30.250',
         ], $a);

@@ -24,6 +24,7 @@ use Illuminate\Support\Carbon;
  * @property string $total_amount
  * @property Carbon|null $return_date
  * @property string|null $reason
+ * @property string|null $refund_method
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property int|null $store_id
@@ -33,6 +34,10 @@ use Illuminate\Support\Carbon;
 class ReturnDocument extends Model
 {
     use HasFactory, SoftDeletes;
+
+    public const REFUND_CASH = 'cash';
+
+    public const REFUND_BALANCE = 'balance';
 
     protected $table = 'returns';
 
@@ -48,6 +53,7 @@ class ReturnDocument extends Model
         'total_amount',
         'return_date',
         'reason',
+        'refund_method',
     ];
 
     protected function casts(): array
@@ -112,6 +118,16 @@ class ReturnDocument extends Model
     public function items(): HasMany
     {
         return $this->hasMany(ReturnItem::class, 'return_id');
+    }
+
+    /**
+     * BE-10: the refund vouchers (negative cash payments) this return booked.
+     *
+     * @return HasMany<Payment, $this>
+     */
+    public function refundPayments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'return_id');
     }
 
     /**

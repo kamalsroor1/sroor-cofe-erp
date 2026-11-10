@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\Item;
 use App\Models\Payment;
 use App\Models\Purchase;
@@ -9,9 +10,9 @@ use App\Models\PurchaseItem;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Models\Supplier;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
-use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -30,13 +31,17 @@ class PurchaseService
         'transfer_reversal_in',
     ];
 
+    protected DocumentNumberService $documentNumbers;
+
     public function __construct(
         protected StockService $stockService,
         protected SupplierBalanceService $supplierBalanceService,
         protected AuditLogService $auditLogService,
         protected ?ActivityLogService $activityLogService = null,
         protected ?TenantClock $tenantClock = null,
+        ?DocumentNumberService $documentNumbers = null,
     ) {
+        $this->documentNumbers = $documentNumbers ?: app(DocumentNumberService::class);
         $this->activityLogService = $this->activityLogService ?: app(ActivityLogService::class);
         $this->tenantClock = $this->tenantClock ?: app(TenantClock::class);
     }
@@ -65,6 +70,9 @@ class PurchaseService
         return DB::transaction(function () use ($data) {
             $baseSubtotal = '0.000';
             $storeId = $data['store_id'] ?? Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
+
+            // BE-09 lock order: the supplier row first, then the purchase number and payment numbers.
+            Supplier::where('id', $data['supplier_id'])->lockForUpdate()->firstOrFail();
 
             $purchase = Purchase::create([
                 'purchase_number' => $data['purchase_number'] ?? $this->generateUniqueNumber(),
@@ -207,9 +215,10 @@ class PurchaseService
                     // Paid from treasury (Cash, Instapay, E-wallet)
                     $paymentMethod = str_replace('treasury_', '', $paidBy);
                     $payment = Payment::create([
-                        'payment_number' => 'PAY-EXP-'.strtoupper(uniqid()),
+                        'payment_number' => $this->documentNumbers->nextDated('PAY-EXP', 6, Payment::class, 'payment_number'),
                         'supplier_id' => $purchase->supplier_id,
                         'purchase_id' => $purchase->id,
+                        'store_id' => $purchase->store_id,
                         'user_id' => $this->actorId($data),
                         'amount' => $expAmount,
                         'payment_date' => $purchase->purchase_date,
@@ -248,9 +257,10 @@ class PurchaseService
             // 5. Record direct supplier payment voucher if paid amount exists
             if (bccomp($paidAmount, '0.000', 3) > 0) {
                 Payment::create([
-                    'payment_number' => 'PAY-PUR-'.strtoupper(uniqid()),
+                    'payment_number' => $this->documentNumbers->nextDated('PAY-PUR', 6, Payment::class, 'payment_number'),
                     'supplier_id' => $purchase->supplier_id,
                     'purchase_id' => $purchase->id,
+                    'store_id' => $purchase->store_id,
                     'user_id' => $this->actorId($data),
                     'amount' => $paidAmount,
                     'payment_date' => $purchase->purchase_date,
@@ -289,7 +299,7 @@ class PurchaseService
             $lockedPurchase = Purchase::where('id', $purchase->id)->lockForUpdate()->firstOrFail();
 
             if ($lockedPurchase->status === 'cancelled') {
-                throw new Exception("فاتورة المشتريات رقم [{$lockedPurchase->purchase_number}] ملغاة بالفعل مسبقاً.");
+                throw BusinessRuleException::conflict('purchases.already_cancelled', ['number' => $lockedPurchase->purchase_number]);
             }
 
             ReturnSourceService::assertNoLiveReturns($lockedPurchase);
@@ -305,7 +315,7 @@ class PurchaseService
 
                 // Check master stock
                 if (bccomp((string) $item->current_stock, $qty, 3) < 0) {
-                    throw new Exception("تعذر إلغاء الفاتورة: رصيد الصنف [{$item->name}] الحالي ({$item->current_stock} {$item->unit}) أقل من الكمية المطلوب عكسها ({$qty} {$item->unit})، لوجود مبيعات تمت من هذه الشحنة.");
+                    throw BusinessRuleException::conflict('purchases.cancel_stock_sold', ['item' => $item->name, 'current' => $item->current_stock, 'unit' => $item->unit, 'required' => $qty]);
                 }
 
                 // Check store stock if assigned to a specific store
@@ -316,8 +326,8 @@ class PurchaseService
                         ->first();
 
                     if ($storeStock && bccomp((string) $storeStock->quantity, $qty, 3) < 0) {
-                        $storeName = $lockedPurchase->store?->name ?? "الفرع #{$storeId}";
-                        throw new Exception("تعذر إلغاء الفاتورة: رصيد الصنف [{$item->name}] في [{$storeName}] ({$storeStock->quantity} {$item->unit}) غير كافٍ لخصم الكمية ({$qty} {$item->unit}).");
+                        $storeName = $lockedPurchase->store?->name ?? (string) __('inventory.store_fallback_name', ['id' => $storeId]);
+                        throw BusinessRuleException::conflict('purchases.cancel_store_stock_insufficient', ['item' => $item->name, 'store' => $storeName, 'current' => $storeStock->quantity, 'unit' => $item->unit, 'required' => $qty]);
                     }
                 }
             }
@@ -389,8 +399,11 @@ class PurchaseService
             $lockedPurchase = Purchase::where('id', $purchase->id)->lockForUpdate()->firstOrFail();
 
             if ($lockedPurchase->status !== 'cancelled') {
-                throw new Exception("فاتورة المشتريات رقم [{$lockedPurchase->purchase_number}] ليست ملغاة.");
+                throw BusinessRuleException::conflict('purchases.not_cancelled', ['number' => $lockedPurchase->purchase_number]);
             }
+
+            // BE-09 lock order: document -> supplier -> items -> payment number.
+            Supplier::where('id', $lockedPurchase->supplier_id)->lockForUpdate()->firstOrFail();
 
             $storeId = $lockedPurchase->store_id;
 
@@ -449,9 +462,10 @@ class PurchaseService
                 $hasPayment = Payment::where('purchase_id', $lockedPurchase->id)->exists();
                 if (! $hasPayment) {
                     Payment::create([
-                        'payment_number' => 'PAY-PUR-'.strtoupper(uniqid()),
+                        'payment_number' => $this->documentNumbers->nextDated('PAY-PUR', 6, Payment::class, 'payment_number'),
                         'supplier_id' => $lockedPurchase->supplier_id,
                         'purchase_id' => $lockedPurchase->id,
+                        'store_id' => $lockedPurchase->store_id,
                         'user_id' => $this->actorId(),
                         'amount' => $lockedPurchase->paid_amount,
                         'payment_date' => $lockedPurchase->purchase_date,
@@ -742,32 +756,15 @@ class PurchaseService
         return $items;
     }
 
+    /**
+     * Allocates the next number from the locked sequence: it CONSUMES a number (no previews).
+     * Call it inside the transaction that inserts the document, after the party/document locks.
+     */
     public function generateUniqueNumber(): string
     {
         // SETG-2 ext: the date in the number is the business date (tenant clock + cutoff).
         $prefix = 'PUR-'.str_replace('-', '', $this->tenantClock->businessDate());
 
-        $lastPurchase = Purchase::withTrashed()
-            ->where('purchase_number', 'LIKE', $prefix.'-%')
-            ->orderBy('purchase_number', 'desc')
-            ->first();
-
-        if ($lastPurchase) {
-            $parts = explode('-', $lastPurchase->purchase_number);
-            $lastSequence = (int) end($parts);
-            $nextSequence = $lastSequence + 1;
-        } else {
-            $nextSequence = 1;
-        }
-
-        do {
-            $candidate = $prefix.'-'.str_pad((string) $nextSequence, 4, '0', STR_PAD_LEFT);
-            $exists = Purchase::withTrashed()->where('purchase_number', $candidate)->exists();
-            if ($exists) {
-                $nextSequence++;
-            }
-        } while ($exists);
-
-        return $candidate;
+        return $this->documentNumbers->nextFor($prefix, 4, Purchase::class, 'purchase_number');
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\BusinessRuleException;
 use App\Exceptions\DiscountCapExceededException;
 use App\Http\Middleware\AdminSecurityHeaders;
 use App\Http\Middleware\AuthenticateCentral;
@@ -114,6 +115,20 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // BE-07: one unified domain exception (422 rule / 409 conflict). Re-translated at render
+        // time so the request locale wins; never reported (a refused operation is not a fault).
+        $exceptions->dontReport([BusinessRuleException::class]);
+
+        $exceptions->render(function (BusinessRuleException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->translatedMessage(),
+                    'error_code' => $e->errorCode(),
+                ], $e->status());
+            }
+        });
 
         $exceptions->render(function (AuthenticationException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {

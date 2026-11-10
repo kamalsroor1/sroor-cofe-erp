@@ -24,7 +24,7 @@ use Illuminate\Support\Collection;
 final class DailyCashFlowService
 {
     /**
-     * @return array{cash_sales: string, customer_receipts: string, total_cash_in: string, supplier_paid: string, cash_expenses: string, total_cash_out: string, net_cash: string}
+     * @return array{cash_sales: string, customer_receipts: string, total_cash_in: string, supplier_paid: string, cash_expenses: string, cash_refunds: string, total_cash_out: string, net_cash: string}
      */
     public function forDate(string $date, ?int $storeId): array
     {
@@ -43,8 +43,12 @@ final class DailyCashFlowService
             ->where('payment_method', 'cash')
             ->when($storeId !== null, fn (Builder $q) => $q->where('store_id', $storeId)), 'amount');
 
+        // BE-10: cash handed back to customers for sales returns (negative refund vouchers),
+        // shown as a positive outflow.
+        $cashRefunds = bcsub('0.000', $this->sum($this->cashVouchers($date, $storeId)->refunds(), 'payments.amount'), 3);
+
         $totalCashIn = bcadd($cashSales, $customerReceipts, 3);
-        $totalCashOut = bcadd($supplierPaid, $cashExpenses, 3);
+        $totalCashOut = bcadd(bcadd($supplierPaid, $cashExpenses, 3), $cashRefunds, 3);
 
         return [
             'cash_sales' => $cashSales,
@@ -52,6 +56,7 @@ final class DailyCashFlowService
             'total_cash_in' => $totalCashIn,
             'supplier_paid' => $supplierPaid,
             'cash_expenses' => $cashExpenses,
+            'cash_refunds' => $cashRefunds,
             'total_cash_out' => $totalCashOut,
             'net_cash' => bcsub($totalCashIn, $totalCashOut, 3),
         ];

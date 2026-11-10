@@ -9,7 +9,6 @@ defineProps({
   netTotal: { type: Number, required: true },
   discountAmount: { type: [Number, String], default: null }, // null = no discount input
   paidAmount: { type: [Number, String], default: null }, // null = no paid input
-  refundAmount: { type: [Number, String], default: null }, // null = no refund input
   remainingAmount: { type: Number, default: null }, // null = no remaining row
   isProcessing: { type: Boolean, default: false },
   isDisabled: { type: Boolean, default: false },
@@ -17,7 +16,7 @@ defineProps({
   submitIcon: { type: String, default: 'check-circle2' },
 });
 
-defineEmits(['update:discountAmount', 'update:paidAmount', 'update:refundAmount', 'submit']);
+defineEmits(['update:discountAmount', 'update:paidAmount', 'submit']);
 
 const formatMoney = (val) => {
   if (!val && val !== 0) return '0.000';
@@ -76,24 +75,6 @@ const formatMoney = (val) => {
           class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 font-mono font-black focus:outline-none shadow-inner"
           @input="$emit('update:paidAmount', $event.target.value)"
         />
-      </div>
-
-      <!-- Refund input (optional) -->
-      <div v-if="refundAmount !== null" class="space-y-1.5 pt-2 border-t border-slate-200 dark:border-slate-800">
-        <label class="text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal">{{
-          $t('returns.refund_amount_cash')
-        }}</label>
-        <input
-          :value="refundAmount"
-          type="number"
-          step="0.01"
-          min="0"
-          class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 font-mono font-black focus:outline-none shadow-inner"
-          @input="$emit('update:refundAmount', $event.target.value)"
-        />
-        <p class="text-[10px] text-slate-400 font-tajawal mt-0.5">
-          {{ $t('returns.refund_hint') }}
-        </p>
       </div>
 
       <!-- Remaining row (optional) -->

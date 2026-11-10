@@ -8,6 +8,7 @@ use App\DTOs\Items\AdjustStockDTO;
 use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\StoreStock;
+use App\Services\DocumentNumberService;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\DB;
 
@@ -15,6 +16,7 @@ final class AdjustItemStockAction
 {
     public function __construct(
         private readonly TenantClock $tenantClock,
+        private readonly DocumentNumberService $documentNumbers,
     ) {}
 
     /**
@@ -45,12 +47,8 @@ final class AdjustItemStockAction
 
             // SETG-2 ext: number and daily counter follow the tenant business day.
             $businessDate = $this->tenantClock->businessDate();
-            [$dayStart, $dayEnd] = $this->tenantClock->businessDayRange($businessDate);
             $prefix = 'ADJ-'.substr(str_replace('-', '', $businessDate), 2);
-            $count = StockMovement::where('created_at', '>=', $dayStart)
-                ->where('created_at', '<', $dayEnd)
-                ->count() + 1;
-            $docNumber = $prefix.'-'.str_pad((string) $count, 4, '0', STR_PAD_LEFT);
+            $docNumber = $this->documentNumbers->nextFor($prefix, 4, StockMovement::class, 'document_number');
 
             $movement = StockMovement::create([
                 'item_id' => $item->id,

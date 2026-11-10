@@ -179,4 +179,10 @@ return [
 
     'status_confirmed' => 'Confirmed',
     'cancel_purchase' => 'Purchase cancellation',
+
+    // BE-07: business-rule refusals (BusinessRuleException)
+    'already_cancelled' => 'Purchase invoice [:number] has already been cancelled.',
+    'not_cancelled' => 'Purchase invoice [:number] is not cancelled.',
+    'cancel_stock_sold' => 'Cannot cancel the invoice: the current balance of [:item] (:current :unit) is less than the quantity to reverse (:required :unit) because sales were made from this shipment.',
+    'cancel_store_stock_insufficient' => 'Cannot cancel the invoice: the balance of [:item] in [:store] (:current :unit) is not enough to deduct the quantity (:required :unit).',
 ];

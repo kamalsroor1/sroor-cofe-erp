@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Returns;
 
+use App\Models\Payment;
 use App\Models\ReturnDocument;
 use App\Services\AuditLogService;
 use App\Services\ReturnReversalService;
@@ -19,9 +20,10 @@ use Illuminate\Support\Facades\DB;
  *   formula when something moved the cost since) and the supplier balance is recomputed.
  *
  * The stock/cost reversal lives in ReturnReversalService (shared with ReverseDeletedReturnAction).
- * A return has no treasury effect (the `refund_amount` field is not booked anywhere), so
- * there is no treasury row to reverse. Idempotent: the document is locked and a deleted
- * one is invisible to the lookup, so a second delete is a 404 and cannot reverse twice.
+ * BE-10: a cash-refund sales return also soft-deletes its refund voucher, so the shift,
+ * daily journal, treasury and customer balance all return to their prior values.
+ * Idempotent: the document is locked and a deleted one is invisible to the lookup, so a
+ * second delete is a 404 and cannot reverse twice.
  */
 final class DeleteReturnAction
 {
@@ -38,6 +40,11 @@ final class DeleteReturnAction
 
             // 2. Party + items are locked in order and the stock/cost put back.
             $this->reversal->reverseStock($returnDoc);
+
+            // BE-10: the cash refund voucher goes with the return (its cash is back in the drawer).
+            // Both are locked, soft-deleted here, and the balance recompute below ignores them.
+            Payment::query()->where('return_id', $returnDoc->id)->lockForUpdate()->get()
+                ->each(fn (Payment $voucher): ?bool => $voucher->delete());
 
             $returnDoc->delete();
 

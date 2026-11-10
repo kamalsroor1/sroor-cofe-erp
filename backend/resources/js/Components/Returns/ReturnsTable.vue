@@ -67,6 +67,16 @@
         <span class="font-mono font-black text-rose-600 dark:text-rose-400 text-sm">
           {{ formatMoney(row.total_amount) }} {{ currencyLabel }}
         </span>
+        <div
+          v-if="row.refund_method"
+          class="text-[10px] text-slate-500 dark:text-slate-400 font-tajawal mt-0.5"
+          data-testid="return-refund-line"
+        >
+          {{ $t(`returns.refund_method_${row.refund_method}`) }}
+          <span v-if="row.refund_method === 'cash'" class="font-mono"
+            >· {{ formatMoney(row.refund_amount) }} {{ currencyLabel }}</span
+          >
+        </div>
       </template>
 
       <template #cell-reason="{ row }">

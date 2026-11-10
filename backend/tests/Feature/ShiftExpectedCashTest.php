@@ -222,7 +222,7 @@ final class ShiftExpectedCashTest extends TenantTestCase
         });
     }
 
-    public function test_cash_received_before_the_shift_opened_or_on_a_cancelled_invoice_is_excluded(): void
+    public function test_cash_received_before_the_shift_opened_is_excluded_and_a_cancelled_sale_shows_with_its_refund(): void
     {
         $this->asAdmin(function (): void {
             $this->receipt($this->storeA, '80.000'); // before the shift
@@ -238,7 +238,10 @@ final class ShiftExpectedCashTest extends TenantTestCase
             $totals = app(ShiftService::class)->calculateShiftTotals($shift->refresh());
 
             $this->assertNotNull($kept->id);
-            $this->assertSame('100.000', $totals['total_cash_sales']);
+            // BE-03: the cancelled sale (200) is no longer hidden: it stays a sale of this shift and
+            // its cancellation books a 200 cash refund voucher, so the drawer still nets to 200.
+            $this->assertSame('300.000', $totals['total_cash_sales']);
+            $this->assertSame('200.000', $totals['total_refunds']);
             $this->assertSame('0.000', $totals['total_customer_receipts']);
             $this->assertSame('200.000', $totals['expected_cash_balance']);
         });

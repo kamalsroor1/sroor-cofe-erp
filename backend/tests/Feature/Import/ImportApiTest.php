@@ -14,6 +14,7 @@ use App\Models\StoreStock;
 use App\Models\Supplier;
 use App\Models\Tenant;
 use App\Services\CustomerBalanceService;
+use App\Services\DocumentNumberService;
 use App\Services\StockService;
 use App\Services\SupplierBalanceService;
 use App\Support\TenantCache;
@@ -447,7 +448,7 @@ class ImportApiTest extends TenantTestCase
 
     public function test_commit_is_all_or_nothing(): void
     {
-        $failing = new class(app(TenantClock::class)) extends StockService
+        $failing = new class(app(TenantClock::class), app(DocumentNumberService::class)) extends StockService
         {
             private int $calls = 0;
 

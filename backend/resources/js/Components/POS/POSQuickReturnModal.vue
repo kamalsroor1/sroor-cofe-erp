@@ -3,6 +3,7 @@ import AppModal from '../Common/AppModal.vue';
 import ErrorState from '../Common/ErrorState.vue';
 import EmptyState from '../Common/EmptyState.vue';
 import Skeleton from '../Common/Skeletons/Skeleton.vue';
+import RefundMethodPicker from '../Returns/RefundMethodPicker.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
 defineProps({
@@ -14,9 +15,13 @@ defineProps({
   total: { type: [String, Number], default: '0' },
   canSubmit: { type: Boolean, default: false },
   isSubmitting: { type: Boolean, default: false },
+  refundMethod: { type: String, default: 'balance' },
+  refundLocked: { type: Boolean, default: false },
+  refundError: { type: String, default: '' },
+  refundHint: { type: String, default: '' },
 });
 
-defineEmits(['close', 'set-quantity', 'submit']);
+defineEmits(['close', 'set-quantity', 'submit', 'update:refundMethod']);
 
 const { formatMoney, formatQty } = useFormatters();
 </script>
@@ -73,6 +78,14 @@ const { formatMoney, formatQty } = useFormatters();
           <span>{{ $t('pos.quick_return_total') }}</span>
           <span class="font-mono">{{ formatMoney(total) }} {{ $t('common.currency') }}</span>
         </div>
+
+        <RefundMethodPicker
+          :model-value="refundMethod"
+          :locked="refundLocked"
+          :error="refundError"
+          :hint="refundHint"
+          @update:model-value="$emit('update:refundMethod', $event)"
+        />
       </template>
 
       <div class="flex gap-2">

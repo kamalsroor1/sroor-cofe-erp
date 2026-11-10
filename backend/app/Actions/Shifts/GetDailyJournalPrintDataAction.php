@@ -81,6 +81,7 @@ final class GetDailyJournalPrintDataAction
             'expenses' => $expenses,
             'totalExpenses' => $this->sum($expenses->pluck('amount')),
             'totalSupplierPaid' => $cashFlow['supplier_paid'],
+            'totalCashRefunds' => $cashFlow['cash_refunds'],
             'netCashToday' => $cashFlow['net_cash'],
             'openingCashBalance' => $openingCashBalance,
             'expectedCashInDrawer' => bcadd($openingCashBalance, $cashFlow['net_cash'], 3),

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Exceptions\Stock\InsufficientStockException;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Item;
@@ -12,7 +13,6 @@ use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\InvoiceService;
-use Exception;
 use Tests\Concerns\SeedsStoreStock;
 use Tests\TenantTestCase;
 
@@ -130,7 +130,7 @@ class InvoiceServiceTest extends TenantTestCase
             ],
         ];
 
-        $this->expectException(Exception::class);
+        $this->expectException(InsufficientStockException::class);
         $this->invoiceService->confirmInvoice($invoiceData);
 
         // Verify rollback: stock remains 1.000 and 0 invoices created
@@ -225,7 +225,9 @@ class InvoiceServiceTest extends TenantTestCase
             ],
         ]);
 
-        $this->assertEquals($todayPrefix.'-0002', $inv2->invoice_number);
+        // BE-09: generateUniqueNumber() above consumed 0002 from the locked sequence, so the
+        // invoice gets the next one (a number is never reused, soft-deleted or not).
+        $this->assertEquals($todayPrefix.'-0003', $inv2->invoice_number);
         $this->assertEquals(1, Invoice::count()); // 1 active
         $this->assertEquals(2, Invoice::withTrashed()->count()); // 2 total in DB
     }

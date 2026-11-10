@@ -2,16 +2,15 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\CashShift;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Payment;
-use App\Models\ReturnDocument;
 use App\Models\Store;
 use App\Services\Settings\TenantSettings;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
-use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -20,12 +19,16 @@ use Illuminate\Support\Facades\Log;
 
 class ShiftService
 {
+    protected DocumentNumberService $documentNumbers;
+
     public function __construct(
         protected ?ActivityLogService $activityLogService = null,
         protected ?TenantClock $tenantClock = null,
+        ?DocumentNumberService $documentNumbers = null,
     ) {
         $this->activityLogService = $this->activityLogService ?: app(ActivityLogService::class);
         $this->tenantClock = $this->tenantClock ?: app(TenantClock::class);
+        $this->documentNumbers = $documentNumbers ?: app(DocumentNumberService::class);
     }
 
     /**
@@ -52,7 +55,7 @@ class ShiftService
 
         $existing = $this->getActiveShift(storeId: $targetStoreId);
         if ($existing) {
-            throw new Exception(__('treasury.shift_already_open', ['number' => $existing->shift_number]));
+            throw BusinessRuleException::conflict('treasury.shift_already_open', ['number' => $existing->shift_number]);
         }
 
         $shiftNumber = $this->nextShiftNumber();
@@ -93,16 +96,9 @@ class ShiftService
      */
     private function nextShiftNumber(): string
     {
-        $prefix = 'SHIFT-'.str_replace('-', '', $this->tenantClock->businessDate()).'-';
+        $prefix = 'SHIFT-'.str_replace('-', '', $this->tenantClock->businessDate());
 
-        $lastNumber = CashShift::query()
-            ->where('shift_number', 'like', $prefix.'%')
-            ->orderByDesc('shift_number')
-            ->value('shift_number');
-
-        $sequence = $lastNumber !== null ? ((int) substr((string) $lastNumber, strlen($prefix))) + 1 : 1;
-
-        return $prefix.str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
+        return $this->documentNumbers->nextFor($prefix, 3, CashShift::class, 'shift_number');
     }
 
     /**
@@ -151,11 +147,9 @@ class ShiftService
         // Cash outflows: Supplier payments paid in cash from this drawer
         $supplierPaid = $this->sumDecimal($cashVouchers()->whereNotNull('payments.supplier_id'), 'payments.amount');
 
-        // Sales Returns refunded in cash
-        $refunds = $this->sumDecimal(ReturnDocument::where('created_at', '>=', $openedAt)
-            ->where('created_at', '<=', $closesAt)
-            ->where('return_type', 'sales_return')
-            ->when($storeId !== null, fn ($q) => $q->where('store_id', $storeId)), 'total_amount');
+        // BE-10: only sales returns refunded IN CASH leave the drawer: their negative refund
+        // vouchers (a 'balance' refund books none), reported as a positive figure.
+        $refunds = bcsub('0.000', $this->sumDecimal($cashVouchers()->refunds(), 'payments.amount'), 3);
 
         $totalOutflows = bcadd($expenses, $supplierPaid, 3);
         $totalOutflows = bcadd($totalOutflows, $refunds, 3);

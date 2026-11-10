@@ -2,24 +2,29 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessRuleException;
+use App\Exceptions\Stock\InsufficientStockException;
 use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\StockTransfer;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Support\TenantClock;
-use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class StockTransferService
 {
+    protected DocumentNumberService $documentNumbers;
+
     public function __construct(
         protected ?ActivityLogService $activityLogService = null,
         protected ?TenantClock $tenantClock = null,
+        ?DocumentNumberService $documentNumbers = null,
     ) {
         $this->activityLogService = $this->activityLogService ?: app(ActivityLogService::class);
         $this->tenantClock = $this->tenantClock ?: app(TenantClock::class);
+        $this->documentNumbers = $documentNumbers ?: app(DocumentNumberService::class);
     }
 
     /**
@@ -46,7 +51,7 @@ class StockTransferService
         $toStoreId = (int) $data['to_store_id'];
 
         if ($fromStoreId === $toStoreId) {
-            throw new Exception('لا يمكن إجراء تحويل مخزني لنفس الفرع أو المخزن.');
+            throw BusinessRuleException::make('inventory.transfer_same_location');
         }
 
         return DB::transaction(function () use ($data, $fromStoreId, $toStoreId) {
@@ -87,7 +92,7 @@ class StockTransferService
 
                 if (! $fromStock || bccomp((string) $fromStock->quantity, $quantity, 3) < 0) {
                     $available = $fromStock ? (string) $fromStock->quantity : '0.000';
-                    throw new Exception("رصيد الصنف [{$item->name}] في [{$fromStore->name}] غير كافٍ لإجراء التحويل. المتوفر حالياً: {$available} {$item->unit}");
+                    throw InsufficientStockException::forStore((string) $item->name, (string) $fromStore->name, (string) $available, (string) $item->unit);
                 }
 
                 // 3. If transfer is confirmed, move stock immediately
@@ -190,7 +195,7 @@ class StockTransferService
             $lockedTransfer = StockTransfer::where('id', $transfer->id)->lockForUpdate()->firstOrFail();
 
             if ($lockedTransfer->status === 'cancelled') {
-                throw new Exception('إذن التحويل ملغي مسبقاً.');
+                throw BusinessRuleException::conflict('inventory.transfer_already_cancelled');
             }
 
             if ($lockedTransfer->status === 'confirmed') {
@@ -209,7 +214,7 @@ class StockTransferService
 
                     if (! $toStock || bccomp((string) $toStock->quantity, $quantity, 3) < 0) {
                         $available = $toStock ? (string) $toStock->quantity : '0.000';
-                        throw new Exception("لا يمكن إلغاء التحويل لأن رصيد الصنف [{$item->name}] في [{$toStore->name}] تم التصرف فيه (المتبقي: {$available}، والمطلوب إرجاعه: {$quantity}).");
+                        throw BusinessRuleException::conflict('inventory.transfer_cancel_stock_consumed', ['item' => $item->name, 'store' => $toStore->name, 'available' => $available, 'required' => $quantity]);
                     }
 
                     // 2. Deduct from destination
@@ -290,34 +295,14 @@ class StockTransferService
     }
 
     /**
-     * Generate sequential unique transfer document number
+     * Allocates the next number from the locked sequence: it CONSUMES a number (no previews).
+     * Call it inside the transaction that inserts the document, after the party/document locks.
      */
     public function generateUniqueNumber(): string
     {
         // SETG-2 ext: the number carries the tenant business date, not the server date.
         $prefix = 'TRF-'.str_replace('-', '', $this->tenantClock->businessDate());
 
-        $lastTransfer = StockTransfer::withTrashed()
-            ->where('transfer_number', 'LIKE', $prefix.'-%')
-            ->orderBy('transfer_number', 'desc')
-            ->first();
-
-        if ($lastTransfer) {
-            $parts = explode('-', $lastTransfer->transfer_number);
-            $lastSequence = (int) end($parts);
-            $nextSequence = $lastSequence + 1;
-        } else {
-            $nextSequence = 1;
-        }
-
-        do {
-            $candidate = $prefix.'-'.str_pad((string) $nextSequence, 4, '0', STR_PAD_LEFT);
-            $exists = StockTransfer::withTrashed()->where('transfer_number', $candidate)->exists();
-            if ($exists) {
-                $nextSequence++;
-            }
-        } while ($exists);
-
-        return $candidate;
+        return $this->documentNumbers->nextFor($prefix, 4, StockTransfer::class, 'transfer_number');
     }
 }

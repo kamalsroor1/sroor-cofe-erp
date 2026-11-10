@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessRuleException;
 use App\Exceptions\Stock\InsufficientStockException;
 use App\Models\Item;
 use App\Models\StockDeposit;
@@ -10,7 +11,6 @@ use App\Models\Store;
 use App\Models\StoreStock;
 use App\Services\Settings\TenantSettings;
 use App\Support\TenantClock;
-use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +19,7 @@ class StockService
 {
     public function __construct(
         private readonly TenantClock $tenantClock,
+        private readonly DocumentNumberService $documentNumbers,
     ) {}
 
     /**
@@ -327,14 +328,14 @@ class StockService
             $diff = bcsub($actualQuantity, $currentStoreQty, 3);
 
             if (bccomp($diff, '0.000', 3) === 0) {
-                throw new Exception("الرصيد الفعلي المدخل ({$actualQuantity}) مطابق تماماً للرصيد المسجل حالياً بالمخزن.");
+                throw BusinessRuleException::make('inventory.adjustment_no_difference', ['quantity' => $actualQuantity]);
             }
 
             $stockBefore = (string) $lockedItem->current_stock;
             $stockAfter = bcadd($stockBefore, $diff, 3);
 
             if (bccomp($stockAfter, '0.000', 3) < 0) {
-                throw new Exception("لا يمكن تنفيذ التسوية: الرصيد الإجمالي للصنف سيصبح سالباً ({$stockAfter}).");
+                throw BusinessRuleException::make('inventory.adjustment_negative_total', ['balance' => $stockAfter]);
             }
 
             // Update StoreStock
@@ -350,7 +351,7 @@ class StockService
             $isSurplus = bccomp($diff, '0.000', 3) > 0;
             $movementType = $isSurplus ? 'stock_adjustment_in' : 'stock_adjustment_out';
             $adjQty = $isSurplus ? $diff : bcmul($diff, '-1', 3);
-            $docNumber = 'ADJ-'.str_replace('-', '', $this->tenantClock->businessDate()).'-'.strtoupper(substr(uniqid(), -4));
+            $docNumber = $this->documentNumbers->nextDated('ADJ', 4, StockMovement::class, 'document_number');
 
             $movement = StockMovement::create([
                 'item_id' => $lockedItem->id,

@@ -91,6 +91,7 @@ return [
     'inflow_details_sub' => 'مبيعات كاش + تحصيل عملاء',
     'total_disbursements_out' => 'إجمالي المدفوعات (كاش منصرف)',
     'outflow_details_sub' => 'مصروفات + سداد موردين',
+    'cash_refunds_line' => 'منها مرتجعات نقدية للعملاء',
     'net_cash_flow' => 'صافي النقدية اليومية',
     'net_cash_flow_sub' => 'الفارق بين الوارد والمنصرف',
     'expected_drawer_balance' => 'الرصيد المتوقع بالدرج 💵',
@@ -186,7 +187,14 @@ return [
     'cash_diff_surplus' => 'زيادة بمقدار :amount :currency',
     'cash_diff_shortage' => 'عجز بمقدار :amount :currency',
     'activity' => [
+        'transfer_created' => 'تحويل رصيد مالي برقم [:number] بمبلغ :amount :currency من [:from] إلى [:to]',
         'shift_opened' => 'تم فتح وردية عمل جديدة رقم [:number] في فرع (:store) برصيد افتتاحي :amount :currency',
         'shift_closed' => 'تم تقفيل وإغلاق وردية العمل رقم [:number] بنقدية فعلية :amount :currency (:status)',
     ],
+
+    // BE-07: business-rule refusals (BusinessRuleException)
+    'transfer_accounts_required' => 'يرجى تحديد الحساب المحول منه والحساب المستلم.',
+    'transfer_amount_invalid' => 'يرجى إدخال مبلغ تحويل صحيح أكبر من الصفر.',
+    'transfer_insufficient_balance' => 'عفواً، رصيد الحساب المحول منه [:account] غير كافٍ لإتمام التحويل (المتاح: :available :currency - المطلوب بالعمولة: :required :currency).',
+    'customer_refund_label' => 'رد نقدي للعميل (مرتجع مبيعات)',
 ];

@@ -137,7 +137,7 @@ final class StoreStockCompletenessTest extends TenantTestCase
                 $this->sell($item, $branch, '30.000');
                 $this->fail('Expected insufficient stock');
             } catch (InsufficientStockException $e) {
-                $this->assertSame(422, $e->getStatusCode());
+                $this->assertSame(422, $e->status());
                 $this->assertStringContainsString($item->name, $e->getMessage());
             }
 

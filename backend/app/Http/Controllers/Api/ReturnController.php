@@ -46,7 +46,7 @@ final class ReturnController extends Controller
         // filter (403). Null (every store) only through a verified `all`.
         $storeId = $activeStore->readFilter($request);
 
-        $query = ReturnDocument::with(['customer', 'supplier', 'user', 'store', 'items.item']);
+        $query = ReturnDocument::with(['customer', 'supplier', 'user', 'store', 'items.item'])->withSum('refundPayments', 'amount');
 
         if ($storeId !== null) {
             $query->where('store_id', $storeId);
@@ -111,7 +111,7 @@ final class ReturnController extends Controller
             $this->findReturnOr404($user, $id, 'view');
         }
 
-        $returnDoc = ReturnDocument::with(['customer', 'supplier', 'user', 'store', 'items.item'])->findOrFail($id);
+        $returnDoc = ReturnDocument::with(['customer', 'supplier', 'user', 'store', 'items.item'])->withSum('refundPayments', 'amount')->findOrFail($id);
 
         return response()->json([
             'success' => true,

@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Actions\Customers\ResolveWalkInCustomerAction;
+use App\Exceptions\BusinessRuleException;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Item;
@@ -24,6 +26,8 @@ class ReturnService
         protected TenantClock $tenantClock,
         protected PurchaseService $purchaseService,
         protected ReturnSourceService $returnSourceService,
+        protected DocumentNumberService $documentNumbers,
+        protected ResolveWalkInCustomerAction $walkInCustomer,
     ) {}
 
     /**
@@ -63,7 +67,6 @@ class ReturnService
             $invoiceId = $data['invoice_id'] ?? null;
 
             $totalAmount = '0.000';
-            $returnNumber = $data['return_number'] ?? $this->generateUniqueNumber('RET-SALES');
             $storeId = $data['store_id'] ?? ($invoiceId ? Invoice::query()->whereKey($invoiceId)->value('store_id') : null) ?? Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
 
             // Lock order: document -> party -> lines -> items (same as cancelInvoice).
@@ -77,6 +80,15 @@ class ReturnService
                 ? $this->returnSourceService->resolveLines(ReturnSourceService::SALES, $invoice, (int) $customer->id, $data['items'])
                 : $this->manualLines($data['items']);
 
+            // BE-09: allocate the number after the document and party locks.
+            $returnNumber = $data['return_number'] ?? $this->generateUniqueNumber('RET-SALES');
+
+            // BE-10: how the customer is paid back. The anonymous walk-in customer has no account
+            // to credit, so that return is always handed back in cash.
+            $refundMethod = $this->walkInCustomer->isWalkIn($customer)
+                ? ReturnDocument::REFUND_CASH
+                : $this->resolveRefundMethod($data['refund_method'] ?? null);
+
             $returnDoc = ReturnDocument::create([
                 'return_number' => $returnNumber,
                 'return_type' => 'sales_return',
@@ -89,6 +101,7 @@ class ReturnService
                 'total_amount' => '0.000',
                 'return_date' => $data['return_date'] ?? $this->tenantClock->businessDate(),
                 'reason' => $data['reason'] ?? 'مرتجع مبيعات',
+                'refund_method' => $refundMethod,
             ]);
 
             foreach ($lines as $line) {
@@ -125,6 +138,16 @@ class ReturnService
 
             $returnDoc->update(['total_amount' => $totalAmount]);
 
+            // BE-10: cash leaves the drawer through its own (negative) voucher; the amount is the
+            // return's total, never a client figure. A 'balance' refund books nothing but the
+            // customer balance below.
+            if ($refundMethod === ReturnDocument::REFUND_CASH && bccomp($totalAmount, '0.000', 3) > 0) {
+                if ($invoice !== null) {
+                    $this->assertCashRefundWithinPaid((int) $invoice->id, $totalAmount);
+                }
+                $this->bookCashRefund($returnDoc, $customer, $totalAmount, $this->actorId($data));
+            }
+
             // Update customer balance (reduces debt)
             $this->customerBalanceService->updateBalance($customer->id);
 
@@ -140,6 +163,54 @@ class ReturnService
         });
     }
 
+    private function resolveRefundMethod(mixed $requested): string
+    {
+        return $requested === ReturnDocument::REFUND_CASH ? ReturnDocument::REFUND_CASH : ReturnDocument::REFUND_BALANCE;
+    }
+
+    /**
+     * BE-10 fraud guard: cash given back against an invoice can never exceed the money the
+     * customer actually paid on it, net of the cash already refunded on it. Runs under the
+     * invoice lock taken at the start of the return, so two refunds cannot both pass.
+     */
+    private function assertCashRefundWithinPaid(int $invoiceId, string $required): void
+    {
+        $available = $this->returnSourceService->cashRefundable([$invoiceId])[$invoiceId];
+
+        if (bccomp($required, $available, 3) > 0) {
+            throw BusinessRuleException::make('returns.cash_refund_exceeds_paid', [
+                'available' => bccomp($available, '0.000', 3) < 0 ? '0.000' : $available,
+                'required' => $required,
+            ]);
+        }
+    }
+
+    /**
+     * BE-10: the cash voucher of a cash refund. A NEGATIVE cash payment of the return's store:
+     * the shift, the daily journal and the treasury see the money leave, and the customer
+     * balance (invoices - payments - returns) stays net-zero for it (return -X, voucher +X).
+     * Called inside the return's transaction after the document/party locks, so the payment
+     * number is allocated after the return number.
+     */
+    private function bookCashRefund(ReturnDocument $returnDoc, Customer $customer, string $amount, ?int $actorId): Payment
+    {
+        return Payment::create([
+            'payment_number' => $this->documentNumbers->nextDated('PAY-RET', 6, Payment::class, 'payment_number'),
+            'customer_id' => $customer->id,
+            'supplier_id' => null,
+            'invoice_id' => $returnDoc->invoice_id,
+            'purchase_id' => null,
+            'store_id' => $returnDoc->store_id,
+            'return_id' => $returnDoc->id,
+            'user_id' => $actorId,
+            'amount' => bcsub('0.000', $amount, 3),
+            // The cash leaves the drawer today, even for a back-dated return.
+            'payment_date' => $this->tenantClock->businessDate(),
+            'payment_method' => 'cash',
+            'notes' => __('returns.refund_voucher_note', ['number' => $returnDoc->return_number]),
+        ]);
+    }
+
     /**
      * Process purchase return to supplier (deducts stock from warehouse)
      */
@@ -149,7 +220,6 @@ class ReturnService
             $purchaseId = $data['purchase_id'] ?? null;
 
             $totalAmount = '0.000';
-            $returnNumber = $data['return_number'] ?? $this->generateUniqueNumber('RET-PURCH');
             $storeId = $data['store_id'] ?? ($purchaseId !== null ? Purchase::query()->whereKey($purchaseId)->value('store_id') : null) ?? Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
 
             // Lock order: document -> party -> lines -> items (same as cancelPurchase).
@@ -160,6 +230,9 @@ class ReturnService
             $lines = $purchase !== null
                 ? $this->returnSourceService->resolveLines(ReturnSourceService::PURCHASE, $purchase, (int) $supplier->id, $data['items'])
                 : $this->manualLines($data['items']);
+
+            // BE-09: allocate the number after the document and party locks.
+            $returnNumber = $data['return_number'] ?? $this->generateUniqueNumber('RET-PURCH');
 
             $returnDoc = ReturnDocument::create([
                 'return_number' => $returnNumber,
@@ -259,32 +332,15 @@ class ReturnService
         ], $items));
     }
 
+    /**
+     * Allocates the next number from the locked sequence: it CONSUMES a number (no previews).
+     * Call it inside the transaction that inserts the document, after the party/document locks.
+     */
     public function generateUniqueNumber(string $prefix): string
     {
         // SETG-2 ext: the date in the number is the business date (tenant clock + cutoff).
         $datePrefix = $prefix.'-'.str_replace('-', '', $this->tenantClock->businessDate());
 
-        $lastReturn = ReturnDocument::withTrashed()
-            ->where('return_number', 'LIKE', $datePrefix.'-%')
-            ->orderBy('return_number', 'desc')
-            ->first();
-
-        if ($lastReturn) {
-            $parts = explode('-', $lastReturn->return_number);
-            $lastSequence = (int) end($parts);
-            $nextSequence = $lastSequence + 1;
-        } else {
-            $nextSequence = 1;
-        }
-
-        do {
-            $candidate = $datePrefix.'-'.str_pad((string) $nextSequence, 4, '0', STR_PAD_LEFT);
-            $exists = ReturnDocument::withTrashed()->where('return_number', $candidate)->exists();
-            if ($exists) {
-                $nextSequence++;
-            }
-        } while ($exists);
-
-        return $candidate;
+        return $this->documentNumbers->nextFor($datePrefix, 4, ReturnDocument::class, 'return_number');
     }
 }

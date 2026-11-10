@@ -404,6 +404,14 @@ return [
     'store_delete_blockers' => "Linked operations prevent deletion:\n- :blockers",
     'insufficient_stock_item' => 'Insufficient stock for item [:item]. Currently available: :available',
     'insufficient_stock_store' => 'Insufficient stock for item [:item] in [:store]. Currently available: :available :unit',
+
+    // BE-07: business-rule refusals (BusinessRuleException)
+    'adjustment_no_difference' => 'The entered actual balance (:quantity) exactly matches the balance currently recorded in the store.',
+    'adjustment_negative_total' => 'The adjustment cannot be applied: the total balance of the item would become negative (:balance).',
+    'transfer_same_location' => 'A stock transfer cannot be made to the same branch or store.',
+    'transfer_already_cancelled' => 'This transfer has already been cancelled.',
+    'transfer_cancel_stock_consumed' => 'The transfer cannot be cancelled because the stock of [:item] in [:store] has already been used (remaining: :available, required to return: :required).',
+    'store_fallback_name' => 'Branch #:id',
     'sold_by_weight' => 'Sold by weight',
     'sold_by_weight_hint' => 'Allows fractional quantities (e.g. 0.250 kg) at the POS',
 

@@ -23,7 +23,9 @@ class CustomerBalanceService
             ->sum('net_total');
 
         // Total Customer Payments
+        // BE-03: payments of a legacy cancelled invoice (never reversed) are not customer credit.
         $totalPayments = Payment::where('customer_id', $customerId)
+            ->excludingCancelledInvoices()
             ->sum('amount');
 
         // Total Sales Returns
@@ -95,17 +97,20 @@ class CustomerBalanceService
 
         // Payments
         $payments = Payment::where('customer_id', $customer->id)
+            ->excludingCancelledInvoices()
             ->when($fromDate, fn ($q) => $q->whereDate('payment_date', '>=', $fromDate))
             ->when($toDate, fn ($q) => $q->whereDate('payment_date', '<=', $toDate))
             ->get();
 
         foreach ($payments as $pay) {
+            // BE-10: a refund voucher (negative amount) is cash given back: a debit, same balance effect.
+            $isRefund = bccomp((string) $pay->amount, '0.000', 3) < 0;
             $entries->push([
                 'date' => $pay->payment_date->format('Y-m-d'),
-                'type' => 'سند قبض نقدي',
+                'type' => $isRefund ? __('treasury.customer_refund_label') : 'سند قبض نقدي',
                 'ref_number' => $pay->payment_number,
-                'debit' => '0.000',
-                'credit' => $pay->amount,       // دائن (سداد من العميل)
+                'debit' => $isRefund ? bcsub('0.000', (string) $pay->amount, 3) : '0.000',
+                'credit' => $isRefund ? '0.000' : $pay->amount,       // دائن (سداد من العميل)
                 'notes' => $pay->notes,
                 'timestamp' => $pay->created_at->timestamp,
             ]);

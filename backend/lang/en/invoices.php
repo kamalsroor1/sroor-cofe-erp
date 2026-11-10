@@ -219,6 +219,9 @@ return [
     'split_payment_non_cash_exceeds_due' => 'Non-cash payments (:non_cash) exceed the invoice net (:net); change can only be given from cash',
     'split_payment_below_net' => 'The payment methods total (:paid) is less than the invoice net (:net)',
     'payment_note_split' => 'Split payment on issuing invoice :number',
+    'cannot_edit_cancelled' => 'A cancelled invoice cannot be edited',
+    'cannot_receive_payment_cancelled' => 'A payment cannot be recorded against a cancelled invoice',
+    'cancel_refund_voucher_note' => 'Refund for cancelled invoice :number (reverses voucher :voucher)',
     'payment_note_on_issue' => 'Payment on issuing invoice :number',
     'credit_invoice_cannot_have_payments' => 'A credit invoice cannot have payments',
     'idempotency_key_conflict' => 'This request key was already used for a different invoice, customer, or store',
@@ -258,6 +261,11 @@ return [
         'whatsapp_text' => "Hello :customer,\nHere are the details of your invoice #:number from :company:\nNet total: :net :currency\nPaid: :paid :currency\nRemaining: :remaining :currency\nThank you for your business!",
     ],
 
+    // BE-07: business-rule refusals (BusinessRuleException)
+    'cancel_admin_only' => 'Sorry, only the general manager can cancel invoices.',
+    'delete_admin_only' => 'Sorry, only the general manager can delete invoices.',
+    'already_cancelled' => 'This invoice has already been cancelled.',
+    'discrete_unit_integer_only' => 'The item \':item\' is sold by piece/box and only accepts whole numbers; fractions are not allowed (:quantity :unit).',
     // BE-08
     'line_discount_exceeds_total' => 'The line discount cannot exceed the line total.',
 ];

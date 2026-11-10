@@ -85,6 +85,7 @@ return [
     'inflow_details_sub' => 'Cash sales + customer collections',
     'total_disbursements_out' => 'Total Outflows (Cash Out)',
     'outflow_details_sub' => 'Expenses + supplier payouts',
+    'cash_refunds_line' => 'Of which customer cash refunds',
     'net_cash_flow' => 'Daily Net Cash',
     'net_cash_flow_sub' => 'Difference between inflows and outflows',
     'expected_drawer_balance' => 'Expected Drawer Balance 💵',
@@ -180,7 +181,14 @@ return [
     'cash_diff_surplus' => 'Surplus of :amount :currency',
     'cash_diff_shortage' => 'Shortage of :amount :currency',
     'activity' => [
+        'transfer_created' => 'Treasury transfer [:number] of :amount :currency from [:from] to [:to]',
         'shift_opened' => 'Opened shift [:number] at branch (:store) with an opening balance of :amount :currency',
         'shift_closed' => 'Closed shift [:number] with actual cash of :amount :currency (:status)',
     ],
+
+    // BE-07: business-rule refusals (BusinessRuleException)
+    'transfer_accounts_required' => 'Please select the source account and the destination account.',
+    'transfer_amount_invalid' => 'Please enter a valid transfer amount greater than zero.',
+    'transfer_insufficient_balance' => 'Sorry, the balance of the source account [:account] is not enough for this transfer (available: :available :currency - required including fee: :required :currency).',
+    'customer_refund_label' => 'Customer refund (sales return)',
 ];

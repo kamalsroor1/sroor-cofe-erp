@@ -219,6 +219,9 @@ return [
     'split_payment_non_cash_exceeds_due' => 'المدفوع بغير الكاش (:non_cash) أكبر من صافي الفاتورة (:net)، الباقي يرجع كاش بس',
     'split_payment_below_net' => 'مجموع طرق الدفع (:paid) أقل من صافي الفاتورة (:net)',
     'payment_note_split' => 'سداد مجزأ عند إصدار الفاتورة رقم :number',
+    'cannot_edit_cancelled' => 'لا يمكن تعديل فاتورة ملغاة',
+    'cannot_receive_payment_cancelled' => 'لا يمكن تسجيل سداد على فاتورة ملغاة',
+    'cancel_refund_voucher_note' => 'سند رد نقدي عن إلغاء الفاتورة :number (عكس السند :voucher)',
     'payment_note_on_issue' => 'سداد عند إصدار الفاتورة رقم :number',
     'credit_invoice_cannot_have_payments' => 'الفاتورة الآجلة لا يمكن تسجيل مدفوعات عليها',
     'idempotency_key_conflict' => 'رقم العملية ده اتستخدم قبل كده مع فاتورة أو عميل أو فرع مختلف',
@@ -258,6 +261,11 @@ return [
         'whatsapp_text' => "مرحباً بك :customer،\nمرفق تفاصيل فاتورتك رقم #:number من :company:\nالإجمالي الصافي: :net :currency\nالمدفوع: :paid :currency\nالمتبقي: :remaining :currency\nشكراً لتعاملكم معنا!",
     ],
 
+    // BE-07: business-rule refusals (BusinessRuleException)
+    'cancel_admin_only' => 'عفواً، لا يملك صلاحية إلغاء الفواتير سوى المدير العام.',
+    'delete_admin_only' => 'عفواً، لا يملك صلاحية حذف الفواتير سوى المدير العام.',
+    'already_cancelled' => 'هذه الفاتورة ملغاة بالفعل مسبقاً.',
+    'discrete_unit_integer_only' => 'الصنف \':item\' بالقطعة/العلبة يقبل فقط أعداداً صحيحة، ولا يمكن بيع أجزاء أو كسور (:quantity :unit).',
     // BE-08
     'line_discount_exceeds_total' => 'خصم البند لا يمكن أن يزيد عن إجمالي البند.',
 ];
