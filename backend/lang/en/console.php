@@ -157,6 +157,9 @@ return [
         'restore_user_required' => 'In production a restore needs a dedicated MySQL account (DB_RESTORE_USERNAME or --db-user), never the application account.',
     ],
     'health' => [
+        'telegram_title' => 'Health check FAILED on :application_name (:env_name)',
+        'heartbeat_sent' => 'Heartbeat sent.',
+        'heartbeat_failed' => 'Heartbeat ping failed.',
         'archive_password_missing' => 'BACKUP_ARCHIVE_PASSWORD is empty: backups refuse to run.',
         'archive_password_missing_dev' => 'BACKUP_ARCHIVE_PASSWORD is empty: archives would not be encrypted (allowed in local/testing only).',
         'archive_password_short' => 'BACKUP_ARCHIVE_PASSWORD is shorter than :min characters.',

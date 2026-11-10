@@ -74,9 +74,10 @@ return [
         // ArchiveTenantJob: one attempt, killed (→ archive_state failed) after this.
         'job_timeout_seconds' => 1800,
 
-        // null = the default queue connection / queue.
-        'queue_connection' => null,
-        'queue' => null,
+        // null = the default queue connection / queue. OPS-9: the VPS sets
+        // TENANT_ARCHIVE_QUEUE_CONNECTION=long (config/queue.php, retry_after > job timeout).
+        'queue_connection' => env('TENANT_ARCHIVE_QUEUE_CONNECTION') ?: null,
+        'queue' => env('TENANT_ARCHIVE_QUEUE') ?: null,
 
         // A queued / running archive with no progress for this long may be requested again
         // (lost dispatch, dead worker). Must stay above job_timeout_seconds.

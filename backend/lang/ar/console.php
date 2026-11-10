@@ -157,6 +157,9 @@ return [
         'restore_user_required' => 'في الإنتاج الاسترجاع محتاج حساب MySQL مخصص (DB_RESTORE_USERNAME أو --db-user)، مش حساب التطبيق.',
     ],
     'health' => [
+        'telegram_title' => 'فشل فحص السلامة على :application_name (:env_name)',
+        'heartbeat_sent' => 'اتبعت الـ heartbeat.',
+        'heartbeat_failed' => 'فشل إرسال الـ heartbeat.',
         'archive_password_missing' => 'BACKUP_ARCHIVE_PASSWORD فاضي: النسخ الاحتياطي يرفض التشغيل.',
         'archive_password_missing_dev' => 'BACKUP_ARCHIVE_PASSWORD فاضي: الأرشيفات مش هتتشفر (مسموح في local/testing بس).',
         'archive_password_short' => 'BACKUP_ARCHIVE_PASSWORD أقصر من :min حرف.',

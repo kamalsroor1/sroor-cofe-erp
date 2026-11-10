@@ -65,7 +65,10 @@ return [
         ],
 
         'database' => [
-            'connection' => env('PULSE_DB_CONNECTION'),
+            // OPS-10: pinned to the CENTRAL connection. A null connection means the default one,
+            // which stancl swaps to the `tenant` connection while tenancy is initialised, so Pulse
+            // would write its tables into the shop databases. Never set PULSE_DB_CONNECTION=tenant.
+            'connection' => env('PULSE_DB_CONNECTION') ?: env('DB_CONNECTION', 'mysql'),
             'chunk' => 1000,
         ],
     ],
