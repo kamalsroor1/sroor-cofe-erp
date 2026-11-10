@@ -23,7 +23,9 @@ use Illuminate\Support\Facades\DB;
 final class GetPosItemsAction
 {
     /**
-     * @return array{paginator: LengthAwarePaginator<int, Item>, counts: array{total: int, categories: list<array{category_id: int|null, count: int}>}}
+     * Counters are computed for page 1 only (later pages return `counts: null`; the client keeps the last ones).
+     *
+     * @return array{paginator: LengthAwarePaginator<int, Item>, counts: array{total: int, categories: list<array{category_id: int|null, count: int}>}|null}
      */
     public function execute(ListPosItemsDTO $dto): array
     {
@@ -37,7 +39,7 @@ final class GetPosItemsAction
             ])
             ->paginate($dto->perPage, ['*'], 'page', $dto->page);
 
-        return ['paginator' => $paginator, 'counts' => $this->counts($dto)];
+        return ['paginator' => $paginator, 'counts' => $dto->page === 1 ? $this->counts($dto) : null];
     }
 
     /**

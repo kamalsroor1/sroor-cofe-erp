@@ -10,14 +10,20 @@ defineProps({
   searchQuery: { type: String, default: '' },
   favoriteCount: { type: Number, default: 0 },
   totalItemsCount: { type: Number, default: 0 },
+  visibleCount: { type: Number, default: 0 },
+  isLoading: { type: Boolean, default: false },
+  isLoadingMore: { type: Boolean, default: false },
+  hasMore: { type: Boolean, default: false },
+  cardsPerRow: { type: String, default: '3' },
+  showImages: { type: Boolean, default: false },
 });
 
-defineEmits(['add-item', 'select-category']);
+defineEmits(['add-item', 'select-category', 'load-more']);
 </script>
 
 <template>
   <main
-    class="w-full lg:w-[350px] xl:w-[400px] 2xl:w-[440px] flex flex-col overflow-visible lg:overflow-hidden shrink-0 bg-slate-100/60 dark:bg-slate-900/60 border-b lg:border-b-0 lg:border-e border-slate-200 dark:border-slate-800 order-1 lg:order-2 animate-in fade-in duration-150 min-h-[300px] lg:min-h-0"
+    class="w-full lg:w-[48%] xl:w-[54%] 2xl:w-[58%] flex flex-col overflow-visible lg:overflow-hidden shrink-0 bg-slate-100/60 dark:bg-slate-900/60 border-b lg:border-b-0 lg:border-e border-slate-200 dark:border-slate-800 order-1 lg:order-2 animate-in fade-in duration-150 min-h-[300px] lg:min-h-0"
   >
     <POSProductGrid
       :items="items"
@@ -25,7 +31,14 @@ defineEmits(['add-item', 'select-category']);
       :active-category-id="activeCategoryId"
       :active-price-tier="activePriceTier"
       :search-query="searchQuery"
+      :visible-count="visibleCount"
+      :is-loading="isLoading"
+      :is-loading-more="isLoadingMore"
+      :has-more="hasMore"
+      :cards-per-row="cardsPerRow"
+      :show-images="showImages"
       @add-item="$emit('add-item', $event)"
+      @load-more="$emit('load-more')"
     />
   </main>
 

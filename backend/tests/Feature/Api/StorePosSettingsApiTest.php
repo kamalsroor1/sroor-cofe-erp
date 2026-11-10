@@ -297,4 +297,50 @@ final class StorePosSettingsApiTest extends TenantTestCase
             ->assertJsonPath('data.pos_settings.scale_barcode_enabled', false)
             ->assertJsonPath('data.pos_settings.scale_prefixes', self::DEFAULT_PREFIXES);
     }
+
+    public function test_catalog_display_defaults_validates_and_saves(): void
+    {
+        $tenant = $this->createTenant();
+        $storeId = (int) $this->tenantStore($tenant)->id;
+        $headers = $this->tenantHeaders($tenant);
+
+        $this->getJson($this->url($storeId), $headers)->assertOk()
+            ->assertJsonPath('data.catalog_cards_per_row', '3')
+            ->assertJsonPath('data.show_item_images', false);
+
+        $this->putJson($this->url($storeId), ['catalog_cards_per_row' => 'auto', 'show_item_images' => true], $headers)->assertOk()
+            ->assertJsonPath('data.catalog_cards_per_row', 'auto')
+            ->assertJsonPath('data.show_item_images', true);
+
+        $this->putJson($this->url($storeId), ['catalog_cards_per_row' => '4'], $headers)
+            ->assertStatus(422)->assertJsonValidationErrors(['catalog_cards_per_row']);
+    }
+
+    public function test_cashier_cannot_change_catalog_display(): void
+    {
+        $tenant = $this->createTenant();
+        $storeId = (int) $this->tenantStore($tenant)->id;
+        $cashier = $this->createTenantUser($tenant, 'cashier');
+
+        $this->putJson($this->url($storeId), ['show_item_images' => true], $this->tenantHeaders($tenant, $cashier))->assertStatus(403);
+    }
+
+    public function test_cashier_reads_catalog_display_from_bootstrap(): void
+    {
+        $tenant = $this->createTenant();
+        $mainId = (int) $this->tenantStore($tenant)->id;
+        $cashier = $this->createTenantUser($tenant, 'cashier');
+
+        $this->getJson('/api/v1/pos/bootstrap', $this->tenantHeaders($tenant, $cashier, $mainId))
+            ->assertOk()
+            ->assertJsonPath('data.pos_settings.catalog_cards_per_row', '3')
+            ->assertJsonPath('data.pos_settings.show_item_images', false);
+
+        $this->putJson($this->url($mainId), ['catalog_cards_per_row' => '2', 'show_item_images' => true], $this->tenantHeaders($tenant))->assertOk();
+
+        $this->getJson('/api/v1/pos/bootstrap', $this->tenantHeaders($tenant, $cashier, $mainId))
+            ->assertOk()
+            ->assertJsonPath('data.pos_settings.catalog_cards_per_row', '2')
+            ->assertJsonPath('data.pos_settings.show_item_images', true);
+    }
 }

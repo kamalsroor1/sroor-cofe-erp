@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Http\Requests\Pos\ListPosItemsRequest;
 use App\Models\Item;
-use App\Models\Setting;
+use App\Models\StorePosSetting;
 use App\Support\CostVisibility;
 use App\Support\PosItemPrices;
 use Illuminate\Http\Request;
@@ -14,15 +15,12 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * POS-04: lean item for the POS grid (no deletion blockers, no per-row queries). Same price keys as
  * /pos/bootstrap and /pos/lookup. Needs the `calculated_stock` and `category_*` attributes selected by
- * GetPosItemsAction. Cost only for items.view_cost; image only when the tenant setting
- * `pos_show_item_images` is on.
+ * GetPosItemsAction. Cost only for items.view_cost; image only when the ACTIVE branch has `show_item_images` on (store_pos_settings).
  *
  * @mixin Item
  */
 class PosGridItemResource extends JsonResource
 {
-    public const SETTING_SHOW_IMAGES = 'pos_show_item_images';
-
     /**
      * @return array<string, mixed>
      */
@@ -50,15 +48,24 @@ class PosGridItemResource extends JsonResource
             'pos_sales_count' => (int) $it->pos_sales_count,
         ];
 
-        if (self::imagesEnabled()) {
+        if (self::imagesEnabled($request)) {
             $data['image'] = $it->image;
         }
 
         return $data;
     }
 
-    public static function imagesEnabled(): bool
+    /**
+     * Resolved once per request (the resource runs per row): the branch switch of the active store.
+     */
+    public static function imagesEnabled(Request $request): bool
     {
-        return filter_var(Setting::get(self::SETTING_SHOW_IMAGES, '0'), FILTER_VALIDATE_BOOLEAN);
+        if (! $request->attributes->has('pos_show_item_images')) {
+            $enabled = $request instanceof ListPosItemsRequest
+                && StorePosSetting::forStore((int) $request->activeStore()->id)->show_item_images;
+            $request->attributes->set('pos_show_item_images', $enabled);
+        }
+
+        return (bool) $request->attributes->get('pos_show_item_images');
     }
 }

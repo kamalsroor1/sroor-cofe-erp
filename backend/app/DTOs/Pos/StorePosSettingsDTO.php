@@ -22,6 +22,8 @@ final class StorePosSettingsDTO
         'scale_check_digit',
         'max_discount_percent',
         'require_shift_for_sales',
+        'catalog_cards_per_row',
+        'show_item_images',
     ];
 
     /**
@@ -39,6 +41,8 @@ final class StorePosSettingsDTO
         public readonly ?bool $scaleCheckDigit = null,
         public readonly ?string $maxDiscountPercent = null,
         public readonly ?bool $requireShiftForSales = null,
+        public readonly ?string $catalogCardsPerRow = null,
+        public readonly ?bool $showItemImages = null,
         public readonly array $provided = [],
     ) {}
 
@@ -69,6 +73,8 @@ final class StorePosSettingsDTO
             scaleCheckDigit: isset($data['scale_check_digit']) ? (bool) $data['scale_check_digit'] : null,
             maxDiscountPercent: $maxDiscount,
             requireShiftForSales: isset($data['require_shift_for_sales']) ? (bool) $data['require_shift_for_sales'] : null,
+            catalogCardsPerRow: isset($data['catalog_cards_per_row']) ? (string) $data['catalog_cards_per_row'] : null,
+            showItemImages: isset($data['show_item_images']) ? (bool) $data['show_item_images'] : null,
             provided: $provided,
         );
     }
@@ -91,6 +97,8 @@ final class StorePosSettingsDTO
             'scale_check_digit' => $this->scaleCheckDigit,
             'max_discount_percent' => $this->maxDiscountPercent,
             'require_shift_for_sales' => $this->requireShiftForSales,
+            'catalog_cards_per_row' => $this->catalogCardsPerRow,
+            'show_item_images' => $this->showItemImages,
         ];
 
         return array_intersect_key($all, array_flip($this->provided));

@@ -26,6 +26,7 @@ const PARTIAL_ERROR_KEYS = {
   customers: 'pos.load_failed_customers',
   shift: 'pos.load_failed_shift',
   category_items: 'pos.load_failed_category_items',
+  catalog_more: 'pos.catalog_load_more_failed',
 };
 
 const {
@@ -164,8 +165,15 @@ const {
               :search-query="search.searchQuery.value"
               :favorite-count="catalog.favoriteItemsCount.value"
               :total-items-count="catalog.totalItemsCount.value"
+              :visible-count="catalog.visibleCount.value"
+              :is-loading="catalog.isLoadingCategoryItems.value"
+              :is-loading-more="catalog.isLoadingMore.value"
+              :has-more="catalog.hasMore.value"
+              :cards-per-row="catalog.cardsPerRow.value"
+              :show-images="catalog.showItemImages.value"
               @add-item="cartOps.addToCart"
               @select-category="catalog.selectCategory"
+              @load-more="catalog.loadMore"
             />
           </div>
 

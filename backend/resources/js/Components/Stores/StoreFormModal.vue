@@ -71,6 +71,9 @@
       <!-- POS-07: the branch's discount cap (own save; only for users who may manage POS settings) -->
       <StorePosDiscountSettings v-if="editingStore && canManagePosSettings" :store-id="editingStore.id" />
 
+      <!-- POS catalog display: cards per row + item images (own save; settings.manage only) -->
+      <StorePosCatalogSettings v-if="editingStore && canManagePosSettings" :store-id="editingStore.id" />
+
       <!-- POS-10: per-branch rule - sales need an open cash shift -->
       <div v-if="editingStore && showShiftSetting" class="pt-1">
         <BaseCheckbox
@@ -112,6 +115,7 @@ import BaseSelect from '../Form/BaseSelect.vue';
 import BaseCheckbox from '../Form/BaseCheckbox.vue';
 import BaseButton from '../Common/BaseButton.vue';
 import StorePosDiscountSettings from './StorePosDiscountSettings.vue';
+import StorePosCatalogSettings from './StorePosCatalogSettings.vue';
 import { useAuthStore } from '../../stores/auth';
 import { useTrans } from '../../Composables/useTrans';
 

@@ -6,12 +6,10 @@ namespace Tests\Feature\Api;
 
 use App\Models\Category;
 use App\Models\Item;
-use App\Models\Setting;
 use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Events\QueryExecuted;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Tests\TenantTestCase;
 
@@ -143,8 +141,8 @@ final class PosItemsApiTest extends TenantTestCase
             ->assertJsonPath('data.0.cost_price', 10)
             ->assertJsonMissingPath('data.0.image');
 
-        $this->inTenant($tenant, fn () => Setting::query()->create(['key' => 'pos_show_item_images', 'value' => '1']));
-        $this->inTenant($tenant, fn () => Cache::forget(Setting::getCacheKey()));
+        $storeId = (int) $this->tenantStore($tenant)->id;
+        $this->putJson('/api/v1/stores/'.$storeId.'/pos-settings', ['show_item_images' => true], $this->tenantHeaders($tenant))->assertOk();
         $this->getJson(self::URL.'?sort=pos_sales_count', $this->tenantHeaders($tenant))
             ->assertOk()->assertJsonPath('data.0.image', 'items/b.png');
     }
@@ -307,5 +305,95 @@ final class PosItemsApiTest extends TenantTestCase
         $this->getJson('/api/v1/pos/bootstrap', $h)->assertOk()->assertJsonCount(1, 'data.items');
         $this->getJson('/api/v1/pos/bootstrap?include_items=0', $h)->assertOk()
             ->assertJsonCount(0, 'data.items')->assertJsonStructure(['data' => ['categories', 'active_store', 'pos_settings', 'quick_keys']]);
+    }
+
+    public function test_newest_sort_and_low_stock_filter(): void
+    {
+        $tenant = $this->createTenant();
+        $this->item($tenant, 'OLD', ['current_stock' => '50.000', 'min_stock_level' => '5.000']);
+        $this->item($tenant, 'LOW', ['current_stock' => '3.000', 'min_stock_level' => '5.000']);
+        $this->item($tenant, 'ZERO', ['current_stock' => '0.000', 'min_stock_level' => '5.000']);
+        $h = $this->tenantHeaders($tenant);
+
+        $this->getJson(self::URL.'?sort=newest', $h)->assertOk()->assertJsonPath('data.0.code', 'ZERO');
+        $this->getJson(self::URL.'?only_low_stock=1', $h)->assertOk()
+            ->assertJsonCount(1, 'data')->assertJsonPath('data.0.code', 'LOW');
+    }
+
+    public function test_counts_are_computed_for_the_first_page_only(): void
+    {
+        $tenant = $this->createTenant();
+        $cat = $this->category($tenant, 'مشروبات');
+        $this->bulk($tenant, 5, $cat);
+        $h = $this->tenantHeaders($tenant);
+
+        $this->getJson(self::URL.'?per_page=2&page=1', $h)->assertOk()
+            ->assertJsonPath('meta.counts.total', 5)->assertJsonPath('meta.last_page', 3);
+        $this->getJson(self::URL.'?per_page=2&page=2', $h)->assertOk()
+            ->assertJsonCount(2, 'data')->assertJsonPath('meta.current_page', 2)->assertJsonPath('meta.counts', null);
+    }
+
+    public function test_low_stock_uses_the_active_store_stock_only(): void
+    {
+        $tenant = $this->createTenant();
+        $storeA = (int) $this->tenantStore($tenant)->id;
+        $storeB = (int) $this->inTenant($tenant, fn (): int => (int) Store::query()->create([
+            'name' => 'فرع B', 'code' => 'B-01', 'type' => 'retail', 'is_main' => false, 'is_active' => true,
+        ])->id);
+        $base = ['current_stock' => '50.000'];
+        $withMin = $this->item($tenant, 'MIN5', $base + ['min_stock_level' => '5.000']);
+        $noMinLow = $this->item($tenant, 'NOMIN-LOW', $base + ['min_stock_level' => '0.000']);
+        $noMinOk = $this->item($tenant, 'NOMIN-OK', $base + ['min_stock_level' => '0.000']);
+        $deletedRow = $this->item($tenant, 'DELETED-ROW', $base + ['min_stock_level' => '5.000']);
+        $otherStore = $this->item($tenant, 'OTHER-STORE', $base + ['min_stock_level' => '5.000']);
+        $now = now();
+        $this->inTenant($tenant, function () use ($withMin, $noMinLow, $noMinOk, $deletedRow, $otherStore, $storeA, $storeB, $now): void {
+            DB::table('store_stocks')->insert([
+                ['store_id' => $storeA, 'item_id' => $withMin, 'quantity' => '3.000', 'created_at' => $now, 'updated_at' => $now],
+                // min_stock_level 0 falls back to 5: 4 is low, 6 is not.
+                ['store_id' => $storeA, 'item_id' => $noMinLow, 'quantity' => '4.000', 'created_at' => $now, 'updated_at' => $now],
+                ['store_id' => $storeA, 'item_id' => $noMinOk, 'quantity' => '6.000', 'created_at' => $now, 'updated_at' => $now],
+                // Low only in the other branch.
+                ['store_id' => $storeB, 'item_id' => $otherStore, 'quantity' => '2.000', 'created_at' => $now, 'updated_at' => $now],
+            ]);
+            // A soft-deleted stock row is ignored (the item falls back to items.current_stock = 50).
+            DB::table('store_stocks')->insert(
+                ['store_id' => $storeA, 'item_id' => $deletedRow, 'quantity' => '1.000', 'created_at' => $now, 'updated_at' => $now, 'deleted_at' => $now],
+            );
+        });
+
+        $codes = fn (int $store): array => collect($this->getJson(self::URL.'?only_low_stock=1&sort=code', $this->tenantHeaders($tenant, null, $store))
+            ->assertOk()->json('data'))->pluck('code')->all();
+
+        $this->assertSame(['MIN5', 'NOMIN-LOW'], $codes($storeA));
+        $this->assertSame(['OTHER-STORE'], $codes($storeB));
+    }
+
+    public function test_only_low_stock_requires_authentication_permission_and_a_boolean(): void
+    {
+        $tenant = $this->createTenant();
+
+        $this->getJson(self::URL.'?only_low_stock=1', ['Accept' => 'application/json', 'X-Tenant' => (string) $tenant->getTenantKey()])->assertStatus(401);
+
+        $nobody = $this->createTenantUser($tenant);
+        $this->getJson(self::URL.'?only_low_stock=1', $this->tenantHeaders($tenant, $nobody))->assertStatus(403);
+
+        $this->getJson(self::URL.'?only_low_stock=abc', $this->tenantHeaders($tenant))
+            ->assertStatus(422)->assertJsonValidationErrors('only_low_stock');
+    }
+
+    public function test_image_follows_the_branch_setting_and_turns_off_again(): void
+    {
+        $tenant = $this->createTenant();
+        $this->item($tenant, 'IMG', ['image' => 'items/a.png']);
+        $storeId = (int) $this->tenantStore($tenant)->id;
+        $settings = '/api/v1/stores/'.$storeId.'/pos-settings';
+        $h = $this->tenantHeaders($tenant);
+
+        $this->putJson($settings, ['show_item_images' => true], $h)->assertOk();
+        $this->getJson(self::URL, $h)->assertOk()->assertJsonPath('data.0.image', 'items/a.png');
+
+        $this->putJson($settings, ['show_item_images' => false], $h)->assertOk();
+        $this->getJson(self::URL, $h)->assertOk()->assertJsonMissingPath('data.0.image');
     }
 }

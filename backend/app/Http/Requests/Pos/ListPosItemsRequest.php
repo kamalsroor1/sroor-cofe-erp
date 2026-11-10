@@ -40,6 +40,7 @@ final class ListPosItemsRequest extends FormRequest
             'search' => ['nullable', 'string', 'max:100'],
             'category_id' => ['nullable', 'integer', 'min:1'],
             'only_in_stock' => ['nullable', 'boolean'],
+            'only_low_stock' => ['nullable', 'boolean'],
             'is_weighted' => ['nullable', 'boolean'],
             'sort' => ['nullable', 'string', Rule::in(ListPosItemsDTO::SORTS)],
             'direction' => ['nullable', 'string', Rule::in(['asc', 'desc'])],

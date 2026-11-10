@@ -13,13 +13,14 @@ final readonly class ListPosItemsDTO
 
     public const MAX_PER_PAGE = 200;
 
-    public const SORTS = ['name', 'code', 'pos_sales_count'];
+    public const SORTS = ['name', 'code', 'pos_sales_count', 'newest'];
 
     public function __construct(
         public int $storeId,
         public ?string $search,
         public ?int $categoryId,
         public bool $onlyInStock,
+        public bool $onlyLowStock,
         public ?bool $isWeighted,
         public string $sort,
         public string $direction,
@@ -40,9 +41,10 @@ final readonly class ListPosItemsDTO
             search: $search === '' ? null : $search,
             categoryId: isset($data['category_id']) ? (int) $data['category_id'] : null,
             onlyInStock: (bool) ($data['only_in_stock'] ?? false),
+            onlyLowStock: (bool) ($data['only_low_stock'] ?? false),
             isWeighted: isset($data['is_weighted']) ? (bool) $data['is_weighted'] : null,
             sort: in_array($sort, self::SORTS, true) ? $sort : 'name',
-            direction: ($data['direction'] ?? null) === 'desc' || (! isset($data['direction']) && $sort === 'pos_sales_count') ? 'desc' : 'asc',
+            direction: ($data['direction'] ?? null) === 'desc' || (! isset($data['direction']) && in_array($sort, ['pos_sales_count', 'newest'], true)) ? 'desc' : 'asc',
             perPage: max(1, min(self::MAX_PER_PAGE, (int) ($data['per_page'] ?? self::DEFAULT_PER_PAGE))),
             page: max(1, (int) ($data['page'] ?? 1)),
         );
