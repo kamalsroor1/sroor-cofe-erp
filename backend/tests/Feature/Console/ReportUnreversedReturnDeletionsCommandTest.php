@@ -45,7 +45,7 @@ final class ReportUnreversedReturnDeletionsCommandTest extends TenantTestCase
 
         [$this->customerId, $this->supplierId, $this->itemId] = $this->inTenant($this->tenant, function (): array {
             $customer = Customer::create(['name' => 'عميل', 'phone' => '01000007103', 'price_tier' => 'retail', 'is_active' => true]);
-            $supplier = Supplier::create(['name' => 'مورد', 'phone' => '01234567891', 'current_balance' => '0.000', 'is_active' => true]);
+            $supplier = Supplier::create(['name' => 'مورد', 'phone' => '01234567890', 'current_balance' => '0.000', 'is_active' => true]);
             $item = Item::create([
                 'name' => 'بن', 'code' => 'BN-9', 'category' => 'coffee_beans', 'unit' => 'كجم',
                 'cost_price' => '350.000', 'weighted_avg_cost' => '350.000', 'selling_price' => '480.000',
