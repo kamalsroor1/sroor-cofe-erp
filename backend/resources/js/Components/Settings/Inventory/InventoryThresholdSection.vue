@@ -81,21 +81,75 @@
         <span>{{ fieldError('low_stock_default_threshold') }}</span>
       </p>
     </div>
+
+    <!-- Allow Negative Stock Toggle Row -->
+    <div class="border-t border-slate-200 dark:border-slate-800 pt-5 space-y-2">
+      <div
+        id="setting-allow_negative_stock"
+        data-testid="setting-allow-negative-stock"
+        role="switch"
+        :aria-checked="!!form.allow_negative_stock"
+        tabindex="0"
+        @click="handleToggleNegativeStock"
+        @keydown.space.prevent="handleToggleNegativeStock"
+        @keydown.enter.prevent="handleToggleNegativeStock"
+        class="flex items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 transition select-none min-h-[44px]"
+        :class="canManage ? 'cursor-pointer' : 'opacity-60 cursor-not-allowed'"
+      >
+        <div class="space-y-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+              {{ $t('settings.allow_negative_stock') }}
+            </span>
+            <span
+              v-if="form.allow_negative_stock"
+              class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800"
+            >
+              {{ $t('settings.modified_from_default') }}
+            </span>
+          </div>
+          <p class="text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-400">
+            {{ $t('settings.allow_negative_stock_desc') }}
+          </p>
+        </div>
+
+        <div
+          class="w-12 h-6 rounded-full transition-colors relative p-0.5 shrink-0"
+          :class="form.allow_negative_stock ? 'bg-theme-primary' : 'bg-slate-300 dark:bg-slate-700'"
+        >
+          <div
+            class="w-5 h-5 rounded-full bg-white transition-transform shadow-md"
+            :class="form.allow_negative_stock ? 'ltr:translate-x-6 rtl:-translate-x-6' : 'translate-x-0'"
+          ></div>
+        </div>
+      </div>
+
+      <p
+        v-if="fieldError('allow_negative_stock')"
+        class="text-xs font-bold text-rose-500 dark:text-rose-400 mt-1 flex items-center gap-1"
+      >
+        <AlertCircle class="w-3.5 h-3.5 shrink-0" />
+        <span>{{ fieldError('allow_negative_stock') }}</span>
+      </p>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue';
+import Swal from 'sweetalert2';
 import { TrendingDown, RotateCcw, Info, AlertCircle } from 'lucide-vue-next';
 import { normalize } from '../../../helpers/decimal';
+import { useTrans } from '../../../Composables/useTrans';
 
 const props = defineProps({
-  form: { type: Object, default: () => ({ low_stock_default_threshold: '5.000' }) },
+  form: { type: Object, default: () => ({ low_stock_default_threshold: '5.000', allow_negative_stock: false }) },
   errors: { type: Object, default: () => ({}) },
   canManage: { type: Boolean, default: true },
 });
 
 const emit = defineEmits(['update:field', 'reset-field']);
+const { t } = useTrans();
 
 const DEFAULT_THRESHOLD = '5.000';
 
@@ -113,6 +167,29 @@ const fieldError = (key) => {
   const err = props.errors?.[key];
   if (!err) return null;
   return Array.isArray(err) ? err[0] : err;
+};
+
+const handleToggleNegativeStock = async () => {
+  if (!props.canManage) return;
+
+  if (props.form?.allow_negative_stock) {
+    emit('update:field', 'allow_negative_stock', false);
+    return;
+  }
+
+  const result = await Swal.fire({
+    icon: 'warning',
+    title: t('settings.allow_negative_stock_confirm_title'),
+    text: t('settings.allow_negative_stock_confirm_text'),
+    showCancelButton: true,
+    confirmButtonText: t('settings.allow_negative_stock_confirm_btn'),
+    cancelButtonText: t('common.cancel'),
+    reverseButtons: true,
+  });
+
+  if (result.isConfirmed) {
+    emit('update:field', 'allow_negative_stock', true);
+  }
 };
 
 const handleBlur = (e) => {

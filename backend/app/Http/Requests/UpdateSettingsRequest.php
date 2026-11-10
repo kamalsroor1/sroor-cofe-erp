@@ -80,6 +80,7 @@ class UpdateSettingsRequest extends FormRequest
             TenantSettings::KEY_BUSINESS_DAY_CUTOFF => ['sometimes', 'required', 'string', 'regex:'.TenantSettings::CUTOFF_PATTERN],
             // SETG-10: low-stock threshold for items without their own minimum.
             TenantSettings::KEY_LOW_STOCK_DEFAULT_THRESHOLD => ['sometimes', 'required', 'numeric', 'min:0', 'max:999999999.999', 'decimal:0,3'],
+            TenantSettings::KEY_ALLOW_NEGATIVE_STOCK => ['sometimes', 'boolean'],
             TenantSettings::KEY_DEFAULT_LOCALE => ['sometimes', 'required', 'string', Rule::in(TenantSettings::SUPPORTED_LOCALES)],
             TenantSettings::KEY_NUMBER_DIGITS => ['sometimes', 'required', 'string', Rule::in(TenantSettings::SUPPORTED_NUMBER_DIGITS)],
         ];
@@ -97,6 +98,7 @@ class UpdateSettingsRequest extends FormRequest
             TenantSettings::KEY_NUMBER_DIGITS => __('settings.number_digits'),
             TenantSettings::KEY_BUSINESS_DAY_CUTOFF => __('settings.business_day_cutoff'),
             TenantSettings::KEY_LOW_STOCK_DEFAULT_THRESHOLD => __('settings.low_stock_default_threshold'),
+            TenantSettings::KEY_ALLOW_NEGATIVE_STOCK => __('settings.allow_negative_stock'),
             TenantSettings::KEY_INVENTORY_UNITS => __('settings.inventory_units'),
             'telegram_bot_token' => __('settings.attr_telegram_bot_token'),
             'telegram_chat_id' => __('settings.attr_telegram_chat_id'),

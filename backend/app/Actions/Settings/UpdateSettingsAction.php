@@ -7,8 +7,10 @@ namespace App\Actions\Settings;
 use App\Enums\TenantLogoVariant;
 use App\Models\Setting;
 use App\Models\TenantBrandProfile;
+use App\Services\ActivityLogService;
 use App\Services\Branding\TenantBranding;
 use App\Services\Settings\SettingSecrets;
+use App\Services\Settings\TenantSettings;
 use App\Support\Media\SanitizedImage;
 use Illuminate\Support\Facades\DB;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -21,6 +23,7 @@ final class UpdateSettingsAction
 
     public function __construct(
         private readonly UploadTenantBrandAssetAction $uploadTenantBrandAssetAction,
+        private readonly ActivityLogService $activityLogService,
     ) {}
 
     /**
@@ -75,6 +78,12 @@ final class UpdateSettingsAction
     private function writeSettings(array $data): void
     {
         DB::transaction(function () use ($data): void {
+            $hasNegativeStockField = array_key_exists(TenantSettings::KEY_ALLOW_NEGATIVE_STOCK, $data);
+            $previousAllowNegative = Setting::getBool(
+                TenantSettings::KEY_ALLOW_NEGATIVE_STOCK,
+                TenantSettings::DEFAULT_ALLOW_NEGATIVE_STOCK,
+            );
+
             foreach ($data as $key => $value) {
                 if (in_array($key, self::FILE_KEYS, true)) {
                     continue;
@@ -89,6 +98,28 @@ final class UpdateSettingsAction
                     Setting::set($key, $value ? '1' : '0');
                 } else {
                     Setting::set($key, (string) ($value ?? ''));
+                }
+            }
+
+            if ($hasNegativeStockField) {
+                $newAllowNegative = filter_var(
+                    $data[TenantSettings::KEY_ALLOW_NEGATIVE_STOCK],
+                    FILTER_VALIDATE_BOOLEAN,
+                );
+
+                if ($newAllowNegative !== $previousAllowNegative) {
+                    $this->activityLogService->log(
+                        module: 'settings',
+                        action: 'update',
+                        description: $newAllowNegative
+                            ? __('settings.activity_allow_negative_stock_enabled')
+                            : __('settings.activity_allow_negative_stock_disabled'),
+                        properties: [
+                            'setting' => TenantSettings::KEY_ALLOW_NEGATIVE_STOCK,
+                            'old' => $previousAllowNegative,
+                            'new' => $newAllowNegative,
+                        ],
+                    );
                 }
             }
         });

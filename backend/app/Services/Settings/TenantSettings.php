@@ -45,6 +45,9 @@ final class TenantSettings
     /** SETG-10 (catalog `inventory.low_stock.default_threshold`). */
     public const KEY_LOW_STOCK_DEFAULT_THRESHOLD = 'low_stock_default_threshold';
 
+    /** BE-04: whether sales and stock transfers may push item/branch stock below zero. */
+    public const KEY_ALLOW_NEGATIVE_STOCK = 'allow_negative_stock';
+
     /** SETG-1 ext (W1 Q5): legal keys printed on the A4 invoice ('' = line hidden). */
     public const KEY_COMMERCIAL_REGISTER = 'commercial_register';
 
@@ -61,6 +64,8 @@ final class TenantSettings
     public const DEFAULT_BUSINESS_DAY_CUTOFF = '00:00';
 
     public const DEFAULT_LOW_STOCK_THRESHOLD = '5.000';
+
+    public const DEFAULT_ALLOW_NEGATIVE_STOCK = false;
 
     /** Used when the tenant never saved a unit list (same list the settings screen always showed). */
     public const DEFAULT_INVENTORY_UNITS = 'قطعة,علبة,كرتونة,كجم,جرام,شيكارة,طرد,دستة,لتر';
@@ -205,7 +210,15 @@ final class TenantSettings
     }
 
     /**
-     * @return array{currency: string, currency_decimals: int, timezone: string, default_locale: string, number_digits: string, business_day_cutoff: string, low_stock_default_threshold: string}
+     * BE-04: whether sales and stock transfers may push item/branch stock below zero.
+     */
+    public function allowNegativeStock(): bool
+    {
+        return Setting::getBool(self::KEY_ALLOW_NEGATIVE_STOCK, self::DEFAULT_ALLOW_NEGATIVE_STOCK);
+    }
+
+    /**
+     * @return array{currency: string, currency_decimals: int, timezone: string, default_locale: string, number_digits: string, business_day_cutoff: string, low_stock_default_threshold: string, allow_negative_stock: bool}
      */
     public function toArray(): array
     {
@@ -217,6 +230,7 @@ final class TenantSettings
             self::KEY_NUMBER_DIGITS => $this->numberDigits(),
             self::KEY_BUSINESS_DAY_CUTOFF => $this->businessDayCutoff(),
             self::KEY_LOW_STOCK_DEFAULT_THRESHOLD => $this->lowStockDefaultThreshold(),
+            self::KEY_ALLOW_NEGATIVE_STOCK => $this->allowNegativeStock(),
         ];
     }
 
