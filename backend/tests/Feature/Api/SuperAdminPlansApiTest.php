@@ -105,6 +105,33 @@ final class SuperAdminPlansApiTest extends TenantTestCase
         $this->assertSame('باقة المحامص الاحترافية', Plan::query()->findOrFail($this->plan->id)->name);
     }
 
+    public function test_not_enforced_limits_are_hidden_from_the_console_and_their_stored_values_kept(): void
+    {
+        $headers = $this->steppedUpCentralHeaders($this->centralSuperAdmin());
+        $this->plan->update(['max_storage_mb' => 2048]);
+
+        $listed = collect($this->getJson('/api/v1/super-admin/plans', $headers)->assertOk()->json('data.plans'))
+            ->firstWhere('id', $this->plan->id);
+        $this->assertIsArray($listed);
+        $this->assertArrayNotHasKey('max_invoices_per_month', $listed);
+        $this->assertArrayNotHasKey('max_storage_mb', $listed);
+        $this->assertSame(10, $listed['max_users'], 'Enforced limits are still listed.');
+
+        // A client that still sends them (older form) neither fails nor changes the stored value.
+        $this->putJson("/api/v1/super-admin/plans/{$this->plan->id}", $this->updatePayload([
+            'max_invoices_per_month' => 10000, 'max_storage_mb' => 1,
+        ]), $headers)->assertOk();
+        $fresh = Plan::query()->findOrFail($this->plan->id);
+        $this->assertSame(5000, $fresh->max_invoices_per_month);
+        $this->assertSame(2048, $fresh->max_storage_mb);
+        $this->assertSame(20, $fresh->max_users);
+
+        // The new form no longer sends max_invoices_per_month at all.
+        $payload = $this->updatePayload();
+        unset($payload['max_invoices_per_month']);
+        $this->putJson("/api/v1/super-admin/plans/{$this->plan->id}", $payload, $headers)->assertOk();
+    }
+
     public function test_hidden_features_are_excluded_from_the_console_catalog_and_kept_on_plans(): void
     {
         PlanFeature::query()->updateOrCreate(['key' => 'quotations.manage'], [

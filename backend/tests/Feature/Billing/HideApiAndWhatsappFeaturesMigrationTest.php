@@ -69,4 +69,22 @@ final class HideApiAndWhatsappFeaturesMigrationTest extends TenantTestCase
         $this->assertTrue((bool) PlanFeature::query()->where('key', 'whatsapp.share')->value('is_public'));
         $this->assertTrue((bool) PlanFeature::query()->where('key', 'quotations.manage')->value('is_core'));
     }
+
+    public function test_reports_advanced_is_hidden_by_its_own_migration_and_the_plan_value_stays(): void
+    {
+        $this->seed(PlansAndFeaturesSeeder::class);
+        DB::connection($this->centralConnectionName())->table('plan_features')->where('key', 'reports.advanced')->update(['is_public' => true]);
+        $pro = Plan::query()->where('slug', 'pro')->firstOrFail();
+        $this->assertTrue($pro->features['reports.advanced']);
+
+        $migration = require database_path('migrations/2026_11_13_100300_hide_reports_advanced_feature.php');
+        $this->assertInstanceOf(Migration::class, $migration);
+        $migration->up();
+
+        $this->assertNotContains('reports.advanced', PlanFeature::query()->public()->pluck('key')->all());
+        $this->assertTrue(Plan::query()->findOrFail($pro->id)->features['reports.advanced'], 'Stored plan value is untouched.');
+
+        $migration->down();
+        $this->assertContains('reports.advanced', PlanFeature::query()->public()->pluck('key')->all());
+    }
 }

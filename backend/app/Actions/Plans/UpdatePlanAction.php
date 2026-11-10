@@ -21,6 +21,9 @@ class UpdatePlanAction
             }
         }
 
+        // Not-yet-enforced limits cannot be sold or edited from the console: keep what is stored.
+        $data = array_diff_key($data, array_flip(Plan::HIDDEN_LIMIT_COLUMNS));
+
         $plan->update($data);
 
         return $plan;
