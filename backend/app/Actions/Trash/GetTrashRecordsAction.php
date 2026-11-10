@@ -10,14 +10,21 @@ use App\Models\Item;
 use App\Models\ReturnDocument;
 use App\Models\Store;
 use App\Models\Supplier;
+use App\Services\Settings\TenantSettings;
 
 final class GetTrashRecordsAction
 {
+    public function __construct(
+        private readonly TenantSettings $tenantSettings,
+    ) {}
+
     /**
      * Get trashed records and counts for all modules
      */
     public function execute(string $tab = 'items', string $search = '', int $perPage = 15): array
     {
+        $currency = $this->tenantSettings->currencyLabel();
+
         $itemsCount = Item::onlyTrashed()->count();
         $customersCount = Customer::onlyTrashed()->count();
         $suppliersCount = Supplier::onlyTrashed()->count();
@@ -116,7 +123,7 @@ final class GetTrashRecordsAction
             $records = collect($paged->items())->map(fn ($e) => [
                 'id' => $e->id,
                 'title' => $e->title ?? 'مصروف',
-                'subtitle' => (string) $e->amount.' ج.م',
+                'subtitle' => (string) $e->amount.' '.$currency,
                 'category' => $e->category,
                 'deleted_at' => $e->deleted_at?->diffForHumans(),
             ]);
@@ -135,7 +142,7 @@ final class GetTrashRecordsAction
             $records = collect($paged->items())->map(fn ($r) => [
                 'id' => $r->id,
                 'title' => $r->return_number,
-                'subtitle' => (string) $r->total_amount.' ج.م',
+                'subtitle' => (string) $r->total_amount.' '.$currency,
                 // BE-02: deleting a return reversed its stock and balance; it cannot be restored.
                 'restorable' => false,
                 'deleted_at' => $r->deleted_at?->diffForHumans(),

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Settings\TenantSettings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -91,7 +92,8 @@ class Customer extends Model
         $blockers = [];
 
         if (bccomp((string) $this->current_balance, '0.000', 3) != 0) {
-            $blockers[] = 'يوجد رصيد / مديونية غير مسواة على العميل ('.number_format((float) $this->current_balance, 2).' ج.م)';
+            $currency = app(TenantSettings::class)->currencyLabel();
+            $blockers[] = 'يوجد رصيد / مديونية غير مسواة على العميل ('.number_format((float) $this->current_balance, 2)." {$currency})";
         }
 
         $invoicesCount = $this->invoices()->count();

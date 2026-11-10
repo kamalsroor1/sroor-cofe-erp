@@ -16,6 +16,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Services\Pricing\SaleDiscountGuard;
 use App\Services\Pricing\SalePriceGuard;
+use App\Services\Settings\TenantSettings;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -380,7 +381,7 @@ class InvoiceService
             $this->activityLogService->logSales(
                 action: 'created',
                 invoice: $invoice,
-                description: "تم إنشاء واعتماد فاتورة مبيعات جديدة رقم [{$invoice->invoice_number}] للعميل ({$customer->name}) بقيمة ".number_format((float) $invoice->net_total, 2).' ج.م'
+                description: "تم إنشاء واعتماد فاتورة مبيعات جديدة رقم [{$invoice->invoice_number}] للعميل ({$customer->name}) بقيمة ".number_format((float) $invoice->net_total, 2).' '.app(TenantSettings::class)->currencyLabel()
             );
 
             return $invoice;

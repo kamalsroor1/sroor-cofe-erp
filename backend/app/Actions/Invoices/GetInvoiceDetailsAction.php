@@ -6,9 +6,14 @@ namespace App\Actions\Invoices;
 
 use App\Models\Invoice;
 use App\Models\Setting;
+use App\Services\Settings\TenantSettings;
 
 final class GetInvoiceDetailsAction
 {
+    public function __construct(
+        private readonly TenantSettings $tenantSettings,
+    ) {}
+
     /**
      * Get Invoice details with relations and WhatsApp sharing URL
      */
@@ -32,6 +37,7 @@ final class GetInvoiceDetailsAction
         }
 
         $companyName = Setting::get('company_name') ?: ($store?->name ?: config('app.name', 'منظومة ERP'));
+        $currency = $this->tenantSettings->currencyLabel();
 
         $lines = [];
         $lines[] = "🧾 *فاتورة مبيعات - {$companyName}*";
@@ -48,16 +54,16 @@ final class GetInvoiceDetailsAction
             $qty = number_format((float) $lineItem->quantity, 2);
             $price = number_format((float) $lineItem->unit_price, 2);
             $total = number_format((float) $lineItem->total_price, 2);
-            $lines[] = ($idx + 1).". {$name} × {$qty} = {$total} ج.م";
+            $lines[] = ($idx + 1).". {$name} × {$qty} = {$total} {$currency}";
         }
 
         $lines[] = '--------------------------------';
-        $lines[] = '💵 *الإجمالي الصافي:* '.number_format((float) $invoice->net_total, 2).' ج.م';
-        $lines[] = '✅ *المدفوع:* '.number_format((float) $invoice->paid_amount, 2).' ج.م';
-        $lines[] = '⚠️ *المتبقي:* '.number_format((float) $invoice->remaining_amount, 2).' ج.م';
+        $lines[] = '💵 *الإجمالي الصافي:* '.number_format((float) $invoice->net_total, 2).' '.$currency;
+        $lines[] = '✅ *المدفوع:* '.number_format((float) $invoice->paid_amount, 2).' '.$currency;
+        $lines[] = '⚠️ *المتبقي:* '.number_format((float) $invoice->remaining_amount, 2).' '.$currency;
 
         if ($customer) {
-            $lines[] = '📊 *إجمالي رصيد الحساب الحالي:* '.number_format((float) $customer->current_balance, 2).' ج.م';
+            $lines[] = '📊 *إجمالي رصيد الحساب الحالي:* '.number_format((float) $customer->current_balance, 2).' '.$currency;
         }
 
         $lines[] = '--------------------------------';

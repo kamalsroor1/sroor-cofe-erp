@@ -96,7 +96,7 @@ final class PopulateRealisticTenantDataCommand extends Command
                     'company_name' => 'مؤسسة 2M لاكسسوارات وسماعات وشواحن المحمول',
                     'company_subtitle' => 'الوكيل الأول لسماعات الإيربودز، السبيكرات، الشواحن السريعة، وكابلات الهواتف الذكية',
                     'theme_preference' => 'dark',
-                    'currency' => 'ج.م',
+                    'currency' => 'EGP',
                 ],
             ]);
 
