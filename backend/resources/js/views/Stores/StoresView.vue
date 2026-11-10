@@ -9,6 +9,7 @@
       <template #actions>
         <div class="flex items-center gap-2 flex-wrap">
           <BaseButton
+            v-can="'items.view'"
             to="/stores/stocks"
             variant="secondary"
             :icon="Package"
