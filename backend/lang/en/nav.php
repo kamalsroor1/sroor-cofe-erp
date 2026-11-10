@@ -152,6 +152,7 @@ return [
         'settings_index' => 'System & business settings',
         'profile_show' => 'Profile & account',
         'trash_index' => 'Recycle bin',
+        'help_index' => 'Help Center & Support',
     ],
 
     // Sidebar / drawer menu labels (Composables/useNavigation.js)
@@ -205,6 +206,7 @@ return [
             'activity-logs' => 'Activity & Audit Log',
             'trash' => 'Recycle Bin',
             'settings' => 'Business Settings',
+            'help' => 'Help & Support Center',
         ],
     ],
 ];

@@ -32,16 +32,21 @@
     </div>
 
     <ul class="grid grid-cols-1 md:grid-cols-2 gap-2">
-      <li v-for="step in steps" :key="step.key">
+      <li
+        v-for="step in steps"
+        :key="step.key"
+        class="flex items-stretch gap-1.5 rounded-2xl border p-1.5 transition"
+        :class="
+          step.done
+            ? 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40'
+            : 'border-theme-border bg-slate-50 dark:bg-slate-800/70 hover:bg-theme-light dark:hover:bg-slate-800'
+        "
+      >
         <component
           :is="step.done ? 'div' : 'router-link'"
           :to="step.done ? undefined : step.to"
-          class="min-h-[44px] flex items-center gap-3 p-3 rounded-2xl border transition"
-          :class="
-            step.done
-              ? 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40'
-              : 'border-theme-border bg-slate-50 dark:bg-slate-800/70 hover:bg-theme-light dark:hover:bg-slate-800 cursor-pointer active:scale-[0.99]'
-          "
+          class="min-h-[44px] flex-1 flex items-center gap-3 px-2 py-1.5 rounded-xl transition"
+          :class="step.done ? '' : 'cursor-pointer active:scale-[0.99]'"
         >
           <span
             class="w-6 h-6 shrink-0 rounded-full flex items-center justify-center"
@@ -63,13 +68,24 @@
           <ChevronLeft v-if="!step.done" class="w-4 h-4 shrink-0 text-theme-primary rtl:block ltr:hidden" />
           <ChevronRight v-if="!step.done" class="w-4 h-4 shrink-0 text-theme-primary ltr:block rtl:hidden" />
         </component>
+
+        <router-link
+          v-if="step.helpSlug"
+          :to="{ path: '/help', query: { article: step.helpSlug } }"
+          :data-testid="`checklist-help-${step.key}`"
+          :title="$t('help.checklist_help_label')"
+          :aria-label="$t('help.checklist_help_label')"
+          class="min-h-[44px] min-w-[44px] shrink-0 rounded-xl flex items-center justify-center text-slate-400 hover:text-theme-primary hover:bg-white dark:hover:bg-slate-900 transition"
+        >
+          <CircleHelp class="w-4 h-4" />
+        </router-link>
       </li>
     </ul>
   </section>
 </template>
 
 <script setup>
-import { Check, ChevronLeft, ChevronRight, X } from 'lucide-vue-next';
+import { Check, ChevronLeft, ChevronRight, CircleHelp, X } from 'lucide-vue-next';
 
 defineProps({
   steps: { type: Array, default: () => [] },

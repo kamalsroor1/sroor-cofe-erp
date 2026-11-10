@@ -24,6 +24,7 @@ import {
     Trash2,
     Sliders,
     Truck,
+    LifeBuoy,
 } from 'lucide-vue-next';
 
 export function useNavigation() {
@@ -183,6 +184,11 @@ export function useNavigation() {
                     key: 'settings',
                     path: '/settings',
                     icon: Sliders,
+                },
+                {
+                    key: 'help',
+                    path: '/help',
+                    icon: LifeBuoy,
                 },
             ],
         },

@@ -362,6 +362,15 @@ const tenantRoutes = [
         },
     },
     {
+        path: '/help',
+        name: 'help.index',
+        component: () => import('../views/Help/HelpView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.help_index',
+            requiresAuth: true,
+        },
+    },
+    {
         // APP-3: public manual download page (no login). The in-app updater sends users here when it cannot
         // install safely; it lists each platform's latest release with its SHA-256.
         path: '/download',

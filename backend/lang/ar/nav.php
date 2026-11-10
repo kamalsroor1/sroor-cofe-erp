@@ -152,6 +152,7 @@ return [
         'settings_index' => 'إعدادات النظام والمؤسسة',
         'profile_show' => 'الملف الشخصي والحساب',
         'trash_index' => 'سلة المحذوفات',
+        'help_index' => 'مركز المساعدة والدعم الفني',
     ],
 
     // Sidebar / drawer menu labels (Composables/useNavigation.js)
@@ -205,6 +206,7 @@ return [
             'activity-logs' => 'سجل العمليات والرقابة',
             'trash' => 'سلة المحذوفات',
             'settings' => 'إعدادات المؤسسة',
+            'help' => 'مركز المساعدة والدعم',
         ],
     ],
 ];

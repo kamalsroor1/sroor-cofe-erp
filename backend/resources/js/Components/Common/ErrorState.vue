@@ -1,7 +1,8 @@
 <script setup>
-import { AlertTriangle, RefreshCw } from 'lucide-vue-next';
+import { AlertTriangle, RefreshCw, MessageCircle } from 'lucide-vue-next';
 import DynamicIcon from './DynamicIcon.vue';
 import BaseButton from './BaseButton.vue';
+import { useSupportContact } from '../../Composables/useSupportContact';
 
 defineProps({
   icon: {
@@ -35,6 +36,8 @@ defineProps({
 });
 
 defineEmits(['retry']);
+
+const { supportHref } = useSupportContact();
 </script>
 
 <template>
@@ -66,18 +69,31 @@ defineEmits(['retry']);
       </p>
     </div>
 
-    <div v-if="canRetry" class="pt-2 flex justify-center">
+    <div class="pt-2 flex flex-wrap items-center justify-center gap-2.5">
       <BaseButton
+        v-if="canRetry"
         variant="outline"
         size="sm"
         data-testid="retry-button"
         :icon="RefreshCw"
         :loading="loading"
-        class="coarse:min-h-[44px] coarse:min-w-[44px] border-rose-300 dark:border-rose-800/80 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+        class="min-h-[44px] min-w-[44px] border-rose-300 dark:border-rose-800/80 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30"
         @click="$emit('retry')"
       >
         {{ retryLabel || $t('connectivity.retry') }}
       </BaseButton>
+
+      <a
+        v-if="supportHref"
+        :href="supportHref"
+        target="_blank"
+        rel="noopener noreferrer"
+        data-testid="error-state-contact-support"
+        class="min-h-[44px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs inline-flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95"
+      >
+        <MessageCircle class="w-4 h-4" />
+        <span>{{ $t('help.contact_support') }}</span>
+      </a>
     </div>
   </div>
 </template>
