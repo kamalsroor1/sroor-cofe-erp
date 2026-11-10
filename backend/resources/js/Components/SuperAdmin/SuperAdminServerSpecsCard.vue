@@ -9,12 +9,12 @@
         >
           <Cpu class="w-4.5 h-4.5" />
         </div>
-        <span>معلومات بيئة السيرفر والنظام المركزي (Central Server Specs)</span>
+        <span>{{ $t('super.server_specs.title') }}</span>
       </h2>
       <span
         class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold"
       >
-        ● متصل ويعمل بكفاءة
+        {{ $t('super.server_specs.online') }}
       </span>
     </div>
 
@@ -27,7 +27,9 @@
             <Code2 class="w-4 h-4" />
           </div>
           <div>
-            <span class="text-slate-500 dark:text-slate-400 text-[11px] block">إصدار PHP</span>
+            <span class="text-slate-500 dark:text-slate-400 text-[11px] block">{{
+              $t('super.server_specs.php_version')
+            }}</span>
             <span class="text-slate-900 dark:text-white font-bold font-mono text-xs">{{
               systemInfo.php_version || '8.3+'
             }}</span>
@@ -35,7 +37,7 @@
         </div>
         <span
           class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold font-mono"
-          >Active</span
+          >{{ $t('super.server_specs.status_active') }}</span
         >
       </div>
 
@@ -47,7 +49,9 @@
             <Layers class="w-4 h-4" />
           </div>
           <div>
-            <span class="text-slate-500 dark:text-slate-400 text-[11px] block">إصدار Laravel</span>
+            <span class="text-slate-500 dark:text-slate-400 text-[11px] block">{{
+              $t('super.server_specs.laravel_version')
+            }}</span>
             <span class="text-slate-900 dark:text-white font-bold font-mono text-xs">{{
               systemInfo.laravel_version || '11.x'
             }}</span>
@@ -67,7 +71,9 @@
             <Database class="w-4 h-4" />
           </div>
           <div>
-            <span class="text-slate-500 dark:text-slate-400 text-[11px] block">قاعدة البيانات (DB Engine)</span>
+            <span class="text-slate-500 dark:text-slate-400 text-[11px] block">{{
+              $t('super.server_specs.db_engine')
+            }}</span>
             <span class="text-cyan-600 dark:text-cyan-400 font-bold font-mono text-xs"
               >{{ systemInfo.db_driver || 'MySQL' }} ({{ systemInfo.mysql_version || '8.0' }})</span
             >
@@ -83,7 +89,9 @@
             <Server class="w-4 h-4" />
           </div>
           <div>
-            <span class="text-slate-500 dark:text-slate-400 text-[11px] block">بيئة التشغيل (Environment)</span>
+            <span class="text-slate-500 dark:text-slate-400 text-[11px] block">{{
+              $t('super.server_specs.environment')
+            }}</span>
             <span class="text-theme-primary font-bold font-mono text-xs">{{
               systemInfo.environment || 'Production'
             }}</span>
@@ -91,7 +99,7 @@
         </div>
         <span
           class="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-bold"
-          >LIVE</span
+          >{{ $t('super.server_specs.live') }}</span
         >
       </div>
     </div>

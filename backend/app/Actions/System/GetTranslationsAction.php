@@ -48,6 +48,19 @@ final class GetTranslationsAction
     }
 
     /**
+     * Version of a locale's dictionary. The SPA echoes it back so /system/context can skip
+     * re-sending a dictionary the page already inlined.
+     *
+     * @param  array<string, mixed>|null  $translations  Already built dictionary (avoids rebuilding it).
+     */
+    public function hash(string $locale, ?array $translations = null): string
+    {
+        $locale = self::normalizeLocale($locale);
+
+        return substr(md5($locale.json_encode($translations ?? $this->execute($locale))), 0, 16);
+    }
+
+    /**
      * Pure helper: map any input to a supported locale (never echoes raw input).
      */
     public static function normalizeLocale(?string $locale): string

@@ -120,6 +120,7 @@ final class CheckoutHalfUpRoundingTest extends TenantTestCase
                 'name' => 'بن بالوزن',
                 'code' => 'HALF-UP-1',
                 'unit' => 'كجم',
+                'is_weighted' => true,
                 'cost_price' => '10.005',
                 'selling_price' => $price,
                 'current_stock' => '10.000',

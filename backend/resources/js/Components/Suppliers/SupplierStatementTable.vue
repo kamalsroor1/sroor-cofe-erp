@@ -53,7 +53,7 @@
         class="font-mono font-black text-end"
         :class="row.balance_after > 0 ? 'text-theme-primary' : 'text-emerald-500 dark:text-emerald-400'"
       >
-        {{ formatMoney(row.balance_after) }} {{ $t('common.currency') }}
+        {{ formatMoney(row.balance_after) }} {{ currencyLabel }}
       </div>
     </template>
 
@@ -72,7 +72,7 @@ import DataTable from '../Common/DataTable.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
 
 defineProps({

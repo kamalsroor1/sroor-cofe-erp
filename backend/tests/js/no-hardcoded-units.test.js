@@ -38,7 +38,11 @@ const UNIT_NAMES = [
 ];
 
 // TEMPORARY allowlist — files this lane may not edit. Remove an entry once its file is fixed.
-const ALLOWLIST = new Map([]);
+const ALLOWLIST = new Map([
+    // BE-08: mirrors App\\Support\\WeightUnits to pre-set the item form's is_weighted toggle.
+    // Follow-up: serve a weight flag with the unit catalog and delete this helper.
+    ['helpers/weightUnits.js', 'BE-08 weight-unit mirror'],
+]);
 
 const unitAlternation = UNIT_NAMES.join('|');
 const QUOTED_UNIT = new RegExp(`(['"\`])(?:${unitAlternation})\\1`, 'g');

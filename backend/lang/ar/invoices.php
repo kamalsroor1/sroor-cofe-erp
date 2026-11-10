@@ -108,7 +108,6 @@ return [
     'cancel_dismiss_btn' => 'تراجع',
     'invoice_cancelled_success' => 'تم إلغاء الفاتورة وإرجاع الأصناف للمخزن بنجاح',
     'invoice_cancelled_failed' => 'تعذر إلغاء الفاتورة',
-    'cancel_reason_default' => 'إلغاء من واجهة النظام',
     'check' => 'شيك',
     'receipt_title' => 'إيصال - :number',
     'print_receipt' => 'طباعة الإيصال',
@@ -159,7 +158,6 @@ return [
     'bulk_cancel_confirm_title' => 'إلغاء :count فواتير محددة؟',
     'bulk_cancel_confirm_text' => 'سيتم إلغاء كافة الفواتير المحددة وإرجاع بضائعها إلى رصيد المخزن وعكس القيود المالية.',
     'bulk_cancel_confirm_btn' => 'نعم، قم بالإلغاء المجمع',
-    'bulk_cancel_success' => 'تم إلغاء :count فواتير بنجاح وعكس رصيد المخزون.',
 
     // Invoice Show & Dual Print additions
     'invoice_show_title' => 'تفاصيل ومعاينة الفاتورة',
@@ -233,11 +231,21 @@ return [
     'total_net' => 'الصافي',
     'invoice_with_number' => 'فاتورة #:number',
 
-    'bulk_cancel_reason' => 'إلغاء مجمع من لوحة المبيعات',
     'stamp_placeholder' => 'ختم',
     'image_filename_a4' => 'فاتورة-مبيعات-:number.png',
     'image_filename_thermal' => 'إيصال-:number.png',
+    'csv_cash_customer' => 'عميل نقدي',
+    'csv_payment_type' => ['cash' => 'نقدي', 'credit' => 'آجل', 'partial' => 'جزئي'],
+    'csv_status' => ['confirmed' => 'مؤكدة', 'cancelled' => 'ملغاة'],
+    'active_store_option' => 'الفرع الحالي',
+    'cancel_reason_required' => 'اكتب سبب الإلغاء',
+    'bulk_cancel_result_success' => 'تم إلغاء :success من :total فاتورة',
+    'bulk_cancel_result_partial' => 'تم إلغاء :success فاتورة وفشل إلغاء :failed من :total',
+    'bulk_cancel_result_failed' => 'فشل إلغاء كل الفواتير (:failed)',
+    'export_failed' => 'تعذر تصدير الفواتير',
     'csv_columns' => [
+        'store' => 'الفرع',
+        'payment_type' => 'نوع الدفع',
         'number' => 'رقم الفاتورة',
         'customer' => 'العميل',
         'phone' => 'الهاتف',
@@ -258,4 +266,6 @@ return [
     'delete_admin_only' => 'عفواً، لا يملك صلاحية حذف الفواتير سوى المدير العام.',
     'already_cancelled' => 'هذه الفاتورة ملغاة بالفعل مسبقاً.',
     'discrete_unit_integer_only' => 'الصنف \':item\' بالقطعة/العلبة يقبل فقط أعداداً صحيحة، ولا يمكن بيع أجزاء أو كسور (:quantity :unit).',
+    // BE-08
+    'line_discount_exceeds_total' => 'خصم البند لا يمكن أن يزيد عن إجمالي البند.',
 ];

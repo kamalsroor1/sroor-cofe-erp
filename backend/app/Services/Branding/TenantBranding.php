@@ -43,12 +43,15 @@ final class TenantBranding
     public const MAX_FOOTER_LENGTH = 500;
 
     /** Preset ids of the SPA theme palette (resources/js/helpers/themeHelper.js). */
-    public const THEME_PALETTE = ['amber', 'emerald', 'blue', 'purple', 'rose', 'orange', 'teal', 'indigo'];
+    public const THEME_PALETTE = ['ibraa', 'amber', 'emerald', 'blue', 'purple', 'rose', 'orange', 'teal', 'indigo'];
 
-    public const DEFAULT_THEME_COLOR = 'emerald';
+    /** Product brand preset «صافي» (#0F6E5E): the default for shops that never chose a color. */
+    public const DEFAULT_THEME_COLOR = 'ibraa';
 
     /** Same list UpdateSettingsRequest accepts for invoice_primary_color. */
     public const INVOICE_COLORS = ['amber', 'emerald', 'blue', 'slate'];
+
+    public const DEFAULT_INVOICE_COLOR = 'emerald';
 
     public const HEX_COLOR_PATTERN = '/^#[0-9a-fA-F]{6}$/';
 
@@ -214,7 +217,7 @@ final class TenantBranding
     {
         $value = (string) Setting::get('invoice_primary_color', '');
 
-        return in_array($value, self::INVOICE_COLORS, true) ? $value : self::DEFAULT_THEME_COLOR;
+        return in_array($value, self::INVOICE_COLORS, true) ? $value : self::DEFAULT_INVOICE_COLOR;
     }
 
     private function logoUrl(Tenant $tenant, TenantLogoVariant $variant, ?Media $media): ?string

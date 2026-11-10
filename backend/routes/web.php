@@ -25,10 +25,9 @@ Route::get('/telescope-access', TelescopeAccessController::class)
     ->middleware('signed')
     ->name('telescope.access');
 
-// 📄 Public Marketing Brochure & Pricing PDF Presentation
-Route::get('/brochure', function () {
-    return view('marketing-brochure');
-})->name('marketing.brochure');
+// PRD-07: the old brochure advertised features that do not exist. It is closed for good:
+// /pricing (SPA, built from GET /api/v1/public/plans) replaces it.
+Route::permanentRedirect('/brochure', '/pricing')->name('marketing.brochure');
 
 // NOTE: invoice thermal/A4 and daily-journal print routes live in routes/tenant.php
 // behind auth + permission (+ store.access) middleware. Do not re-add them here.
@@ -55,7 +54,7 @@ $spaShell = function (Request $request) {
     return view('app');
 };
 
-Route::get('/stock-transfers', $spaShell)->name('stock-transfers');
+Route::get('/stock-transfers', $spaShell)->name('stock-transfers')->middleware('spa.headers');
 
 Route::post('/logout', function (Request $request) {
     Auth::guard('web')->logout();
@@ -86,25 +85,17 @@ $webManifest = function () {
         'start_url' => $baseUrl.'/',
         'scope' => $baseUrl.'/',
         'display' => 'standalone',
-        'background_color' => '#020617',
-        'theme_color' => '#0f172a',
+        'background_color' => '#13201C',
+        'theme_color' => '#0F6E5E',
         'orientation' => 'portrait-primary',
         'dir' => 'rtl',
         'lang' => 'ar',
         'prefer_related_applications' => false,
         'icons' => [
-            [
-                'src' => asset('logo.png'),
-                'sizes' => '192x192',
-                'type' => 'image/png',
-                'purpose' => 'any',
-            ],
-            [
-                'src' => asset('logo.png'),
-                'sizes' => '512x512',
-                'type' => 'image/png',
-                'purpose' => 'any',
-            ],
+            ['src' => asset('icons/icon-192.png'), 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
+            ['src' => asset('icons/icon-512.png'), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
+            ['src' => asset('icons/maskable-192.png'), 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'maskable'],
+            ['src' => asset('icons/maskable-512.png'), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'],
         ],
     ];
 
@@ -135,4 +126,5 @@ Route::get('/sw.js', function () {
 // registered in routes/tenant.php (loaded after this file, so the catch-all would shadow them).
 Route::get('/{any?}', $spaShell)
     ->where('any', '(?!api(?:/|$)|reports/print$|items/[^/]+/movements/print$).*')
-    ->name('app');
+    ->name('app')
+    ->middleware('spa.headers');

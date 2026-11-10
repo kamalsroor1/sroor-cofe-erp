@@ -3,7 +3,7 @@
 return [
     'welcome' => 'Welcome to :app',
     'subtitle' => 'Daily overview of sales, inventory, and cash flow',
-    'welcome_banner_title' => 'Welcome to Cloud ERP & Invoicing System',
+    'welcome_banner_title' => 'Welcome to Ibraa',
     'current_branch_label' => 'Current Branch:',
     'overview_subtitle' => 'Overview of sales, treasury, and inventory',
     'pos_fast_btn' => 'Fast POS Cashier',
@@ -120,7 +120,7 @@ return [
     // App Navigation Menu Hub Keys
     'menu_hub_title' => 'Quick Operations & Documents Hub (App Menu)',
     'menu_hub_subtitle' => 'Direct 1-touch visual access to all system screens and documents',
-    'search_screens_placeholder' => '🔍 Search any screen or document (e.g. sale, purchase, stock)...',
+    'search_screens_placeholder' => 'Search any screen or document (e.g. sale, purchase, stock)...',
     'no_screens_found' => 'No screens matching your search query',
 
     // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
@@ -149,5 +149,90 @@ return [
         'high_cash_title' => 'High cash in drawer',
         'high_cash_desc' => 'There is currently :amount :currency in the cash drawer. Consider depositing the surplus.',
         'high_cash_link' => 'Daily journal & treasury',
+    ],
+    'menu_hub' => [
+        'tabs' => [
+            'all' => 'All',
+            'sales' => 'Sales & POS',
+            'purchases' => 'Purchasing',
+            'finance' => 'Treasury & journal',
+            'inventory' => 'Stock & items',
+            'reports' => 'Reports',
+            'setup' => 'Setup & system',
+        ],
+        'tiles' => [
+            'pos' => [
+                'title' => 'Point of sale (POS)',
+                'subtitle' => 'Fast touch checkout',
+            ],
+            'invoices' => [
+                'title' => 'Sales invoice',
+                'subtitle' => 'Issue and follow up sales',
+            ],
+            'sale_returns' => [
+                'title' => 'Sales return',
+                'subtitle' => 'Take goods back',
+            ],
+            'customers' => [
+                'title' => 'Customers & accounts',
+                'subtitle' => 'Credit account statements',
+            ],
+            'purchases' => [
+                'title' => 'Purchase invoice',
+                'subtitle' => 'Receive supplier goods',
+            ],
+            'purchase_returns' => [
+                'title' => 'Purchase return',
+                'subtitle' => 'Send goods back to a supplier',
+            ],
+            'suppliers' => [
+                'title' => 'Suppliers & companies',
+                'subtitle' => 'Supplier balances',
+            ],
+            'smart_reorder' => [
+                'title' => 'Shortage radar',
+                'subtitle' => 'Smart reorder',
+            ],
+            'daily_journal' => [
+                'title' => 'Daily journal',
+                'subtitle' => 'Treasury and cash movement',
+            ],
+            'expenses' => [
+                'title' => 'Expenses & advances',
+                'subtitle' => 'Payment vouchers and running costs',
+            ],
+            'items' => [
+                'title' => 'Item card & stock',
+                'subtitle' => 'Enter goods and prices',
+            ],
+            'categories' => [
+                'title' => 'Item categories',
+                'subtitle' => 'Menu groups and sections',
+            ],
+            'store_stocks' => [
+                'title' => 'Branch stock & counts',
+                'subtitle' => 'Count branches and warehouses',
+            ],
+            'stock_transfers' => [
+                'title' => 'Stock transfers',
+                'subtitle' => 'Goods transfer order',
+            ],
+            'coffee_blender' => [
+                'title' => 'Blends & assembly',
+                'subtitle' => 'Coffee lab and production',
+            ],
+            'reports' => [
+                'title' => 'All reports',
+                'subtitle' => 'Profit, sales and stock',
+            ],
+            'stores' => [
+                'title' => 'Branches & warehouses',
+                'subtitle' => 'Manage sales outlets',
+            ],
+            'settings' => [
+                'title' => 'System settings',
+                'subtitle' => 'Tax, invoice and branch',
+            ],
+        ],
     ],
 ];

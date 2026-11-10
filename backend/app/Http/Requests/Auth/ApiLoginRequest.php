@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Auth;
 
+use App\Support\Auth\AccountLockout;
 use App\Support\RateLimitKey;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\RateLimiter;
@@ -46,6 +47,8 @@ class ApiLoginRequest extends FormRequest
 
     public function ensureIsNotRateLimited(): void
     {
+        $this->ensureAccountIsNotLocked();
+
         if (! RateLimiter::tooManyAttempts($this->throttleKey(), $this->maxFailedAttempts())) {
             return;
         }
@@ -68,6 +71,57 @@ class ApiLoginRequest extends FormRequest
     public function clearRateLimit(): void
     {
         RateLimiter::clear($this->throttleKey());
+        AccountLockout::clearFailures($this->accountLogin());
+    }
+
+    /**
+     * SEC-05: per-account lockout. Refuses the attempt (even with the right password) while the
+     * account is locked. Same 422-on-`login` envelope as the IP failure counter.
+     */
+    public function ensureAccountIsNotLocked(): void
+    {
+        $until = AccountLockout::lockedUntil($this->accountLogin());
+
+        if ($until === null) {
+            return;
+        }
+
+        $seconds = $until - now()->getTimestamp();
+
+        throw ValidationException::withMessages([
+            'login' => trans('auth.account_locked', [
+                'seconds' => $seconds,
+                'minutes' => (int) ceil($seconds / 60),
+            ]),
+        ]);
+    }
+
+    /**
+     * SEC-05: count a failed attempt against the ACCOUNT (any IP; unknown logins count too, so
+     * lockout behaviour reveals nothing about which accounts exist). Returns true exactly when
+     * this failure triggers the lockout.
+     */
+    public function hitAccountFailure(): bool
+    {
+        return AccountLockout::hit($this->accountLogin());
+    }
+
+    public function accountIdentifier(): string
+    {
+        return RateLimitKey::identifier($this->accountLogin());
+    }
+
+    /** The login exactly as typed (login, else phone, else email). */
+    public function submittedLogin(): string
+    {
+        $login = $this->accountLogin();
+
+        return is_scalar($login) ? (string) $login : '';
+    }
+
+    private function accountLogin(): mixed
+    {
+        return $this->input('login') ?? $this->input('phone') ?? $this->input('email');
     }
 
     /**

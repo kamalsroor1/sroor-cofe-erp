@@ -1,3 +1,8 @@
+import { dAdd, dSub, dCmp } from './decimal.js';
+import { limitQuantityText } from './posWeight.js';
+import { DISCOUNT_FIXED, DISCOUNT_PERCENT } from './posDiscount.js';
+import { sanitizeAmountInput } from './posCheckout.js';
+
 /**
  * POS cart line edits. The cart array is owned by the POS view (one per open order);
  * child components only emit the requested change and the view applies it here,
@@ -13,12 +18,20 @@ export const WEIGHT_MIN = 0.125;
 
 const hasLine = (cart, index) => Array.isArray(cart) && index >= 0 && index < cart.length;
 
-/** Set the quantity from a typed value; ignores empty, non-numeric and non-positive input. */
+/** Set the quantity from a typed value; ignores empty, non-numeric and non-positive input. Weighted lines keep decimals (3 max), others are whole. */
 export function updateLineQty(cart, { index, value }) {
     if (!hasLine(cart, index)) return false;
     const parsed = parseFloat(value);
     if (isNaN(parsed) || parsed <= 0) return false;
-    cart[index].quantity = parsed;
+    if (cart[index].is_weighted) {
+        const text = limitQuantityText(String(value));
+        if (!(parseFloat(text) > 0)) return false;
+        cart[index].quantity = text;
+        return true;
+    }
+    const whole = Math.round(parsed);
+    if (whole < 1) return false;
+    cart[index].quantity = whole;
     return true;
 }
 
@@ -32,6 +45,25 @@ export function updateLinePrice(cart, { index, value }) {
     return true;
 }
 
+/**
+ * POS-07: set a line's discount from what the cashier typed. `type` ('percentage' | 'fixed') and `value` are
+ * both optional: a missing one keeps the current setting. A percent is capped at 100; an amount larger than the
+ * line total is clamped when the totals are computed, so the typed text is kept as is.
+ */
+export function updateLineDiscount(cart, { index, type, value }) {
+    if (!hasLine(cart, index)) return false;
+    const line = cart[index];
+    if (type === DISCOUNT_PERCENT || type === DISCOUNT_FIXED) line.discount_type = type;
+    if (value !== undefined) {
+        let text = sanitizeAmountInput(value);
+        const [whole, fraction] = text.split('.');
+        if (fraction !== undefined) text = `${whole || '0'}.${fraction.slice(0, 3)}`;
+        if ((line.discount_type || DISCOUNT_PERCENT) === DISCOUNT_PERCENT && parseFloat(text) > 100) text = '100';
+        line.discount_value = text;
+    }
+    return true;
+}
+
 export function removeLine(cart, index) {
     if (!hasLine(cart, index)) return false;
     cart.splice(index, 1);
@@ -40,13 +72,23 @@ export function removeLine(cart, index) {
 
 export function increaseLineQty(cart, index) {
     if (!hasLine(cart, index)) return false;
+    if (cart[index].is_weighted) {
+        cart[index].quantity = dAdd(cart[index].quantity, String(WEIGHT_STEP));
+        return true;
+    }
     cart[index].quantity = parseFloat(cart[index].quantity) + 1;
     return true;
 }
 
-/** Decrease by one; a line at quantity 1 or less is removed. */
+/** Decrease by one (weighted lines by 0.250); a line that would reach zero is removed. */
 export function decreaseLineQty(cart, index) {
     if (!hasLine(cart, index)) return false;
+    if (cart[index].is_weighted) {
+        const next = dSub(cart[index].quantity, String(WEIGHT_STEP));
+        if (dCmp(next, '0.001') < 0) return removeLine(cart, index);
+        cart[index].quantity = next;
+        return true;
+    }
     if (parseFloat(cart[index].quantity) > 1) {
         cart[index].quantity = parseFloat(cart[index].quantity) - 1;
         return true;

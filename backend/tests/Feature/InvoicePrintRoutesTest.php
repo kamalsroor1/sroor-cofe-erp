@@ -629,6 +629,38 @@ class InvoicePrintRoutesTest extends TenantTestCase
         $response->assertDontSee('DOC-STORE-B-222');
     }
 
+    public function test_item_movements_print_counts_imported_opening_balance_in_total_in(): void
+    {
+        $item = Item::query()->firstOrFail();
+        foreach ([['opening_balance_in', '20.000'], ['sales_out', '5.000']] as [$type, $qty]) {
+            StockMovement::create([
+                'item_id' => $item->id,
+                'movement_type' => $type,
+                'quantity' => $qty,
+                'stock_before' => '0.000',
+                'stock_after' => $qty,
+                'unit_cost' => '10.000',
+                'source_type' => 'item',
+                'source_id' => $item->id,
+                'document_number' => 'OPEN-TEST',
+                'user_id' => $this->admin->id,
+                'store_id' => $this->storeA->id,
+            ]);
+        }
+        $user = $this->userWithPermissions(['items.view'], $this->storeA);
+
+        $response = $this->actingAs($user)->get("/items/{$item->id}/movements/print?type=in");
+
+        $response->assertStatus(200);
+        $this->assertSame('20.000', $response->viewData('totalIn'));
+        $this->assertSame('0.000', $response->viewData('totalOut'));
+
+        $all = $this->actingAs($user)->get("/items/{$item->id}/movements/print");
+        $this->assertSame('20.000', $all->viewData('totalIn'));
+        $this->assertSame('5.000', $all->viewData('totalOut'));
+        $this->assertSame('15.000', $all->viewData('netMovement'));
+    }
+
     #[DataProvider('malformedStoreIds')]
     public function test_item_movements_print_rejects_malformed_store_id(string $pattern): void
     {

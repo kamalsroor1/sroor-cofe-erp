@@ -23,6 +23,8 @@ class POSInvoiceDTO
         public readonly array $additionalExpenses = [],
         public readonly ?array $payments = null,
         public readonly ?string $clientUuid = null,
+        /** BE-08: manager approval for below-minimum prices: {user_id, pin}. */
+        public readonly ?array $override = null,
     ) {}
 
     public static function fromArray(array $data): self
@@ -46,6 +48,7 @@ class POSInvoiceDTO
             additionalExpenses: $data['additional_expenses'] ?? $data['expenses'] ?? [],
             payments: $data['payments'] ?? null,
             clientUuid: ! empty($data['client_uuid']) ? strtolower((string) $data['client_uuid']) : null,
+            override: isset($data['override']) && is_array($data['override']) ? $data['override'] : null,
         );
     }
 
@@ -65,6 +68,7 @@ class POSInvoiceDTO
             'additional_expenses' => $this->additionalExpenses,
             'payments' => $this->payments,
             'client_uuid' => $this->clientUuid,
+            'override' => $this->override,
         ];
     }
 }

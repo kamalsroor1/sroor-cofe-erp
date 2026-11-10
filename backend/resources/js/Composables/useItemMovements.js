@@ -2,6 +2,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../Services/api';
 import { useTrans } from './useTrans';
+import { businessToday, startOfMonth, endOfMonth } from './useBusinessDate';
 
 export function useItemMovements() {
     const route = useRoute();
@@ -26,17 +27,18 @@ export function useItemMovements() {
 
     const formatMovementLabel = (type) => {
         const map = {
-            purchase_in: `🚛 ${t('inventory.movement_purchase')}`,
-            sales_out: `🛒 ${t('inventory.movement_sale')}`,
-            transfer_in: `📥 ${t('inventory.movement_transfer_in')}`,
-            transfer_out: `📤 ${t('inventory.movement_transfer_out')}`,
-            sales_return_in: `↩️ ${t('inventory.movement_sale_return')}`,
-            purchase_return_out: `↪️ ${t('inventory.movement_purchase_return')}`,
-            stock_adjustment_in: `➕ ${t('inventory.movement_adjustment')}`,
-            stock_adjustment_out: `➖ ${t('inventory.movement_adjustment')}`,
-            cancellation_in: `🚫 ${t('invoices.cancelled_badge')}`,
-            waste_out: `🗑️ ${t('inventory.movement_waste')}`,
-            stock_deposit_in: `📦 ${t('inventory.movement_initial')}`,
+            purchase_in: t('inventory.movement_purchase'),
+            sales_out: t('inventory.movement_sale'),
+            transfer_in: t('inventory.movement_transfer_in'),
+            transfer_out: t('inventory.movement_transfer_out'),
+            sales_return_in: t('inventory.movement_sale_return'),
+            purchase_return_out: t('inventory.movement_purchase_return'),
+            stock_adjustment_in: t('inventory.movement_adjustment'),
+            stock_adjustment_out: t('inventory.movement_adjustment'),
+            cancellation_in: t('invoices.cancelled_badge'),
+            waste_out: t('inventory.movement_waste'),
+            stock_deposit_in: t('inventory.movement_initial'),
+            opening_balance_in: t('inventory.movement_opening_balance'),
         };
         return map[type] || type;
     };
@@ -45,6 +47,7 @@ export function useItemMovements() {
         const positive = [
             'purchase_in',
             'stock_deposit_in',
+            'opening_balance_in',
             'stock_adjustment_in',
             'cancellation_in',
             'transfer_in',
@@ -61,17 +64,14 @@ export function useItemMovements() {
 
     const applyPreset = (preset) => {
         activePreset.value = preset;
-        const now = new Date();
-        const formatDate = (d) => d.toISOString().split('T')[0];
+        const today = businessToday();
 
         if (preset === 'today') {
-            dateFrom.value = formatDate(now);
-            dateTo.value = formatDate(now);
+            dateFrom.value = today;
+            dateTo.value = today;
         } else if (preset === 'this_month') {
-            const start = new Date(now.getFullYear(), now.getMonth(), 1);
-            const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            dateFrom.value = formatDate(start);
-            dateTo.value = formatDate(end);
+            dateFrom.value = startOfMonth(today);
+            dateTo.value = endOfMonth(today);
         } else if (preset === 'all') {
             dateFrom.value = '';
             dateTo.value = '';

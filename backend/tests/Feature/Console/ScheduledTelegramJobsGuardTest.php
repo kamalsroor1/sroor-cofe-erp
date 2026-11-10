@@ -41,8 +41,6 @@ final class ScheduledTelegramJobsGuardTest extends TestCase
     public static function nonTelegramCommands(): array
     {
         return [
-            'queue work' => ['queue:work'],
-            'queue restart' => ['queue:restart'],
             'pulse clear' => ['pulse:clear'],
             'tenant backups' => ['backup:tenants'],
             'file backups' => ['backup:run --only-files'],

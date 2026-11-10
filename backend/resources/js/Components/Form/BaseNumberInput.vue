@@ -8,7 +8,7 @@
       :class="{ 'text-rose-500 dark:text-rose-400': hasError }"
     >
       {{ label }}
-      <span v-if="required" class="text-rose-500 font-black mr-0.5">*</span>
+      <span v-if="required" class="text-rose-500 font-black ms-0.5">*</span>
     </label>
 
     <!-- Number Input Container -->
@@ -35,8 +35,8 @@
           hasError
             ? 'border-rose-500 dark:border-rose-500/80 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 text-rose-900 dark:text-rose-100'
             : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20',
-          prefix ? 'pr-12' : '',
-          suffix || showStepper ? 'pl-16' : '',
+          prefix ? 'ps-12' : '',
+          suffix || showStepper ? 'pe-16' : '',
           inputClass,
         ]"
         v-bind="$attrs"
@@ -48,13 +48,13 @@
       <!-- Currency / Unit Prefix (Right in RTL) -->
       <div
         v-if="prefix"
-        class="absolute right-3 flex items-center pointer-events-none text-xs font-black text-slate-400 dark:text-slate-500 select-none"
+        class="absolute start-3 flex items-center pointer-events-none text-xs font-black text-slate-400 dark:text-slate-500 select-none"
       >
         {{ prefix }}
       </div>
 
       <!-- Currency / Unit Suffix (Left in RTL) or Stepper Buttons -->
-      <div class="absolute left-2.5 flex items-center gap-1">
+      <div class="absolute end-2.5 flex items-center gap-1">
         <span v-if="suffix" class="text-xs font-black text-slate-400 dark:text-slate-500 select-none px-1">
           {{ suffix }}
         </span>
@@ -69,7 +69,7 @@
             tabindex="-1"
             @click="decrement"
             class="w-6 h-6 flex items-center justify-center rounded-md bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 transition cursor-pointer active:scale-95 text-xs font-black shadow-2xs"
-            title="تقليل"
+            :title="$t('common.decrease')"
           >
             -
           </button>
@@ -78,7 +78,7 @@
             tabindex="-1"
             @click="increment"
             class="w-6 h-6 flex items-center justify-center rounded-md bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 transition cursor-pointer active:scale-95 text-xs font-black shadow-2xs"
-            title="زيادة"
+            :title="$t('common.increase')"
           >
             +
           </button>

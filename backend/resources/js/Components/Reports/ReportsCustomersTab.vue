@@ -52,7 +52,7 @@
                   c.current_balance > 0 ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-500 dark:text-emerald-400'
                 "
               >
-                {{ formatMoney(c.current_balance) }} {{ $t('common.currency') }}
+                {{ formatMoney(c.current_balance) }} {{ currencyLabel }}
               </td>
             </tr>
           </tbody>
@@ -76,7 +76,7 @@
               <span
                 class="text-sm font-black font-mono"
                 :class="c.current_balance > 0 ? 'text-rose-500' : 'text-emerald-500'"
-                >{{ formatMoney(c.current_balance) }} {{ $t('common.currency') }}</span
+                >{{ formatMoney(c.current_balance) }} {{ currencyLabel }}</span
               >
             </div>
           </div>
@@ -95,7 +95,7 @@
       </div>
     </div>
 
-    <EmptyState v-else :title="$t('reports.no_data_title')" :description="$t('reports.no_data_desc')" icon="👥" />
+    <EmptyState v-else :title="$t('reports.no_data_title')" :description="$t('reports.no_data_desc')" icon="users" />
   </div>
 </template>
 
@@ -104,7 +104,7 @@ import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   customerSales: { type: Array, default: () => [] },

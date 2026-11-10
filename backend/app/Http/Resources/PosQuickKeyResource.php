@@ -39,7 +39,7 @@ class PosQuickKeyResource extends JsonResource
                 'name' => (string) $item->name,
                 'price' => (string) $item->selling_price,
                 'unit' => $item->unit,
-                'is_weighted' => (bool) $item->is_weighted,
+                'is_weighted' => $item->isSoldByWeight(),
                 'image' => $item->image,
             ],
             'category' => $category === null ? null : [

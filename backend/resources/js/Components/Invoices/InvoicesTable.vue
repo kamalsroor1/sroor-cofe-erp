@@ -57,19 +57,19 @@
 
     <template #cell-net_total="{ row }">
       <span class="font-mono font-black text-slate-900 dark:text-white text-sm">
-        {{ formatMoney(row.net_total) }} {{ $t('common.currency') }}
+        {{ formatMoney(row.net_total) }} {{ currencyLabel }}
       </span>
     </template>
 
     <template #cell-paid_amount="{ row }">
       <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-        {{ formatMoney(row.paid_amount) }} {{ $t('common.currency') }}
+        {{ formatMoney(row.paid_amount) }} {{ currencyLabel }}
       </span>
     </template>
 
     <template #cell-remaining_amount="{ row }">
       <span class="font-mono font-bold" :class="row.remaining_amount > 0 ? 'text-rose-500' : 'text-slate-400'">
-        {{ formatMoney(row.remaining_amount) }} {{ $t('common.currency') }}
+        {{ formatMoney(row.remaining_amount) }} {{ currencyLabel }}
       </span>
     </template>
 
@@ -116,9 +116,11 @@ import ActionMenu from '../ActionMenu.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { trans } from '../../helpers/trans';
 import { useTrans } from '../../Composables/useTrans';
+import { useAuthStore } from '../../stores/auth';
 
 const { t } = useTrans();
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
+const authStore = useAuthStore();
 
 const props = defineProps({
   invoices: { type: Array, default: () => [] },
@@ -164,7 +166,7 @@ const getInvoiceActions = (inv) => [
     label: trans('invoices.cancel_invoice'),
     icon: Ban,
     variant: 'danger',
-    show: !inv.is_cancelled,
+    show: !inv.is_cancelled && authStore.hasPermission('invoices.cancel'),
     onClick: () => emit('cancel', inv),
   },
 ];

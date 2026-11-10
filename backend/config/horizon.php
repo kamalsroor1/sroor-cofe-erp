@@ -230,6 +230,20 @@ return [
             'timeout' => 930,
             'nice' => 0,
         ],
+        // OPS-9: ArchiveTenantJob (timeout 1800 s, tries 1) on the `long` connection
+        // (config/queue.php, retry_after 2000 s). One process: archives are rare and unique per tenant.
+        'supervisor-long' => [
+            'connection' => 'long',
+            'queue' => [env('TENANT_ARCHIVE_QUEUE') ?: 'long'],
+            'balance' => false,
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 256,
+            'tries' => 1,
+            'timeout' => 1830,
+            'nice' => 0,
+        ],
     ],
 
     'environments' => [

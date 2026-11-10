@@ -87,7 +87,9 @@ final class ItemCostAndStoreScopeApiTest extends TenantTestCase
         $this->assertSame([$this->storeAId], array_column($data['store_stocks'], 'store_id'));
         $this->assertNull($data['cost_price']);
         $this->assertSame(500.0, (float) $data['selling_price']);
-        $this->assertSame(450.0, (float) $data['min_selling_price']);
+        // BE-08: the floor value is hidden without items.view_cost; has_min_price says one exists.
+        $this->assertNull($data['min_selling_price']);
+        $this->assertTrue($data['has_min_price']);
     }
 
     public function test_cashier_cannot_open_an_item_on_another_branch(): void
@@ -185,8 +187,11 @@ final class ItemCostAndStoreScopeApiTest extends TenantTestCase
         $row = collect($items)->firstWhere('id', $this->itemId);
 
         $this->assertSame(500.0, (float) $row['price_retail']);
-        $this->assertSame(450.0, (float) $row['price_wholesale']);
-        $this->assertSame(450.0, (float) $row['min_selling_price']);
+        // BE-08: wholesale is its own column (retail when unset), and the floor value is hidden from
+        // users without items.view_cost; they only learn that a floor exists.
+        $this->assertSame(500.0, (float) $row['price_wholesale']);
+        $this->assertNull($row['min_selling_price']);
+        $this->assertTrue($row['has_min_price']);
         $this->assertNull($row['cost_price']);
         $this->assertSame(10.25, (float) $row['current_stock']);
 

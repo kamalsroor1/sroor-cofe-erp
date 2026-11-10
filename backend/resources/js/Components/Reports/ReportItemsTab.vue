@@ -3,6 +3,9 @@ import { computed } from 'vue';
 import DataTable from '@/Components/Common/DataTable.vue';
 import { useMoney } from '@/Composables/useMoney';
 import { trans } from '@/helpers/trans';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 defineProps({
   itemProfits: {
@@ -35,7 +38,12 @@ const itemColumns = computed(() => [
       }}</span>
     </div>
 
-    <DataTable :columns="itemColumns" :rows="itemProfits" :empty-title="$t('common.no_data_available')" empty-icon="📊">
+    <DataTable
+      :columns="itemColumns"
+      :rows="itemProfits"
+      :empty-title="$t('common.no_data_available')"
+      empty-icon="bar-chart3"
+    >
       <!-- Name -->
       <template #cell-name="{ row }">
         <span class="font-bold text-slate-900 dark:text-white font-tajawal">{{ row.name }}</span>
@@ -54,27 +62,27 @@ const itemColumns = computed(() => [
       <!-- Revenue -->
       <template #cell-total_revenue="{ row }">
         <span class="font-mono font-bold text-slate-900 dark:text-white"
-          >{{ formatMoney(row.total_revenue) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(row.total_revenue) }} {{ currencyLabel }}</span
         >
       </template>
 
       <!-- COGS -->
       <template #cell-total_cogs="{ row }">
         <span class="font-mono text-slate-500 dark:text-slate-400"
-          >{{ formatMoney(row.total_cogs) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(row.total_cogs) }} {{ currencyLabel }}</span
         >
       </template>
 
       <!-- Profit -->
       <template #cell-profit="{ row }">
         <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400"
-          >{{ formatMoney(row.profit) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(row.profit) }} {{ currencyLabel }}</span
         >
       </template>
 
       <!-- Margin -->
       <template #cell-margin="{ row }">
-        <span class="font-mono text-left font-bold text-theme-primary">{{ row.margin }}%</span>
+        <span class="font-mono text-end font-bold text-theme-primary">{{ row.margin }}%</span>
       </template>
 
       <!-- Mobile Card Custom Slot -->
@@ -103,7 +111,7 @@ const itemColumns = computed(() => [
               <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('reports.sales_summary') }}</span>
               <span class="font-black text-slate-900 dark:text-white">{{ formatMoney(row.total_revenue) }}</span>
             </div>
-            <div class="text-left">
+            <div class="text-end">
               <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('reports.gross_profit_trade') }}</span>
               <span class="font-black text-emerald-600 dark:text-emerald-400">{{ formatMoney(row.profit) }}</span>
             </div>

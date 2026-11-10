@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6 text-center font-sans py-4" dir="rtl">
+  <div class="space-y-6 text-center font-sans py-4">
     <!-- Animated Glowing Pulse Avatar / Logo -->
     <div class="relative inline-flex items-center justify-center">
       <div class="absolute inset-0 rounded-3xl bg-theme-primary/20 animate-ping"></div>
@@ -12,7 +12,7 @@
           :alt="resolvedTenant.name"
           class="w-full h-full object-contain"
         />
-        <Coffee v-else class="w-12 h-12 text-theme-primary animate-bounce" />
+        <BrandMark v-else :size="56" decorative />
       </div>
     </div>
 
@@ -55,7 +55,8 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Coffee, Monitor } from 'lucide-vue-next';
+import { Monitor } from 'lucide-vue-next';
+import BrandMark from '../Brand/BrandMark.vue';
 
 const props = defineProps({
   tenantCode: {

@@ -26,6 +26,11 @@ const TEXT_FIELDS = [
     'support_email',
     'support_phone',
     'website_url',
+    'billing_instapay_address',
+    'billing_vodafone_cash_number',
+    'billing_account_name',
+    'billing_payment_note',
+    'billing_tax_rate',
 ];
 
 /** Never blanked server-side: sent trimmed, never as null. */

@@ -6,7 +6,7 @@
       <h2
         class="text-xs font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2"
       >
-        <span>📊</span>
+        <BarChart3 class="w-4 h-4" />
         <span>{{ $t('returns.document_financial_summary') }}</span>
       </h2>
 
@@ -21,7 +21,7 @@
         >
           <span>{{ $t('returns.total_returns_val') }}:</span>
           <span class="font-mono text-rose-600 dark:text-rose-400"
-            >{{ formatMoney(netTotal) }} {{ $t('common.currency') }}</span
+            >{{ formatMoney(netTotal) }} {{ currencyLabel }}</span
           >
         </div>
 
@@ -56,12 +56,12 @@
 </template>
 
 <script setup>
-import { RotateCcw } from 'lucide-vue-next';
+import { RotateCcw, BarChart3 } from 'lucide-vue-next';
 import BaseNumberInput from '../Form/BaseNumberInput.vue';
 import BaseButton from '../Common/BaseButton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   itemsCount: { type: Number, default: 0 },

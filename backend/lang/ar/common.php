@@ -1,9 +1,17 @@
 <?php
 
 return [
-    'app_name' => 'نظام إدارة المبيعات والمخزون والحسابات',
+    'app_name' => 'إبراء ERP',
     'currency' => 'ج.م',
     'currency_full' => 'جنيه مصري',
+    'currencies' => [
+        'EGP' => 'ج.م',
+        'SAR' => 'ر.س',
+        'AED' => 'د.إ',
+        'KWD' => 'د.ك',
+        'QAR' => 'ر.ق',
+        'USD' => '$',
+    ],
     'save' => 'حفظ',
     'cancel' => 'إلغاء',
     'edit' => 'تعديل',
@@ -78,8 +86,8 @@ return [
     'search_in_list' => '... بحث في القائمة',
     'unexpected_error' => 'حدث خطأ غير متوقع في الاتصال بالخادم',
     'permission_alert' => 'تنبيه الصلاحيات',
-    'app_title' => 'منظومة إدارة المؤسسات والمخزون ERP',
-    'app_subtitle' => 'منظومة إدارة المبيعات، المخزون، ونقاط البيع السريعة',
+    'app_title' => 'إبراء',
+    'app_subtitle' => 'حساباتك خالصة. كل قرش في مكانه.',
     'system_booting' => 'جاري تحميل وتهيئة المنظومة...',
     'pos_badge' => 'ERP & POS',
     'ok' => 'حسناً',
@@ -117,9 +125,8 @@ return [
     'remind_me_later' => 'تذكيري لاحقاً',
     'yes_delete' => 'نعم، احذف',
     'all_items' => 'كل الأصناف',
-    'app_title' => 'منظومة ERP المتكاملة',
     'store_access_denied' => 'غير مصرح لك بالوصول لبيانات هذا الفرع',
-    'platform_name' => 'منظومة ERP السحابية',
+    'platform_name' => 'إبراء ERP',
     'default_company_subtitle' => 'لإدارة المبيعات والمخزون والفروع',
 
     // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
@@ -133,7 +140,7 @@ return [
 
     // Boot splash screen (app.blade.php)
     'splash' => [
-        'subtitle' => 'نظام الفواتير والمخزون ونقاط البيع السريعة',
+        'subtitle' => 'حساباتك خالصة. كل قرش في مكانه.',
     ],
 
     // Generic confirmation dialogs (helpers/alert.js)
@@ -153,4 +160,19 @@ return [
     'operation_failed' => 'تعذّر إتمام العملية. حاول مرة أخرى أو تواصل مع الدعم الفني.',
     'record_not_found' => 'السجل المطلوب غير موجود.',
     'trash_invalid_type' => 'نوع السجل ده مينفعش يتسترجع أو يتحذف من سلة المحذوفات.',
+    'no_access' => 'ليس لديك صلاحية للدخول إلى هذه الصفحة.',
+    'no_results' => 'لا توجد نتائج مطابقة',
+    'clear_search' => 'مسح البحث',
+    'search_failed' => 'تعذّر تحميل النتائج',
+    'retry' => 'إعادة المحاولة',
+    'clear' => 'مسح',
+    'show_password' => 'إظهار كلمة المرور',
+    'hide_password' => 'إخفاء كلمة المرور',
+    'increase' => 'زيادة',
+    'decrease' => 'تقليل',
+    'remove_file' => 'حذف الملف',
+    'upload_prompt' => 'اضغط هنا لرفع ملف أو اسحبه إلى هنا',
+    'quick_search' => 'بحث سريع...',
+    'clear_search_esc' => 'تفريغ البحث (ESC)',
+    'preview' => 'معاينة',
 ];

@@ -1,6 +1,8 @@
 <script setup>
+import { X } from 'lucide-vue-next';
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useNativeBridge } from '@/Composables/useNativeBridge';
+import { useBodyScrollLock } from '@/Composables/useBodyScrollLock';
 
 const props = defineProps({
   show: {
@@ -94,23 +96,24 @@ const onTouchEnd = () => {
   isDragging.value = false;
 };
 
+const { lock: lockScroll, unlock: unlockScroll } = useBodyScrollLock();
+
 onMounted(() => {
   document.addEventListener('keydown', handleKeyDown);
+  if (props.show) lockScroll();
 });
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeyDown);
+  unlockScroll();
 });
 
 watch(
   () => props.show,
   (val) => {
     dragOffset.value = 0;
-    if (val) {
-      document.body.classList.add('overflow-hidden');
-    } else {
-      document.body.classList.remove('overflow-hidden');
-    }
+    if (val) lockScroll();
+    else unlockScroll();
   }
 );
 </script>
@@ -121,7 +124,6 @@ watch(
       <div
         v-if="show"
         class="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 font-tajawal select-none"
-        dir="rtl"
         @click="close"
       >
         <!-- Sheet Panel Container -->
@@ -170,12 +172,12 @@ watch(
               class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white text-xs font-bold flex items-center justify-center transition active:scale-90 cursor-pointer shrink-0 shadow-xs"
               @click="close"
             >
-              ✕
+              <X class="w-4 h-4" />
             </button>
           </div>
 
           <!-- Body / Content (Scrollable) -->
-          <div class="flex-1 overflow-y-auto pr-0.5">
+          <div class="flex-1 overflow-y-auto ps-0.5">
             <slot />
           </div>
 

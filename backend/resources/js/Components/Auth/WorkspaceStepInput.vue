@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6 font-sans" dir="rtl">
+  <div class="space-y-6 font-sans">
     <!-- Header / Brand Icon -->
     <div class="text-center space-y-3">
       <div
@@ -31,12 +31,12 @@
       <div class="space-y-1.5">
         <label
           for="workspaceCode"
-          class="block text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal text-right"
+          class="block text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal text-start"
         >
           {{ $t('auth.workspace_code') }}
         </label>
         <div class="relative">
-          <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
+          <div class="absolute inset-y-0 end-0 pe-3.5 flex items-center pointer-events-none text-slate-400">
             <Building class="w-4 h-4" />
           </div>
           <input
@@ -49,24 +49,18 @@
             autocomplete="off"
             autofocus
             dir="ltr"
-            class="w-full h-12 pr-10 pl-4 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-2xl text-slate-900 dark:text-white font-mono text-base font-bold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all uppercase tracking-wider text-center"
+            class="w-full h-12 pe-10 ps-4 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-2xl text-slate-900 dark:text-white font-mono text-base font-bold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all uppercase tracking-wider text-center"
           />
         </div>
       </div>
 
-      <!-- Quick Hint / Example -->
-      <div class="flex items-center justify-between text-[11px] text-slate-400 px-1 font-tajawal">
-        <span>{{ $t('auth.click_to_fill') }}:</span>
-        <div class="flex items-center gap-2">
-          <button
-            type="button"
-            @click="$emit('update:modelValue', '2m')"
-            class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-theme-light dark:hover:bg-theme-light text-slate-600 dark:text-slate-300 hover:text-theme-primary font-mono font-bold text-xs transition cursor-pointer"
-          >
-            2M
-          </button>
-        </div>
-      </div>
+      <!-- Neutral example (Latin text isolated so it never breaks the Arabic sentence) -->
+      <p class="text-[11px] text-slate-400 px-1 font-tajawal">
+        {{ $t('auth.workspace_code_example') }}:
+        <bdi dir="ltr" class="font-mono font-bold uppercase tracking-wider">{{
+          $t('auth.workspace_code_placeholder')
+        }}</bdi>
+      </p>
 
       <!-- Submit Button -->
       <button
@@ -79,11 +73,29 @@
           <span>{{ $t('auth.workspace_connecting') }}</span>
         </template>
         <template v-else>
-          <ArrowLeft class="w-5 h-5" />
+          <ArrowLeft class="ltr:rotate-180 w-5 h-5" />
           <span>{{ $t('auth.workspace_continue') }}</span>
         </template>
       </button>
     </form>
+
+    <!-- Public pages for people who do not have a workspace yet -->
+    <nav
+      class="flex flex-wrap items-center justify-center gap-x-4 border-t border-slate-200 pt-4 font-tajawal dark:border-slate-800"
+    >
+      <router-link
+        to="/welcome"
+        class="flex min-h-11 items-center text-xs font-bold text-slate-500 transition hover:text-theme-primary dark:text-slate-400"
+      >
+        {{ $t('landing.nav.discover') }}
+      </router-link>
+      <router-link
+        to="/pricing"
+        class="flex min-h-11 items-center text-xs font-bold text-slate-500 transition hover:text-theme-primary dark:text-slate-400"
+      >
+        {{ $t('landing.nav.pricing') }}
+      </router-link>
+    </nav>
   </div>
 </template>
 

@@ -6,12 +6,15 @@ namespace App\Actions\Users;
 
 use App\DTOs\Users\UpdateUserDTO;
 use App\Models\User;
+use App\Support\Roles\RoleGrantGuard;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 final class UpdateUserAction
 {
+    public function __construct(private readonly RoleGrantGuard $roleGrantGuard) {}
+
     /**
      * Update user details, optional password and sync role.
      *
@@ -41,8 +44,17 @@ final class UpdateUserAction
                 $data['password'] = Hash::make($dto->password);
             }
 
+            $wasActive = (bool) $user->is_active;
+            $rolesBefore = $user->getRoleNames()->sort()->values()->all();
+
             $user->update($data);
             $user->syncRoles([$dto->role]);
+
+            // SEC-03: password reset, deactivation or a different role set ends all sessions.
+            $rolesAfter = $user->getRoleNames()->sort()->values()->all();
+            if ($dto->password || ($wasActive && ! $dto->is_active) || $rolesBefore !== $rolesAfter) {
+                $user->tokens()->delete();
+            }
 
             return $user;
         });
@@ -67,6 +79,11 @@ final class UpdateUserAction
         $currentRoles = $target->getRoleNames()->values()->all();
         if ((int) $actor->id === (int) $target->id && $currentRoles !== [$dto->role]) {
             throw new AuthorizationException(__('auth.cannot_change_own_role'));
+        }
+
+        // SEC-04: a role change may not hand out permissions the actor does not hold.
+        if ($currentRoles !== [$dto->role]) {
+            $this->roleGrantGuard->assertCanAssignRole($actor, $dto->role);
         }
     }
 

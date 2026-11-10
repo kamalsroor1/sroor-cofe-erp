@@ -1,5 +1,9 @@
 <script setup>
+import { X } from 'lucide-vue-next';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 defineProps({
   items: { type: Array, required: true },
@@ -49,21 +53,23 @@ const formatTotal = (qty, price) => {
 
   <!-- Desktop Table -->
   <div class="hidden md:block overflow-x-auto pt-2">
-    <table class="w-full text-right text-xs">
+    <table class="w-full text-start text-xs">
       <thead>
         <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
           <th class="pb-2.5">{{ $t('inventory.item_name') }}</th>
           <th class="pb-2.5 w-28">{{ $t('common.quantity') }}</th>
           <th class="pb-2.5 w-28">{{ priceLabel }}</th>
           <th class="pb-2.5 font-mono">{{ $t('common.total') }}</th>
-          <th class="pb-2.5 text-center w-10">✕</th>
+          <th class="pb-2.5 text-center w-10">
+            <span class="sr-only">{{ $t('common.delete') }}</span>
+          </th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
         <tr v-for="(it, itIdx) in items" :key="it.item_id">
           <td class="py-3 font-bold text-slate-900 dark:text-white font-tajawal">
             {{ it.name }}
-            <span class="text-[10px] text-slate-400 dark:text-slate-500 mr-1">({{ it.unit }})</span>
+            <span class="text-[10px] text-slate-400 dark:text-slate-500 ms-1">({{ it.unit }})</span>
           </td>
 
           <td class="py-3">
@@ -91,7 +97,7 @@ const formatTotal = (qty, price) => {
           </td>
 
           <td class="py-3 font-mono font-black text-emerald-600 dark:text-emerald-400">
-            {{ formatTotal(it.quantity, it[priceField]) }} {{ $t('common.currency') }}
+            {{ formatTotal(it.quantity, it[priceField]) }} {{ currencyLabel }}
           </td>
 
           <td class="py-3 text-center">
@@ -100,7 +106,7 @@ const formatTotal = (qty, price) => {
               class="w-9 h-9 rounded-xl bg-rose-500/15 hover:bg-rose-500/30 text-rose-600 dark:text-rose-400 flex items-center justify-center transition active:scale-90 cursor-pointer"
               @click="onRemove(itIdx)"
             >
-              ✕
+              <X class="w-4 h-4" />
             </button>
           </td>
         </tr>
@@ -125,7 +131,7 @@ const formatTotal = (qty, price) => {
           class="w-9 h-9 rounded-xl bg-rose-500/15 text-rose-500 dark:text-rose-400 flex items-center justify-center transition active:scale-90 cursor-pointer shrink-0"
           @click="onRemove(itIdx)"
         >
-          ✕
+          <X class="w-4 h-4" />
         </button>
       </div>
 
@@ -162,7 +168,7 @@ const formatTotal = (qty, price) => {
       >
         <span class="text-slate-500 dark:text-slate-400 font-tajawal">{{ $t('common.total') }}:</span>
         <span class="font-black text-sm text-emerald-600 dark:text-emerald-400">
-          {{ formatTotal(it.quantity, it[priceField]) }} {{ $t('common.currency') }}
+          {{ formatTotal(it.quantity, it[priceField]) }} {{ currencyLabel }}
         </span>
       </div>
     </div>

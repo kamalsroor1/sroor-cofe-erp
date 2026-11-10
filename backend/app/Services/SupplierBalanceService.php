@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\OpeningBalance;
 use App\Models\Payment;
 use App\Models\Purchase;
 use App\Models\ReturnDocument;
@@ -39,6 +40,8 @@ class SupplierBalanceService
             // Running calculation: (Purchases - Payments) - Returns
             $balance = bcsub((string) $totalPurchases, (string) $totalPayments, 3);
             $finalBalance = bcsub($balance, (string) $totalReturns, 3);
+            // PRD-06: imported opening balance (signed, positive = we owe the supplier).
+            $finalBalance = bcadd($finalBalance, OpeningBalance::totalFor(OpeningBalance::PARTY_SUPPLIER, (int) $supplier->id), 3);
 
             $supplier->current_balance = $finalBalance;
             $supplier->save();
@@ -53,6 +56,28 @@ class SupplierBalanceService
     public function getSupplierLedger(Supplier $supplier, ?string $fromDate = null, ?string $toDate = null): array
     {
         $entries = collect();
+
+        // PRD-06: opening balance entries come first on the statement.
+        $openings = OpeningBalance::query()
+            ->where('party_type', OpeningBalance::PARTY_SUPPLIER)
+            ->where('party_id', $supplier->id)
+            ->when($fromDate, fn ($q) => $q->whereDate('balance_date', '>=', $fromDate))
+            ->when($toDate, fn ($q) => $q->whereDate('balance_date', '<=', $toDate))
+            ->get();
+
+        foreach ($openings as $opening) {
+            $amount = (string) $opening->amount;
+            $isCredit = bccomp($amount, '0.000', 3) >= 0;
+            $entries->push([
+                'date' => $opening->balance_date->format('Y-m-d'),
+                'type' => __('import.opening_balance_entry'),
+                'ref_number' => null,
+                'debit' => $isCredit ? '0.000' : ltrim($amount, '-'),
+                'credit' => $isCredit ? $amount : '0.000',
+                'notes' => $opening->notes,
+                'timestamp' => 0,
+            ]);
+        }
 
         // 1. Confirmed Purchases (Credit - المستحقات للمورد)
         $purchases = Purchase::where('supplier_id', $supplier->id)

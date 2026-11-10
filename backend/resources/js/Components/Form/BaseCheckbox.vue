@@ -39,7 +39,7 @@
           :class="{ 'text-rose-500': hasError }"
         >
           {{ label }}
-          <span v-if="required" class="text-rose-500 font-black mr-0.5">*</span>
+          <span v-if="required" class="text-rose-500 font-black ms-0.5">*</span>
         </span>
         <span v-if="description" class="text-xs text-slate-500 dark:text-slate-400 font-medium">
           {{ description }}

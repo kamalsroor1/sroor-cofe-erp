@@ -1,4 +1,5 @@
 <script setup>
+import { X, Search, RefreshCw, Rocket } from 'lucide-vue-next';
 import { onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({
@@ -28,7 +29,7 @@ onUnmounted(() => {
 <template>
   <teleport to="body">
     <Transition name="drawer">
-      <div v-if="show" class="fixed inset-0 z-50 overflow-hidden font-tajawal" dir="rtl">
+      <div v-if="show" class="fixed inset-0 z-50 overflow-hidden font-tajawal">
         <!-- Backdrop -->
         <div
           @click="emit('close')"
@@ -36,9 +37,9 @@ onUnmounted(() => {
         />
 
         <!-- Slide-Over Drawer Container -->
-        <div class="fixed inset-y-0 left-0 max-w-full flex pl-0 sm:pl-10 pointer-events-none">
+        <div class="fixed inset-y-0 end-0 max-w-full flex pe-0 sm:pe-10 pointer-events-none">
           <div
-            class="drawer-panel w-screen max-w-md bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col justify-between pointer-events-auto"
+            class="drawer-panel w-screen max-w-md bg-white dark:bg-slate-900 border-s border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col justify-between pointer-events-auto"
           >
             <!-- Drawer Header -->
             <div
@@ -48,7 +49,7 @@ onUnmounted(() => {
                 <div
                   class="w-10 h-10 rounded-2xl bg-theme-primary/15 border border-theme-border text-theme-primary text-theme-primary flex items-center justify-center font-bold text-base shadow-xs"
                 >
-                  🔍
+                  <Search class="w-5 h-5" />
                 </div>
                 <div>
                   <div class="flex items-center gap-2">
@@ -73,7 +74,7 @@ onUnmounted(() => {
                 type="button"
                 class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white flex items-center justify-center text-sm font-bold transition active:scale-90 cursor-pointer shadow-xs"
               >
-                ✕
+                <X class="w-4 h-4" />
               </button>
             </div>
 
@@ -91,7 +92,7 @@ onUnmounted(() => {
                 type="button"
                 class="h-11 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-bold transition active:scale-95 cursor-pointer flex items-center gap-1.5 border border-slate-200 dark:border-transparent shadow-xs"
               >
-                <span>🔄</span>
+                <RefreshCw class="w-4 h-4" />
                 <span>{{ $t('common.reset_filters') }}</span>
               </button>
 
@@ -109,7 +110,7 @@ onUnmounted(() => {
                   type="button"
                   class="h-11 px-5 rounded-2xl btn-primary-theme text-xs font-black shadow-theme-primary transition transform active:scale-95 cursor-pointer flex items-center gap-1.5"
                 >
-                  <span>🚀</span>
+                  <Rocket class="w-4 h-4" />
                   <span>{{ $t('common.apply_filters') }}</span>
                 </button>
               </div>
@@ -150,5 +151,10 @@ onUnmounted(() => {
 .drawer-leave-to .drawer-panel {
   transform: translateX(-100%);
   opacity: 0.7;
+}
+
+[dir='ltr'] .drawer-enter-from .drawer-panel,
+[dir='ltr'] .drawer-leave-to .drawer-panel {
+  transform: translateX(100%);
 }
 </style>

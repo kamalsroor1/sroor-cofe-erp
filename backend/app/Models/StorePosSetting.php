@@ -24,12 +24,21 @@ use Illuminate\Support\Carbon;
  * @property int $scale_price_divisor
  * @property bool $scale_check_digit
  * @property string|null $max_discount_percent
+ * @property bool $require_shift_for_sales
+ * @property string $catalog_cards_per_row
+ * @property bool $show_item_images
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Store $store
  */
 class StorePosSetting extends Model
 {
+    /** POS-07: the cap used when a store never set `max_discount_percent` (or cleared it). */
+    public const DEFAULT_MAX_DISCOUNT_PERCENT = '10.000';
+
+    /** @var list<string> */
+    public const CARDS_PER_ROW = ['2', '3', 'auto'];
+
     protected $fillable = [
         'store_id',
         'scale_barcode_enabled',
@@ -41,6 +50,9 @@ class StorePosSetting extends Model
         'scale_price_divisor',
         'scale_check_digit',
         'max_discount_percent',
+        'require_shift_for_sales',
+        'catalog_cards_per_row',
+        'show_item_images',
     ];
 
     protected function casts(): array
@@ -55,6 +67,8 @@ class StorePosSetting extends Model
             'scale_price_divisor' => 'integer',
             'scale_check_digit' => 'boolean',
             'max_discount_percent' => 'decimal:3',
+            'require_shift_for_sales' => 'boolean',
+            'show_item_images' => 'boolean',
         ];
     }
 
@@ -66,7 +80,7 @@ class StorePosSetting extends Model
         $setting = new self;
         $setting->forceFill(array_merge(
             ScaleBarcodeConfig::defaults()->toArray(),
-            ['store_id' => $storeId, 'max_discount_percent' => null],
+            ['store_id' => $storeId, 'max_discount_percent' => null, 'require_shift_for_sales' => (bool) config('pos.require_shift_by_default', true), 'catalog_cards_per_row' => '3', 'show_item_images' => false],
         ));
 
         return $setting;
@@ -78,6 +92,17 @@ class StorePosSetting extends Model
     public static function forStore(int $storeId): self
     {
         return self::query()->where('store_id', $storeId)->first() ?? self::defaultsFor($storeId);
+    }
+
+    /**
+     * POS-07: the total-discount cap (% of gross) a cashier may give without approval.
+     * A store that never set one (NULL) gets the default; 100 means "no limit".
+     */
+    public function effectiveMaxDiscountPercent(): string
+    {
+        return $this->max_discount_percent === null
+            ? self::DEFAULT_MAX_DISCOUNT_PERCENT
+            : bcadd((string) $this->max_discount_percent, '0', 3);
     }
 
     public function scaleConfig(): ScaleBarcodeConfig

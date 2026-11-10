@@ -29,6 +29,11 @@ return [
         // ApiLoginRequest failure counter (answers 422 auth.throttle). Keep it below
         // per_login_per_minute so the counter answers before the limiter's 429.
         'max_failed_attempts' => (int) env('RATE_LIMIT_TENANT_LOGIN_MAX_FAILURES', 6),
+
+        // SEC-05 per-account lockout: this many failures for one tenant + login (any IP)
+        // locks that login for the given minutes, even for the correct password.
+        'account_lockout_attempts' => (int) env('RATE_LIMIT_TENANT_LOGIN_LOCKOUT_ATTEMPTS', 5),
+        'account_lockout_minutes' => (int) env('RATE_LIMIT_TENANT_LOGIN_LOCKOUT_MINUTES', 15),
     ],
 
     // Central (platform operator) login, used by IDEN-1.3.
@@ -62,6 +67,27 @@ return [
     // several devices behind one NAT address is not locked out.
     'tenant_resolve' => [
         'per_minute' => (int) env('RATE_LIMIT_TENANT_RESOLVE', 30),
+    ],
+
+    // POST /api/v1/billing/invoices/{id}/payments (receipt upload), per tenant + user + IP.
+    'billing_receipt_upload' => [
+        'per_hour' => (int) (env('RATE_LIMIT_BILLING_RECEIPT_HOURLY') ?: 20),
+    ],
+
+    // POST /api/v1/billing/renewal-invoice, per tenant + user + IP.
+    'billing_renewal_invoice' => [
+        'per_hour' => (int) (env('RATE_LIMIT_BILLING_RENEWAL_HOURLY') ?: 10),
+    ],
+
+    // Public assisted-signup form (POST /api/v1/public/signup-requests), PRD-05: strict, per client IP (accepted submissions only, see AppServiceProvider).
+    'signup_requests' => [
+        'per_hour' => (int) (env('RATE_LIMIT_SIGNUP_HOURLY') ?: 3),
+        'per_day' => (int) (env('RATE_LIMIT_SIGNUP_DAILY') ?: 10),
+        // Every attempt (valid or not) per IP and hour; the two limits above count accepted submissions only.
+        'attempts_per_hour' => (int) (env('RATE_LIMIT_SIGNUP_ATTEMPTS_HOURLY') ?: 30),
+        // Accepted submissions across ALL client IPs (one shared bucket); IPv6 clients are keyed by their /64.
+        'global_per_hour' => (int) (env('RATE_LIMIT_SIGNUP_GLOBAL_HOURLY') ?: 30),
+        'global_per_day' => (int) (env('RATE_LIMIT_SIGNUP_GLOBAL_DAILY') ?: 200),
     ],
 
 ];

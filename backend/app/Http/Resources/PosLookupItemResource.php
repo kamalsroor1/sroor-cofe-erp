@@ -6,6 +6,7 @@ namespace App\Http\Resources;
 
 use App\Models\Item;
 use App\Support\CostVisibility;
+use App\Support\PosItemPrices;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -25,7 +26,6 @@ class PosLookupItemResource extends JsonResource
         /** @var Item $it */
         $it = $this->resource;
         $showCost = CostVisibility::allows($request->user());
-        $min = (float) $it->min_selling_price;
 
         return [
             'id' => (int) $it->id,
@@ -35,8 +35,7 @@ class PosLookupItemResource extends JsonResource
             'category' => (string) ($it->category ?: __('inventory.general_category')),
             'category_id' => $it->category_id ? (int) $it->category_id : null,
             'price_retail' => (float) $it->selling_price,
-            'price_wholesale' => $min > 0 ? $min : (float) $it->selling_price,
-            'min_selling_price' => $showCost ? ($min > 0 ? $min : (float) $it->cost_price) : $min,
+            ...PosItemPrices::forItem($it, $request->user()),
             'cost_price' => $showCost ? (float) $it->cost_price : null,
             'current_stock' => (float) ($it->getAttribute('calculated_stock') ?? $it->current_stock ?? 0),
             'min_stock_level' => (float) ($it->min_stock_level ?: 0),
@@ -44,7 +43,7 @@ class PosLookupItemResource extends JsonResource
             'pos_sort_order' => (int) ($it->pos_sort_order ?? 0),
             'is_pos_pinned' => (bool) ($it->is_pos_pinned ?? false),
             'pos_sales_count' => (int) ($it->pos_sales_count ?? 0),
-            'is_weighted' => (bool) $it->is_weighted,
+            'is_weighted' => $it->isSoldByWeight(),
         ];
     }
 }

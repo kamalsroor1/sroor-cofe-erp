@@ -32,6 +32,9 @@ final class LoginThrottleApiTest extends TenantTestCase
 
     public function test_failure_counter_of_one_tenant_does_not_lock_the_same_login_in_another_tenant(): void
     {
+        // SEC-05's per-account lockout (5) would answer before this IP failure counter (6);
+        // raise it so this test keeps exercising the IP counter's tenant scoping.
+        config(['rate_limits.tenant_login.account_lockout_attempts' => 100]);
         [$a, $b] = $this->twoTenantsSharingALogin();
 
         for ($i = 1; $i <= 6; $i++) {

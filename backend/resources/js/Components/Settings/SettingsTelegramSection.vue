@@ -42,7 +42,7 @@
         >
           <div
             class="w-5 h-5 rounded-full bg-white transition-transform shadow-md"
-            :class="form.telegram_notifications_enabled ? '-translate-x-6' : 'translate-x-0'"
+            :class="form.telegram_notifications_enabled ? 'ltr:translate-x-6 rtl:-translate-x-6' : 'translate-x-0'"
           ></div>
         </div>
       </div>

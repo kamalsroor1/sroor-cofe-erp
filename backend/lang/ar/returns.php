@@ -121,4 +121,6 @@ return [
     'refund_method_walk_in_cash' => 'العميل النقدي العام يُرد له المبلغ نقدًا دائمًا',
     'refund_method_invalid' => 'طريقة الرد المختارة غير صحيحة.',
     'cash_refund_exceeds_paid' => 'مبلغ الرد النقدي (:required) أكبر من المدفوع فعلًا على هذه الفاتورة (المتاح :available). اختر الخصم من رصيد العميل بدلًا من ذلك.',
+    'select_customer_warning' => 'يرجى اختيار العميل',
+    'select_supplier_warning' => 'يرجى اختيار المورد',
 ];

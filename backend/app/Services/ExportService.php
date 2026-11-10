@@ -10,6 +10,7 @@ use App\Models\Purchase;
 use App\Models\ReturnDocument;
 use App\Models\StockMovement;
 use App\Models\Supplier;
+use App\Support\StockMovementTypes;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExportService
@@ -271,31 +272,19 @@ class ExportService
             __('inventory.notes_and_statement'),
         ];
 
-        $inTypes = [
-            'purchase_in', 'stock_deposit_in', 'stock_adjustment_in',
-            'cancellation_in', 'transfer_in', 'sales_return_in', 'purchase_restore_in',
-        ];
-
-        $outTypes = [
-            'sales_out', 'waste_out', 'stock_adjustment_out',
-            'transfer_out', 'purchase_cancel_out', 'purchase_return_out',
-        ];
-
-        $adjTypes = ['stock_adjustment_in', 'stock_adjustment_out', 'stock_deposit_in'];
-
         $query = StockMovement::with(['user', 'store'])
             ->where('item_id', $item->id)
             ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
             ->when($fromDate, fn ($q) => $q->whereDate('created_at', '>=', $fromDate))
             ->when($toDate, fn ($q) => $q->whereDate('created_at', '<=', $toDate))
-            ->when($filterType === 'in', fn ($q) => $q->whereIn('movement_type', $inTypes))
-            ->when($filterType === 'out', fn ($q) => $q->whereIn('movement_type', $outTypes))
-            ->when($filterType === 'adjustments', fn ($q) => $q->whereIn('movement_type', $adjTypes))
+            ->when($filterType === 'in', fn ($q) => $q->whereIn('movement_type', StockMovementTypes::INBOUND))
+            ->when($filterType === 'out', fn ($q) => $q->whereIn('movement_type', StockMovementTypes::OUTBOUND))
+            ->when($filterType === 'adjustments', fn ($q) => $q->whereIn('movement_type', StockMovementTypes::ADJUSTMENTS))
             ->oldest('created_at');
 
         $rows = [];
         foreach ($query->get() as $row) {
-            $isIn = in_array($row->movement_type, $inTypes);
+            $isIn = StockMovementTypes::isInbound((string) $row->movement_type);
             $typeLabel = match ($row->movement_type) {
                 'sales_out' => __('invoices.sales_invoice'),
                 'purchase_in' => __('purchases.title'),
@@ -305,6 +294,7 @@ class ExportService
                 'stock_adjustment_in' => __('inventory.movement_adj_in'),
                 'stock_adjustment_out' => __('inventory.movement_adj_out'),
                 'stock_deposit_in' => __('inventory.movement_deposit'),
+                'opening_balance_in' => __('inventory.movement_opening_balance'),
                 'transfer_in' => __('inventory.transfers_title'),
                 'transfer_out' => __('inventory.transfers_title'),
                 'sales_return_in' => __('returns.sales_return'),

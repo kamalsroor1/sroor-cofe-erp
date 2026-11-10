@@ -3,32 +3,32 @@ import { useRouter, useRoute } from 'vue-router';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
+import { useLoadError } from './useLoadError';
+import { businessToday } from './useBusinessDate';
+import { useRemoteOptions } from './useRemoteOptions';
+
+const newLine = () => ({ item_id: '', item_option: null, quantity: '1.000', cost_price: '0.000' });
 
 export function useCreatePurchase() {
     const router = useRouter();
     const route = useRoute();
     const { t } = useTrans();
+    const { error, errorMessage, clearError, setError } = useLoadError();
+    const isLoading = ref(false);
 
-    const suppliers = ref([]);
-    const availableItems = ref([]);
+    const { searchFn: searchSuppliers } = useRemoteOptions('suppliers');
+    const { searchFn: searchItems, fetchOption: fetchItemOption } = useRemoteOptions('items');
     const isSubmitting = ref(false);
 
     const form = reactive({
         supplier_id: '',
-        purchase_date: new Date().toISOString().split('T')[0],
+        purchase_date: businessToday(),
         supplier_invoice_ref: '',
         paid_amount: '0.000',
         discount_amount: '0.000',
         payment_method: 'cash',
         notes: '',
-        items: [{ item_id: '', quantity: '1.000', cost_price: '0.000' }],
-    });
-
-    const supplierOptions = computed(() => {
-        return suppliers.value.map((s) => ({
-            value: s.id,
-            label: s.company_name ? `${s.name} (${s.company_name})` : s.name,
-        }));
+        items: [newLine()],
     });
 
     const subtotal = computed(() => {
@@ -45,7 +45,7 @@ export function useCreatePurchase() {
     const remaining = computed(() => Math.max(0, netTotal.value - paid.value));
 
     const addItemLine = () => {
-        form.items.push({ item_id: '', quantity: '1.000', cost_price: '0.000' });
+        form.items.push(newLine());
     };
 
     const removeItemLine = (idx) => {
@@ -54,40 +54,41 @@ export function useCreatePurchase() {
         }
     };
 
-    const onItemSelect = (line) => {
-        const item = availableItems.value.find((it) => it.id === parseInt(line.item_id, 10));
-        if (item) {
-            line.cost_price = item.cost_price?.toString() || '0.000';
-        }
+    const onItemSelect = (line, option) => {
+        line.item_option = option;
+        line.cost_price = option?.raw?.cost_price?.toString() || '0.000';
     };
 
-    const loadInitialData = async () => {
+    const hydratePrefill = async () => {
+        if (!route.query.prefill) return;
+        isLoading.value = true;
+        clearError();
         try {
-            const [supRes, itemRes] = await Promise.all([
-                api.get('/suppliers', { params: { per_page: 100 } }),
-                api.get('/items', { params: { per_page: 200 } }),
-            ]);
-
-            suppliers.value = supRes.data?.data || [];
-            availableItems.value = itemRes.data?.data || [];
-
-            // Check for smart reorder prefill
-            if (route.query.prefill) {
-                try {
-                    const prefilled = JSON.parse(route.query.prefill);
-                    if (Array.isArray(prefilled) && prefilled.length > 0) {
-                        form.items = prefilled.map((p) => ({
-                            item_id: p.item_id || p.id,
-                            quantity: (p.quantity || p.suggested_reorder_qty || 10).toString(),
-                            cost_price: (p.cost_price || 0).toString(),
-                        }));
-                    }
-                } catch (err) {
-                    console.error('Error parsing prefill params:', err);
-                }
+            let prefilled = [];
+            try {
+                prefilled = JSON.parse(route.query.prefill);
+            } catch {
+                // Malformed prefill param: start with an empty basket.
             }
-        } catch (error) {
-            console.error('Failed to load form dependencies:', error);
+            if (!Array.isArray(prefilled) || prefilled.length === 0) return;
+
+            // Item labels are not part of the prefill payload: read them by id so the picker shows names.
+            const options = await Promise.all(
+                prefilled.map(async (p) => {
+                    const id = p.item_id || p.id;
+                    return (await fetchItemOption(id)) || { value: id, label: p.name || `#${id}`, raw: p };
+                })
+            );
+            form.items = prefilled.map((p, idx) => ({
+                item_id: p.item_id || p.id,
+                item_option: options[idx],
+                quantity: (p.quantity || p.suggested_reorder_qty || 10).toString(),
+                cost_price: (p.cost_price || 0).toString(),
+            }));
+        } catch (err) {
+            setError(err);
+        } finally {
+            isLoading.value = false;
         }
     };
 
@@ -132,13 +133,16 @@ export function useCreatePurchase() {
         }
     };
 
-    onMounted(loadInitialData);
+    onMounted(hydratePrefill);
 
     return {
+        isLoading,
+        error,
+        errorMessage,
+        retry: hydratePrefill,
         form,
-        suppliers,
-        availableItems,
-        supplierOptions,
+        searchSuppliers,
+        searchItems,
         isSubmitting,
         subtotal,
         discount,

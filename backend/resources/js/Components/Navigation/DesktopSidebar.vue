@@ -1,6 +1,6 @@
 <template>
   <aside
-    class="hidden md:flex h-full max-h-full bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800/80 flex-col shrink-0 font-tajawal select-none transition-all duration-300 shadow-xl z-30 overflow-hidden"
+    class="hidden md:flex h-full max-h-full bg-white dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800/80 flex-col shrink-0 font-tajawal select-none transition-all duration-300 shadow-xl z-30 overflow-hidden"
     :class="isCollapsed ? 'w-20' : 'w-80'"
   >
     <!-- 📌 1. HEADER: BRAND LOGO + COLLAPSE/EXPAND TOGGLE -->
@@ -10,12 +10,13 @@
       <!-- Expanded Mode Header -->
       <div v-if="!isCollapsed" class="flex items-center justify-between">
         <div class="flex items-center gap-3 overflow-hidden">
-          <div
-            class="w-10 h-10 rounded-2xl flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shrink-0 transition-transform hover:scale-105"
-            :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
-          >
-            <Coffee class="w-5 h-5 stroke-[2.5]" />
-          </div>
+          <img
+            v-if="appConfigStore.companyLogo"
+            :src="appConfigStore.companyLogo"
+            :alt="appConfigStore.companyName"
+            class="w-10 h-10 rounded-2xl object-contain shrink-0"
+          />
+          <BrandMark v-else variant="app-icon" :size="40" class="rounded-2xl shadow-lg" />
           <div class="min-w-0">
             <h2 class="font-black text-sm text-slate-900 dark:text-white tracking-tight truncate">
               {{ appConfigStore.companyName || $t('dashboard.company_title') }}
@@ -36,31 +37,32 @@
           class="w-8 h-8 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
           :title="isCollapsed ? $t('nav.layout.expand_menu') : $t('nav.layout.collapse_menu')"
         >
-          <ChevronRight class="w-4 h-4 stroke-[2.5]" />
+          <ChevronRight class="ltr:rotate-180 w-4 h-4 stroke-[2.5]" />
         </button>
       </div>
 
       <!-- Collapsed Mini Mode Header -->
       <div v-else class="flex flex-col items-center gap-2.5 py-1">
-        <div
-          class="w-10 h-10 rounded-2xl flex items-center justify-center text-slate-950 font-black text-lg shadow-lg shrink-0 transition-transform hover:scale-105"
-          :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
-        >
-          <Coffee class="w-5 h-5 stroke-[2.5]" />
-        </div>
+        <img
+          v-if="appConfigStore.companyLogo"
+          :src="appConfigStore.companyLogo"
+          :alt="appConfigStore.companyName"
+          class="w-10 h-10 rounded-2xl object-contain shrink-0"
+        />
+        <BrandMark v-else variant="app-icon" :size="40" class="rounded-2xl shadow-lg" />
         <button
           type="button"
           @click="toggleCollapse"
           class="w-8 h-8 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
           :title="$t('nav.layout.expand_menu')"
         >
-          <ChevronLeft class="w-4 h-4 stroke-[2.5]" />
+          <ChevronLeft class="ltr:rotate-180 w-4 h-4 stroke-[2.5]" />
         </button>
       </div>
     </div>
 
     <!-- 📌 2. QUICK POS ACTION BUTTON (F2) -->
-    <div class="px-3 pt-3 shrink-0" v-if="isModuleEnabled('pos_and_sales')">
+    <div class="px-3 pt-3 shrink-0" v-if="canAccessPath('/pos')">
       <div
         class="relative"
         @mouseenter="handleItemHover($event, $t('nav.layout.quick_pos_hint'))"
@@ -128,7 +130,9 @@
                 </div>
               </div>
             </div>
-            <ChevronLeft class="w-4 h-4 text-slate-400 group-hover:text-theme-primary transition shrink-0" />
+            <ChevronLeft
+              class="ltr:rotate-180 w-4 h-4 text-slate-400 group-hover:text-theme-primary transition shrink-0"
+            />
           </router-link>
 
           <!-- Collapsed Mini Mode: Mini Icon Button -->
@@ -200,7 +204,7 @@
                   v-if="section.comingSoon"
                   class="px-2 py-0.5 rounded-lg bg-amber-500/15 text-[10px] font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20"
                 >
-                  🚀 {{ $t('nav.coming_soon') }}
+                  {{ $t('nav.coming_soon') }}
                 </span>
                 <template v-else>
                   <span
@@ -236,7 +240,7 @@
                   <!-- Active Accent Bar -->
                   <span
                     v-if="isItemActive(item)"
-                    class="absolute right-0 top-1 bottom-1 w-1 rounded-l-full"
+                    class="absolute start-0 top-1 bottom-1 w-1 rounded-e-full"
                     :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
                   ></span>
 
@@ -255,7 +259,7 @@
                   </div>
 
                   <ChevronLeft
-                    class="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 group-hover:text-theme-primary transition shrink-0"
+                    class="ltr:rotate-180 w-3.5 h-3.5 opacity-40 group-hover:opacity-100 group-hover:text-theme-primary transition shrink-0"
                   />
                 </router-link>
               </div>
@@ -380,7 +384,7 @@
       <div
         v-if="hoveredTooltip.show && isCollapsed"
         class="fixed z-[999999] pointer-events-none -translate-y-1/2 px-3 py-2 bg-slate-950 text-white text-xs font-black rounded-xl shadow-2xl border border-slate-700 flex items-center gap-2 font-tajawal whitespace-nowrap"
-        :style="{ top: `${hoveredTooltip.top}px`, right: `${hoveredTooltip.right}px` }"
+        :style="tooltipStyle"
       >
         <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"></span>
         <span>{{ hoveredTooltip.text }}</span>
@@ -390,14 +394,15 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useNavigation } from '../../Composables/useNavigation';
-import { useModules } from '../../Composables/useModules';
+import { useRoutePermission } from '../../Composables/useRoutePermission';
 import { useAppConfigStore } from '../../stores/appConfig';
+import BrandMark from '../Brand/BrandMark.vue';
 import { useAppUpdate } from '../../Composables/useAppUpdate';
 import versionData from '../../version.json';
-import { ChevronRight, ChevronLeft, ChevronDown, Plus, Coffee, Sparkles } from 'lucide-vue-next';
+import { ChevronRight, ChevronLeft, ChevronDown, Plus, Sparkles } from 'lucide-vue-next';
 
 const props = defineProps({
   isCollapsed: { type: Boolean, default: false },
@@ -408,7 +413,7 @@ const emit = defineEmits(['toggle-collapse']);
 const route = useRoute();
 const appConfigStore = useAppConfigStore();
 const { navigationSections } = useNavigation();
-const { isModuleEnabled } = useModules();
+const { canAccessPath } = useRoutePermission();
 const { checkForUpdates } = useAppUpdate();
 
 const currentVersionName = ref(versionData?.version || '1.0.10');
@@ -469,7 +474,14 @@ const isItemActive = (item) => {
 };
 
 // 🌟 Mini Tooltip Tracking
-const hoveredTooltip = ref({ show: false, text: '', top: 0, right: 0 });
+const hoveredTooltip = ref({ show: false, text: '', top: 0, offset: 0 });
+
+// Viewport coordinates. The sidebar sits at the inline start edge (right in RTL, left in LTR), so the
+// tooltip opens toward the content: anchored by `right` in RTL and by `left` in LTR.
+const tooltipStyle = computed(() => ({
+  top: `${hoveredTooltip.value.top}px`,
+  [appConfigStore.isRtl ? 'right' : 'left']: `${hoveredTooltip.value.offset}px`,
+}));
 
 const handleItemHover = (event, text) => {
   if (!props.isCollapsed) return;
@@ -478,7 +490,7 @@ const handleItemHover = (event, text) => {
     show: true,
     text,
     top: rect.top + rect.height / 2,
-    right: window.innerWidth - rect.left + 12,
+    offset: appConfigStore.isRtl ? window.innerWidth - rect.left + 12 : rect.right + 12,
   };
 };
 

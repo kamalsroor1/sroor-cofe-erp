@@ -2,9 +2,11 @@ import { ref, onMounted } from 'vue';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
+import { useLoadError } from './useLoadError';
 
 export function useRoles() {
     const { t } = useTrans();
+    const { error, errorMessage, clearError, setError } = useLoadError();
 
     const roles = ref([]);
     const selectedRole = ref(null);
@@ -15,6 +17,7 @@ export function useRoles() {
 
     const fetchMatrix = async (roleId = null) => {
         isLoading.value = true;
+        clearError();
         try {
             const res = await api.get('/roles', { params: { role_id: roleId } });
             const data = res.data?.data || {};
@@ -29,7 +32,7 @@ export function useRoles() {
 
             activePermissions.value = [...(selectedRole.value?.permissions || [])];
         } catch (e) {
-            console.error('Failed to load roles matrix:', e);
+            setError(e);
         } finally {
             isLoading.value = false;
         }
@@ -104,6 +107,9 @@ export function useRoles() {
         activePermissions,
         isLoading,
         isSaving,
+        error,
+        errorMessage,
+        retry: () => fetchMatrix(selectedRole.value?.id ?? null),
         fetchMatrix,
         selectRole,
         togglePermission,

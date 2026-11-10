@@ -1,13 +1,13 @@
 {
   "id": "cloud-erp-pos-app",
-  "name": "Retail ERP | نظام الفواتير والمخزون ونقاط البيع",
-  "short_name": "Retail ERP",
-  "description": "نظام سحابي لإدارة المبيعات والفواتير والمخزون ونقاط البيع",
+  "name": "إبراء | Ibraa ERP",
+  "short_name": "إبراء",
+  "description": "إبراء: نظام سحابي للمبيعات والفواتير والمخزون ونقاط البيع. حساباتك خالصة. كل قرش في مكانه.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#020617",
-  "theme_color": "#0f172a",
+  "background_color": "#13201C",
+  "theme_color": "#0F6E5E",
   "orientation": "portrait-primary",
   "dir": "rtl",
   "lang": "ar",
@@ -15,27 +15,9 @@
   "icons": [
     {
       "src": "logo.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "logo.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "logo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     }
   ]
 }

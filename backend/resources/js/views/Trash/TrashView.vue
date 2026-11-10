@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Page Header & Action Controls -->
-    <PageHeader :title="$t('trash.trash_title')" :subtitle="$t('trash.trash_subtitle')" icon="🗑️">
+    <PageHeader :title="$t('trash.trash_title')" :subtitle="$t('trash.trash_subtitle')" icon="trash2">
       <template #actions>
         <BaseButton
           type="button"

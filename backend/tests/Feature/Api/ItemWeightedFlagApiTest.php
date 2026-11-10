@@ -43,14 +43,28 @@ final class ItemWeightedFlagApiTest extends TenantTestCase
         $this->assertTrue($this->itemFlag($tenant, (int) $response->json('data.id')));
     }
 
-    public function test_create_defaults_to_not_weighted_even_for_kg_unit(): void
+    public function test_create_defaults_to_weighted_for_a_weight_unit_when_the_flag_is_not_sent(): void
     {
         $tenant = $this->createTenant();
 
         $response = $this->postJson('/api/v1/items', $this->payload(), $this->tenantHeaders($tenant));
 
-        $response->assertStatus(201)->assertJsonPath('data.is_weighted', false);
-        $this->assertFalse($this->itemFlag($tenant, (int) $response->json('data.id')));
+        $response->assertStatus(201)->assertJsonPath('data.is_weighted', true);
+        $this->assertTrue($this->itemFlag($tenant, (int) $response->json('data.id')));
+    }
+
+    public function test_create_defaults_to_not_weighted_for_a_piece_unit_and_honours_an_explicit_false(): void
+    {
+        $tenant = $this->createTenant();
+        $headers = $this->tenantHeaders($tenant);
+
+        $piece = $this->postJson('/api/v1/items', $this->payload(['unit' => 'قطعة']), $headers);
+        $piece->assertStatus(201)->assertJsonPath('data.is_weighted', false);
+
+        // An explicit false is stored, but the item still sells by weight through its kg unit (isSoldByWeight).
+        $explicit = $this->postJson('/api/v1/items', $this->payload(['is_weighted' => false]), $headers);
+        $explicit->assertStatus(201)->assertJsonPath('data.is_weighted', true);
+        $this->assertFalse($this->itemFlag($tenant, (int) $explicit->json('data.id')));
     }
 
     public function test_update_sets_and_clears_flag_and_keeps_it_when_omitted(): void
@@ -70,7 +84,8 @@ final class ItemWeightedFlagApiTest extends TenantTestCase
             ->assertJsonPath('data.is_weighted', true);
         $this->assertTrue($this->itemFlag($tenant, $id));
 
-        $this->putJson('/api/v1/items/'.$id, $this->payload(['is_weighted' => false]), $headers)
+        // Clearing the flag on a non-weight unit: the item stops selling by weight.
+        $this->putJson('/api/v1/items/'.$id, $this->payload(['unit' => 'قطعة', 'is_weighted' => false]), $headers)
             ->assertOk()
             ->assertJsonPath('data.is_weighted', false);
         $this->assertFalse($this->itemFlag($tenant, $id));

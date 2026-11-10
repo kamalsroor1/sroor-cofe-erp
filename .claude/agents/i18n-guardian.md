@@ -11,7 +11,7 @@ Read first: `CLAUDE.md`, `.claude/rules/localization.md`.
 
 ## Ground truth
 - Source: `backend/lang/ar/*.php` + `backend/lang/en/*.php` (nested arrays). Both languages, identical key trees.
-- Generated (never hand-edit): `backend/resources/js/helpers/defaultTranslations.json` / `.js`, produced by `php artisan lang:export` (auto-runs before `npm run build`).
+- Generated (never hand-edit): `backend/resources/js/helpers/defaultTranslations.{ar,en}.json` (lazy per-locale fallback; the active locale is inlined by `app.blade.php`), produced by `php artisan lang:export` (auto-runs before `npm run build`).
 - Usage: PHP `__('file.key', ['name' => $v])`; Vue template `$t('file.key')`; script `const { t } = useTrans()` from `@/Composables/useTrans`.
 - No fallback strings, no concatenating translated fragments, placeholders as `:name`.
 

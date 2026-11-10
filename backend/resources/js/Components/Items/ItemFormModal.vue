@@ -42,7 +42,7 @@
 
         <BaseSelect
           :model-value="form.unit"
-          @update:model-value="updateForm('unit', $event)"
+          @update:model-value="onUnitChange"
           :label="$t('inventory.unit')"
           :required="true"
           :options="unitOptions"
@@ -51,9 +51,18 @@
         />
       </div>
 
+      <BaseSwitch
+        :model-value="!!form.is_weighted"
+        @update:model-value="updateForm('is_weighted', $event)"
+        :label="$t('inventory.sold_by_weight')"
+        :description="$t('inventory.sold_by_weight_hint')"
+        data-testid="item-is-weighted"
+      />
+
       <!-- Row 3: Pricing Grid (Cost, Retail, Min Selling/Wholesale, Min Stock Level) -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <BaseNumberInput
+          v-if="form.cost_price != null"
           :model-value="form.cost_price"
           @update:model-value="updateForm('cost_price', $event)"
           :label="$t('inventory.cost_price')"
@@ -74,6 +83,16 @@
         />
 
         <BaseNumberInput
+          :model-value="form.wholesale_price"
+          @update:model-value="updateForm('wholesale_price', $event)"
+          :label="$t('inventory.wholesale_price')"
+          :min="0"
+          :step="0.001"
+          :error="errors?.wholesale_price"
+        />
+
+        <BaseNumberInput
+          v-if="form.min_selling_price != null"
           :model-value="form.min_selling_price"
           @update:model-value="updateForm('min_selling_price', $event)"
           :label="$t('inventory.min_selling_price')"
@@ -120,6 +139,8 @@ import BaseNumberInput from '../Form/BaseNumberInput.vue';
 import BaseSelect from '../Form/BaseSelect.vue';
 import BaseTextarea from '../Form/BaseTextarea.vue';
 import BaseButton from '../Common/BaseButton.vue';
+import BaseSwitch from '../Form/BaseSwitch.vue';
+import { isWeightUnit } from '../../helpers/weightUnits';
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -137,10 +158,13 @@ const emit = defineEmits(['close', 'submit', 'update:form']);
 // Never mutate the prop: emit a patched shallow copy and let the parent apply it.
 const updateForm = (key, value) => emit('update:form', { ...props.form, [key]: value });
 
+// Picking a weight unit turns the by-weight toggle on, any other unit turns it off (still editable afterwards).
+const onUnitChange = (unit) => emit('update:form', { ...props.form, unit, is_weighted: isWeightUnit(unit) });
+
 const categoryOptions = computed(() => {
   return props.categories.map((c) => ({
     value: typeof c === 'object' ? c.name : c,
-    label: typeof c === 'object' ? `${c.icon || '☕'} ${c.name}` : c,
+    label: typeof c === 'object' ? c.name : c,
   }));
 });
 

@@ -254,6 +254,10 @@ final class PlansSchemaMigrationTest extends TenantTestCase
     public function test_super_admin_can_set_limits_to_null_and_new_fields(): void
     {
         $plan = Plan::query()->create($this->planAttributes(['slug' => 'editable']));
+        $storedInvoices = $plan->max_invoices_per_month;
+        $storedStorage = $plan->max_storage_mb;
+        $this->assertNotNull($storedInvoices);
+        $this->assertNotNull($storedStorage);
         $headers = $this->superAdminHeaders();
 
         $this->putJson("/api/v1/super-admin/plans/{$plan->id}", $this->updatePayload([
@@ -279,8 +283,9 @@ final class PlansSchemaMigrationTest extends TenantTestCase
         $this->assertNull($fresh->max_users);
         $this->assertNull($fresh->max_stores);
         $this->assertNull($fresh->max_items);
-        $this->assertNull($fresh->max_invoices_per_month);
-        $this->assertNull($fresh->max_storage_mb);
+        // Owner decision: not-enforced limits are not editable from the console; stored values stay.
+        $this->assertSame($storedInvoices, $fresh->max_invoices_per_month);
+        $this->assertSame($storedStorage, $fresh->max_storage_mb);
         $this->assertNull($fresh->max_warehouses);
         $this->assertSame(5, $fresh->max_vans);
         $this->assertSame(14, $fresh->trial_days);
@@ -297,6 +302,8 @@ final class PlansSchemaMigrationTest extends TenantTestCase
         $this->assertIsArray($listed);
         $this->assertNull($listed['max_users'], 'PlanResource must not turn "unlimited" into 0.');
         $this->assertNull($listed['max_warehouses']);
+        $this->assertArrayNotHasKey('max_invoices_per_month', $listed, 'Not-enforced limits are hidden from the console.');
+        $this->assertArrayNotHasKey('max_storage_mb', $listed);
         $this->assertSame(5, $listed['max_vans']);
         $this->assertSame('1799.000', $listed['price_monthly']);
         $this->assertSame('999.000', $listed['founder_price_monthly']);
@@ -438,7 +445,7 @@ final class PlansSchemaMigrationTest extends TenantTestCase
             'max_invoices_per_month' => 30000,
             'is_active' => true,
             'is_popular' => true,
-            'features' => ['pos.access' => true],
+            'features' => ['pos.access' => true, 'invoices.create' => true, 'shifts.manage' => true],
         ], $overrides);
     }
 

@@ -13,7 +13,7 @@
           </router-link>
 
           <BaseButton
-            v-if="selectedRole?.name !== 'admin'"
+            v-if="selectedRole && selectedRole.name !== 'admin'"
             type="button"
             variant="primary"
             size="md"
@@ -28,31 +28,39 @@
       </template>
     </PageHeader>
 
-    <!-- Roles Selector Grid -->
-    <RolesSelectorGrid
-      :roles="roles"
-      :selected-role-id="selectedRole?.id"
-      :loading="isLoading"
-      @select-role="selectRole"
-    />
+    <ErrorState v-if="error && roles.length === 0" :message="errorMessage" :loading="isLoading" @retry="retry" />
 
-    <!-- Admin Protection Notice -->
-    <RoleAdminNotice v-if="selectedRole?.name === 'admin'" />
+    <template v-else>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="retry" />
 
-    <!-- Permission Modules Grid -->
-    <PermissionModulesGrid
-      v-if="!isLoading"
-      :permission-modules="permissionModules"
-      :active-permissions="activePermissions"
-      :is-admin="selectedRole?.name === 'admin'"
-      @toggle-module="toggleModule"
-      @toggle-permission="togglePermission"
-    />
+      <!-- Roles Selector Grid -->
+      <RolesSelectorGrid
+        :roles="roles"
+        :selected-role-id="selectedRole?.id"
+        :loading="isLoading"
+        @select-role="selectRole"
+      />
+
+      <!-- Admin Protection Notice -->
+      <RoleAdminNotice v-if="selectedRole?.name === 'admin'" />
+
+      <!-- Permission Modules Grid -->
+      <PermissionModulesGrid
+        v-if="!isLoading"
+        :permission-modules="permissionModules"
+        :active-permissions="activePermissions"
+        :is-admin="selectedRole?.name === 'admin'"
+        @toggle-module="toggleModule"
+        @toggle-permission="togglePermission"
+      />
+    </template>
   </div>
 </template>
 
 <script setup>
 import { Users, Check, Shield } from 'lucide-vue-next';
+import ErrorState from '../../Components/Common/ErrorState.vue';
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import RolesSelectorGrid from '../../Components/Roles/RolesSelectorGrid.vue';
@@ -67,6 +75,9 @@ const {
   activePermissions,
   isLoading,
   isSaving,
+  error,
+  errorMessage,
+  retry,
   selectRole,
   togglePermission,
   toggleModule,

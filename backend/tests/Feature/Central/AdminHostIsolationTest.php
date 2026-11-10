@@ -144,8 +144,13 @@ final class AdminHostIsolationTest extends TenantTestCase
         $response = $this->get('http://localhost/login')->assertOk();
 
         $this->assertStringNotContainsString('name="app-context"', (string) $response->getContent());
-        $this->assertStringNotContainsString(' nonce="', (string) $response->getContent());
-        $this->assertFalse($response->headers->has('Content-Security-Policy'));
+        // SEC-07: the tenant/central shell has its own CSP (SpaSecurityHeadersTest); none of the
+        // admin-only headers leak onto it.
+        $this->assertFalse($response->headers->has('Strict-Transport-Security'));
+        $this->assertFalse($response->headers->has('Cross-Origin-Opener-Policy'));
+        $this->assertNotSame('no-referrer', $response->headers->get('Referrer-Policy'));
+        // It is the tenant/central policy (frame-src 'none' exists only there), not the admin one.
+        $this->assertStringContainsString("frame-src 'none'", (string) $response->headers->get('Content-Security-Policy'));
     }
 
     public function test_super_admin_spa_paths_are_404_off_the_admin_host(): void
@@ -175,6 +180,9 @@ final class AdminHostIsolationTest extends TenantTestCase
         $this->getJson('http://localhost/api/v1/super-admin/dashboard', $headers)->assertOk();
 
         $response = $this->get('http://localhost/login')->assertOk();
-        $this->assertFalse($response->headers->has('Content-Security-Policy'));
+        // The admin policy is not applied (SEC-07: the tenant/central shell has its own CSP).
+        $this->assertFalse($response->headers->has('Strict-Transport-Security'));
+        $this->assertNotSame('no-referrer', $response->headers->get('Referrer-Policy'));
+        $this->assertStringContainsString("frame-src 'none'", (string) $response->headers->get('Content-Security-Policy'));
     }
 }

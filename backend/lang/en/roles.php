@@ -17,4 +17,8 @@ return [
     'loading_roles_matrix' => 'Loading roles & permissions matrix...',
     'permissions_saved_success' => 'Permissions matrix updated successfully',
     'permissions_save_failed' => 'Failed to save permissions',
+    'cannot_edit_admin_role' => 'Only a system admin can edit the admin role.',
+    'cannot_edit_own_role' => 'You cannot edit a role that is assigned to you.',
+    'cannot_grant_unheld_permission' => 'You cannot grant a permission that you do not have yourself.',
+    'activity_permissions_updated' => ':user updated the permissions of role ":role"',
 ];

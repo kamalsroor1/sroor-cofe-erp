@@ -9,6 +9,7 @@
       <template #actions>
         <div class="flex items-center gap-2 flex-wrap">
           <BaseButton
+            v-can="'items.view'"
             to="/stores/stocks"
             variant="secondary"
             :icon="Package"
@@ -20,32 +21,40 @@
     </PageHeader>
 
     <!-- 2. 📊 Summary Metrics Grid -->
-    <StoresMetricsGrid :stores="stores" :is-loading="isLoading" />
+    <ErrorState v-if="error && stores.length === 0" :message="errorMessage" :loading="isLoading" @retry="fetchStores" />
 
-    <!-- 3. 🔍 Search & Filters Bar -->
-    <StoresSearchFilterBar
-      v-model:search="searchQuery"
-      v-model:type="selectedType"
-      v-model:status="selectedStatus"
-      @reset="resetFilters"
-    />
+    <template v-else>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchStores" />
+      <StoresMetricsGrid :stores="stores" :is-loading="isLoading" />
 
-    <!-- 4. 🏬 Stores Cards Grid with Shimmer Skeletons -->
-    <StoresGrid
-      :stores="filteredStores"
-      :is-loading="isLoading"
-      @create="openCreateModal"
-      @edit="openEditModal"
-      @delete="deleteStore"
-      @toggle-active="toggleActive"
-      @manage-staff="openStaffModal"
-    />
+      <!-- 3. 🔍 Search & Filters Bar -->
+      <StoresSearchFilterBar
+        v-model:search="searchQuery"
+        v-model:type="selectedType"
+        v-model:status="selectedStatus"
+        @reset="resetFilters"
+      />
+
+      <!-- 4. 🏬 Stores Cards Grid with Shimmer Skeletons -->
+      <StoresGrid
+        :stores="filteredStores"
+        :is-loading="isLoading"
+        @create="openCreateModal"
+        @edit="openEditModal"
+        @delete="deleteStore"
+        @toggle-active="toggleActive"
+        @manage-staff="openStaffModal"
+      />
+    </template>
 
     <!-- 5. Create / Edit Store Modal -->
     <StoreFormModal
       :show="showStoreModal"
       :editing-store="editingStore"
       :form="form"
+      :show-shift-setting="shiftSetting.available.value"
+      :require-shift="shiftSetting.value.value"
+      @update:require-shift="shiftSetting.value.value = $event"
       @update:form="Object.assign(form, $event)"
       :submitting="isSubmitting"
       @close="showStoreModal = false"
@@ -71,11 +80,15 @@ import { Plus, Package, Store as StoreIcon } from 'lucide-vue-next';
 import Swal from 'sweetalert2';
 import api from '../../Services/api';
 import { useTrans } from '../../Composables/useTrans';
+import { useLoadError } from '../../Composables/useLoadError';
+import ErrorState from '../../Components/Common/ErrorState.vue';
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import StoresMetricsGrid from '../../Components/Stores/StoresMetricsGrid.vue';
 import StoresSearchFilterBar from '../../Components/Stores/StoresSearchFilterBar.vue';
 import StoresGrid from '../../Components/Stores/StoresGrid.vue';
+import { useStoreShiftSetting } from '../../Composables/useStoreShiftSetting';
 import StoreFormModal from '../../Components/Stores/StoreFormModal.vue';
 import StoreStaffModal from '../../Components/Stores/StoreStaffModal.vue';
 
@@ -100,6 +113,8 @@ const form = reactive({
   is_active: true,
   is_main: false,
 });
+
+const shiftSetting = useStoreShiftSetting();
 
 const showStaffModal = ref(false);
 const targetStore = ref(null);
@@ -128,14 +143,17 @@ const resetFilters = () => {
   selectedStatus.value = 'all';
 };
 
+const { error, errorMessage, clearError, setError } = useLoadError();
+
 const fetchStores = async () => {
   isLoading.value = true;
+  clearError();
   try {
     const res = await api.get('/stores');
     stores.value = res.data?.stores || [];
     allUsers.value = res.data?.all_users || [];
   } catch (err) {
-    console.error('Failed to load stores:', err);
+    setError(err);
   } finally {
     isLoading.value = false;
   }
@@ -143,6 +161,7 @@ const fetchStores = async () => {
 
 const openCreateModal = () => {
   editingStore.value = null;
+  shiftSetting.reset();
   Object.assign(form, {
     name: '',
     code: '',
@@ -157,6 +176,7 @@ const openCreateModal = () => {
 
 const openEditModal = (store) => {
   editingStore.value = store;
+  shiftSetting.load(store.id);
   Object.assign(form, {
     name: store.name,
     code: store.code,
@@ -174,12 +194,13 @@ const saveStore = async () => {
   try {
     if (editingStore.value) {
       await api.put(`/stores/${editingStore.value.id}`, form);
+      const shiftSaved = await shiftSetting.save(editingStore.value.id);
       Swal.fire({
-        icon: 'success',
+        icon: shiftSaved ? 'success' : 'warning',
         title: t('common.success'),
-        text: t('inventory.store_updated_success'),
-        timer: 1500,
-        showConfirmButton: false,
+        text: shiftSaved ? t('inventory.store_updated_success') : t('pos.shift_setting_save_failed'),
+        timer: shiftSaved ? 1500 : undefined,
+        showConfirmButton: !shiftSaved,
       });
     } else {
       await api.post('/stores', form);

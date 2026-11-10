@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\OpeningBalance;
 use App\Models\Payment;
 use App\Models\ReturnDocument;
 
@@ -37,6 +38,8 @@ class CustomerBalanceService
         $returnsStr = (string) ($totalReturns ?: '0.000');
 
         $balance = bcsub(bcsub($invoicesStr, $paymentsStr, 3), $returnsStr, 3);
+        // PRD-06: imported opening balance (signed, positive = customer owes us).
+        $balance = bcadd($balance, OpeningBalance::totalFor(OpeningBalance::PARTY_CUSTOMER, $customerId), 3);
 
         $customer->current_balance = $balance;
         $customer->save();
@@ -50,6 +53,28 @@ class CustomerBalanceService
     public function getCustomerLedger(Customer $customer, ?string $fromDate = null, ?string $toDate = null): array
     {
         $entries = collect();
+
+        // PRD-06: opening balance entries come first on the statement.
+        $openings = OpeningBalance::query()
+            ->where('party_type', OpeningBalance::PARTY_CUSTOMER)
+            ->where('party_id', $customer->id)
+            ->when($fromDate, fn ($q) => $q->whereDate('balance_date', '>=', $fromDate))
+            ->when($toDate, fn ($q) => $q->whereDate('balance_date', '<=', $toDate))
+            ->get();
+
+        foreach ($openings as $opening) {
+            $amount = (string) $opening->amount;
+            $isDebit = bccomp($amount, '0.000', 3) >= 0;
+            $entries->push([
+                'date' => $opening->balance_date->format('Y-m-d'),
+                'type' => __('import.opening_balance_entry'),
+                'ref_number' => null,
+                'debit' => $isDebit ? $amount : '0.000',
+                'credit' => $isDebit ? '0.000' : ltrim($amount, '-'),
+                'notes' => $opening->notes,
+                'timestamp' => 0,
+            ]);
+        }
 
         // Invoices
         $invoices = Invoice::where('customer_id', $customer->id)

@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'platform_title' => 'Makhzani SaaS Super Admin',
+    'platform_title' => 'Ibraa',
     'central_platform' => 'Central Platform',
     'platform_subtitle' => 'Manage tenants, subscriptions, and pricing plans',
     'dashboard' => 'Dashboard',
@@ -274,6 +274,7 @@ return [
 
     // IDEN-1.4 / IDEN-4.6 ext (backend): central control-plane responses
     'tenant_not_found' => 'Tenant not found.',
+    'plan_pos_requires' => 'The POS feature (pos.access) requires :feature to be enabled on the same plan.',
     'plan_not_found' => 'Plan not found.',
     'tenant_provisioning_failed' => 'The tenant could not be set up. Check the server logs and try again.',
     'tenant_db_missing' => 'The tenant database does not exist on the database server. Create it first, then try again.',
@@ -462,4 +463,15 @@ return [
     // OPS-9: tenant archive (DELETE) and unarchive.
     'tenant_archive_queued' => 'Archive requested: the final backup is being taken. The account is archived once it is uploaded and verified.',
     'tenant_unarchived' => 'The account was restored to its previous status.',
+    'mrr_full' => 'Monthly recurring revenue',
+    'server_specs' => [
+        'live' => 'Live',
+        'status_active' => 'Active',
+        'title' => 'Server environment and central system',
+        'online' => 'Online and running well',
+        'php_version' => 'PHP version',
+        'laravel_version' => 'Laravel version',
+        'db_engine' => 'Database engine',
+        'environment' => 'Runtime environment',
+    ],
 ];

@@ -27,6 +27,7 @@ use Illuminate\Support\Carbon;
  * @property string $discount_type
  * @property string $discount_value
  * @property string $discount_amount
+ * @property int|null $discount_override_by
  * @property string $shipping_cost
  * @property string $net_total
  * @property string $paid_amount
@@ -57,6 +58,7 @@ class Invoice extends Model
         'discount_type',
         'discount_value',
         'discount_amount',
+        'discount_override_by',
         'shipping_cost',
         'net_total',
         'paid_amount',

@@ -1,12 +1,13 @@
 import { ref, computed, watch } from 'vue';
 import { normalize, dSum, dCmp } from '../../helpers/decimal';
 import { usePosCheckout } from '../usePosCheckout';
+import { summarizeDiscounts } from '../../helpers/posDiscount';
 
 /**
  * Totals, discount, expenses and split-payment state for the active order, plus the watchers
  * that keep paid/received amounts in step with the net (incl. the POS-02 walk-in rule).
  */
-export function usePosPayment({ fields, activeOrder, activeOrderId, isWalkInCustomer }) {
+export function usePosPayment({ fields, activeOrder, activeOrderId, isWalkInCustomer, maxDiscountPercent }) {
     const {
         cart,
         discountType,
@@ -34,16 +35,18 @@ export function usePosPayment({ fields, activeOrder, activeOrderId, isWalkInCust
         multiPayments,
     });
 
-    const cartSubtotal = computed(() =>
-        cart.value.reduce((sum, item) => sum + parseFloat(item.quantity) * parseFloat(item.unit_price), 0)
+    // POS-07: exact discount totals (lines + invoice) and the cap warning. Display numbers only.
+    const discountSummary = computed(() =>
+        summarizeDiscounts({
+            cart: cart.value,
+            discountType: discountType.value,
+            discountValue: discountValue.value,
+            maxPercent: maxDiscountPercent?.value ?? null,
+        })
     );
+    const cartSubtotal = computed(() => Number(discountSummary.value.gross));
     const cartTotalQuantity = computed(() => cart.value.reduce((sum, item) => sum + parseFloat(item.quantity || 0), 0));
-    const discountAmount = computed(() => {
-        const val = parseFloat(discountValue.value) || 0;
-        if (val <= 0) return 0;
-        if (discountType.value === 'percentage') return (cartSubtotal.value * val) / 100;
-        return Math.min(val, cartSubtotal.value);
-    });
+    const discountAmount = computed(() => Number(discountSummary.value.totalDiscount));
     const customerExpensesTotal = computed(() =>
         additionalExpenses.value
             .filter((exp) => (exp.paid_by || 'customer_account') === 'customer_account')
@@ -105,7 +108,7 @@ export function usePosPayment({ fields, activeOrder, activeOrderId, isWalkInCust
     // Idempotency key lives per checkout attempt: any change to what is being sold starts a new one.
     const checkoutFingerprint = computed(() =>
         JSON.stringify([
-            cart.value.map((i) => [i.id, i.quantity, i.unit_price]),
+            cart.value.map((i) => [i.id, i.quantity, i.unit_price, i.discount_type, i.discount_value]),
             discountType.value,
             discountValue.value,
             paymentType.value,
@@ -158,6 +161,7 @@ export function usePosPayment({ fields, activeOrder, activeOrderId, isWalkInCust
         cartSubtotal,
         cartTotalQuantity,
         discountAmount,
+        discountSummary,
         customerExpensesTotal,
         cartNetTotal,
         changeDue,

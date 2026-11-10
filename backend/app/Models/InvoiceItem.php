@@ -15,6 +15,9 @@ use Illuminate\Support\Carbon;
  * @property string $quantity
  * @property string $cost_price
  * @property string $unit_price
+ * @property string|null $list_unit_price BE-08: server-resolved tier list price at sale time
+ * @property string|null $price_source BE-08: 'retail' | 'wholesale'
+ * @property int|null $override_approved_by BE-08: user who approved a below-minimum price
  * @property string $discount_amount
  * @property string $total_price
  * @property Carbon|null $created_at
@@ -31,6 +34,9 @@ class InvoiceItem extends Model
         'quantity',
         'cost_price',
         'unit_price',
+        'list_unit_price',
+        'price_source',
+        'override_approved_by',
         'discount_amount',
         'total_price',
     ];
@@ -41,6 +47,7 @@ class InvoiceItem extends Model
             'quantity' => 'decimal:3',
             'cost_price' => 'decimal:3',
             'unit_price' => 'decimal:3',
+            'list_unit_price' => 'decimal:3',
             'discount_amount' => 'decimal:3',
             'total_price' => 'decimal:3',
         ];

@@ -24,7 +24,8 @@
             </div>
             <button
               @click="$emit('close')"
-              class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+              :aria-label="$t('common.close')"
+              class="w-11 h-11 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
             >
               <X class="w-5 h-5" />
             </button>
@@ -62,7 +63,7 @@
                   <select
                     v-model="entry.method"
                     data-testid="pos-split-method"
-                    class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block p-2.5"
+                    class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block p-2.5 min-h-11"
                   >
                     <option v-for="method in paymentMethods" :key="method.key" :value="method.key">
                       {{ method.label }}
@@ -81,7 +82,7 @@
                       data-testid="pos-split-amount"
                       min="0"
                       step="0.001"
-                      class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block p-2.5"
+                      class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block p-2.5 min-h-11"
                     />
                   </div>
                 </div>
@@ -89,14 +90,14 @@
                 <div class="flex flex-col gap-2 pt-5">
                   <button
                     @click="fillRemaining(index)"
-                    class="px-2 py-1.5 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors whitespace-nowrap"
+                    class="px-2 min-h-11 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors whitespace-nowrap"
                   >
                     {{ $t('pos.fill_remaining') }}
                   </button>
                   <button
                     @click="removePaymentEntry(index)"
                     :disabled="localPayments.length <= 1"
-                    class="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="min-h-11 min-w-11 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Trash2 class="w-4 h-4 mx-auto" />
                   </button>
@@ -114,7 +115,7 @@
                   v-for="method in paymentMethods"
                   :key="'add-' + method.key"
                   @click="addPaymentEntry(method.key)"
-                  class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full hover:border-primary hover:text-primary dark:hover:border-primary transition-colors"
+                  class="flex items-center gap-1.5 px-3 min-h-11 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full hover:border-primary hover:text-primary dark:hover:border-primary transition-colors"
                 >
                   <component :is="method.icon" class="w-4 h-4" />
                   <span>{{ method.label }}</span>

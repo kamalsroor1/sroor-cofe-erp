@@ -13,9 +13,13 @@ import {
   Heart,
   Coffee,
   Waves,
+  Gem,
 } from 'lucide-vue-next';
 import { useTheme } from '@/Composables/useTheme';
 import { trans } from '@/helpers/trans';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 const props = defineProps({
   form: {
@@ -33,12 +37,21 @@ const { applyColorTheme } = useTheme();
 
 const palettes = computed(() => [
   {
+    id: 'ibraa',
+    name: trans('settings.palette_ibraa_name'),
+    sub: trans('settings.palette_ibraa_sub'),
+    hex: '#0F6E5E',
+    ring: 'ring-theme-primary',
+    bg: 'bg-theme-primary',
+    icon: Gem,
+  },
+  {
     id: 'amber',
     name: trans('settings.palette_amber_name'),
     sub: trans('settings.palette_amber_sub'),
     hex: '#f59e0b',
-    ring: 'ring-theme-primary',
-    bg: 'bg-theme-primary',
+    ring: 'ring-amber-500',
+    bg: 'bg-amber-500',
     icon: Sparkles,
   },
   {
@@ -130,7 +143,7 @@ const activeHexColor = computed(() => {
   if (preset) return preset.hex;
   if (props.form.system_theme_color && props.form.system_theme_color.startsWith('#'))
     return props.form.system_theme_color;
-  return '#f59e0b';
+  return '#0F6E5E';
 });
 
 const customPickerColor = ref(activeHexColor.value);
@@ -304,11 +317,7 @@ const onHexTextInput = (val) => {
                 :style="{ backgroundColor: swatch.hex }"
                 :title="swatch.name + ' (' + swatch.hex + ')'"
               >
-                <span
-                  v-if="activeHexColor.toLowerCase() === swatch.hex.toLowerCase()"
-                  class="text-white text-[10px] font-black"
-                  >✓</span
-                >
+                <Check v-if="activeHexColor.toLowerCase() === swatch.hex.toLowerCase()" class="w-3 h-3 text-white" />
               </button>
             </div>
           </div>
@@ -335,7 +344,7 @@ const onHexTextInput = (val) => {
                 <Zap class="w-4 h-4 text-theme-primary" />
               </div>
               <div class="text-2xl font-black font-mono text-theme-primary">
-                24,850.00 <span class="text-xs font-bold text-slate-500">{{ $t('common.currency') }}</span>
+                24,850.00 <span class="text-xs font-bold text-slate-500">{{ currencyLabel }}</span>
               </div>
             </div>
 

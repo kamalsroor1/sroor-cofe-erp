@@ -41,51 +41,6 @@
                     <span>•</span>
                     <span class="text-slate-500 font-tajawal">{{ unitLabel(item.unit) }}</span>
                   </div>
-
-                  <!-- Dual Price Badges -->
-                  <div class="flex flex-wrap items-center gap-1.5 mt-2 font-tajawal">
-                    <!-- Retail Badge -->
-                    <button
-                      v-if="(item.price_retail || item.unit_price) > 0"
-                      type="button"
-                      tabindex="-1"
-                      @click="$emit('update-price', { index: idx, value: item.price_retail || item.unit_price })"
-                      class="px-1.5 py-0.5 rounded text-[10px] font-bold border transition cursor-pointer flex items-center gap-1 active:scale-95"
-                      :class="
-                        parseFloat(item.unit_price) === parseFloat(item.price_retail || item.unit_price)
-                          ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-black'
-                          : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-emerald-400'
-                      "
-                      :title="$t('pos.price_retail')"
-                    >
-                      <span>🏷️ {{ $t('pos.price_retail') }}:</span>
-                      <span class="font-mono">{{ formatMoney(item.price_retail || item.unit_price) }}</span>
-                    </button>
-
-                    <!-- Wholesale Badge -->
-                    <button
-                      v-if="
-                        (item.price_wholesale || item.min_selling_price) > 0 &&
-                        parseFloat(item.price_wholesale || item.min_selling_price) !==
-                          parseFloat(item.price_retail || item.unit_price)
-                      "
-                      type="button"
-                      tabindex="-1"
-                      @click="
-                        $emit('update-price', { index: idx, value: item.price_wholesale || item.min_selling_price })
-                      "
-                      class="px-1.5 py-0.5 rounded text-[10px] font-bold border transition cursor-pointer flex items-center gap-1 active:scale-95"
-                      :class="
-                        parseFloat(item.unit_price) === parseFloat(item.price_wholesale || item.min_selling_price)
-                          ? 'bg-purple-500/15 border-purple-500/40 text-purple-600 dark:text-purple-400 font-black'
-                          : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-purple-400'
-                      "
-                      :title="$t('pos.price_wholesale')"
-                    >
-                      <span>🏪 {{ $t('pos.price_wholesale') }}:</span>
-                      <span class="font-mono">{{ formatMoney(item.price_wholesale || item.min_selling_price) }}</span>
-                    </button>
-                  </div>
                 </div>
               </div>
 
@@ -93,8 +48,9 @@
                 type="button"
                 tabindex="-1"
                 @click="$emit('remove-item', idx)"
-                class="min-h-[36px] min-w-[36px] p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0"
+                class="min-h-11 min-w-11 p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0"
                 :title="$t('pos.delete_item')"
+                :aria-label="$t('pos.delete_item')"
               >
                 <Trash2 class="w-4 h-4" />
               </button>
@@ -110,7 +66,7 @@
                   type="button"
                   tabindex="-1"
                   @click="$emit('decrease-qty', idx)"
-                  class="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 hover:bg-rose-500/20 hover:text-rose-500 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
+                  class="w-11 h-11 rounded-xl bg-white dark:bg-slate-800 hover:bg-rose-500/20 hover:text-rose-500 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
                 >
                   -
                 </button>
@@ -126,42 +82,48 @@
                   @input="onNumberInput($event, idx, 'update-qty')"
                   @keydown.enter.prevent="focusLineField(item.id, 'price')"
                   @keydown.esc.prevent="revertField($event, idx, 'update-qty')"
-                  class="w-14 h-9 text-center font-mono font-black text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
+                  class="w-16 h-11 text-center font-mono font-black text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
                 />
                 <button
                   type="button"
                   tabindex="-1"
                   @click="$emit('increase-qty', idx)"
-                  class="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-500 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
+                  class="w-11 h-11 rounded-xl bg-white dark:bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-500 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
                 >
                   +
                 </button>
+                <span
+                  v-if="item.is_weighted"
+                  class="ms-1 text-[11px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap"
+                  data-testid="pos-cart-unit"
+                  >{{ unitLabel(item.unit) }}</span
+                >
               </div>
 
               <!-- Price Breakdown (Editable Selling Price) -->
               <div class="flex items-center justify-between sm:justify-end gap-2">
                 <div class="flex items-center gap-1">
                   <label class="text-[10px] font-bold text-slate-500">{{ $t('pos.item_price') }}:</label>
-                  <input
-                    type="text"
-                    inputmode="decimal"
-                    :value="item.unit_price"
-                    :data-line-id="item.id"
-                    data-line-field="price"
-                    :aria-invalid="!(parseFloat(item.unit_price) > 0)"
-                    @focus="onFieldFocus"
-                    @blur="onFieldBlur($event, idx, 'unit_price')"
-                    @input="onNumberInput($event, idx, 'update-price')"
-                    @keydown.enter.prevent="focusPosSearch()"
-                    @keydown.esc.prevent="revertField($event, idx, 'update-price')"
-                    class="aria-invalid:border-rose-500 aria-invalid:bg-rose-50 dark:aria-invalid:bg-rose-500/10 w-18 h-8 px-1.5 text-center font-mono font-black text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-                  />
+                  <POSLinePriceField compact :line="item" :index="idx" @update-price="$emit('update-price', $event)" />
                 </div>
                 <div class="text-xs font-black font-mono text-emerald-600 dark:text-emerald-400">
-                  {{ formatMoney(item.quantity * item.unit_price) }}
+                  <div
+                    v-if="hasLineDiscount(item)"
+                    class="text-[10px] font-normal text-slate-400 line-through"
+                    data-testid="pos-line-gross"
+                  >
+                    {{ formatMoney(lineGross(item)) }}
+                  </div>
+                  {{ formatMoney(lineNet(item)) }}
                   <span class="text-[9px] font-normal text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
                 </div>
               </div>
+            </div>
+
+            <!-- Line discount (POS-07) -->
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] font-bold text-slate-500">{{ $t('pos.line_discount_label') }}</span>
+              <POSLineDiscount :line="item" :index="idx" @update-discount="$emit('update-discount', $event)" />
             </div>
           </div>
         </div>
@@ -176,6 +138,7 @@
               <th class="p-3 text-start">{{ $t('pos.item_and_code') }}</th>
               <th class="p-3 text-center w-36">{{ $t('pos.item_qty') }}</th>
               <th class="p-3 text-start w-32">{{ $t('pos.item_price') }}</th>
+              <th class="p-3 text-start w-40">{{ $t('pos.line_discount_label') }}</th>
               <th class="p-3 text-start w-32">{{ $t('pos.item_total') }}</th>
               <th class="p-3 text-center w-14">{{ $t('pos.delete_item') }}</th>
             </tr>
@@ -202,51 +165,6 @@
                   <span>•</span>
                   <span class="text-slate-500 font-tajawal">{{ unitLabel(item.unit) }}</span>
                 </div>
-
-                <!-- Dual Price Badges -->
-                <div class="flex flex-wrap items-center gap-1.5 mt-2 font-tajawal">
-                  <!-- Retail Badge -->
-                  <button
-                    v-if="(item.price_retail || item.unit_price) > 0"
-                    type="button"
-                    tabindex="-1"
-                    @click="$emit('update-price', { index: idx, value: item.price_retail || item.unit_price })"
-                    class="px-1.5 py-0.5 rounded text-[10px] font-bold border transition cursor-pointer flex items-center gap-1 active:scale-95"
-                    :class="
-                      parseFloat(item.unit_price) === parseFloat(item.price_retail || item.unit_price)
-                        ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-black'
-                        : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-emerald-400'
-                    "
-                    :title="$t('pos.price_retail')"
-                  >
-                    <span>🏷️ {{ $t('pos.price_retail') }}:</span>
-                    <span class="font-mono">{{ formatMoney(item.price_retail || item.unit_price) }}</span>
-                  </button>
-
-                  <!-- Wholesale Badge -->
-                  <button
-                    v-if="
-                      (item.price_wholesale || item.min_selling_price) > 0 &&
-                      parseFloat(item.price_wholesale || item.min_selling_price) !==
-                        parseFloat(item.price_retail || item.unit_price)
-                    "
-                    type="button"
-                    tabindex="-1"
-                    @click="
-                      $emit('update-price', { index: idx, value: item.price_wholesale || item.min_selling_price })
-                    "
-                    class="px-1.5 py-0.5 rounded text-[10px] font-bold border transition cursor-pointer flex items-center gap-1 active:scale-95"
-                    :class="
-                      parseFloat(item.unit_price) === parseFloat(item.price_wholesale || item.min_selling_price)
-                        ? 'bg-purple-500/15 border-purple-500/40 text-purple-600 dark:text-purple-400 font-black'
-                        : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-purple-400'
-                    "
-                    :title="$t('pos.price_wholesale')"
-                  >
-                    <span>🏪 {{ $t('pos.price_wholesale') }}:</span>
-                    <span class="font-mono">{{ formatMoney(item.price_wholesale || item.min_selling_price) }}</span>
-                  </button>
-                </div>
               </td>
 
               <!-- Quantity Controls -->
@@ -256,7 +174,7 @@
                     type="button"
                     tabindex="-1"
                     @click="$emit('decrease-qty', idx)"
-                    class="w-9 h-9 rounded-lg bg-slate-100 hover:bg-rose-500/20 hover:text-rose-500 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
+                    class="w-9 h-9 pointer-coarse:w-11 pointer-coarse:h-11 rounded-lg bg-slate-100 hover:bg-rose-500/20 hover:text-rose-500 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
                   >
                     -
                   </button>
@@ -272,43 +190,45 @@
                     @input="onNumberInput($event, idx, 'update-qty')"
                     @keydown.enter.prevent="focusLineField(item.id, 'price')"
                     @keydown.esc.prevent="revertField($event, idx, 'update-qty')"
-                    class="w-16 h-9 text-center font-mono font-black text-sm bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
+                    class="w-16 h-9 pointer-coarse:h-11 text-center font-mono font-black text-sm bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
                   />
                   <button
                     type="button"
                     tabindex="-1"
                     @click="$emit('increase-qty', idx)"
-                    class="w-9 h-9 rounded-lg bg-slate-100 hover:bg-emerald-500/20 hover:text-emerald-500 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
+                    class="w-9 h-9 pointer-coarse:w-11 pointer-coarse:h-11 rounded-lg bg-slate-100 hover:bg-emerald-500/20 hover:text-emerald-500 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
                   >
                     +
                   </button>
+                  <span
+                    v-if="item.is_weighted"
+                    class="ms-1 text-[11px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap"
+                    data-testid="pos-cart-unit"
+                    >{{ unitLabel(item.unit) }}</span
+                  >
                 </div>
               </td>
 
               <!-- Unit Price (Editable input) -->
               <td class="p-3 font-mono">
-                <div class="flex items-center gap-1">
-                  <input
-                    type="text"
-                    inputmode="decimal"
-                    :value="item.unit_price"
-                    :data-line-id="item.id"
-                    data-line-field="price"
-                    :aria-invalid="!(parseFloat(item.unit_price) > 0)"
-                    @focus="onFieldFocus"
-                    @blur="onFieldBlur($event, idx, 'unit_price')"
-                    @input="onNumberInput($event, idx, 'update-price')"
-                    @keydown.enter.prevent="focusPosSearch()"
-                    @keydown.esc.prevent="revertField($event, idx, 'update-price')"
-                    class="aria-invalid:border-rose-500 aria-invalid:bg-rose-50 dark:aria-invalid:bg-rose-500/10 w-24 h-9 px-2 text-start font-mono font-black text-sm bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none"
-                  />
-                  <span class="text-[10px] font-bold text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
-                </div>
+                <POSLinePriceField :line="item" :index="idx" @update-price="$emit('update-price', $event)" />
+              </td>
+
+              <!-- Line discount (POS-07) -->
+              <td class="p-3">
+                <POSLineDiscount :line="item" :index="idx" @update-discount="$emit('update-discount', $event)" />
               </td>
 
               <!-- Line Subtotal -->
               <td class="p-3 font-mono font-black text-base text-emerald-600 dark:text-emerald-400">
-                {{ formatMoney(item.quantity * item.unit_price) }}
+                <div
+                  v-if="hasLineDiscount(item)"
+                  class="text-[11px] font-normal text-slate-400 line-through"
+                  data-testid="pos-line-gross"
+                >
+                  {{ formatMoney(lineGross(item)) }}
+                </div>
+                {{ formatMoney(lineNet(item)) }}
               </td>
 
               <!-- Delete Action -->
@@ -317,8 +237,9 @@
                   type="button"
                   tabindex="-1"
                   @click="$emit('remove-item', idx)"
-                  class="min-h-[40px] min-w-[40px] p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition cursor-pointer flex items-center justify-center mx-auto"
+                  class="min-h-[40px] min-w-[40px] pointer-coarse:min-h-11 pointer-coarse:min-w-11 p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition cursor-pointer flex items-center justify-center mx-auto"
                   :title="$t('pos.delete_item')"
+                  :aria-label="$t('pos.delete_item')"
                 >
                   <Trash2 class="w-4 h-4" />
                 </button>
@@ -346,9 +267,13 @@
 
 <script setup>
 import { Trash2 } from 'lucide-vue-next';
+import POSLineDiscount from './POSLineDiscount.vue';
+import POSLinePriceField from './POSLinePriceField.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useUnits } from '../../Composables/useUnits';
 import { toWesternDigits } from '../../helpers/digits';
+import { normalize, isPositive } from '../../helpers/decimal';
+import { lineGross, lineNet, lineDiscountAmount } from '../../helpers/posDiscount';
 import { focusLineField, focusPosSearch } from '../../helpers/posFocus';
 
 const { formatMoney } = useFormatters();
@@ -359,13 +284,23 @@ const props = defineProps({
   totalQty: { type: Number, default: 0 },
 });
 
-const emit = defineEmits(['increase-qty', 'decrease-qty', 'update-qty', 'update-price', 'remove-item']);
+const emit = defineEmits([
+  'increase-qty',
+  'decrease-qty',
+  'update-qty',
+  'update-price',
+  'update-discount',
+  'remove-item',
+]);
+
+const hasLineDiscount = (line) => isPositive(lineDiscountAmount(line));
 
 // Arabic-Indic digits are accepted in the numeric line fields and converted before they reach the cart.
 const onNumberInput = (event, index, eventName) => {
-  // Keep digits and a single decimal point only.
+  // Keep digits and a single decimal point only (whole numbers for non-weighted quantities).
+  const wholeOnly = eventName === 'update-qty' && !props.cart[index]?.is_weighted;
   const normalized = toWesternDigits(event.target.value)
-    .replace(/[^0-9.]/g, '')
+    .replace(wholeOnly ? /[^0-9]/g : /[^0-9.]/g, '')
     .replace(/^(\d*\.\d*)\./, '$1');
   if (normalized !== event.target.value) event.target.value = normalized;
   emit(eventName, { index, value: normalized });
@@ -373,9 +308,15 @@ const onNumberInput = (event, index, eventName) => {
 
 // Leaving a field with an invalid or zero value snaps it back to the cart value.
 const onFieldBlur = (event, index, key) => {
+  if (key === 'quantity') {
+    // The field always settles on the cart quantity (weighted: exactly 3 decimals, others: whole).
+    const line = props.cart[index];
+    if (line?.is_weighted) emit('update-qty', { index, value: normalize(event.target.value) });
+    event.target.value = line?.is_weighted ? normalize(line.quantity) : (line?.quantity ?? '');
+    return;
+  }
   const parsed = parseFloat(event.target.value);
-  const minimum = key === 'quantity' ? 0 : -1;
-  if (isNaN(parsed) || parsed <= minimum) event.target.value = props.cart[index]?.[key] ?? '';
+  if (isNaN(parsed) || parsed <= -1) event.target.value = props.cart[index]?.[key] ?? '';
 };
 
 // Select the whole value on focus so typing replaces it, and remember it for Esc.

@@ -3,7 +3,7 @@
     class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm dark:shadow-xl space-y-4 text-xs font-tajawal"
   >
     <h2 class="text-sm font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-1.5">
-      <span>👤</span>
+      <User class="w-4 h-4" />
       <span>{{ $t('profile.basic_info') }}</span>
     </h2>
 
@@ -41,6 +41,7 @@
 </template>
 
 <script setup>
+import { User } from 'lucide-vue-next';
 import BaseInput from '../Form/BaseInput.vue';
 
 defineProps({

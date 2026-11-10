@@ -19,7 +19,7 @@ defineProps({
   >
     <!-- Desktop Table Skeleton View -->
     <div class="hidden md:block overflow-x-auto">
-      <table class="w-full text-right text-xs">
+      <table class="w-full text-start text-xs">
         <thead>
           <tr class="border-b border-slate-200 dark:border-slate-800 pb-3">
             <th v-for="c in columnsCount" :key="c" class="pb-3 px-3">

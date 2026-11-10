@@ -17,7 +17,7 @@
       <!-- 1. Favorites Tab -->
       <button
         @click="$emit('select-category', 'favorites')"
-        class="w-full flex items-center justify-center sm:justify-between rounded-xl p-2 sm:p-2.5 cursor-pointer transition-all duration-150 border-e-4"
+        class="w-full flex items-center justify-center sm:justify-between rounded-xl p-2 sm:p-2.5 pointer-coarse:min-h-11 cursor-pointer transition-all duration-150 border-e-4"
         :class="
           activeCategoryId === 'favorites'
             ? 'bg-[#fef3c7] dark:bg-amber-500/20 border-amber-500 font-bold'
@@ -39,7 +39,7 @@
       <!-- 2. Newest Arrivals Tab -->
       <button
         @click="$emit('select-category', 'newest')"
-        class="w-full flex items-center justify-center sm:justify-between rounded-xl p-2 sm:p-2.5 cursor-pointer transition-all duration-150 border-e-4"
+        class="w-full flex items-center justify-center sm:justify-between rounded-xl p-2 sm:p-2.5 pointer-coarse:min-h-11 cursor-pointer transition-all duration-150 border-e-4"
         :class="
           activeCategoryId === 'newest'
             ? 'bg-emerald-50 dark:bg-emerald-500/20 border-emerald-500 font-bold'
@@ -56,7 +56,7 @@
       <!-- 3. In Stock Only Tab -->
       <button
         @click="$emit('select-category', 'in_stock')"
-        class="w-full flex items-center justify-center sm:justify-between rounded-xl p-2 sm:p-2.5 cursor-pointer transition-all duration-150 border-e-4"
+        class="w-full flex items-center justify-center sm:justify-between rounded-xl p-2 sm:p-2.5 pointer-coarse:min-h-11 cursor-pointer transition-all duration-150 border-e-4"
         :class="
           activeCategoryId === 'in_stock'
             ? 'bg-sky-50 dark:bg-sky-500/20 border-sky-500 font-bold'
@@ -73,7 +73,7 @@
       <!-- 4. Low Stock Alert Tab -->
       <button
         @click="$emit('select-category', 'low_stock')"
-        class="w-full flex items-center justify-center sm:justify-between rounded-xl p-2 sm:p-2.5 cursor-pointer transition-all duration-150 border-e-4"
+        class="w-full flex items-center justify-center sm:justify-between rounded-xl p-2 sm:p-2.5 pointer-coarse:min-h-11 cursor-pointer transition-all duration-150 border-e-4"
         :class="
           activeCategoryId === 'low_stock'
             ? 'bg-rose-50 dark:bg-rose-500/20 border-rose-500 font-bold'
@@ -95,7 +95,7 @@
         v-for="cat in categories"
         :key="cat.id"
         @click="$emit('select-category', cat.id)"
-        class="w-full flex items-center justify-center sm:justify-between rounded-xl p-2 sm:p-2.5 cursor-pointer transition-all duration-150 border-e-4"
+        class="w-full flex items-center justify-center sm:justify-between rounded-xl p-2 sm:p-2.5 pointer-coarse:min-h-11 cursor-pointer transition-all duration-150 border-e-4"
         :style="
           activeCategoryId === cat.id
             ? {
@@ -126,7 +126,7 @@
     <div class="p-2 border-t border-slate-200 dark:border-slate-800">
       <button
         @click="$emit('select-category', null)"
-        class="w-full text-center p-2 rounded-xl text-xs sm:text-sm transition-all duration-150 flex items-center justify-center gap-1"
+        class="w-full text-center p-2 pointer-coarse:min-h-11 rounded-xl text-xs sm:text-sm transition-all duration-150 flex items-center justify-center gap-1"
         :class="
           activeCategoryId === null
             ? 'bg-slate-200 dark:bg-slate-700 font-bold text-slate-800 dark:text-slate-100'

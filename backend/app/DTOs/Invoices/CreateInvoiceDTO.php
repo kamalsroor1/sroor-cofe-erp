@@ -22,6 +22,8 @@ final class CreateInvoiceDTO
         public readonly array $additional_expenses = [],
         public readonly array $payments = [],
         public readonly ?string $client_uuid = null,
+        /** BE-08: manager approval for below-minimum prices: {user_id, pin}. */
+        public readonly ?array $override = null,
     ) {}
 
     public static function fromArray(array $data, ?int $storeId = null): self
@@ -40,6 +42,7 @@ final class CreateInvoiceDTO
             additional_expenses: (array) ($data['additional_expenses'] ?? $data['expenses'] ?? []),
             payments: self::normalizePayments($data['payments'] ?? []),
             client_uuid: ! empty($data['client_uuid']) ? strtolower((string) $data['client_uuid']) : null,
+            override: isset($data['override']) && is_array($data['override']) ? $data['override'] : null,
         );
     }
 
@@ -59,6 +62,7 @@ final class CreateInvoiceDTO
             'additional_expenses' => $this->additional_expenses,
             'payments' => $this->payments,
             'client_uuid' => $this->client_uuid,
+            'override' => $this->override,
         ];
     }
 

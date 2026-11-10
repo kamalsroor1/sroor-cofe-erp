@@ -7,7 +7,7 @@
           class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-sm transition active:scale-90 shadow-xs border border-slate-300 dark:border-slate-700 shrink-0"
           :title="$t('common.back')"
         >
-          <ArrowRight class="w-5 h-5" />
+          <ArrowRight class="ltr:rotate-180 w-5 h-5" />
         </router-link>
         <div>
           <h1

@@ -57,6 +57,14 @@ import {
   CupSoda,
   Phone,
   PackageOpen,
+  ScrollText,
+  BookOpen,
+  Rocket,
+  Briefcase,
+  ClipboardList,
+  CheckCircle2,
+  CalendarDays,
+  Settings,
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -114,6 +122,7 @@ const emojiMap = {
   '🗑️': Trash2,
   '🛡️': ShieldCheck,
   '🔒': Lock,
+  '🔐': Lock,
   '⚖️': Scale,
   '🖨️': Printer,
   '🔍': Search,
@@ -124,6 +133,7 @@ const emojiMap = {
   '📥': ArrowDownLeft,
   '📤': ArrowUpRight,
   '🔄': ArrowLeftRight,
+  '🔁': ArrowLeftRight,
   '⚠️': AlertTriangle,
   '🗂️': Folder,
   '📞': Phone,
@@ -188,6 +198,20 @@ const stringNameMap = {
   'cup-soda': CupSoda,
   cupsoda: CupSoda,
   phone: Phone,
+  'scroll-text': ScrollText,
+  'book-open': BookOpen,
+  rocket: Rocket,
+  briefcase: Briefcase,
+  'clipboard-list': ClipboardList,
+  'check-circle2': CheckCircle2,
+  'calendar-days': CalendarDays,
+  settings: Settings,
+  'alert-triangle': AlertTriangle,
+  wallet: Banknote,
+  'arrow-left-right': ArrowLeftRight,
+  'arrow-down-left': ArrowDownLeft,
+  'arrow-up-right': ArrowUpRight,
+  'building-2': Building2,
 };
 
 const resolveIcon = (val) => {

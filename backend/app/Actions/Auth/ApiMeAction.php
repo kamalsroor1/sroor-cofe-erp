@@ -11,6 +11,7 @@ use App\Models\Setting;
 use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Branding\TenantBranding;
 use App\Support\ActiveStore;
 use App\Support\Tenancy\TenantLifecyclePolicy;
 use Carbon\CarbonImmutable;
@@ -28,7 +29,7 @@ final class ApiMeAction
         $system = [
             'company_name' => Setting::get('company_name') ?: (function_exists('tenant') && tenant('name') ? tenant('name') : __('auth.default_company_name')),
             'company_subtitle' => Setting::get('company_subtitle') ?: '',
-            'system_theme' => Setting::get('system_theme_color', 'emerald'),
+            'system_theme' => Setting::get('system_theme_color', TenantBranding::DEFAULT_THEME_COLOR),
             'server_time' => now()->toDateTimeString(),
         ];
 

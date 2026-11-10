@@ -6,16 +6,21 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\Users\CreateUserAction;
 use App\Actions\Users\DeleteUserAction;
+use App\Actions\Users\SetUserPosPinAction;
 use App\Actions\Users\ToggleUserActiveAction;
+use App\Actions\Users\UnlockUserLoginAction;
 use App\Actions\Users\UpdateUserAction;
 use App\DTOs\Users\CreateUserDTO;
 use App\DTOs\Users\UpdateUserDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UnlockUserLoginRequest;
+use App\Http\Requests\UpdateUserPosPinRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Store;
 use App\Models\User;
+use App\Support\Auth\AccountLockout;
 use App\Support\SafeJsonError;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,7 +33,9 @@ final class UserController extends Controller
         private readonly CreateUserAction $createUserAction,
         private readonly UpdateUserAction $updateUserAction,
         private readonly DeleteUserAction $deleteUserAction,
-        private readonly ToggleUserActiveAction $toggleUserActiveAction
+        private readonly ToggleUserActiveAction $toggleUserActiveAction,
+        private readonly SetUserPosPinAction $setUserPosPinAction,
+        private readonly UnlockUserLoginAction $unlockUserLoginAction,
     ) {}
 
     /**
@@ -67,13 +74,19 @@ final class UserController extends Controller
 
         $users = $query->latest('id')->paginate($perPage);
 
-        $formattedUsers = collect($users->items())->map(function ($u) {
+        $pageUsers = collect($users->items());
+        $locks = AccountLockout::lockedUntilMany($pageUsers->flatMap(fn ($u) => [$u->phone, $u->email])->all());
+
+        $formattedUsers = $pageUsers->map(function ($u) use ($locks) {
+            $lockedUntil = max($locks[(string) $u->phone] ?? 0, $locks[(string) $u->email] ?? 0) ?: null;
+
             return [
                 'id' => $u->id,
                 'name' => $u->name,
                 'phone' => $u->phone,
                 'email' => $u->email,
                 'is_active' => (bool) $u->is_active,
+                ...AccountLockout::payload($lockedUntil),
                 'default_store_id' => $u->default_store_id,
                 'default_store_name' => $u->defaultStore?->name ?? 'غير محدد',
                 'roles' => $u->roles->pluck('name')->toArray(),
@@ -129,7 +142,8 @@ final class UserController extends Controller
     public function store(StoreUserRequest $request): JsonResponse
     {
         $dto = CreateUserDTO::fromArray($request->validated());
-        $user = $this->createUserAction->execute($dto);
+        $actor = $request->user();
+        $user = $this->createUserAction->execute($dto, $actor instanceof User ? $actor : null);
 
         return response()->json([
             'success' => true,
@@ -199,5 +213,47 @@ final class UserController extends Controller
             // SEC-1 (L4): 422/403/404 pass through; anything else is logged, never echoed.
             return SafeJsonError::respond($e);
         }
+    }
+
+    /**
+     * BE-08: set (or clear with null) a user's manager approval PIN.
+     */
+    public function updatePosPin(UpdateUserPosPinRequest $request, int $id): JsonResponse
+    {
+        $actor = $request->user();
+        $target = User::query()->findOrFail($id);
+
+        try {
+            $this->setUserPosPinAction->execute($target, $request->validated('pin'), $actor);
+        } catch (Throwable $e) {
+            // SEC-1 (L4): 422/403/404 pass through; anything else is logged, never echoed.
+            return SafeJsonError::respond($e);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => __('pos.pos_pin_updated'),
+            'has_pos_pin' => $target->pos_pin !== null,
+        ], 200);
+    }
+
+    /**
+     * SEC-05: lift a user's sign-in lockout (idempotent).
+     */
+    public function unlockLogin(UnlockUserLoginRequest $request, int $id): JsonResponse
+    {
+        $actor = $request->user();
+        abort_unless($actor instanceof User, 401);
+
+        try {
+            $wasLocked = $this->unlockUserLoginAction->execute($id, $actor);
+        } catch (Throwable $e) {
+            return SafeJsonError::respond($e);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $wasLocked ? __('users.unlock_login_success') : __('users.login_not_locked'),
+        ], 200);
     }
 }

@@ -11,15 +11,20 @@ final class ItemDTO
         public readonly ?string $code = null,
         public readonly ?string $category = null,
         public readonly string $unit = 'كجم',
-        public readonly string $cost_price = '0.000',
+        /** null = key not sent. Create stores '0.000'; update keeps the stored cost. */
+        public readonly ?string $cost_price = null,
         /** null = key not sent. Create stores '0.000' (no floor); update keeps the stored value. Never defaults to cost. */
         public readonly ?string $min_selling_price = null,
         public readonly string $selling_price = '0.000',
+        /** BE-08: null = key not sent (update keeps the stored value). '0' / '0.000' clears it (= not set). */
+        public readonly ?string $wholesale_price = null,
         public readonly string $min_stock_level = '0.000',
         public readonly ?string $notes = null,
         public readonly bool $is_active = true,
         /** POSB-2: null = not sent (update keeps the stored flag; create defaults to false). */
         public readonly ?bool $is_weighted = null,
+        /** Create-only link to an existing categories row (PRD-06 import). Not part of toArray(): update never touches it. */
+        public readonly ?int $category_id = null,
     ) {}
 
     public static function fromArray(array $data): self
@@ -29,13 +34,15 @@ final class ItemDTO
             code: isset($data['code']) && $data['code'] !== '' ? (string) $data['code'] : null,
             category: isset($data['category']) && $data['category'] !== '' ? (string) $data['category'] : null,
             unit: (string) ($data['unit'] ?? 'كجم'),
-            cost_price: isset($data['cost_price']) ? (string) $data['cost_price'] : '0.000',
+            cost_price: isset($data['cost_price']) && $data['cost_price'] !== '' ? (string) $data['cost_price'] : null,
             min_selling_price: isset($data['min_selling_price']) && $data['min_selling_price'] !== '' ? (string) $data['min_selling_price'] : null,
             selling_price: isset($data['selling_price']) ? (string) $data['selling_price'] : '0.000',
+            wholesale_price: isset($data['wholesale_price']) && $data['wholesale_price'] !== '' ? (string) $data['wholesale_price'] : null,
             min_stock_level: isset($data['min_stock_level']) ? (string) $data['min_stock_level'] : '0.000',
             notes: isset($data['notes']) && $data['notes'] !== '' ? (string) $data['notes'] : null,
             is_active: ! isset($data['is_active']) || (bool) $data['is_active'],
             is_weighted: isset($data['is_weighted']) ? (bool) $data['is_weighted'] : null,
+            category_id: isset($data['category_id']) ? (int) $data['category_id'] : null,
         );
     }
 
@@ -49,6 +56,7 @@ final class ItemDTO
             'cost_price' => $this->cost_price,
             'min_selling_price' => $this->min_selling_price,
             'selling_price' => $this->selling_price,
+            'wholesale_price' => $this->wholesale_price,
             'min_stock_level' => $this->min_stock_level,
             'notes' => $this->notes,
             'is_active' => $this->is_active,

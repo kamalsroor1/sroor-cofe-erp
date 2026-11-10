@@ -71,7 +71,7 @@
       <template #cell-amount="{ row }">
         <div class="text-end font-mono font-black text-sm text-rose-500 dark:text-rose-400">
           {{ formatMoney(row.amount) }}
-          <span class="text-xs font-normal font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
       </template>
 
@@ -123,7 +123,7 @@ import DataTable from '../Common/DataTable.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
 
 defineProps({

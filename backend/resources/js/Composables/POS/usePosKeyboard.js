@@ -12,13 +12,14 @@ const isTypingTarget = (el) => {
  * Keys are matched on `e.code` so they work on the Arabic layout. F-keys always work; plain
  * letters are never hijacked, and everything but Esc is blocked while a modal is open.
  *
- * F1 / ?  help      F2 search     F3 customer   F4 new order   F7 discount
- * F9 / Ctrl+Enter checkout   F10 catalog   Alt+Q qty   Alt+P price   Alt+L last line   Esc close / back to search
+ * F1 / ?  help      F2 search     F3 customer   F4 new order   F7 discount   F8 recent sales
+ * F9 / Ctrl+Enter checkout   F10 catalog   Alt+Q qty   Alt+P price   Alt+D line discount   Alt+L last line   Esc close / back to search
  */
 export function usePosKeyboard({
     focusSearch,
     focusCustomer,
     focusDiscount,
+    openRecentSales,
     createOrder,
     toggleCatalog,
     toggleHelp,
@@ -82,6 +83,9 @@ export function usePosKeyboard({
         } else if (e.code === 'F7') {
             // Only claim the key once a discount input exists on screen.
             if (focusDiscount()) e.preventDefault();
+        } else if (e.code === 'F8') {
+            e.preventDefault();
+            openRecentSales();
         } else if (e.code === 'F10') {
             e.preventDefault();
             toggleCatalog();
@@ -94,6 +98,9 @@ export function usePosKeyboard({
         } else if (e.altKey && !e.ctrlKey && e.code === 'KeyP') {
             e.preventDefault();
             editLine('price');
+        } else if (e.altKey && !e.ctrlKey && e.code === 'KeyD') {
+            e.preventDefault();
+            editLine('discount');
         } else if (e.altKey && !e.ctrlKey && e.code === 'KeyL') {
             e.preventDefault();
             editLine('price', { last: true });

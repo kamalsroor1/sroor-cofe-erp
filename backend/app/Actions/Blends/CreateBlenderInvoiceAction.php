@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Actions\Blends;
 
 use App\DTOs\Blends\CreateBlenderInvoiceDTO;
+use App\Enums\BlendGrind;
+use App\Enums\BlendRoast;
 use App\Models\Invoice;
 use App\Services\InvoiceService;
+use App\Services\Pos\SaleShiftGuard;
 use App\Support\TenantClock;
 
 final class CreateBlenderInvoiceAction
@@ -14,6 +17,7 @@ final class CreateBlenderInvoiceAction
     public function __construct(
         private readonly InvoiceService $invoiceService,
         private readonly TenantClock $tenantClock,
+        private readonly SaleShiftGuard $saleShiftGuard,
     ) {}
 
     /**
@@ -21,6 +25,9 @@ final class CreateBlenderInvoiceAction
      */
     public function execute(CreateBlenderInvoiceDTO $dto): Invoice
     {
+        // POS-10: a branch that requires a shift cannot sell without an open one.
+        $this->saleShiftGuard->assertCanSell($dto->store_id);
+
         $itemsForInvoice = [];
 
         foreach ($dto->components as $comp) {
@@ -35,15 +42,22 @@ final class CreateBlenderInvoiceAction
             }
         }
 
-        $extraDetails = "درجة التحميص: {$dto->roast_type} | الطحن: {$dto->grind_level} | الوزن: {$dto->target_weight_grams}جم";
+        $roast = BlendRoast::tryFrom($dto->roast_type)?->label() ?? $dto->roast_type;
+        $grind = BlendGrind::tryFrom($dto->grind_level)?->label() ?? $dto->grind_level;
+
+        $parts = [
+            __('inventory.blend_note.roast', ['value' => $roast]),
+            __('inventory.blend_note.grind', ['value' => $grind]),
+            __('inventory.blend_note.weight', ['grams' => $dto->target_weight_grams]),
+        ];
         if ($dto->cardamom_grams > 0) {
-            $extraDetails .= " | حبهان: {$dto->cardamom_grams}جم";
+            $parts[] = __('inventory.blend_note.cardamom', ['grams' => $dto->cardamom_grams]);
         }
         if ($dto->notes) {
-            $extraDetails .= " | {$dto->notes}";
+            $parts[] = $dto->notes;
         }
 
-        $notesStr = "خلطة وتوليفة مخصوصة: {$dto->blend_name} ({$extraDetails})";
+        $notesStr = __('inventory.blend_note.summary', ['name' => $dto->blend_name, 'details' => implode(' | ', $parts)]);
 
         return $this->invoiceService->confirmInvoice([
             'customer_id' => $dto->customer_id,

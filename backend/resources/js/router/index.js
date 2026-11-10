@@ -5,6 +5,7 @@ import { useCentralAuthStore } from '../stores/centralAuth';
 import { CENTRAL_STORAGE_KEYS, isCentralAppContext, setCentralSessionHandlers } from '../Services/centralApi';
 import { safeCentralRedirect } from '../Composables/useSuperAdminLogin';
 import { trans } from '../helpers/trans';
+import { notifyError } from '../helpers/alert';
 import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
 
 /**
@@ -25,6 +26,25 @@ const tenantRoutes = [
             titleKey: 'nav.page_titles.workspace_connect',
             guestOnly: true,
         },
+    },
+    {
+        // PRD-05 / PRD-07: public marketing pages. Guest-accessible, no workspace connection needed.
+        path: '/welcome',
+        name: 'landing.home',
+        component: () => import('../views/Landing/HomeView.vue'),
+        meta: { titleKey: 'landing.page_titles.home', layout: 'blank' },
+    },
+    {
+        path: '/pricing',
+        name: 'landing.pricing',
+        component: () => import('../views/Landing/PricingView.vue'),
+        meta: { titleKey: 'landing.page_titles.pricing', layout: 'blank' },
+    },
+    {
+        path: '/signup',
+        name: 'landing.signup',
+        component: () => import('../views/Landing/SignupView.vue'),
+        meta: { titleKey: 'landing.page_titles.signup', layout: 'blank' },
     },
     {
         path: '/login',
@@ -62,6 +82,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.stores_stocks',
             requiresAuth: true,
+            permission: 'items.view',
         },
     },
     {
@@ -111,6 +132,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.expenses_index',
             requiresAuth: true,
+            feature: 'expenses.manage',
             permission: 'expenses.manage',
         },
     },
@@ -141,6 +163,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.items_movements',
             requiresAuth: true,
+            feature: 'items.movements',
             permission: 'items.view',
         },
     },
@@ -152,6 +175,7 @@ const tenantRoutes = [
             titleKey: 'nav.page_titles.daily_journal_index',
             requiresAuth: true,
             permission: 'daily_journal.view',
+            feature: 'shifts.manage',
         },
     },
     {
@@ -161,6 +185,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.purchases_index',
             requiresAuth: true,
+            feature: 'purchases.manage',
             permission: 'purchases.view',
         },
     },
@@ -171,6 +196,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.purchases_create',
             requiresAuth: true,
+            feature: 'purchases.manage',
             permission: 'purchases.create',
         },
     },
@@ -182,6 +208,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.purchases_smart_reorder',
             requiresAuth: true,
+            feature: 'purchases.reorder',
             permission: 'purchases.view',
         },
     },
@@ -192,7 +219,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.invoices_index',
             requiresAuth: true,
-            permission: 'invoices.view',
+            permission: ['invoices.view', 'pos.access'],
         },
     },
     {
@@ -202,7 +229,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.invoices_show',
             requiresAuth: true,
-            permission: 'invoices.view',
+            permission: ['invoices.view', 'pos.access'],
         },
     },
     {
@@ -224,6 +251,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.pos_index',
             requiresAuth: true,
+            feature: 'pos.access',
             permission: 'pos.access',
         },
     },
@@ -234,6 +262,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.returns_index',
             requiresAuth: true,
+            feature: 'returns.manage',
             permission: 'returns.manage',
         },
     },
@@ -244,6 +273,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.returns_create',
             requiresAuth: true,
+            feature: 'returns.manage',
             permission: 'returns.manage',
         },
     },
@@ -254,7 +284,8 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.stock_transfers_index',
             requiresAuth: true,
-            permission: 'transfers.view',
+            feature: 'transfers.manage',
+            permission: ['stores.manage', 'transfers.view'],
         },
     },
     {
@@ -264,7 +295,8 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.stock_transfers_create',
             requiresAuth: true,
-            permission: 'stores.manage',
+            feature: 'transfers.manage',
+            permission: ['stores.manage', 'transfers.create'],
         },
     },
     {
@@ -274,6 +306,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.coffee_blender_index',
             requiresAuth: true,
+            feature: 'mixes.manage',
             permission: 'items.create',
         },
     },
@@ -284,6 +317,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.reports_index',
             requiresAuth: true,
+            feature: 'reports.basic',
             permission: 'reports.view',
         },
     },
@@ -314,7 +348,30 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.activity_logs_index',
             requiresAuth: true,
+            feature: 'audit.logs',
             permission: 'logs.view',
+        },
+    },
+    {
+        path: '/billing',
+        name: 'billing.index',
+        component: () => import('../views/Billing/SubscriptionView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.billing_index',
+            requiresAuth: true,
+            permission: 'billing.manage',
+        },
+    },
+    {
+        path: '/billing/invoices/:id/print',
+        name: 'billing.invoice.print',
+        component: () => import('../views/Billing/BillingInvoicePrintView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.billing_invoice_print',
+            requiresAuth: true,
+            layout: 'blank',
+            isPrintView: true,
+            permission: 'billing.manage',
         },
     },
     {
@@ -334,6 +391,16 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.profile_show',
             requiresAuth: true,
+        },
+    },
+    {
+        path: '/imports',
+        name: 'imports.index',
+        component: () => import('../views/Imports/ImportView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.import_index',
+            requiresAuth: true,
+            permissionAny: ['items.create', 'customers.manage', 'suppliers.manage'],
         },
     },
     {
@@ -413,6 +480,13 @@ const centralRoutes = [
         () => import('../views/SuperAdmin/SuperAdminTenantShowView.vue')
     ),
     centralPage(
+        '/super-admin/signup-requests',
+        'super_admin.signup_requests',
+        'signup.console.page_title',
+        () => import('../views/SuperAdmin/SuperAdminSignupRequestsView.vue'),
+        CENTRAL_PERMISSIONS.tenantsView
+    ),
+    centralPage(
         '/super-admin/plans',
         'super_admin.plans',
         'super.page_titles.plans',
@@ -429,6 +503,20 @@ const centralRoutes = [
         'super_admin.units',
         'super.page_titles.units',
         () => import('../views/SuperAdmin/SuperAdminUnitsView.vue')
+    ),
+    centralPage(
+        '/super-admin/billing',
+        'super_admin.billing',
+        'billing.console.page_titles.queue',
+        () => import('../views/SuperAdmin/SuperAdminBillingView.vue'),
+        CENTRAL_PERMISSIONS.billingView
+    ),
+    centralPage(
+        '/super-admin/billing-invoices/:id/print',
+        'super_admin.billing_invoice_print',
+        'billing.console.page_titles.invoice_print',
+        () => import('../views/SuperAdmin/SuperAdminBillingInvoicePrintView.vue'),
+        CENTRAL_PERMISSIONS.billingView
     ),
     centralPage(
         '/super-admin/settings',
@@ -484,12 +572,18 @@ async function tenantGuard(to, from, next) {
         return next({ name: 'login', query: { redirect: to.fullPath } });
     }
 
-    // 5. Permission / Role Check
+    // 5. Permission / Role Check (plan gating via meta.feature is rendered by App.vue as a FeatureGate upsell)
     if (to.meta.permission && !authStore.hasPermission(to.meta.permission)) {
+        notifyError(trans('common.no_access'));
+        return next({ name: 'dashboard' });
+    }
+
+    if (to.meta.permissionAny && !to.meta.permissionAny.some((permission) => authStore.hasPermission(permission))) {
         return next({ name: 'dashboard' });
     }
 
     if (to.meta.role && !authStore.hasRole(to.meta.role)) {
+        notifyError(trans('common.no_access'));
         return next({ name: 'dashboard' });
     }
 

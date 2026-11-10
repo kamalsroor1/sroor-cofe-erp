@@ -4,6 +4,7 @@ import { Receipt, FileText, Pencil, Trash2, Users } from 'lucide-vue-next';
 import DataTable from '@/Components/Common/DataTable.vue';
 import { useFormatters } from '@/Composables/useFormatters';
 import { useTrans } from '@/Composables/useTrans';
+import { useAppConfigStore } from '@/stores/appConfig';
 
 defineProps({
   customers: { type: Array, default: () => [] },
@@ -13,8 +14,9 @@ defineProps({
 
 defineEmits(['create', 'pay', 'edit', 'delete', 'page-change']);
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
+const appConfigStore = useAppConfigStore();
 
 const columns = computed(() => [
   { key: 'index', label: '#', width: 'w-16', mono: true, hideOnMobile: true },
@@ -96,7 +98,7 @@ const columns = computed(() => [
           "
         >
           {{ formatMoney(row.current_balance) }}
-          <span class="text-xs font-normal font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
         <div class="text-[10px] font-tajawal text-slate-500 dark:text-slate-400 mt-0.5">
           {{
@@ -127,6 +129,7 @@ const columns = computed(() => [
     <template #actions="{ row }">
       <div class="flex items-center justify-center gap-1 flex-wrap">
         <button
+          v-if="appConfigStore.hasFeature('payments.manage')"
           type="button"
           @click="$emit('pay', row)"
           class="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0 px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold transition flex items-center gap-1 font-tajawal cursor-pointer active:scale-95"

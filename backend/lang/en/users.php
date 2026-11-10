@@ -65,4 +65,14 @@ return [
     'delete_user_confirm_text' => 'Are you sure you want to delete this user?',
     'user_deleted_success' => 'User deleted successfully',
     'user_delete_failed' => 'Failed to delete user',
+
+    // BE-08
+    'pos_pin_format' => 'The approval PIN must be 4 to 6 digits.',
+    'activity_login_unlocked' => 'Sign-in lock lifted for account [:name] by :actor',
+    'login_not_locked' => 'The account was not locked; nothing to unlock',
+    'unlock_login' => 'Unlock login',
+    'login_locked_badge' => 'Locked',
+    'unlock_login_confirm' => 'Unlock login for :name?',
+    'unlock_login_success' => 'Login unlocked successfully',
+    'unlock_login_failed' => 'Failed to unlock login',
 ];

@@ -105,6 +105,7 @@ final class StoreIsolationApiTest extends TenantTestCase
                 'code' => 'ISO-1',
                 'name' => 'صنف العزل',
                 'unit' => 'كجم',
+                'is_weighted' => true,
                 'cost_price' => '10.000',
                 'selling_price' => '20.000',
                 'current_stock' => '30.000',

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCentralAuthStore } from '../stores/centralAuth';
 import { trans } from '../helpers/trans';
@@ -7,6 +7,7 @@ import centralApi from '../Services/centralApi';
 import { notifyError } from '../helpers/alert';
 import { useIdleLogout } from '../Composables/useIdleLogout';
 import versionData from '../version.json';
+import BrandMark from '../Components/Brand/BrandMark.vue';
 import DynamicIcon from '../Components/Common/DynamicIcon.vue';
 import StepUpPrompt from '../Components/SuperAdmin/StepUpPrompt.vue';
 import {
@@ -23,14 +24,24 @@ import {
   Zap,
   ExternalLink,
   Settings,
+  Receipt,
+  Inbox,
 } from 'lucide-vue-next';
 import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
+import { useBillingPendingCount } from '../Composables/useBillingPendingCount';
+import { usePendingSignupRequests } from '../Composables/usePendingSignupRequests';
 
 const centralAuth = useCentralAuthStore();
 const route = useRoute();
 const router = useRouter();
 
 useIdleLogout();
+const { pendingCount: pendingSignupCount } = usePendingSignupRequests();
+
+const { pendingCount, refreshPendingCount } = useBillingPendingCount();
+onMounted(() => {
+  if (centralAuth.can(CENTRAL_PERMISSIONS.billingView)) refreshPendingCount();
+});
 
 const user = computed(() => centralAuth.user || {});
 const mobileMenuOpen = ref(false);
@@ -72,10 +83,26 @@ const navItems = computed(() =>
       active: route.path.startsWith('/super-admin/tenants'),
     },
     {
+      name: trans('signup.console.nav'),
+      href: '/super-admin/signup-requests',
+      icon: Inbox,
+      active: route.path.startsWith('/super-admin/signup-requests'),
+      permission: CENTRAL_PERMISSIONS.tenantsView,
+      badge: pendingSignupCount.value,
+    },
+    {
       name: trans('super.plans'),
       href: '/super-admin/plans',
       icon: Layers,
       active: route.path.startsWith('/super-admin/plans'),
+    },
+    {
+      name: trans('billing.console.nav'),
+      href: '/super-admin/billing',
+      icon: Receipt,
+      active: route.path.startsWith('/super-admin/billing'),
+      permission: CENTRAL_PERMISSIONS.billingView,
+      badge: pendingCount.value || null,
     },
     {
       name: trans('super.nav_units'),
@@ -109,7 +136,6 @@ const handleLogout = async () => {
 <template>
   <div
     class="flex-1 h-full max-h-full min-h-0 overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col antialiased selection:bg-indigo-500 selection:text-white font-tajawal"
-    dir="rtl"
   >
     <!-- Top Navbar -->
     <header
@@ -128,11 +154,7 @@ const handleLogout = async () => {
         </button>
 
         <router-link to="/super-admin/dashboard" class="flex items-center gap-2.5">
-          <div
-            class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white font-black flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0"
-          >
-            <ShieldCheck class="w-5 h-5" />
-          </div>
+          <BrandMark variant="app-icon" :size="40" class="rounded-2xl shadow-lg" decorative />
           <div>
             <div class="flex items-center gap-2">
               <span class="font-black text-sm tracking-tight text-slate-900 dark:text-white">
@@ -185,7 +207,7 @@ const handleLogout = async () => {
     <Transition name="sidebar-drawer">
       <aside
         v-if="mobileMenuOpen"
-        class="fixed inset-y-0 right-0 z-50 w-72 max-w-[85vw] h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-indigo-900/40 p-4 flex flex-col space-y-6 shadow-2xl md:hidden font-tajawal"
+        class="fixed inset-y-0 start-0 z-50 w-72 max-w-[85vw] h-full bg-white dark:bg-slate-900 border-e border-slate-200 dark:border-indigo-900/40 p-4 flex flex-col space-y-6 shadow-2xl md:hidden font-tajawal"
       >
         <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
           <div class="flex items-center gap-2.5">
@@ -231,6 +253,12 @@ const handleLogout = async () => {
             >
               <DynamicIcon :name="item.icon" class="w-4 h-4 shrink-0" />
               <span>{{ item.name }}</span>
+              <span
+                v-if="item.badge"
+                class="ms-auto min-w-5 h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center"
+              >
+                {{ item.badge }}
+              </span>
             </router-link>
           </template>
         </div>
@@ -253,7 +281,7 @@ const handleLogout = async () => {
     <div class="flex-1 flex overflow-hidden">
       <!-- Desktop Sidebar (Hidden on Mobile) -->
       <aside
-        class="hidden md:flex w-64 bg-white dark:bg-slate-900/60 border-l border-slate-200 dark:border-indigo-900/30 flex-col p-4 space-y-6 shrink-0 font-tajawal shadow-xs"
+        class="hidden md:flex w-64 bg-white dark:bg-slate-900/60 border-e border-slate-200 dark:border-indigo-900/30 flex-col p-4 space-y-6 shrink-0 font-tajawal shadow-xs"
       >
         <div class="space-y-1">
           <div class="px-3 text-[11px] font-black tracking-wider text-indigo-600 dark:text-indigo-400 uppercase mb-2">
@@ -285,6 +313,12 @@ const handleLogout = async () => {
             >
               <DynamicIcon :name="item.icon" class="w-4 h-4 shrink-0" />
               <span>{{ item.name }}</span>
+              <span
+                v-if="item.badge"
+                class="ms-auto min-w-5 h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center"
+              >
+                {{ item.badge }}
+              </span>
             </router-link>
           </template>
         </div>
@@ -328,6 +362,10 @@ const handleLogout = async () => {
 .sidebar-drawer-enter-from,
 .sidebar-drawer-leave-to {
   transform: translateX(100%);
+}
+[dir='ltr'] .sidebar-drawer-enter-from,
+[dir='ltr'] .sidebar-drawer-leave-to {
+  transform: translateX(-100%);
 }
 
 .fade-enter-active,

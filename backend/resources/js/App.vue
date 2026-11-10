@@ -1,7 +1,6 @@
 <template>
   <div
     class="h-screen max-h-screen w-screen max-w-full overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans selection:bg-theme-primary selection:text-white flex flex-col"
-    dir="rtl"
   >
     <!-- 0. 🖥️ Native Desktop Frameless Titlebar (Visible ONLY when running in Electron) -->
     <DesktopTitlebar @open-hardware="isDesktopHardwareOpen = true" @open-shortcuts="isDesktopShortcutsOpen = true" />
@@ -31,7 +30,8 @@
     <SpaLayout v-else>
       <router-view v-slot="{ Component, route }">
         <transition name="page" mode="out-in">
-          <component :is="Component" :key="route.fullPath" />
+          <component :is="Component" v-if="appConfigStore.hasFeature(route.meta.feature)" :key="route.fullPath" />
+          <FeatureGate v-else :key="route.fullPath" :feature="route.meta.feature" page />
         </transition>
       </router-view>
     </SpaLayout>
@@ -56,7 +56,9 @@ import { useAppConfigStore } from './stores/appConfig';
 import { useAuthStore } from './stores/auth';
 import { useTabsStore } from './stores/tabs';
 import { useAppUpdate } from './Composables/useAppUpdate';
+import { useLocaleSync } from './Composables/useLocale';
 import { useDesktopHardware } from './Composables/useDesktopHardware';
+import FeatureGate from './Components/FeatureGate.vue';
 import SpaLayout from './Layouts/SpaLayout.vue';
 import SuperAdminLayout from './Layouts/SuperAdminLayout.vue';
 import AppUpdateModal from './Components/AppUpdateModal.vue';
@@ -66,6 +68,7 @@ import DesktopPrinterSettingsModal from './Components/Common/DesktopPrinterSetti
 import DesktopShortcutsModal from './Components/Common/DesktopShortcutsModal.vue';
 
 const route = useRoute();
+useLocaleSync();
 const appConfigStore = useAppConfigStore();
 const authStore = useAuthStore();
 useTabsStore(); // instantiate the tabs store at boot (side effect kept; the binding was unused)
@@ -85,7 +88,6 @@ const isStandaloneRoute = computed(() => {
     meta.layout === 'blank' ||
     meta.isPrintView ||
     route.name === 'login' ||
-    route.name === 'marketing.brochure' ||
     route.name === 'invoices.print' ||
     path.includes('/print') ||
     path === '/login' ||
@@ -112,9 +114,13 @@ onMounted(async () => {
 
     // 2. Fetch translations if guest or bootstrap context if authenticated
     if (authStore.isAuthenticated) {
-      await appConfigStore.fetchBootstrapContext();
+      // The router guard already loads the context before first render; only fetch it here if it did not.
+      if (!appConfigStore.isLoaded) await appConfigStore.fetchBootstrapContext();
+    } else if (window.spaTranslations && Object.keys(window.spaTranslations).length > 0) {
+      // The server already inlined the dictionary; no extra request for guests.
+      appConfigStore.translations = window.spaTranslations;
     } else {
-      await appConfigStore.fetchTranslations();
+      await appConfigStore.fetchTranslations().catch(() => {});
     }
   } catch (error) {
     console.error('Failed to initialize bootstrap context:', error);

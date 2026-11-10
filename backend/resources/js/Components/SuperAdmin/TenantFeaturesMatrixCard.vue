@@ -5,7 +5,7 @@
     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-xl">
-          ⚡
+          <Zap class="w-5 h-5" />
         </div>
         <div>
           <h2 class="text-base font-black text-slate-900 dark:text-white">{{ $t('super.custom_features_title') }}</h2>
@@ -15,7 +15,7 @@
     </div>
 
     <!-- Feature Matrix List -->
-    <div class="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
+    <div class="space-y-2.5 max-h-[420px] overflow-y-auto ps-1">
       <div
         v-for="feat in features"
         :key="feat.key"
@@ -27,7 +27,7 @@
         "
       >
         <div class="flex items-center gap-3 min-w-0">
-          <span class="text-lg">{{ feat.icon || '✨' }}</span>
+          <DynamicIcon :name="feat.icon" fallback="sparkles" class="w-5 h-5 text-theme-primary" />
           <div>
             <div class="text-xs font-black text-slate-900 dark:text-white truncate">{{ feat.name }}</div>
             <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">{{ feat.key }}</div>
@@ -52,6 +52,8 @@
 </template>
 
 <script setup>
+import { Zap } from 'lucide-vue-next';
+import DynamicIcon from '../Common/DynamicIcon.vue';
 const props = defineProps({
   features: { type: Array, default: () => [] },
   enabledFeatures: { type: Array, default: () => [] },

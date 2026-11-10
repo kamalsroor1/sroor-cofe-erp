@@ -21,10 +21,13 @@ final class UpdateItemAction
                 'code' => $dto->code ?: $item->code,
                 'category' => $dto->category,
                 'unit' => $dto->unit,
-                'cost_price' => $dto->cost_price,
+                // A missing key keeps the stored cost (users without items.view_cost never send it).
+                'cost_price' => $dto->cost_price ?? $item->cost_price,
                 // Partial-update safety: a missing key keeps the stored floor.
                 'min_selling_price' => $dto->min_selling_price ?? $item->min_selling_price,
                 'selling_price' => $dto->selling_price,
+                // BE-08: a missing key keeps the stored wholesale price.
+                'wholesale_price' => $dto->wholesale_price ?? $item->wholesale_price,
                 'min_stock_level' => $dto->min_stock_level,
                 'is_active' => $dto->is_active,
                 'notes' => $dto->notes,

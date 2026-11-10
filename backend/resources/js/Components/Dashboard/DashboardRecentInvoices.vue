@@ -6,7 +6,7 @@
         class="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-theme-primary transition flex items-center gap-1 cursor-pointer"
       >
         <span>{{ $t('dashboard.all_invoices') }}</span>
-        <span>←</span>
+        <ArrowRight class="w-3.5 h-3.5 rtl:rotate-180" />
       </router-link>
     </template>
     <DataTable
@@ -34,7 +34,7 @@
       <template #cell-net_total="{ row }">
         <span class="font-bold text-slate-900 dark:text-white font-mono">
           {{ formatMoney(row.net_total) }}
-          <span class="text-[10px] font-sans text-slate-400">{{ $t('common.currency') }}</span>
+          <span class="text-[10px] font-sans text-slate-400">{{ currencyLabel }}</span>
         </span>
       </template>
 
@@ -61,13 +61,14 @@
 </template>
 
 <script setup>
+import { ArrowRight } from 'lucide-vue-next';
 import { computed } from 'vue';
 import DashboardSectionCard from '../Common/DashboardSectionCard.vue';
 import DataTable from '@/Components/Common/DataTable.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
 
 defineProps({ invoices: { type: Array, default: () => [] } });

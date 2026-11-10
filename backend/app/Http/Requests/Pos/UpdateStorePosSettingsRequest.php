@@ -40,6 +40,9 @@ class UpdateStorePosSettingsRequest extends FormRequest
             'scale_price_divisor' => ['sometimes', 'integer', Rule::in(ScaleBarcodeConfig::DIVISORS)],
             'scale_check_digit' => ['sometimes', 'boolean'],
             'max_discount_percent' => ['sometimes', 'nullable', 'numeric', 'decimal:0,3', 'min:0', 'max:100'],
+            'require_shift_for_sales' => ['sometimes', 'boolean'],
+            'catalog_cards_per_row' => ['sometimes', 'string', Rule::in(StorePosSetting::CARDS_PER_ROW)],
+            'show_item_images' => ['sometimes', 'boolean'],
         ];
     }
 }

@@ -5,7 +5,7 @@
     <h2
       class="text-xs font-bold text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2"
     >
-      <span>📊</span>
+      <BarChart3 class="w-4 h-4" />
       <span>{{ $t('inventory.blend_cost_summary') }}</span>
     </h2>
 
@@ -21,7 +21,7 @@
       <div class="flex justify-between text-slate-500 dark:text-slate-400 font-sans">
         <span>{{ $t('inventory.estimated_raw_cost') }}</span>
         <span class="font-mono text-rose-500 font-bold"
-          >{{ formatMoney(totalCalculatedCost) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(totalCalculatedCost) }} {{ currencyLabel }}</span
         >
       </div>
 
@@ -30,15 +30,14 @@
       >
         <span>{{ $t('inventory.suggested_retail_price') }}:</span>
         <span class="font-mono text-emerald-500 text-lg font-black"
-          >{{ formatMoney(totalCalculatedPrice) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(totalCalculatedPrice) }} {{ currencyLabel }}</span
         >
       </div>
 
       <div class="flex justify-between text-xs text-slate-500 dark:text-slate-400 font-sans">
         <span>{{ $t('inventory.profit_margin') }}:</span>
         <span class="font-mono font-bold text-theme-primary">
-          {{ profitMargin }}% ({{ formatMoney(totalCalculatedPrice - totalCalculatedCost) }}
-          {{ $t('common.currency') }})
+          {{ profitMargin }}% ({{ formatMoney(totalCalculatedPrice - totalCalculatedCost) }} {{ currencyLabel }})
         </span>
       </div>
     </div>
@@ -49,8 +48,7 @@
         :model-value="selectedCustomerId"
         @update:model-value="$emit('update:selectedCustomerId', $event)"
         :label="$t('contacts.customer')"
-        :options="customerOptions"
-        :required="true"
+        :search-fn="searchCustomers"
       />
     </div>
 
@@ -72,18 +70,18 @@
 </template>
 
 <script setup>
-import { Zap } from 'lucide-vue-next';
+import { Zap, BarChart3 } from 'lucide-vue-next';
 import BaseSelect from '../Form/BaseSelect.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   targetWeightGrams: { type: Number, default: 250 },
   totalCalculatedCost: { type: Number, default: 0 },
   totalCalculatedPrice: { type: Number, default: 0 },
   profitMargin: { type: Number, default: 0 },
-  customerOptions: { type: Array, default: () => [] },
+  searchCustomers: { type: Function, required: true },
   selectedCustomerId: { type: [Number, String], default: null },
   isSubmitting: { type: Boolean, default: false },
   componentsCount: { type: Number, default: 0 },

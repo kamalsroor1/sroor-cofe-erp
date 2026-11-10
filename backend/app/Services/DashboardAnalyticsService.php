@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Services\Settings\TenantSettings;
 use App\Support\TenantClock;
 use Carbon\Carbon;
 
@@ -69,7 +70,7 @@ class DashboardAnalyticsService
                 'date' => $date,
                 'label' => $dayName,
                 'sales' => (float) $daySales,
-                'sales_formatted' => number_format((float) $daySales, 2).' '.__('common.currency'),
+                'sales_formatted' => number_format((float) $daySales, 2).' '.app(TenantSettings::class)->currencyLabel(),
                 'invoices' => $dayCount,
             ];
         }
@@ -101,7 +102,7 @@ class DashboardAnalyticsService
         foreach ($hourlySales as &$hRow) {
             $hSalesFloat = (float) $hRow['sales'];
             $hRow['intensity'] = $peakSales > 0 ? min(100, max(0, round(($hSalesFloat / $peakSales) * 100))) : 0;
-            $hRow['sales_formatted'] = number_format($hSalesFloat, 2).' '.__('common.currency');
+            $hRow['sales_formatted'] = number_format($hSalesFloat, 2).' '.app(TenantSettings::class)->currencyLabel();
         }
         unset($hRow);
 

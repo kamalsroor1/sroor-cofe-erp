@@ -1,7 +1,6 @@
 <template>
   <div
     class="flex-1 h-full max-h-full min-h-0 overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 transition-colors duration-200"
-    dir="rtl"
   >
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- 🔝 TOP HEADER BAR (Clean, Non-Crowded & Responsive)          -->
@@ -47,7 +46,7 @@
           <Transition name="fade">
             <div
               v-if="isUserDropdownOpen"
-              class="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-2 z-50 font-tajawal space-y-1"
+              class="absolute start-0 top-full mt-2 w-64 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-2 z-50 font-tajawal space-y-1"
             >
               <div
                 class="p-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 rounded-xl mb-1"
@@ -73,6 +72,7 @@
               </router-link>
 
               <router-link
+                v-can="'roles.manage'"
                 to="/users"
                 @click="isUserDropdownOpen = false"
                 class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition"
@@ -82,6 +82,7 @@
               </router-link>
 
               <router-link
+                v-can="'roles.manage'"
                 to="/roles"
                 @click="isUserDropdownOpen = false"
                 class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition"
@@ -91,6 +92,7 @@
               </router-link>
 
               <router-link
+                v-can="'logs.view'"
                 to="/activity-logs"
                 @click="isUserDropdownOpen = false"
                 class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition"
@@ -98,6 +100,8 @@
                 <FileText class="w-4 h-4 text-slate-400" />
                 <span>{{ $t('nav.layout.activity_audit') }}</span>
               </router-link>
+
+              <LanguageSwitcher variant="menu" @switched="isUserDropdownOpen = false" />
 
               <div class="border-t border-slate-100 dark:border-slate-800/80 pt-1">
                 <button
@@ -141,53 +145,9 @@
 
         <NotificationsBell />
 
-        <!-- 🏬 Store Switcher (Branch context dropdown / badge - Desktop/Tablet) -->
-        <div class="hidden lg:flex items-center gap-2">
-          <!-- Multi-store selector -->
-          <div v-if="authStore.stores?.length > 1" class="relative">
-            <select
-              :value="authStore.currentStore?.id"
-              @change="handleStoreSwitch($event.target.value)"
-              class="h-8 pr-7 pl-3 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-800 dark:text-cyan-400 focus:outline-none focus:ring-2 focus:ring-theme-primary cursor-pointer font-tajawal shadow-2xs"
-            >
-              <option v-for="s in authStore.stores" :key="s.id" :value="s.id">
-                {{ s.name }}
-              </option>
-            </select>
-          </div>
-          <!-- Single Store Badge -->
-          <div
-            v-else
-            class="px-3 py-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl text-xs font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5 shadow-2xs"
-          >
-            <StoreIcon class="w-3.5 h-3.5" />
-            <span>{{ authStore.activeStoreName || $t('common.main_store_default') }}</span>
-          </div>
-
-          <!-- 🔴/🟢 Shift Status Badge -->
-          <router-link
-            to="/daily-journal"
-            class="px-3 py-1.5 rounded-2xl text-xs font-bold flex items-center gap-1.5 border transition cursor-pointer shadow-2xs"
-            :class="
-              appConfigStore.hasOpenShift
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
-                : 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20'
-            "
-            :title="
-              appConfigStore.hasOpenShift ? $t('nav.layout.journal_open') : $t('nav.layout.journal_open_cta_hint')
-            "
-          >
-            <span
-              class="w-2 h-2 rounded-full"
-              :class="appConfigStore.hasOpenShift ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500 animate-ping'"
-            ></span>
-            <span>{{
-              appConfigStore.hasOpenShift
-                ? $t('nav.layout.journal_number', { number: appConfigStore.currentShiftNumber })
-                : $t('nav.layout.open_journal')
-            }}</span>
-          </router-link>
-        </div>
+        <!-- Store switcher + journal status: full row on lg, compact chip on md -->
+        <StoreShiftSwitcher class="hidden lg:flex" variant="inline" />
+        <StoreShiftSwitcher class="hidden md:block lg:hidden" variant="chip" />
       </div>
 
       <!-- Left Side (in RTL): Live Clock & Logout -->
@@ -234,8 +194,8 @@
         <slot />
       </main>
 
-      <!-- Fixed Mobile Bottom Navigation Bar -->
-      <MobileBottomNav @open-drawer="isSidebarOpen = true" />
+      <!-- Fixed Mobile Bottom Navigation Bar (the POS has its own sticky cart bar, the nav would cover Pay) -->
+      <MobileBottomNav v-if="!isPosView" @open-drawer="isSidebarOpen = true" />
     </div>
 
     <!-- 📱 DYNAMIC MOBILE DRAWER (Complete Mirror of Full ERP System) -->
@@ -251,20 +211,20 @@
       <Transition name="sidebar-drawer">
         <aside
           v-if="isSidebarOpen"
-          class="fixed inset-y-0 right-0 w-[88vw] max-w-[360px] bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 flex flex-col shadow-2xl z-[9999] font-tajawal md:hidden"
-          dir="rtl"
+          class="fixed inset-y-0 start-0 w-[88vw] max-w-[360px] bg-white dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 flex flex-col shadow-2xl z-[9999] font-tajawal md:hidden"
         >
           <!-- Drawer Header -->
           <div
             class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50 mobile-safe-header"
           >
             <div class="flex items-center gap-2.5 min-w-0">
-              <div
-                class="w-9 h-9 rounded-xl flex items-center justify-center text-slate-950 font-black text-base shadow-sm shrink-0"
-                :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
-              >
-                <Coffee class="w-5 h-5 stroke-[2.5]" />
-              </div>
+              <img
+                v-if="appConfigStore.companyLogo"
+                :src="appConfigStore.companyLogo"
+                :alt="appConfigStore.companyName"
+                class="w-9 h-9 rounded-xl object-contain shrink-0"
+              />
+              <BrandMark v-else variant="app-icon" :size="36" class="rounded-xl shadow-sm" />
               <div class="min-w-0">
                 <span class="font-black text-sm text-slate-900 dark:text-white truncate block">{{
                   appConfigStore.companyName
@@ -282,11 +242,16 @@
             </button>
           </div>
 
+          <!-- Store switcher + journal status -->
+          <div class="p-3 border-b border-slate-200 dark:border-slate-800">
+            <StoreShiftSwitcher variant="drawer" @navigate="isSidebarOpen = false" />
+          </div>
+
           <!-- Drawer Navigation Items -->
           <div class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
             <!-- 🌟 Quick Action Button: POS -->
             <router-link
-              v-if="isModuleEnabled('pos_and_sales') && !activeMobileSection"
+              v-if="canAccessPath('/pos') && !activeMobileSection"
               to="/pos"
               @click="isSidebarOpen = false"
               class="flex items-center justify-center gap-2.5 w-full py-3 px-4 rounded-2xl text-slate-950 font-black text-xs shadow-lg transition active:scale-95 cursor-pointer"
@@ -330,7 +295,9 @@
                         </div>
                       </div>
                     </div>
-                    <ChevronLeft class="w-4 h-4 text-slate-400 group-hover:text-theme-primary transition shrink-0" />
+                    <ChevronLeft
+                      class="ltr:rotate-180 w-4 h-4 text-slate-400 group-hover:text-theme-primary transition shrink-0"
+                    />
                   </router-link>
 
                   <!-- Category Card with Drill-Down Sub-menu -->
@@ -377,7 +344,7 @@
                         v-if="section.comingSoon"
                         class="px-2 py-0.5 rounded-lg bg-amber-500/15 text-[10px] font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20"
                       >
-                        🚀 {{ $t('nav.coming_soon') }}
+                        {{ $t('nav.coming_soon') }}
                       </span>
                       <template v-else>
                         <span
@@ -386,7 +353,7 @@
                           {{ $t('nav.layout.links_count', { count: section.items?.length || 0 }) }}
                         </span>
                         <ChevronLeft
-                          class="w-4 h-4 text-slate-400 group-hover:text-theme-primary group-hover:-translate-x-0.5 transition"
+                          class="ltr:rotate-180 w-4 h-4 text-slate-400 group-hover:text-theme-primary group-hover:-translate-x-0.5 ltr:group-hover:translate-x-0.5 transition"
                         />
                       </template>
                     </div>
@@ -396,7 +363,10 @@
             </div>
 
             <!-- 📂 LEVEL 2: DRILL-DOWN SUB-MENU (When Category is Active) -->
-            <div v-else class="space-y-3 animate-in fade-in slide-in-from-left duration-200">
+            <div
+              v-else
+              class="space-y-3 animate-in fade-in rtl:slide-in-from-left ltr:slide-in-from-right duration-200"
+            >
               <!-- Back to Modules Bar -->
               <div
                 class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between"
@@ -406,7 +376,7 @@
                   @click="activeMobileSection = null"
                   class="flex items-center gap-1.5 text-xs font-black text-theme-primary hover:opacity-80 transition cursor-pointer active:scale-95"
                 >
-                  <ChevronRight class="w-4 h-4 stroke-[3]" />
+                  <ChevronRight class="ltr:rotate-180 w-4 h-4 stroke-[3]" />
                   <span>{{ $t('nav.layout.back_to_sections') }}</span>
                 </button>
 
@@ -456,7 +426,7 @@
                     </div>
                     <span class="truncate">{{ item.title }}</span>
                   </div>
-                  <ChevronLeft class="w-4 h-4 opacity-40 shrink-0" />
+                  <ChevronLeft class="ltr:rotate-180 w-4 h-4 opacity-40 shrink-0" />
                 </router-link>
               </div>
             </div>
@@ -479,7 +449,7 @@
               @click="checkForUpdates(true)"
               class="px-3 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold font-tajawal transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
             >
-              <span>🚀</span>
+              <Rocket class="w-3.5 h-3.5" />
               <span>{{ $t('nav.layout.check_updates') }}</span>
             </button>
           </div>
@@ -501,22 +471,24 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useAppConfigStore } from '../stores/appConfig';
-import { useModules } from '../Composables/useModules';
+import { useRoutePermission } from '../Composables/useRoutePermission';
 import { useNavigation } from '../Composables/useNavigation';
 import { useAppUpdate } from '../Composables/useAppUpdate';
 import { useDesktopHardware } from '../Composables/useDesktopHardware';
 import { useFormatters } from '../Composables/useFormatters';
 import { useTabsStore } from '../stores/tabs';
+import LanguageSwitcher from '../Components/Common/LanguageSwitcher.vue';
 import DesktopPrinterSettingsModal from '../Components/Common/DesktopPrinterSettingsModal.vue';
 import DesktopTabsBar from '../Components/Navigation/DesktopTabsBar.vue';
 import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
 import DesktopSidebar from '../Components/Navigation/DesktopSidebar.vue';
+import BrandMark from '../Components/Brand/BrandMark.vue';
 import OfflineBanner from '../Components/Layout/OfflineBanner.vue';
 import NotificationsBell from '../Components/Layout/NotificationsBell.vue';
+import StoreShiftSwitcher from '../Components/Layout/StoreShiftSwitcher.vue';
 import Swal from 'sweetalert2';
 import { trans } from '../helpers/trans';
 import {
-  Store as StoreIcon,
   LogOut,
   Sun,
   Moon,
@@ -530,8 +502,8 @@ import {
   ShieldCheck,
   FileText,
   Printer,
-  Coffee,
   X,
+  Rocket,
 } from 'lucide-vue-next';
 
 const { currentVersionName, checkForUpdates } = useAppUpdate();
@@ -541,7 +513,7 @@ const isDesktopSettingsOpen = ref(false);
 const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
 const { formatDate, formatTime } = useFormatters();
-const { isModuleEnabled } = useModules();
+const { canAccessPath } = useRoutePermission();
 const { navigationSections, isItemActive } = useNavigation();
 
 const route = useRoute();
@@ -562,7 +534,7 @@ const isSidebarOpen = ref(false);
 const activeMobileSection = ref(null);
 const isSidebarCollapsed = ref(localStorage.getItem('sidebar_collapsed') === 'true');
 
-const isPosView = computed(() => route.path === '/pos' || route.path.startsWith('/pos'));
+const isPosView = computed(() => route.path === '/pos' || route.path.startsWith('/pos/'));
 
 // 📱 Smart Adaptive Sidebar: Auto-collapse on POS, restore user's original state on exit
 watch(
@@ -607,13 +579,6 @@ const updateLiveClock = () => {
 const toggleTheme = () => {
   const nextTheme = appConfigStore.isDark ? 'light' : 'dark';
   appConfigStore.setTheme(nextTheme);
-};
-
-const handleStoreSwitch = (storeId) => {
-  const store = authStore.stores?.find((s) => String(s.id) === String(storeId));
-  if (store) {
-    authStore.switchStore(store);
-  }
 };
 
 const confirmLogout = async () => {
@@ -662,6 +627,10 @@ onUnmounted(() => {
 .sidebar-drawer-enter-from,
 .sidebar-drawer-leave-to {
   transform: translateX(100%);
+}
+[dir='ltr'] .sidebar-drawer-enter-from,
+[dir='ltr'] .sidebar-drawer-leave-to {
+  transform: translateX(-100%);
 }
 
 .fade-enter-active,

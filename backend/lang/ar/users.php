@@ -65,4 +65,14 @@ return [
     'delete_user_confirm_text' => 'هل أنت متأكد من حذف هذا المستخدم؟',
     'user_deleted_success' => 'تم حذف المستخدم بنجاح',
     'user_delete_failed' => 'تعذر حذف الحساب',
+
+    // BE-08
+    'pos_pin_format' => 'الرقم السري للموافقة يجب أن يكون من 4 إلى 6 أرقام.',
+    'activity_login_unlocked' => 'تم إلغاء إيقاف الدخول للحساب [:name] بواسطة :actor',
+    'login_not_locked' => 'الحساب غير موقوف، لا يوجد ما يلزم إلغاؤه',
+    'unlock_login' => 'فتح تسجيل الدخول',
+    'login_locked_badge' => 'مقفل',
+    'unlock_login_confirm' => 'فتح تسجيل الدخول للمستخدم :name؟',
+    'unlock_login_success' => 'تم فتح تسجيل الدخول بنجاح',
+    'unlock_login_failed' => 'تعذر فتح تسجيل الدخول',
 ];

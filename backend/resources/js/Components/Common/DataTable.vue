@@ -246,10 +246,13 @@ const getCellValue = (row, key) => {
   return key.split('.').reduce((obj, k) => obj?.[k], row);
 };
 
+// Column `align` is historical and physical-in-RTL: 'right' meant the start edge, 'left' the end edge
+// (numeric columns). They map to logical start/end so the table mirrors correctly in LTR. The header's
+// flex-row-reverse for 'left' is direction-relative too (it swaps label/sort icon in both directions).
 const alignClass = (col) => {
   if (col.align === 'center') return 'text-center';
-  if (col.align === 'left') return 'text-left';
-  if (col.align === 'right') return 'text-right';
+  if (col.align === 'left') return 'text-end';
+  if (col.align === 'right') return 'text-start';
   if (col.align === 'end') return 'text-end';
   return 'text-start';
 };

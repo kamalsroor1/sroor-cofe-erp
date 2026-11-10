@@ -1,13 +1,13 @@
 <template>
   <div class="max-w-5xl mx-auto space-y-6 font-tajawal">
     <!-- Page Header -->
-    <PageHeader :title="$t('returns.create_title')" :subtitle="$t('returns.create_subtitle')" icon="🔄">
+    <PageHeader :title="$t('returns.create_title')" :subtitle="$t('returns.create_subtitle')" icon="arrow-left-right">
       <template #actions>
         <router-link
           to="/returns"
           class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 active:scale-95"
         >
-          <ArrowRight class="w-4 h-4" />
+          <ArrowRight class="ltr:rotate-180 w-4 h-4" />
           <span>{{ $t('returns.back_to_returns') }}</span>
         </router-link>
       </template>
@@ -19,8 +19,8 @@
         <!-- Return Type & Party Info -->
         <ReturnPartySection
           :form="form"
-          :customers="customers"
-          :suppliers="suppliers"
+          :search-customers="searchCustomers"
+          :search-suppliers="searchSuppliers"
           :hide-party="usingSource"
           @type-change="onTypeChange"
           @update:field="updateField"
@@ -61,7 +61,7 @@
         <ReturnItemsTable
           v-else
           :items-list="form.items"
-          :items="items"
+          :search-items="searchItems"
           :selected-item-to-add="selectedItemToAdd"
           @update:selected-item="selectedItemToAdd = $event"
           @add-item="addItemRow"
@@ -95,9 +95,9 @@ import ReturnFinancialSummary from '../../Components/Returns/ReturnFinancialSumm
 import { useCreateReturn } from '../../Composables/useCreateReturn';
 
 const {
-  customers,
-  suppliers,
-  items,
+  searchCustomers,
+  searchSuppliers,
+  searchItems,
   isSubmitting,
   selectedItemToAdd,
   form,

@@ -40,7 +40,7 @@
         <div class="text-2xl font-black text-theme-primary font-mono">
           {{ formatMoney(plan.price_monthly) }}
           <span class="text-xs text-slate-500 dark:text-slate-400 font-tajawal"
-            >{{ $t('common.currency') }} / {{ $t('super.per_month') }}</span
+            >{{ $t('common.currencies.EGP') }} / {{ $t('super.per_month') }}</span
           >
         </div>
         <div class="text-xs text-slate-500 dark:text-slate-400 font-mono">

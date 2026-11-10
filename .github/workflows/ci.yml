@@ -86,6 +86,10 @@ jobs:
       - name: Composer install
         run: composer install --prefer-dist --no-progress --no-interaction
 
+      # SEC-08: fail on any known-vulnerable PHP package in composer.lock.
+      - name: Composer audit
+        run: composer audit --locked --no-interaction
+
       - name: Prepare environment (no real secrets)
         run: |
           cp .env.example .env

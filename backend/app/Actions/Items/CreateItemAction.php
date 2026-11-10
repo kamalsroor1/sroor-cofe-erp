@@ -9,6 +9,7 @@ use App\Enums\LimitResource;
 use App\Models\Item;
 use App\Services\Entitlements\PlanEnforcer;
 use App\Services\StoreStockInitializer;
+use App\Support\WeightUnits;
 use Illuminate\Support\Facades\DB;
 
 final class CreateItemAction
@@ -37,17 +38,19 @@ final class CreateItemAction
                 'name' => $dto->name,
                 'code' => $code,
                 'category' => $dto->category,
+                'category_id' => $dto->category_id,
                 'unit' => $dto->unit,
-                'cost_price' => $dto->cost_price,
+                'cost_price' => $dto->cost_price ?? '0.000',
                 // '0.000' = no price floor; never default to cost (cost leak).
                 'min_selling_price' => $dto->min_selling_price ?? '0.000',
-                'weighted_avg_cost' => $dto->cost_price,
+                'weighted_avg_cost' => $dto->cost_price ?? '0.000',
                 'selling_price' => $dto->selling_price,
+                'wholesale_price' => $dto->wholesale_price,
                 'min_stock_level' => $dto->min_stock_level,
                 'current_stock' => '0.000',
                 'is_active' => $dto->is_active,
                 'notes' => $dto->notes,
-                'is_weighted' => $dto->is_weighted ?? false,
+                'is_weighted' => $dto->is_weighted ?? WeightUnits::matches($dto->unit),
             ]);
 
             // Auto-initialize StoreStock for every existing store (bulk, idempotent)

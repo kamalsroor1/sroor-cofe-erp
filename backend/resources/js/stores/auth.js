@@ -151,11 +151,14 @@ export const useAuthStore = defineStore('auth', {
         },
 
         /**
-         * Check if user possesses given permission
+         * Check if user possesses given permission (string, or array = any-of)
          */
         hasPermission(permissionName) {
             if (!this.user) return false;
             if (this.roles.includes('admin')) return true;
+            if (Array.isArray(permissionName)) {
+                return permissionName.some((name) => this.permissions.includes(name));
+            }
             return this.permissions.includes(permissionName);
         },
 

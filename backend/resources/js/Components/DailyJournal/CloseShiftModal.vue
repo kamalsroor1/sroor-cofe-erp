@@ -9,7 +9,7 @@
             $t('treasury.shift_opening_balance_label')
           }}</span>
           <span class="font-mono text-slate-900 dark:text-slate-200 font-bold"
-            >{{ formatMoney(openingCashBalance) }} {{ $t('common.currency') }}</span
+            >{{ formatMoney(openingCashBalance) }} {{ currencyLabel }}</span
           >
         </div>
         <div class="flex items-center justify-between text-xs">
@@ -17,7 +17,7 @@
             $t('treasury.shift_expected_balance_label')
           }}</span>
           <span class="font-mono text-theme-primary font-black text-sm"
-            >{{ formatMoney(expectedCashInDrawer) }} {{ $t('common.currency') }}</span
+            >{{ formatMoney(expectedCashInDrawer) }} {{ currencyLabel }}</span
           >
         </div>
       </div>
@@ -28,7 +28,7 @@
         :label="$t('treasury.actual_counted_cash_prompt')"
         :required="true"
         :decimals="3"
-        :suffix="$t('common.currency')"
+        :suffix="currencyLabel"
         class="text-emerald-500 dark:text-emerald-400 text-lg font-bold"
       />
 
@@ -79,7 +79,7 @@ import BaseButton from '../Common/BaseButton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
 
 const props = defineProps({
@@ -107,8 +107,8 @@ const diffClass = computed(() => {
 });
 
 const diffText = computed(() => {
-  if (diff.value === 0) return `✓ ${t('treasury.drawer_balanced')}`;
-  if (diff.value > 0) return `+${formatMoney(diff.value)} ${t('common.currency')} (${t('treasury.drawer_surplus')})`;
-  return `${formatMoney(diff.value)} ${t('common.currency')} (${t('treasury.drawer_shortage')})`;
+  if (diff.value === 0) return t('treasury.drawer_balanced');
+  if (diff.value > 0) return `+${formatMoney(diff.value)} ${currencyLabel.value} (${t('treasury.drawer_surplus')})`;
+  return `${formatMoney(diff.value)} ${currencyLabel.value} (${t('treasury.drawer_shortage')})`;
 });
 </script>

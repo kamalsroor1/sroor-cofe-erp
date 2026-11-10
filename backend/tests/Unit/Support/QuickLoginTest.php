@@ -79,7 +79,7 @@ class QuickLoginTest extends TestCase
 
         $this->assertFalse($config['quick_login']['enabled']);
         $this->assertSame(480, $config['quick_login']['token_ttl_minutes']);
-        $this->assertSame(43200, $config['tokens']['tenant_ttl_minutes']);
+        $this->assertSame(720, $config['tokens']['tenant_ttl_minutes']);
     }
 
     public function test_flag_env_value_is_parsed_as_a_boolean(): void
@@ -102,12 +102,12 @@ class QuickLoginTest extends TestCase
         $this->assertSame(1440, $config['tokens']['tenant_ttl_minutes']);
     }
 
-    public function test_tenant_token_ttl_defaults_to_thirty_days(): void
+    public function test_tenant_token_ttl_defaults_to_twelve_hours(): void
     {
         $config = $this->freshAuthConfig(['TENANT_TOKEN_TTL_MINUTES' => null]);
 
-        // CTO Q-B10: tenant tokens live 30 days (sliding renewal is IDEN-2.2).
-        $this->assertSame(30 * 24 * 60, $config['tokens']['tenant_ttl_minutes']);
+        // SEC-03 (CTO): tenant tokens live 12 hours, fixed, never renewed on use.
+        $this->assertSame(12 * 60, $config['tokens']['tenant_ttl_minutes']);
     }
 
     public function test_token_ttl_minutes_falls_back_when_misconfigured(): void

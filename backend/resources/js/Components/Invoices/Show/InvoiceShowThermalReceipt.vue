@@ -3,7 +3,6 @@
     <div
       id="receipt-print-area"
       class="receipt-card bg-white text-black p-4 shadow-2xl rounded-2xl border border-slate-300 w-[80mm] max-w-[80mm] font-tajawal select-none print:shadow-none print:border-none print:rounded-none print:p-1 print:w-[78mm]"
-      dir="rtl"
     >
       <div class="text-center space-y-1 pb-2 border-b-2 border-dashed border-black">
         <h1 class="text-lg font-black tracking-tight leading-tight text-black">{{ companyInfo?.name }}</h1>
@@ -62,25 +61,19 @@
       <div class="py-2 border-b-2 border-dashed border-black text-xs space-y-1 text-black">
         <div class="flex justify-between items-center">
           <span class="font-bold">{{ $t('invoices.subtotal') }}:</span>
-          <span class="font-mono font-bold">{{ formatMoney(invoice?.subtotal) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono font-bold">{{ formatMoney(invoice?.subtotal) }} {{ currencyLabel }}</span>
         </div>
         <div v-if="parseFloat(invoice?.discount_amount || 0) > 0" class="flex justify-between items-center">
           <span class="font-bold">{{ $t('invoices.discount') }}:</span>
-          <span class="font-mono font-bold"
-            >- {{ formatMoney(invoice?.discount_amount) }} {{ $t('common.currency') }}</span
-          >
+          <span class="font-mono font-bold">- {{ formatMoney(invoice?.discount_amount) }} {{ currencyLabel }}</span>
         </div>
         <div v-if="parseFloat(invoice?.shipping_cost || 0) > 0" class="flex justify-between items-center">
           <span class="font-bold">{{ $t('invoices.extra_fees_shipping') }}</span>
-          <span class="font-mono font-bold"
-            >+ {{ formatMoney(invoice?.shipping_cost) }} {{ $t('common.currency') }}</span
-          >
+          <span class="font-mono font-bold">+ {{ formatMoney(invoice?.shipping_cost) }} {{ currencyLabel }}</span>
         </div>
         <div class="flex justify-between items-center text-sm font-black pt-1.5 border-t-2 border-black">
           <span class="text-sm font-black">{{ $t('invoices.net_total') }}:</span>
-          <span class="font-mono text-base font-black"
-            >{{ formatMoney(invoice?.net_total) }} {{ $t('common.currency') }}</span
-          >
+          <span class="font-mono text-base font-black">{{ formatMoney(invoice?.net_total) }} {{ currencyLabel }}</span>
         </div>
         <div class="flex justify-between items-center text-xs pt-1 border-t border-dashed border-black/50">
           <span class="font-bold">{{ $t('invoices.payment_method') }}:</span>
@@ -88,16 +81,14 @@
         </div>
         <div v-if="parseFloat(invoice?.paid_amount || 0) > 0" class="flex justify-between items-center text-xs">
           <span>{{ $t('invoices.amount_paid_label') }}</span>
-          <span class="font-mono font-black">{{ formatMoney(invoice?.paid_amount) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono font-black">{{ formatMoney(invoice?.paid_amount) }} {{ currencyLabel }}</span>
         </div>
         <div
           v-if="parseFloat(invoice?.remaining_amount || 0) > 0"
           class="flex justify-between items-center text-xs font-bold"
         >
           <span>{{ $t('invoices.amount_remaining_label') }}</span>
-          <span class="font-mono font-black"
-            >{{ formatMoney(invoice?.remaining_amount) }} {{ $t('common.currency') }}</span
-          >
+          <span class="font-mono font-black">{{ formatMoney(invoice?.remaining_amount) }} {{ currencyLabel }}</span>
         </div>
       </div>
 
@@ -114,7 +105,7 @@
 
 <script setup>
 import { useFormatters } from '../../../Composables/useFormatters';
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 defineProps({
   invoice: { type: Object, default: null },
   items: { type: Array, default: () => [] },

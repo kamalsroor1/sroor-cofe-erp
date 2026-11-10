@@ -113,6 +113,30 @@ class SystemContextApiTest extends TenantTestCase
 
         $notifications = $response->json('data.notifications');
         $this->assertNotEmpty($notifications);
+
+        // Alert icons are lucide icon names, never emoji glyphs.
+        foreach ($notifications as $notification) {
+            $this->assertMatchesRegularExpression('/^[a-z][a-z0-9-]*$/', $notification['icon']);
+        }
+    }
+
+    public function test_system_context_omits_translations_when_client_hash_matches(): void
+    {
+        $first = $this->withHeaders($this->adminHeaders)->getJson('/api/v1/system/context');
+        $hash = $first->json('data.translations_hash');
+        $this->assertNotEmpty($hash);
+        $this->assertNotEmpty($first->json('data.translations'));
+
+        $matched = $this->withHeaders($this->adminHeaders)->getJson('/api/v1/system/context?translations_hash='.$hash);
+        $matched->assertOk()->assertJsonPath('data.translations_hash', $hash);
+        $this->assertArrayNotHasKey('translations', $matched->json('data'));
+
+        $stale = $this->withHeaders($this->adminHeaders)->getJson('/api/v1/system/context?translations_hash=stale');
+        $this->assertNotEmpty($stale->json('data.translations'));
+
+        $otherLocale = $this->withHeaders($this->adminHeaders)->withHeader('X-Locale', 'en')
+            ->getJson('/api/v1/system/context?translations_hash='.$hash);
+        $this->assertNotEmpty($otherLocale->json('data.translations'));
     }
 
     public function test_can_fetch_translation_dictionary(): void

@@ -3,7 +3,6 @@
     <div
       id="a4-print-area"
       class="a4-page bg-white text-slate-900 p-8 sm:p-12 shadow-2xl rounded-3xl border border-slate-200 w-full max-w-[210mm] font-tajawal select-none print:shadow-none print:border-none print:rounded-none print:p-0 print:m-0 print:w-full print:max-w-none"
-      dir="rtl"
     >
       <!-- 1. Header: Enterprise Branding & Official Tax Invoice -->
       <div class="flex items-start justify-between border-b-2 border-slate-900 pb-5">
@@ -101,13 +100,13 @@
         <table class="w-full text-start text-xs border-collapse border border-slate-300">
           <thead>
             <tr class="bg-slate-100 text-slate-950 font-black border-b-2 border-slate-400 print:bg-slate-200">
-              <th class="py-2 px-2.5 text-start w-8 border-l border-slate-300">#</th>
-              <th class="py-2 px-2.5 text-start w-24 border-l border-slate-300">{{ $t('invoices.item_code_col') }}</th>
-              <th class="py-2 px-2.5 text-start border-l border-slate-300">{{ $t('invoices.item_name_col') }}</th>
-              <th class="py-2 px-2 text-center w-14 border-l border-slate-300">{{ $t('invoices.item_unit_col') }}</th>
-              <th class="py-2 px-2 text-center w-14 border-l border-slate-300">{{ $t('invoices.item_qty_col') }}</th>
-              <th class="py-2 px-2.5 text-end w-24 border-l border-slate-300">{{ $t('invoices.item_price_col') }}</th>
-              <th class="py-2 px-2.5 text-end w-20 border-l border-slate-300">
+              <th class="py-2 px-2.5 text-start w-8 border-e border-slate-300">#</th>
+              <th class="py-2 px-2.5 text-start w-24 border-e border-slate-300">{{ $t('invoices.item_code_col') }}</th>
+              <th class="py-2 px-2.5 text-start border-e border-slate-300">{{ $t('invoices.item_name_col') }}</th>
+              <th class="py-2 px-2 text-center w-14 border-e border-slate-300">{{ $t('invoices.item_unit_col') }}</th>
+              <th class="py-2 px-2 text-center w-14 border-e border-slate-300">{{ $t('invoices.item_qty_col') }}</th>
+              <th class="py-2 px-2.5 text-end w-24 border-e border-slate-300">{{ $t('invoices.item_price_col') }}</th>
+              <th class="py-2 px-2.5 text-end w-20 border-e border-slate-300">
                 {{ $t('invoices.item_discount_col') }}
               </th>
               <th class="py-2 px-2.5 text-end w-28">{{ $t('invoices.item_total_col') }}</th>
@@ -115,27 +114,27 @@
           </thead>
           <tbody class="divide-y divide-slate-200 font-mono">
             <tr v-for="(item, idx) in items" :key="item.id || idx" class="hover:bg-slate-50">
-              <td class="py-2 px-2.5 text-slate-500 font-bold border-l border-slate-200">{{ idx + 1 }}</td>
-              <td class="py-2 px-2.5 font-bold text-slate-700 border-l border-slate-200">
+              <td class="py-2 px-2.5 text-slate-500 font-bold border-e border-slate-200">{{ idx + 1 }}</td>
+              <td class="py-2 px-2.5 font-bold text-slate-700 border-e border-slate-200">
                 {{ item.item_code || `ITM-${item.id}` }}
               </td>
-              <td class="py-2 px-2.5 font-sans font-black text-slate-950 text-xs border-l border-slate-200">
+              <td class="py-2 px-2.5 font-sans font-black text-slate-950 text-xs border-e border-slate-200">
                 {{ item.name || item.item_name }}
               </td>
-              <td class="py-2 px-2 text-center font-sans text-slate-600 border-l border-slate-200">
+              <td class="py-2 px-2 text-center font-sans text-slate-600 border-e border-slate-200">
                 {{ unitLabel(item.unit) }}
               </td>
-              <td class="py-2 px-2 text-center font-black text-slate-950 border-l border-slate-200">
+              <td class="py-2 px-2 text-center font-black text-slate-950 border-e border-slate-200">
                 {{ formatMoney(item.quantity) }}
               </td>
-              <td class="py-2 px-2.5 text-end font-bold text-slate-800 border-l border-slate-200">
+              <td class="py-2 px-2.5 text-end font-bold text-slate-800 border-e border-slate-200">
                 {{ formatMoney(item.unit_price) }}
               </td>
-              <td class="py-2 px-2.5 text-end text-rose-600 font-bold border-l border-slate-200">
+              <td class="py-2 px-2.5 text-end text-rose-600 font-bold border-e border-slate-200">
                 {{ parseFloat(item.discount_amount || 0) > 0 ? '-' + formatMoney(item.discount_amount) : '—' }}
               </td>
               <td class="py-2 px-2.5 text-end font-black text-slate-950">
-                {{ formatMoney(item.total_price) }} {{ $t('common.currency') }}
+                {{ formatMoney(item.total_price) }} {{ currencyLabel }}
               </td>
             </tr>
           </tbody>
@@ -166,7 +165,7 @@
         <div class="col-span-5 p-4 rounded-2xl bg-slate-50 border border-slate-300 space-y-2 text-xs font-mono">
           <div class="flex justify-between text-slate-700 font-sans">
             <span>{{ $t('invoices.subtotal') }}:</span>
-            <span class="font-mono font-bold">{{ formatMoney(invoice?.subtotal) }} {{ $t('common.currency') }}</span>
+            <span class="font-mono font-bold">{{ formatMoney(invoice?.subtotal) }} {{ currencyLabel }}</span>
           </div>
 
           <div
@@ -174,16 +173,12 @@
             class="flex justify-between text-rose-600 font-sans"
           >
             <span>{{ $t('invoices.discount') }}:</span>
-            <span class="font-mono font-bold"
-              >- {{ formatMoney(invoice?.discount_amount) }} {{ $t('common.currency') }}</span
-            >
+            <span class="font-mono font-bold">- {{ formatMoney(invoice?.discount_amount) }} {{ currencyLabel }}</span>
           </div>
 
           <div v-if="parseFloat(invoice?.shipping_cost || 0) > 0" class="flex justify-between text-slate-700 font-sans">
             <span>{{ $t('invoices.shipping') }}:</span>
-            <span class="font-mono font-bold"
-              >+ {{ formatMoney(invoice?.shipping_cost) }} {{ $t('common.currency') }}</span
-            >
+            <span class="font-mono font-bold">+ {{ formatMoney(invoice?.shipping_cost) }} {{ currencyLabel }}</span>
           </div>
 
           <div
@@ -191,14 +186,14 @@
           >
             <span>{{ $t('invoices.net_total') }}:</span>
             <span class="font-mono text-base font-black"
-              >{{ formatMoney(invoice?.net_total) }} {{ $t('common.currency') }}</span
+              >{{ formatMoney(invoice?.net_total) }} {{ currencyLabel }}</span
             >
           </div>
 
           <div class="flex justify-between text-slate-800 font-sans pt-1 border-t border-dashed border-slate-300">
             <span>{{ $t('invoices.paid') }}:</span>
             <span class="font-mono font-black text-emerald-700"
-              >{{ formatMoney(invoice?.paid_amount) }} {{ $t('common.currency') }}</span
+              >{{ formatMoney(invoice?.paid_amount) }} {{ currencyLabel }}</span
             >
           </div>
 
@@ -207,9 +202,7 @@
             class="flex justify-between text-rose-600 font-sans font-bold"
           >
             <span>{{ $t('invoices.remaining') }}:</span>
-            <span class="font-mono font-black"
-              >{{ formatMoney(invoice?.remaining_amount) }} {{ $t('common.currency') }}</span
-            >
+            <span class="font-mono font-black">{{ formatMoney(invoice?.remaining_amount) }} {{ currencyLabel }}</span>
           </div>
         </div>
       </div>
@@ -243,7 +236,7 @@
 import { Coffee, MapPin, Phone } from 'lucide-vue-next';
 import { useFormatters } from '../../../Composables/useFormatters';
 import { useUnits } from '../../../Composables/useUnits';
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const { unitLabel } = useUnits();
 defineProps({
   invoice: { type: Object, default: null },

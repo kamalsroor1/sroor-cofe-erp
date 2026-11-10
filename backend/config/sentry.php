@@ -55,6 +55,11 @@ return [
     // OPS-7 adds the tenant_id tag through a scope, never e-mails or phone numbers.
     'send_default_pii' => false,
 
+    // OPS-6: strips request bodies/cookies/query strings/headers/user and bearer tokens in messages
+    // before anything leaves the server. Static callable arrays keep `config:cache` working.
+    'before_send' => [\App\Support\SentryScrubber::class, 'beforeSend'],
+    'before_send_transaction' => [\App\Support\SentryScrubber::class, 'beforeSendTransaction'],
+
     // @see: https://docs.sentry.io/platforms/php/guides/laravel/configuration/options/#ignore_exceptions
     // 'ignore_exceptions' => [],
 

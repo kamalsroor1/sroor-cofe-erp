@@ -303,7 +303,7 @@ class PosApiTest extends TenantTestCase
                     'customer_id' => $customerId,
                     'payment_type' => 'cash',
                     'payment_method' => 'cash',
-                    'items' => [['item_id' => $this->item->id, 'quantity' => 0.250, 'unit_price' => 35.000]],
+                    'items' => [['item_id' => $this->item->id, 'quantity' => 1.000, 'unit_price' => 35.000]],
                 ])
                 ->assertStatus(201);
         }
@@ -311,6 +311,6 @@ class PosApiTest extends TenantTestCase
         $walkIns = Customer::query()->where('phone', '0000000000')->pluck('id')->all();
         $this->assertCount(1, $walkIns);
         $this->assertSame(3, Invoice::query()->where('customer_id', $walkIns[0])->count());
-        $this->assertSame('99.250', (string) Item::findOrFail($this->item->id)->current_stock);
+        $this->assertSame('97.000', (string) Item::findOrFail($this->item->id)->current_stock);
     }
 }

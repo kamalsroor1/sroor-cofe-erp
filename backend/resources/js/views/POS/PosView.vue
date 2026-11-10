@@ -14,14 +14,24 @@ import POSSkeleton from '../../Components/POS/POSSkeleton.vue';
 import POSExpensesModal from '../../Components/POS/POSExpensesModal.vue';
 import POSMultiPaymentModal from '../../Components/POS/POSMultiPaymentModal.vue';
 import POSShortcutsModal from '../../Components/POS/POSShortcutsModal.vue';
+import POSRecentSalesDrawer from '../../Components/POS/POSRecentSalesDrawer.vue';
+import POSQuickReturnModal from '../../Components/POS/POSQuickReturnModal.vue';
+import POSWeightPickerModal from '../../Components/POS/POSWeightPickerModal.vue';
+import POSShiftGate from '../../Components/POS/POSShiftGate.vue';
+import POSShiftPanel from '../../Components/POS/POSShiftPanel.vue';
 import { usePosTerminal } from '../../Composables/POS/usePosTerminal';
+import { usePhoneViewport } from '../../Composables/useMediaQuery';
 
 const PARTIAL_ERROR_KEYS = {
   categories: 'pos.load_failed_categories',
   customers: 'pos.load_failed_customers',
   shift: 'pos.load_failed_shift',
   category_items: 'pos.load_failed_category_items',
+  catalog_more: 'pos.catalog_load_more_failed',
 };
+
+// POS-12: phones (< 768px) get the catalog + sticky cart bar + sheets; tablets keep the split layout.
+const isPhone = usePhoneViewport();
 
 const {
   authStore,
@@ -45,6 +55,12 @@ const {
   cartEmpty,
   orderApi,
   showShortcutsHelp,
+  recentSales,
+  quickReturn,
+  reprintInvoice,
+  canReturn,
+  canOverrideDiscount,
+  shift,
 } = usePosTerminal();
 </script>
 
@@ -57,7 +73,8 @@ const {
 
     <div
       v-else
-      class="h-full max-h-full min-h-0 overflow-y-auto lg:overflow-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col"
+      class="h-full max-h-full min-h-0 bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col"
+      :class="isPhone ? 'overflow-hidden' : 'overflow-y-auto lg:overflow-hidden'"
     >
       <POSHeader
         ref="headerRef"
@@ -82,6 +99,8 @@ const {
         @open-customer-picker="customer.showCustomerPickerModal.value = true"
         @clear-cart="cartOps.clearCart"
         @switch-store="catalog.switchStore"
+        @open-recent-sales="recentSales.open"
+        @open-shift-menu="shift.openPanel"
       />
 
       <ErrorState
@@ -103,51 +122,80 @@ const {
           />
         </div>
 
-        <div class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0">
-          <POSCartSection
-            v-model:payment-type="fields.paymentType.value"
-            v-model:payment-method="fields.paymentMethod.value"
-            v-model:cash-received="fields.cashReceived.value"
-            :cart="fields.cart.value"
-            :total-qty="payment.cartTotalQuantity.value"
-            :orders="orders"
-            :active-order-id="activeOrderId"
-            :subtotal="payment.cartSubtotal.value"
-            :discount-amount="payment.discountAmount.value"
-            :discount-value="fields.discountValue.value"
-            :discount-type="fields.discountType.value"
-            :customer-expenses-total="payment.customerExpensesTotal.value"
-            :net-total="payment.cartNetTotal.value"
-            :change-due="payment.changeDue.value"
-            :walk-in="customer.isWalkInCustomer.value"
-            :is-submitting="isSubmitting"
-            :offline="!isOnline"
-            :expenses-count="fields.additionalExpenses.value.length"
-            @increase-qty="cartOps.increaseCartItemQty"
-            @decrease-qty="cartOps.decreaseCartItemQty"
-            @update-qty="cartOps.onCartQtyUpdate"
-            @update-price="cartOps.onCartPriceUpdate"
-            @remove-item="cartOps.removeFromCart"
-            @switch-order="orderApi.switchOrder"
-            @create-order="cartOps.handleCreateOrder"
-            @close-order="cartOps.handleCloseOrder"
-            @apply-discount="payment.applyDiscountPreset"
-            @submit="submitInvoice"
-            @open-expenses="payment.showExpensesModal.value = true"
-            @open-multi-payment="payment.openMultiPayment"
-          />
+        <div class="relative flex-1 flex flex-col min-h-0">
+          <div
+            class="flex-1 flex flex-col lg:flex-row min-h-0"
+            :class="isPhone ? 'overflow-hidden' : 'overflow-y-auto lg:overflow-hidden'"
+          >
+            <POSCartSection
+              :phone="isPhone"
+              v-model:payment-type="fields.paymentType.value"
+              v-model:payment-method="fields.paymentMethod.value"
+              v-model:cash-received="fields.cashReceived.value"
+              :cart="fields.cart.value"
+              :total-qty="payment.cartTotalQuantity.value"
+              :orders="orders"
+              :active-order-id="activeOrderId"
+              :subtotal="payment.cartSubtotal.value"
+              :discount-amount="payment.discountAmount.value"
+              :discount-value="fields.discountValue.value"
+              :discount-type="fields.discountType.value"
+              :customer-expenses-total="payment.customerExpensesTotal.value"
+              :net-total="payment.cartNetTotal.value"
+              :change-due="payment.changeDue.value"
+              :walk-in="customer.isWalkInCustomer.value"
+              :is-submitting="isSubmitting"
+              :offline="!isOnline"
+              :expenses-count="fields.additionalExpenses.value.length"
+              :discount-summary="payment.discountSummary.value"
+              :max-discount-percent="catalog.maxDiscountPercent.value"
+              :can-override-discount="canOverrideDiscount"
+              @increase-qty="cartOps.increaseCartItemQty"
+              @decrease-qty="cartOps.decreaseCartItemQty"
+              @update-qty="cartOps.onCartQtyUpdate"
+              @update-price="cartOps.onCartPriceUpdate"
+              @update-discount="cartOps.onCartDiscountUpdate"
+              @remove-item="cartOps.removeFromCart"
+              @switch-order="orderApi.switchOrder"
+              @create-order="cartOps.handleCreateOrder"
+              @close-order="cartOps.handleCloseOrder"
+              @apply-discount="payment.applyDiscountPreset"
+              @submit="submitInvoice"
+              @open-expenses="payment.showExpensesModal.value = true"
+              @open-multi-payment="payment.openMultiPayment"
+            />
 
-          <POSCatalogSection
-            v-if="catalog.showCatalog.value"
-            :items="catalog.items.value"
-            :categories="catalog.categories.value"
-            :active-category-id="catalog.activeCategoryId.value"
-            :active-price-tier="fields.activePriceTier.value"
-            :search-query="search.searchQuery.value"
-            :favorite-count="catalog.favoriteItemsCount.value"
-            :total-items-count="catalog.totalItemsCount.value"
-            @add-item="cartOps.addToCart"
-            @select-category="catalog.selectCategory"
+            <POSCatalogSection
+              v-if="catalog.showCatalog.value"
+              :phone="isPhone"
+              :items="catalog.items.value"
+              :categories="catalog.categories.value"
+              :active-category-id="catalog.activeCategoryId.value"
+              :active-price-tier="fields.activePriceTier.value"
+              :search-query="search.searchQuery.value"
+              :favorite-count="catalog.favoriteItemsCount.value"
+              :total-items-count="catalog.totalItemsCount.value"
+              :visible-count="catalog.visibleCount.value"
+              :is-loading="catalog.isLoadingCategoryItems.value"
+              :is-loading-more="catalog.isLoadingMore.value"
+              :has-more="catalog.hasMore.value"
+              :cards-per-row="catalog.cardsPerRow.value"
+              :show-images="catalog.showItemImages.value"
+              @add-item="cartOps.addToCart"
+              @select-category="catalog.selectCategory"
+              @load-more="catalog.loadMore"
+            />
+          </div>
+
+          <!-- POS-10: the branch needs an open shift before it can sell -->
+          <POSShiftGate
+            v-if="shift.gateVisible.value"
+            :opening-cash="shift.openingCash.value"
+            :can-manage="shift.canManageShift.value"
+            :is-submitting="shift.isSubmitting.value"
+            :error-message="shift.errorMessage.value"
+            @update:opening-cash="shift.setOpeningCash"
+            @submit="shift.submitOpen"
           />
         </div>
       </template>
@@ -188,6 +236,62 @@ const {
       :payment-type="fields.paymentType.value === 'partial' ? 'partial' : 'cash'"
       @close="payment.showMultiPaymentModal.value = false"
       @confirm="payment.confirmMultiPayment"
+    />
+
+    <POSRecentSalesDrawer
+      :show="recentSales.show.value"
+      :sales="recentSales.sales.value"
+      :search="recentSales.search.value"
+      :is-loading="recentSales.isLoading.value"
+      :error-message="recentSales.errorMessage.value"
+      :can-return="canReturn"
+      :offline="!isOnline"
+      @close="recentSales.close"
+      @update:search="recentSales.onSearch"
+      @retry="recentSales.load"
+      @reprint="(sale) => reprintInvoice(sale.id)"
+      @return="quickReturn.open"
+    />
+
+    <POSQuickReturnModal
+      :show="quickReturn.show.value"
+      :invoice="quickReturn.source.selected.value"
+      :lines="quickReturn.source.lines.value"
+      :is-loading="quickReturn.source.isLoadingLines.value"
+      :error-message="quickReturn.source.errorMessage.value"
+      :total="quickReturn.source.total.value"
+      :can-submit="quickReturn.canSubmit.value"
+      :is-submitting="quickReturn.isSubmitting.value"
+      @close="quickReturn.close"
+      @set-quantity="quickReturn.setQuantity"
+      @submit="quickReturn.submit"
+    />
+
+    <POSWeightPickerModal
+      :show="!!cartOps.weightPickerItem.value"
+      :item="cartOps.weightPickerItem.value || null"
+      :unit-price="cartOps.weightPickerPrice.value"
+      @close="cartOps.cancelWeight"
+      @confirm="cartOps.confirmWeight"
+    />
+
+    <POSShiftPanel
+      :show="shift.showPanel.value"
+      :shift="catalog.activeShift.value"
+      :metrics="catalog.shiftMetrics.value"
+      :opening-cash="shift.openingCash.value"
+      :counted-cash="shift.countedCash.value"
+      :can-manage="shift.canManageShift.value"
+      :is-submitting="shift.isSubmitting.value"
+      :is-report-loading="shift.isReportLoading.value"
+      :report-failed="shift.reportFailed.value"
+      :error-message="shift.errorMessage.value"
+      @close="shift.closePanel"
+      @refresh="shift.refreshReport"
+      @update:opening-cash="shift.setOpeningCash"
+      @update:counted-cash="shift.setCountedCash"
+      @submit-open="shift.submitOpen"
+      @submit-close="shift.submitClose"
     />
 
     <POSShortcutsModal :show="showShortcutsHelp" @close="showShortcutsHelp = false" />

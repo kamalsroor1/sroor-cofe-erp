@@ -1,5 +1,9 @@
 <script setup>
+import { Download } from 'lucide-vue-next';
 import { useMoney } from '@/Composables/useMoney';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 defineProps({
   summary: {
@@ -29,7 +33,7 @@ const { formatMoney } = useMoney();
         }}</span>
         <div class="text-2xl font-black font-mono text-indigo-600 dark:text-indigo-300">
           {{ formatMoney(summary.stock_cost_valuation) }}
-          <span class="text-xs font-bold text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
+          <span class="text-xs font-bold text-slate-700 dark:text-white">{{ currencyLabel }}</span>
         </div>
       </div>
 
@@ -41,7 +45,7 @@ const { formatMoney } = useMoney();
         }}</span>
         <div class="text-2xl font-black font-mono text-slate-900 dark:text-white">
           {{ formatMoney(summary.stock_selling_valuation) }}
-          <span class="text-xs font-bold text-theme-primary">{{ $t('common.currency') }}</span>
+          <span class="text-xs font-bold text-theme-primary">{{ currencyLabel }}</span>
         </div>
       </div>
 
@@ -53,7 +57,7 @@ const { formatMoney } = useMoney();
         }}</span>
         <div class="text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">
           {{ formatMoney(summary.expected_stock_profit) }}
-          <span class="text-xs font-bold text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
+          <span class="text-xs font-bold text-slate-700 dark:text-white">{{ currencyLabel }}</span>
         </div>
       </div>
     </div>
@@ -73,7 +77,7 @@ const { formatMoney } = useMoney();
           class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1.5"
           @click="$emit('export-abc')"
         >
-          <span>📥</span>
+          <Download class="w-4 h-4" />
           <span>{{ $t('reports.export_abc_excel') }}</span>
         </button>
       </div>

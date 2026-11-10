@@ -36,9 +36,11 @@ return [
     'users' => 'المستخدمون والكاشير',
     'roles' => 'الأدوار والصلاحيات',
     'audit_logs' => 'سجل الرقابة والتدقيق',
+    'import' => 'استيراد البيانات',
     'trash' => 'سلة المحذوفات',
     'pulse' => 'مراقبة السيرفر Pulse',
     'settings' => 'إعدادات النظام والطباعة',
+    'billing' => 'الاشتراك والفواتير',
     'super_admin' => 'لوحة Super Admin المركزية',
     'switch_store' => 'تبديل الفرع / المخزن',
     'toggle_sidebar' => 'تصغير / تكبير القائمة',
@@ -108,6 +110,7 @@ return [
         'journal_open_cta_hint' => 'اضغط لفتح يومية جديدة',
         'journal_number' => '• يومية (#:number)',
         'open_journal' => '• فتح يومية',
+        'store_and_shift' => 'الفرع واليومية',
         'back_to_sections' => 'العودة لجميع الأقسام',
         'logout_confirm_title' => 'تسجيل الخروج؟',
         'logout_confirm_text' => 'هل أنت متأكد من رغبتك في تسجيل الخروج وإنهاء الجلسة؟',
@@ -116,7 +119,7 @@ return [
 
     // Browser tab / document titles per route (router/index.js meta.titleKey)
     'page_titles' => [
-        'default_app_name' => 'منظومة ERP',
+        'default_app_name' => 'إبراء ERP',
         'untitled_screen' => 'شاشة',
         'workspace_connect' => 'الاتصال ببيئة العمل',
         'login' => 'تسجيل الدخول',
@@ -138,6 +141,8 @@ return [
         'invoices_index' => 'فواتير المبيعات',
         'invoices_show' => 'معاينة الفاتورة والطباعة',
         'invoices_print' => 'طباعة الفاتورة',
+        'billing_index' => 'الاشتراك والفواتير',
+        'billing_invoice_print' => 'طباعة فاتورة الاشتراك',
         'pos_index' => 'نقطة البيع السريعة (POS)',
         'returns_index' => 'مرتجعات المبيعات والمشتريات',
         'returns_create' => 'تسجيل مرتجع جديد',
@@ -150,6 +155,63 @@ return [
         'activity_logs_index' => 'سجل التدقيق الأمني والنشاطات',
         'settings_index' => 'إعدادات النظام والمؤسسة',
         'profile_show' => 'الملف الشخصي والحساب',
+        'import_index' => 'استيراد البيانات',
         'trash_index' => 'سلة المحذوفات',
+    ],
+
+    // Sidebar / drawer menu labels (Composables/useNavigation.js)
+    'menu' => [
+        'sections' => [
+            'main' => [
+                'title' => 'الرئيسية',
+                'subtitle' => 'لوحة المؤشرات والتحليلات الحية',
+            ],
+            'sales' => [
+                'title' => 'المبيعات ونقاط البيع',
+                'subtitle' => 'الفواتير، نقطة البيع، اليومية، والعملاء',
+            ],
+            'inventory' => [
+                'title' => 'المخزون والأصناف والفروع',
+                'subtitle' => 'الأصناف، الفئات، المخازن، والتحويلات',
+            ],
+            'purchases' => [
+                'title' => 'المشتريات والموردين',
+                'subtitle' => 'فواتير التوريد وحسابات الموردين',
+            ],
+            'finance' => [
+                'title' => 'المالية والمرتجعات والتقارير',
+                'subtitle' => 'المصروفات، المرتجعات، والأرباح',
+            ],
+            'system' => [
+                'title' => 'إدارة النظام والأمان',
+                'subtitle' => 'المستخدمين، الصلاحيات، وسجل الرقابة',
+            ],
+        ],
+        'items' => [
+            'dashboard' => 'لوحة التحكم (Dashboard)',
+            'invoices' => 'فواتير المبيعات',
+            'pos' => 'نقطة البيع السريعة (POS)',
+            'daily-journal' => 'اليومية وحركة الدرج والورديات',
+            'customers' => 'العملاء والشركات',
+            'items' => 'الأصناف والأسعار',
+            'categories' => 'فئات وتصنيفات الأصناف',
+            'stores' => 'المخازن والفروع',
+            'stores-stocks' => 'أرصدة المخازن الحية',
+            'stock-transfers' => 'التحويلات المخزنية',
+            'smart-reorder' => 'مساعد المشتريات وإعادة الطلب',
+            'coffee-blender' => 'صانع الخلطات وتوليفات البن',
+            'purchases' => 'فواتير المشتريات والتوريد',
+            'suppliers' => 'الموردون والشركات',
+            'expenses' => 'المصروفات والعهد',
+            'returns' => 'سجل المرتجعات',
+            'reports' => 'التقارير المالية والأرباح',
+            'users' => 'المستخدمون والكاشير',
+            'roles' => 'الأدوار والصلاحيات',
+            'activity-logs' => 'سجل العمليات والرقابة',
+            'imports' => 'استيراد البيانات',
+            'trash' => 'سلة المحذوفات',
+            'settings' => 'إعدادات المؤسسة',
+            'billing' => 'الاشتراك والفواتير',
+        ],
     ],
 ];

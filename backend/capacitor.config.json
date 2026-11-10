@@ -1,6 +1,6 @@
 {
   "appId": "com.sroor.cofe.erp",
-  "appName": "منظومة سرور كوفي ERP",
+  "appName": "إبراء",
   "webDir": "capacitor-www",
   "bundledWebRuntime": false,
   "server": {
@@ -11,7 +11,7 @@
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 2000,
-      "backgroundColor": "#020617",
+      "backgroundColor": "#13201C",
       "showSpinner": false,
       "androidScaleType": "CENTER_CROP"
     },

@@ -4,7 +4,7 @@
   >
     <div>
       <h2 class="text-sm font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-1.5">
-        <span>🔐</span>
+        <Lock class="w-4 h-4" />
         <span>{{ $t('profile.security_password_title') }}</span>
       </h2>
       <p class="text-[11px] text-slate-500 dark:text-slate-400">{{ $t('profile.password_leave_blank_hint') }}</p>
@@ -29,6 +29,7 @@
             @update:model-value="$emit('update:field', 'new_password', $event)"
             :label="$t('profile.new_password')"
             type="password"
+            :minlength="8"
             placeholder="••••••••"
             class="font-mono"
           />
@@ -50,6 +51,7 @@
 </template>
 
 <script setup>
+import { Lock } from 'lucide-vue-next';
 import BaseInput from '../Form/BaseInput.vue';
 
 defineProps({

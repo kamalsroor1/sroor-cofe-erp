@@ -25,6 +25,16 @@ final class StorePosSettingPolicy
     }
 
     /**
+     * POS-10: ONLY the "require an open shift to sell" rule. Branch owners (`stores.manage`) may
+     * read and change it besides `settings.manage`; they gain nothing else from the POS settings
+     * (discount cap, scale parser and quick keys stay `settings.manage`-only via view/update).
+     */
+    public function updateShiftRule(User $user, Store $store): bool
+    {
+        return ($user->can('settings.manage') || $user->can('stores.manage')) && $this->canAccessStore($user, $store);
+    }
+
+    /**
      * Same store-access rule as StorePolicy::view (stores.manage sees every branch;
      * otherwise the user's default store or an assigned one).
      */

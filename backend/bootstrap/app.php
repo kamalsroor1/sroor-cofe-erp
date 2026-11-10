@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\BusinessRuleException;
+use App\Exceptions\DiscountCapExceededException;
 use App\Http\Middleware\AdminSecurityHeaders;
 use App\Http\Middleware\AuthenticateCentral;
 use App\Http\Middleware\EnsureCentralContext;
@@ -8,6 +9,7 @@ use App\Http\Middleware\EnsureTenantFeature;
 use App\Http\Middleware\RequireRecentTwoFactor;
 use App\Http\Middleware\ResolveActiveStore;
 use App\Http\Middleware\ResolveApiTenancy;
+use App\Http\Middleware\SpaSecurityHeaders;
 use App\Http\Middleware\StoreAccess;
 use App\Http\Middleware\StoreScope;
 use App\Http\Middleware\ThrottleTenantMisses;
@@ -21,6 +23,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
+use Sentry\Laravel\Integration;
 use Spatie\Permission\Exceptions\UnauthorizedException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
@@ -92,6 +95,7 @@ return Application::configure(basePath: dirname(__DIR__))
         );
 
         $middleware->alias([
+            'spa.headers' => SpaSecurityHeaders::class,
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
@@ -104,6 +108,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // OPS-6: report unhandled exceptions to Sentry. Inert without SENTRY_LARAVEL_DSN; events are
+        // scrubbed by App\Support\SentryScrubber (config/sentry.php before_send).
+        Integration::handles($exceptions);
+
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
@@ -162,6 +170,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     'success' => false,
                     'message' => $e->getMessage(),
                     'errors' => $e->errors(),
+                    ...($e instanceof DiscountCapExceededException ? ['error_code' => DiscountCapExceededException::ERROR_CODE] : []),
                 ], 422);
             }
         });

@@ -5,7 +5,14 @@ import { useRouter } from 'vue-router';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
+import { useRemoteOptions } from './useRemoteOptions';
 import { useUnits } from './useUnits';
+import { businessToday } from './useBusinessDate';
+
+const defaultUnitPrice = (type, item) =>
+    type === 'sales_return'
+        ? parseFloat(item.price_retail || item.selling_price) || 0
+        : parseFloat(item.cost_price) || 0;
 
 export function useCreateReturn() {
     const { unitLabel } = useUnits();
@@ -17,9 +24,9 @@ export function useCreateReturn() {
     const canWithoutInvoice = computed(() => authStore.can('returns.without_invoice'));
     const manualMode = ref(false);
 
-    const customers = ref([]);
-    const suppliers = ref([]);
-    const items = ref([]);
+    const { searchFn: searchCustomers } = useRemoteOptions('customers');
+    const { searchFn: searchSuppliers } = useRemoteOptions('suppliers');
+    const { searchFn: searchItems } = useRemoteOptions('items');
 
     const isSubmitting = ref(false);
     const selectedItemToAdd = ref(null);
@@ -28,7 +35,7 @@ export function useCreateReturn() {
         return_type: 'sales_return',
         customer_id: null,
         supplier_id: null,
-        return_date: new Date().toISOString().split('T')[0],
+        return_date: businessToday(),
         refund_amount: '0.000',
         reason: '',
         items: [],
@@ -49,29 +56,6 @@ export function useCreateReturn() {
 
     const netTotal = computed(() => (usingSource.value ? parseFloat(source.total.value) || 0 : manualTotal.value));
 
-    const loadFormDependencies = async () => {
-        try {
-            const [custRes, suppRes, itemRes] = await Promise.all([
-                api.get('/customers?per_page=100'),
-                api.get('/suppliers?per_page=100'),
-                api.get('/items?per_page=100'),
-            ]);
-
-            customers.value = custRes.data?.data || [];
-            suppliers.value = suppRes.data?.data || [];
-            items.value = itemRes.data?.data || [];
-
-            if (customers.value.length > 0) {
-                form.customer_id = customers.value[0].id;
-            }
-            if (suppliers.value.length > 0) {
-                form.supplier_id = suppliers.value[0].id;
-            }
-        } catch (error) {
-            console.error('Failed to load return form data:', error);
-        }
-    };
-
     const setManualMode = (value) => {
         manualMode.value = value && canWithoutInvoice.value;
         source.clearSource();
@@ -82,13 +66,7 @@ export function useCreateReturn() {
         source.clearSource();
         source.loadSources();
         form.items.forEach((line) => {
-            const it = items.value.find((i) => i.id === line.item_id);
-            if (it) {
-                line.unit_price =
-                    type === 'sales_return'
-                        ? parseFloat(it.price_retail || it.selling_price) || 0
-                        : parseFloat(it.cost_price) || 0;
-            }
+            line.unit_price = defaultUnitPrice(type, line.catalog);
         });
     };
 
@@ -105,17 +83,13 @@ export function useCreateReturn() {
             return;
         }
 
-        const unitPrice =
-            form.return_type === 'sales_return'
-                ? parseFloat(it.price_retail || it.selling_price) || 0
-                : parseFloat(it.cost_price) || 0;
-
         form.items.push({
             item_id: it.id,
             name: it.name,
             unit: unitLabel(it.unit),
             quantity: 1,
-            unit_price: unitPrice,
+            unit_price: defaultUnitPrice(form.return_type, it),
+            catalog: { price_retail: it.price_retail, selling_price: it.selling_price, cost_price: it.cost_price },
         });
 
         selectedItemToAdd.value = null;
@@ -126,6 +100,18 @@ export function useCreateReturn() {
     };
 
     const submitReturn = async () => {
+        if (!usingSource.value) {
+            const isSalesType = form.return_type === 'sales_return';
+            if (isSalesType ? !form.customer_id : !form.supplier_id) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: t('common.warning'),
+                    text: t(isSalesType ? 'returns.select_customer_warning' : 'returns.select_supplier_warning'),
+                });
+                return;
+            }
+        }
+
         if (itemsCount.value === 0) {
             Swal.fire({ icon: 'warning', title: t('common.warning'), text: t('returns.add_at_least_one_item') });
             return;
@@ -174,15 +160,12 @@ export function useCreateReturn() {
         }
     };
 
-    onMounted(() => {
-        loadFormDependencies();
-        source.loadSources();
-    });
+    onMounted(source.loadSources);
 
     return {
-        customers,
-        suppliers,
-        items,
+        searchCustomers,
+        searchSuppliers,
+        searchItems,
         isSubmitting,
         selectedItemToAdd,
         form,

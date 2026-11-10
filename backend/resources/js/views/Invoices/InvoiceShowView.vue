@@ -4,10 +4,12 @@
 
     <div
       v-else-if="error"
-      class="p-16 text-center text-rose-500 font-bold space-y-3 bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800"
+      class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800"
     >
-      <p class="text-sm">{{ error }}</p>
-      <BaseButton variant="secondary" size="md" @click="goBack">{{ $t('common.back') }}</BaseButton>
+      <ErrorState :message="error" @retry="retry" />
+      <div class="flex justify-center pb-8">
+        <BaseButton variant="secondary" size="md" @click="goBack">{{ $t('common.back') }}</BaseButton>
+      </div>
     </div>
 
     <div v-else class="space-y-6">
@@ -63,6 +65,7 @@
 
 <script setup>
 import { useInvoiceShow } from '../../Composables/useInvoiceShow';
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import InvoiceShowSkeleton from '../../Components/Invoices/Show/InvoiceShowSkeleton.vue';
 import InvoiceShowHeader from '../../Components/Invoices/Show/InvoiceShowHeader.vue';
@@ -76,6 +79,7 @@ const {
   invoice,
   isLoading,
   error,
+  retry,
   activeMode,
   setMode,
   showCancelModal,

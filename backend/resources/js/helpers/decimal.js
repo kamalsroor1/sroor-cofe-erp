@@ -111,6 +111,17 @@ export function dMul(a, b) {
 }
 
 /**
+ * Divide, half-up at scale 3 (e.g. amount / unit price = quantity). A zero divisor gives '0.000'
+ * so a half-typed form never throws; the server stays authoritative for every real total.
+ */
+export function dDiv(a, b) {
+    const divisor = toMilli(b);
+    if (divisor === 0n) return fromMilli(0n);
+    const sign = divisor < 0n ? -1n : 1n;
+    return fromMilli(divRoundHalfUp(toMilli(a) * ONE * sign, divisor * sign));
+}
+
+/**
  * Percentage of an amount, half-up at scale 3 — same as Decimal::percent():
  * amount x pct / 100, computed exactly before the single rounding.
  */

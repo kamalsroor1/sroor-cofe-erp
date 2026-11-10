@@ -3,7 +3,7 @@
     class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm dark:shadow-xl space-y-4 text-xs font-tajawal"
   >
     <h2 class="text-sm font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-1.5">
-      <span>🎨</span>
+      <Palette class="w-4 h-4" />
       <span>{{ $t('profile.theme_pref') }}</span>
     </h2>
 
@@ -18,7 +18,7 @@
             : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
         "
       >
-        <div class="text-lg mb-1">🌙</div>
+        <Moon class="w-5 h-5 mx-auto mb-1" />
         <div class="font-bold">{{ $t('profile.theme_dark_slate') }}</div>
       </button>
 
@@ -32,7 +32,7 @@
             : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
         "
       >
-        <div class="text-lg mb-1">☀️</div>
+        <Sun class="w-5 h-5 mx-auto mb-1" />
         <div class="font-bold">{{ $t('profile.theme_light_shell') }}</div>
       </button>
     </div>
@@ -40,6 +40,7 @@
 </template>
 
 <script setup>
+import { Moon, Palette, Sun } from 'lucide-vue-next';
 defineProps({
   form: { type: Object, default: () => ({}) },
 });

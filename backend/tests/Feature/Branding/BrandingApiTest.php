@@ -6,6 +6,7 @@ namespace Tests\Feature\Branding;
 
 use App\Models\Setting;
 use App\Services\Branding\PlatformBranding;
+use App\Services\Branding\TenantBranding;
 use Illuminate\Http\UploadedFile;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\TenantTestCase;
@@ -92,7 +93,32 @@ final class BrandingApiTest extends TenantTestCase
         $this->getJson('/api/v1/branding', ['X-Tenant' => (string) $tenant->getTenantKey()])
             ->assertOk()
             ->assertJsonPath('data.tenant.name', 'Fallback Roastery')
-            ->assertJsonPath('data.tenant.theme_color', 'emerald');
+            ->assertJsonPath('data.tenant.theme_color', 'ibraa');
+    }
+
+    public function test_shop_without_colors_gets_the_ibraa_theme_and_emerald_invoices(): void
+    {
+        $tenant = $this->createTenant();
+        $this->inTenant($tenant, function (): void {
+            Setting::set('system_theme_color', '');
+            Setting::set('invoice_primary_color', '');
+        });
+
+        $brand = $this->inTenant($tenant, fn () => app(TenantBranding::class)->get());
+
+        $this->assertSame(TenantBranding::DEFAULT_THEME_COLOR, $brand->themeColor);
+        $this->assertSame('ibraa', $brand->themeColor);
+        $this->assertSame('emerald', $brand->invoiceColor);
+    }
+
+    public function test_shop_custom_hex_color_overrides_the_ibraa_default(): void
+    {
+        $tenant = $this->createTenant();
+        $this->inTenant($tenant, fn () => Setting::set('system_theme_color', '#AA3355'));
+
+        $this->getJson('/api/v1/branding', ['X-Tenant' => (string) $tenant->getTenantKey()])
+            ->assertOk()
+            ->assertJsonPath('data.tenant.theme_color', '#aa3355');
     }
 
     public function test_tenants_never_see_each_others_brand(): void

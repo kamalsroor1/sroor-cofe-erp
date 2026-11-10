@@ -14,7 +14,7 @@
           : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800'
       "
     >
-      <span>{{ t.icon }}</span>
+      <DynamicIcon :name="t.icon" class="w-4 h-4" />
       <span>{{ t.label }}</span>
       <span
         class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold"
@@ -33,6 +33,7 @@
 </template>
 
 <script setup>
+import DynamicIcon from '../Common/DynamicIcon.vue';
 defineProps({
   currentTab: { type: String, default: 'items' },
   tabsList: { type: Array, default: () => [] },

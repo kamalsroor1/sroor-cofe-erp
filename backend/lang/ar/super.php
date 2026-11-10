@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'platform_title' => 'منصة مخزني SaaS Super Admin',
+    'platform_title' => 'إبراء',
     'central_platform' => 'المنصة المركزية',
     'platform_subtitle' => 'إدارة الشركات والمستأجرين، الباقات، والاشتراكات',
     'dashboard' => 'لوحة المؤشرات',
@@ -274,6 +274,7 @@ return [
 
     // IDEN-1.4 / IDEN-4.6 ext (backend): central control-plane responses
     'tenant_not_found' => 'المستأجر غير موجود.',
+    'plan_pos_requires' => 'ميزة نقطة البيع (pos.access) لازم تتفعّل معاها الميزة :feature في نفس الباقة.',
     'plan_not_found' => 'الباقة غير موجودة.',
     'tenant_provisioning_failed' => 'تعذر تجهيز المستأجر. راجع سجلات الخادم وحاول مرة أخرى.',
     'tenant_db_missing' => 'قاعدة بيانات المستأجر غير موجودة على خادم قواعد البيانات. أنشئها أولًا ثم حاول مرة أخرى.',
@@ -462,4 +463,15 @@ return [
     // OPS-9: أرشفة المحل (DELETE) وإلغاء الأرشفة.
     'tenant_archive_queued' => 'اتطلبت الأرشفة: بناخد النسخة الاحتياطية النهائية، والحساب هيتأرشف بعد ما تترفع ونتأكد منها.',
     'tenant_unarchived' => 'الحساب رجع لحالته اللي كان عليها قبل الأرشفة.',
+    'mrr_full' => 'الإيراد الشهري المتكرر',
+    'server_specs' => [
+        'live' => 'مباشر',
+        'status_active' => 'نشط',
+        'title' => 'معلومات بيئة السيرفر والنظام المركزي',
+        'online' => 'متصل ويعمل بكفاءة',
+        'php_version' => 'إصدار PHP',
+        'laravel_version' => 'إصدار Laravel',
+        'db_engine' => 'قاعدة البيانات',
+        'environment' => 'بيئة التشغيل',
+    ],
 ];

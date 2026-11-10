@@ -10,6 +10,12 @@ declare(strict_types=1);
 return [
     'pos' => [
         'access' => 'Access the point of sale (POS) screen',
+        'price' => [
+            'below_min' => 'Sell below the minimum selling price without a manager PIN',
+        ],
+        'discount' => [
+            'override' => 'Give a total discount above the store limit without a manager PIN',
+        ],
     ],
     'invoices' => [
         'view' => 'View the sales invoice history',
@@ -76,5 +82,8 @@ return [
     ],
     'settings' => [
         'manage' => 'Manage shop, printing and integration settings',
+    ],
+    'billing' => [
+        'manage' => 'Manage the subscription: view invoices, pay and renew',
     ],
 ];

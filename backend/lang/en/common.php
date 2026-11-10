@@ -1,9 +1,17 @@
 <?php
 
 return [
-    'app_name' => 'Sales, Inventory & Accounting ERP System',
+    'app_name' => 'Ibraa ERP',
     'currency' => 'EGP',
     'currency_full' => 'Egyptian Pound',
+    'currencies' => [
+        'EGP' => 'EGP',
+        'SAR' => 'SAR',
+        'AED' => 'AED',
+        'KWD' => 'KWD',
+        'QAR' => 'QAR',
+        'USD' => 'USD',
+    ],
     'save' => 'Save',
     'cancel' => 'Cancel',
     'edit' => 'Edit',
@@ -78,8 +86,8 @@ return [
     'search_in_list' => 'Search in list...',
     'unexpected_error' => 'An unexpected server communication error occurred',
     'permission_alert' => 'Permission Alert',
-    'app_title' => 'Enterprise ERP & Inventory System',
-    'app_subtitle' => 'Sales, Inventory, and POS Management Platform',
+    'app_title' => 'Ibraa',
+    'app_subtitle' => 'Your accounts, settled. Every piece in its place.',
     'system_booting' => 'Loading and initializing system...',
     'pos_badge' => 'ERP & POS',
     'ok' => 'OK',
@@ -117,9 +125,8 @@ return [
     'remind_me_later' => 'Remind Me Later',
     'yes_delete' => 'Yes, Delete',
     'all_items' => 'All Items',
-    'app_title' => 'Integrated ERP Platform',
     'store_access_denied' => 'You are not allowed to access this store\'s data',
-    'platform_name' => 'Cloud ERP platform',
+    'platform_name' => 'Ibraa ERP',
     'default_company_subtitle' => 'Sales, inventory and branch management',
 
     // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
@@ -133,7 +140,7 @@ return [
 
     // Boot splash screen (app.blade.php)
     'splash' => [
-        'subtitle' => 'Invoicing, inventory and fast point of sale',
+        'subtitle' => 'Your accounts, settled. Every piece in its place.',
     ],
 
     // Generic confirmation dialogs (helpers/alert.js)
@@ -153,4 +160,19 @@ return [
     'operation_failed' => 'The operation could not be completed. Please try again or contact support.',
     'record_not_found' => 'The requested record was not found.',
     'trash_invalid_type' => 'This record type cannot be restored or deleted from the recycle bin.',
+    'no_access' => 'You do not have access to this page.',
+    'no_results' => 'No matching results',
+    'clear_search' => 'Clear search',
+    'search_failed' => 'Could not load results',
+    'retry' => 'Retry',
+    'clear' => 'Clear',
+    'show_password' => 'Show password',
+    'hide_password' => 'Hide password',
+    'increase' => 'Increase',
+    'decrease' => 'Decrease',
+    'remove_file' => 'Remove file',
+    'upload_prompt' => 'Click here to upload a file or drag it in',
+    'quick_search' => 'Quick search...',
+    'clear_search_esc' => 'Clear search (Esc)',
+    'preview' => 'Preview',
 ];

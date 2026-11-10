@@ -1,5 +1,5 @@
 <template>
-  <div v-if="workspaceName" class="flex items-center justify-center font-sans" dir="rtl">
+  <div v-if="workspaceName" class="flex items-center justify-center font-sans">
     <div
       class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm backdrop-blur-sm transition-all hover:border-theme-primary/50"
     >

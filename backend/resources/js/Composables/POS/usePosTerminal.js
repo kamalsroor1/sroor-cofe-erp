@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import versionData from '../../version.json';
 import { useAppConfigStore } from '../../stores/appConfig';
 import { useAuthStore } from '../../stores/auth';
@@ -16,6 +16,11 @@ import { usePosCart } from './usePosCart';
 import { usePosReceipt } from './usePosReceipt';
 import { usePosSubmit } from './usePosSubmit';
 import { usePosKeyboard } from './usePosKeyboard';
+import { hasPlanFeature } from '../../helpers/planFeatures';
+import { usePosRecentSales } from './usePosRecentSales';
+import { usePosQuickReturn } from './usePosQuickReturn';
+import { usePosShift } from './usePosShift';
+import { openSheetCount } from '../useOpenSheets';
 
 /**
  * Wires every POS composable together for the POS screen and returns what the view renders.
@@ -51,6 +56,7 @@ export function usePosTerminal() {
         activeOrder,
         activeOrderId,
         isWalkInCustomer: customer.isWalkInCustomer,
+        maxDiscountPercent: catalog.maxDiscountPercent,
     });
     const cartOps = usePosCart({
         fields,
@@ -63,11 +69,15 @@ export function usePosTerminal() {
     });
     const search = usePosItemSearch({
         items: catalog.items,
+        searchResults: catalog.searchResults,
+        isSearching: catalog.isSearchingResults,
         addToCart: cartOps.addToCart,
         focusSearch,
         onMiss: sounds.playErrorTone,
     });
-    const { printLastInvoice } = usePosReceipt({
+    // The grid shows the server's matches for the same text the header search holds.
+    watch(search.searchTerm, (term) => catalog.setSearch(term));
+    const { printLastInvoice, reprintInvoice } = usePosReceipt({
         lastCreatedInvoice,
         paymentType: fields.paymentType,
         isDesktop: hardware.isDesktop,
@@ -91,19 +101,44 @@ export function usePosTerminal() {
         printLastInvoice,
         lastCreatedInvoice,
         sounds,
+        onShiftRequired: catalog.reloadShift,
+    });
+
+    const recentSales = usePosRecentSales();
+    const quickReturn = usePosQuickReturn({ isOnline, onDone: recentSales.load });
+    const canReturn = computed(
+        () => authStore.can('returns.manage') && hasPlanFeature(appConfigStore.tenant, 'returns.manage')
+    );
+
+    // POS-07: a user with this permission may exceed the discount cap; everyone else needs a manager PIN.
+    const canOverrideDiscount = computed(() => authStore.can('pos.discount.override'));
+
+    // POS-10: shift gate, shift menu (X-report / close) and open/close calls for the active branch.
+    const shift = usePosShift({
+        authStore,
+        activeShift: catalog.activeShift,
+        requiresShift: catalog.requiresShift,
+        isLoading: catalog.isLoading,
+        reloadShift: catalog.reloadShift,
+        isOnline,
     });
 
     const showShortcutsHelp = ref(false);
     const modalCloseOrder = [
         showShortcutsHelp,
+        shift.showPanel,
+        quickReturn.show,
+        recentSales.show,
         customer.showCustomerPickerModal,
         payment.showExpensesModal,
         payment.showMultiPaymentModal,
         showSuccessModal,
+        cartOps.weightPickerItem,
     ];
     usePosKeyboard({
         focusSearch,
         focusCustomer: () => (customer.showCustomerPickerModal.value = true),
+        openRecentSales: recentSales.open,
         focusDiscount: () => {
             const input = document.querySelector('[data-pos-discount-input]');
             input?.focus();
@@ -114,11 +149,13 @@ export function usePosTerminal() {
         toggleHelp: () => (showShortcutsHelp.value = !showShortcutsHelp.value),
         submit: submitInvoice,
         canSubmit: () => !isSubmitting.value && fields.cart.value.length > 0,
-        isModalOpen: () => modalCloseOrder.some((flag) => flag.value),
+        isModalOpen: () => openSheetCount.value > 0 || modalCloseOrder.some((flag) => flag.value),
         closeTopModal: () => {
             const open = modalCloseOrder.find((flag) => flag.value);
             if (!open) return false;
-            open.value = false;
+            if (open === quickReturn.show) quickReturn.close();
+            else if (open === recentSales.show) recentSales.close();
+            else open.value = false;
             focusSearch();
             return true;
         },
@@ -156,5 +193,11 @@ export function usePosTerminal() {
         cartEmpty,
         orderApi,
         showShortcutsHelp,
+        recentSales,
+        quickReturn,
+        reprintInvoice,
+        canReturn,
+        canOverrideDiscount,
+        shift,
     };
 }

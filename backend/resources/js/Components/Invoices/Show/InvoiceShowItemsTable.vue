@@ -4,7 +4,7 @@
   >
     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
       <div class="flex items-center gap-2">
-        <span class="text-base">📦</span>
+        <Package class="w-5 h-5" />
         <h3 class="text-sm font-black text-slate-900 dark:text-white">
           {{ $t('invoices.items_count') }} ({{ items.length }})
         </h3>
@@ -57,7 +57,7 @@
               {{ parseFloat(item.discount_amount || 0) > 0 ? '-' + formatMoney(item.discount_amount) : '—' }}
             </td>
             <td class="py-3 px-3 text-end font-black text-theme-primary text-sm">
-              {{ formatMoney(item.total_price) }} {{ $t('common.currency') }}
+              {{ formatMoney(item.total_price) }} {{ currencyLabel }}
             </td>
           </tr>
         </tbody>
@@ -67,9 +67,10 @@
 </template>
 
 <script setup>
+import { Package } from 'lucide-vue-next';
 import { useFormatters } from '../../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   items: { type: Array, default: () => [] },

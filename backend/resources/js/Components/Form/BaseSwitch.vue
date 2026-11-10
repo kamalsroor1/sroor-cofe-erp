@@ -12,7 +12,7 @@
           :class="{ 'text-rose-500': hasError }"
         >
           {{ label }}
-          <span v-if="required" class="text-rose-500 font-black mr-0.5">*</span>
+          <span v-if="required" class="text-rose-500 font-black ms-0.5">*</span>
         </span>
         <span v-if="description" class="text-xs text-slate-500 dark:text-slate-400 font-medium">
           {{ description }}
@@ -34,9 +34,9 @@
           class="w-12 h-7 bg-slate-300 dark:bg-slate-700 peer-focus-visible:ring-2 peer-focus-visible:ring-theme-primary rounded-full peer peer-checked:bg-theme-primary transition-colors duration-200 shadow-inner"
         ></div>
         <div
-          class="absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition-transform duration-200 shadow-md peer-checked:translate-x-5 flex items-center justify-center text-[10px] font-black"
+          class="absolute end-1 top-1 bg-white w-5 h-5 rounded-full transition-transform duration-200 shadow-md rtl:peer-checked:translate-x-5 ltr:peer-checked:-translate-x-5 flex items-center justify-center text-[10px] font-black"
         >
-          <span v-if="model" class="text-theme-primary">✓</span>
+          <Check v-if="model" class="w-3 h-3 text-theme-primary" />
         </div>
       </div>
     </label>
@@ -51,7 +51,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { AlertCircle } from 'lucide-vue-next';
+import { AlertCircle, Check } from 'lucide-vue-next';
 
 defineOptions({
   inheritAttrs: false,

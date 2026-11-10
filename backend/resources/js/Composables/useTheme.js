@@ -1,74 +1,64 @@
 import { ref } from 'vue';
 
 export const PRESET_PALETTES = {
+    ibraa: {
+        hex: '#0F6E5E',
+        hover: '#0B5A4D',
+        rgb: '15, 110, 94',
+        text: '#ffffff',
+    },
     amber: {
         hex: '#f59e0b',
         hover: '#d97706',
         rgb: '245, 158, 11',
         text: '#020617',
-        name: 'الكهرمان / الذهبي الأصيل',
-        icon: '🌟',
     },
     emerald: {
         hex: '#10b981',
         hover: '#059669',
         rgb: '16, 185, 129',
         text: '#ffffff',
-        name: 'الأخضر الزمردي الملكي',
-        icon: '🌿',
     },
     blue: {
         hex: '#3b82f6',
         hover: '#2563eb',
         rgb: '59, 130, 246',
         text: '#ffffff',
-        name: 'الأزرق الملكي (Sapphire)',
-        icon: '🔵',
     },
     purple: {
         hex: '#a855f7',
         hover: '#9333ea',
         rgb: '168, 85, 247',
         text: '#ffffff',
-        name: 'البنفسجي الإمبراطوري',
-        icon: '🟣',
     },
     rose: {
         hex: '#f43f5e',
         hover: '#e11d48',
         rgb: '244, 63, 94',
         text: '#ffffff',
-        name: 'الياقوتي القرمزي (Ruby Rose)',
-        icon: '🌹',
     },
     orange: {
         hex: '#f97316',
         hover: '#ea580c',
         rgb: '249, 115, 22',
         text: '#ffffff',
-        name: 'البرتقالي الكلاسيكي (Warm Orange)',
-        icon: '🟧',
     },
     teal: {
         hex: '#14b8a6',
         hover: '#0d9488',
         rgb: '20, 184, 166',
         text: '#ffffff',
-        name: 'السماوي التركوازي (Ocean Teal)',
-        icon: '🌊',
     },
     indigo: {
         hex: '#6366f1',
         hover: '#4f46e5',
         rgb: '99, 102, 241',
         text: '#ffffff',
-        name: 'النيلي الداكن (Deep Indigo)',
-        icon: '🌌',
     },
 };
 
 export function hexToRgb(hex) {
-    let c = (hex || '#f59e0b').replace(/^#/, '');
+    let c = (hex || '#0F6E5E').replace(/^#/, '');
     if (c.length === 3)
         c = c
             .split('')
@@ -98,7 +88,7 @@ export function getContrastTextColor(hex) {
     return yiq >= 155 ? '#020617' : '#ffffff';
 }
 
-export function useTheme(defaultTheme = 'dark', defaultColor = 'amber') {
+export function useTheme(defaultTheme = 'dark', defaultColor = 'ibraa') {
     const currentTheme = ref(localStorage.getItem('theme_preference') || defaultTheme);
     const currentColor = ref(localStorage.getItem('system_theme_color') || defaultColor);
 

@@ -156,7 +156,8 @@ return [
 
         Watchers\ClientRequestWatcher::class => [
             'enabled' => env('TELESCOPE_CLIENT_REQUEST_WATCHER', true),
-            'ignore_hosts' => [],
+            // The platform bot token is part of the Telegram URL path: never record those calls.
+            'ignore_hosts' => ['api.telegram.org'],
         ],
 
         Watchers\CommandWatcher::class => [

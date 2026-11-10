@@ -6,13 +6,21 @@ namespace App\Http\Requests;
 
 use App\Services\Settings\TenantSettings;
 use Closure;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreItemRequest extends FormRequest
 {
+    use Concerns\ValidatesItemPriceTiers;
+
     public function authorize(): bool
     {
         return $this->user()?->hasRole('admin') || $this->user()?->can('items.create') ?? false;
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $this->validateWholesaleAgainstFloor($validator, null);
     }
 
     public function rules(): array
@@ -26,6 +34,8 @@ class StoreItemRequest extends FormRequest
             'cost_price' => ['required', 'numeric', 'min:0'],
             'min_selling_price' => ['nullable', 'numeric', 'min:0'],
             'selling_price' => ['required', 'numeric', 'min:0'],
+            // BE-08: separate from the floor; 0 / empty = not set (retail applies).
+            'wholesale_price' => ['nullable', 'numeric', 'min:0', 'decimal:0,3', 'max:999999999.999'],
             'min_stock_level' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string', 'max:1000'],
             // POSB-2: explicit weighed-item flag (scale labels, fractional qty).

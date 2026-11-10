@@ -70,12 +70,16 @@ final class ItemMinSellingPriceDefaultTest extends TenantTestCase
         $this->assertSame('190.000', $this->storedMin($tenant, $id));
     }
 
-    public function test_wholesale_accessor_falls_back_to_retail_when_no_floor(): void
+    public function test_wholesale_accessor_uses_the_wholesale_column_never_the_floor(): void
     {
-        $item = new Item(['selling_price' => '200.000', 'min_selling_price' => '0.000']);
+        // BE-08: the floor (min_selling_price) is no longer the wholesale price.
+        $item = new Item(['selling_price' => '200.000', 'min_selling_price' => '180.000']);
         $this->assertSame('200.000', $item->price_wholesale);
 
-        $item = new Item(['selling_price' => '200.000', 'min_selling_price' => '180.000']);
-        $this->assertSame('180.000', $item->price_wholesale);
+        $item = new Item(['selling_price' => '200.000', 'min_selling_price' => '180.000', 'wholesale_price' => '0.000']);
+        $this->assertSame('200.000', $item->price_wholesale);
+
+        $item = new Item(['selling_price' => '200.000', 'min_selling_price' => '180.000', 'wholesale_price' => '190.000']);
+        $this->assertSame('190.000', $item->price_wholesale);
     }
 }

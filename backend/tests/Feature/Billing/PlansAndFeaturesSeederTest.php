@@ -23,7 +23,7 @@ use Tests\TenantTestCase;
  *
  * Approved values: pricing-model-recommendation-2026-10 §4/§5/§7, Q-E2/Q-E3/Q-E8/Q-E9 and
  * CTO W1 Q3/Q4 [2026-10-09] (yearly = 10 months, founder 299/599/999 and 2,990/5,990/9,990,
- * premium_support recurring, quotations.manage core = 18 core features). VAT excluded.
+ * premium_support recurring; 17 core features, quotations.manage is not core). VAT excluded.
  */
 #[Group('billing')]
 #[Group('mysql')]
@@ -46,7 +46,7 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
     ];
 
     private const CORE = [
-        'pos.access', 'invoices.create', 'invoices.edit', 'whatsapp.share', 'quotations.manage',
+        'pos.access', 'invoices.create', 'invoices.edit', 'whatsapp.share',
         'items.manage', 'items.movements', 'purchases.manage', 'expenses.manage', 'payments.manage',
         'shifts.manage', 'treasury.view', 'returns.manage', 'reports.basic', 'reports.export',
         'printing.thermal', 'printing.a4', 'telegram.notifications',
@@ -71,7 +71,7 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
         'mixes.manage' => ['recurring', '199.000', '1990.000', [], true],
         'reports.advanced' => ['recurring', '149.000', '1490.000', [], true],
         'audit.logs' => ['recurring', '99.000', '990.000', [], true],
-        'api.access' => ['recurring', '299.000', '2990.000', [], true],
+        'api.access' => ['recurring', '299.000', '2990.000', [], false],
         'custom.domain' => ['recurring', '149.000', '1490.000', [], false],
         'addon.premium_support' => ['recurring', '299.000', '2990.000', [], true],
         'service.onboarding' => ['service', '1500.000', null, [], true],
@@ -127,7 +127,7 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
         }
     }
 
-    public function test_it_seeds_the_feature_registry_with_18_core_and_three_hidden_keys(): void
+    public function test_it_seeds_the_feature_registry_with_17_core_and_six_hidden_keys(): void
     {
         $this->seedCatalog();
 
@@ -141,10 +141,10 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
         $expectedCore = self::CORE;
         sort($expectedCore);
         $this->assertSame($expectedCore, $core);
-        $this->assertCount(18, $core);
+        $this->assertCount(17, $core);
 
         $hidden = $features->reject(fn (object $feature): bool => (bool) $feature->is_public)->keys()->sort()->values()->all();
-        $this->assertSame(['custom.domain', 'pos.offline', 'quotations.manage'], $hidden);
+        $this->assertSame(['api.access', 'custom.domain', 'pos.offline', 'quotations.manage', 'reports.advanced', 'whatsapp.share'], $hidden);
 
         foreach ($features as $key => $feature) {
             $this->assertSame(FeatureCatalog::nameKey($key), $feature->name_key);
@@ -286,7 +286,7 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
 
         $basic = $this->plan('basic');
         $features = $basic->features ?? [];
-        unset($features['quotations.manage']);
+        unset($features['reports.export']);
         $features['reports.advanced'] = true;
         $features['custom.extra'] = true;
         $basic->update([
@@ -318,7 +318,7 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
         $this->assertFalse($basic->is_public);
         $this->assertTrue($basic->features['reports.advanced'], 'An edited feature value is kept.');
         $this->assertTrue($basic->features['custom.extra'], 'A key the catalog does not know is kept.');
-        $this->assertTrue($basic->features['quotations.manage'], 'A missing catalog key is merged back with its catalog value.');
+        $this->assertTrue($basic->features['reports.export'], 'A missing catalog key is merged back with its catalog value.');
 
         $posAccess = $db->table('plan_features')->where('key', 'pos.access')->first();
         $this->assertNotNull($posAccess);

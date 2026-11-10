@@ -54,7 +54,7 @@
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           "
         >
-          ⚠️ {{ $t('inventory.low_stock') }}
+          <AlertTriangle class="inline w-3.5 h-3.5 me-1 align-text-bottom" />{{ $t('inventory.low_stock') }}
         </button>
 
         <button
@@ -67,7 +67,7 @@
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           "
         >
-          🚨 {{ $t('inventory.out_of_stock') }}
+          <AlertTriangle class="inline w-3.5 h-3.5 me-1 align-text-bottom" />{{ $t('inventory.out_of_stock') }}
         </button>
       </div>
     </div>
@@ -75,6 +75,7 @@
 </template>
 
 <script setup>
+import { AlertTriangle } from 'lucide-vue-next';
 import BaseSelect from '../Form/BaseSelect.vue';
 import BaseSearchInput from '../Form/BaseSearchInput.vue';
 

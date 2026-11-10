@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    @php $currencyLabel = app(\App\Services\Settings\TenantSettings::class)->currencyLabel(); @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ __('inventory.item_movements_card_title', ['name' => $item->name]) }}</title>
@@ -119,7 +120,7 @@
         </div>
         <div>
             <span class="text-slate-500 text-[10px] block">{{ __('inventory.approved_selling_price') }}</span>
-            <span class="font-mono font-bold text-slate-900 block">{{ number_format($item->selling_price, 2) }} {{ __('common.currency') }}</span>
+            <span class="font-mono font-bold text-slate-900 block">{{ number_format($item->selling_price, 2) }} {{ $currencyLabel }}</span>
         </div>
     </div>
 
@@ -160,15 +161,9 @@
             </tr>
         </thead>
         <tbody class="divide-y divide-slate-300">
-            @php
-                $inboundTypes = [
-                    'purchase_in', 'stock_deposit_in', 'stock_adjustment_in',
-                    'cancellation_in', 'transfer_in', 'sales_return_in', 'purchase_restore_in'
-                ];
-            @endphp
             @forelse($movements as $idx => $row)
             @php
-                $isIn = in_array($row->movement_type, $inboundTypes);
+                $isIn = \App\Support\StockMovementTypes::isInbound((string) $row->movement_type);
                 $typeLabel = match ($row->movement_type) {
                     'sales_out'            => '🛒 ' . __('invoices.sales_invoice'),
                     'purchase_in'          => '📦 ' . __('purchases.title'),
@@ -178,6 +173,7 @@
                     'stock_adjustment_in'  => '⚖️ ' . __('inventory.movement_adj_in'),
                     'stock_adjustment_out' => '⚖️ ' . __('inventory.movement_adj_out'),
                     'stock_deposit_in'     => '📥 ' . __('inventory.movement_deposit'),
+                    'opening_balance_in'   => '📥 ' . __('inventory.movement_opening_balance'),
                     'transfer_in'          => '🚚 ' . __('inventory.transfers_title'),
                     'transfer_out'         => '🚚 ' . __('inventory.transfers_title'),
                     'sales_return_in'      => '🔁 ' . __('returns.sales_return'),

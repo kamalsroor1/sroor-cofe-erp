@@ -108,7 +108,6 @@ return [
     'cancel_dismiss_btn' => 'Dismiss',
     'invoice_cancelled_success' => 'Invoice cancelled and stock reversed successfully',
     'invoice_cancelled_failed' => 'Failed to cancel invoice',
-    'cancel_reason_default' => 'Cancelled via system interface',
     'check' => 'Check',
     'receipt_title' => 'Receipt - :number',
     'print_receipt' => 'Print Receipt',
@@ -159,7 +158,6 @@ return [
     'bulk_cancel_confirm_title' => 'Cancel :count selected invoices?',
     'bulk_cancel_confirm_text' => 'All selected invoices will be cancelled, items returned to store inventory, and financial records reversed.',
     'bulk_cancel_confirm_btn' => 'Yes, Cancel Selected',
-    'bulk_cancel_success' => ':count invoices cancelled successfully and stock reversed.',
 
     // Invoice Show & Dual Print additions
     'invoice_show_title' => 'Invoice Details & Preview',
@@ -233,11 +231,21 @@ return [
     'total_net' => 'Net total',
     'invoice_with_number' => 'Invoice #:number',
 
-    'bulk_cancel_reason' => 'Bulk cancellation from the sales list',
     'stamp_placeholder' => 'Stamp',
     'image_filename_a4' => 'sales-invoice-:number.png',
     'image_filename_thermal' => 'receipt-:number.png',
+    'csv_cash_customer' => 'Walk-in customer',
+    'csv_payment_type' => ['cash' => 'Cash', 'credit' => 'Credit', 'partial' => 'Partial'],
+    'csv_status' => ['confirmed' => 'Confirmed', 'cancelled' => 'Cancelled'],
+    'active_store_option' => 'Current branch',
+    'cancel_reason_required' => 'Enter the cancellation reason',
+    'bulk_cancel_result_success' => ':success of :total invoices cancelled',
+    'bulk_cancel_result_partial' => ':success invoices cancelled, :failed of :total failed',
+    'bulk_cancel_result_failed' => 'Cancelling all invoices failed (:failed)',
+    'export_failed' => 'Could not export the invoices',
     'csv_columns' => [
+        'store' => 'Branch',
+        'payment_type' => 'Payment type',
         'number' => 'Invoice number',
         'customer' => 'Customer',
         'phone' => 'Phone',
@@ -258,4 +266,6 @@ return [
     'delete_admin_only' => 'Sorry, only the general manager can delete invoices.',
     'already_cancelled' => 'This invoice has already been cancelled.',
     'discrete_unit_integer_only' => 'The item \':item\' is sold by piece/box and only accepts whole numbers; fractions are not allowed (:quantity :unit).',
+    // BE-08
+    'line_discount_exceeds_total' => 'The line discount cannot exceed the line total.',
 ];

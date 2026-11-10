@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, watchEffect } from 'vue';
 import { AlertTriangle, PackageOpen, RefreshCw } from 'lucide-vue-next';
+import BrandLogo from '../../Components/Brand/BrandLogo.vue';
 import AppDownloadCard from '../../Components/AppDownload/AppDownloadCard.vue';
 import EmptyState from '../../Components/Common/EmptyState.vue';
 import CardSkeleton from '../../Components/Common/Skeletons/CardSkeleton.vue';
@@ -26,6 +27,7 @@ onMounted(load);
   <main class="min-h-0 flex-1 overflow-y-auto bg-slate-50 px-4 py-8 dark:bg-slate-950 sm:px-6 sm:py-12">
     <div class="mx-auto max-w-4xl space-y-6">
       <header class="space-y-2 text-center">
+        <BrandLogo layout="stacked" :size="64" class="mb-2" />
         <h1 class="text-xl font-black text-slate-900 dark:text-white sm:text-2xl">
           {{ $t('app_update.download_page.title') }}
         </h1>
@@ -65,6 +67,10 @@ onMounted(load);
           :is-current-platform="release.platform === currentPlatform"
         />
       </div>
+
+      <p class="text-center text-[10px] font-medium text-slate-400 dark:text-slate-500">
+        {{ $t('brand.company_line') }}
+      </p>
     </div>
   </main>
 </template>

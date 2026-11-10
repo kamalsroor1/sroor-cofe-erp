@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\User;
+use App\Support\Auth\AccountLockout;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -25,6 +26,9 @@ class UserResource extends JsonResource
             'show_print_subtitle' => (bool) $this->show_print_subtitle,
             'default_store_id' => $this->default_store_id,
             'is_active' => (bool) $this->is_active,
+            // BE-08: whether a manager approval PIN is set (the hash itself is never exposed).
+            'has_pos_pin' => $this->resource instanceof User && $this->resource->pos_pin !== null,
+            ...AccountLockout::payload($this->loginLockedUntil()),
             'last_login_at' => $this->last_login_at,
             'stores' => $this->whenLoaded('stores', function () {
                 return $this->stores->map(fn ($store) => [
@@ -35,5 +39,12 @@ class UserResource extends JsonResource
                 ]);
             }),
         ];
+    }
+
+    private function loginLockedUntil(): ?int
+    {
+        return $this->resource instanceof User
+            ? AccountLockout::lockedUntilForIdentifiers($this->resource->phone, $this->resource->email)
+            : null;
     }
 }

@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Actions\Auth\ApiLoginAction;
 use App\Actions\Auth\ApiLogoutAction;
 use App\Actions\Auth\ApiMeAction;
+use App\Actions\Auth\DispatchAccountLockAlertAction;
 use App\Actions\Auth\ListQuickLoginUsersAction;
 use App\Actions\Auth\QuickLoginAction;
 use App\DTOs\Auth\ApiLoginDTO;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ApiLoginRequest;
 use App\Http\Requests\Auth\QuickLoginRequest;
 use App\Http\Resources\QuickLoginUserResource;
+use App\Services\ActivityLogService;
 use App\Support\QuickLoginGate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,8 +26,10 @@ final class AuthController extends Controller
 {
     public function __construct(
         private readonly ApiLoginAction $loginAction,
+        private readonly ActivityLogService $activityLogService,
         private readonly ApiLogoutAction $logoutAction,
         private readonly ApiMeAction $meAction,
+        private readonly DispatchAccountLockAlertAction $lockAlertAction,
         private readonly QuickLoginAction $quickLoginAction,
         private readonly ListQuickLoginUsersAction $listQuickLoginUsersAction,
     ) {}
@@ -50,6 +54,17 @@ final class AuthController extends Controller
             ], 200);
         } catch (ValidationException $e) {
             $request->hitRateLimit();
+
+            if ($request->hitAccountFailure()) {
+                $this->activityLogService->log(
+                    module: 'auth',
+                    action: 'account_locked',
+                    description: __('auth.activity_account_locked', ['login' => $request->accountIdentifier()]),
+                    properties: ['login' => $request->accountIdentifier(), 'ip' => $request->ip()],
+                );
+                $this->lockAlertAction->execute($request->submittedLogin(), $request->ip());
+            }
+
             throw $e;
         }
     }

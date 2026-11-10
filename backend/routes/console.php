@@ -9,14 +9,22 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// 1. Run queue worker every minute (processes pending background jobs)
+// 1. OPS-8: cron-driven queue worker for hosts WITHOUT a resident worker (Hostinger shared
+// staging, QUEUE_CONNECTION=database). Where Horizon owns the queue (redis, the VPS) it must NOT
+// run: two consumers on the same queue race and ignore Horizon's per-queue timeout/tries.
+// Decided at schedule time from config('queue.scheduler_worker'), so config:cache is respected.
+$schedulerQueueWorkerEnabled = static fn (): bool => (bool) config('queue.scheduler_worker', false);
+
 Schedule::command('queue:work --stop-when-empty --tries=3 --max-time=55')
     ->everyMinute()
-    ->withoutOverlapping();
+    ->withoutOverlapping()
+    ->when($schedulerQueueWorkerEnabled);
 
-// 2. Restart queue worker gracefully every 6 hours to free RAM
+// 2. Restart queue workers gracefully every 6 hours to free RAM (same hosts only: Horizon
+// is restarted by the deploy via horizon:terminate and supervisor).
 Schedule::command('queue:restart')
-    ->everySixHours();
+    ->everySixHours()
+    ->when($schedulerQueueWorkerEnabled);
 
 // 3. Clear old Pulse monitoring entries weekly
 Schedule::command('pulse:clear --force')
@@ -68,6 +76,10 @@ Schedule::command('health:schedule-check-heartbeat')
     ->everyMinute();
 Schedule::command('health:queue-check-heartbeat')
     ->everyMinute();
+// OPS-7: external dead-man switch (no-op while OPS_HEARTBEAT_URL is empty).
+Schedule::command('ops:heartbeat')
+    ->everyMinute()
+    ->runInBackground();
 
 // 8. IDEN-1.15: platform audit retention (2 years, CTO W1 Q2). Deletes ONLY rows strictly
 // older than config('activitylog.central_audit.retention_days') from central_audit_logs and
@@ -110,3 +122,9 @@ Schedule::command('central-audit:prune')
 Schedule::command('tenants:apply-lifecycle')
     ->dailyAt((string) config('tenant_lifecycle.sweep.at', '01:00'))
     ->withoutOverlapping(60);
+
+// 9. SEC-03: drop expired tenant API tokens (12h fixed TTL) from every provisioned tenant DB.
+// `tenants:run` is the app's provisioned-tenants-only variant (RunForProvisionedTenants).
+Schedule::command('tenants:run sanctum:prune-expired --option="hours=24"')
+    ->dailyAt('03:30')
+    ->withoutOverlapping();

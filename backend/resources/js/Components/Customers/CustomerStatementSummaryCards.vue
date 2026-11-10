@@ -19,7 +19,7 @@
       </div>
       <div class="text-xl font-black text-slate-900 dark:text-white font-mono">
         {{ formatMoney(summary.total_debit || 0) }}
-        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
       </div>
     </div>
 
@@ -32,7 +32,7 @@
       </div>
       <div class="text-xl font-black text-emerald-500 dark:text-emerald-400 font-mono">
         {{ formatMoney(summary.total_credit || 0) }}
-        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
       </div>
     </div>
 
@@ -48,7 +48,7 @@
         :class="currentBalance > 0 ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-500 dark:text-emerald-400'"
       >
         {{ formatMoney(currentBalance) }}
-        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
       </div>
     </div>
   </div>
@@ -58,7 +58,7 @@
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   summary: { type: Object, default: () => ({}) },

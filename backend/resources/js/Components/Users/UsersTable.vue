@@ -20,7 +20,17 @@
             {{ row.name.charAt(0) }}
           </div>
           <div>
-            <div class="font-tajawal text-xs text-slate-900 dark:text-white font-bold">{{ row.name }}</div>
+            <div class="font-tajawal text-xs text-slate-900 dark:text-white font-bold flex items-center gap-2">
+              <span>{{ row.name }}</span>
+              <span
+                v-if="row.login_locked"
+                data-testid="login-locked-badge"
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400"
+              >
+                <Lock class="w-3 h-3" />
+                {{ $t('users.login_locked_badge') }}
+              </span>
+            </div>
             <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
               {{ row.email || $t('users.no_email') }}
             </div>
@@ -66,6 +76,17 @@
       <template #cell-actions="{ row }">
         <div class="flex items-center justify-end gap-2 font-sans">
           <button
+            v-if="row.login_locked"
+            type="button"
+            @click="$emit('unlock-login', row)"
+            data-testid="action-unlock-login"
+            class="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0 p-2 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/30 dark:hover:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-800 rounded-xl transition cursor-pointer active:scale-95 flex items-center justify-center"
+            :title="$t('users.unlock_login')"
+            :aria-label="$t('users.unlock_login')"
+          >
+            <LockOpen class="w-3.5 h-3.5" />
+          </button>
+          <button
             type="button"
             @click="$emit('edit', row)"
             data-testid="action-edit"
@@ -91,7 +112,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Edit2, Trash2 } from 'lucide-vue-next';
+import { Edit2, Trash2, Lock, LockOpen } from 'lucide-vue-next';
 import DataTable from '@/Components/Common/DataTable.vue';
 import { useTrans } from '../../Composables/useTrans';
 
@@ -103,7 +124,7 @@ defineProps({
   loading: { type: Boolean, default: false },
 });
 
-defineEmits(['edit', 'delete', 'toggle-active', 'page-change']);
+defineEmits(['edit', 'delete', 'toggle-active', 'unlock-login', 'page-change']);
 
 const columns = computed(() => [
   { key: 'name', label: t('users.employee_col') },

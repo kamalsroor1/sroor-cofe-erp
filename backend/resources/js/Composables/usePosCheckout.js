@@ -1,5 +1,6 @@
 import { computed } from 'vue';
-import { normalize } from '../helpers/decimal';
+import { normalize, isPositive } from '../helpers/decimal';
+import { DISCOUNT_FIXED } from '../helpers/posDiscount';
 import { computeCheckoutNet, previewChange, buildCheckoutPayment } from '../helpers/posCheckout';
 
 /**
@@ -45,10 +46,17 @@ export function usePosCheckout({
 
     const buildPayloadLines = () => ({
         discount_value: normalize(discountValue.value),
+        // POS-07: a line discount goes as a percent (the server turns it into money from the price it charges)
+        // or as an amount.
         items: cart.value.map((line) => ({
             item_id: line.id,
             quantity: normalize(line.quantity),
             unit_price: normalize(line.unit_price),
+            ...(isPositive(line.discount_value ?? '0')
+                ? line.discount_type === DISCOUNT_FIXED
+                    ? { discount_amount: normalize(line.discount_value) }
+                    : { discount_percent: normalize(line.discount_value) }
+                : {}),
         })),
         additional_expenses: additionalExpenses.value.map((exp) => ({
             title: exp.title,

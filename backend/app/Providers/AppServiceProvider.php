@@ -13,10 +13,13 @@ use App\Enums\CentralPermission;
 use App\Models\Addon;
 use App\Models\CentralUser;
 use App\Models\Plan;
+use App\Models\PlanAddon;
+use App\Models\PlanFeature;
 use App\Models\Subscription;
 use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
 use App\Observers\Billing\EntitlementsCacheObserver;
+use App\Observers\Landing\PublicCatalogObserver;
 use App\Observers\TenantObserver;
 use App\Services\Branding\PlatformBranding;
 use App\Services\Entitlements\EntitlementFeatures;
@@ -143,6 +146,11 @@ class AppServiceProvider extends ServiceProvider
             $model::observe(EntitlementsCacheObserver::class);
         }
 
+        // PRD-07: the cached public pricing payload follows the catalog rows it is built from.
+        foreach ([Plan::class, PlanFeature::class, Addon::class, PlanAddon::class] as $model) {
+            $model::observe(PublicCatalogObserver::class);
+        }
+
         // ENTI-2.2 / Q-E1: Pennant features resolve through the entitlement service (array store).
         $this->app->make(EntitlementFeatures::class)->register();
 
@@ -247,6 +255,10 @@ class AppServiceProvider extends ServiceProvider
                 ->by('public-api|'.$endpoint.'|'.$request->ip());
         });
 
+        // Heavy CSV exports (invoices): 6 per minute per user and tenant.
+        RateLimiter::for('exports', fn (Request $request): Limit => Limit::perMinute($this->limit('rate_limits.exports.per_minute', 6))
+            ->by('exports|'.(tenant()?->getTenantKey() ?? 'central').'|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
+
         // L2: release binary downloads, one bucket per IP shared by both download routes (each hit
         // streams a large file). config rate_limits.app_download.per_hour (default 10).
         RateLimiter::for('app-download', fn (Request $request): Limit => Limit::perHour($this->limit('rate_limits.app_download.per_hour', 10))
@@ -269,9 +281,38 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute($default)->by('tenant-resolve|'.$request->ip());
         });
 
+        // PRD-03: payment receipt uploads, per tenant + user + IP (the cache is shared by all tenants).
+        RateLimiter::for('billing-receipt-upload', fn (Request $request): Limit => Limit::perHour($this->limit('rate_limits.billing_receipt_upload.per_hour', 20))
+            ->by('billing-receipt|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->user()?->getAuthIdentifier()).'|'.$request->ip()));
+
+        // PRD-04: renewal-invoice requests, per tenant + user + IP.
+        RateLimiter::for('billing-renewal-invoice', fn (Request $request): Limit => Limit::perHour($this->limit('rate_limits.billing_renewal_invoice.per_hour', 10))
+            ->by('billing-renewal|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->user()?->getAuthIdentifier()).'|'.$request->ip()));
+
+        // PRD-05: the public assisted-signup form, per client IP. Only ACCEPTED submissions (2xx, a
+        // honeypot hit included) spend the strict 3/hour + 10/day budget, so a visitor fixing a typo
+        // is never locked out; every attempt, valid or not, also spends a looser hourly ceiling.
+        RateLimiter::for('signup-requests', function (Request $request): array {
+            $accepted = static fn ($response): bool => $response->getStatusCode() >= 200 && $response->getStatusCode() < 300;
+            $ip = RateLimitKey::clientNetwork((string) $request->ip());
+
+            return [
+                Limit::perHour($this->limit('rate_limits.signup_requests.per_hour', 3))->by('signup-requests-hour|'.$ip)->after($accepted),
+                Limit::perDay($this->limit('rate_limits.signup_requests.per_day', 10))->by('signup-requests-day|'.$ip)->after($accepted),
+                // Global ceiling across every IP (botnets / IPv6 rotation): accepted submissions only.
+                Limit::perHour($this->limit('rate_limits.signup_requests.global_per_hour', 30))->by('signup-requests-global-hour')->after($accepted),
+                Limit::perDay($this->limit('rate_limits.signup_requests.global_per_day', 200))->by('signup-requests-global-day')->after($accepted),
+                Limit::perHour($this->limit('rate_limits.signup_requests.attempts_per_hour', 30))->by('signup-requests-attempts|'.$ip),
+            ];
+        });
+
         // Testing-only quick login (AUTH-1a / IDEN-4.1): per tenant + IP.
         RateLimiter::for('quick-login', fn (Request $request): Limit => Limit::perMinute($this->limit('auth.quick_login.per_minute', 5))
             ->by('quick-login|'.RateLimitKey::scope().'|'.$request->ip()));
+
+        // PRD-06: spreadsheet import wizard (template / preview / commit), per tenant and user.
+        RateLimiter::for('imports', fn (Request $request): Limit => Limit::perMinute($this->limit('rate_limits.imports.per_minute', 20))
+            ->by('imports|'.RateLimitKey::scope().'|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
     }
 
     /**

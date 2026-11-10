@@ -5,7 +5,7 @@
     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-xl">
-          ⚖️
+          <Scale class="w-5 h-5" />
         </div>
         <div>
           <h2 class="text-base font-black text-slate-900 dark:text-white">{{ $t('super.tenant_units_title') }}</h2>
@@ -43,7 +43,7 @@
             class="hover:text-rose-500 transition cursor-pointer text-xs"
             :title="$t('common.delete')"
           >
-            ✕
+            <X class="w-3.5 h-3.5" />
           </button>
         </span>
       </div>
@@ -90,6 +90,7 @@
 </template>
 
 <script setup>
+import { X, Scale } from 'lucide-vue-next';
 import BaseButton from '../Common/BaseButton.vue';
 import BaseInput from '../Form/BaseInput.vue';
 

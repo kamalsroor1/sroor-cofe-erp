@@ -1,12 +1,13 @@
 <template>
   <div
     class="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4 sm:p-6 selection:bg-theme-primary selection:text-white relative overflow-hidden font-sans transition-colors duration-300"
-    dir="rtl"
   >
+    <LanguageSwitcher class="absolute top-4 end-4 z-20 rounded-2xl shadow-md" />
+
     <!-- Glowing Ambient Lighting Background Blobs -->
-    <div class="absolute top-0 right-0 w-96 h-96 bg-theme-light rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute top-0 start-0 w-96 h-96 bg-theme-light rounded-full blur-3xl pointer-events-none"></div>
     <div
-      class="absolute -bottom-32 -left-32 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"
+      class="absolute -bottom-32 -end-32 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"
     ></div>
 
     <div
@@ -40,6 +41,7 @@ import { useRoute, useRouter } from 'vue-router';
 import api from '../../Services/api';
 import { trans } from '../../helpers/trans';
 import { isCentralHost, isLoopbackHost } from '../../helpers/platformHosts';
+import LanguageSwitcher from '../../Components/Common/LanguageSwitcher.vue';
 import WorkspaceStepInput from '../../Components/Auth/WorkspaceStepInput.vue';
 import WorkspaceConnectingState from '../../Components/Auth/WorkspaceConnectingState.vue';
 

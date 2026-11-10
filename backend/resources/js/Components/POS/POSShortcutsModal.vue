@@ -22,6 +22,7 @@ const groups = computed(() => [
       { keys: ['F3'], label: t('pos.shortcut_customer') },
       { keys: ['F4'], label: t('pos.shortcut_new_order') },
       ...(hasDiscountInput.value ? [{ keys: ['F7'], label: t('pos.shortcut_discount') }] : []),
+      { keys: ['F8'], label: t('pos.shortcut_recent_sales') },
       { keys: ['F9', 'Ctrl+Enter'], label: t('pos.shortcut_checkout') },
       { keys: ['F10'], label: t('pos.shortcut_catalog') },
       { keys: ['F1', '?'], label: t('pos.shortcut_help') },
@@ -34,6 +35,7 @@ const groups = computed(() => [
     rows: [
       { keys: ['Alt+Q'], label: t('pos.shortcut_edit_qty') },
       { keys: ['Alt+P'], label: t('pos.shortcut_edit_price') },
+      { keys: ['Alt+D'], label: t('pos.shortcut_edit_discount') },
       { keys: ['Alt+L'], label: t('pos.shortcut_last_line') },
       { keys: ['Tab', 'Shift+Tab'], label: t('pos.shortcut_tab_fields') },
       { keys: ['Enter'], label: t('pos.shortcut_enter_field') },

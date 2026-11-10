@@ -53,10 +53,10 @@
               <td class="p-2.5 font-bold text-slate-900 dark:text-white">{{ it.item_name }}</td>
               <td class="p-2.5 text-end font-mono text-theme-primary">{{ it.quantity }} {{ it.unit }}</td>
               <td class="p-2.5 text-end font-mono text-slate-600 dark:text-slate-300">
-                {{ formatMoney(it.unit_price) }} {{ $t('common.currency') }}
+                {{ formatMoney(it.unit_price) }} {{ currencyLabel }}
               </td>
               <td class="p-2.5 text-end font-mono font-bold text-rose-600 dark:text-rose-400">
-                {{ formatMoney(it.total_price) }} {{ $t('common.currency') }}
+                {{ formatMoney(it.total_price) }} {{ currencyLabel }}
               </td>
             </tr>
           </tbody>
@@ -69,7 +69,7 @@
       >
         <span class="font-bold text-slate-700 dark:text-slate-300">{{ $t('returns.total_returns_val') }}:</span>
         <span class="text-base font-black text-rose-600 dark:text-rose-400 font-mono"
-          >{{ formatMoney(returnDetails.total_amount) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(returnDetails.total_amount) }} {{ currencyLabel }}</span
         >
       </div>
 
@@ -86,6 +86,9 @@
 
 <script setup>
 import AppModal from '../Common/AppModal.vue';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 defineProps({
   show: { type: Boolean, default: false },

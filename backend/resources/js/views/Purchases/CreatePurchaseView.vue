@@ -4,9 +4,11 @@
     <PageHeader
       :title="$t('purchases.new_purchase')"
       :subtitle="$t('purchases.create_subtitle')"
-      icon="🚛"
+      icon="truck"
       back-href="/purchases"
     />
+
+    <InlineErrorBar v-if="error" :message="errorMessage" @retry="retry" />
 
     <form @submit.prevent="submitPurchase" class="space-y-6">
       <!-- Supplier & Metadata Card -->
@@ -14,13 +16,13 @@
         v-model:supplier-id="form.supplier_id"
         v-model:purchase-date="form.purchase_date"
         v-model:supplier-invoice-ref="form.supplier_invoice_ref"
-        :supplier-options="supplierOptions"
+        :search-fn="searchSuppliers"
       />
 
       <!-- Items Table Card -->
       <CreatePurchaseItemsCard
         :items="form.items"
-        :available-items="availableItems"
+        :search-fn="searchItems"
         @add-line="addItemLine"
         @remove-line="removeItemLine"
         @item-select="onItemSelect"
@@ -61,6 +63,7 @@
 </template>
 
 <script setup>
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import CreatePurchaseSupplierCard from '../../Components/Purchases/CreatePurchaseSupplierCard.vue';
@@ -69,9 +72,12 @@ import CreatePurchaseSummaryCard from '../../Components/Purchases/CreatePurchase
 import { useCreatePurchase } from '../../Composables/useCreatePurchase';
 
 const {
+  error,
+  errorMessage,
+  retry,
   form,
-  availableItems,
-  supplierOptions,
+  searchSuppliers,
+  searchItems,
   isSubmitting,
   subtotal,
   discount,

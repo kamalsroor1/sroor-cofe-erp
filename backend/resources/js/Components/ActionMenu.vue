@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
-import { MoreHorizontal, MoreVertical, X } from 'lucide-vue-next';
+import { MoreHorizontal, MoreVertical, X, ArrowRight } from 'lucide-vue-next';
 import { useNativeBridge } from '@/Composables/useNativeBridge';
 
 const props = defineProps({
@@ -152,7 +152,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="menuRef" class="relative inline-block text-right font-tajawal">
+  <div ref="menuRef" class="relative inline-block text-start font-tajawal">
     <!-- Trigger Button (•••) -->
     <button
       @click.stop="toggleMenu"
@@ -173,7 +173,6 @@ onUnmounted(() => {
           v-if="isOpen && (mode === 'dropdown' || mode === 'auto')"
           class="hidden sm:block fixed z-[99999] w-60 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 space-y-1 select-none font-tajawal"
           :style="{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }"
-          dir="rtl"
           @click.stop
         >
           <div
@@ -189,7 +188,7 @@ onUnmounted(() => {
                 v-if="item.href"
                 :to="item.href"
                 @click="closeMenu"
-                class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition text-right cursor-pointer"
+                class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition text-start cursor-pointer"
                 :class="[
                   item.variant === 'danger'
                     ? 'text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40'
@@ -214,7 +213,7 @@ onUnmounted(() => {
                 v-else
                 @click="handleItemClick(item)"
                 type="button"
-                class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition text-right cursor-pointer"
+                class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition text-start cursor-pointer"
                 :class="[
                   item.variant === 'danger'
                     ? 'text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40'
@@ -246,7 +245,6 @@ onUnmounted(() => {
         <div
           v-if="isOpen && (mode === 'sheet' || mode === 'auto')"
           class="sm:hidden fixed inset-0 z-[99999] bg-slate-950/75 backdrop-blur-xs flex items-end justify-center font-tajawal select-none"
-          dir="rtl"
           @click="closeMenu"
         >
           <div
@@ -294,7 +292,7 @@ onUnmounted(() => {
                     v-if="item.href"
                     :to="item.href"
                     @click="closeMenu"
-                    class="w-full min-h-[48px] px-4 py-3 rounded-2xl flex items-center gap-3.5 text-xs font-black transition text-right active:scale-98 border shadow-xs"
+                    class="w-full min-h-[48px] px-4 py-3 rounded-2xl flex items-center gap-3.5 text-xs font-black transition text-start active:scale-98 border shadow-xs"
                     :class="[
                       item.variant === 'danger'
                         ? 'bg-rose-500/10 border-rose-500/25 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20'
@@ -313,14 +311,14 @@ onUnmounted(() => {
                         item.description
                       }}</span>
                     </div>
-                    <span class="text-slate-400 text-xs">←</span>
+                    <ArrowRight class="w-3.5 h-3.5 text-slate-400 rtl:rotate-180" />
                   </router-link>
 
                   <button
                     v-else
                     @click="handleItemClick(item)"
                     type="button"
-                    class="w-full min-h-[48px] px-4 py-3 rounded-2xl flex items-center gap-3.5 text-xs font-black transition text-right active:scale-98 border shadow-xs cursor-pointer"
+                    class="w-full min-h-[48px] px-4 py-3 rounded-2xl flex items-center gap-3.5 text-xs font-black transition text-start active:scale-98 border shadow-xs cursor-pointer"
                     :class="[
                       item.variant === 'danger'
                         ? 'bg-rose-500/10 border-rose-500/25 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20'
@@ -339,7 +337,7 @@ onUnmounted(() => {
                         item.description
                       }}</span>
                     </div>
-                    <span class="text-slate-400 text-xs">←</span>
+                    <ArrowRight class="w-3.5 h-3.5 text-slate-400 rtl:rotate-180" />
                   </button>
                 </template>
               </template>
