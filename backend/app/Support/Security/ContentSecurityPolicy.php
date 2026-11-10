@@ -64,8 +64,8 @@ final class ContentSecurityPolicy
         return [
             'default-src' => ["'self'"],
             'script-src' => array_merge(["'self'", "'nonce-{$nonce}'"], $devScript),
-            'style-src' => array_merge(["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'], $devScript),
-            'font-src' => array_merge(["'self'", 'https://fonts.gstatic.com', 'data:'], $devScript),
+            'style-src' => array_merge(["'self'", "'unsafe-inline'"], $devScript),
+            'font-src' => array_merge(["'self'", 'data:'], $devScript),
             'img-src' => $img,
             'connect-src' => array_merge(["'self'"], $devConnect),
             'worker-src' => ["'self'"],
