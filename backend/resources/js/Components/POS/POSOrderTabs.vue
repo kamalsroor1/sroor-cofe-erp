@@ -4,7 +4,7 @@
     <div
       v-for="order in orders"
       :key="order.id"
-      class="group relative flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shrink-0"
+      class="group relative flex items-center gap-2 ps-3 pe-1.5 py-1.5 max-md:min-h-11 pointer-coarse:min-h-11 rounded-xl border text-xs font-bold transition-all cursor-pointer shrink-0"
       :class="
         order.id === activeOrderId
           ? 'bg-white dark:bg-slate-900 border-theme-primary text-theme-primary shadow-xs ring-1 ring-theme-primary/30'
@@ -33,8 +33,9 @@
       <button
         type="button"
         @click.stop="$emit('close-order', order)"
-        class="w-4 h-4 rounded-md flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer ms-1 shrink-0"
+        class="w-6 h-6 max-md:w-11 max-md:h-11 pointer-coarse:w-11 pointer-coarse:h-11 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
         :title="$t('pos.confirm_close_order_title')"
+        :aria-label="$t('pos.confirm_close_order_title')"
       >
         <X class="w-3 h-3" />
       </button>
@@ -44,7 +45,7 @@
     <button
       type="button"
       @click="$emit('create-order')"
-      class="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-theme-primary bg-slate-50 hover:bg-theme-light dark:bg-slate-900/50 text-slate-600 hover:text-theme-primary text-xs font-bold transition-all cursor-pointer shrink-0 shadow-2xs"
+      class="flex items-center gap-1 px-3 py-1.5 max-md:min-h-11 pointer-coarse:min-h-11 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-theme-primary bg-slate-50 hover:bg-theme-light dark:bg-slate-900/50 text-slate-600 hover:text-theme-primary text-xs font-bold transition-all cursor-pointer shrink-0 shadow-2xs"
       :title="$t('pos.new_order_btn')"
     >
       <Plus class="w-3.5 h-3.5 text-theme-primary" />

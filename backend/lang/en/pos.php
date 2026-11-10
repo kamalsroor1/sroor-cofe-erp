@@ -438,4 +438,15 @@ return [
     'catalog_load_more_failed' => 'Could not load more items.',
     'unit_badge' => 'Unit',
     'stock_label' => 'Stock',
+
+    // Phone layout (POS-12)
+    'phone_view_cart' => 'View cart',
+    'phone_checkout_btn' => 'Checkout',
+    'phone_cart_sheet_title' => 'Cart',
+    'phone_payment_sheet_title' => 'Payment',
+    'phone_menu_btn' => 'More',
+    'phone_menu_title' => 'POS options',
+    'phone_store_label' => 'Branch',
+    'phone_categories_label' => 'Categories',
+    'change_customer' => 'Change customer',
 ];

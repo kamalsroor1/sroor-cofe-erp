@@ -194,8 +194,8 @@
         <slot />
       </main>
 
-      <!-- Fixed Mobile Bottom Navigation Bar -->
-      <MobileBottomNav @open-drawer="isSidebarOpen = true" />
+      <!-- Fixed Mobile Bottom Navigation Bar (the POS has its own sticky cart bar, the nav would cover Pay) -->
+      <MobileBottomNav v-if="!isPosView" @open-drawer="isSidebarOpen = true" />
     </div>
 
     <!-- 📱 DYNAMIC MOBILE DRAWER (Complete Mirror of Full ERP System) -->
@@ -534,7 +534,7 @@ const isSidebarOpen = ref(false);
 const activeMobileSection = ref(null);
 const isSidebarCollapsed = ref(localStorage.getItem('sidebar_collapsed') === 'true');
 
-const isPosView = computed(() => route.path === '/pos' || route.path.startsWith('/pos'));
+const isPosView = computed(() => route.path === '/pos' || route.path.startsWith('/pos/'));
 
 // 📱 Smart Adaptive Sidebar: Auto-collapse on POS, restore user's original state on exit
 watch(

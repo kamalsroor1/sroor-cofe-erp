@@ -15,7 +15,7 @@
 
     <!-- Products grid: per-branch cards per row, sized by the panel width (container query) -->
     <div ref="scrollRef" class="flex-1 overflow-y-auto custom-scrollbar p-3.5 @container">
-      <div v-if="isLoading" class="grid gap-3" :class="gridClass" :style="gridStyle" aria-busy="true">
+      <div v-if="isLoading" class="grid gap-3" :class="gridClass" aria-busy="true">
         <div
           v-for="n in 9"
           :key="n"
@@ -31,7 +31,7 @@
       </div>
 
       <template v-else-if="items.length">
-        <div class="grid gap-3" :class="gridClass" :style="gridStyle" data-testid="pos-product-grid">
+        <div class="grid gap-3" :class="gridClass" data-testid="pos-product-grid">
           <POSProductButton
             v-for="item in items"
             :key="item.id"
@@ -45,7 +45,7 @@
 
         <div ref="sentinelRef" class="h-px" aria-hidden="true"></div>
 
-        <div v-if="isLoadingMore" class="grid gap-3 mt-3" :class="gridClass" :style="gridStyle" aria-busy="true">
+        <div v-if="isLoadingMore" class="grid gap-3 mt-3" :class="gridClass" aria-busy="true">
           <Skeleton v-for="n in 3" :key="n" height="h-28" rounded="rounded-xl" />
         </div>
         <div v-else-if="hasMore" class="flex justify-center mt-3">
@@ -99,16 +99,13 @@ const props = defineProps({
 const emit = defineEmits(['add-item', 'load-more']);
 
 // Static class strings so Tailwind keeps them. 2 and 3 fall back by panel width; "auto" fills with a minimum card width.
+// Phone-width panels (< 340px of content) show 2 tiles per row instead of 1, as in the phone mockups.
 const GRID_CLASSES = {
-  2: 'grid-cols-1 @[340px]:grid-cols-2',
-  3: 'grid-cols-1 @[340px]:grid-cols-2 @[600px]:grid-cols-3',
+  2: 'grid-cols-2',
+  3: 'grid-cols-2 @[600px]:grid-cols-3',
+  auto: 'grid-cols-2 @[400px]:grid-cols-[repeat(auto-fill,minmax(190px,1fr))]',
 };
-const gridClass = computed(() =>
-  props.cardsPerRow === 'auto' ? '' : GRID_CLASSES[props.cardsPerRow] || GRID_CLASSES[3]
-);
-const gridStyle = computed(() =>
-  props.cardsPerRow === 'auto' ? { gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))' } : {}
-);
+const gridClass = computed(() => GRID_CLASSES[props.cardsPerRow] || GRID_CLASSES[3]);
 
 const scrollRef = ref(null);
 const sentinelRef = ref(null);

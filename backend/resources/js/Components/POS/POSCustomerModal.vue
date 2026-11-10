@@ -48,7 +48,7 @@
             v-model="quickCustomerName"
             type="text"
             :placeholder="$t('pos.customer_name_required')"
-            class="h-10 px-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-theme-primary"
+            class="h-11 px-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-theme-primary"
             @keydown.enter="submitQuickCustomer"
           />
           <input
@@ -56,7 +56,7 @@
             v-model="quickCustomerPhone"
             type="text"
             :placeholder="$t('pos.customer_phone_optional')"
-            class="h-10 px-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-1 focus:ring-theme-primary"
+            class="h-11 px-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-1 focus:ring-theme-primary"
             dir="ltr"
             @keydown.enter="submitQuickCustomer"
           />

@@ -1,19 +1,20 @@
 <template>
   <header
-    class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 shrink-0 shadow-xs z-30 font-tajawal select-none"
+    class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-2 py-[5px] md:px-4 md:py-2.5 shrink-0 shadow-xs z-30 font-tajawal select-none"
   >
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <div class="flex items-center justify-between gap-2 md:gap-3">
       <!-- Right: Logo & Quick Navigation -->
       <div class="flex items-center gap-3 shrink-0">
         <router-link
           to="/invoices"
-          class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition border border-slate-200 dark:border-slate-700 cursor-pointer"
+          class="w-11 h-11 md:w-10 md:h-10 pointer-coarse:w-11 pointer-coarse:h-11 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition border border-slate-200 dark:border-slate-700 cursor-pointer shrink-0"
           :title="$t('pos.back_to_invoices')"
+          :aria-label="$t('pos.back_to_invoices')"
         >
           <ArrowRight class="w-4 h-4" />
         </router-link>
 
-        <div class="flex items-center gap-2">
+        <div class="hidden md:flex items-center gap-2">
           <div
             class="w-10 h-10 rounded-xl bg-theme-primary text-slate-950 flex items-center justify-center font-black text-lg shadow-xs"
           >
@@ -34,7 +35,7 @@
                 <select
                   :value="activeStore?.id"
                   @change="$emit('switch-store', $event.target.value)"
-                  class="h-6 pr-5 pl-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg text-[11px] font-bold text-slate-800 dark:text-cyan-400 focus:outline-none focus:ring-1 focus:ring-theme-primary cursor-pointer font-tajawal appearance-none transition"
+                  class="h-6 pointer-coarse:h-11 pointer-coarse:-my-2.5 pe-5 ps-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg text-[11px] font-bold text-slate-800 dark:text-cyan-400 focus:outline-none focus:ring-1 focus:ring-theme-primary cursor-pointer font-tajawal appearance-none transition"
                 >
                   <option
                     v-for="s in stores"
@@ -45,7 +46,7 @@
                     🏬 {{ s.name }}
                   </option>
                 </select>
-                <ChevronDown class="w-3 h-3 text-slate-400 absolute right-1 pointer-events-none" />
+                <ChevronDown class="w-3 h-3 text-slate-400 absolute end-1 pointer-events-none" />
               </div>
               <span v-else class="text-[11px] text-slate-500 dark:text-slate-400 font-bold">{{
                 activeStore?.name || $t('common.main_branch')
@@ -72,7 +73,7 @@
       </div>
 
       <!-- Center: Giant Barcode / Product Search Box with Dropdown -->
-      <div class="flex-1 max-w-3xl relative">
+      <div class="flex-1 min-w-0 max-w-3xl relative">
         <div class="relative">
           <div class="absolute inset-y-0 start-0 ps-3.5 flex items-center pointer-events-none text-slate-400">
             <Search class="w-5 h-5" />
@@ -83,7 +84,7 @@
             :value="searchQuery"
             @input="$emit('update:searchQuery', $event.target.value)"
             type="text"
-            class="w-full h-12 ps-11 pe-24 bg-slate-50 dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 focus:border-theme-primary focus:ring-4 focus:ring-theme-primary/20 rounded-2xl text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all focus:outline-none"
+            class="w-full h-11 md:h-12 ps-11 pe-12 sm:pe-24 bg-slate-50 dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 focus:border-theme-primary focus:ring-4 focus:ring-theme-primary/20 rounded-2xl text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all focus:outline-none"
             :placeholder="$t('pos.search_placeholder_long')"
             @keydown.down.prevent="$emit('navigate-dropdown', 'down')"
             @keydown.up.prevent="$emit('navigate-dropdown', 'up')"
@@ -92,7 +93,7 @@
             @focus="$emit('update:isSearchFocused', true)"
           />
 
-          <div class="absolute inset-y-0 end-0 pe-2 flex items-center gap-1.5">
+          <div class="absolute inset-y-0 end-0 pe-1 md:pe-2 flex items-center gap-1.5">
             <button
               v-if="searchQuery"
               type="button"
@@ -100,9 +101,10 @@
                 $emit('update:searchQuery', '');
                 focusSearch();
               "
-              class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"
+              class="w-11 h-11 md:w-9 md:h-9 pointer-coarse:w-11 pointer-coarse:h-11 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"
+              :aria-label="$t('common.clear_search')"
             >
-              ✕
+              <X class="w-4 h-4" aria-hidden="true" />
             </button>
             <kbd
               class="hidden sm:inline-block px-2 py-1 text-[10px] font-mono font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg border border-slate-300 dark:border-slate-700"
@@ -114,7 +116,7 @@
         <!-- 🌟 FLOATING LIVE SEARCH RESULTS DROPDOWN -->
         <div
           v-if="isSearchFocused && searchResults.length > 0"
-          class="absolute top-full start-0 end-0 mt-2 bg-white dark:bg-slate-900 border-2 border-theme-primary/50 rounded-2xl shadow-2xl overflow-hidden z-50 max-h-96 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-150"
+          class="absolute top-full start-0 end-0 mt-2 bg-white dark:bg-slate-900 border-2 border-theme-primary/50 rounded-2xl shadow-2xl overflow-hidden z-50 max-h-[60dvh] md:max-h-96 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-150"
         >
           <div
             class="p-2 bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] font-bold text-slate-500"
@@ -136,7 +138,7 @@
               type="button"
               @click="$emit('add-item', item)"
               @mouseenter="$emit('update:highlightedIndex', idx)"
-              class="w-full p-3.5 text-start transition-all cursor-pointer group space-y-2"
+              class="w-full min-h-11 p-3.5 text-start transition-all cursor-pointer group space-y-2"
               :class="
                 highlightedIndex === idx
                   ? 'bg-theme-light dark:bg-slate-800 text-slate-950 dark:text-white ring-1 ring-inset ring-theme-primary'
@@ -262,7 +264,7 @@
         <button
           type="button"
           disabled
-          class="min-h-[44px] px-3 py-2 border rounded-xl text-xs font-bold transition flex items-center gap-1.5 opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-400 dark:text-slate-500 shadow-2xs select-none"
+          class="hidden md:flex min-h-[44px] px-3 py-2 border rounded-xl text-xs font-bold transition items-center gap-1.5 opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-400 dark:text-slate-500 shadow-2xs select-none"
           :title="`${$t('pos.show_menu')} - ${$t('nav.coming_soon')} 🚀`"
         >
           <LayoutGrid class="w-4 h-4 shrink-0 opacity-70" />
@@ -278,7 +280,7 @@
         <button
           type="button"
           data-testid="pos-recent-sales-btn"
-          class="min-h-[44px] min-w-[44px] px-3 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/80 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+          class="hidden md:flex min-h-[44px] min-w-[44px] px-3 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/80 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
           :title="`${$t('pos.recent_sales_title')} (F8)`"
           :aria-label="$t('pos.recent_sales_title')"
           @click="$emit('open-recent-sales')"
@@ -291,10 +293,17 @@
         <button
           type="button"
           @click="$emit('open-customer-picker')"
-          class="min-h-[44px] px-3 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/80 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-2xs"
+          :aria-label="$t('pos.change_customer')"
+          data-testid="pos-customer-btn"
+          class="relative min-h-[44px] min-w-[44px] justify-center md:justify-start px-2 md:px-3 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/80 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-2xs"
         >
           <Users class="w-4 h-4 text-theme-primary shrink-0" />
-          <div class="text-start leading-tight min-w-0">
+          <span
+            v-if="selectedCustomer"
+            class="md:hidden absolute top-1.5 end-1.5 w-2 h-2 rounded-full bg-theme-primary"
+            aria-hidden="true"
+          ></span>
+          <div class="hidden sm:block text-start leading-tight min-w-0">
             <div class="text-slate-900 dark:text-white truncate max-w-[130px] font-black">
               {{ selectedCustomer?.name || $t('pos.general_cash_customer') }}
             </div>
@@ -306,12 +315,12 @@
 
         <!-- Price Tier Toggle (Retail / Wholesale) -->
         <div
-          class="flex p-0.5 bg-slate-200 dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold"
+          class="hidden md:flex p-0.5 bg-slate-200 dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold"
         >
           <button
             type="button"
             @click="$emit('update:activePriceTier', 'retail')"
-            class="min-h-[36px] px-2.5 py-1 rounded-lg transition cursor-pointer"
+            class="min-h-[36px] pointer-coarse:min-h-11 px-2.5 py-1 rounded-lg transition cursor-pointer"
             :class="
               activePriceTier === 'retail'
                 ? 'bg-white dark:bg-slate-900 text-theme-primary font-black shadow-xs'
@@ -323,7 +332,7 @@
           <button
             type="button"
             @click="$emit('update:activePriceTier', 'wholesale')"
-            class="min-h-[36px] px-2.5 py-1 rounded-lg transition cursor-pointer"
+            class="min-h-[36px] pointer-coarse:min-h-11 px-2.5 py-1 rounded-lg transition cursor-pointer"
             :class="
               activePriceTier === 'wholesale'
                 ? 'bg-white dark:bg-slate-900 text-purple-500 font-black shadow-xs'
@@ -339,23 +348,69 @@
           type="button"
           @click="$emit('clear-cart')"
           :disabled="cartEmpty"
-          class="min-h-[44px] min-w-[44px] p-2.5 bg-slate-100 hover:bg-rose-500/20 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-500/20 dark:hover:text-rose-400 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700 rounded-xl transition disabled:opacity-30 cursor-pointer flex items-center justify-center"
+          class="hidden md:flex min-h-[44px] min-w-[44px] p-2.5 bg-slate-100 hover:bg-rose-500/20 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-500/20 dark:hover:text-rose-400 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700 rounded-xl transition disabled:opacity-30 cursor-pointer items-center justify-center"
           :title="$t('pos.clear_cart_full')"
+          :aria-label="$t('pos.clear_cart_full')"
         >
           <RotateCcw class="w-4 h-4" />
         </button>
+
+        <!-- Phones: store, shift, recent sales, price tier and clear cart live in one sheet -->
+        <button
+          type="button"
+          class="md:hidden relative w-11 h-11 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center cursor-pointer active:scale-95 transition"
+          data-testid="pos-phone-menu-btn"
+          :aria-label="$t('pos.phone_menu_btn')"
+          aria-haspopup="dialog"
+          @click="showPhoneMenu = true"
+        >
+          <EllipsisVertical class="w-5 h-5" aria-hidden="true" />
+          <span
+            class="absolute top-1.5 end-1.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-slate-900"
+            :class="activeShift ? 'bg-emerald-500' : 'bg-rose-500'"
+            aria-hidden="true"
+          ></span>
+        </button>
       </div>
     </div>
+
+    <POSPhoneMenuSheet
+      :show="showPhoneMenu"
+      :stores="stores"
+      :active-store="activeStore"
+      :active-shift="activeShift"
+      :active-price-tier="activePriceTier"
+      :cart-empty="cartEmpty"
+      @close="showPhoneMenu = false"
+      @switch-store="$emit('switch-store', $event)"
+      @open-shift-menu="$emit('open-shift-menu')"
+      @open-recent-sales="$emit('open-recent-sales')"
+      @update:active-price-tier="$emit('update:activePriceTier', $event)"
+      @clear-cart="$emit('clear-cart')"
+    />
   </header>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import { ArrowRight, Search, Users, RotateCcw, Zap, LayoutGrid, ChevronDown, History } from 'lucide-vue-next';
+import {
+  ArrowRight,
+  Search,
+  Users,
+  RotateCcw,
+  Zap,
+  LayoutGrid,
+  ChevronDown,
+  History,
+  X,
+  EllipsisVertical,
+} from 'lucide-vue-next';
+import POSPhoneMenuSheet from './POSPhoneMenuSheet.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
 const { formatMoney } = useFormatters();
 const searchInputRef = ref(null);
+const showPhoneMenu = ref(false);
 
 const props = defineProps({
   appVersion: { type: String, default: '1.0.10' },

@@ -1,6 +1,7 @@
 <script setup>
 import POSProductGrid from './POSProductGrid.vue';
 import POSCategorySidebar from './POSCategorySidebar.vue';
+import POSCategoryChips from './POSCategoryChips.vue';
 
 defineProps({
   items: { type: Array, default: () => [] },
@@ -16,14 +17,29 @@ defineProps({
   hasMore: { type: Boolean, default: false },
   cardsPerRow: { type: String, default: '3' },
   showImages: { type: Boolean, default: false },
+  phone: { type: Boolean, default: false },
 });
 
 defineEmits(['add-item', 'select-category', 'load-more']);
 </script>
 
 <template>
+  <!-- Phones: category chips on top, the catalog fills the screen and scrolls on its own -->
+  <POSCategoryChips
+    v-if="phone"
+    class="order-1"
+    :categories="categories"
+    :active-category-id="activeCategoryId"
+    @select-category="$emit('select-category', $event)"
+  />
+
   <main
-    class="w-full lg:w-[48%] xl:w-[54%] 2xl:w-[58%] flex flex-col overflow-visible lg:overflow-hidden shrink-0 bg-slate-100/60 dark:bg-slate-900/60 border-b lg:border-b-0 lg:border-e border-slate-200 dark:border-slate-800 order-1 lg:order-2 animate-in fade-in duration-150 min-h-[300px] lg:min-h-0"
+    class="w-full flex flex-col bg-slate-100/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 animate-in fade-in duration-150"
+    :class="
+      phone
+        ? 'order-2 flex-1 min-h-0 overflow-hidden'
+        : 'shrink-0 order-1 lg:order-2 lg:w-[48%] xl:w-[54%] 2xl:w-[58%] overflow-visible lg:overflow-hidden border-b lg:border-b-0 lg:border-e min-h-[300px] lg:min-h-0'
+    "
   >
     <POSProductGrid
       :items="items"
@@ -43,6 +59,7 @@ defineEmits(['add-item', 'select-category', 'load-more']);
   </main>
 
   <POSCategorySidebar
+    v-if="!phone"
     class="order-3 animate-in fade-in duration-150 shrink-0"
     :categories="categories"
     :active-category-id="activeCategoryId"

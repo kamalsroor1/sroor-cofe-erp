@@ -438,4 +438,15 @@ return [
     'catalog_load_more_failed' => 'تعذر تحميل المزيد من الأصناف.',
     'unit_badge' => 'الوحدة',
     'stock_label' => 'المخزون',
+
+    // Phone layout (POS-12)
+    'phone_view_cart' => 'عرض السلة',
+    'phone_checkout_btn' => 'الدفع',
+    'phone_cart_sheet_title' => 'السلة',
+    'phone_payment_sheet_title' => 'الدفع',
+    'phone_menu_btn' => 'المزيد',
+    'phone_menu_title' => 'خيارات نقطة البيع',
+    'phone_store_label' => 'الفرع',
+    'phone_categories_label' => 'الأقسام',
+    'change_customer' => 'تغيير العميل',
 ];

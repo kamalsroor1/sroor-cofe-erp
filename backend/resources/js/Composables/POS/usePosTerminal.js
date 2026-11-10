@@ -20,6 +20,7 @@ import { hasPlanFeature } from '../../helpers/planFeatures';
 import { usePosRecentSales } from './usePosRecentSales';
 import { usePosQuickReturn } from './usePosQuickReturn';
 import { usePosShift } from './usePosShift';
+import { openSheetCount } from '../useOpenSheets';
 
 /**
  * Wires every POS composable together for the POS screen and returns what the view renders.
@@ -148,7 +149,7 @@ export function usePosTerminal() {
         toggleHelp: () => (showShortcutsHelp.value = !showShortcutsHelp.value),
         submit: submitInvoice,
         canSubmit: () => !isSubmitting.value && fields.cart.value.length > 0,
-        isModalOpen: () => modalCloseOrder.some((flag) => flag.value),
+        isModalOpen: () => openSheetCount.value > 0 || modalCloseOrder.some((flag) => flag.value),
         closeTopModal: () => {
             const open = modalCloseOrder.find((flag) => flag.value);
             if (!open) return false;

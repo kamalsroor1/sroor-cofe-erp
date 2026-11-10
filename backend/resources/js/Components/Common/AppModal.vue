@@ -2,6 +2,7 @@
 import { X } from 'lucide-vue-next';
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useNativeBridge } from '@/Composables/useNativeBridge';
+import { useBodyScrollLock } from '@/Composables/useBodyScrollLock';
 
 const props = defineProps({
   show: {
@@ -95,23 +96,24 @@ const onTouchEnd = () => {
   isDragging.value = false;
 };
 
+const { lock: lockScroll, unlock: unlockScroll } = useBodyScrollLock();
+
 onMounted(() => {
   document.addEventListener('keydown', handleKeyDown);
+  if (props.show) lockScroll();
 });
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeyDown);
+  unlockScroll();
 });
 
 watch(
   () => props.show,
   (val) => {
     dragOffset.value = 0;
-    if (val) {
-      document.body.classList.add('overflow-hidden');
-    } else {
-      document.body.classList.remove('overflow-hidden');
-    }
+    if (val) lockScroll();
+    else unlockScroll();
   }
 );
 </script>

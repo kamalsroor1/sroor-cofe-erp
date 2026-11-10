@@ -48,8 +48,9 @@
                 type="button"
                 tabindex="-1"
                 @click="$emit('remove-item', idx)"
-                class="min-h-[36px] min-w-[36px] p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0"
+                class="min-h-11 min-w-11 p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0"
                 :title="$t('pos.delete_item')"
+                :aria-label="$t('pos.delete_item')"
               >
                 <Trash2 class="w-4 h-4" />
               </button>
@@ -65,7 +66,7 @@
                   type="button"
                   tabindex="-1"
                   @click="$emit('decrease-qty', idx)"
-                  class="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 hover:bg-rose-500/20 hover:text-rose-500 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
+                  class="w-11 h-11 rounded-xl bg-white dark:bg-slate-800 hover:bg-rose-500/20 hover:text-rose-500 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
                 >
                   -
                 </button>
@@ -81,13 +82,13 @@
                   @input="onNumberInput($event, idx, 'update-qty')"
                   @keydown.enter.prevent="focusLineField(item.id, 'price')"
                   @keydown.esc.prevent="revertField($event, idx, 'update-qty')"
-                  class="w-14 h-9 text-center font-mono font-black text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
+                  class="w-16 h-11 text-center font-mono font-black text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
                 />
                 <button
                   type="button"
                   tabindex="-1"
                   @click="$emit('increase-qty', idx)"
-                  class="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-500 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
+                  class="w-11 h-11 rounded-xl bg-white dark:bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-500 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
                 >
                   +
                 </button>
@@ -173,7 +174,7 @@
                     type="button"
                     tabindex="-1"
                     @click="$emit('decrease-qty', idx)"
-                    class="w-9 h-9 rounded-lg bg-slate-100 hover:bg-rose-500/20 hover:text-rose-500 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
+                    class="w-9 h-9 pointer-coarse:w-11 pointer-coarse:h-11 rounded-lg bg-slate-100 hover:bg-rose-500/20 hover:text-rose-500 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
                   >
                     -
                   </button>
@@ -189,13 +190,13 @@
                     @input="onNumberInput($event, idx, 'update-qty')"
                     @keydown.enter.prevent="focusLineField(item.id, 'price')"
                     @keydown.esc.prevent="revertField($event, idx, 'update-qty')"
-                    class="w-16 h-9 text-center font-mono font-black text-sm bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
+                    class="w-16 h-9 pointer-coarse:h-11 text-center font-mono font-black text-sm bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
                   />
                   <button
                     type="button"
                     tabindex="-1"
                     @click="$emit('increase-qty', idx)"
-                    class="w-9 h-9 rounded-lg bg-slate-100 hover:bg-emerald-500/20 hover:text-emerald-500 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
+                    class="w-9 h-9 pointer-coarse:w-11 pointer-coarse:h-11 rounded-lg bg-slate-100 hover:bg-emerald-500/20 hover:text-emerald-500 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
                   >
                     +
                   </button>
@@ -236,8 +237,9 @@
                   type="button"
                   tabindex="-1"
                   @click="$emit('remove-item', idx)"
-                  class="min-h-[40px] min-w-[40px] p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition cursor-pointer flex items-center justify-center mx-auto"
+                  class="min-h-[40px] min-w-[40px] pointer-coarse:min-h-11 pointer-coarse:min-w-11 p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition cursor-pointer flex items-center justify-center mx-auto"
                   :title="$t('pos.delete_item')"
+                  :aria-label="$t('pos.delete_item')"
                 >
                   <Trash2 class="w-4 h-4" />
                 </button>

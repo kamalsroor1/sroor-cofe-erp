@@ -99,7 +99,7 @@
         <button
           type="button"
           @click="$emit('open-expenses')"
-          class="flex items-center gap-1 text-[11px] font-bold text-theme-primary hover:underline cursor-pointer transition"
+          class="flex items-center gap-1 min-h-11 pointer-coarse:min-h-11 md:min-h-0 text-[11px] font-bold text-theme-primary hover:underline cursor-pointer transition"
         >
           <Truck class="w-3 h-3" />
           <span>{{ $t('pos.extra_expenses_shipping') }}</span>
@@ -284,7 +284,7 @@
     </div>
 
     <!-- 4. Execution Buttons (Always Pinned & Accessible) -->
-    <div class="space-y-1.5 pt-1">
+    <div class="space-y-1.5 pt-1 sticky bottom-0 z-10 bg-white dark:bg-slate-900 pb-[env(safe-area-inset-bottom,0px)]">
       <p
         v-if="offline"
         data-testid="pos-checkout-offline-hint"

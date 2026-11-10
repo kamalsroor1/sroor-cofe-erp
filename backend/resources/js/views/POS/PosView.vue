@@ -20,6 +20,7 @@ import POSWeightPickerModal from '../../Components/POS/POSWeightPickerModal.vue'
 import POSShiftGate from '../../Components/POS/POSShiftGate.vue';
 import POSShiftPanel from '../../Components/POS/POSShiftPanel.vue';
 import { usePosTerminal } from '../../Composables/POS/usePosTerminal';
+import { usePhoneViewport } from '../../Composables/useMediaQuery';
 
 const PARTIAL_ERROR_KEYS = {
   categories: 'pos.load_failed_categories',
@@ -28,6 +29,9 @@ const PARTIAL_ERROR_KEYS = {
   category_items: 'pos.load_failed_category_items',
   catalog_more: 'pos.catalog_load_more_failed',
 };
+
+// POS-12: phones (< 768px) get the catalog + sticky cart bar + sheets; tablets keep the split layout.
+const isPhone = usePhoneViewport();
 
 const {
   authStore,
@@ -69,7 +73,8 @@ const {
 
     <div
       v-else
-      class="h-full max-h-full min-h-0 overflow-y-auto lg:overflow-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col"
+      class="h-full max-h-full min-h-0 bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col"
+      :class="isPhone ? 'overflow-hidden' : 'overflow-y-auto lg:overflow-hidden'"
     >
       <POSHeader
         ref="headerRef"
@@ -118,8 +123,12 @@ const {
         </div>
 
         <div class="relative flex-1 flex flex-col min-h-0">
-          <div class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0">
+          <div
+            class="flex-1 flex flex-col lg:flex-row min-h-0"
+            :class="isPhone ? 'overflow-hidden' : 'overflow-y-auto lg:overflow-hidden'"
+          >
             <POSCartSection
+              :phone="isPhone"
               v-model:payment-type="fields.paymentType.value"
               v-model:payment-method="fields.paymentMethod.value"
               v-model:cash-received="fields.cashReceived.value"
@@ -158,6 +167,7 @@ const {
 
             <POSCatalogSection
               v-if="catalog.showCatalog.value"
+              :phone="isPhone"
               :items="catalog.items.value"
               :categories="catalog.categories.value"
               :active-category-id="catalog.activeCategoryId.value"

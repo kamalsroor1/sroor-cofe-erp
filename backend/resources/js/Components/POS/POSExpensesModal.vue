@@ -32,7 +32,7 @@
             <button
               type="button"
               @click="$emit('close')"
-              class="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-200/70 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              class="w-11 h-11 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-200/70 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <X class="w-5 h-5" />
             </button>
@@ -47,7 +47,7 @@
                 <button
                   type="button"
                   @click="addPreset($t('pos.expense_shipping'), 50)"
-                  class="flex items-center gap-1.5 px-3 py-2 bg-theme-primary/10 text-theme-primary hover:bg-theme-primary/20 rounded-xl text-xs font-bold transition-all border border-theme-primary/25 cursor-pointer active:scale-95 shadow-2xs"
+                  class="flex items-center gap-1.5 px-3 min-h-11 py-2 bg-theme-primary/10 text-theme-primary hover:bg-theme-primary/20 rounded-xl text-xs font-bold transition-all border border-theme-primary/25 cursor-pointer active:scale-95 shadow-2xs"
                 >
                   <Truck class="w-4 h-4 shrink-0" />
                   {{ $t('pos.expense_shipping') }} (50 {{ $t('common.currency') }})
@@ -55,7 +55,7 @@
                 <button
                   type="button"
                   @click="addPreset($t('pos.expense_packaging'), 20)"
-                  class="flex items-center gap-1.5 px-3 py-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 rounded-xl text-xs font-bold transition-all border border-amber-500/25 cursor-pointer active:scale-95 shadow-2xs"
+                  class="flex items-center gap-1.5 px-3 min-h-11 py-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 rounded-xl text-xs font-bold transition-all border border-amber-500/25 cursor-pointer active:scale-95 shadow-2xs"
                 >
                   <Package class="w-4 h-4 shrink-0" />
                   {{ $t('pos.expense_packaging') }} (20 {{ $t('common.currency') }})
@@ -63,7 +63,7 @@
                 <button
                   type="button"
                   @click="addPreset($t('pos.expense_tip'), 10)"
-                  class="flex items-center gap-1.5 px-3 py-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 rounded-xl text-xs font-bold transition-all border border-emerald-500/25 cursor-pointer active:scale-95 shadow-2xs"
+                  class="flex items-center gap-1.5 px-3 min-h-11 py-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 rounded-xl text-xs font-bold transition-all border border-emerald-500/25 cursor-pointer active:scale-95 shadow-2xs"
                 >
                   <Gift class="w-4 h-4 shrink-0" />
                   {{ $t('pos.expense_tip') }} (10 {{ $t('common.currency') }})
@@ -71,7 +71,7 @@
                 <button
                   type="button"
                   @click="addPreset($t('pos.expense_porter'), 30)"
-                  class="flex items-center gap-1.5 px-3 py-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl text-xs font-bold transition-all border border-blue-500/25 cursor-pointer active:scale-95 shadow-2xs"
+                  class="flex items-center gap-1.5 px-3 min-h-11 py-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl text-xs font-bold transition-all border border-blue-500/25 cursor-pointer active:scale-95 shadow-2xs"
                 >
                   <ArrowUp class="w-4 h-4 shrink-0" />
                   {{ $t('pos.expense_porter') }} (30 {{ $t('common.currency') }})
@@ -132,9 +132,9 @@
             <!-- Expenses List Table -->
             <div
               v-if="localExpenses.length > 0"
-              class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xs"
+              class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-2xs"
             >
-              <table class="w-full text-xs text-right">
+              <table class="w-full min-w-[480px] text-xs text-right">
                 <thead
                   class="bg-slate-100/80 dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-[11px] font-black uppercase border-b border-slate-200 dark:border-slate-800"
                 >
@@ -157,7 +157,7 @@
                       <input
                         v-model="expense.title"
                         type="text"
-                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-bold focus:border-theme-primary focus:ring-1 focus:ring-theme-primary outline-hidden transition-colors"
+                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 min-h-11 py-1.5 text-xs text-slate-900 dark:text-white font-bold focus:border-theme-primary focus:ring-1 focus:ring-theme-primary outline-hidden transition-colors"
                       />
                     </td>
                     <td class="px-3 py-2.5">
@@ -166,7 +166,7 @@
                         type="number"
                         min="0"
                         step="0.001"
-                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-mono font-bold focus:border-theme-primary focus:ring-1 focus:ring-theme-primary outline-hidden transition-colors"
+                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 min-h-11 py-1.5 text-xs text-slate-900 dark:text-white font-mono font-bold focus:border-theme-primary focus:ring-1 focus:ring-theme-primary outline-hidden transition-colors"
                       />
                     </td>
                     <td class="px-3 py-2.5">
@@ -176,7 +176,7 @@
                       <button
                         type="button"
                         @click="removeExpense(index)"
-                        class="w-8 h-8 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors cursor-pointer active:scale-95"
+                        class="w-11 h-11 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors cursor-pointer active:scale-95"
                         :title="$t('common.delete')"
                       >
                         <Trash2 class="w-4 h-4" />
