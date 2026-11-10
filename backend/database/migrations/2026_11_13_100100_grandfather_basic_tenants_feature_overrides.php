@@ -79,7 +79,7 @@ return new class extends Migration
                 }
 
                 if ($isList) {
-                    $next = array_values(array_merge($current, $missing));
+                    $next = [...$current, ...$missing];
                 } else {
                     $next = $current;
                     foreach ($missing as $key) {
