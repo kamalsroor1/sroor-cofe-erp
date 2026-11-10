@@ -1,6 +1,12 @@
 import { ref, computed } from 'vue';
 import api from '../Services/api';
-import DarkSwal, { DANGER_CONFIRM_BUTTON_CLASS, notifyError, notifySuccess, notifyWarning } from '../helpers/alert';
+import DarkSwal, {
+    DANGER_CONFIRM_BUTTON_CLASS,
+    DARK_SWAL_CUSTOM_CLASS,
+    notifyError,
+    notifySuccess,
+    notifyWarning,
+} from '../helpers/alert';
 import { trans } from '../helpers/trans';
 import { useAuthStore } from '../stores/auth';
 import { addDays, businessToday, startOfMonth } from './useBusinessDate';
@@ -187,7 +193,7 @@ export function useInvoices() {
             reverseButtons: true,
             confirmButtonText,
             cancelButtonText: trans('invoices.cancel_dismiss_btn'),
-            customClass: { ...DarkSwal.params.customClass, confirmButton: DANGER_CONFIRM_BUTTON_CLASS },
+            customClass: { ...DARK_SWAL_CUSTOM_CLASS, confirmButton: DANGER_CONFIRM_BUTTON_CLASS },
         });
         return result.isConfirmed ? result.value.trim() : null;
     };
