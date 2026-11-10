@@ -91,7 +91,7 @@ class Setting extends Model
         $forget = static function () use ($cacheKey): void {
             Cache::forget($cacheKey);
         };
-        $connection = (new static)->getConnection();
+        $connection = (new self)->getConnection();
         $connection->afterCommit($forget);
         $connection->afterRollBack($forget);
     }
