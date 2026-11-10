@@ -161,6 +161,15 @@ export const SETTINGS_REGISTRY = [
         keywordsKey: 'settings.search_keywords.low_stock_default_threshold',
         isAdvanced: false,
     },
+    {
+        id: 'allow_negative_stock',
+        key: 'inventory.allow_negative_stock',
+        labelKey: 'settings.allow_negative_stock',
+        descKey: 'settings.allow_negative_stock_desc',
+        tabId: 'inventory',
+        keywordsKey: 'settings.search_keywords.allow_negative_stock',
+        isAdvanced: false,
+    },
 
     // 4. Branding Tab Settings
     {
