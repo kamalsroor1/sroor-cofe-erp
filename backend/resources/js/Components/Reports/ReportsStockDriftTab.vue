@@ -161,66 +161,15 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
-import api from '../../Services/api';
-import { useTrans } from '../../Composables/useTrans';
+import { useStockDriftReport } from '../../Composables/useStockDriftReport';
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
 import ErrorState from '../Common/ErrorState.vue';
 
-const { t } = useTrans();
-
-const items = ref([]);
-const isLoading = ref(false);
-const hasError = ref(false);
-const errorMessage = ref('');
-const search = ref('');
-const meta = reactive({
-  current_page: 1,
-  last_page: 1,
-  per_page: 25,
-  total: 0,
-});
-
-let searchTimer = null;
+const { items, isLoading, hasError, errorMessage, search, meta, loadPage, onSearchInput } = useStockDriftReport();
 
 const formatSignedDrift = (val) => {
   const s = String(val ?? '0.000');
   return s.startsWith('-') || s === '0.000' ? s : `+${s}`;
 };
-
-const loadPage = async (page = 1) => {
-  isLoading.value = true;
-  hasError.value = false;
-  errorMessage.value = '';
-  try {
-    const res = await api.get('/reports/stock-drift', {
-      params: {
-        page,
-        per_page: meta.per_page,
-        search: search.value.trim() || undefined,
-      },
-    });
-    items.value = res.data?.data || [];
-    const m = res.data?.meta || {};
-    meta.current_page = m.current_page || 1;
-    meta.last_page = m.last_page || 1;
-    meta.per_page = m.per_page || 25;
-    meta.total = m.total ?? items.value.length;
-  } catch (e) {
-    hasError.value = true;
-    errorMessage.value = e.userMessage || e.response?.data?.message || t('common.error_occurred');
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-const onSearchInput = () => {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => loadPage(1), 300);
-};
-
-onMounted(() => {
-  loadPage(1);
-});
 </script>
