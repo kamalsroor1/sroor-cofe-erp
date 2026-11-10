@@ -235,6 +235,8 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
             Route::put('/users/{id}', [UserController::class, 'update'])->name('api.users.update');
             Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('api.users.destroy');
             Route::patch('/users/{id}/toggle-active', [UserController::class, 'toggleActive'])->name('api.users.toggle_active');
+            // SEC-05: lift a sign-in lockout.
+            Route::post('/users/{id}/unlock-login', [UserController::class, 'unlockLogin'])->whereNumber('id')->name('api.users.unlock_login')->middleware('throttle:20,1');
             // BE-08: manager approval PIN for below-minimum-price sales.
             Route::put('/users/{id}/pos-pin', [UserController::class, 'updatePosPin'])->whereNumber('id')->name('api.users.pos_pin')->middleware('throttle:20,1');
 

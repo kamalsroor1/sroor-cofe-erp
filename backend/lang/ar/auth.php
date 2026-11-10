@@ -112,4 +112,5 @@ return [
     'cannot_modify_admin_account' => 'تغيير صلاحية أو كلمة مرور أو حالة حساب مدير النظام أو حذفه متاح لمدير النظام فقط.',
     'cannot_change_own_role' => 'لا يمكنك تغيير صلاحية حسابك بنفسك.',
     'cannot_modify_admin_identity' => 'تعديل اسم أو رقم هاتف أو بريد حساب مدير النظام متاح لمدير النظام فقط.',
+    'telegram_account_locked' => "🔒 <b>تم إيقاف الدخول لحساب مؤقتاً</b>\nالمتجر: :shop\nالمستخدم: :name\nالدخول: :login\nالوقت: :time\nمدة الإيقاف: :minutes دقيقة\nعنوان IP: :ip",
 ];

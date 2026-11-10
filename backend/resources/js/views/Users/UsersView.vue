@@ -52,6 +52,7 @@
         :loading="isLoading"
         @edit="openEditModal"
         @delete="deleteUser"
+        @unlock-login="unlockLogin"
         @toggle-active="toggleActive"
         @page-change="changePage"
       />
@@ -106,5 +107,6 @@ const {
   submitForm,
   toggleActive,
   deleteUser,
+  unlockLogin,
 } = useUsers();
 </script>
