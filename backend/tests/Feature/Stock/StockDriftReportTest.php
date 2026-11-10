@@ -224,4 +224,19 @@ final class StockDriftReportTest extends TenantTestCase
 
         $this->assertSame(1, Artisan::call('stock:report-drift', ['--tenant' => 'non-existent-tenant']));
     }
+
+    public function test_artisan_command_returns_failure_when_a_tenant_run_throws(): void
+    {
+        // Point the tenant at a database that does not exist so its run() blows up.
+        $realDb = $this->tenant->database()->getName();
+        $this->tenant->setInternal('db_name', 'missing_tenant_db_'.uniqid());
+        $this->tenant->save();
+
+        try {
+            $this->assertSame(1, Artisan::call('stock:report-drift', ['--tenant' => $this->tenant->id]));
+        } finally {
+            $this->tenant->setInternal('db_name', $realDb);
+            $this->tenant->save();
+        }
+    }
 }

@@ -46,12 +46,14 @@ final class ReportStockDriftCommand extends Command
         $rows = [];
         $total = 0;
         $affected = 0;
+        $failed = 0;
 
         foreach ($query->cursor() as $tenant) {
             try {
                 /** @var list<array{id: int, code: string|null, name: string, unit: string, current_stock: string, stores_stock_sum: string, drift: string, difference: string}> $items */
                 $items = $tenant->run(fn (): array => $this->getStockDriftReportAction->execute(1, 0)['items']);
             } catch (Throwable $e) {
+                $failed++;
                 $this->warn((string) __('console.stock_drift.tenant_failed', [
                     'tenant' => $tenant->getTenantKey(),
                     'error' => $e->getMessage(),
@@ -76,7 +78,7 @@ final class ReportStockDriftCommand extends Command
             }
         }
 
-        if ($total === 0) {
+        if ($total === 0 && $failed === 0) {
             $this->info((string) __('console.stock_drift.no_tenants'));
 
             return self::SUCCESS;
@@ -99,6 +101,6 @@ final class ReportStockDriftCommand extends Command
             'total' => $total,
         ]));
 
-        return self::SUCCESS;
+        return $failed > 0 ? self::FAILURE : self::SUCCESS;
     }
 }
