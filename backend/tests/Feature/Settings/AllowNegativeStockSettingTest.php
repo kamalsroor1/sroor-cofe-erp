@@ -14,6 +14,8 @@ use App\Models\StoreStock;
 use App\Models\Tenant;
 use App\Services\InvoiceService;
 use App\Services\Settings\TenantSettings;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Tests\TenantTestCase;
 
 final class AllowNegativeStockSettingTest extends TenantTestCase
@@ -30,6 +32,28 @@ final class AllowNegativeStockSettingTest extends TenantTestCase
         $this->tenant = $this->createTenant();
         $this->tenantAdmin($this->tenant);
         $this->adminHeaders = $this->tenantHeaders($this->tenant);
+    }
+
+    public function test_settings_cache_is_invalidated_only_after_the_transaction_commits(): void
+    {
+        $this->inTenant($this->tenant, function (): void {
+            Setting::set('allow_negative_stock', '0');
+            $this->assertFalse(Setting::getBool('allow_negative_stock', false)); // warms the cache
+
+            DB::transaction(function (): void {
+                Setting::set('allow_negative_stock', '1');
+
+                // Not committed yet: the cached dictionary must not be dropped (a concurrent
+                // reader would re-cache the stale value).
+                $this->assertArrayHasKey(
+                    'allow_negative_stock',
+                    Cache::get(Setting::getCacheKey(), [])
+                );
+            });
+
+            $this->assertNull(Cache::get(Setting::getCacheKey()));
+            $this->assertTrue(app(TenantSettings::class)->allowNegativeStock());
+        });
     }
 
     public function test_default_allow_negative_stock_is_false(): void

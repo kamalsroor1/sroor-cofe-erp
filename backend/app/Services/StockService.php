@@ -4,11 +4,11 @@ namespace App\Services;
 
 use App\Exceptions\Stock\InsufficientStockException;
 use App\Models\Item;
-use App\Models\Setting;
 use App\Models\StockDeposit;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Services\Settings\TenantSettings;
 use App\Support\TenantClock;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
@@ -91,7 +91,7 @@ class StockService
         $lockedItem = Item::where('id', $item->id)->lockForUpdate()->firstOrFail();
 
         // BE-04: a missing store_stocks row counts as zero stock, never as "skip the check".
-        $allowNegative = Setting::getBool('allow_negative_stock', false);
+        $allowNegative = app(TenantSettings::class)->allowNegativeStock();
 
         // Item-level check is skipped only when allow_negative_stock is on (intended; same as DeleteReturnAction).
         if (! $allowNegative && bccomp((string) $lockedItem->current_stock, $quantity, 3) < 0) {
