@@ -5,6 +5,7 @@ import { useRoutePermission } from './useRoutePermission';
 
 const STEPS = [
     { key: 'company_info', to: '/settings' },
+    { key: 'branch_setup', to: '/stores' },
     { key: 'categories', to: '/categories' },
     { key: 'items', to: '/items' },
     { key: 'users', to: '/users' },

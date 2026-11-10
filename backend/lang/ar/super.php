@@ -274,6 +274,7 @@ return [
 
     // IDEN-1.4 / IDEN-4.6 ext (backend): central control-plane responses
     'tenant_not_found' => 'المستأجر غير موجود.',
+    'plan_pos_requires' => 'ميزة نقطة البيع (pos.access) لازم تتفعّل معاها الميزة :feature في نفس الباقة.',
     'plan_not_found' => 'الباقة غير موجودة.',
     'tenant_provisioning_failed' => 'تعذر تجهيز المستأجر. راجع سجلات الخادم وحاول مرة أخرى.',
     'tenant_db_missing' => 'قاعدة بيانات المستأجر غير موجودة على خادم قواعد البيانات. أنشئها أولًا ثم حاول مرة أخرى.',

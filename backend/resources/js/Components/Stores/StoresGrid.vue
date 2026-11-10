@@ -158,6 +158,7 @@
         <!-- Card Actions Footer -->
         <div class="flex items-center justify-between gap-2 mt-5 pt-3 border-t border-slate-100 dark:border-slate-800">
           <router-link
+            v-can="'items.view'"
             :to="{ path: '/stores/stocks', query: { store_id: store.id } }"
             class="min-h-[40px] px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-950/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all flex items-center gap-1.5 font-tajawal shadow-xs active:scale-95"
           >

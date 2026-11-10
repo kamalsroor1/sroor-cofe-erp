@@ -82,6 +82,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.stores_stocks',
             requiresAuth: true,
+            permission: 'items.view',
         },
     },
     {

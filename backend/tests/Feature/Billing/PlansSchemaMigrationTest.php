@@ -445,7 +445,7 @@ final class PlansSchemaMigrationTest extends TenantTestCase
             'max_invoices_per_month' => 30000,
             'is_active' => true,
             'is_popular' => true,
-            'features' => ['pos.access' => true],
+            'features' => ['pos.access' => true, 'invoices.create' => true, 'shifts.manage' => true],
         ], $overrides);
     }
 
