@@ -1,5 +1,5 @@
 <script setup>
-import { Store } from 'lucide-vue-next';
+import BrandMark from '../Brand/BrandMark.vue';
 import BaseButton from '../Common/BaseButton.vue';
 
 defineProps({
@@ -16,13 +16,10 @@ defineProps({
     >
       <div class="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
         <router-link to="/welcome" class="flex min-h-11 items-center gap-2.5">
-          <span
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl"
-            style="background: var(--color-primary-light); color: var(--color-primary)"
-          >
-            <Store class="h-5 w-5" />
-          </span>
-          <span class="truncate text-sm font-black text-slate-900 dark:text-white">{{ brandName }}</span>
+          <BrandMark :size="40" decorative class="shrink-0" />
+          <span class="font-brand truncate text-base font-semibold text-slate-900 dark:text-white">{{
+            brandName
+          }}</span>
         </router-link>
 
         <nav class="flex items-center gap-1.5 sm:gap-2" :aria-label="brandName">
