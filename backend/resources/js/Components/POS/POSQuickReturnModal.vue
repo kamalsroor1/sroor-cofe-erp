@@ -28,7 +28,7 @@ const { formatMoney, formatQty } = useFormatters();
     max-width="lg"
     @close="$emit('close')"
   >
-    <div class="p-4 space-y-3 font-tajawal select-none">
+    <div class="p-4 space-y-3 font-tajawal select-none" data-testid="pos-quick-return-modal">
       <div v-if="isLoading" class="space-y-2">
         <Skeleton v-for="n in 3" :key="n" height="h-16" />
       </div>
@@ -57,6 +57,7 @@ const { formatMoney, formatQty } = useFormatters();
               min="0"
               step="any"
               dir="ltr"
+              data-testid="pos-quick-return-qty"
               :value="line.return_quantity"
               :aria-label="$t('pos.quick_return_qty')"
               :placeholder="$t('pos.quick_return_qty')"
@@ -84,6 +85,7 @@ const { formatMoney, formatQty } = useFormatters();
         </button>
         <button
           type="button"
+          data-testid="pos-quick-return-confirm"
           class="min-h-[44px] flex-1 rounded-xl bg-amber-500 text-slate-950 text-xs font-black cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           :disabled="!canSubmit"
           @click="$emit('submit')"

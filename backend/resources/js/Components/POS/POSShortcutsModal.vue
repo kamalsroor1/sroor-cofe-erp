@@ -47,7 +47,7 @@ const groups = computed(() => [
 
 <template>
   <AppModal :show="show" :title="$t('pos.shortcuts_title')" max-width="lg" @close="$emit('close')">
-    <div class="p-4 space-y-5 font-tajawal select-none">
+    <div class="p-4 space-y-5 font-tajawal select-none" data-testid="pos-shortcuts-modal">
       <section v-for="group in groups" :key="group.title" class="space-y-2">
         <h3 class="text-xs font-black text-slate-500 dark:text-slate-400">{{ group.title }}</h3>
         <ul class="divide-y divide-slate-100 dark:divide-slate-800">
