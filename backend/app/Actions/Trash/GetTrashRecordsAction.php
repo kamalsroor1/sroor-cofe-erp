@@ -122,7 +122,7 @@ final class GetTrashRecordsAction
             $paged = $q->latest('deleted_at')->paginate($perPage);
             $records = collect($paged->items())->map(fn ($e) => [
                 'id' => $e->id,
-                'title' => $e->title ?? 'مصروف',
+                'title' => $e->title ?? __('expenses.expense_item'),
                 'subtitle' => (string) $e->amount.' '.$currency,
                 'category' => $e->category,
                 'deleted_at' => $e->deleted_at?->diffForHumans(),

@@ -268,4 +268,20 @@ return [
     'discrete_unit_integer_only' => 'الصنف \':item\' بالقطعة/العلبة يقبل فقط أعداداً صحيحة، ولا يمكن بيع أجزاء أو كسور (:quantity :unit).',
     // BE-08
     'line_discount_exceeds_total' => 'خصم البند لا يمكن أن يزيد عن إجمالي البند.',
+    'whatsapp_receipt' => [
+        'title' => '*فاتورة مبيعات - :company*',
+        'invoice_number' => '*رقم الفاتورة:* :number',
+        'date' => '*التاريخ:* :date',
+        'customer' => '*العميل:* :customer',
+        'walk_in_customer' => 'عميل نقدي',
+        'branch' => '*الفرع:* :store',
+        'main_branch' => 'الفرع الرئيسي',
+        'items_header' => '*تفاصيل الأصناف:*',
+        'item_fallback' => 'صنف',
+        'net_total' => '*الإجمالي الصافي:* :amount :currency',
+        'paid' => '*المدفوع:* :amount :currency',
+        'remaining' => '*المتبقي:* :amount :currency',
+        'current_balance' => '*إجمالي رصيد الحساب الحالي:* :amount :currency',
+        'footer' => 'شكراً لتعاملكم مع :company',
+    ],
 ];

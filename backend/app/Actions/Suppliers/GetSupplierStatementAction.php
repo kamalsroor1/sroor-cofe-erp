@@ -20,8 +20,8 @@ final class GetSupplierStatementAction
     {
         $ledgerData = $this->supplierBalanceService->getSupplierLedger($supplier, $fromDate, $toDate);
 
-        $totalCredit = '0.000'; // مستحقات المورد (مشتريات)
-        $totalDebit = '0.000';  // مدفوعات للمورد (سدادات)
+        $totalCredit = '0.000'; // Supplier payables (purchases)
+        $totalDebit = '0.000';  // Supplier payments (disbursements)
 
         foreach ($ledgerData['ledger'] as $entry) {
             $totalCredit = bcadd($totalCredit, (string) ($entry['credit'] ?? '0'), 3);

@@ -50,7 +50,7 @@ class GetTenantDetailsAction
 
         // `allowed_units` is a stancl virtual attribute (decoded from `data` on retrieval), so
         // it is read through getAttribute(): $tenant->data is always null after hydration.
-        $allowedUnits = $tenant->getAttribute('allowed_units') ?? ['قطعة', 'علبة', 'كرتونة', 'كجم', 'جرام', 'شيكارة', 'طرد', 'دستة', 'لتر'];
+        $allowedUnits = $tenant->getAttribute('allowed_units') ?? explode(',', TenantSettings::DEFAULT_INVENTORY_UNITS);
 
         // OPS-2: a pending / running / failed tenant has no database yet: zero stats.
         if ($tenant->isProvisioned()) {

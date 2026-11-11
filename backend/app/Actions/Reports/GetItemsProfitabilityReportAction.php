@@ -39,7 +39,7 @@ final class GetItemsProfitabilityReportAction
 
                 return [
                     'item_id' => $row->item_id,
-                    'name' => $row->item?->name ?? 'صنف محذوف',
+                    'name' => $row->item?->name ?? __('inventory.deleted_item'),
                     'code' => $row->item?->code,
                     'category' => $row->item?->category,
                     'unit' => $row->item?->unit,

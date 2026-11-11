@@ -75,4 +75,11 @@ return [
     'unlock_login_confirm' => 'Unlock login for :name?',
     'unlock_login_success' => 'Login unlocked successfully',
     'unlock_login_failed' => 'Failed to unlock login',
+    'role_labels' => [
+        'admin' => 'General Manager (Full Access)',
+        'cashier' => 'Sales Cashier (POS & Invoices)',
+        'storekeeper' => 'Storekeeper (Items & Supplies)',
+        'accountant' => 'Financial Accountant (Reports & Statements)',
+    ],
+    'role_custom_prefix' => 'Role: :role',
 ];

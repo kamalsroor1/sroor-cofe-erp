@@ -75,4 +75,11 @@ return [
     'unlock_login_confirm' => 'فتح تسجيل الدخول للمستخدم :name؟',
     'unlock_login_success' => 'تم فتح تسجيل الدخول بنجاح',
     'unlock_login_failed' => 'تعذر فتح تسجيل الدخول',
+    'role_labels' => [
+        'admin' => 'مدير عام (كامل الصلاحيات)',
+        'cashier' => 'كاشير مبيعات (POS وفواتير)',
+        'storekeeper' => 'أمين مخزن (أصناف وتوريدات)',
+        'accountant' => 'محاسب مالي (تقارير وكشوفات)',
+    ],
+    'role_custom_prefix' => 'دور: :role',
 ];

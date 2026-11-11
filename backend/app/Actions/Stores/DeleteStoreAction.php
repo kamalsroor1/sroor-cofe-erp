@@ -17,7 +17,7 @@ final class DeleteStoreAction
         if (! $store->canBeDeleted()) {
             $blockers = implode(', ', $store->getDeletionBlockers());
             throw ValidationException::withMessages([
-                'store' => ["لا يمكن حذف الفرع ({$store->name}) لوجود ارتباطات: {$blockers}"],
+                'store' => [__('inventory.store_delete_blockers', ['blockers' => $blockers])],
             ]);
         }
 

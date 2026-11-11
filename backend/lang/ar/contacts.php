@@ -181,4 +181,5 @@ return [
     'disbursement_record_failed_generic' => 'تعذّر تسجيل سند الصرف. حاول مرة أخرى.',
     'payment_invoice_customer_mismatch' => 'الفاتورة دي مش تبع العميل المختار.',
     'payment_purchase_supplier_mismatch' => 'فاتورة الشراء دي مش تبع المورد المختار.',
+    'deleted_customer' => 'عميل محذوف',
 ];

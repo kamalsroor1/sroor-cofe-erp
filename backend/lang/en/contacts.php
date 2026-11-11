@@ -181,4 +181,5 @@ return [
     'disbursement_record_failed_generic' => 'The payment voucher could not be recorded. Please try again.',
     'payment_invoice_customer_mismatch' => 'This invoice does not belong to the selected customer.',
     'payment_purchase_supplier_mismatch' => 'This purchase invoice does not belong to the selected supplier.',
+    'deleted_customer' => 'Deleted Customer',
 ];
