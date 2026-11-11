@@ -334,8 +334,9 @@ check "tenants:migrate ran with the app account" log_has "php tenants:migrate @$
 check "storage:link --force ran in the new release" log_has "php storage:link @$ID1"
 check "first release: no pre-migration backup (nothing to back up yet)" bash -c "! grep -q 'php backup:tenants' '$FAKE_LOG'"
 check "artisan runs with the health deploy gate" log_has "php health:check @$ID1 dbuser= gate=1"
-check "order: storage:link > migrate > grants > tenants:migrate > relocate > caches > smoke > switch > queue > health > /up" \
-    in_order "php storage:link" "php migrate" "mysql --defaults-extra-file=" "php tenants:migrate" "php app-releases:relocate @$ID1" "php config:cache" \
+check "central operator permissions re-seeded with the app account" log_has "php db:seed @$ID1 dbuser="
+check "order: storage:link > migrate > grants > central permissions > tenants:migrate > relocate > caches > smoke > switch > queue > health > /up" \
+    in_order "php storage:link" "php migrate" "mysql --defaults-extra-file=" "php db:seed @$ID1" "php tenants:migrate" "php app-releases:relocate @$ID1" "php config:cache" \
     "php route:cache" "php view:cache" "php event:cache" "php health:check @$ID1" "sudo -n /usr/bin/systemctl reload php8.5-fpm" \
     "php horizon:terminate @current" "php health:check @current" "curl " "php app-releases:relocate --prune-legacy @current"
 check "pre-switch relocate only copies (no --prune-legacy before the switch)" bash -c "! grep -q 'php app-releases:relocate --prune-legacy @$ID1' '$FAKE_LOG'"
@@ -366,7 +367,7 @@ check "previous shared/.env kept as .env.previous" grep -q 'Retail ERP one' "$RO
 # ------------------------------------------------------------------------------------
 echo "3. Failure before the switch: nothing changes for users"
 # ------------------------------------------------------------------------------------
-for failing in "backup:tenants" "migrate" "tenants:migrate" "app-releases:relocate" "config:cache"; do
+for failing in "backup:tenants" "migrate" "db:seed" "tenants:migrate" "app-releases:relocate" "config:cache"; do
     FAKE_FAIL="$failing" run_deploy "$SHA3" "$WORK/good3.tar.gz" "$WORK/env-one"
     DETAIL="$OUT"
     check "[$failing fails] exit 1" test "$RC" -eq 1
@@ -537,7 +538,10 @@ echo "7b. Pipeline hygiene (BE-06): static guards on the replacement pipeline"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 PIPELINE_FILES=("$REPO_ROOT/scripts/ops/deploy.sh" "$REPO_ROOT/.github/workflows/release.yml")
 DETAIL=""
-check "pipeline never seeds, populates demo data, or runs tinker" bash -c "! grep -nE '^[^#]*(db:seed|populate-realistic-data|artisan[[:space:]]+tinker|[[:space:]]tinker[[:space:]])' ${PIPELINE_FILES[*]}"
+# The only seeder allowed is the idempotent central operator-permission sync (no data, no demo
+# rows): its exact invocation is blanked before the scan, so any other db:seed still fails.
+check "pipeline never seeds (except CentralPermissionsSeeder), populates demo data, or runs tinker" bash -c "! sed 's/db:seed --class=CentralPermissionsSeeder --force//g' ${PIPELINE_FILES[*]} | grep -nE '^[^#]*(db:seed|populate-realistic-data|artisan[[:space:]]+tinker|[[:space:]]tinker[[:space:]])'"
+check "the allowed seeder is the central permission sync only" bash -c "[[ \$(grep -cE '^[^#]*db:seed' $REPO_ROOT/scripts/ops/deploy.sh) -eq 2 ]] && ! grep -nE '^[^#]*db:seed' ${PIPELINE_FILES[*]} | grep -v 'db:seed --class=CentralPermissionsSeeder --force'"
 check "pipeline never wipes or resets a database" bash -c "! grep -nE '^[^#]*(migrate:fresh|migrate:reset|migrate:refresh|db:wipe|tenants:migrate-fresh)' ${PIPELINE_FILES[*]}"
 check "pipeline never migrates a single tenant (--tenants=...)" bash -c "! grep -nE '^[^#]*tenants:migrate[^#]*--tenants' ${PIPELINE_FILES[*]}"
 check "no '|| true' on a migrate or backup line" bash -c "! grep -nE '^[^#]*(migrate|backup:tenants)[^#]*\\|\\|[[:space:]]*(true|:)' ${PIPELINE_FILES[*]}"

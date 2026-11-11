@@ -18,7 +18,9 @@ set -euo pipefail
 #   BACKUP_ARCHIVE_PASSWORD set, SMTP...) -> extract releases/<id> -> shared .env + storage
 #   -> storage:link --force -> pre-migration backup (`backup:tenants`, not on the 1st
 #   release) -> migrate --force (central, as the migrator account)
-#   -> per-table central grants (append-only audit) -> tenants:migrate --force
+#   -> per-table central grants (append-only audit)
+#   -> db:seed CentralPermissionsSeeder (operator roles/permissions, idempotent)
+#   -> tenants:migrate --force
 #   -> app-releases:relocate (copy + verify release binaries to the private disk;
 #      the public copy stays for the old release, idempotent)
 #   -> config/route/view/event cache -> smoke health:check from the new release
@@ -489,6 +491,14 @@ CENTRAL_DB_NAME="${ENVV[DB_DATABASE]}" \
     CENTRAL_APPEND_ONLY_TABLES="${DEPV[CENTRAL_APPEND_ONLY_TABLES]:-tenant_credit_ledger}" \
     bash "$SCRIPT_DIR/sync-central-grants.sh" --client-file "$WORK/migrator.cnf" \
     --verify-app "$WORK/app.cnf" --verify-pruner "$WORK/pruner.cnf"
+
+# The CentralPermission enum is the only source of operator roles/permissions (super_admin,
+# support). Re-sync them every release (idempotent; prunes central-guard permissions that left
+# the enum) so a new console permission reaches production without a manual seed. Runs as the
+# app account, after the grants, on the central connection only (the seeder refuses tenancy).
+STAGE="central-permissions"
+info "php artisan db:seed --class=CentralPermissionsSeeder --force (operator roles, idempotent)"
+artisan "$BACKEND" db:seed --class=CentralPermissionsSeeder --force
 
 STAGE="migrate-tenants"
 info "php artisan tenants:migrate --force (any failing tenant stops the release)"
