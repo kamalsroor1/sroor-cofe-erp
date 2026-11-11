@@ -71,12 +71,10 @@
         })();
     </script>
 
-    {{-- Cairo is self-hosted (resources/css/app.css @font-face); preload the Arabic subset used by first paint. --}}
-    <link rel="preload" href="{{ \Illuminate\Support\Facades\Vite::asset('resources/fonts/cairo-arabic-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
-    {{-- Ibraa brand fonts (IBM Plex Sans Arabic body, Reem Kufi wordmark) still come from Google Fonts (allowed by the CSP); Cairo/Tajawal CDN loads were dropped with FE-13. --}}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@500;600;700&display=swap" rel="stylesheet">
+    {{-- Ibraa brand fonts are self-hosted (resources/css/app.css @font-face): IBM Plex Sans Arabic for text, Reem Kufi
+         for the wordmark, Cairo as the fallback. Preload the Arabic Plex faces used by first paint. --}}
+    <link rel="preload" href="{{ \Illuminate\Support\Facades\Vite::asset('resources/fonts/ibm-plex-sans-arabic-arabic-400.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{{ \Illuminate\Support\Facades\Vite::asset('resources/fonts/ibm-plex-sans-arabic-arabic-700.woff2') }}" as="font" type="font/woff2" crossorigin>
 
     <!-- Favicon & PWA Manifest -->
     <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
