@@ -2,7 +2,6 @@
 import { computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import LandingShell from '../../Components/Landing/LandingShell.vue';
-import SupportFooter from '../../Components/Landing/SupportFooter.vue';
 import LegalDocumentContent from '../../Components/Landing/LegalDocumentContent.vue';
 import { useLegalDocument } from '../../Composables/useLegalDocument';
 
@@ -17,7 +16,7 @@ watch(documentKey, refresh, { immediate: true });
 </script>
 
 <template>
-  <LandingShell :brand-name="brand.name || ''">
+  <LandingShell :brand="brand">
     <div class="mx-auto max-w-4xl space-y-6 px-4 py-10 sm:px-6">
       <LegalDocumentContent
         :blocks="blocks"
@@ -28,6 +27,5 @@ watch(documentKey, refresh, { immediate: true });
         @retry="refresh"
       />
     </div>
-    <template #footer><SupportFooter :brand="brand" /></template>
   </LandingShell>
 </template>

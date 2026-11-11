@@ -1,9 +1,6 @@
 import { nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-/** Section ids of the marketing homepage that the header links to. */
-export const LANDING_SECTIONS = Object.freeze(['features', 'plans', 'faq']);
-
 const prefersReducedMotion = () =>
     typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -17,8 +14,8 @@ function scrollToSection(id) {
 }
 
 /**
- * In-page navigation for the public landing pages. The pages scroll inside LandingShell's <main>,
- * so anchors are scrolled explicitly; from another landing page the link opens the homepage on
+ * In-page navigation for the public landing pages. The pages scroll inside LandingShell's root,
+ * so anchors (#features, #plans, #faq) are scrolled explicitly; from another landing page the link opens the homepage on
  * that section (the homepage calls scrollToRouteHash once mounted).
  */
 export function useLandingAnchors() {

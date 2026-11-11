@@ -229,6 +229,44 @@
     --color-primary-border: var(--color-primary-border);
 }
 
+/* Marketing site palette (public landing pages). `inline` makes the utilities read the --mk-* variables
+   where they are used, so `.marketing` (light) and `html.dark .marketing` (dark) can redefine them. */
+@theme inline {
+    --color-mk-bg: var(--mk-bg);
+    --color-mk-surface: var(--mk-surface);
+    --color-mk-surface-2: var(--mk-surface-2);
+    --color-mk-ink: var(--mk-ink);
+    --color-mk-muted: var(--mk-muted);
+    --color-mk-faint: var(--mk-faint);
+    --color-mk-line: var(--mk-line);
+    --color-mk-primary: var(--mk-primary);
+    --color-mk-primary-ink: var(--mk-primary-ink);
+    --color-mk-soft: var(--mk-soft);
+    --color-mk-soft-ink: var(--mk-soft-ink);
+    --color-mk-hero: var(--mk-hero);
+    --color-mk-hero-2: var(--mk-hero-2);
+    --color-mk-hero-ink: var(--mk-hero-ink);
+    --color-mk-hero-muted: var(--mk-hero-muted);
+    --color-mk-hero-line: var(--mk-hero-line);
+    --color-mk-hero-accent: var(--mk-hero-accent);
+    --color-mk-cta-muted: var(--mk-cta-muted);
+    --color-mk-accent: var(--mk-accent);
+    --color-mk-accent-hover: var(--mk-accent-hover);
+    --color-mk-accent-ink: var(--mk-accent-ink);
+    --color-mk-accent-soft: var(--mk-accent-soft);
+    --color-mk-band: var(--mk-band);
+    --color-mk-app-bg: var(--mk-app-bg);
+    --color-mk-app-surface: var(--mk-app-surface);
+    --color-mk-app-line: var(--mk-app-line);
+    --color-mk-app-ink: var(--mk-app-ink);
+    --color-mk-app-muted: var(--mk-app-muted);
+    --color-mk-app-cta: var(--mk-app-cta);
+    --color-mk-warn-ink: var(--mk-warn-ink);
+    --color-mk-up: var(--mk-up);
+    --color-mk-down: var(--mk-down);
+    --color-mk-low: var(--mk-low);
+}
+
 body {
     font-family:
         'IBM Plex Sans Arabic',
@@ -258,6 +296,101 @@ html.dark {
 
 .font-brand {
     font-family: var(--font-brand);
+}
+
+/* Marketing site tokens (design/landing/build_landing.py THEMES). Fixed Ibraa identity: the public site is
+   the platform's own brand, never a tenant's --color-primary. Scoped to LandingShell's root `.marketing`. */
+.marketing {
+    --mk-bg: #f5f7f6;
+    --mk-surface: #ffffff;
+    --mk-surface-2: #eef3f1;
+    --mk-ink: #0b1f1a;
+    --mk-muted: #4f625c;
+    --mk-faint: #7d8f89;
+    --mk-line: #dce5e1;
+    --mk-primary: #0f6e5e;
+    --mk-primary-ink: #ffffff;
+    --mk-soft: #e2f1ed;
+    --mk-soft-ink: #0b5b4d;
+    --mk-hero: #08362f;
+    --mk-hero-2: #0b4a40;
+    --mk-hero-ink: #ffffff;
+    --mk-hero-muted: #b9d6cf;
+    --mk-hero-line: #1d5a50;
+    --mk-hero-accent: #9fe6d3;
+    --mk-cta-muted: #d3ede6;
+    --mk-accent: #f6b93b;
+    --mk-accent-hover: #f3ad1f;
+    --mk-accent-ink: #1b1203;
+    --mk-accent-soft: #fdf1d6;
+    --mk-band: #0b4a40;
+    --mk-app-bg: #f3f6f5;
+    --mk-app-surface: #ffffff;
+    --mk-app-line: #e3e9e6;
+    --mk-app-ink: #13231f;
+    --mk-app-muted: #6b7c77;
+    --mk-app-cta: #0f6e5e;
+    --mk-warn-ink: #a86b00;
+    --mk-up: #16a34a;
+    --mk-down: #dc2626;
+    --mk-low: #c2410c;
+    --mk-shadow: rgba(11, 31, 26, 0.13);
+    --mk-shadow-accent: rgba(246, 185, 59, 0.33);
+    --mk-cta-from: #0f6e5e;
+    --mk-cta-to: #08362f;
+    background-color: var(--mk-bg);
+    color: var(--mk-ink);
+}
+
+html.dark .marketing {
+    --mk-bg: #08110f;
+    --mk-surface: #0f1c19;
+    --mk-surface-2: #132420;
+    --mk-ink: #edf3f1;
+    --mk-muted: #a3b5af;
+    --mk-faint: #71857f;
+    --mk-line: #1f322d;
+    --mk-primary: #4cc3a8;
+    --mk-primary-ink: #04201a;
+    --mk-soft: #12302a;
+    --mk-soft-ink: #7fdcc6;
+    --mk-hero: #051512;
+    --mk-hero-2: #0a2621;
+    --mk-hero-ink: #ffffff;
+    --mk-hero-muted: #9dbdb5;
+    --mk-hero-line: #173a33;
+    --mk-accent-soft: #3a2c10;
+    --mk-band: #0c2a24;
+    --mk-app-bg: #0b1513;
+    --mk-app-surface: #12201d;
+    --mk-app-line: #22332f;
+    --mk-app-ink: #e6eeeb;
+    --mk-app-muted: #8da19b;
+    --mk-app-cta: #1e9c83;
+    --mk-warn-ink: #f6b93b;
+    --mk-shadow: rgba(0, 0, 0, 0.4);
+}
+
+.mk-shadow-card {
+    box-shadow: 0 20px 40px var(--mk-shadow);
+}
+.mk-shadow-window {
+    box-shadow: 0 30px 60px var(--mk-shadow);
+}
+.mk-shadow-accent {
+    box-shadow: 0 8px 24px var(--mk-shadow-accent);
+}
+.mk-shadow-float {
+    box-shadow: 0 24px 50px rgba(0, 0, 0, 0.33);
+}
+.mk-cta-gradient {
+    background-image: linear-gradient(135deg, var(--mk-cta-from), var(--mk-cta-to));
+}
+.mk-no-scrollbar {
+    scrollbar-width: none;
+}
+.mk-no-scrollbar::-webkit-scrollbar {
+    display: none;
 }
 
 html.dark,

@@ -1,15 +1,15 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import LandingShell from '../../Components/Landing/LandingShell.vue';
-import HomeHero from '../../Components/Landing/HomeHero.vue';
-import AudienceSection from '../../Components/Landing/AudienceSection.vue';
-import FeatureGroups from '../../Components/Landing/FeatureGroups.vue';
-import PlatformsSection from '../../Components/Landing/PlatformsSection.vue';
-import StartSteps from '../../Components/Landing/StartSteps.vue';
-import HomePlans from '../../Components/Landing/HomePlans.vue';
 import LandingFaq from '../../Components/Landing/LandingFaq.vue';
-import FinalCta from '../../Components/Landing/FinalCta.vue';
-import SupportFooter from '../../Components/Landing/SupportFooter.vue';
+import LandingFinalCta from '../../Components/Landing/LandingFinalCta.vue';
+import HomeAudience from '../../Components/Landing/Home/HomeAudience.vue';
+import HomeCoffeeBand from '../../Components/Landing/Home/HomeCoffeeBand.vue';
+import HomeDevicesSteps from '../../Components/Landing/Home/HomeDevicesSteps.vue';
+import HomeHero from '../../Components/Landing/Home/HomeHero.vue';
+import HomeMoreTiles from '../../Components/Landing/Home/HomeMoreTiles.vue';
+import HomePlans from '../../Components/Landing/Home/HomePlans.vue';
+import HomeShowcase from '../../Components/Landing/Home/HomeShowcase.vue';
 import { usePublicPlans } from '../../Composables/usePublicPlans';
 import { useLandingAnchors } from '../../Composables/useLandingAnchors';
 
@@ -24,26 +24,24 @@ onMounted(() => {
 </script>
 
 <template>
-  <LandingShell :brand-name="brand.name || ''">
-    <div class="mx-auto max-w-6xl space-y-20 px-4 py-8 sm:px-6 sm:space-y-24">
-      <HomeHero :brand="brand" :is-loading="isLoading" />
-      <AudienceSection />
-      <FeatureGroups />
-      <PlatformsSection />
-      <StartSteps />
-      <HomePlans
-        v-model:billing="billing"
-        :plans="plans"
-        :is-loading="isLoading"
-        :has-error="hasError"
-        :currency="currency"
-        :founder="founder"
-        :prices-exclude-vat="pricesExcludeVat"
-        @retry="load"
-      />
-      <LandingFaq />
-      <FinalCta />
-    </div>
-    <template #footer><SupportFooter :brand="brand" /></template>
+  <LandingShell :brand="brand">
+    <HomeHero />
+    <HomeAudience />
+    <HomeShowcase />
+    <HomeCoffeeBand />
+    <HomeMoreTiles />
+    <HomeDevicesSteps />
+    <HomePlans
+      v-model:billing="billing"
+      :plans="plans"
+      :is-loading="isLoading"
+      :has-error="hasError"
+      :currency="currency"
+      :founder="founder"
+      :prices-exclude-vat="pricesExcludeVat"
+      @retry="load"
+    />
+    <LandingFaq />
+    <LandingFinalCta />
   </LandingShell>
 </template>
