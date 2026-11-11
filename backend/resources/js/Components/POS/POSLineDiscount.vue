@@ -3,6 +3,9 @@ import { computed } from 'vue';
 import { sanitizeAmountInput } from '../../helpers/posCheckout';
 import { focusPosSearch } from '../../helpers/posFocus';
 import { DISCOUNT_FIXED, DISCOUNT_PERCENT } from '../../helpers/posDiscount';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 const props = defineProps({
   line: { type: Object, required: true },
@@ -45,7 +48,7 @@ const onEscape = (event) => {
       class="min-h-11 min-w-11 px-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-black text-slate-700 dark:text-slate-200 transition active:scale-95 cursor-pointer"
       @click="toggleMode"
     >
-      {{ isFixed ? $t('common.currency') : '%' }}
+      {{ isFixed ? currencyLabel : '%' }}
     </button>
     <input
       type="text"

@@ -3,8 +3,7 @@
     <Transition name="fade">
       <div
         v-if="show"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm rtl"
-        dir="rtl"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
         @click.self="$emit('close')"
       >
         <div
@@ -44,7 +43,7 @@
                 class="text-4xl font-bold text-green-600 dark:text-green-500 tracking-tight flex items-baseline gap-1"
               >
                 {{ formatMoney(net) }}
-                <span class="text-lg text-green-600/70 font-normal">{{ $t('common.currency') }}</span>
+                <span class="text-lg text-green-600/70 font-normal">{{ currencyLabel }}</span>
               </div>
             </div>
 
@@ -214,7 +213,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'confirm']);
 
 const { t } = useTrans();
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 const paymentMethods = computed(() => [
   { key: 'cash', label: t('pos.payment_cash'), icon: Banknote },

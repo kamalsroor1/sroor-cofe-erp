@@ -14,6 +14,7 @@ import {
 import { focusLineField } from '../../helpers/posFocus';
 import { dAdd, isPositive, normalize } from '../../helpers/decimal';
 import { notifyWarning } from '../../helpers/alert';
+import { currentCurrencyLabel } from '../useFormatters';
 
 // Where focus goes after a manually added item (see pos.entry_sequence in the keyboard research):
 // 'scan' stays in search, 'qty' / 'price' jump to that field, 'qty_price' starts at qty then Enter moves to price.
@@ -167,7 +168,7 @@ export function usePosCart({
                 title: trans('pos.confirm_close_order_title'),
                 text: trans('pos.confirm_close_order_text', {
                     count: order.cart.length,
-                    total: `${formatMoney(subtotal)} ${trans('common.currency')}`,
+                    total: `${formatMoney(subtotal)} ${currentCurrencyLabel()}`,
                 }),
                 icon: 'warning',
                 showCancelButton: true,

@@ -43,7 +43,7 @@
                     :value="s.id"
                     class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                   >
-                    🏬 {{ s.name }}
+                    {{ s.name }}
                   </option>
                 </select>
                 <ChevronDown class="w-3 h-3 text-slate-400 absolute end-1 pointer-events-none" />
@@ -180,7 +180,7 @@
                 <div class="text-end shrink-0 ps-2">
                   <div class="text-sm sm:text-base font-black font-mono text-emerald-600 dark:text-emerald-400">
                     {{ formatMoney(getItemPrice(item)) }}
-                    <span class="text-[10px] font-normal text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
+                    <span class="text-[10px] font-normal text-slate-400 font-tajawal">{{ currencyLabel }}</span>
                   </div>
                   <div
                     v-if="Number(item.min_selling_price) > 0"
@@ -266,14 +266,15 @@
           type="button"
           disabled
           class="hidden md:flex min-h-[44px] px-3 py-2 border rounded-xl text-xs font-bold transition items-center gap-1.5 opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-400 dark:text-slate-500 shadow-2xs select-none"
-          :title="`${$t('pos.show_menu')} - ${$t('nav.coming_soon')} 🚀`"
+          :title="`${$t('pos.show_menu')} - ${$t('nav.coming_soon')}`"
         >
           <LayoutGrid class="w-4 h-4 shrink-0 opacity-70" />
           <span class="hidden lg:inline">{{ $t('pos.show_menu') }}</span>
           <span
-            class="px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[10px] font-bold border border-amber-500/20"
+            class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[10px] font-bold border border-amber-500/20"
           >
-            🚀 {{ $t('nav.coming_soon') }}
+            <Rocket class="w-3 h-3 shrink-0" aria-hidden="true" />
+            {{ $t('nav.coming_soon') }}
           </span>
         </button>
 
@@ -408,11 +409,12 @@ import {
   History,
   X,
   EllipsisVertical,
+  Rocket,
 } from 'lucide-vue-next';
 import POSPhoneMenuSheet from './POSPhoneMenuSheet.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const searchInputRef = ref(null);
 const showPhoneMenu = ref(false);
 

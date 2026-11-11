@@ -15,7 +15,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update-price']);
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
 
 const inputRef = ref(null);
@@ -201,7 +201,7 @@ onBeforeUnmount(close);
       :aria-label="$t('pos.min_price_protected')"
       :title="$t('pos.min_price_protected')"
     />
-    <span class="text-[10px] font-bold text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
+    <span class="text-[10px] font-bold text-slate-400 font-tajawal">{{ currencyLabel }}</span>
 
     <Teleport to="body">
       <div

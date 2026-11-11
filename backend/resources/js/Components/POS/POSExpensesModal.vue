@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <Transition name="fade">
-      <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" dir="rtl">
+      <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
         <!-- Backdrop -->
         <div
           class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs dark:bg-slate-950/80 transition-opacity"
@@ -50,7 +50,7 @@
                   class="flex items-center gap-1.5 px-3 min-h-11 py-2 bg-theme-primary/10 text-theme-primary hover:bg-theme-primary/20 rounded-xl text-xs font-bold transition-all border border-theme-primary/25 cursor-pointer active:scale-95 shadow-2xs"
                 >
                   <Truck class="w-4 h-4 shrink-0" />
-                  {{ $t('pos.expense_shipping') }} (50 {{ $t('common.currency') }})
+                  {{ $t('pos.expense_shipping') }} (50 {{ currencyLabel }})
                 </button>
                 <button
                   type="button"
@@ -58,7 +58,7 @@
                   class="flex items-center gap-1.5 px-3 min-h-11 py-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 rounded-xl text-xs font-bold transition-all border border-amber-500/25 cursor-pointer active:scale-95 shadow-2xs"
                 >
                   <Package class="w-4 h-4 shrink-0" />
-                  {{ $t('pos.expense_packaging') }} (20 {{ $t('common.currency') }})
+                  {{ $t('pos.expense_packaging') }} (20 {{ currencyLabel }})
                 </button>
                 <button
                   type="button"
@@ -66,7 +66,7 @@
                   class="flex items-center gap-1.5 px-3 min-h-11 py-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 rounded-xl text-xs font-bold transition-all border border-emerald-500/25 cursor-pointer active:scale-95 shadow-2xs"
                 >
                   <Gift class="w-4 h-4 shrink-0" />
-                  {{ $t('pos.expense_tip') }} (10 {{ $t('common.currency') }})
+                  {{ $t('pos.expense_tip') }} (10 {{ currencyLabel }})
                 </button>
                 <button
                   type="button"
@@ -74,7 +74,7 @@
                   class="flex items-center gap-1.5 px-3 min-h-11 py-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl text-xs font-bold transition-all border border-blue-500/25 cursor-pointer active:scale-95 shadow-2xs"
                 >
                   <ArrowUp class="w-4 h-4 shrink-0" />
-                  {{ $t('pos.expense_porter') }} (30 {{ $t('common.currency') }})
+                  {{ $t('pos.expense_porter') }} (30 {{ currencyLabel }})
                 </button>
               </div>
             </div>
@@ -134,7 +134,7 @@
               v-if="localExpenses.length > 0"
               class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-2xs"
             >
-              <table class="w-full min-w-[480px] text-xs text-right">
+              <table class="w-full min-w-[480px] text-xs text-start">
                 <thead
                   class="bg-slate-100/80 dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-[11px] font-black uppercase border-b border-slate-200 dark:border-slate-800"
                 >
@@ -209,7 +209,7 @@
                   >{{ $t('pos.expense_total_customer') }}:</span
                 >
                 <span class="font-black text-emerald-600 dark:text-emerald-400 font-mono text-sm"
-                  >{{ formatMoney(totalCustomer) }} {{ $t('common.currency') }}</span
+                  >{{ formatMoney(totalCustomer) }} {{ currencyLabel }}</span
                 >
               </div>
               <div
@@ -219,7 +219,7 @@
                   >{{ $t('pos.expense_total_treasury') }}:</span
                 >
                 <span class="font-black text-blue-600 dark:text-blue-400 font-mono text-sm"
-                  >{{ formatMoney(totalTreasury) }} {{ $t('common.currency') }}</span
+                  >{{ formatMoney(totalTreasury) }} {{ currencyLabel }}</span
                 >
               </div>
             </div>
@@ -264,7 +264,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'update:expenses']);
 
 const { t } = useTrans();
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 const localExpenses = ref([]);
 const newExpense = ref({ title: '', amount: '', paid_by: 'customer_account' });

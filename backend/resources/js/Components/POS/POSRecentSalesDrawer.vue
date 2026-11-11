@@ -18,7 +18,7 @@ defineProps({
 
 defineEmits(['close', 'update:search', 'retry', 'reprint', 'return']);
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 </script>
 
 <template>
@@ -68,7 +68,7 @@ const { formatMoney } = useFormatters();
             </div>
             <div class="text-xs text-slate-600 dark:text-slate-300 truncate">{{ sale.customer_name }}</div>
             <div class="text-xs font-bold text-theme-primary">
-              {{ formatMoney(sale.net_total) }} {{ $t('common.currency') }}
+              {{ formatMoney(sale.net_total) }} {{ currencyLabel }}
             </div>
           </div>
           <div class="flex items-center gap-2">

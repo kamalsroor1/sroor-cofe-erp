@@ -115,7 +115,7 @@
                     {{ formatMoney(lineGross(item)) }}
                   </div>
                   {{ formatMoney(lineNet(item)) }}
-                  <span class="text-[9px] font-normal text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
+                  <span class="text-[9px] font-normal text-slate-400 font-tajawal">{{ currencyLabel }}</span>
                 </div>
               </div>
             </div>
@@ -254,7 +254,7 @@
         <div
           class="w-16 h-16 rounded-3xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-2xl mb-3 shadow-inner"
         >
-          🛒
+          <ShoppingCart class="w-8 h-8" aria-hidden="true" />
         </div>
         <h3 class="text-base font-black text-slate-800 dark:text-slate-200">{{ $t('pos.empty_cart_title') }}</h3>
         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
@@ -266,7 +266,7 @@
 </template>
 
 <script setup>
-import { Trash2 } from 'lucide-vue-next';
+import { ShoppingCart, Trash2 } from 'lucide-vue-next';
 import POSLineDiscount from './POSLineDiscount.vue';
 import POSLinePriceField from './POSLinePriceField.vue';
 import { useFormatters } from '../../Composables/useFormatters';
@@ -276,7 +276,7 @@ import { normalize, isPositive } from '../../helpers/decimal';
 import { lineGross, lineNet, lineDiscountAmount } from '../../helpers/posDiscount';
 import { focusLineField, focusPosSearch } from '../../helpers/posFocus';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const { unitLabel } = useUnits();
 
 const props = defineProps({

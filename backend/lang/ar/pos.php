@@ -449,4 +449,5 @@ return [
     'phone_store_label' => 'الفرع',
     'phone_categories_label' => 'الأقسام',
     'change_customer' => 'تغيير العميل',
+    'order_title' => 'طلب #:number',
 ];

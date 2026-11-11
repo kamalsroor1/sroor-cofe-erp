@@ -28,7 +28,7 @@ const emit = defineEmits([
   'update:countedCash',
 ]);
 
-const { formatMoney, formatDateTime } = useFormatters();
+const { formatMoney, formatDateTime, currencyLabel } = useFormatters();
 
 const rows = computed(() => {
   const m = props.metrics || {};
@@ -102,7 +102,7 @@ const rows = computed(() => {
           <div class="flex items-center justify-between py-3 text-base">
             <dt class="font-black text-slate-900 dark:text-white">{{ $t('pos.shift_report_expected') }}</dt>
             <dd class="font-mono font-black text-emerald-600 dark:text-emerald-400" dir="ltr">
-              {{ formatMoney(metrics.expected_cash_balance) }} {{ $t('common.currency') }}
+              {{ formatMoney(metrics.expected_cash_balance) }} {{ currencyLabel }}
             </dd>
           </div>
         </dl>
@@ -111,7 +111,7 @@ const rows = computed(() => {
         <div v-if="canManage" class="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-3">
           <div class="space-y-1.5">
             <label class="block text-xs font-bold text-slate-600 dark:text-slate-400" for="pos-shift-counted-cash">
-              {{ $t('pos.shift_close_counted_cash') }} ({{ $t('common.currency') }})
+              {{ $t('pos.shift_close_counted_cash') }} ({{ currencyLabel }})
             </label>
             <input
               id="pos-shift-counted-cash"

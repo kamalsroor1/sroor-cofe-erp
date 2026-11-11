@@ -24,7 +24,7 @@
           data-testid="pos-success-change-amount"
           class="text-xl font-black font-mono text-emerald-700 dark:text-emerald-400"
         >
-          {{ formatMoney(changeAmount) }} <span class="text-xs font-bold">{{ $t('common.currency') }}</span>
+          {{ formatMoney(changeAmount) }} <span class="text-xs font-bold">{{ currencyLabel }}</span>
         </span>
       </div>
       <div class="flex gap-2">
@@ -55,7 +55,7 @@ import AppModal from '../Common/AppModal.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { isPositive } from '../../helpers/decimal';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 const props = defineProps({
   show: { type: Boolean, default: false },

@@ -49,7 +49,7 @@ const emit = defineEmits([
   'open-multi-payment',
 ]);
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 // Phones: the ticket and the payment are two sheets over the catalog. null = both closed.
 const sheet = ref(null);
@@ -137,7 +137,7 @@ const checkoutProps = computed(() => ({
           <span class="text-sm font-black text-slate-900 dark:text-white">{{ $t('pos.giant_net_total') }}</span>
           <span class="text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">
             {{ formatMoney(netTotal) }}
-            <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
+            <span class="text-xs font-bold text-slate-400 font-tajawal">{{ currencyLabel }}</span>
           </span>
         </div>
         <button

@@ -13,7 +13,7 @@
     </div>
 
     <!-- Scrollable Categories -->
-    <nav class="flex-1 overflow-y-auto custom-scrollbar p-1.5 space-y-1" dir="rtl">
+    <nav class="flex-1 overflow-y-auto custom-scrollbar p-1.5 space-y-1">
       <!-- 1. Favorites Tab -->
       <button
         @click="$emit('select-category', 'favorites')"

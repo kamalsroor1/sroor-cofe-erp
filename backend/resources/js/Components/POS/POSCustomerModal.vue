@@ -170,7 +170,7 @@
               class="px-2 py-0.5 rounded text-[10px] font-mono font-bold"
               :class="cust.current_balance > 0 ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'"
             >
-              {{ $t('pos.balance_label') }} {{ formatMoney(cust.current_balance || 0) }} {{ $t('common.currency') }}
+              {{ $t('pos.balance_label') }} {{ formatMoney(cust.current_balance || 0) }} {{ currencyLabel }}
             </span>
           </div>
         </button>
@@ -185,7 +185,7 @@ import { Search, Sparkles, User, Plus, Banknote } from 'lucide-vue-next';
 import AppModal from '../Common/AppModal.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 const props = defineProps({
   show: { type: Boolean, default: false },

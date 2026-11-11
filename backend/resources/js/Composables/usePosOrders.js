@@ -1,4 +1,5 @@
 import { ref, computed, watch } from 'vue';
+import { trans } from '../helpers/trans';
 
 export function usePosOrders() {
     const orders = ref([]);
@@ -12,7 +13,7 @@ export function usePosOrders() {
     const makeNewOrderObject = (orderNumber) => ({
         id: `ord_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
         number: orderNumber,
-        title: `طلب #${orderNumber}`,
+        title: trans('pos.order_title', { number: orderNumber }),
         createdAt: Date.now(),
         updatedAt: Date.now(),
         cart: [],

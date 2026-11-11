@@ -449,4 +449,5 @@ return [
     'phone_store_label' => 'Branch',
     'phone_categories_label' => 'Categories',
     'change_customer' => 'Change customer',
+    'order_title' => 'Order #:number',
 ];

@@ -10,7 +10,7 @@ defineProps({
 
 defineEmits(['open-cart', 'checkout']);
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 </script>
 
 <template>
@@ -42,7 +42,7 @@ const { formatMoney } = useFormatters();
           data-testid="pos-phone-cart-total"
         >
           {{ formatMoney(total) }}
-          <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs font-bold text-slate-400 font-tajawal">{{ currencyLabel }}</span>
         </span>
       </span>
     </button>

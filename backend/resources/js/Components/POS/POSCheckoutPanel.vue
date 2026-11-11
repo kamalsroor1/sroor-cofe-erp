@@ -9,7 +9,7 @@
       <div class="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
         <span>{{ $t('pos.subtotal_items', { count: cartCount }) }}</span>
         <span class="font-mono font-black text-xs text-slate-900 dark:text-white"
-          >{{ formatMoney(subtotal) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(subtotal) }} {{ currencyLabel }}</span
         >
       </div>
 
@@ -120,7 +120,7 @@
         <span class="text-xs font-black text-slate-900 dark:text-white">{{ $t('pos.giant_net_total') }}</span>
         <span class="text-xl font-black font-mono text-emerald-600 dark:text-emerald-400 tracking-tight">
           {{ formatMoney(netTotal) }}
-          <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs font-bold text-slate-400 font-tajawal">{{ currencyLabel }}</span>
         </span>
       </div>
     </div>
@@ -346,7 +346,7 @@ import { normalize, dAdd, dSub, dCmp, dMax0, dRoundTo, isZero, isPositive } from
 import { focusPosSearch } from '../../helpers/posFocus';
 import { DISCOUNT_FIXED, DISCOUNT_PERCENT } from '../../helpers/posDiscount';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
 
 const denominations = [50, 100, 200, 500];
@@ -406,7 +406,7 @@ const props = defineProps({
 const discountPresets = [0, 5, 10];
 const discountModes = computed(() => [
   { key: DISCOUNT_PERCENT, symbol: '%', label: t('pos.discount_mode_percent') },
-  { key: DISCOUNT_FIXED, symbol: t('common.currency'), label: t('pos.discount_mode_amount') },
+  { key: DISCOUNT_FIXED, symbol: currencyLabel.value, label: t('pos.discount_mode_amount') },
 ]);
 const discountInputValue = computed(() =>
   isPositive(String(props.discountValue ?? '0')) ? String(props.discountValue) : ''

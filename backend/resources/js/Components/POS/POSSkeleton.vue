@@ -1,7 +1,6 @@
 <template>
   <div
     class="h-full max-h-full min-h-0 overflow-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-tajawal select-none"
-    dir="rtl"
   >
     <!-- 🔝 1. POS Header Skeleton -->
     <header

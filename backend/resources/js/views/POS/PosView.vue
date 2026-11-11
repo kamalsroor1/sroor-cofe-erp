@@ -67,7 +67,6 @@ const {
 <template>
   <div
     class="h-full w-full max-h-full min-h-0 overflow-hidden flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 select-none"
-    dir="rtl"
   >
     <POSSkeleton v-if="catalog.isLoading.value" />
 

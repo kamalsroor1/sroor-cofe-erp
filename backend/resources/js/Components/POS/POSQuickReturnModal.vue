@@ -23,7 +23,7 @@ defineProps({
 
 defineEmits(['close', 'set-quantity', 'submit', 'update:refundMethod']);
 
-const { formatMoney, formatQty } = useFormatters();
+const { formatMoney, formatQty, currencyLabel } = useFormatters();
 </script>
 
 <template>
@@ -53,7 +53,7 @@ const { formatMoney, formatQty } = useFormatters();
               <div class="text-sm font-black text-slate-900 dark:text-white truncate">{{ line.item_name }}</div>
               <div class="text-xs text-slate-500 dark:text-slate-400">
                 {{ $t('pos.quick_return_remaining', { qty: formatQty(line.remaining_quantity) }) }}
-                · {{ formatMoney(line.unit_price) }}
+                · {{ formatMoney(line.unit_price) }} {{ currencyLabel }}
               </div>
             </div>
             <input
@@ -65,7 +65,7 @@ const { formatMoney, formatQty } = useFormatters();
               data-testid="pos-quick-return-qty"
               :value="line.return_quantity"
               :aria-label="$t('pos.quick_return_qty')"
-              :placeholder="$t('pos.quick_return_qty')"
+              :placeholder="'0'"
               class="w-24 min-h-[44px] px-2 text-center font-mono font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
               @input="$emit('set-quantity', line, $event.target.value, $event.target)"
             />
@@ -76,7 +76,7 @@ const { formatMoney, formatQty } = useFormatters();
           class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm font-black text-slate-900 dark:text-white"
         >
           <span>{{ $t('pos.quick_return_total') }}</span>
-          <span class="font-mono">{{ formatMoney(total) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono">{{ formatMoney(total) }} {{ currencyLabel }}</span>
         </div>
 
         <RefundMethodPicker

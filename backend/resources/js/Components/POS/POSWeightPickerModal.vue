@@ -21,7 +21,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'confirm']);
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const { unitLabel } = useUnits();
 
 const mode = ref('weight');
@@ -80,7 +80,7 @@ const confirm = (qty) => {
   >
     <div class="p-4 space-y-4 font-tajawal select-none" data-testid="pos-weight-picker">
       <p class="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-        {{ $t('pos.weight_picker_unit_price', { unit }) }}: {{ formatMoney(unitPrice) }} {{ $t('common.currency') }}
+        {{ $t('pos.weight_picker_unit_price', { unit }) }}: {{ formatMoney(unitPrice) }} {{ currencyLabel }}
       </p>
 
       <div class="grid grid-cols-4 gap-2">
@@ -133,7 +133,7 @@ const confirm = (qty) => {
         <label class="block text-xs font-bold text-slate-600 dark:text-slate-400" for="pos-weight-input">
           {{
             mode === 'amount'
-              ? $t('pos.weight_amount_label', { currency: $t('common.currency') })
+              ? $t('pos.weight_amount_label', { currency: currencyLabel })
               : $t('pos.weight_input_label', { unit })
           }}
         </label>
@@ -178,7 +178,7 @@ const confirm = (qty) => {
             {{ $t('pos.weight_resulting_total') }}
           </div>
           <div class="text-base font-black font-mono text-slate-900 dark:text-white">
-            {{ formatMoney(total) }} {{ $t('common.currency') }}
+            {{ formatMoney(total) }} {{ currencyLabel }}
           </div>
         </div>
       </div>

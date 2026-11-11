@@ -1,6 +1,9 @@
 <script setup>
 import { Lock, Unlock } from 'lucide-vue-next';
 import BaseButton from '../Common/BaseButton.vue';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 defineProps({
   openingCash: { type: String, default: '0' },
@@ -24,7 +27,7 @@ const emit = defineEmits(['update:openingCash', 'submit']);
   <form v-else class="space-y-4" data-testid="pos-shift-open-form" @submit.prevent="emit('submit')">
     <div class="space-y-1.5">
       <label class="block text-xs font-bold text-slate-600 dark:text-slate-400" for="pos-shift-opening-cash">
-        {{ $t('pos.shift_gate_opening_cash') }} ({{ $t('common.currency') }})
+        {{ $t('pos.shift_gate_opening_cash') }} ({{ currencyLabel }})
       </label>
       <input
         id="pos-shift-opening-cash"
