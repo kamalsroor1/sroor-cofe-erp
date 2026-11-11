@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Concurrency;
 
 use App\Exceptions\BusinessRuleException;
+use App\Exceptions\Stock\InsufficientStockException;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Item;
@@ -12,6 +13,7 @@ use App\Models\Payment;
 use App\Models\StockMovement;
 use App\Models\Tenant;
 use App\Services\DocumentNumberService;
+use App\Services\InvoiceService;
 use App\Services\StockService;
 use App\Services\TreasuryService;
 use Illuminate\Database\Connection;
@@ -20,6 +22,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Group;
 use RuntimeException;
+use Tests\Concerns\SeedsStoreStock;
 use Tests\TenantTestCase;
 
 /**
@@ -45,6 +48,8 @@ use Tests\TenantTestCase;
 #[Group('concurrency')]
 final class MysqlConcurrencyTest extends TenantTestCase
 {
+    use SeedsStoreStock;
+
     /** MySQL error code for "Lock wait timeout exceeded". */
     private const LOCK_WAIT_TIMEOUT = 1205;
 
@@ -134,7 +139,7 @@ final class MysqlConcurrencyTest extends TenantTestCase
         $this->assertCount(2, $failed);
         foreach ($failed as $failure) {
             // Rejected by the stock check, not by a deadlock or a crash.
-            $this->assertSame('Exception', $failure['error_class'], (string) json_encode($failure, JSON_UNESCAPED_UNICODE));
+            $this->assertSame(InsufficientStockException::class, $failure['error_class'], (string) json_encode($failure, JSON_UNESCAPED_UNICODE));
         }
 
         $state = $this->inTenant($tenant, fn (): array => [
@@ -354,7 +359,8 @@ final class MysqlConcurrencyTest extends TenantTestCase
 
     private function makeItem(string $code, string $stock): Item
     {
-        return Item::query()->create([
+        // BE-04: the per-store row is the stock the checkout sees; seed it for every store.
+        return $this->stockInAllStores(Item::query()->create([
             'code' => $code,
             'name' => 'صنف تزامن '.$code,
             'category' => 'coffee_beans',
@@ -364,7 +370,7 @@ final class MysqlConcurrencyTest extends TenantTestCase
             'current_stock' => $stock,
             'min_stock_level' => '0.000',
             'is_active' => true,
-        ]);
+        ]));
     }
 
     private function deduct(int $itemId, string $quantity, int $storeId, string $document): void
