@@ -284,4 +284,5 @@ return [
         'current_balance' => '*Current Account Balance:* :amount :currency',
         'footer' => 'Thank you for your business with :company',
     ],
+    'export_limit_exceeded' => 'Cannot export more than :max invoices at once. Please narrow your search or filter criteria.',
 ];

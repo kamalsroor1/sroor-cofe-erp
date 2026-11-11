@@ -7,6 +7,7 @@ namespace App\Actions\Invoices;
 use App\Models\Invoice;
 use App\Support\Csv\CsvCell;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Streams the filtered invoices as CSV (UTF-8 BOM so Excel reads Arabic) in id-ordered chunks,
@@ -17,6 +18,21 @@ final class ExportInvoicesCsvAction
     private const CHUNK_SIZE = 500;
 
     private const COLUMNS = ['number', 'customer', 'phone', 'store', 'date', 'payment_type', 'payment_method', 'net', 'paid', 'remaining', 'status'];
+
+    /**
+     * @param  Builder<Invoice>  $query
+     *
+     * @throws ValidationException
+     */
+    public function assertWithinExportLimit(Builder $query): void
+    {
+        $max = (int) config('invoices.max_export_rows', 20000);
+        if ($max > 0 && (clone $query)->count() > $max) {
+            throw ValidationException::withMessages([
+                'export' => __('invoices.export_limit_exceeded', ['max' => $max]),
+            ]);
+        }
+    }
 
     /**
      * @param  Builder<Invoice>  $query

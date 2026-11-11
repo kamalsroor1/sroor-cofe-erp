@@ -284,4 +284,5 @@ return [
         'current_balance' => '*إجمالي رصيد الحساب الحالي:* :amount :currency',
         'footer' => 'شكراً لتعاملكم مع :company',
     ],
+    'export_limit_exceeded' => 'لا يمكن تصدير أكثر من :max فاتورة في المرة الواحدة. يرجى تضييق نطاق البحث أو التصفية.',
 ];

@@ -9,6 +9,7 @@ use App\Actions\Invoices\CancelSalesInvoiceAction;
 use App\Actions\Invoices\CreateSalesInvoiceAction;
 use App\Actions\Invoices\ExportInvoicesCsvAction;
 use App\Actions\Invoices\GetInvoiceDetailsAction;
+use App\Actions\Invoices\GetInvoicesSummaryAction;
 use App\DTOs\Invoices\CancelInvoiceDTO;
 use App\DTOs\Invoices\CreateInvoiceDTO;
 use App\Http\Controllers\Controller;
@@ -35,6 +36,7 @@ final class InvoiceController extends Controller
         private readonly GetInvoiceDetailsAction $getInvoiceDetailsAction,
         private readonly BuildInvoiceListQueryAction $buildInvoiceListQueryAction,
         private readonly ExportInvoicesCsvAction $exportInvoicesCsvAction,
+        private readonly GetInvoicesSummaryAction $getInvoicesSummaryAction,
     ) {}
 
     /**
@@ -51,10 +53,7 @@ final class InvoiceController extends Controller
 
         $query = $this->buildInvoiceListQueryAction->execute();
 
-        $totalSales = (float) (clone $query)->where('status', '!=', 'cancelled')->sum('net_total');
-        $totalPaid = (float) (clone $query)->where('status', '!=', 'cancelled')->sum('paid_amount');
-        $totalDue = (float) bcsub((string) $totalSales, (string) $totalPaid, 3);
-        $totalCount = (int) (clone $query)->count();
+        $summary = $this->getInvoicesSummaryAction->execute($query);
 
         $invoices = $query->latest('id')->paginate($perPage);
 
@@ -67,12 +66,7 @@ final class InvoiceController extends Controller
                 'per_page' => $invoices->perPage(),
                 'total' => $invoices->total(),
             ],
-            'summary' => [
-                'total_count' => $totalCount,
-                'total_sales' => $totalSales,
-                'total_paid' => $totalPaid,
-                'total_due' => $totalDue,
-            ],
+            'summary' => $summary,
         ], 200);
     }
 
@@ -82,6 +76,8 @@ final class InvoiceController extends Controller
     public function export(ExportInvoicesRequest $request): StreamedResponse
     {
         $query = $this->buildInvoiceListQueryAction->execute();
+
+        $this->exportInvoicesCsvAction->assertWithinExportLimit($query);
 
         return response()->streamDownload(function () use ($query): void {
             $out = fopen('php://output', 'wb');

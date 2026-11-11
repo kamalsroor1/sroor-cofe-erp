@@ -99,6 +99,51 @@ class InvoiceExportApiTest extends TenantTestCase
             ->assertJsonValidationErrors(['from_date', 'ids.0']);
     }
 
+    public function test_export_returns_422_when_matching_rows_exceed_max_configured_limit(): void
+    {
+        config(['invoices.max_export_rows' => 2]);
+
+        $this->invoice('INV-LIMIT-1', $this->mainStore);
+        $this->invoice('INV-LIMIT-2', $this->mainStore);
+        $this->invoice('INV-LIMIT-3', $this->mainStore);
+
+        $response = $this->export($this->adminToken);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['export']);
+        $this->assertStringContainsString('لا يمكن تصدير أكثر من 2 فاتورة', (string) $response->json('message'));
+        $this->assertStringContainsString('لا يمكن تصدير أكثر من 2 فاتورة', (string) $response->json('errors.export.0'));
+    }
+
+    public function test_export_limit_exceeded_error_is_localized_in_english(): void
+    {
+        config(['invoices.max_export_rows' => 2]);
+
+        $this->invoice('INV-EN-1', $this->mainStore);
+        $this->invoice('INV-EN-2', $this->mainStore);
+        $this->invoice('INV-EN-3', $this->mainStore);
+
+        $response = $this->export($this->adminToken, '', ['X-Locale' => 'en']);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['export']);
+        $this->assertStringContainsString('Cannot export more than 2 invoices', (string) $response->json('message'));
+        $this->assertStringContainsString('Cannot export more than 2 invoices', (string) $response->json('errors.export.0'));
+    }
+
+    public function test_export_succeeds_when_within_max_rows_limit(): void
+    {
+        config(['invoices.max_export_rows' => 3]);
+
+        $this->invoice('INV-OK-1', $this->mainStore);
+        $this->invoice('INV-OK-2', $this->mainStore);
+
+        $response = $this->export($this->adminToken);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('text/csv', (string) $response->headers->get('Content-Type'));
+    }
+
     public function test_streams_utf8_bom_csv_with_translated_headers_and_all_filtered_rows(): void
     {
         $customer = Customer::create(['name' => 'كافيه "الأهرام"', 'phone' => '01098765432', 'balance' => '0.000', 'current_balance' => '0.000', 'price_tier' => 'retail', 'is_active' => true]);
