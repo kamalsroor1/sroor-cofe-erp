@@ -138,9 +138,9 @@ const emit = defineEmits(['close', 'submit', 'update:form', 'update:requireShift
 // Never mutate the prop: emit a patched shallow copy and let the parent apply it.
 const updateForm = (key, value) => emit('update:form', { ...props.form, [key]: value });
 
-const storeTypeOptions = [
+const storeTypeOptions = computed(() => [
   { value: 'retail_shop', label: t('inventory.retail_shop') },
   { value: 'warehouse', label: t('inventory.warehouse') },
   { value: 'van', label: t('inventory.distribution_van') },
-];
+]);
 </script>

@@ -55,6 +55,7 @@ import { RotateCcw } from 'lucide-vue-next';
 import BaseSearchInput from '../Form/BaseSearchInput.vue';
 import BaseSelect from '../Form/BaseSelect.vue';
 import BaseButton from '../Common/BaseButton.vue';
+import { computed } from 'vue';
 import { useTrans } from '../../Composables/useTrans';
 
 const { t } = useTrans();
@@ -68,16 +69,16 @@ defineProps({
 
 defineEmits(['update:search', 'update:type', 'update:status', 'reset']);
 
-const typeOptions = [
+const typeOptions = computed(() => [
   { value: 'all', label: t('inventory.all_store_types') },
   { value: 'retail_shop', label: t('inventory.retail_shop') },
   { value: 'warehouse', label: t('inventory.warehouse') },
   { value: 'van', label: t('inventory.distribution_van') },
-];
+]);
 
-const statusOptions = [
+const statusOptions = computed(() => [
   { value: 'all', label: t('common.all') },
   { value: 'active', label: t('common.active') },
   { value: 'inactive', label: t('common.inactive') },
-];
+]);
 </script>
