@@ -53,7 +53,12 @@ const badgeClass = (status) =>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-          <tr v-for="row in rows" :key="row.row_number" class="align-top">
+          <tr
+            v-for="row in rows"
+            :key="row.row_number"
+            class="align-top"
+            :data-testid="`import-preview-row-${row.row_number}`"
+          >
             <td class="px-3 py-3 font-black tabular-nums text-slate-500">{{ row.row_number }}</td>
             <td v-for="column in columns" :key="column" class="px-3 py-3 text-slate-800 dark:text-slate-100 font-bold">
               {{ display(column, row.data?.[column]) }}

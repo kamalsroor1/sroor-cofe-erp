@@ -21,7 +21,7 @@ defineEmits(['update:filter', 'update:skipInvalid', 'commit', 'back']);
 </script>
 
 <template>
-  <section class="space-y-4 font-tajawal">
+  <section class="space-y-4 font-tajawal" data-testid="import-preview-step">
     <ImportSummaryBar :summary="summary" :filter="filter" @update:filter="$emit('update:filter', $event)" />
 
     <p
@@ -69,6 +69,7 @@ defineEmits(['update:filter', 'update:skipInvalid', 'commit', 'back']);
         :icon="CheckCircle2"
         :loading="isCommitting"
         :disabled="!canCommit"
+        data-testid="import-commit-btn"
         :label="isCommitting ? $t('import.ui.importing') : $t('import.ui.import_now', { count: importableCount })"
         @click="$emit('commit')"
       />

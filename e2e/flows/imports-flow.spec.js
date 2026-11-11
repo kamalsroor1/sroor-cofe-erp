@@ -5,14 +5,16 @@
 //  - Validating preview step (summary counts, data table, skip-invalid handling)
 //  - Committing import and verifying results summary
 //
-// Network endpoints /preview and /commit are mocked via page.route so nothing is written
-// to the persistent database and tests run deterministically.
+// POST /api/v1/imports/items/preview and /commit are mocked via page.route so nothing is written
+// to the persistent database and tests run deterministically. Selectors use data-testid, never
+// translated text.
 import { test, expect } from '@playwright/test';
+import { skipOnPhoneViewport } from '../utils/pos-viewport.js';
 
 const MOCK_ITEMS_PREVIEW = {
     success: true,
     data: {
-        session_token: 'mock-session-token-12345',
+        token: 'mock-import-token-12345',
         type: 'items',
         summary: {
             total: 3,
@@ -83,68 +85,67 @@ const MOCK_COMMIT_RESULT = {
 };
 
 test.describe('PRD-06: Imports Flow Journey', () => {
+    // The preview table is the md+ layout; phones render cards instead.
+    skipOnPhoneViewport(test);
+
     test('complete wizard: select items type, upload CSV, preview, and commit', async ({ page }) => {
         let commitPayload = null;
 
-        // Mock import preview API
-        await page.route('**/api/v1/import/preview', (route) => {
-            return route.fulfill({
-                status: 200,
-                json: MOCK_ITEMS_PREVIEW,
-            });
+        await page.route('**/api/v1/imports/items/preview', (route) => {
+            if (route.request().method() !== 'POST') return route.fallback();
+            return route.fulfill({ status: 200, json: MOCK_ITEMS_PREVIEW });
         });
 
-        // Mock import commit API
-        await page.route('**/api/v1/import/commit', async (route) => {
+        await page.route('**/api/v1/imports/items/commit', async (route) => {
             if (route.request().method() !== 'POST') return route.fallback();
             commitPayload = route.request().postDataJSON();
-            return route.fulfill({
-                status: 200,
-                json: MOCK_COMMIT_RESULT,
-            });
+            return route.fulfill({ status: 200, json: MOCK_COMMIT_RESULT });
         });
 
-        // Step 1: Navigate to import page
-        await page.goto('/import', { waitUntil: 'networkidle' });
-        await page.waitForSelector('#app', { timeout: 15000 });
+        // Step 1: open the import page
+        await page.goto('/imports', { waitUntil: 'networkidle' });
 
-        // Step 2: Choose type (items)
-        const itemsTypeBtn = page.locator('button:has-text("الأصناف"), button:has-text("Items")').first();
-        if (await itemsTypeBtn.isVisible()) {
-            await itemsTypeBtn.click();
-        }
-
-        const continueBtn = page.locator('button:has-text("متابعة"), button:has-text("Continue")').first();
+        // Step 2: choose the items type and continue
+        await page.getByTestId('import-type-items').click();
+        const continueBtn = page.getByTestId('import-type-continue');
         await expect(continueBtn).toBeEnabled();
         await continueBtn.click();
 
-        // Step 3: Upload file (simulate CSV with Arabic items)
+        // Step 3: upload a CSV with Arabic items
         const csvContent =
             'name,code,category,unit,cost_price,selling_price,opening_quantity,opening_cost\n' +
             'بن برازيلي وسط,BRAZIL-MED,قهوة,كجم,350.000,450.000,25.000,350.000\n' +
             'بن كولومبي فاخر,COLOMB-PRM,قهوة,كجم,420.000,520.000,15.000,420.000\n' +
             'شاي أخضر سيلاني,TEA-GREEN,شاي,قطعة,45.000,65.000,50.000,45.000\n';
 
-        const fileInput = page.locator('input[type="file"]');
-        await fileInput.setInputFiles({
+        await page.getByTestId('import-file-input').setInputFiles({
             name: 'items_import.csv',
             mimeType: 'text/csv',
             buffer: Buffer.from(csvContent, 'utf-8'),
         });
 
-        // Step 4: Verify preview step loaded
-        await expect(page.getByText('بن برازيلي وسط')).toBeVisible({ timeout: 15000 });
-        await expect(page.getByText('بن كولومبي فاخر')).toBeVisible();
+        // Step 4: the preview shows the summary counts and one table row per sheet row
+        await expect(page.getByTestId('import-preview-step')).toBeVisible({ timeout: 15000 });
+        await expect(page.getByTestId('import-summary-all-count')).toHaveText('3');
+        await expect(page.getByTestId('import-summary-valid-count')).toHaveText('3');
+        await expect(page.getByTestId('import-summary-invalid-count')).toHaveText('0');
+        for (const rowNumber of [2, 3, 4]) {
+            await expect(page.getByTestId(`import-preview-row-${rowNumber}`)).toBeVisible();
+        }
 
-        // Step 5: Commit import
-        const commitBtn = page.locator('button:has-text("استيراد"), button:has-text("Import")').last();
+        // Step 5: commit (the confirmation dialog is SweetAlert2; its confirm button has a fixed class)
+        const commitBtn = page.getByTestId('import-commit-btn');
         await expect(commitBtn).toBeEnabled();
         await commitBtn.click();
+        await page.locator('.swal2-confirm').click();
 
-        // Step 6: Verify result step displays created counts
-        await expect(page.getByText('3').first()).toBeVisible({ timeout: 15000 });
-        expect(commitPayload).not.toBeNull();
-        expect(commitPayload.session_token).toBe('mock-session-token-12345');
-        expect(commitPayload.type).toBe('items');
+        // Step 6: the result summary shows the created / skipped / duplicate counts
+        await expect(page.getByTestId('import-result-step')).toBeVisible({ timeout: 15000 });
+        await expect(page.getByTestId('import-result-created')).toHaveText('3');
+        await expect(page.getByTestId('import-result-skipped')).toHaveText('0');
+        await expect(page.getByTestId('import-result-duplicates')).toHaveText('0');
+
+        // The commit body carries the token returned by the preview and the skip flag
+        expect(commitPayload).toEqual({ token: 'mock-import-token-12345', skip_invalid: false });
     });
 });
