@@ -132,6 +132,14 @@ cat >"$STUBS/sudo" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 printf 'sudo %s\n' "$*" >>"$FAKE_LOG"
+# supervisorctl status: Horizon RUNNING unless the test says it is down (FATAL).
+if [[ "$*" == "-n /usr/bin/supervisorctl status" ]]; then
+    if [[ -n "${FAKE_HORIZON_DOWN:-}" ]]; then
+        printf 'sroor-horizon                    FATAL     Exited too quickly (process log may have details)\n'
+    else
+        printf 'sroor-horizon                    RUNNING   pid 4242, uptime 1:00:00\n'
+    fi
+fi
 exit "${FAKE_SUDO_RC:-0}"
 EOF
 
@@ -344,6 +352,7 @@ check "pre-switch relocate only copies (no --prune-legacy before the switch)" ba
 check "per-table grants applied (app: no UPDATE/DELETE on audit tables)" grep -qF 'REVOKE IF EXISTS ALL PRIVILEGES ON `sroor_central`.`central_audit_logs` FROM `sroor_app`@`localhost`' "$FAKE_SQL"
 check "app gets UPDATE, DELETE on a normal table" grep -qF 'GRANT UPDATE, DELETE ON `sroor_central`.`tenants` TO `sroor_app`@`localhost`' "$FAKE_SQL"
 check "/up is checked against the local nginx" log_has "--resolve example.test:443:127.0.0.1 https://example.test/up"
+check "queue running: supervisor status checked, Horizon not force-started" bash -c "grep -q 'sudo -n /usr/bin/supervisorctl status' '$FAKE_LOG' && ! grep -q 'supervisorctl restart' '$FAKE_LOG'"
 check "lock released" test ! -e "$ROOT/.deploy.lock"
 check "no previous release recorded on the first deploy" test ! -e "$ROOT/.previous_release"
 check "history records the deploy" grep -q "$ID1 $SHA1 deployed" "$ROOT/shared/deploy-history.log"
@@ -351,11 +360,15 @@ check "history records the deploy" grep -q "$ID1 $SHA1 deployed" "$ROOT/shared/d
 # ------------------------------------------------------------------------------------
 echo "2. Second deploy"
 # ------------------------------------------------------------------------------------
-run_deploy "$SHA2" "$WORK/good2.tar.gz" "$WORK/env-two"
+# Horizon FATAL (e.g. since provisioning, before any release existed): the deploy must start it.
+FAKE_HORIZON_DOWN=1 run_deploy "$SHA2" "$WORK/good2.tar.gz" "$WORK/env-two"
 DETAIL="$OUT"
 check "second deploy exits 0" test "$RC" -eq 0
 ID2="$(current_id)"
 DETAIL="$(cat "$FAKE_LOG")"
+check "queue not running: Horizon is started after terminate" \
+    in_order "php horizon:terminate @current" "sudo -n /usr/bin/supervisorctl status" "sudo -n /usr/bin/supervisorctl restart sroor-horizon"
+check "queue not running: a warning names the program" bash -c "grep -q 'queue program sroor-horizon is not running' <<<\"\$0\"" "$OUT"
 check "pre-migration backup ran from the new release" log_has "php backup:tenants @$ID2"
 check "order: storage:link > pre-migration backup > migrate > tenants:migrate" \
     in_order "php storage:link" "php backup:tenants" "php migrate" "php tenants:migrate"
