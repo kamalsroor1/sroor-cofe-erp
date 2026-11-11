@@ -312,6 +312,50 @@ final class MysqlConcurrencyTest extends TenantTestCase
         $this->assertCount(self::WORKERS, array_unique($paymentNumbers));
     }
 
+    public function test_first_checkouts_on_a_brand_new_sequence_scope_do_not_deadlock(): void
+    {
+        // BE-09 regression: the first issuers of a new scope (a new business day) used to race
+        // on creating the document_sequences row inside their document transactions (MySQL 1213).
+        $tenant = $this->createTenant();
+        $storeId = (int) $this->tenantStore($tenant)->getKey();
+
+        [$itemId, $customerIds] = $this->inTenant($tenant, function (): array {
+            $item = $this->makeItem('QA-FIRST-01', '100.000');
+            $customerIds = [];
+            for ($i = 1; $i <= self::WORKERS; $i++) {
+                $customerIds[] = (int) Customer::query()->create(['name' => 'عميل يوم جديد '.$i, 'current_balance' => '0.000', 'is_active' => true])->getKey();
+            }
+
+            return [(int) $item->getKey(), $customerIds];
+        });
+
+        $this->assertSame(0, $this->inTenant($tenant, fn (): int => DB::table('document_sequences')->where('scope', 'like', 'INV-%')->count()), 'The scope must be brand new.');
+
+        $payloads = array_map(fn (int $customerId): array => [
+            'client_uuid' => (string) Str::uuid(),
+            'customer_id' => $customerId,
+            'store_id' => $storeId,
+            'payment_type' => 'cash',
+            'discount_type' => 'fixed',
+            'discount_value' => '0.000',
+            'items' => [['item_id' => $itemId, 'quantity' => '1.000', 'unit_price' => '150.000', 'discount_amount' => '0.000']],
+        ], $customerIds);
+
+        $results = $this->runWorkers('checkout', $tenant, $payloads);
+
+        foreach ($results as $result) {
+            $this->assertTrue($result['ok'], 'A first-use checkout failed (1213 deadlock on the new scope?): '.json_encode($result, JSON_UNESCAPED_UNICODE));
+        }
+
+        $sequences = array_map(fn (array $r): int => (int) substr((string) $r['invoice_number'], (int) strrpos((string) $r['invoice_number'], '-') + 1), $results);
+        sort($sequences);
+        $this->assertSame(range(1, self::WORKERS), $sequences, 'Distinct consecutive numbers expected.');
+
+        $scopes = $this->inTenant($tenant, fn (): array => DB::table('document_sequences')->where('scope', 'like', 'INV-%')->pluck('last_value')->map(fn ($v): int => (int) $v)->all());
+        $this->assertSame([self::WORKERS], $scopes, 'Exactly one scope row, advanced once per invoice.');
+        // Teardown: the harness drops the whole tenant schema after every test, scope rows included.
+    }
+
     public function test_checkout_and_edit_of_a_paid_invoice_for_the_same_customer_do_not_deadlock(): void
     {
         $tenant = $this->createTenant();

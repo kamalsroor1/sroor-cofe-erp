@@ -144,17 +144,24 @@ final class DocumentNumberService
     /**
      * Make sure the counter row of a scope exists (seeded on first use).
      *
-     * On MySQL/MariaDB the existence check and the insert run on their OWN autocommit
-     * connection. Inside the caller's transaction, N issuers hitting a new scope together all
-     * queue for a shared lock behind the first (uncommitted) insert, are all granted it when it
-     * commits, and then all try to upgrade it to exclusive for the lock/update below: InnoDB
-     * kills one with error 1213, which rolls back the whole document. Committing the row at
-     * once means the losers only ever wait for one statement and hold no lock afterwards.
-     * The check must be on that connection too: the caller's snapshot may predate the winner's
-     * commit, and a stale "missing" would make this insert wait on a row lock held by another
-     * document transaction, which InnoDB cannot see across connections (lock wait timeout).
-     * The row is pure bookkeeping (last_value = the seed), so committing it early is harmless
-     * even if the document is later rolled back. sqlite has a single writer: plain statements.
+     * Hot path: a plain existence check on the caller's connection. Scope rows are never
+     * deleted, so "present" is reliable even from an old snapshot; only "missing" can be stale.
+     *
+     * Slow path, only when the row looks missing, on MySQL/MariaDB: the check is repeated and
+     * the row inserted on a short-lived OWN autocommit connection. Inside the caller's
+     * transaction, N issuers hitting a new scope together all queue for a shared lock behind
+     * the first (uncommitted) insert, are all granted it when it commits, and then all try to
+     * upgrade it to exclusive for the lock/update in allocate(): InnoDB kills one with error
+     * 1213, which rolls back the whole document. Committing the row at once means the losers
+     * only ever wait for one statement and hold no lock afterwards. The repeated check must be
+     * on that connection too: the caller's snapshot may predate the winner's commit, and a stale
+     * "missing" would make the insert wait on a row lock held by another document transaction,
+     * which InnoDB cannot see across connections (lock wait timeout).
+     *
+     * The seed row therefore commits independently of the document transaction. That is
+     * harmless: last_value equals the seed, i.e. the highest number already issued, so a
+     * rolled-back document leaves the counter exactly as it would have been found.
+     * sqlite has a single writer: plain statements.
      *
      * @param  (callable(): int)|null  $seed
      */
@@ -162,15 +169,18 @@ final class DocumentNumberService
     {
         $connection = DB::connection();
 
+        if (DB::table(self::TABLE)->where('scope', $scope)->exists()) {
+            return;
+        }
+
         if (! in_array($connection->getDriverName(), ['mysql', 'mariadb'], true)) {
-            if (! DB::table(self::TABLE)->where('scope', $scope)->exists()) {
-                $this->insertScopeRow(DB::connection(), $scope, $seed);
-            }
+            $this->insertScopeRow($connection, $scope, $seed);
 
             return;
         }
 
-        $name = 'document_sequences_seed';
+        // Unique per call so nested or interleaved allocations never share (or purge) each other's session.
+        $name = 'document_sequences_seed_'.uniqid('', true);
         $seedConnection = DB::connectUsing($name, $connection->getConfig(), force: true);
 
         try {
