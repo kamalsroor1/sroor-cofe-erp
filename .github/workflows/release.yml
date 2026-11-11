@@ -102,6 +102,24 @@ jobs:
           cp .env.example .env
           php artisan key:generate --ansi
 
+      # The SPA shell resolves hashed assets through the Vite manifest; the copy still
+      # tracked in git is stale, so build it here (same as ci.yml) or every test that
+      # renders the shell dies with ViteException.
+      - name: Setup Node (Vite manifest for SPA shell tests)
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: npm ci
+        working-directory: backend
+        run: npm ci
+
+      - name: Build assets (runs lang:export via prebuild)
+        working-directory: backend
+        run: npm run build
+
       - name: PHPUnit (sqlite :memory:, PHP 8.5)
         working-directory: backend
         run: php artisan test
