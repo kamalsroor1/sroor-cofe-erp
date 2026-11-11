@@ -132,6 +132,14 @@ cat >"$STUBS/sudo" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 printf 'sudo %s\n' "$*" >>"$FAKE_LOG"
+# supervisorctl status: Horizon RUNNING unless the test says it is down (FATAL).
+if [[ "$*" == "-n /usr/bin/supervisorctl status" ]]; then
+    if [[ -n "${FAKE_HORIZON_DOWN:-}" ]]; then
+        printf 'sroor-horizon                    FATAL     Exited too quickly (process log may have details)\n'
+    else
+        printf 'sroor-horizon                    RUNNING   pid 4242, uptime 1:00:00\n'
+    fi
+fi
 exit "${FAKE_SUDO_RC:-0}"
 EOF
 
@@ -335,6 +343,7 @@ check "storage:link --force ran in the new release" log_has "php storage:link @$
 check "first release: no pre-migration backup (nothing to back up yet)" bash -c "! grep -q 'php backup:tenants' '$FAKE_LOG'"
 check "artisan runs with the health deploy gate" log_has "php health:check @$ID1 dbuser= gate=1"
 check "central operator permissions re-seeded with the app account" log_has "php db:seed @$ID1 dbuser="
+check "two central syncs (permissions + plan catalog) ran" test "$(grep -c "php db:seed @$ID1 " "$FAKE_LOG")" -eq 2
 check "order: storage:link > migrate > grants > central permissions > tenants:migrate > relocate > caches > smoke > switch > queue > health > /up" \
     in_order "php storage:link" "php migrate" "mysql --defaults-extra-file=" "php db:seed @$ID1" "php tenants:migrate" "php app-releases:relocate @$ID1" "php config:cache" \
     "php route:cache" "php view:cache" "php event:cache" "php health:check @$ID1" "sudo -n /usr/bin/systemctl reload php8.5-fpm" \
@@ -343,6 +352,7 @@ check "pre-switch relocate only copies (no --prune-legacy before the switch)" ba
 check "per-table grants applied (app: no UPDATE/DELETE on audit tables)" grep -qF 'REVOKE IF EXISTS ALL PRIVILEGES ON `sroor_central`.`central_audit_logs` FROM `sroor_app`@`localhost`' "$FAKE_SQL"
 check "app gets UPDATE, DELETE on a normal table" grep -qF 'GRANT UPDATE, DELETE ON `sroor_central`.`tenants` TO `sroor_app`@`localhost`' "$FAKE_SQL"
 check "/up is checked against the local nginx" log_has "--resolve example.test:443:127.0.0.1 https://example.test/up"
+check "queue running: supervisor status checked, Horizon not force-started" bash -c "grep -q 'sudo -n /usr/bin/supervisorctl status' '$FAKE_LOG' && ! grep -q 'supervisorctl restart' '$FAKE_LOG'"
 check "lock released" test ! -e "$ROOT/.deploy.lock"
 check "no previous release recorded on the first deploy" test ! -e "$ROOT/.previous_release"
 check "history records the deploy" grep -q "$ID1 $SHA1 deployed" "$ROOT/shared/deploy-history.log"
@@ -350,11 +360,15 @@ check "history records the deploy" grep -q "$ID1 $SHA1 deployed" "$ROOT/shared/d
 # ------------------------------------------------------------------------------------
 echo "2. Second deploy"
 # ------------------------------------------------------------------------------------
-run_deploy "$SHA2" "$WORK/good2.tar.gz" "$WORK/env-two"
+# Horizon FATAL (e.g. since provisioning, before any release existed): the deploy must start it.
+FAKE_HORIZON_DOWN=1 run_deploy "$SHA2" "$WORK/good2.tar.gz" "$WORK/env-two"
 DETAIL="$OUT"
 check "second deploy exits 0" test "$RC" -eq 0
 ID2="$(current_id)"
 DETAIL="$(cat "$FAKE_LOG")"
+check "queue not running: Horizon is started after terminate" \
+    in_order "php horizon:terminate @current" "sudo -n /usr/bin/supervisorctl status" "sudo -n /usr/bin/supervisorctl restart sroor-horizon"
+check "queue not running: a warning names the program" bash -c "grep -q 'queue program sroor-horizon is not running' <<<\"\$0\"" "$OUT"
 check "pre-migration backup ran from the new release" log_has "php backup:tenants @$ID2"
 check "order: storage:link > pre-migration backup > migrate > tenants:migrate" \
     in_order "php storage:link" "php backup:tenants" "php migrate" "php tenants:migrate"
@@ -538,10 +552,11 @@ echo "7b. Pipeline hygiene (BE-06): static guards on the replacement pipeline"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 PIPELINE_FILES=("$REPO_ROOT/scripts/ops/deploy.sh" "$REPO_ROOT/.github/workflows/release.yml")
 DETAIL=""
-# The only seeder allowed is the idempotent central operator-permission sync (no data, no demo
-# rows): its exact invocation is blanked before the scan, so any other db:seed still fails.
-check "pipeline never seeds (except CentralPermissionsSeeder), populates demo data, or runs tinker" bash -c "! sed 's/db:seed --class=CentralPermissionsSeeder --force//g' ${PIPELINE_FILES[*]} | grep -nE '^[^#]*(db:seed|populate-realistic-data|artisan[[:space:]]+tinker|[[:space:]]tinker[[:space:]])'"
-check "the allowed seeder is the central permission sync only" bash -c "[[ \$(grep -cE '^[^#]*db:seed' $REPO_ROOT/scripts/ops/deploy.sh) -eq 2 ]] && ! grep -nE '^[^#]*db:seed' ${PIPELINE_FILES[*]} | grep -v 'db:seed --class=CentralPermissionsSeeder --force'"
+# The only seeders allowed are two idempotent, central, non-demo syncs: operator permissions and
+# the SaaS plan catalog (adds missing entries only). Their exact invocations are blanked before
+# the scan, so any other db:seed (DatabaseSeeder, demo data...) still fails.
+check "pipeline never seeds (except the two central syncs), populates demo data, or runs tinker" bash -c "! sed -E 's/db:seed --class=(CentralPermissionsSeeder|PlansAndFeaturesSeeder) --force//g' ${PIPELINE_FILES[*]} | grep -nE '^[^#]*(db:seed|populate-realistic-data|artisan[[:space:]]+tinker|[[:space:]]tinker[[:space:]])'"
+check "the allowed seeders are the two central syncs only" bash -c "[[ \$(grep -cE '^[^#]*db:seed' $REPO_ROOT/scripts/ops/deploy.sh) -eq 4 ]] && ! grep -nE '^[^#]*db:seed' ${PIPELINE_FILES[*]} | grep -vE 'db:seed --class=(CentralPermissionsSeeder|PlansAndFeaturesSeeder) --force'"
 check "pipeline never wipes or resets a database" bash -c "! grep -nE '^[^#]*(migrate:fresh|migrate:reset|migrate:refresh|db:wipe|tenants:migrate-fresh)' ${PIPELINE_FILES[*]}"
 check "pipeline never migrates a single tenant (--tenants=...)" bash -c "! grep -nE '^[^#]*tenants:migrate[^#]*--tenants' ${PIPELINE_FILES[*]}"
 check "no '|| true' on a migrate or backup line" bash -c "! grep -nE '^[^#]*(migrate|backup:tenants)[^#]*\\|\\|[[:space:]]*(true|:)' ${PIPELINE_FILES[*]}"

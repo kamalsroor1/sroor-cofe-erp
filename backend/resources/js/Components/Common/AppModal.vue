@@ -30,6 +30,13 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  // A modal that can open ON TOP of another open modal (e.g. the 2FA step-up prompt raised by a
+  // request sent from a modal). Every modal teleports to <body> at z-50, so the one mounted later
+  // would otherwise cover it.
+  stacked: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['close']);
@@ -123,7 +130,8 @@ watch(
     <Transition name="sheet-slide">
       <div
         v-if="show"
-        class="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 font-tajawal select-none"
+        :class="stacked ? 'z-[60]' : 'z-50'"
+        class="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 font-tajawal select-none"
         @click="close"
       >
         <!-- Sheet Panel Container -->

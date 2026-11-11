@@ -20,6 +20,7 @@ set -euo pipefail
 #   release) -> migrate --force (central, as the migrator account)
 #   -> per-table central grants (append-only audit)
 #   -> db:seed CentralPermissionsSeeder (operator roles/permissions, idempotent)
+#   -> db:seed PlansAndFeaturesSeeder (SaaS catalog: adds what is missing, never overwrites)
 #   -> tenants:migrate --force
 #   -> app-releases:relocate (copy + verify release binaries to the private disk;
 #      the public copy stays for the old release, idempotent)
@@ -191,11 +192,29 @@ reload_fpm() {
 }
 
 restart_queue() {
-    local backend="$1"
+    local backend="$1" program status
     if [[ "$QUEUE_MODE_ARG" == "horizon" ]]; then
-        artisan "$backend" horizon:terminate
+        # Explicit returns: rollback calls this under `if !`, where set -e is off.
+        artisan "$backend" horizon:terminate || return 1
+        program="sroor-horizon"
     else
-        artisan "$backend" queue:restart
+        artisan "$backend" queue:restart || return 1
+        program="sroor-worker:"
+    fi
+    # terminate/restart only stop running workers; supervisor brings them back. A program that is
+    # not running at all (FATAL after provisioning, before the first release existed, or STOPPED)
+    # is never restarted by supervisor, so jobs (tenant provisioning!) would queue forever.
+    # Start it explicitly; `supervisorctl restart <program>` is the sudoers-allowed form.
+    # supervisorctl status exits 3 when any program is not RUNNING: that is the case we handle.
+    local rc=0
+    status="$(sudo -n /usr/bin/supervisorctl status 2>/dev/null)" || rc=$?
+    if [[ "$rc" -ne 0 && "$rc" -ne 3 ]]; then
+        warn "supervisorctl status failed (exit $rc)"
+        return 1
+    fi
+    if ! grep -E "^${program%:}[: ][^ ]*[[:space:]]+(RUNNING|STARTING)" <<<"$status" >/dev/null; then
+        warn "queue program ${program%:} is not running: starting it"
+        sudo -n /usr/bin/supervisorctl restart "$program" || return 1
     fi
 }
 
@@ -499,6 +518,13 @@ CENTRAL_DB_NAME="${ENVV[DB_DATABASE]}" \
 STAGE="central-permissions"
 info "php artisan db:seed --class=CentralPermissionsSeeder --force (operator roles, idempotent)"
 artisan "$BACKEND" db:seed --class=CentralPermissionsSeeder --force
+
+# The approved SaaS catalog (plans, features, add-ons) lives in code. PlansAndFeaturesSeeder only
+# creates what is missing and merges new feature keys; it never overwrites a price, limit, flag or
+# name a super-admin edited. Running it every release ships new catalog entries without a manual seed.
+STAGE="plan-catalog"
+info "php artisan db:seed --class=PlansAndFeaturesSeeder --force (missing catalog entries only)"
+artisan "$BACKEND" db:seed --class=PlansAndFeaturesSeeder --force
 
 STAGE="migrate-tenants"
 info "php artisan tenants:migrate --force (any failing tenant stops the release)"

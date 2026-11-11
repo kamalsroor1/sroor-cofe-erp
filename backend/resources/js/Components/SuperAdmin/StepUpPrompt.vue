@@ -50,6 +50,7 @@ const cancel = () => {
     :subtitle="$t('super.central_auth.step_up_subtitle')"
     :icon="ShieldAlert"
     max-width="sm"
+    stacked
     @close="cancel"
   >
     <CentralTwoFactorCodeForm
