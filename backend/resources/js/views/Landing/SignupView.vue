@@ -1,7 +1,7 @@
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import LandingShell from '../../Components/Landing/LandingShell.vue';
-import SupportFooter from '../../Components/Landing/SupportFooter.vue';
+import SignupAside from '../../Components/Signup/SignupAside.vue';
 import SignupForm from '../../Components/Signup/SignupForm.vue';
 import SignupSuccess from '../../Components/Signup/SignupSuccess.vue';
 import { useSignupRequest } from '../../Composables/useSignupRequest';
@@ -15,24 +15,30 @@ const {
   businessTypeOptions,
   planOptions,
   plansFailed,
+  selectedPlan,
+  founder,
+  currency,
   brand,
   loadPlans,
   submit,
 } = useSignupRequest();
+const formRef = ref(null);
 
 onMounted(loadPlans);
 </script>
 
 <template>
-  <LandingShell :brand-name="brand.name || ''">
-    <div class="mx-auto max-w-2xl space-y-6 px-4 py-10 sm:px-6">
-      <SignupSuccess v-if="successMessage" :message="successMessage" />
-      <template v-else>
-        <header class="space-y-2 text-center">
-          <h1 class="text-2xl font-black text-slate-900 dark:text-white">{{ $t('signup.form.title') }}</h1>
-          <p class="text-sm text-slate-500 dark:text-slate-400">{{ $t('signup.form.subtitle') }}</p>
-        </header>
+  <LandingShell :brand="brand">
+    <div class="bg-mk-bg px-5 pt-6 pb-14 sm:px-6 lg:pt-14 lg:pb-24">
+      <div v-if="successMessage" class="py-10">
+        <SignupSuccess :message="successMessage" />
+      </div>
+      <div
+        v-else
+        class="mx-auto grid max-w-[1200px] grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_440px]"
+      >
         <SignupForm
+          ref="formRef"
           v-model:form="form"
           :errors="errors"
           :form-error="formError"
@@ -42,8 +48,15 @@ onMounted(loadPlans);
           :is-submitting="isSubmitting"
           @submit="submit"
         />
-      </template>
+        <SignupAside
+          class="lg:sticky lg:top-[100px]"
+          :plan="selectedPlan"
+          :founder="founder"
+          :currency="currency"
+          :brand="brand"
+          @change-plan="formRef?.focusPlan()"
+        />
+      </div>
     </div>
-    <template #footer><SupportFooter :brand="brand" /></template>
   </LandingShell>
 </template>

@@ -52,6 +52,10 @@ return [
         'contact_name' => 'Contact person',
         'phone' => 'Mobile number',
         'phone_placeholder' => '01xxxxxxxxx',
+        'contact_name_placeholder' => 'Full name',
+        'email_placeholder' => 'name@example.com',
+        'city_placeholder' => 'Cairo',
+        'notes_placeholder' => 'Number of branches, the devices you have, anything you want us to know…',
         'email' => 'Email (optional)',
         'city' => 'City (optional)',
         'business_type' => 'Business type',
@@ -73,6 +77,16 @@ return [
         'throttled' => 'Too many attempts. Please wait a moment and try again.',
         'failed' => 'The request could not be sent. Please try again.',
         'plans_failed' => 'Plans could not be loaded. You can still send the request without choosing a plan.',
+    ],
+
+    'aside' => [
+        'label' => 'Your request details',
+        'selected_plan' => 'Selected plan',
+        'change' => 'Change',
+        'next_title' => 'What happens next',
+        'review_title' => 'We review your request',
+        'review_body' => 'Our team reviews your details and calls you on your mobile.',
+        'help' => 'Need help?',
     ],
 
     'console' => [

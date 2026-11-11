@@ -27,7 +27,7 @@ const emptyForm = () => ({
 export function useSignupRequest() {
     const { t } = useTrans();
     const route = useRoute();
-    const { plans, brand, load: loadPlans, hasError: plansFailed } = usePublicPlans();
+    const { plans, brand, founder, currency, load: loadPlans, hasError: plansFailed } = usePublicPlans();
 
     const form = ref(emptyForm());
     const errors = ref({});
@@ -51,6 +51,9 @@ export function useSignupRequest() {
         }
     };
     watch(plans, preselectPlan);
+
+    // The plan shown in the page aside; null while none is chosen ("not sure yet").
+    const selectedPlan = computed(() => plans.value.find((plan) => plan.code === form.value.plan_code) || null);
 
     const buildPayload = () => {
         const payload = {};
@@ -92,6 +95,9 @@ export function useSignupRequest() {
         businessTypeOptions,
         planOptions,
         plansFailed,
+        selectedPlan,
+        founder,
+        currency,
         brand,
         loadPlans,
         submit,

@@ -1,6 +1,6 @@
 <script setup>
-import { CheckCircle2 } from 'lucide-vue-next';
-import BaseButton from '../Common/BaseButton.vue';
+import { Check } from 'lucide-vue-next';
+import MarketingButton from '../Landing/MarketingButton.vue';
 
 defineProps({
   message: { type: String, default: '' },
@@ -10,16 +10,16 @@ defineProps({
 <template>
   <div
     role="status"
-    class="space-y-4 rounded-3xl border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900"
+    class="mx-auto flex w-full max-w-[560px] flex-col items-center gap-4 rounded-3xl border border-mk-line bg-mk-surface p-7 text-center sm:p-10"
   >
-    <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-500">
-      <CheckCircle2 class="h-9 w-9" />
+    <span class="inline-flex size-[72px] items-center justify-center rounded-full bg-mk-primary text-mk-primary-ink">
+      <Check class="size-9" stroke-width="3" aria-hidden="true" />
     </span>
-    <h2 class="text-lg font-black text-slate-900 dark:text-white">{{ $t('signup.form.success_title') }}</h2>
-    <p class="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{{ message }}</p>
-    <div class="flex flex-col justify-center gap-3 sm:flex-row">
-      <BaseButton to="/welcome" variant="primary" size="md">{{ $t('signup.form.back_home') }}</BaseButton>
-      <BaseButton to="/pricing" variant="outline" size="md">{{ $t('signup.form.view_pricing') }}</BaseButton>
+    <h1 class="text-[26px] font-bold text-mk-ink sm:text-[30px]">{{ $t('signup.form.success_title') }}</h1>
+    <p class="text-base leading-[1.6] text-mk-muted sm:text-[17px]">{{ message }}</p>
+    <div class="flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row">
+      <MarketingButton to="/welcome" variant="primary">{{ $t('signup.form.back_home') }}</MarketingButton>
+      <MarketingButton to="/pricing" variant="outline">{{ $t('signup.form.view_pricing') }}</MarketingButton>
     </div>
   </div>
 </template>

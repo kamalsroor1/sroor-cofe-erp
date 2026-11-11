@@ -1,10 +1,12 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import LandingShell from '../../Components/Landing/LandingShell.vue';
-import PricingHero from '../../Components/Landing/PricingHero.vue';
-import PlansSection from '../../Components/Landing/PlansSection.vue';
-import AddonsList from '../../Components/Landing/AddonsList.vue';
-import SupportFooter from '../../Components/Landing/SupportFooter.vue';
+import LandingFaq from '../../Components/Landing/LandingFaq.vue';
+import LandingFinalCta from '../../Components/Landing/LandingFinalCta.vue';
+import PricingAddons from '../../Components/Landing/Pricing/PricingAddons.vue';
+import PricingCompare from '../../Components/Landing/Pricing/PricingCompare.vue';
+import PricingHeader from '../../Components/Landing/Pricing/PricingHeader.vue';
+import PricingPlans from '../../Components/Landing/Pricing/PricingPlans.vue';
 import { usePublicPlans } from '../../Composables/usePublicPlans';
 
 const { plans, addons, brand, founder, currency, pricesExcludeVat, isLoading, hasError, load } = usePublicPlans();
@@ -14,21 +16,29 @@ onMounted(load);
 </script>
 
 <template>
-  <LandingShell :brand-name="brand.name || ''">
-    <div class="mx-auto max-w-6xl space-y-10 px-4 py-10 sm:px-6">
-      <PricingHero v-model:billing="billing" :brand="brand" :is-loading="isLoading" />
-      <PlansSection
+  <LandingShell :brand="brand">
+    <PricingHeader v-model:billing="billing" :plans="plans" :founder="founder" :is-loading="isLoading" />
+    <PricingPlans
+      :plans="plans"
+      :billing="billing"
+      :is-loading="isLoading"
+      :has-error="hasError"
+      :currency="currency"
+      :founder="founder"
+      :prices-exclude-vat="pricesExcludeVat"
+      @retry="load"
+    />
+    <template v-if="!hasError">
+      <PricingCompare
         :plans="plans"
-        :is-loading="isLoading"
-        :has-error="hasError"
         :billing="billing"
-        :currency="currency"
         :founder="founder"
-        :prices-exclude-vat="pricesExcludeVat"
-        @retry="load"
+        :currency="currency"
+        :is-loading="isLoading"
       />
-      <AddonsList :addons="addons" :billing="billing" :currency="currency" />
-    </div>
-    <template #footer><SupportFooter :brand="brand" /></template>
+      <PricingAddons :addons="addons" :billing="billing" :currency="currency" :is-loading="isLoading" />
+    </template>
+    <LandingFaq />
+    <LandingFinalCta />
   </LandingShell>
 </template>

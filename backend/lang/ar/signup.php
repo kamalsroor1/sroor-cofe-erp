@@ -52,6 +52,10 @@ return [
         'contact_name' => 'اسم المسؤول',
         'phone' => 'رقم الموبايل',
         'phone_placeholder' => '01xxxxxxxxx',
+        'contact_name_placeholder' => 'الاسم بالكامل',
+        'email_placeholder' => 'name@example.com',
+        'city_placeholder' => 'القاهرة',
+        'notes_placeholder' => 'عدد الفروع، الأجهزة اللي عندك، أي حاجة تحب نعرفها…',
         'email' => 'البريد الإلكتروني (اختياري)',
         'city' => 'المدينة (اختياري)',
         'business_type' => 'نوع النشاط',
@@ -73,6 +77,16 @@ return [
         'throttled' => 'محاولات كثيرة. انتظر قليلًا ثم حاول مرة أخرى.',
         'failed' => 'تعذّر إرسال الطلب. حاول مرة أخرى.',
         'plans_failed' => 'تعذّر تحميل الباقات. تقدر تكمل الطلب بدون اختيار باقة.',
+    ],
+
+    'aside' => [
+        'label' => 'تفاصيل طلبك',
+        'selected_plan' => 'الباقة المختارة',
+        'change' => 'تغيير',
+        'next_title' => 'اللي هيحصل بعد كده',
+        'review_title' => 'بنراجع طلبك',
+        'review_body' => 'فريقنا بيراجع البيانات ويتواصل معاك على الموبايل.',
+        'help' => 'محتاج مساعدة؟',
     ],
 
     'console' => [
