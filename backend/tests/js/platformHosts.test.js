@@ -8,6 +8,7 @@ import {
     getCentralDomains,
     isCentralHost,
     isLoopbackHost,
+    isPublicLandingHost,
     parseHostList,
 } from '../../resources/js/helpers/platformHosts.js';
 
@@ -56,4 +57,21 @@ test('loopback hosts are recognised', () => {
     assert.equal(isLoopbackHost('127.0.0.1'), true);
     assert.equal(isLoopbackHost('sroor.test'), false);
     assert.equal(isLoopbackHost('demo.localhost'), false);
+});
+
+test('the marketing homepage is shown on the platform apex only', () => {
+    const doc = fakeDocument({ 'central-domains': 'ibraa.app,localhost' });
+
+    assert.equal(isPublicLandingHost({ host: 'ibraa.app', doc }), true);
+    assert.equal(isPublicLandingHost({ host: 'IBRAA.app', doc }), true);
+    // tenant subdomain: the dashboard / sign-in flow stays
+    assert.equal(isPublicLandingHost({ host: 'shop.ibraa.app', doc }), false);
+    // loopback development host, even when configured as central
+    assert.equal(isPublicLandingHost({ host: 'localhost', doc }), false);
+    // a browser already connected to a workspace goes to its sign-in
+    assert.equal(isPublicLandingHost({ host: 'ibraa.app', doc, hasWorkspace: true }), false);
+    // the Android / Windows shells never show the marketing page
+    assert.equal(isPublicLandingHost({ host: 'ibraa.app', doc, isNativeShell: true }), false);
+    // no server configuration: never
+    assert.equal(isPublicLandingHost({ host: 'ibraa.app', doc: fakeDocument({}) }), false);
 });

@@ -7,6 +7,7 @@ import { safeCentralRedirect } from '../Composables/useSuperAdminLogin';
 import { trans } from '../helpers/trans';
 import { notifyError } from '../helpers/alert';
 import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
+import { isPublicLandingHost } from '../helpers/platformHosts';
 
 /**
  * Two disjoint route tables (IDEN-1.9). The server decides the mode:
@@ -575,6 +576,13 @@ const router = createRouter({
     },
 });
 
+function isGuestOnPlatformApex() {
+    return isPublicLandingHost({
+        hasWorkspace: !!(localStorage.getItem('active_tenant') || localStorage.getItem('tenant_id')),
+        isNativeShell: !!window.Capacitor?.isNativePlatform?.() || !!window.electronAPI?.isElectron,
+    });
+}
+
 // Tenant navigation guard
 async function tenantGuard(to, from, next) {
     const authStore = useAuthStore();
@@ -602,12 +610,18 @@ async function tenantGuard(to, from, next) {
         return next({ name: 'dashboard' });
     }
 
-    // 4. Requires Auth check
+    // 4. Platform apex: a guest opening "/" gets the marketing homepage. Tenant hosts, the native
+    // shells and browsers already connected to a workspace keep the dashboard -> sign-in flow.
+    if (to.path === '/' && !authStore.isAuthenticated && isGuestOnPlatformApex()) {
+        return next({ name: 'landing.home', query: to.query, hash: to.hash, replace: true });
+    }
+
+    // 5. Requires Auth check
     if (to.meta.requiresAuth && !authStore.isAuthenticated) {
         return next({ name: 'login', query: { redirect: to.fullPath } });
     }
 
-    // 5. Permission / Role Check (plan gating via meta.feature is rendered by App.vue as a FeatureGate upsell)
+    // 6. Permission / Role Check (plan gating via meta.feature is rendered by App.vue as a FeatureGate upsell)
     if (to.meta.permission && !authStore.hasPermission(to.meta.permission)) {
         notifyError(trans('common.no_access'));
         return next({ name: 'dashboard' });

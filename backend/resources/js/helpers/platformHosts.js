@@ -63,3 +63,18 @@ export function isLoopbackHost(host = currentHost()) {
             .toLowerCase()
     );
 }
+
+/**
+ * Does a guest opening "/" get the public marketing homepage instead of the sign-in flow?
+ * Only on a public platform apex: a server-configured central host (never a tenant subdomain,
+ * never a loopback development host), in a plain browser (not the Android / Windows shells),
+ * and only while this browser is not already connected to a workspace.
+ */
+export function isPublicLandingHost({
+    host = currentHost(),
+    doc = globalThis.document,
+    hasWorkspace = false,
+    isNativeShell = false,
+} = {}) {
+    return !isNativeShell && !hasWorkspace && isCentralHost(host, doc) && !isLoopbackHost(host);
+}
