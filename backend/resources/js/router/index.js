@@ -42,6 +42,25 @@ const tenantRoutes = [
         meta: { titleKey: 'landing.page_titles.pricing', layout: 'blank' },
     },
     {
+        path: '/features',
+        name: 'landing.features',
+        component: () => import('../views/Landing/FeaturesView.vue'),
+        meta: { titleKey: 'landing.page_titles.features', layout: 'blank' },
+    },
+    {
+        // One marketing page per business type; keep the list in step with LANDING_INDUSTRIES (useLandingNav).
+        path: '/for/:industry(coffee|retail|wholesale|vans)',
+        name: 'landing.industry',
+        component: () => import('../views/Landing/IndustryView.vue'),
+        meta: { titleKey: 'landing.page_titles.industry', layout: 'blank' },
+    },
+    {
+        path: '/contact',
+        name: 'landing.contact',
+        component: () => import('../views/Landing/ContactView.vue'),
+        meta: { titleKey: 'landing.page_titles.contact', layout: 'blank' },
+    },
+    {
         path: '/signup',
         name: 'landing.signup',
         component: () => import('../views/Landing/SignupView.vue'),
