@@ -6,6 +6,8 @@ import flatpickr from 'flatpickr';
 import { Arabic } from 'flatpickr/dist/l10n/ar.js';
 import 'flatpickr/dist/flatpickr.min.css';
 
+import { useLocale } from '../Composables/useLocale';
+
 const props = defineProps({
   modelValue: { type: [String, Array, Date, null], default: null },
   mode: { type: String, default: 'single' }, // 'single' | 'range'
@@ -18,24 +20,36 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'change', 'clear']);
 
+const { isRtl } = useLocale();
 const inputRef = ref(null);
 let fpInstance = null;
 
-onMounted(() => {
-  if (inputRef.value) {
-    fpInstance = flatpickr(inputRef.value, {
-      locale: Arabic,
-      mode: props.mode,
-      enableTime: props.enableTime,
-      dateFormat: props.enableTime ? 'Y-m-d H:i' : 'Y-m-d',
-      defaultDate: props.modelValue || undefined,
-      disableMobile: true,
-      onChange: (selectedDates, dateStr) => {
-        emit('update:modelValue', dateStr);
-        emit('change', dateStr, selectedDates);
-      },
-    });
+const initFlatpickr = () => {
+  if (fpInstance) {
+    fpInstance.destroy();
+    fpInstance = null;
   }
+  if (!inputRef.value) return;
+  fpInstance = flatpickr(inputRef.value, {
+    locale: isRtl.value ? Arabic : 'default',
+    mode: props.mode,
+    enableTime: props.enableTime,
+    dateFormat: props.enableTime ? 'Y-m-d H:i' : 'Y-m-d',
+    defaultDate: props.modelValue || undefined,
+    disableMobile: true,
+    onChange: (selectedDates, dateStr) => {
+      emit('update:modelValue', dateStr);
+      emit('change', dateStr, selectedDates);
+    },
+  });
+};
+
+onMounted(() => {
+  initFlatpickr();
+});
+
+watch(isRtl, () => {
+  initFlatpickr();
 });
 
 watch(

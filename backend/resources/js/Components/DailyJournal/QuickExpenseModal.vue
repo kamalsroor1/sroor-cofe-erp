@@ -90,6 +90,7 @@ import BaseInput from '../Form/BaseInput.vue';
 import BaseNumberInput from '../Form/BaseNumberInput.vue';
 import BaseSelect from '../Form/BaseSelect.vue';
 import BaseButton from '../Common/BaseButton.vue';
+import { computed } from 'vue';
 import { useTrans } from '../../Composables/useTrans';
 
 const { t } = useTrans();
@@ -102,20 +103,20 @@ defineProps({
 
 defineEmits(['close', 'submit', 'update:field']);
 
-const costCenterOptions = [
+const costCenterOptions = computed(() => [
   { value: 'operational', label: t('treasury.cost_center_operational') },
   { value: 'hospitality', label: t('treasury.cost_center_hospitality') },
   { value: 'packaging', label: t('treasury.cost_center_packaging') },
   { value: 'utilities', label: t('treasury.cost_center_utilities') },
   { value: 'salaries', label: t('treasury.cost_center_salaries') },
   { value: 'maintenance', label: t('treasury.cost_center_maintenance') },
-];
+]);
 
-const paymentMethodOptions = [
+const paymentMethodOptions = computed(() => [
   { value: 'cash', label: t('treasury.method_cash_drawer') },
   { value: 'instapay', label: t('contacts.instapay') },
   { value: 'e_wallet', label: t('contacts.wallet') },
   { value: 'visa', label: t('treasury.method_visa') },
   { value: 'bank_transfer', label: t('contacts.bank_transfer') },
-];
+]);
 </script>
