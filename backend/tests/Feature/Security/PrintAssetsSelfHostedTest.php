@@ -95,7 +95,7 @@ final class PrintAssetsSelfHostedTest extends TenantTestCase
         ]);
     }
 
-    public function test_qr_code_helper_generates_valid_scannable_svg_and_data_uri(): void
+    public function test_qr_code_helper_generates_valid_scannable_svg(): void
     {
         $payload = 'https://tenant.example.test/invoices/42';
         $svg = QrCode::svg($payload, 90, 0);
@@ -106,11 +106,6 @@ final class PrintAssetsSelfHostedTest extends TenantTestCase
         $this->assertStringContainsString('aria-label="QR Code"', $svg);
         $this->assertStringContainsString('<path', $svg);
 
-        $dataUri = QrCode::dataUri($payload, 90, 0);
-        $this->assertStringStartsWith('data:image/svg+xml;base64,', $dataUri);
-        $decoded = base64_decode(substr($dataUri, strlen('data:image/svg+xml;base64,')), true);
-        $this->assertIsString($decoded);
-        $this->assertStringContainsString('<svg', $decoded);
     }
 
     public function test_thermal_invoice_print_uses_local_svg_qr_and_no_qrserver_or_google_fonts(): void

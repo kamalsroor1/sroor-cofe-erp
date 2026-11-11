@@ -39,19 +39,4 @@ final class QrCode
 
         return $clean;
     }
-
-    /**
-     * Generate a self-contained RFC 2397 Data URI for embedding in an <img> tag.
-     */
-    public static function dataUri(string $data, int $size = 75, int $margin = 0): string
-    {
-        $renderer = new ImageRenderer(
-            new RendererStyle($size, $margin),
-            new SvgImageBackEnd
-        );
-
-        $svg = (new Writer($renderer))->writeString($data);
-
-        return 'data:image/svg+xml;base64,'.base64_encode($svg);
-    }
 }
