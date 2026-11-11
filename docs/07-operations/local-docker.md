@@ -41,7 +41,7 @@
 cd ~/projects/sroor
 docker/bin/dev.sh init     # backend/.env.docker + passwords عشوائية + build الـ image + APP_KEY
 docker/bin/dev.sh up       # docker compose up -d
-SEED_DEMO_TENANT_PASSWORD=password docker/bin/dev.sh setup
+SEED_DEMO_TENANT_PASSWORD=fixture-demo-pass docker/bin/dev.sh setup
 ```
 
 - `init` بينسخ `backend/.env.docker.example` لـ `backend/.env.docker` (عليه git-ignore، mode 600) **لو مش موجود بس**، وبيملا أي password فاضي بقيمة عشوائية من 32 حرف (مش بتتطبع)، وعمره ما بيغيّر قيمة موجودة. أول build بياخد حوالي 8 دقايق (تنزيل)، وبعد كده الـ cache.
