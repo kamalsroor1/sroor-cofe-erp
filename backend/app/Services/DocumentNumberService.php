@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Support\TenantClock;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -124,17 +125,7 @@ final class DocumentNumberService
     private function allocate(string $prefix, int $pad, ?callable $existsCheck, ?callable $seed, string $scope): string
     {
         // Seed only on first use, and only read the existing documents once.
-        if (! DB::table(self::TABLE)->where('scope', $scope)->exists()) {
-            $now = Carbon::now();
-            // upsert (ON DUPLICATE KEY UPDATE) instead of insertOrIgnore: when two issuers hit a
-            // brand-new scope together, the loser takes an exclusive lock on the winner's row
-            // right away instead of a shared one that would deadlock on the upgrade below.
-            DB::table(self::TABLE)->upsert(
-                [['scope' => $scope, 'last_value' => $seed !== null ? $seed() : 0, 'created_at' => $now, 'updated_at' => $now]],
-                ['scope'],
-                ['updated_at'],
-            );
-        }
+        $this->ensureScopeRow($scope, $seed);
 
         $row = DB::table(self::TABLE)->where('scope', $scope)->lockForUpdate()->first();
         $value = (int) ($row->last_value ?? 0);
@@ -148,5 +139,58 @@ final class DocumentNumberService
         DB::table(self::TABLE)->where('scope', $scope)->update(['last_value' => $value, 'updated_at' => Carbon::now()]);
 
         return $candidate;
+    }
+
+    /**
+     * Make sure the counter row of a scope exists (seeded on first use).
+     *
+     * On MySQL/MariaDB the existence check and the insert run on their OWN autocommit
+     * connection. Inside the caller's transaction, N issuers hitting a new scope together all
+     * queue for a shared lock behind the first (uncommitted) insert, are all granted it when it
+     * commits, and then all try to upgrade it to exclusive for the lock/update below: InnoDB
+     * kills one with error 1213, which rolls back the whole document. Committing the row at
+     * once means the losers only ever wait for one statement and hold no lock afterwards.
+     * The check must be on that connection too: the caller's snapshot may predate the winner's
+     * commit, and a stale "missing" would make this insert wait on a row lock held by another
+     * document transaction, which InnoDB cannot see across connections (lock wait timeout).
+     * The row is pure bookkeeping (last_value = the seed), so committing it early is harmless
+     * even if the document is later rolled back. sqlite has a single writer: plain statements.
+     *
+     * @param  (callable(): int)|null  $seed
+     */
+    private function ensureScopeRow(string $scope, ?callable $seed): void
+    {
+        $connection = DB::connection();
+
+        if (! in_array($connection->getDriverName(), ['mysql', 'mariadb'], true)) {
+            if (! DB::table(self::TABLE)->where('scope', $scope)->exists()) {
+                $this->insertScopeRow(DB::connection(), $scope, $seed);
+            }
+
+            return;
+        }
+
+        $name = 'document_sequences_seed';
+        $seedConnection = DB::connectUsing($name, $connection->getConfig(), force: true);
+
+        try {
+            if (! $seedConnection->table(self::TABLE)->where('scope', $scope)->exists()) {
+                $this->insertScopeRow($seedConnection, $scope, $seed);
+            }
+        } finally {
+            DB::purge($name);
+        }
+    }
+
+    /**
+     * @param  (callable(): int)|null  $seed
+     */
+    private function insertScopeRow(ConnectionInterface $connection, string $scope, ?callable $seed): void
+    {
+        $now = Carbon::now();
+
+        $connection->table(self::TABLE)->insertOrIgnore([
+            ['scope' => $scope, 'last_value' => $seed !== null ? $seed() : 0, 'created_at' => $now, 'updated_at' => $now],
+        ]);
     }
 }

@@ -130,7 +130,13 @@ class InvoiceService
             $storeId = $this->resolveInvoiceStoreId($data);
 
             if ($clientUuid !== null) {
-                $existing = Invoice::where('client_uuid', $clientUuid)->lockForUpdate()->first();
+                // Plain read on purpose. The customer row lock above already serialises replays of the
+                // same sale (same customer, and this read starts its snapshot after that lock), and a
+                // FOR UPDATE on a key that does not exist yet takes a gap lock on the unique index: with
+                // several first-time checkouts in flight each one blocks the others' insert (MySQL 1213).
+                // A concurrent insert of the same key by another customer ends in the unique-violation
+                // backstop in confirmInvoice().
+                $existing = Invoice::where('client_uuid', $clientUuid)->first();
                 if ($existing) {
                     $this->assertReplayMatches($existing, (int) $customer->id, $storeId);
 
