@@ -65,7 +65,7 @@ class UsersApiTest extends TenantTestCase
             ->assertJsonStructure([
                 'success',
                 'data' => [
-                    '*' => ['id', 'name', 'phone', 'email', 'is_active', 'roles', 'primary_role'],
+                    '*' => ['id', 'name', 'phone', 'email', 'is_active', 'roles', 'primary_role', 'has_pos_pin'],
                 ],
                 'roles',
                 'stores',
@@ -386,5 +386,48 @@ class UsersApiTest extends TenantTestCase
             $this->assertSame('01000007888', $fresh->phone);
             $this->assertSame('branch2-admin@example.test', $fresh->email);
         });
+    }
+
+    public function test_users_index_and_profile_return_has_pos_pin_boolean_and_hide_pin_hash(): void
+    {
+        $cashier = $this->createTenantUser($this->tenant, 'cashier', attributes: [
+            'name' => 'كاشير موافقة',
+            'phone' => '01000009988',
+        ]);
+
+        // Initially no PIN
+        $indexResp = $this->getJson('/api/v1/users', $this->adminHeaders)->assertOk();
+        $row = collect($indexResp->json('data'))->firstWhere('id', $cashier->id);
+        $this->assertNotNull($row);
+        $this->assertFalse($row['has_pos_pin']);
+        $this->assertArrayNotHasKey('pos_pin', $row);
+
+        // Set PIN via admin endpoint
+        $this->putJson("/api/v1/users/{$cashier->id}/pos-pin", ['pin' => '5432'], $this->adminHeaders)
+            ->assertOk()
+            ->assertJson(['success' => true, 'has_pos_pin' => true]);
+
+        // Index now reports has_pos_pin = true
+        $indexResp2 = $this->getJson('/api/v1/users', $this->adminHeaders)->assertOk();
+        $row2 = collect($indexResp2->json('data'))->firstWhere('id', $cashier->id);
+        $this->assertTrue($row2['has_pos_pin']);
+        $this->assertArrayNotHasKey('pos_pin', $row2);
+
+        // Profile endpoint also returns has_pos_pin = true for that user
+        $cashierHeaders = $this->tenantHeaders($this->tenant, $cashier);
+        $profileResp = $this->getJson('/api/v1/profile', $cashierHeaders)->assertOk();
+        $this->assertTrue($profileResp->json('data.has_pos_pin'));
+        $this->assertArrayNotHasKey('pos_pin', $profileResp->json('data'));
+
+        // Clear PIN via profile endpoint
+        $this->putJson('/api/v1/profile/pos-pin', [
+            'pin' => null,
+            'current_password' => 'password',
+        ], $cashierHeaders)
+            ->assertOk()
+            ->assertJson(['success' => true, 'has_pos_pin' => false]);
+
+        $profileResp2 = $this->getJson('/api/v1/profile', $cashierHeaders)->assertOk();
+        $this->assertFalse($profileResp2->json('data.has_pos_pin'));
     }
 }

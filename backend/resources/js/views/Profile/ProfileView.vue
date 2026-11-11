@@ -22,6 +22,14 @@
       <!-- Security / Password Card -->
       <ProfileSecurityCard :form="form" @update:field="updateField" />
 
+      <!-- POS Manager Approval PIN Card -->
+      <ProfilePosPinCard
+        :has-pos-pin="hasPosPin"
+        :submitting="isPinSubmitting"
+        @save-pin="updateProfilePosPin"
+        @clear-pin="clearProfilePosPin"
+      />
+
       <!-- Appearance / Theme Preferences Card -->
       <ProfileThemeCard :form="form" @update:field="updateField" />
 
@@ -47,8 +55,22 @@ import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import ProfileBasicInfoCard from '../../Components/Profile/ProfileBasicInfoCard.vue';
 import ProfileSecurityCard from '../../Components/Profile/ProfileSecurityCard.vue';
+import ProfilePosPinCard from '../../Components/Profile/ProfilePosPinCard.vue';
 import ProfileThemeCard from '../../Components/Profile/ProfileThemeCard.vue';
 import { useProfile } from '../../Composables/useProfile';
 
-const { error, errorMessage, isLoading, isSubmitting, form, updateField, submitProfile, fetchProfile } = useProfile();
+const {
+  error,
+  errorMessage,
+  isLoading,
+  isSubmitting,
+  isPinSubmitting,
+  hasPosPin,
+  form,
+  updateField,
+  submitProfile,
+  fetchProfile,
+  updateProfilePosPin,
+  clearProfilePosPin,
+} = useProfile();
 </script>
