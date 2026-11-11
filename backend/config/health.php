@@ -43,7 +43,7 @@ return [
         'only_on_failure' => true,
 
         'mail' => [
-            'to' => env('HEALTH_TO_ADDRESS', env('BACKUP_NOTIFICATION_EMAIL', env('MAIL_FROM_ADDRESS', ''))),
+            'to' => env('HEALTH_TO_ADDRESS') ?: (env('BACKUP_NOTIFICATION_EMAIL') ?: (env('MAIL_FROM_ADDRESS') ?: '')),
 
             'from' => [
                 'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),

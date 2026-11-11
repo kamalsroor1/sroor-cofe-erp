@@ -155,10 +155,12 @@ return [
         'notifiable' => Notifiable::class,
 
         'mail' => [
-            'to' => env('BACKUP_NOTIFICATION_EMAIL', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
+            // `?:` not env() defaults: the rendered production .env carries the key even when it
+            // is empty (rehearsal), and spatie rejects '' as an invalid address at boot.
+            'to' => env('BACKUP_NOTIFICATION_EMAIL') ?: (env('MAIL_FROM_ADDRESS') ?: 'hello@example.com'),
 
             'from' => [
-                'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+                'address' => env('MAIL_FROM_ADDRESS') ?: 'hello@example.com',
                 'name' => env('MAIL_FROM_NAME', 'Sroor ERP'),
             ],
         ],
@@ -241,7 +243,7 @@ return [
         ],
 
         // Failure alerts: always to the log; mail when an address is configured.
-        'notify_mail' => env('BACKUP_NOTIFICATION_EMAIL', env('MAIL_FROM_ADDRESS')),
+        'notify_mail' => env('BACKUP_NOTIFICATION_EMAIL') ?: env('MAIL_FROM_ADDRESS'),
 
         // OPS-04: text-only Telegram failure alert (platform bot token + this chat id, both .env).
         // Telegram never carries dumps. Empty = alert off.
