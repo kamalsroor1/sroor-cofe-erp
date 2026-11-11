@@ -92,13 +92,13 @@ final class TenantTimezoneReportTest extends TenantTestCase
             ->assertJsonPath('period.from_date', '2026-10-09')
             ->assertJsonPath('period.to_date', '2026-10-09')
             ->assertJsonPath('summary.invoices_count', 1)
-            ->assertJsonPath('summary.total_sales', 250);
+            ->assertJsonPath('summary.total_sales', '250.000');
 
         $this->getJson('/api/v1/reports/summary?period=yesterday', $this->tenantHeaders($tenant))
             ->assertStatus(200)
             ->assertJsonPath('period.from_date', '2026-10-08')
             ->assertJsonPath('summary.invoices_count', 1)
-            ->assertJsonPath('summary.total_sales', 100);
+            ->assertJsonPath('summary.total_sales', '100.000');
 
         // Default period (this_month) ends on the tenant's today, not the server's.
         $this->getJson('/api/v1/reports/summary', $this->tenantHeaders($tenant))
@@ -117,7 +117,7 @@ final class TenantTimezoneReportTest extends TenantTestCase
             ->assertStatus(200)
             ->assertJsonPath('period.from_date', '2026-10-08')
             ->assertJsonPath('period.to_date', '2026-10-08')
-            ->assertJsonPath('summary.total_sales', 100);
+            ->assertJsonPath('summary.total_sales', '100.000');
     }
 
     public function test_each_tenant_uses_its_own_timezone(): void
@@ -131,12 +131,12 @@ final class TenantTimezoneReportTest extends TenantTestCase
             ->assertStatus(200)
             ->assertJsonPath('period.from_date', '2026-10-08')
             ->assertJsonPath('summary.invoices_count', 1)
-            ->assertJsonPath('summary.total_sales', 70);
+            ->assertJsonPath('summary.total_sales', '70.000');
 
         $this->getJson('/api/v1/reports/summary?period=today', $this->tenantHeaders($tokyo))
             ->assertStatus(200)
             ->assertJsonPath('period.from_date', '2026-10-09')
-            ->assertJsonPath('summary.total_sales', 250);
+            ->assertJsonPath('summary.total_sales', '250.000');
     }
 
     public function test_dashboard_today_uses_the_tenant_day(): void
@@ -147,7 +147,7 @@ final class TenantTimezoneReportTest extends TenantTestCase
         $response = $this->getJson('/api/v1/dashboard', $this->tenantHeaders($tenant))
             ->assertStatus(200)
             ->assertJsonPath('metrics.today_invoices_count', 1)
-            ->assertJsonPath('metrics.today_sales', 250)
+            ->assertJsonPath('metrics.today_sales', '250.000')
             ->assertJsonPath('data.analytics.today.invoices_count', 1);
 
         $trend = $response->json('data.analytics.daily_trend');
@@ -164,7 +164,7 @@ final class TenantTimezoneReportTest extends TenantTestCase
             ->assertStatus(200)
             ->assertJsonPath('data.date', '2026-10-09')
             ->assertJsonCount(1, 'data.invoices')
-            ->assertJsonPath('data.summary.total_sales', 250);
+            ->assertJsonPath('data.summary.total_sales', '250.000');
     }
 
     public function test_shift_number_rolls_over_at_tenant_midnight(): void

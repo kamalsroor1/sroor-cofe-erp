@@ -6,6 +6,7 @@ namespace App\Actions\Suppliers;
 
 use App\Models\Supplier;
 use App\Services\SupplierBalanceService;
+use App\Support\Money\Decimal;
 
 final class GetSupplierStatementAction
 {
@@ -35,25 +36,25 @@ final class GetSupplierStatementAction
                 'company_name' => $supplier->company_name,
                 'phone' => $supplier->phone,
                 'address' => $supplier->address,
-                'current_balance' => (float) $supplier->current_balance,
+                'current_balance' => Decimal::normalize((string) $supplier->current_balance),
             ],
             'filters' => [
                 'from_date' => $fromDate,
                 'to_date' => $toDate,
             ],
             'summary' => [
-                'total_purchases' => (float) $totalCredit,
-                'total_paid' => (float) $totalDebit,
-                'current_balance' => (float) $supplier->current_balance,
+                'total_purchases' => Decimal::normalize((string) $totalCredit),
+                'total_paid' => Decimal::normalize((string) $totalDebit),
+                'current_balance' => Decimal::normalize((string) $supplier->current_balance),
                 'transactions_count' => count($ledgerData['ledger']),
             ],
             'ledger' => array_map(fn ($row) => [
                 'date' => $row['date'],
                 'type' => $row['type'],
                 'ref_number' => $row['ref_number'],
-                'debit' => (float) $row['debit'],
-                'credit' => (float) $row['credit'],
-                'balance_after' => (float) $row['balance_after'],
+                'debit' => Decimal::normalize((string) $row['debit']),
+                'credit' => Decimal::normalize((string) $row['credit']),
+                'balance_after' => Decimal::normalize((string) $row['balance_after']),
                 'notes' => $row['notes'],
             ], $ledgerData['ledger']),
         ];

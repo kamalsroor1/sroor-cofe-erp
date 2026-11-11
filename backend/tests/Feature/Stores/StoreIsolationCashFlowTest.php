@@ -182,22 +182,22 @@ final class StoreIsolationCashFlowTest extends TenantTestCase
     {
         $this->getJson('/api/v1/dashboard', $this->tenantHeaders($this->tenant, null, $this->storeA))
             ->assertOk()
-            ->assertJsonPath('data.metrics.total_cash_collected', 37.5)
-            ->assertJsonPath('data.metrics.supplier_payments', 5.25)
-            ->assertJsonPath('data.metrics.net_cash_today', 30.25);
+            ->assertJsonPath('data.metrics.total_cash_collected', '37.500')
+            ->assertJsonPath('data.metrics.supplier_payments', '5.250')
+            ->assertJsonPath('data.metrics.net_cash_today', '30.250');
 
         $this->getJson('/api/v1/dashboard', $this->tenantHeaders($this->tenant, null, $this->storeB))
             ->assertOk()
-            ->assertJsonPath('data.metrics.total_cash_collected', 170)
-            ->assertJsonPath('data.metrics.supplier_payments', 45)
-            ->assertJsonPath('data.metrics.net_cash_today', 125);
+            ->assertJsonPath('data.metrics.total_cash_collected', '170.000')
+            ->assertJsonPath('data.metrics.supplier_payments', '45.000')
+            ->assertJsonPath('data.metrics.net_cash_today', '125.000');
 
         // A verified `all` (admin) aggregates every branch, still counting each sale once.
         $all = $this->tenantHeaders($this->tenant);
         $all['X-Store-Id'] = ActiveStore::ALL;
         $this->getJson('/api/v1/dashboard', $all)
             ->assertOk()
-            ->assertJsonPath('data.metrics.total_cash_collected', 207.5);
+            ->assertJsonPath('data.metrics.total_cash_collected', '207.500');
     }
 
     public function test_tenant_dashboard_analytics_uses_the_active_branch_vouchers_only(): void
@@ -209,9 +209,9 @@ final class StoreIsolationCashFlowTest extends TenantTestCase
             return app(GetTenantDashboardAnalyticsAction::class)->execute(null)['metrics'];
         });
 
-        $this->assertSame(37.5, $metrics['total_cash_collected']);
-        $this->assertSame(5.25, $metrics['supplier_payments']);
-        $this->assertSame(30.25, $metrics['net_cash_today']);
+        $this->assertSame('37.500', $metrics['total_cash_collected']);
+        $this->assertSame('5.250', $metrics['supplier_payments']);
+        $this->assertSame('30.250', $metrics['net_cash_today']);
     }
 
     public function test_payments_list_is_scoped_to_the_active_branch(): void
@@ -223,8 +223,8 @@ final class StoreIsolationCashFlowTest extends TenantTestCase
         $a = $this->getJson('/api/v1/payments?per_page=50', $this->tenantHeaders($this->tenant, null, $this->storeA))
             ->assertOk()
             ->assertJsonPath('pagination.total', 3)
-            ->assertJsonPath('summary.total_collections', 37.5)
-            ->assertJsonPath('summary.total_disbursements', 5.25);
+            ->assertJsonPath('summary.total_collections', '37.500')
+            ->assertJsonPath('summary.total_disbursements', '5.250');
         $this->assertSame(['12.500', '25.000', '5.250'], $this->sortedAmounts($a->json('data')));
 
         $b = $this->getJson('/api/v1/payments?per_page=50', $this->tenantHeaders($this->tenant, null, $this->storeB))

@@ -51,16 +51,16 @@ class ResourceColumnMappingTest extends TestCase
     {
         $data = (new InvoiceResource($this->makeInvoice()))->resolve();
 
-        $this->assertSame(1250.5, $data['customer_balance']);
-        $this->assertSame(1250.5, $data['customer']['balance']);
+        $this->assertSame('1250.500', $data['customer_balance']);
+        $this->assertSame('1250.500', $data['customer']['balance']);
     }
 
     public function test_invoice_summary_resource_total_amount_is_net_total(): void
     {
         $data = (new InvoiceSummaryResource($this->makeInvoice()))->resolve();
 
-        $this->assertSame(950.0, $data['total_amount']);
-        $this->assertSame(950.0, $data['net_total']);
+        $this->assertSame('950.000', $data['total_amount']);
+        $this->assertSame('950.000', $data['net_total']);
     }
 
     public function test_purchase_item_resource_falls_back_to_exact_quantity_times_cost(): void
@@ -77,7 +77,7 @@ class ResourceColumnMappingTest extends TestCase
         $data = (new PurchaseItemResource($line))->resolve();
 
         // 1.1 * 1.1 in float is 1.2100000000000002; bcmath gives the exact 1.210.
-        $this->assertSame(1.21, $data['total_price']);
+        $this->assertSame('1.210', $data['total_price']);
     }
 
     public function test_web_pos_store_json_reports_net_total_as_total_amount(): void
@@ -98,7 +98,7 @@ class ResourceColumnMappingTest extends TestCase
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $invoice = $response->getData(true)['invoice'];
-        $this->assertSame(950, $invoice['total_amount']);
-        $this->assertSame(950, $invoice['net_total']);
+        $this->assertSame('950.000', $invoice['total_amount']);
+        $this->assertSame('950.000', $invoice['net_total']);
     }
 }

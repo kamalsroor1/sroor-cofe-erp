@@ -6,6 +6,7 @@ namespace App\Actions\Reports;
 
 use App\DTOs\Reports\ReportFilterDTO;
 use App\Models\Expense;
+use App\Support\Money\Decimal;
 use Illuminate\Support\Facades\DB;
 
 final class GetExpensesBreakdownReportAction
@@ -24,7 +25,7 @@ final class GetExpensesBreakdownReportAction
             ->get()
             ->map(fn ($e) => [
                 'category' => $e->category,
-                'amount' => (float) $e->total_amount,
+                'amount' => Decimal::normalize((string) $e->total_amount),
                 'count' => (int) $e->count,
             ])
             ->values()

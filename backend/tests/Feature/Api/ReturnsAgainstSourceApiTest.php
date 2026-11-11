@@ -67,7 +67,7 @@ final class ReturnsAgainstSourceApiTest extends TenantTestCase
 
         $response = $this->postReturn($invoiceId, $lineId, '4.000', clientPrice: '999.000')->assertCreated();
 
-        $response->assertJsonPath('data.total_amount', 72);
+        $response->assertJsonPath('data.total_amount', '72.000');
         $this->inTenant($this->tenant, function () use ($lineId): void {
             $line = ReturnItem::query()->sole();
             $this->assertSame('18.000', (string) $line->unit_price);
@@ -187,7 +187,7 @@ final class ReturnsAgainstSourceApiTest extends TenantTestCase
             'items' => [['purchase_item_id' => $lineId, 'quantity' => $qty, 'unit_price' => '1.000']],
         ], $this->headers);
 
-        $post('4.000')->assertCreated()->assertJsonPath('data.total_amount', 380);
+        $post('4.000')->assertCreated()->assertJsonPath('data.total_amount', '380.000');
         $post('6.001')->assertStatus(422)->assertJsonValidationErrors(['items.0.quantity']);
         $post('1.000', 999999)->assertStatus(422);
         $post('6.000')->assertCreated();

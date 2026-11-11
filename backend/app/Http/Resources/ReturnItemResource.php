@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\ReturnItem;
+use App\Support\Money\Decimal;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -21,9 +22,9 @@ class ReturnItemResource extends JsonResource
             'item_name' => $this->item?->name ?? 'صنف',
             'item_code' => $this->item?->code,
             'unit' => $this->item?->unit ?? 'كجم',
-            'quantity' => (float) $this->quantity,
-            'unit_price' => (float) $this->unit_price,
-            'total_price' => (float) $this->total_price,
+            'quantity' => Decimal::normalize((string) $this->quantity),
+            'unit_price' => Decimal::normalize((string) $this->unit_price),
+            'total_price' => Decimal::normalize((string) $this->total_price),
         ];
     }
 }

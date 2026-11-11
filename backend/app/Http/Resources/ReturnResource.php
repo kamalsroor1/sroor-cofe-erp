@@ -29,7 +29,7 @@ class ReturnResource extends JsonResource
             'store_id' => $this->store_id,
             'store_name' => $this->store?->name ?? 'الفرع الرئيسي',
             'user_name' => $this->user?->name ?? 'المسؤول',
-            'total_amount' => (float) $this->total_amount,
+            'total_amount' => Decimal::normalize((string) $this->total_amount),
             // BE-10: null for purchase returns; legacy sales returns read as 'balance'.
             'refund_method' => $this->return_type === 'sales_return'
                 ? ($this->refund_method ?? ReturnDocument::REFUND_BALANCE)

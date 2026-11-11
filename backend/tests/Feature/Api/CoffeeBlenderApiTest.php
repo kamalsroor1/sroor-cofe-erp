@@ -15,6 +15,7 @@ use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\Money\Decimal;
 use Illuminate\Support\Facades\Hash;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TenantTestCase;
@@ -197,6 +198,41 @@ class CoffeeBlenderApiTest extends TenantTestCase
                     'profit_amount' => 112.5,
                 ],
             ]);
+
+        // assertJson is loose; pin the exact strings (golden rule 1) and each field's scale.
+        $response->assertJsonPath('data.target_weight_grams', '500.000')
+            ->assertJsonPath('data.cardamom_grams', '10.000')
+            ->assertJsonPath('data.total_percentage', '100.000')
+            ->assertJsonPath('data.total_cost', '217.500')
+            ->assertJsonPath('data.total_price', '330.000')
+            ->assertJsonPath('data.profit_amount', '112.500')
+            ->assertJsonPath('data.profit_margin', '34.1')
+            ->assertJsonPath('data.components.0.percentage', '50.000')
+            ->assertJsonPath('data.components.0.grams', '250.00')
+            ->assertJsonPath('data.components.0.kg', '0.2500')
+            ->assertJsonPath('data.components.0.selling_price', '600.000');
+    }
+
+    public function test_blend_grams_round_half_up_and_cardamom_is_exact_at_three_decimals(): void
+    {
+        // 125 g x 4.02% = 5.025 g -> 5.03 (half-up; float math used to give 5.02).
+        // 25.137 g cardamom x 1.5 = 37.7055 -> 37.706 cost, x 2.5 = 62.8425 -> 62.843 price.
+        $response = $this->withHeaders($this->adminHeaders)
+            ->postJson('/api/v1/coffee-blender/calculate', [
+                'target_weight_grams' => 125,
+                'cardamom_grams' => '25.137',
+                'components' => [
+                    ['item_id' => $this->itemCol->id, 'percentage' => '4.02', 'unit_price' => '0.000'],
+                ],
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.components.0.grams', '5.03')
+            ->assertJsonPath('data.components.0.kg', '0.0050');
+
+        $cost = bcadd((string) $response->json('data.components.0.line_cost'), '37.706', 3);
+        $this->assertSame(Decimal::normalize($cost), $response->json('data.total_cost'));
+        $this->assertSame('62.843', $response->json('data.total_price'));
     }
 
     public function test_calculate_validation_fails_on_empty_components(): void

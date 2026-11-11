@@ -8,6 +8,7 @@ use App\Models\Item;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use App\Support\CostVisibility;
+use App\Support\Money\Decimal;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -20,15 +21,15 @@ class ItemResource extends JsonResource
     {
         $storeId = $this->resolveStoreId($request);
 
-        $storeStock = $storeId ? (float) $this->getStockInStore($storeId) : (float) $this->current_stock;
-        $effectivePrice = $storeId ? (float) $this->getEffectivePriceForStore($storeId) : (float) $this->selling_price;
+        $storeStock = $storeId ? Decimal::normalize((string) $this->getStockInStore($storeId)) : Decimal::normalize((string) $this->current_stock);
+        $effectivePrice = $storeId ? Decimal::normalize((string) $this->getEffectivePriceForStore($storeId)) : Decimal::normalize((string) $this->selling_price);
 
         // SEC-1 (M6): cost and cost-derived values only with items.view_cost. Without it the
         // minimum selling price is the stored one, never the cost fallback.
         $showCost = CostVisibility::allows($request->user());
         // BE-08: the floor value is hidden from users without it (null, never 0: the edit form must not
         // send it back); has_min_price still tells them a floor exists.
-        $minSellingPrice = $showCost ? (float) ($this->min_selling_price ?? 0) : null;
+        $minSellingPrice = $showCost ? Decimal::normalize((string) ($this->min_selling_price ?? 0)) : null;
 
         return [
             'id' => $this->id,
@@ -38,15 +39,15 @@ class ItemResource extends JsonResource
             'category_id' => $this->category_id,
             'pos_sales_count' => (int) ($this->pos_sales_count ?? 0),
             'unit' => $this->unit ?? 'كجم',
-            'cost_price' => $showCost ? (float) $this->cost_price : null,
+            'cost_price' => $showCost ? Decimal::normalize((string) $this->cost_price) : null,
             'min_selling_price' => $minSellingPrice,
             'has_min_price' => bccomp((string) ($this->min_selling_price ?? '0'), '0', 3) > 0,
             // BE-08: NULL/0 = not set (wholesale customers pay retail).
-            'wholesale_price' => $this->wholesale_price !== null ? (float) $this->wholesale_price : null,
+            'wholesale_price' => $this->wholesale_price !== null ? Decimal::normalize((string) $this->wholesale_price) : null,
             'selling_price' => $effectivePrice,
             'current_stock' => $storeStock,
-            'total_stock' => (float) $this->current_stock,
-            'min_stock_level' => (float) $this->min_stock_level,
+            'total_stock' => Decimal::normalize((string) $this->current_stock),
+            'min_stock_level' => Decimal::normalize((string) $this->min_stock_level),
             'is_active' => (bool) $this->is_active,
             'is_weighted' => $this->resource->isSoldByWeight(),
             'is_low_stock' => method_exists($this->resource, 'isLowStock') ? $this->isLowStock() : false,
@@ -54,8 +55,8 @@ class ItemResource extends JsonResource
             'store_stocks' => $this->relationLoaded('storeStocks') ? $this->storeStocks->map(fn ($ss) => [
                 'store_id' => $ss->store_id,
                 'store_name' => $ss->store?->name,
-                'quantity' => (float) $ss->quantity,
-                'custom_selling_price' => $ss->custom_selling_price ? (float) $ss->custom_selling_price : null,
+                'quantity' => Decimal::normalize((string) $ss->quantity),
+                'custom_selling_price' => $ss->custom_selling_price ? Decimal::normalize((string) $ss->custom_selling_price) : null,
             ])->values() : [],
             'can_be_deleted' => method_exists($this->resource, 'canBeDeleted') ? $this->canBeDeleted() : true,
             'deletion_blockers' => method_exists($this->resource, 'getDeletionBlockers') ? $this->getDeletionBlockers() : [],

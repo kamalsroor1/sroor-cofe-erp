@@ -7,6 +7,7 @@ namespace App\Actions\Items;
 use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\StoreStock;
+use App\Support\Money\Decimal;
 use App\Support\StockMovementTypes;
 
 final class GetItemMovementsAction
@@ -54,8 +55,8 @@ final class GetItemMovementsAction
         $netMovement = bcsub($totalIn, $totalOut, 3);
 
         $currentScopeStock = $storeId
-            ? (float) (StoreStock::where('store_id', $storeId)->where('item_id', $item->id)->value('quantity') ?: 0)
-            : (float) $item->current_stock;
+            ? Decimal::normalize((string) (StoreStock::where('store_id', $storeId)->where('item_id', $item->id)->value('quantity') ?: 0))
+            : Decimal::normalize((string) $item->current_stock);
 
         $movements = $query->latest('id')->paginate($perPage);
         if (! $includeCost) {
@@ -69,9 +70,9 @@ final class GetItemMovementsAction
                 'code' => $item->code,
                 'category' => $item->category,
                 'unit' => $item->unit,
-                'current_stock' => (float) $item->current_stock,
-                'cost_price' => $includeCost ? (float) $item->cost_price : null,
-                'selling_price' => (float) $item->selling_price,
+                'current_stock' => Decimal::normalize((string) $item->current_stock),
+                'cost_price' => $includeCost ? Decimal::normalize((string) $item->cost_price) : null,
+                'selling_price' => Decimal::normalize((string) $item->selling_price),
             ],
             'filters' => [
                 'from_date' => $fromDate,
@@ -80,9 +81,9 @@ final class GetItemMovementsAction
                 'type' => $type ?: 'all',
             ],
             'stats' => [
-                'total_in' => (float) $totalIn,
-                'total_out' => (float) $totalOut,
-                'net_movement' => (float) $netMovement,
+                'total_in' => Decimal::normalize((string) $totalIn),
+                'total_out' => Decimal::normalize((string) $totalOut),
+                'net_movement' => Decimal::normalize((string) $netMovement),
                 'current_scope_stock' => $currentScopeStock,
                 'movements_count' => $allMovements->count(),
             ],

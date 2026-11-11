@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Models\Purchase;
 use App\Models\ReturnDocument;
 use App\Models\Supplier;
+use App\Support\Money\Decimal;
 use Illuminate\Support\Facades\DB;
 
 class SupplierBalanceService
@@ -152,18 +153,18 @@ class SupplierBalanceService
             $runningBalance = bcsub(bcadd($runningBalance, (string) $entry['credit'], 3), (string) $entry['debit'], 3);
 
             return array_merge($entry, [
-                'balance_after' => (float) $runningBalance,
-                'debit' => (float) $entry['debit'],
-                'credit' => (float) $entry['credit'],
+                'balance_after' => Decimal::normalize((string) $runningBalance),
+                'debit' => Decimal::normalize((string) $entry['debit']),
+                'credit' => Decimal::normalize((string) $entry['credit']),
             ]);
         })->toArray();
 
         return [
             'ledger' => $ledger,
             'summary' => [
-                'total_purchases' => (float) $totalCredit,
-                'total_payments' => (float) $totalDebit,
-                'current_balance' => (float) $supplier->current_balance,
+                'total_purchases' => Decimal::normalize((string) $totalCredit),
+                'total_payments' => Decimal::normalize((string) $totalDebit),
+                'current_balance' => Decimal::normalize((string) $supplier->current_balance),
             ],
         ];
     }

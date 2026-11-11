@@ -219,13 +219,21 @@ class ShiftApiTest extends TenantTestCase
                 'report' => [
                     'shift_number' => 'SHF-260821-003',
                     'status' => 'closed',
-                    'opening_cash_balance' => 200.000,
-                    'total_cash_sales' => 1500.000,
-                    'expected_cash_balance' => 1600.000,
-                    'actual_cash_balance' => 1600.000,
-                    'cash_difference' => 0.000,
+                    'opening_cash_balance' => '200.000',
+                    'total_cash_sales' => '1500.000',
+                    'expected_cash_balance' => '1600.000',
+                    'actual_cash_balance' => '1600.000',
+                    'cash_difference' => '0.000',
                 ],
             ]);
+
+        // assertJson is loose (200.0 == '200.000'); golden rule 1 needs the exact 3-decimal string.
+        $response->assertJsonPath('report.opening_cash_balance', '200.000')
+            ->assertJsonPath('report.total_cash_sales', '1500.000')
+            ->assertJsonPath('report.total_credit_sales', '300.000')
+            ->assertJsonPath('report.expected_cash_balance', '1600.000')
+            ->assertJsonPath('report.actual_cash_balance', '1600.000')
+            ->assertJsonPath('report.cash_difference', '0.000');
     }
 
     public function test_shifts_of_another_tenant_are_invisible_and_untouched(): void

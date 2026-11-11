@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Invoice;
+use App\Support\Money\Decimal;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -23,11 +24,11 @@ class InvoiceSummaryResource extends JsonResource
             'payment_type' => $this->payment_type,
             'payment_method' => $this->payment_method,
             'status' => $this->status,
-            'total_amount' => (float) $this->net_total,
-            'discount_amount' => (float) $this->discount_amount,
-            'net_total' => (float) $this->net_total,
-            'paid_amount' => (float) $this->paid_amount,
-            'remaining_amount' => (float) $this->remaining_amount,
+            'total_amount' => Decimal::normalize((string) $this->net_total),
+            'discount_amount' => Decimal::normalize((string) $this->discount_amount),
+            'net_total' => Decimal::normalize((string) $this->net_total),
+            'paid_amount' => Decimal::normalize((string) $this->paid_amount),
+            'remaining_amount' => Decimal::normalize((string) $this->remaining_amount),
             'created_at' => $this->created_at?->format('H:i'),
             'formatted_created_at' => $this->created_at?->format('Y-m-d H:i'),
             'invoice_date' => $this->invoice_date?->toDateString(),

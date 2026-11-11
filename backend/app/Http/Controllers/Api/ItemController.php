@@ -25,6 +25,7 @@ use App\Services\Settings\TenantSettings;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use App\Support\CostVisibility;
+use App\Support\Money\Decimal;
 use Closure;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
@@ -115,7 +116,7 @@ final class ItemController extends Controller
         $lowStockCount = $this->tenantSettings->whereLowStock(Item::query())->where('is_active', true)->count();
         // SEC-1 (M6): stock valuation is cost-derived: items.view_cost only.
         $totalStockValue = CostVisibility::allows($user)
-            ? (float) Item::selectRaw('SUM(current_stock * cost_price) as total_val')->value('total_val')
+            ? Decimal::normalize((string) Item::selectRaw('SUM(current_stock * cost_price) as total_val')->value('total_val'))
             : null;
 
         return response()->json([

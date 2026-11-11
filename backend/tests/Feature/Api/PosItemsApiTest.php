@@ -123,9 +123,9 @@ final class PosItemsApiTest extends TenantTestCase
 
         $this->getJson(self::URL.'?only_in_stock=1', $this->tenantHeaders($tenant, null, $storeA))
             ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.code', 'IN')
-            ->assertJsonPath('data.0.current_stock', 3)->assertJsonPath('meta.counts.total', 1);
+            ->assertJsonPath('data.0.current_stock', '3.000')->assertJsonPath('meta.counts.total', 1);
         $this->getJson(self::URL.'?only_in_stock=1&sort=code', $this->tenantHeaders($tenant, null, $storeB))
-            ->assertOk()->assertJsonCount(2, 'data')->assertJsonPath('data.0.current_stock', 9);
+            ->assertOk()->assertJsonCount(2, 'data')->assertJsonPath('data.0.current_stock', '9.000');
         $this->getJson(self::URL.'?is_weighted=1', $this->tenantHeaders($tenant, null, $storeB))
             ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.is_weighted', true);
     }
@@ -138,7 +138,7 @@ final class PosItemsApiTest extends TenantTestCase
 
         $this->getJson(self::URL.'?sort=pos_sales_count', $this->tenantHeaders($tenant))
             ->assertOk()->assertJsonPath('data.0.code', 'TOP')
-            ->assertJsonPath('data.0.cost_price', 10)
+            ->assertJsonPath('data.0.cost_price', '10.000')
             ->assertJsonMissingPath('data.0.image');
 
         $storeId = (int) $this->tenantStore($tenant)->id;
@@ -154,7 +154,7 @@ final class PosItemsApiTest extends TenantTestCase
         $cashier = $this->createTenantUser($tenant, 'cashier');
 
         $this->getJson(self::URL, $this->tenantHeaders($tenant, $cashier))
-            ->assertOk()->assertJsonPath('data.0.cost_price', null)->assertJsonPath('data.0.price_retail', 32.5);
+            ->assertOk()->assertJsonPath('data.0.cost_price', null)->assertJsonPath('data.0.price_retail', '32.500');
     }
 
     public function test_requires_authentication_pos_access_and_store_access(): void
@@ -256,7 +256,7 @@ final class PosItemsApiTest extends TenantTestCase
 
         $headers = $this->tenantHeaders($tenant);
         $headers['X-Store-Id'] = 'all';
-        $this->getJson(self::URL, $headers)->assertOk()->assertJsonPath('data.0.current_stock', 5);
+        $this->getJson(self::URL, $headers)->assertOk()->assertJsonPath('data.0.current_stock', '5.000');
 
         /** @var User $cashier */
         $cashier = $this->createTenantUser($tenant, 'cashier', [], ['default_store_id' => $storeA]);
@@ -292,7 +292,7 @@ final class PosItemsApiTest extends TenantTestCase
         });
 
         $this->getJson(self::URL, $this->tenantHeaders($tenant))->assertOk()
-            ->assertJsonPath('data.0.current_stock', 7)
+            ->assertJsonPath('data.0.current_stock', '7.000')
             ->assertJsonPath('data.0.category_color', null);
     }
 

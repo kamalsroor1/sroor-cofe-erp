@@ -10,6 +10,7 @@ use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Item;
 use App\Models\StoreStock;
+use App\Support\Money\Decimal;
 
 final class GetProfitLossReportAction
 {
@@ -55,7 +56,7 @@ final class GetProfitLossReportAction
         $netProfit = bcsub($grossProfit, $totalExpenses, 3);
 
         // Overall Customers Debt
-        $totalCustomersDebt = (float) (Customer::where('is_active', true)->sum('current_balance') ?: 0);
+        $totalCustomersDebt = Decimal::normalize((string) (Customer::where('is_active', true)->sum('current_balance') ?: 0));
 
         // Inventory Stock Valuation
         $stockCostValuation = '0.000';
@@ -100,21 +101,21 @@ final class GetProfitLossReportAction
                 'to_date' => $dto->to_date,
             ],
             'summary' => [
-                'total_sales' => (float) $totalSales,
-                'total_cogs' => (float) $totalCost,
-                'gross_profit' => (float) $grossProfit,
-                'margin_percentage' => (float) $marginPct,
-                'total_expenses' => (float) $totalExpenses,
+                'total_sales' => Decimal::normalize((string) $totalSales),
+                'total_cogs' => Decimal::normalize((string) $totalCost),
+                'gross_profit' => Decimal::normalize((string) $grossProfit),
+                'margin_percentage' => Decimal::normalize((string) $marginPct, 2),
+                'total_expenses' => Decimal::normalize((string) $totalExpenses),
                 'expenses_count' => $expensesCount,
-                'net_profit' => (float) $netProfit,
+                'net_profit' => Decimal::normalize((string) $netProfit),
                 'invoices_count' => $invoicesCount,
-                'avg_invoice' => (float) $avgInvoice,
-                'total_paid' => (float) $totalPaid,
-                'total_remaining' => (float) $totalRemaining,
+                'avg_invoice' => Decimal::normalize((string) $avgInvoice),
+                'total_paid' => Decimal::normalize((string) $totalPaid),
+                'total_remaining' => Decimal::normalize((string) $totalRemaining),
                 'total_customers_debt' => $totalCustomersDebt,
-                'stock_cost_valuation' => (float) $stockCostValuation,
-                'stock_selling_valuation' => (float) $stockSellingValuation,
-                'expected_stock_profit' => (float) $expectedStockProfit,
+                'stock_cost_valuation' => Decimal::normalize((string) $stockCostValuation),
+                'stock_selling_valuation' => Decimal::normalize((string) $stockSellingValuation),
+                'expected_stock_profit' => Decimal::normalize((string) $expectedStockProfit),
             ],
         ];
     }

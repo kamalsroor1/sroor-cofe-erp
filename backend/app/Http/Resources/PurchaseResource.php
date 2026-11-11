@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Purchase;
+use App\Support\Money\Decimal;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -28,12 +29,12 @@ class PurchaseResource extends JsonResource
             'purchase_date' => $this->purchase_date ? $this->purchase_date->toDateString() : $this->created_at?->toDateString(),
             'status' => $this->status,
             'payment_status' => $this->payment_status,
-            'subtotal' => (float) $this->subtotal,
-            'discount_amount' => (float) $this->discount_amount,
-            'additional_expenses_total' => (float) $this->additional_expenses_total,
-            'net_total' => (float) $this->net_total,
-            'paid_amount' => (float) $this->paid_amount,
-            'remaining_amount' => (float) $this->remaining_amount,
+            'subtotal' => Decimal::normalize((string) $this->subtotal),
+            'discount_amount' => Decimal::normalize((string) $this->discount_amount),
+            'additional_expenses_total' => Decimal::normalize((string) $this->additional_expenses_total),
+            'net_total' => Decimal::normalize((string) $this->net_total),
+            'paid_amount' => Decimal::normalize((string) $this->paid_amount),
+            'remaining_amount' => Decimal::normalize((string) $this->remaining_amount),
             'supplier_invoice_ref' => $this->supplier_invoice_ref,
             'notes' => $this->notes,
             'items_count' => $this->relationLoaded('items') ? $this->items->count() : 0,

@@ -68,7 +68,7 @@ final class PosLookupApiTest extends TenantTestCase
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.item.id', $id)
             ->assertJsonPath('data.item.code', '1234')
-            ->assertJsonPath('data.item.current_stock', 7)
+            ->assertJsonPath('data.item.current_stock', '7.000')
             ->assertJsonPath('data.quantity', null)
             ->assertJsonPath('data.source', 'code');
     }
@@ -180,9 +180,9 @@ final class PosLookupApiTest extends TenantTestCase
         });
 
         $this->getJson(self::URL.'?code=S1', $this->tenantHeaders($tenant, null, $storeB))
-            ->assertOk()->assertJsonPath('data.item.current_stock', 9);
+            ->assertOk()->assertJsonPath('data.item.current_stock', '9.000');
         $this->getJson(self::URL.'?code=S1', $this->tenantHeaders($tenant, null, $storeA))
-            ->assertOk()->assertJsonPath('data.item.current_stock', 3);
+            ->assertOk()->assertJsonPath('data.item.current_stock', '3.000');
 
         $cashier = $this->createTenantUser($tenant, 'cashier');
         $this->getJson(self::URL.'?code=S1', $this->tenantHeaders($tenant, $cashier))

@@ -8,6 +8,7 @@ use App\DTOs\Reports\ReportFilterDTO;
 use App\Models\Item;
 use App\Models\StoreStock;
 use App\Services\InventoryAnalyticsService;
+use App\Support\Money\Decimal;
 
 final class GetInventoryValuationReportAction
 {
@@ -53,12 +54,12 @@ final class GetInventoryValuationReportAction
                     'code' => $item->code,
                     'category' => $item->category,
                     'unit' => $item->unit,
-                    'current_stock' => (float) $qty,
-                    'cost_price' => (float) $costPrice,
-                    'selling_price' => (float) $sellingPrice,
-                    'cost_val' => (float) $costVal,
-                    'sell_val' => (float) $sellVal,
-                    'profit' => (float) $profit,
+                    'current_stock' => Decimal::normalize((string) $qty),
+                    'cost_price' => Decimal::normalize((string) $costPrice),
+                    'selling_price' => Decimal::normalize((string) $sellingPrice),
+                    'cost_val' => Decimal::normalize((string) $costVal),
+                    'sell_val' => Decimal::normalize((string) $sellVal),
+                    'profit' => Decimal::normalize((string) $profit),
                 ];
             }
         } else {
@@ -81,12 +82,12 @@ final class GetInventoryValuationReportAction
                     'code' => $itm->code,
                     'category' => $itm->category,
                     'unit' => $itm->unit,
-                    'current_stock' => (float) $qty,
-                    'cost_price' => (float) $costPrice,
-                    'selling_price' => (float) $sellingPrice,
-                    'cost_val' => (float) $costVal,
-                    'sell_val' => (float) $sellVal,
-                    'profit' => (float) $profit,
+                    'current_stock' => Decimal::normalize((string) $qty),
+                    'cost_price' => Decimal::normalize((string) $costPrice),
+                    'selling_price' => Decimal::normalize((string) $sellingPrice),
+                    'cost_val' => Decimal::normalize((string) $costVal),
+                    'sell_val' => Decimal::normalize((string) $sellVal),
+                    'profit' => Decimal::normalize((string) $profit),
                 ];
             }
         }
@@ -101,9 +102,9 @@ final class GetInventoryValuationReportAction
         $abcData = $this->inventoryAnalyticsService->getAbcAnalysis($dto->from_date, $dto->to_date, $dto->store_id);
 
         return [
-            'stock_cost_valuation' => (float) $stockCostValuation,
-            'stock_selling_valuation' => (float) $stockSellingValuation,
-            'expected_stock_profit' => (float) $expectedProfit,
+            'stock_cost_valuation' => Decimal::normalize((string) $stockCostValuation),
+            'stock_selling_valuation' => Decimal::normalize((string) $stockSellingValuation),
+            'expected_stock_profit' => Decimal::normalize((string) $expectedProfit),
             'items' => $inventoryItems,
             'abc_data' => $abcData,
         ];

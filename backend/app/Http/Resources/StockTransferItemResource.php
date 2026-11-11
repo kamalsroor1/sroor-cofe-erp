@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\StockTransferItem;
+use App\Support\Money\Decimal;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -21,7 +22,7 @@ class StockTransferItemResource extends JsonResource
             'item_name' => $this->item?->name ?? 'صنف',
             'item_code' => $this->item?->code,
             'unit' => $this->item?->unit ?? 'كجم',
-            'quantity' => (float) $this->quantity,
+            'quantity' => Decimal::normalize((string) $this->quantity),
         ];
     }
 }

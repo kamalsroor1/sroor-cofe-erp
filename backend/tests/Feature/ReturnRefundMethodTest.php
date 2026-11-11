@@ -77,7 +77,7 @@ final class ReturnRefundMethodTest extends TenantTestCase
         $response = $this->postReturn($invoiceId, $lineId, '3.000', 'cash')->assertCreated();
         $response->assertJsonPath('data.refund_method', 'cash')
             ->assertJsonPath('data.refund_amount', '60.000')
-            ->assertJsonPath('data.total_amount', 60);
+            ->assertJsonPath('data.total_amount', '60.000');
         $returnId = (int) $response->json('data.id');
 
         $this->inTenant($this->tenant, function () use ($returnId, $invoiceId): void {
@@ -343,8 +343,8 @@ final class ReturnRefundMethodTest extends TenantTestCase
         $this->postReturn($invoiceId, $lineId, '3.000', 'cash')->assertCreated();
 
         $this->getJson('/api/v1/payments', $this->headers)->assertOk()
-            ->assertJsonPath('summary.total_collections', 200)
-            ->assertJsonPath('summary.total_refunds', 60);
+            ->assertJsonPath('summary.total_collections', '200.000')
+            ->assertJsonPath('summary.total_refunds', '60.000');
     }
 
     /**

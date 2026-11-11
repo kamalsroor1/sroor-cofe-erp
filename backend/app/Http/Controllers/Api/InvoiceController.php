@@ -21,6 +21,7 @@ use App\Models\Invoice;
 use App\Models\User;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
+use App\Support\Money\Decimal;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -51,9 +52,9 @@ final class InvoiceController extends Controller
 
         $query = $this->buildInvoiceListQueryAction->execute();
 
-        $totalSales = (float) (clone $query)->where('status', '!=', 'cancelled')->sum('net_total');
-        $totalPaid = (float) (clone $query)->where('status', '!=', 'cancelled')->sum('paid_amount');
-        $totalDue = (float) bcsub((string) $totalSales, (string) $totalPaid, 3);
+        $totalSales = Decimal::normalize((string) (clone $query)->where('status', '!=', 'cancelled')->sum('net_total'));
+        $totalPaid = Decimal::normalize((string) (clone $query)->where('status', '!=', 'cancelled')->sum('paid_amount'));
+        $totalDue = Decimal::sub($totalSales, $totalPaid);
         $totalCount = (int) (clone $query)->count();
 
         $invoices = $query->latest('id')->paginate($perPage);

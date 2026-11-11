@@ -320,10 +320,10 @@ final class ShiftExpectedCashTest extends TenantTestCase
             $date = app(TenantClock::class)->businessDate();
             $summary = app(GetDailyJournalAction::class)->execute($date, $this->storeA)['summary'];
 
-            $this->assertSame(100.0, $summary['cash_sales']);
-            $this->assertSame(50.0, $summary['customer_payments']);
-            $this->assertSame(150.0, $summary['total_cash_in']);
-            $this->assertSame(650.0, $summary['expected_cash_in_drawer']);
+            $this->assertSame('100.000', $summary['cash_sales']);
+            $this->assertSame('50.000', $summary['customer_payments']);
+            $this->assertSame('150.000', $summary['total_cash_in']);
+            $this->assertSame('650.000', $summary['expected_cash_in_drawer']);
         });
     }
 }

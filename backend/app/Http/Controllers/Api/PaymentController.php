@@ -13,6 +13,7 @@ use App\Models\Supplier;
 use App\Services\PaymentService;
 use App\Services\Settings\TenantSettings;
 use App\Support\ActiveStore;
+use App\Support\Money\Decimal;
 use App\Support\SafeJsonError;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -81,9 +82,9 @@ final class PaymentController extends Controller
         return response()->json([
             'success' => true,
             'summary' => [
-                'total_refunds' => (float) $totalRefunds,
-                'total_collections' => (float) $totalCollections,
-                'total_disbursements' => (float) $totalDisbursements,
+                'total_refunds' => Decimal::normalize((string) $totalRefunds),
+                'total_collections' => Decimal::normalize((string) $totalCollections),
+                'total_disbursements' => Decimal::normalize((string) $totalDisbursements),
             ],
             'data' => $payments->items(),
             'pagination' => [
@@ -113,7 +114,7 @@ final class PaymentController extends Controller
                     'currency' => app(TenantSettings::class)->currencyLabel(),
                 ]),
                 'data' => $payment,
-                'customer_current_balance' => (float) ($customer?->current_balance ?? 0),
+                'customer_current_balance' => Decimal::normalize((string) ($customer?->current_balance ?? 0)),
             ], 201);
         } catch (Throwable $e) {
             // SEC-1 (L4): 404/422/403 pass through; anything else is logged, never echoed.
@@ -139,7 +140,7 @@ final class PaymentController extends Controller
                     'currency' => app(TenantSettings::class)->currencyLabel(),
                 ]),
                 'data' => $payment,
-                'supplier_current_balance' => (float) ($supplier?->current_balance ?? 0),
+                'supplier_current_balance' => Decimal::normalize((string) ($supplier?->current_balance ?? 0)),
             ], 201);
         } catch (Throwable $e) {
             // SEC-1 (L4): 404/422/403 pass through; anything else is logged, never echoed.

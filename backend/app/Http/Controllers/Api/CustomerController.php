@@ -18,6 +18,7 @@ use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Requests\UpdateCustomerRequest;
 use App\Http\Resources\CustomerResource;
 use App\Models\Customer;
+use App\Support\Money\Decimal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -74,7 +75,7 @@ final class CustomerController extends Controller
 
         $customers = $query->latest('id')->paginate($perPage);
 
-        $totalDebt = (float) Customer::where('current_balance', '>', 0)->sum('current_balance');
+        $totalDebt = Decimal::normalize((string) Customer::where('current_balance', '>', 0)->sum('current_balance'));
         $debtorsCount = Customer::where('current_balance', '>', 0)->count();
         $totalCustomersCount = Customer::count();
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Purchases;
 
 use App\Services\ReorderAssistantService;
+use App\Support\Money\Decimal;
 
 final class GetSmartReorderSuggestionsAction
 {
@@ -39,7 +40,7 @@ final class GetSmartReorderSuggestionsAction
             'critical_count' => $data['critical_count'] ?? 0,
             'warning_count' => $data['warning_count'] ?? 0,
             'safe_count' => $data['safe_count'] ?? 0,
-            'total_estimated_cost' => (float) ($data['total_estimated_cost'] ?? 0),
+            'total_estimated_cost' => Decimal::normalize((string) ($data['total_estimated_cost'] ?? 0)),
             'suggestions' => $suggestions->values()->all(),
         ];
     }

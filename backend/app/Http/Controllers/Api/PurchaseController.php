@@ -16,6 +16,7 @@ use App\Models\Purchase;
 use App\Models\User;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
+use App\Support\Money\Decimal;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -81,8 +82,8 @@ final class PurchaseController extends Controller
             $query->whereDate('purchase_date', '<=', $toDate);
         }
 
-        $totalPurchases = (float) (clone $query)->where('status', 'confirmed')->sum('net_total');
-        $unpaidTotal = (float) (clone $query)->where('status', 'confirmed')->sum('remaining_amount');
+        $totalPurchases = Decimal::normalize((string) (clone $query)->where('status', 'confirmed')->sum('net_total'));
+        $unpaidTotal = Decimal::normalize((string) (clone $query)->where('status', 'confirmed')->sum('remaining_amount'));
         $confirmedCount = (int) (clone $query)->where('status', 'confirmed')->count();
 
         $purchases = $query->latest('purchase_date')->latest('id')->paginate($perPage);
