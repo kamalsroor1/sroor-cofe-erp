@@ -335,6 +335,7 @@ check "storage:link --force ran in the new release" log_has "php storage:link @$
 check "first release: no pre-migration backup (nothing to back up yet)" bash -c "! grep -q 'php backup:tenants' '$FAKE_LOG'"
 check "artisan runs with the health deploy gate" log_has "php health:check @$ID1 dbuser= gate=1"
 check "central operator permissions re-seeded with the app account" log_has "php db:seed @$ID1 dbuser="
+check "two central syncs (permissions + plan catalog) ran" test "$(grep -c "php db:seed @$ID1 " "$FAKE_LOG")" -eq 2
 check "order: storage:link > migrate > grants > central permissions > tenants:migrate > relocate > caches > smoke > switch > queue > health > /up" \
     in_order "php storage:link" "php migrate" "mysql --defaults-extra-file=" "php db:seed @$ID1" "php tenants:migrate" "php app-releases:relocate @$ID1" "php config:cache" \
     "php route:cache" "php view:cache" "php event:cache" "php health:check @$ID1" "sudo -n /usr/bin/systemctl reload php8.5-fpm" \
@@ -538,10 +539,11 @@ echo "7b. Pipeline hygiene (BE-06): static guards on the replacement pipeline"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 PIPELINE_FILES=("$REPO_ROOT/scripts/ops/deploy.sh" "$REPO_ROOT/.github/workflows/release.yml")
 DETAIL=""
-# The only seeder allowed is the idempotent central operator-permission sync (no data, no demo
-# rows): its exact invocation is blanked before the scan, so any other db:seed still fails.
-check "pipeline never seeds (except CentralPermissionsSeeder), populates demo data, or runs tinker" bash -c "! sed 's/db:seed --class=CentralPermissionsSeeder --force//g' ${PIPELINE_FILES[*]} | grep -nE '^[^#]*(db:seed|populate-realistic-data|artisan[[:space:]]+tinker|[[:space:]]tinker[[:space:]])'"
-check "the allowed seeder is the central permission sync only" bash -c "[[ \$(grep -cE '^[^#]*db:seed' $REPO_ROOT/scripts/ops/deploy.sh) -eq 2 ]] && ! grep -nE '^[^#]*db:seed' ${PIPELINE_FILES[*]} | grep -v 'db:seed --class=CentralPermissionsSeeder --force'"
+# The only seeders allowed are two idempotent, central, non-demo syncs: operator permissions and
+# the SaaS plan catalog (adds missing entries only). Their exact invocations are blanked before
+# the scan, so any other db:seed (DatabaseSeeder, demo data...) still fails.
+check "pipeline never seeds (except the two central syncs), populates demo data, or runs tinker" bash -c "! sed -E 's/db:seed --class=(CentralPermissionsSeeder|PlansAndFeaturesSeeder) --force//g' ${PIPELINE_FILES[*]} | grep -nE '^[^#]*(db:seed|populate-realistic-data|artisan[[:space:]]+tinker|[[:space:]]tinker[[:space:]])'"
+check "the allowed seeders are the two central syncs only" bash -c "[[ \$(grep -cE '^[^#]*db:seed' $REPO_ROOT/scripts/ops/deploy.sh) -eq 4 ]] && ! grep -nE '^[^#]*db:seed' ${PIPELINE_FILES[*]} | grep -vE 'db:seed --class=(CentralPermissionsSeeder|PlansAndFeaturesSeeder) --force'"
 check "pipeline never wipes or resets a database" bash -c "! grep -nE '^[^#]*(migrate:fresh|migrate:reset|migrate:refresh|db:wipe|tenants:migrate-fresh)' ${PIPELINE_FILES[*]}"
 check "pipeline never migrates a single tenant (--tenants=...)" bash -c "! grep -nE '^[^#]*tenants:migrate[^#]*--tenants' ${PIPELINE_FILES[*]}"
 check "no '|| true' on a migrate or backup line" bash -c "! grep -nE '^[^#]*(migrate|backup:tenants)[^#]*\\|\\|[[:space:]]*(true|:)' ${PIPELINE_FILES[*]}"

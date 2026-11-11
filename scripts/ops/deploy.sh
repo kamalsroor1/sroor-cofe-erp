@@ -20,6 +20,7 @@ set -euo pipefail
 #   release) -> migrate --force (central, as the migrator account)
 #   -> per-table central grants (append-only audit)
 #   -> db:seed CentralPermissionsSeeder (operator roles/permissions, idempotent)
+#   -> db:seed PlansAndFeaturesSeeder (SaaS catalog: adds what is missing, never overwrites)
 #   -> tenants:migrate --force
 #   -> app-releases:relocate (copy + verify release binaries to the private disk;
 #      the public copy stays for the old release, idempotent)
@@ -499,6 +500,13 @@ CENTRAL_DB_NAME="${ENVV[DB_DATABASE]}" \
 STAGE="central-permissions"
 info "php artisan db:seed --class=CentralPermissionsSeeder --force (operator roles, idempotent)"
 artisan "$BACKEND" db:seed --class=CentralPermissionsSeeder --force
+
+# The approved SaaS catalog (plans, features, add-ons) lives in code. PlansAndFeaturesSeeder only
+# creates what is missing and merges new feature keys; it never overwrites a price, limit, flag or
+# name a super-admin edited. Running it every release ships new catalog entries without a manual seed.
+STAGE="plan-catalog"
+info "php artisan db:seed --class=PlansAndFeaturesSeeder --force (missing catalog entries only)"
+artisan "$BACKEND" db:seed --class=PlansAndFeaturesSeeder --force
 
 STAGE="migrate-tenants"
 info "php artisan tenants:migrate --force (any failing tenant stops the release)"
