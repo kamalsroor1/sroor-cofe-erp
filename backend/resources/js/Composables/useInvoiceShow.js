@@ -5,6 +5,7 @@ import { useAppConfigStore } from '../stores/appConfig';
 import { useAuthStore } from '../stores/auth';
 import { currentCurrencyLabel, useFormatters } from './useFormatters';
 import { useTrans } from './useTrans';
+import { useLoadError } from './useLoadError';
 import DarkSwal from '../helpers/alert';
 import { buildCompanyInfo } from '../helpers/companyInfo';
 import { needsManagerApproval, approvalReasons, requestManagerApproval } from './useManagerApproval';
@@ -19,9 +20,7 @@ export function useInvoiceShow() {
 
     const invoice = ref(null);
     const isLoading = ref(true);
-    const error = ref(null);
-    const errorStatusCode = ref(null);
-    const canRetry = ref(true);
+    const { error, errorMessage, statusCode: errorStatusCode, canRetry, clearError, setError } = useLoadError();
     const activeMode = ref(route.query.mode || (route.name === 'invoices.print' ? 'thermal' : 'interactive'));
 
     // Cancellation state
@@ -76,17 +75,12 @@ export function useInvoiceShow() {
         const id = route.params.id;
         if (!id) return;
         isLoading.value = true;
-        error.value = null;
+        clearError();
         try {
             const res = await api.get(`/invoices/${id}`);
             invoice.value = res.data?.data || res.data;
-            errorStatusCode.value = null;
-            canRetry.value = true;
         } catch (e) {
-            const status = e?.response?.status ?? e?.status ?? null;
-            errorStatusCode.value = status ? Number(status) : null;
-            canRetry.value = errorStatusCode.value !== 403;
-            error.value = e.userMessage || e.response?.data?.message || t('common.error_occurred');
+            setError(e);
         } finally {
             isLoading.value = false;
         }
@@ -249,6 +243,7 @@ export function useInvoiceShow() {
         setMode,
         isLoading,
         error,
+        errorMessage,
         errorStatusCode,
         canRetry,
         retry: fetchInvoice,
