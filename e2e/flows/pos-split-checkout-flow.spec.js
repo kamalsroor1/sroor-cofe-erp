@@ -15,6 +15,7 @@ const ITEM = {
     name: 'E2E Kilo Coffee',
     code: 'E2E-KILO',
     unit: 'kg',
+    is_weighted: true,
     selling_price: '550.500',
     price_retail: '550.500',
     price_wholesale: '550.500',
