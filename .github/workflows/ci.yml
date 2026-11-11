@@ -108,6 +108,22 @@ jobs:
       - name: Larastan (level 5 + baseline)
         run: composer analyse
 
+      # The SPA shell (resources/views/app.blade.php) resolves hashed assets through the Vite
+      # manifest. backend/public/build is gitignored and the copy still tracked in git is stale,
+      # so build it here or every test that renders the shell dies with ViteException.
+      - name: Setup Node (Vite manifest for SPA shell tests)
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: npm ci
+        run: npm ci
+
+      - name: Build assets (runs lang:export via prebuild)
+        run: npm run build
+
       - name: PHPUnit (sqlite :memory:)
         run: php artisan test
 
