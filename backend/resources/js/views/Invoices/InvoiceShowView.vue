@@ -6,7 +6,7 @@
       v-else-if="error"
       class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800"
     >
-      <ErrorState :message="error" @retry="retry" />
+      <ErrorState :message="error" :status-code="errorStatusCode" :can-retry="canRetry" @retry="retry" />
       <div class="flex justify-center pb-8">
         <BaseButton variant="secondary" size="md" @click="goBack">{{ $t('common.back') }}</BaseButton>
       </div>
@@ -79,6 +79,8 @@ const {
   invoice,
   isLoading,
   error,
+  errorStatusCode,
+  canRetry,
   retry,
   activeMode,
   setMode,

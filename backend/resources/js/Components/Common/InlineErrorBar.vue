@@ -1,7 +1,8 @@
 <script setup>
+import { computed } from 'vue';
 import { AlertCircle } from 'lucide-vue-next';
 
-defineProps({
+const props = defineProps({
   message: {
     type: String,
     default: '',
@@ -10,6 +11,10 @@ defineProps({
     type: Boolean,
     default: true,
   },
+  statusCode: {
+    type: [Number, String],
+    default: null,
+  },
   retryText: {
     type: String,
     default: '',
@@ -17,6 +22,13 @@ defineProps({
 });
 
 defineEmits(['retry']);
+
+const effectiveCanRetry = computed(() => {
+  if (!props.canRetry) return false;
+  const status = Number(props.statusCode);
+  if (status === 403) return false;
+  return true;
+});
 </script>
 
 <template>
@@ -29,7 +41,7 @@ defineEmits(['retry']);
       <span class="truncate">{{ message || $t('common.error_occurred') }}</span>
     </div>
     <button
-      v-if="canRetry"
+      v-if="effectiveCanRetry"
       type="button"
       data-testid="retry-button"
       class="min-h-[44px] min-w-[44px] px-3.5 py-1.5 rounded-lg bg-red-100 dark:bg-red-900/50 hover:bg-red-200 dark:hover:bg-red-900/80 text-xs font-bold text-red-800 dark:text-red-200 transition shrink-0 cursor-pointer active:scale-95"

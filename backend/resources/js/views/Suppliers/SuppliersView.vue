@@ -25,7 +25,7 @@
     </PageHeader>
 
     <!-- Summary Metrics Grid -->
-    <SuppliersMetricsGrid :metrics="metrics" :loading="isLoading" />
+    <SuppliersMetricsGrid :metrics="metrics" :loading="isLoading" :error="hasError" />
 
     <!-- Filters & Search Bar -->
     <SuppliersFilterBar
@@ -42,6 +42,8 @@
       :loading="isLoading"
       :error="hasError"
       :error-message="errorMessage"
+      :can-retry="canRetry"
+      :error-status-code="errorStatusCode"
       @create="openCreateModal"
       @pay="openPaymentModal"
       @edit="openEditModal"
@@ -96,6 +98,8 @@ const {
   isLoading,
   hasError,
   errorMessage,
+  errorStatusCode,
+  canRetry,
   isSubmitting,
   pagination,
   showSupplierModal,
