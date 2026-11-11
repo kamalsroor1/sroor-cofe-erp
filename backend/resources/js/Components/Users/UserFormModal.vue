@@ -76,6 +76,91 @@
         />
       </div>
 
+      <!-- POS Manager Approval PIN Section (Edit mode only) -->
+      <div
+        v-if="isEditing"
+        class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 space-y-3"
+      >
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <KeyRound class="w-4 h-4 text-theme-primary" />
+            <span class="text-xs font-bold text-slate-900 dark:text-white">
+              {{ $t('users.pos_pin_section_title') }}
+            </span>
+          </div>
+          <span
+            data-testid="user-pos-pin-badge"
+            class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border"
+            :class="
+              form.has_pos_pin
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                : 'bg-slate-500/10 border-slate-500/30 text-slate-500 dark:text-slate-400'
+            "
+          >
+            {{ form.has_pos_pin ? $t('users.pos_pin_set') : $t('users.pos_pin_not_set') }}
+          </span>
+        </div>
+
+        <p class="text-[11px] text-slate-500 dark:text-slate-400">
+          {{ $t('users.pos_pin_section_hint') }}
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <BaseInput
+            :model-value="pinForm.pin"
+            @update:model-value="pinForm.pin = $event"
+            :label="$t('users.pos_pin_label')"
+            type="password"
+            inputmode="numeric"
+            maxlength="6"
+            minlength="4"
+            dir="ltr"
+            placeholder="••••"
+            class="font-mono"
+          />
+
+          <BaseInput
+            :model-value="pinForm.pin_confirmation"
+            @update:model-value="pinForm.pin_confirmation = $event"
+            :label="$t('users.pos_pin_confirm_label')"
+            type="password"
+            inputmode="numeric"
+            maxlength="6"
+            dir="ltr"
+            placeholder="••••"
+            class="font-mono"
+          />
+        </div>
+
+        <div v-if="pinError" class="text-xs text-rose-500 font-bold">
+          {{ pinError }}
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-1">
+          <BaseButton
+            v-if="form.has_pos_pin"
+            type="button"
+            variant="danger"
+            size="md"
+            class="min-h-[44px]"
+            @click="handleClearPin"
+          >
+            {{ $t('users.pos_pin_clear_btn') }}
+          </BaseButton>
+
+          <BaseButton
+            type="button"
+            variant="secondary"
+            size="md"
+            class="min-h-[44px]"
+            :disabled="!pinForm.pin"
+            @click="handleSavePin"
+          >
+            {{ $t('users.pos_pin_save_btn') }}
+          </BaseButton>
+        </div>
+      </div>
+
       <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
         <BaseButton type="button" variant="secondary" size="md" @click="$emit('close')">
           {{ $t('common.cancel') }}
@@ -96,7 +181,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, watch, computed } from 'vue';
+import { KeyRound } from 'lucide-vue-next';
 import AppModal from '../Common/AppModal.vue';
 import BaseInput from '../Form/BaseInput.vue';
 import BaseSelect from '../Form/BaseSelect.vue';
@@ -115,7 +201,47 @@ const props = defineProps({
   submitting: { type: Boolean, default: false },
 });
 
-defineEmits(['close', 'submit', 'update:field']);
+const emit = defineEmits(['close', 'submit', 'update:field', 'update-pos-pin', 'clear-pos-pin']);
+
+const pinForm = ref({
+  pin: '',
+  pin_confirmation: '',
+});
+const pinError = ref('');
+
+watch(
+  () => props.show,
+  (newVal) => {
+    if (!newVal) {
+      pinForm.value = { pin: '', pin_confirmation: '' };
+      pinError.value = '';
+    }
+  }
+);
+
+const handleSavePin = () => {
+  pinError.value = '';
+  const pin = (pinForm.value.pin || '').trim();
+  const confirmation = (pinForm.value.pin_confirmation || '').trim();
+
+  if (!/^\d{4,6}$/.test(pin)) {
+    pinError.value = t('users.pos_pin_format');
+    return;
+  }
+  if (pin !== confirmation) {
+    pinError.value = t('users.pos_pin_mismatch');
+    return;
+  }
+
+  emit('update-pos-pin', pin);
+  pinForm.value = { pin: '', pin_confirmation: '' };
+};
+
+const handleClearPin = () => {
+  emit('clear-pos-pin');
+  pinForm.value = { pin: '', pin_confirmation: '' };
+  pinError.value = '';
+};
 
 const formattedStores = computed(() => [
   { value: null, label: t('users.no_store_assigned') },

@@ -91,6 +91,7 @@ final class UserController extends Controller
                 'default_store_name' => $u->defaultStore?->name ?? 'غير محدد',
                 'roles' => $u->roles->pluck('name')->toArray(),
                 'primary_role' => $u->roles->first()?->name ?: 'cashier',
+                'has_pos_pin' => $u->pos_pin !== null,
                 'created_at' => $u->created_at ? $u->created_at->toDateString() : '',
             ];
         });

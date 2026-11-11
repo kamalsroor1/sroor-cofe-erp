@@ -74,6 +74,8 @@
       @close="showModal = false"
       @submit="submitForm"
       @update:field="updateFormField"
+      @update-pos-pin="updateEditingUserPosPin"
+      @clear-pos-pin="clearEditingUserPosPin"
     />
   </div>
 </template>
@@ -113,5 +115,7 @@ const {
   toggleActive,
   deleteUser,
   unlockLogin,
+  updateEditingUserPosPin,
+  clearEditingUserPosPin,
 } = useUsers();
 </script>
