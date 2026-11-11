@@ -430,4 +430,52 @@ class UsersApiTest extends TenantTestCase
         $profileResp2 = $this->getJson('/api/v1/profile', $cashierHeaders)->assertOk();
         $this->assertFalse($profileResp2->json('data.has_pos_pin'));
     }
+
+    public function test_pos_pin_endpoints_require_authentication(): void
+    {
+        $guest = $this->tenantGuestHeaders($this->tenant);
+
+        $this->putJson("/api/v1/users/{$this->unauthorizedUser->id}/pos-pin", ['pin' => '1234'], $guest)->assertStatus(401);
+        $this->putJson('/api/v1/profile/pos-pin', ['pin' => '1234', 'current_password' => 'password'], $guest)->assertStatus(401);
+    }
+
+    public function test_user_pos_pin_endpoint_is_forbidden_without_user_management_rights_and_validates_the_pin(): void
+    {
+        $target = $this->createTenantUser($this->tenant, 'cashier', attributes: ['name' => 'كاشير PIN']);
+
+        $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '1234'], $this->unauthorizedHeaders)->assertStatus(403);
+
+        foreach (['12', '1234567', '12ab', 1234] as $bad) {
+            $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => $bad], $this->adminHeaders)
+                ->assertStatus(422)
+                ->assertJsonValidationErrors('pin');
+        }
+        $this->putJson("/api/v1/users/{$target->id}/pos-pin", [], $this->adminHeaders)->assertStatus(422)->assertJsonValidationErrors('pin');
+
+        $this->assertNull($this->inTenant($this->tenant, fn () => User::query()->findOrFail($target->id)->pos_pin));
+
+        $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '5678'], $this->adminHeaders)
+            ->assertOk()
+            ->assertJson(['success' => true, 'has_pos_pin' => true])
+            ->assertJsonMissingPath('pos_pin');
+        $this->assertTrue(Hash::check('5678', (string) $this->inTenant($this->tenant, fn () => User::query()->findOrFail($target->id)->pos_pin)));
+    }
+
+    public function test_profile_pos_pin_endpoint_validates_the_pin_and_the_current_password(): void
+    {
+        $headers = $this->unauthorizedHeaders;
+
+        $this->putJson('/api/v1/profile/pos-pin', ['pin' => '12', 'current_password' => 'password'], $headers)
+            ->assertStatus(422)->assertJsonValidationErrors('pin');
+        $this->putJson('/api/v1/profile/pos-pin', ['pin' => '1234'], $headers)
+            ->assertStatus(422)->assertJsonValidationErrors('current_password');
+        $this->putJson('/api/v1/profile/pos-pin', ['pin' => '1234', 'current_password' => 'not-the-password'], $headers)
+            ->assertStatus(422)->assertJsonValidationErrors('current_password');
+        $this->assertNull($this->inTenant($this->tenant, fn () => User::query()->findOrFail($this->unauthorizedUser->id)->pos_pin));
+
+        $this->putJson('/api/v1/profile/pos-pin', ['pin' => '1234', 'current_password' => 'password'], $headers)
+            ->assertOk()
+            ->assertJson(['success' => true, 'has_pos_pin' => true]);
+        $this->assertTrue(Hash::check('1234', (string) $this->inTenant($this->tenant, fn () => User::query()->findOrFail($this->unauthorizedUser->id)->pos_pin)));
+    }
 }

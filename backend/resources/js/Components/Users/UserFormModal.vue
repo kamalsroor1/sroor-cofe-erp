@@ -111,6 +111,7 @@
             @update:model-value="pinForm.pin = $event"
             :label="$t('users.pos_pin_label')"
             type="password"
+            autocomplete="new-password"
             inputmode="numeric"
             maxlength="6"
             minlength="4"
@@ -124,6 +125,7 @@
             @update:model-value="pinForm.pin_confirmation = $event"
             :label="$t('users.pos_pin_confirm_label')"
             type="password"
+            autocomplete="new-password"
             inputmode="numeric"
             maxlength="6"
             dir="ltr"
@@ -234,12 +236,18 @@ const handleSavePin = () => {
   }
 
   emit('update-pos-pin', pin);
-  pinForm.value = { pin: '', pin_confirmation: '' };
 };
+
+/** Called by the parent after the server accepted the change, so a failed attempt keeps what was typed. */
+const resetPin = () => {
+  pinForm.value = { pin: '', pin_confirmation: '' };
+  pinError.value = '';
+};
+
+defineExpose({ resetPin });
 
 const handleClearPin = () => {
   emit('clear-pos-pin');
-  pinForm.value = { pin: '', pin_confirmation: '' };
   pinError.value = '';
 };
 

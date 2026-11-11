@@ -31,6 +31,7 @@
           @update:model-value="pinForm.current_password = $event"
           :label="$t('profile.pos_pin_current_password_label')"
           type="password"
+          autocomplete="new-password"
           placeholder="••••••••"
           class="font-mono"
         />
@@ -43,6 +44,7 @@
             @update:model-value="pinForm.pin = $event"
             :label="$t('profile.pos_pin_input_label')"
             type="password"
+            autocomplete="new-password"
             inputmode="numeric"
             maxlength="6"
             minlength="4"
@@ -58,6 +60,7 @@
             @update:model-value="pinForm.pin_confirmation = $event"
             :label="$t('profile.pos_pin_confirm_label')"
             type="password"
+            autocomplete="new-password"
             inputmode="numeric"
             maxlength="6"
             dir="ltr"
@@ -148,13 +151,19 @@ const handleSubmit = () => {
     pin,
     current_password: currentPassword,
   });
+};
 
+/** Called by the parent after the server accepted the change. */
+const reset = () => {
+  validationError.value = '';
   pinForm.value = {
     current_password: '',
     pin: '',
     pin_confirmation: '',
   };
 };
+
+defineExpose({ reset });
 
 const handleClear = () => {
   validationError.value = '';
@@ -166,11 +175,5 @@ const handleClear = () => {
   }
 
   emit('clear-pin', currentPassword);
-
-  pinForm.value = {
-    current_password: '',
-    pin: '',
-    pin_confirmation: '',
-  };
 };
 </script>

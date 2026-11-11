@@ -65,6 +65,7 @@
 
     <!-- Create / Edit User Modal -->
     <UserFormModal
+      ref="userModal"
       :show="showModal"
       :is-editing="isEditing"
       :form="form"
@@ -74,13 +75,14 @@
       @close="showModal = false"
       @submit="submitForm"
       @update:field="updateFormField"
-      @update-pos-pin="updateEditingUserPosPin"
-      @clear-pos-pin="clearEditingUserPosPin"
+      @update-pos-pin="onUpdatePin"
+      @clear-pos-pin="onClearPin"
     />
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import ErrorState from '../../Components/Common/ErrorState.vue';
 import { ShieldCheck, UserPlus } from 'lucide-vue-next';
@@ -118,4 +120,14 @@ const {
   updateEditingUserPosPin,
   clearEditingUserPosPin,
 } = useUsers();
+
+const userModal = ref(null);
+
+// Reset the PIN fields only once the server accepted the change.
+const onUpdatePin = async (pin) => {
+  if (await updateEditingUserPosPin(pin)) userModal.value?.resetPin();
+};
+const onClearPin = async () => {
+  if (await clearEditingUserPosPin()) userModal.value?.resetPin();
+};
 </script>

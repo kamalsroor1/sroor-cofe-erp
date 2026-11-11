@@ -25,7 +25,6 @@ return [
     'save_changes' => 'Save Changes',
     'pos_pin_title' => 'POS Manager Approval PIN',
     'pos_pin_hint' => 'Used to approve below-floor prices and cancel invoices in POS. Requires current account password.',
-    'pos_pin_status' => 'PIN Status',
     'pos_pin_set' => 'PIN is configured',
     'pos_pin_not_set' => 'No PIN configured yet',
     'pos_pin_input_label' => 'New Approval PIN (4-6 digits)',

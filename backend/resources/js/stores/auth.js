@@ -47,6 +47,12 @@ export const useAuthStore = defineStore('auth', {
         activeStoreName: (state) => state.currentStore?.name || trans('common.main_branch'),
         activeStoreId: (state) => state.currentStore?.id || '',
         themePreference: (state) => state.user?.theme_preference || 'dark',
+        // Users who can act as a manager approver (SalePriceGuard permissions, or the admin role used for cancels).
+        canActAsApprover: (state) =>
+            !!state.user &&
+            (state.roles.includes('admin') ||
+                state.permissions.includes('pos.price.below_min') ||
+                state.permissions.includes('pos.discount.override')),
     },
 
     actions: {
