@@ -45,6 +45,7 @@ export const useAuthStore = defineStore('auth', {
         isAdmin: (state) => state.roles.includes('admin'),
         userName: (state) => state.user?.name || trans('common.default_user_name'),
         activeStoreName: (state) => state.currentStore?.name || trans('common.main_branch'),
+        activeStoreId: (state) => state.currentStore?.id || '',
         themePreference: (state) => state.user?.theme_preference || 'dark',
     },
 

@@ -10,28 +10,37 @@
 
     <!-- 1. Standalone / Print / Guest Views (Completely Isolated with ZERO Sidebar or Navbars) -->
     <template v-if="isStandaloneRoute">
-      <router-view v-slot="{ Component, route }">
+      <router-view v-slot="{ Component, route: currentRoute }">
         <transition name="page" mode="out-in">
-          <component :is="Component" :key="route.fullPath" />
+          <component :is="Component" :key="currentRoute.fullPath" />
         </transition>
       </router-view>
     </template>
 
     <!-- 2. Super Admin Dedicated Layout (Isolated Shell for Central Platform Admins) -->
     <SuperAdminLayout v-else-if="isSuperAdminRoute">
-      <router-view v-slot="{ Component, route }">
+      <router-view v-slot="{ Component, route: currentRoute }">
         <transition name="page" mode="out-in">
-          <component :is="Component" :key="route.fullPath" />
+          <component :is="Component" :key="currentRoute.fullPath" />
         </transition>
       </router-view>
     </SuperAdminLayout>
 
     <!-- 3. Persistent Tenant ERP / POS App Shell -->
     <SpaLayout v-else>
-      <router-view v-slot="{ Component, route }">
+      <router-view v-slot="{ Component, route: currentRoute }">
         <transition name="page" mode="out-in">
-          <component :is="Component" v-if="appConfigStore.hasFeature(route.meta.feature)" :key="route.fullPath" />
-          <FeatureGate v-else :key="route.fullPath" :feature="route.meta.feature" page />
+          <component
+            :is="Component"
+            v-if="appConfigStore.hasFeature(currentRoute.meta.feature)"
+            :key="`${currentRoute.fullPath}-${authStore.activeStoreId}`"
+          />
+          <FeatureGate
+            v-else
+            :key="`${currentRoute.fullPath}-${authStore.activeStoreId}`"
+            :feature="currentRoute.meta.feature"
+            page
+          />
         </transition>
       </router-view>
     </SpaLayout>

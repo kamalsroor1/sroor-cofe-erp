@@ -12,28 +12,8 @@
 
       <span class="w-1 h-3 bg-slate-800 rounded-full"></span>
 
-      <!-- Active Branch Selector / Badge -->
-      <div v-if="authStore.stores?.length > 1" class="relative no-drag flex items-center">
-        <select
-          :value="authStore.currentStore?.id"
-          @change="handleStoreSwitch($event.target.value)"
-          class="h-6 ps-6 pe-2 bg-theme-primary/10 hover:bg-theme-primary/20 border border-theme-primary/30 text-theme-primary text-[10px] font-bold rounded-lg focus:outline-none focus:ring-1 focus:ring-theme-primary cursor-pointer font-tajawal appearance-none transition"
-        >
-          <option v-for="s in authStore.stores" :key="s.id" :value="s.id" class="bg-slate-900 text-white">
-            {{ s.name }}
-          </option>
-        </select>
-        <ChevronDown class="w-3 h-3 text-theme-primary absolute start-1.5 pointer-events-none" />
-      </div>
-      <router-link
-        v-else
-        to="/stores"
-        class="px-2 py-0.5 rounded-lg bg-theme-primary/10 hover:bg-theme-primary/20 border border-theme-primary/20 text-theme-primary text-[10px] font-bold flex items-center gap-1 transition no-drag cursor-pointer"
-        :title="$t('desktop.titlebar.active_branch_hint')"
-      >
-        <Store class="w-3 h-3" />
-        <span>{{ authStore.activeStoreName || $t('desktop.titlebar.main_branch') }}</span>
-      </router-link>
+      <!-- Active Branch Selector & Shift Status (Unified via StoreShiftSwitcher) -->
+      <StoreShiftSwitcher variant="titlebar" />
     </div>
 
     <!-- 🟢 Center: Hardware & Server Ping Diagnostics Pill -->
@@ -186,9 +166,9 @@ import { ref, computed } from 'vue';
 import { useDesktopHardware } from '../../Composables/useDesktopHardware';
 import { useAudioFeedback } from '../../Composables/useAudioFeedback';
 import { useAppUpdate } from '../../Composables/useAppUpdate';
-import { useAuthStore } from '../../stores/auth';
 import { useAppConfigStore } from '../../stores/appConfig';
 import BrandMark from '../Brand/BrandMark.vue';
+import StoreShiftSwitcher from '../Layout/StoreShiftSwitcher.vue';
 import {
   HelpCircle,
   Volume2,
@@ -201,23 +181,13 @@ import {
   X,
   RefreshCw,
   Rocket,
-  Store,
   Zap,
-  ChevronDown,
 } from 'lucide-vue-next';
 
 defineEmits(['open-hardware', 'open-shortcuts']);
 
-const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
 const isReloading = ref(false);
-
-const handleStoreSwitch = (storeId) => {
-  const store = authStore.stores?.find((s) => String(s.id) === String(storeId));
-  if (store) {
-    authStore.switchStore(store);
-  }
-};
 
 const {
   isDesktop,
