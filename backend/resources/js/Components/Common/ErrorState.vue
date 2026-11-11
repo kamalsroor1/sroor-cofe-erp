@@ -1,10 +1,11 @@
 <script setup>
+import { computed } from 'vue';
 import { AlertTriangle, RefreshCw, MessageCircle } from 'lucide-vue-next';
 import DynamicIcon from './DynamicIcon.vue';
 import BaseButton from './BaseButton.vue';
 import { useSupportContact } from '../../Composables/useSupportContact';
 
-defineProps({
+const props = defineProps({
   icon: {
     type: [Object, Function, String],
     default: () => AlertTriangle,
@@ -25,6 +26,10 @@ defineProps({
     type: Boolean,
     default: true,
   },
+  statusCode: {
+    type: [Number, String],
+    default: null,
+  },
   compact: {
     type: Boolean,
     default: false,
@@ -38,6 +43,13 @@ defineProps({
 defineEmits(['retry']);
 
 const { supportHref } = useSupportContact();
+
+const effectiveCanRetry = computed(() => {
+  if (!props.canRetry) return false;
+  const status = Number(props.statusCode);
+  if (status === 403) return false;
+  return true;
+});
 </script>
 
 <template>
@@ -71,7 +83,7 @@ const { supportHref } = useSupportContact();
 
     <div class="pt-2 flex flex-wrap items-center justify-center gap-2.5">
       <BaseButton
-        v-if="canRetry"
+        v-if="effectiveCanRetry"
         variant="outline"
         size="sm"
         data-testid="retry-button"

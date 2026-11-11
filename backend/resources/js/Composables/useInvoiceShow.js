@@ -20,6 +20,8 @@ export function useInvoiceShow() {
     const invoice = ref(null);
     const isLoading = ref(true);
     const error = ref(null);
+    const errorStatusCode = ref(null);
+    const canRetry = ref(true);
     const activeMode = ref(route.query.mode || (route.name === 'invoices.print' ? 'thermal' : 'interactive'));
 
     // Cancellation state
@@ -78,7 +80,12 @@ export function useInvoiceShow() {
         try {
             const res = await api.get(`/invoices/${id}`);
             invoice.value = res.data?.data || res.data;
+            errorStatusCode.value = null;
+            canRetry.value = true;
         } catch (e) {
+            const status = e?.response?.status ?? e?.status ?? null;
+            errorStatusCode.value = status ? Number(status) : null;
+            canRetry.value = errorStatusCode.value !== 403;
             error.value = e.userMessage || e.response?.data?.message || t('common.error_occurred');
         } finally {
             isLoading.value = false;
@@ -242,6 +249,8 @@ export function useInvoiceShow() {
         setMode,
         isLoading,
         error,
+        errorStatusCode,
+        canRetry,
         retry: fetchInvoice,
         activeMode,
         showCancelModal,

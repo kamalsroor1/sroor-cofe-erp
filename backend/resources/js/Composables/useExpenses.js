@@ -24,7 +24,14 @@ export function useExpenses() {
     const dateFrom = ref('');
     const dateTo = ref('');
     const isLoading = ref(false);
-    const { error: hasError, errorMessage, clearError, setError } = useLoadError();
+    const {
+        error: hasError,
+        errorMessage,
+        statusCode: errorStatusCode,
+        canRetry,
+        clearError,
+        setError,
+    } = useLoadError();
     const isSubmitting = ref(false);
 
     const pagination = ref({
@@ -224,6 +231,8 @@ export function useExpenses() {
         isLoading,
         hasError,
         errorMessage,
+        errorStatusCode,
+        canRetry,
         isSubmitting,
         pagination,
         showExpenseModal,

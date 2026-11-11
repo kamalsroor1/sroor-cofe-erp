@@ -10,6 +10,8 @@
       :pagination="pagination"
       :error="error"
       :error-message="errorMessage"
+      :can-retry="canRetry"
+      :error-status-code="errorStatusCode"
       @retry="$emit('retry', $event)"
       @page-change="$emit('page-change', $event)"
       :empty-title="$t('contacts.no_suppliers_found')"
@@ -158,6 +160,8 @@ defineProps({
   loading: { type: Boolean, default: false },
   error: { type: [Boolean, String, Object], default: null },
   errorMessage: { type: String, default: '' },
+  canRetry: { type: Boolean, default: true },
+  errorStatusCode: { type: [Number, String], default: null },
 });
 
 defineEmits(['create', 'pay', 'edit', 'delete', 'page-change', 'retry']);
