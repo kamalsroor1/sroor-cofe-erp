@@ -145,9 +145,9 @@
 
         <NotificationsBell />
 
-        <!-- Store switcher + journal status: full row on lg, compact chip on md -->
+        <!-- Store switcher + journal status: full row on lg, compact chip below lg (tablet + mobile) -->
         <StoreShiftSwitcher class="hidden lg:flex" variant="inline" />
-        <StoreShiftSwitcher class="hidden md:block lg:hidden" variant="chip" />
+        <StoreShiftSwitcher class="flex lg:hidden" variant="chip" />
       </div>
 
       <!-- Left Side (in RTL): Live Clock & Logout -->
