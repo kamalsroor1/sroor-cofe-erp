@@ -3,7 +3,7 @@ import { X } from 'lucide-vue-next';
 import DynamicIcon from 'Common/DynamicIcon.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import flatpickr from 'flatpickr';
-import { Arabic } from 'flatpickr/dist/l10n/ar.js';
+import { datePickerLocale } from '../helpers/datePickerLocale';
 import 'flatpickr/dist/flatpickr.min.css';
 
 import { useLocale } from '../Composables/useLocale';
@@ -31,7 +31,7 @@ const initFlatpickr = () => {
   }
   if (!inputRef.value) return;
   fpInstance = flatpickr(inputRef.value, {
-    locale: isRtl.value ? Arabic : 'default',
+    locale: datePickerLocale(isRtl.value),
     mode: props.mode,
     enableTime: props.enableTime,
     dateFormat: props.enableTime ? 'Y-m-d H:i' : 'Y-m-d',

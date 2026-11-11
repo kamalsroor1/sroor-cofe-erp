@@ -65,7 +65,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import flatpickr from 'flatpickr';
-import { Arabic } from 'flatpickr/dist/l10n/ar.js';
+import { datePickerLocale } from '../../helpers/datePickerLocale';
 import 'flatpickr/dist/flatpickr.min.css';
 import { Calendar, X, AlertCircle } from 'lucide-vue-next';
 
@@ -99,7 +99,7 @@ const initFlatpickr = () => {
   }
   if (!inputRef.value) return;
   fpInstance = flatpickr(inputRef.value, {
-    locale: isRtl.value ? Arabic : undefined,
+    locale: datePickerLocale(isRtl.value),
     mode: props.mode,
     enableTime: props.enableTime,
     dateFormat: props.enableTime ? 'Y-m-d H:i' : 'Y-m-d',
