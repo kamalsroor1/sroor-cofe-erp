@@ -28,6 +28,9 @@ final class AddonModelTest extends TenantTestCase
 
     private const PLAN_ADDON_MIGRATION = 'migrations/2026_10_10_200310_create_plan_addon_table.php';
 
+    /** Holds an FK to addons (addon_id), so a real rollback drops it first (MySQL error 3730 otherwise). */
+    private const PLAN_CHANGE_REQUESTS_MIGRATION = 'migrations/2026_11_10_130000_create_plan_change_requests_table.php';
+
     /** Holds an FK to addons, so a real rollback drops it before addons (MySQL error 3730 otherwise). */
     private const SUBSCRIPTION_ADDONS_MIGRATION = 'migrations/2026_10_10_200320_create_subscription_addons_table.php';
 
@@ -223,6 +226,7 @@ final class AddonModelTest extends TenantTestCase
     {
         // Same order as `migrate:rollback`: later migrations that reference addons first.
         try {
+            $this->runMigration(self::PLAN_CHANGE_REQUESTS_MIGRATION, 'down');
             $this->runMigration(self::SUBSCRIPTION_ADDONS_MIGRATION, 'down');
             $this->runMigration(self::PLAN_ADDON_MIGRATION, 'down');
             $this->runMigration(self::ADDONS_MIGRATION, 'down');
@@ -238,6 +242,7 @@ final class AddonModelTest extends TenantTestCase
             $this->runMigration(self::ADDONS_MIGRATION, 'up');
             $this->runMigration(self::PLAN_ADDON_MIGRATION, 'up');
             $this->runMigration(self::SUBSCRIPTION_ADDONS_MIGRATION, 'up');
+            $this->runMigration(self::PLAN_CHANGE_REQUESTS_MIGRATION, 'up');
         }
 
         $this->assertTrue(Schema::hasTable('subscription_addons'));

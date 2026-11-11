@@ -47,11 +47,13 @@ final class BillingInvoicesSchemaTest extends TenantTestCase
     /**
      * Later migrations that alter or reference these tables, oldest first: rolled back
      * newest-first before the tables are dropped, re-applied in this order afterwards.
-     * 200710 holds a FK to billing_invoices (MySQL 3730 "cannot drop referenced table").
+     * 200710 and plan_change_requests hold a FK to billing_invoices (MySQL 3730 "cannot drop
+     * referenced table").
      */
     private const ALTER_MIGRATIONS = [
         'migrations/2026_10_10_200540_scope_billing_payments_gateway_reference_unique_to_gateway.php',
         'migrations/2026_10_10_200710_create_tenant_credit_ledger_table.php',
+        'migrations/2026_11_10_130000_create_plan_change_requests_table.php',
     ];
 
     public function test_billing_invoices_table_has_the_designed_columns_and_indexes(): void

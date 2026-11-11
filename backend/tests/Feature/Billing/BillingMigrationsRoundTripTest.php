@@ -40,6 +40,14 @@ final class BillingMigrationsRoundTripTest extends TenantTestCase
         '2026_10_10_200720_create_tenant_credit_accounts_table',
     ];
 
+    /**
+     * Later central migrations whose tables hold FKs into the chain (plan_change_requests ->
+     * addons, billing_invoices). Rolled back before the chain (MySQL 3730 otherwise), re-applied after it.
+     */
+    private const DEPENDENT_MIGRATIONS = [
+        '2026_11_10_130000_create_plan_change_requests_table',
+    ];
+
     private const TABLES = [
         'plans', 'plan_features', 'subscriptions', 'addons', 'plan_addon', 'subscription_addons',
         'billing_sequences', 'billing_invoices', 'billing_payments', 'tenant_credit_ledger', 'tenant_credit_accounts',
@@ -66,6 +74,9 @@ final class BillingMigrationsRoundTripTest extends TenantTestCase
         $addonsBefore = Addon::query()->orderBy('key')->pluck('unit_price', 'key')->all();
 
         try {
+            foreach (array_reverse(self::DEPENDENT_MIGRATIONS) as $migration) {
+                $this->runMigration($migration, 'down');
+            }
             foreach (array_reverse(self::CHAIN) as $migration) {
                 $this->runMigration($migration, 'down');
             }
@@ -81,7 +92,7 @@ final class BillingMigrationsRoundTripTest extends TenantTestCase
                 'down() restores the legacy blender.access key.',
             );
         } finally {
-            foreach (self::CHAIN as $migration) {
+            foreach ([...self::CHAIN, ...self::DEPENDENT_MIGRATIONS] as $migration) {
                 $this->runMigration($migration, 'up');
             }
         }
