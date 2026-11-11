@@ -27,7 +27,8 @@ onMounted(() => load(route.params.id));
         variant="secondary"
         :icon="ArrowRight"
         icon-class="rtl:rotate-0 ltr:rotate-180"
-        @click="router.push({ name: 'billing.index' })">
+        @click="router.push({ name: 'billing.index' })"
+      >
         {{ $t('common.back') }}
       </BaseButton>
       <BaseButton v-if="invoice" variant="primary" :icon="Printer" @click="printPage">
