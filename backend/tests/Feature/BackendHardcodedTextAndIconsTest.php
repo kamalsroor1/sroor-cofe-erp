@@ -101,7 +101,7 @@ final class BackendHardcodedTextAndIconsTest extends TenantTestCase
             $store = Store::firstOrFail();
             $customer = Customer::create([
                 'name' => 'John Doe',
-                'phone' => '01099998888',
+                'phone' => '01000000001',
                 'current_balance' => '0.000',
                 'price_tier' => 'retail',
                 'is_active' => true,
