@@ -21,4 +21,18 @@ return [
     'cannot_edit_own_role' => 'You cannot edit a role that is assigned to you.',
     'cannot_grant_unheld_permission' => 'You cannot grant a permission that you do not have yourself.',
     'activity_permissions_updated' => ':user updated the permissions of role ":role"',
+    'modules' => [
+        'sales' => 'Sales & POS',
+        'inventory' => 'Items, Inventory & Raw Beans',
+        'purchases' => 'Purchases & Supplies',
+        'customers' => 'Customers & Cash Collections',
+        'suppliers' => 'Suppliers & Payment Vouchers',
+        'expenses' => 'Expenses & Sundries',
+        'returns' => 'Sales & Purchase Returns',
+        'reports' => 'Financial Reports & Profits',
+        'stores' => 'Branches & Stock Transfers',
+        'daily_journal' => 'Shifts & Treasury (Z-Report)',
+        'roles' => 'System & User Management',
+        'administration' => 'System, Users & Audit Management',
+    ],
 ];

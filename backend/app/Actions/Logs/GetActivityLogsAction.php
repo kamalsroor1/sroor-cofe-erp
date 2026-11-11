@@ -99,7 +99,7 @@ final class GetActivityLogsAction
                 'module' => $log->module,
                 'module_label' => $badge['label'] ?? $log->module,
                 'module_color' => $badge['color'] ?? 'slate',
-                'module_icon' => $badge['icon'] ?? '⚙️',
+                'module_icon' => $badge['icon'] ?? 'sliders',
                 'action' => $log->action,
                 'description' => $log->description,
                 'properties' => $log->properties,

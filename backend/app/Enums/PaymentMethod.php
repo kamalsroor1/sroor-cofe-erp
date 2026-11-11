@@ -14,40 +14,24 @@ enum PaymentMethod: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Cash => 'نقداً (كاش)',
-            self::Instapay => 'إنستاباي (InstaPay)',
-            self::EWallet => 'محفظة إلكترونية (فودافون/أورانج/اتصالات)',
-            self::Visa => 'بطاقة بنكية / فيزا',
-            self::BankTransfer => 'تحويل بنكي',
-            self::Check => 'شيك بنكي',
-            self::Other => 'أخرى',
-        };
+        return __('treasury.payment_methods.'.$this->value);
     }
 
     public function shortLabel(): string
     {
-        return match ($this) {
-            self::Cash => 'كاش',
-            self::Instapay => 'إنستاباي',
-            self::EWallet => 'محفظة',
-            self::Visa => 'فيزا',
-            self::BankTransfer => 'تحويل',
-            self::Check => 'شيك',
-            self::Other => 'أخرى',
-        };
+        return __('treasury.payment_methods_short.'.$this->value);
     }
 
     public function icon(): string
     {
         return match ($this) {
-            self::Cash => '💵',
-            self::Instapay => '⚡',
-            self::EWallet => '📲',
-            self::Visa => '💳',
-            self::BankTransfer => '🏦',
-            self::Check => '📝',
-            self::Other => '🔄',
+            self::Cash => 'banknote',
+            self::Instapay => 'zap',
+            self::EWallet => 'smartphone',
+            self::Visa => 'credit-card',
+            self::BankTransfer => 'building2',
+            self::Check => 'file-text',
+            self::Other => 'arrow-left-right',
         };
     }
 

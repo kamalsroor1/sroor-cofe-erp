@@ -11,21 +11,16 @@ enum UserRole: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::ADMIN => 'مدير عام (كامل الصلاحيات)',
-            self::CASHIER => 'كاشير مبيعات (POS وفواتير)',
-            self::STOREKEEPER => 'أمين مخزن (أصناف وتوريدات)',
-            self::ACCOUNTANT => 'محاسب مالي (تقارير وكشوفات)',
-        };
+        return __('users.role_labels.'.$this->value);
     }
 
     public function icon(): string
     {
         return match ($this) {
-            self::ADMIN => '👑',
-            self::CASHIER => '☕',
-            self::STOREKEEPER => '📦',
-            self::ACCOUNTANT => '📊',
+            self::ADMIN => 'crown',
+            self::CASHIER => 'coffee',
+            self::STOREKEEPER => 'package',
+            self::ACCOUNTANT => 'bar-chart3',
         };
     }
 
@@ -41,7 +36,7 @@ enum UserRole: string
 
     public function formattedName(): string
     {
-        return "{$this->icon()} {$this->label()}";
+        return $this->label();
     }
 
     /**
@@ -51,7 +46,7 @@ enum UserRole: string
     {
         $role = self::tryFrom($roleName);
 
-        return $role ? $role->formattedName() : "🛡️ دور: {$roleName}";
+        return $role ? $role->formattedName() : __('users.role_custom_prefix', ['role' => $roleName]);
     }
 
     /**

@@ -111,8 +111,8 @@ final class TenantSettings
     }
 
     /**
-     * Display symbol of the tenant currency in the active locale (`common.currencies.<CODE>`:
-     * 'ج.م' / 'EGP'). Falls back to the ISO code when no symbol is translated.
+     * Display symbol of the tenant currency in the active locale (`common.currencies.<CODE>`).
+     * Falls back to the ISO code when no symbol is translated.
      */
     public function currencyLabel(): string
     {

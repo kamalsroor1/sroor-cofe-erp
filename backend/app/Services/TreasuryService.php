@@ -9,6 +9,7 @@ use App\Models\Expense;
 use App\Models\Payment;
 use App\Models\Store;
 use App\Models\TreasuryTransfer;
+use App\Services\Settings\TenantSettings;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +22,13 @@ class TreasuryService
         protected ActivityLogService $activityLogService,
         protected TenantClock $tenantClock,
         protected DocumentNumberService $documentNumbers,
+        protected ?TenantSettings $tenantSettings = null,
     ) {}
+
+    private function currency(): string
+    {
+        return ($this->tenantSettings ?? app(TenantSettings::class))->currencyLabel();
+    }
 
     /**
      * Get real-time financial balances per payment method / treasury account.
@@ -130,7 +137,7 @@ class TreasuryService
                     'account' => $fromLabel,
                     'available' => Decimal::normalize($sourceBal),
                     'required' => Decimal::normalize($totalRequired),
-                    'currency' => __('common.currency'),
+                    'currency' => $this->currency(),
                 ]);
             }
 
@@ -165,7 +172,7 @@ class TreasuryService
                 description: __('treasury.activity.transfer_created', [
                     'number' => $transferNumber,
                     'amount' => Decimal::normalize($amount),
-                    'currency' => __('common.currency'),
+                    'currency' => $this->currency(),
                     'from' => $fromLabel,
                     'to' => $toLabel,
                 ]),
@@ -415,7 +422,7 @@ class TreasuryService
                     'method' => $tr->from_method,
                     'method_label' => $fromLabel,
                     'party' => "إلى: {$toLabel}",
-                    'notes' => (bccomp((string) $tr->transfer_fee, '0.000', 3) > 0 ? "شامل عمولة {$tr->transfer_fee} ج.م - " : '').($tr->notes ?: 'تحويل بين الخزن'),
+                    'notes' => (bccomp((string) $tr->transfer_fee, '0.000', 3) > 0 ? "شامل عمولة {$tr->transfer_fee} {$this->currency()} - " : '').($tr->notes ?: 'تحويل بين الخزن'),
                     'debit' => '0.000',
                     'credit' => $totalOut,
                 ];

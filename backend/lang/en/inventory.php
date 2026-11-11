@@ -6,7 +6,6 @@ return [
     'subtitle' => 'Track stock levels across branches, cost/selling prices, and safety reorder alerts',
     'items_list' => 'Items & Inventory List',
     'add_new_item' => 'Add New Item',
-    'add_item' => 'Add Item',
     'edit_item' => 'Edit Item Details',
     'item_name' => 'Commercial Item Name',
     'item_code' => 'Item Code / SKU',
@@ -43,7 +42,6 @@ return [
     'purchase_price' => 'Purchase Price (Base Cost)',
     'weighted_avg_cost' => 'Weighted Average Cost (WAC)',
     'retail_price' => 'Retail Selling Price',
-    'wholesale_price' => 'Wholesale Selling Price',
     'wholesale_below_min_price' => 'The wholesale price cannot be lower than the minimum selling price.',
     'current_stock' => 'Available Store Stock',
     'min_stock_level' => 'Reorder Point (Safety Level)',
@@ -74,7 +72,6 @@ return [
     // Stores & Warehouses
     'stores_title' => 'Branches & Warehouses Management',
     'stores_subtitle' => 'Manage storage facilities, point-of-sale branches, and stock centers',
-    'add_new_store' => 'Add New Store / Branch',
     'store_name' => 'Store / Branch Name',
     'store_code' => 'Store Code',
     'store_type' => 'Store Type',
@@ -442,4 +439,5 @@ return [
         'weight' => 'Weight: :grams g',
         'cardamom' => 'Cardamom: :grams g',
     ],
+    'deleted_item' => 'Deleted Item',
 ];

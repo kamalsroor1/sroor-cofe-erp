@@ -29,8 +29,8 @@ final class GetRolesMatrixAction
 
         $modules = [
             'sales' => [
-                'title' => 'المبيعات ونقاط البيع (POS)',
-                'icon' => '🛒',
+                'title' => __('roles.modules.sales'),
+                'icon' => 'shopping-cart',
                 'permissions' => [
                     'pos.access',
                     'pos.price.below_min',
@@ -44,8 +44,8 @@ final class GetRolesMatrixAction
                 ],
             ],
             'inventory' => [
-                'title' => 'الأصناف والمخزون وخامات البن',
-                'icon' => '📦',
+                'title' => __('roles.modules.inventory'),
+                'icon' => 'package',
                 'permissions' => [
                     'items.view',
                     'items.create',
@@ -56,8 +56,8 @@ final class GetRolesMatrixAction
                 ],
             ],
             'purchases' => [
-                'title' => 'المشتريات والتوريدات',
-                'icon' => '🚚',
+                'title' => __('roles.modules.purchases'),
+                'icon' => 'truck',
                 'permissions' => [
                     'purchases.view',
                     'purchases.create',
@@ -65,45 +65,45 @@ final class GetRolesMatrixAction
                 ],
             ],
             'customers' => [
-                'title' => 'العملاء والتحصيل النقدي',
-                'icon' => '👥',
+                'title' => __('roles.modules.customers'),
+                'icon' => 'users',
                 'permissions' => [
                     'customers.manage',
                     'customers.statement',
                 ],
             ],
             'suppliers' => [
-                'title' => 'الموردين وسندات السداد',
-                'icon' => '🏭',
+                'title' => __('roles.modules.suppliers'),
+                'icon' => 'warehouse',
                 'permissions' => [
                     'suppliers.manage',
                     'suppliers.statement',
                 ],
             ],
             'expenses' => [
-                'title' => 'المصروفات والنثريات',
-                'icon' => '💸',
+                'title' => __('roles.modules.expenses'),
+                'icon' => 'receipt',
                 'permissions' => [
                     'expenses.manage',
                 ],
             ],
             'returns' => [
-                'title' => 'مرتجعات المبيعات والمشتريات',
-                'icon' => '🔄',
+                'title' => __('roles.modules.returns'),
+                'icon' => 'rotate-ccw',
                 'permissions' => [
                     'returns.manage',
                 ],
             ],
             'reports' => [
-                'title' => 'التقارير المالية والأرباح',
-                'icon' => '📈',
+                'title' => __('roles.modules.reports'),
+                'icon' => 'bar-chart3',
                 'permissions' => [
                     'reports.view',
                 ],
             ],
             'stores' => [
-                'title' => 'الفروع والتحويلات المخزنية',
-                'icon' => '🏬',
+                'title' => __('roles.modules.stores'),
+                'icon' => 'store',
                 'permissions' => [
                     'stores.manage',
                     'stores.view_all',
@@ -112,8 +112,8 @@ final class GetRolesMatrixAction
                 ],
             ],
             'daily_journal' => [
-                'title' => 'الورديات والخزينة (Z-Report)',
-                'icon' => '💵',
+                'title' => __('roles.modules.daily_journal'),
+                'icon' => 'banknote',
                 'permissions' => [
                     'daily_journal.view',
                     'daily_journal.close_shift',
@@ -121,8 +121,8 @@ final class GetRolesMatrixAction
                 ],
             ],
             'roles' => [
-                'title' => 'إدارة النظام والمستخدمين',
-                'icon' => '🛡️',
+                'title' => __('roles.modules.roles'),
+                'icon' => 'shield-check',
                 'permissions' => [
                     'roles.manage',
                     'settings.manage',

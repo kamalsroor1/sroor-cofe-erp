@@ -16,7 +16,7 @@ final class ToggleStoreActiveAction
     {
         if ($store->is_main && $store->is_active) {
             throw ValidationException::withMessages([
-                'store' => [__('inventory.cannot_disable_main_store') ?: 'لا يمكن تعطيل الفرع الرئيسي للمنشأة'],
+                'store' => [__('inventory.cannot_disable_main_store')],
             ]);
         }
 

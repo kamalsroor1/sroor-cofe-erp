@@ -20,7 +20,7 @@ final class GetPermissionsTreeAction
 
         $modules = [
             'sales' => [
-                'title' => 'المبيعات ونقاط البيع (POS)',
+                'title' => __('roles.modules.sales'),
                 'icon' => 'shopping-cart',
                 'permissions' => [
                     'pos.access',
@@ -35,7 +35,7 @@ final class GetPermissionsTreeAction
                 ],
             ],
             'inventory' => [
-                'title' => 'الأصناف والمخزون وخامات البن',
+                'title' => __('roles.modules.inventory'),
                 'icon' => 'package',
                 'permissions' => [
                     'items.view',
@@ -47,7 +47,7 @@ final class GetPermissionsTreeAction
                 ],
             ],
             'purchases' => [
-                'title' => 'المشتريات والتوريدات',
+                'title' => __('roles.modules.purchases'),
                 'icon' => 'truck',
                 'permissions' => [
                     'purchases.view',
@@ -56,7 +56,7 @@ final class GetPermissionsTreeAction
                 ],
             ],
             'customers' => [
-                'title' => 'العملاء والتحصيل النقدي',
+                'title' => __('roles.modules.customers'),
                 'icon' => 'users',
                 'permissions' => [
                     'customers.manage',
@@ -64,36 +64,36 @@ final class GetPermissionsTreeAction
                 ],
             ],
             'suppliers' => [
-                'title' => 'الموردين وسندات السداد',
-                'icon' => 'factory',
+                'title' => __('roles.modules.suppliers'),
+                'icon' => 'warehouse',
                 'permissions' => [
                     'suppliers.manage',
                     'suppliers.statement',
                 ],
             ],
             'expenses' => [
-                'title' => 'المصروفات والعهد النثرية',
+                'title' => __('roles.modules.expenses'),
                 'icon' => 'banknote',
                 'permissions' => [
                     'expenses.manage',
                 ],
             ],
             'returns' => [
-                'title' => 'مرتجعات المبيعات والمشتريات',
+                'title' => __('roles.modules.returns'),
                 'icon' => 'rotate-ccw',
                 'permissions' => [
                     'returns.manage',
                 ],
             ],
             'reports' => [
-                'title' => 'التقارير المالية والأرباح',
-                'icon' => 'bar-chart-3',
+                'title' => __('roles.modules.reports'),
+                'icon' => 'bar-chart3',
                 'permissions' => [
                     'reports.view',
                 ],
             ],
             'stores' => [
-                'title' => 'الفروع والتحويلات المخزنية',
+                'title' => __('roles.modules.stores'),
                 'icon' => 'store',
                 'permissions' => [
                     'stores.manage',
@@ -103,7 +103,7 @@ final class GetPermissionsTreeAction
                 ],
             ],
             'daily_journal' => [
-                'title' => 'الورديات والخزينة (Z-Report)',
+                'title' => __('roles.modules.daily_journal'),
                 'icon' => 'wallet',
                 'permissions' => [
                     'daily_journal.view',
@@ -112,7 +112,7 @@ final class GetPermissionsTreeAction
                 ],
             ],
             'administration' => [
-                'title' => 'إدارة النظام والمستخدمين والرقابة',
+                'title' => __('roles.modules.administration'),
                 'icon' => 'shield-check',
                 'permissions' => [
                     'roles.manage',

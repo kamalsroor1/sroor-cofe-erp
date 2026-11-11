@@ -191,4 +191,22 @@ return [
     'transfer_amount_invalid' => 'Please enter a valid transfer amount greater than zero.',
     'transfer_insufficient_balance' => 'Sorry, the balance of the source account [:account] is not enough for this transfer (available: :available :currency - required including fee: :required :currency).',
     'customer_refund_label' => 'Customer refund (sales return)',
+    'payment_methods' => [
+        'cash' => 'Cash',
+        'instapay' => 'InstaPay',
+        'e_wallet' => 'E-Wallet (Vodafone/Orange/Etisalat)',
+        'visa' => 'Bank Card / Visa',
+        'bank_transfer' => 'Bank Transfer',
+        'check' => 'Bank Check',
+        'other' => 'Other',
+    ],
+    'payment_methods_short' => [
+        'cash' => 'Cash',
+        'instapay' => 'InstaPay',
+        'e_wallet' => 'E-Wallet',
+        'visa' => 'Visa',
+        'bank_transfer' => 'Transfer',
+        'check' => 'Check',
+        'other' => 'Other',
+    ],
 ];

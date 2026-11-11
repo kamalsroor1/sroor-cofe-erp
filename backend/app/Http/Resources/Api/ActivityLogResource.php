@@ -20,7 +20,7 @@ class ActivityLogResource extends JsonResource
         return [
             'id' => $this->id,
             'description' => $this->description,
-            'module_icon' => $badge['icon'] ?? '⚙️',
+            'module_icon' => $badge['icon'] ?? 'sliders',
             'user_name' => $this->user?->name ?? __('common.system'),
             'time_ago' => $this->created_at?->diffForHumans(),
             'created_at' => $this->created_at?->toIso8601String(),
