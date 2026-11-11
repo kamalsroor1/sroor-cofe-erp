@@ -18,7 +18,7 @@ final class GetInvoicesSummaryAction
 {
     /**
      * @param  Builder<Invoice>  $query
-     * @return array{total_count: int, total_sales: string, total_paid: string, total_due: string, total_remaining: string}
+     * @return array{total_count: int, total_sales: string, total_paid: string, total_due: string}
      */
     public function execute(Builder $query): array
     {
@@ -34,7 +34,6 @@ final class GetInvoicesSummaryAction
             'total_sales' => $totalSales,
             'total_paid' => $totalPaid,
             'total_due' => $totalDue,
-            'total_remaining' => $totalDue,
         ];
     }
 }

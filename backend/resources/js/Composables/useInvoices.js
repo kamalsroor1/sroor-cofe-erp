@@ -16,6 +16,22 @@ const STORE_ACTIVE = 'active';
 const STORE_ALL = 'all';
 const PER_PAGE = 15;
 
+/**
+ * The export endpoint answers with a blob, so a 422 (e.g. too many rows) arrives as a Blob too.
+ * Parse its JSON and return the translated server message (`errors.export[0]` or `message`), else null.
+ */
+async function exportErrorMessage(error) {
+    const response = error?.response;
+    if (response?.status !== 422) return null;
+
+    try {
+        const body = response.data instanceof Blob ? JSON.parse(await response.data.text()) : response.data;
+        return body?.errors?.export?.[0] ?? body?.message ?? null;
+    } catch {
+        return null;
+    }
+}
+
 export function useInvoices() {
     const authStore = useAuthStore();
 
@@ -296,7 +312,9 @@ export function useInvoices() {
             downloadBlob(res.data, `invoices_${businessToday()}.csv`);
         } catch (e) {
             // api.js already shows the dialog for 403.
-            if (e?.response?.status !== 403) notifyError(trans('common.error'), trans('invoices.export_failed'));
+            if (e?.response?.status !== 403) {
+                notifyError(trans('common.error'), (await exportErrorMessage(e)) ?? trans('invoices.export_failed'));
+            }
         } finally {
             isExporting.value = false;
         }

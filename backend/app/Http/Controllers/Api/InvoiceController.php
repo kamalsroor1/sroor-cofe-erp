@@ -20,6 +20,7 @@ use App\Http\Resources\InvoiceResource;
 use App\Http\Resources\InvoiceSummaryResource;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Services\Invoices\InvoiceExportLimitGuard;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -37,6 +38,7 @@ final class InvoiceController extends Controller
         private readonly BuildInvoiceListQueryAction $buildInvoiceListQueryAction,
         private readonly ExportInvoicesCsvAction $exportInvoicesCsvAction,
         private readonly GetInvoicesSummaryAction $getInvoicesSummaryAction,
+        private readonly InvoiceExportLimitGuard $exportLimitGuard,
     ) {}
 
     /**
@@ -77,7 +79,7 @@ final class InvoiceController extends Controller
     {
         $query = $this->buildInvoiceListQueryAction->execute();
 
-        $this->exportInvoicesCsvAction->assertWithinExportLimit($query);
+        $this->exportLimitGuard->assertWithinLimit($query);
 
         return response()->streamDownload(function () use ($query): void {
             $out = fopen('php://output', 'wb');
