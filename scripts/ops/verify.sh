@@ -102,6 +102,8 @@ for svc in nginx "php$PHP_VERSION-fpm" mysql redis-server supervisor cron fail2b
     check "service active: $svc" systemctl is-active --quiet "$svc"
 done
 
+check "unattended-upgrades holds mysql-* (manual maintenance window)" bash -c "apt-config dump Unattended-Upgrade::Package-Blacklist | grep -qF '\"^mysql-\"'"
+
 echo "== ssh"
 check "sshd: passwordauthentication no" sshd_effective passwordauthentication no
 check "sshd: kbdinteractiveauthentication no" sshd_effective kbdinteractiveauthentication no
@@ -109,7 +111,7 @@ check "sshd: permitrootlogin no" sshd_effective permitrootlogin no
 check "sshd: port $SSH_PORT" sshd_effective port "$SSH_PORT"
 check "admin $ADMIN_USER has an authorized key" test -s "$(getent passwd "$ADMIN_USER" | cut -d: -f6)/.ssh/authorized_keys"
 check "app $APP_USER has an authorized key" test -s "$(getent passwd "$APP_USER" | cut -d: -f6)/.ssh/authorized_keys"
-check "sudoers drop-in is valid" visudo -cf /etc/sudoers.d/sroor-app
+check "sudoers drop-in is valid" visudo -c -f /etc/sudoers.d/sroor-app
 
 echo "== network"
 check "ufw: deny incoming, allow $SSH_PORT/80/443 only" ufw_rules_ok

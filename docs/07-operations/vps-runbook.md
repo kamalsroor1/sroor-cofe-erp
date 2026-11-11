@@ -11,14 +11,14 @@
 | البند | القرار |
 |---|---|
 | المزوّد | **Hetzner** Cloud، ≈ 4 vCPU / 8GB RAM / 160GB (Q-O1) |
-| نظام التشغيل | **Ubuntu 24.04 LTS** (السكريبتات ترفض غيره) |
+| نظام التشغيل | **[CTO-2026-11-11]** **Ubuntu 26.04 LTS** ‏(`resolute`، السيرفر على Hetzner اتعمل بـ 26.04.1) — السكريبتات ترفض غيره. بيحل محل 24.04: الـ CTO قرر نعدّل السكريبتات بدل ما نعيد بناء السيرفر. **مفيش أي apt repo خارجي**: PHP وMySQL وRedis وnginx كلهم من أرشيف Ubuntu |
 | بيئة البروفة (Q-O5) | البروفات على **نفس الـ VPS الإنتاجي** ببيانات اختبار ← **مسح كامل** ← go-live. VPS staging صغير بعد أول عميل مدفوع |
 | الدومين (Q-R1) | دومين المنصة من `PLATFORM_DOMAIN` فقط (لا hardcode). شهادة **wildcard** واحدة: `<domain>` + `*.<domain>` (كل محل subdomain، والـ super-admin على `admin.<domain>`) |
 | الأسرار | **جديدة بالكامل**. لا يُعاد استخدام أي قيمة من الريبو أو تاريخه أو الخادم القديم (كلها تُعتبر مسرّبة لأن الريبو public) |
 | الـ queue | **Horizon** تحت supervisor (`laravel/horizon` من PKG-1). بديل مؤقت: `queue:work` (`QUEUE_MODE=worker`) |
 | Telescope / Pulse | `TELESCOPE_ENABLED=false` في production (يُفحص آليًا). Pulse خلف الـ gate الحالي للـ super-admin فقط |
-| PHP | **[CTO-2026-10-09] W1 Q6:** **PHP 8.4** (Ubuntu 24.04 فيه 8.3 بس). المصدر: PPA ‏`ondrej/php` (مفيش apt repo رسمي من php.net؛ الـ PPA ده بيصونه مسؤول حزم PHP في Debian). الـ release في الـ CI بيتبني على نفس الإصدار |
-| MySQL | **[CTO-2026-10-09] W1 Q6:** **MySQL 8.4 LTS** من الـ repo الرسمي `repo.mysql.com` (component ‏`mysql-8.4-lts`)، ومفتاح التوقيع بيتفحص بالـ fingerprint قبل ما apt يثق فيه. نفس إصدار job ‏`mysql` في الـ CI |
+| PHP | **[CTO-2026-11-11]** **PHP 8.5** من أرشيف Ubuntu 26.04 (`php8.5-*`، ‏8.5.4 وتحديثاته من `resolute-security`). اتشال الـ PPA ‏`ondrej/php` خالص (ماعندوش dist ‏`resolute`، ووجوده بيوقّع `apt-get update`؛ الخطوة بترفض لو لقيته). OPcache بقى جوه PHP 8.5 نفسه، فمفيش باكدج `php8.5-opcache`، وإعدادات opcache في الـ ini زي ما هي. الـ release في الـ CI بيتبني على 8.5 (`release.yml`)، أما `ci.yml` فلسه على 8.3 والـ `config.platform.php` في `composer.json` ثابت على 8.3.30 عمدًا عشان الـ lock يفضل متوافق. _(كان: [CTO-2026-10-09] W1 Q6 ‏PHP 8.4 من `ondrej/php`)_ |
+| MySQL | **[CTO-2026-11-11]** **MySQL 8.4 LTS** من **أرشيف Ubuntu 26.04** (`mysql-server`، source ‏`mysql-8.4`، component ‏main) بدل `repo.mysql.com`. **ليه:** (1) نفس السلسلة 8.4 LTS اللي job ‏`mysql` في الـ CI بيختبر عليها؛ (2) مفيش مفتاح طرف تالت ولا fingerprint ولا apt pin نصونهم؛ (3) main = دعم أمني من Canonical طول عمر الـ LTS، والتحديثات بتنزل في `resolute-security` (8.4.11 موجود فعلًا). `repo.mysql.com` عنده `dists/resolute` بس كان هيرجّع الـ key/pin والمراقبة اليدوية من غير مكسب. **اللي فضل زي ما هو:** الخطوة بترفض سيرفر عليه MySQL إصدار تاني غير 8.4، وبتتأكد إن الـ candidate في apt هو 8.4.x **قبل** التثبيت، وبترفض لو فيه source لـ `repo.mysql.com`. ترقيات MySQL الأمنية **يدوي** في نافذة صيانة (§12 بند 8). _(كان: [CTO-2026-10-09] W1 Q6 من `repo.mysql.com`)_ |
 | الـ audit | **append-only على مستوى الـ DB** (IDEN-1.15، W1 Q2): مستخدم `app` مالوش `UPDATE`/`DELETE` على `central_audit_logs` و`activity_log`؛ الـ prune بمستخدم منفصل `audit_pruner` (§5.1) |
 | البريد | **SMTP إلزامي** (W1 Q6) عن طريق Brevo أو Amazon SES SMTP (الـ CTO بيعمل الحساب). أي `MAIL_*` ناقص يوقف الـ release (`render-env.sh` + `check-env.sh`) |
 | Sentry | الـ DSN في `.env` الـ VPS **بس** (بيوصل له من GitHub Environment secret)، `SENTRY_SEND_DEFAULT_PII=false`. فاضي = تحذير مش فشل لحد OPS-7 |
@@ -34,7 +34,7 @@
    - مفتاح الإدارة: `ssh-keygen -t ed25519 -f ~/.ssh/sroor_admin -C "sroor-admin"`
    - مفتاح الـ deploy (لـ GitHub Actions لاحقًا في OPS-3): `ssh-keygen -t ed25519 -f ~/.ssh/sroor_deploy -C "sroor-deploy"`
    - الملفات `.pub` فقط تُنسخ للخادم. المفتاح الخاص للـ deploy يذهب لـ GitHub Environment secret (OPS-4)، لا لأي ملف في الريبو.
-2. **إنشاء الخادم على Hetzner**: Ubuntu 24.04، اختر مفتاح `sroor_admin.pub` عند الإنشاء (فلا تُرسل كلمة مرور root بالبريد). يُفضّل تفعيل **Hetzner Cloud Firewall** (22/80/443 فقط) كطبقة ثانية فوق ufw، و**Backups/Snapshots** من Hetzner.
+2. **إنشاء الخادم على Hetzner**: **[CTO-2026-11-11]** Ubuntu 26.04 LTS (اتعمل بالفعل بـ 26.04.1)، اختر مفتاح `sroor_admin.pub` عند الإنشاء (فلا تُرسل كلمة مرور root بالبريد). يُفضّل تفعيل **Hetzner Cloud Firewall** (22/80/443 فقط) كطبقة ثانية فوق ufw، و**Backups/Snapshots** من Hetzner.
 3. **DNS** للدومين: سجلات `A` (و`AAAA` إن وُجد IPv6) لـ `<domain>` و`*.<domain>` تشير لعنوان الخادم.
 4. **توكن DNS API** لمزوّد الـ DNS، صلاحيته **تعديل DNS لهذه الـ zone فقط** (لـ certbot DNS-01). **TODO(CTO): تأكيد مزوّد الـ DNS** — المدعوم: `cloudflare`، `digitalocean`، `linode`، `ovh`، `rfc2136`.
 5. بريد لتنبيهات Let's Encrypt (`CERTBOT_EMAIL`).
@@ -52,9 +52,9 @@
 | `steps/NN-*.sh` | خطوة لكل مكوّن (الجدول في §4.3). كل خطوة idempotent وتعمل منفردة |
 | `lib/common.sh` | logging، تحقق المتغيرات والأسرار، parser آمن لـ `.env` (لا ينفّذ محتوى الملف)، render للقوالب، تثبيت الملفات فقط عند التغيير |
 | `lib/mysql-grants.sh` | **مصدر الحقيقة الوحيد** لصلاحيات MySQL (§5) |
-| `templates/` | nginx، php-fpm، php.ini، supervisor، cron، redis، mysql، sshd، fail2ban، sudoers، `production.env.example` |
+| `templates/` | nginx، php-fpm، php.ini، supervisor، cron، redis، mysql، sshd، fail2ban، sudoers، unattended-upgrades (**[CTO-2026-11-11]** حجز `mysql-*`)، `production.env.example` |
 | `check-env.sh` | يفحص `.env` الإنتاجي مقابل معايير الإنتاج **دون طباعة أي قيمة** (يعيد استخدامه OPS-3 كبوابة release) |
-| `verify.sh` | فحوص القبول بعد التهيئة (read-only): الخدمات، SSH، الـ firewall، المنافذ، PHP 8.4، MySQL 8.4، `SHOW GRANTS`، عقد الـ audit (§5.1)، الشهادة، nginx |
+| `verify.sh` | فحوص القبول بعد التهيئة (read-only): الخدمات، SSH، الـ firewall، المنافذ، PHP 8.5 **[CTO-2026-11-11]**، MySQL 8.4، حجز `mysql-*` من unattended-upgrades، `SHOW GRANTS`، عقد الـ audit (§5.1)، الشهادة، nginx |
 | `sync-central-grants.sh` | **[CTO-2026-10-09]** صلاحيات الجداول المركزية لعقد الـ audit الـ append-only (§5.1)؛ بيشغّله `deploy.sh` (كـ migrator) و`41-mysql-users` (كـ root) و`verify.sh` (`--check-only`) |
 | `deploy.sh` | **[CTO-2026-10-09]** الـ release على الخادم (OPS-3): [`deploy-runbook.md`](deploy-runbook.md) |
 | `templates/deploy.env.example` | **[CTO-2026-10-09]** مفاتيح الـ deploy بس (`DB_MIGRATOR_*`)، مش جزء من `.env` التطبيق |
@@ -110,11 +110,11 @@ bash provision.sh --env-file /root/sroor-provision.env
 
 | الخطوة | ماذا تفعل |
 |---|---|
-| `00-base` | تحقق Ubuntu 24.04، `apt upgrade`، أدوات أساسية، timezone (UTC)، swap، **unattended security upgrades** |
-| `10-ssh-users` | `opsadmin` (sudo) و`sroor` (حساب الخدمة + الـ deploy) بمفاتيح فقط؛ `sshd_config.d/00-sroor-hardening.conf`: `PermitRootLogin no`، `PasswordAuthentication no`، `KbdInteractiveAuthentication no`، `AllowUsers`؛ `sshd -t` قبل أي reload؛ sudoers محدود لـ `sroor` (reload php-fpm + برامج supervisor الخاصة به فقط) |
+| `00-base` | **[CTO-2026-11-11]** تحقق Ubuntu 26.04، `apt upgrade`، أدوات أساسية، timezone (UTC)، swap، **unattended security upgrades** + `/etc/apt/apt.conf.d/52unattended-upgrades-sroor` (يحجز `^mysql-` بس، §12 بند 8) |
+| `10-ssh-users` | `opsadmin` (sudo) و`sroor` (حساب الخدمة + الـ deploy) بمفاتيح فقط؛ `sshd_config.d/00-sroor-hardening.conf`: `PermitRootLogin no`، `PasswordAuthentication no`، `KbdInteractiveAuthentication no`، `AllowUsers`؛ `sshd -t` قبل أي reload؛ sudoers محدود لـ `sroor` (reload php-fpm + برامج supervisor الخاصة به فقط). **[CTO-2026-11-11]** على 26.04 الـ `sudo` الافتراضي هو **sudo-rs** (أولوية 50 في `update-alternatives` قصاد 40 لـ sudo الكلاسيكي)، وده مابيقبلش wildcard جوه الـ arguments؛ عشان كده قاعدة الـ worker بقت `supervisorctl restart sroor-worker:` (supervisor بيعامل اسم process فاضي زي `:*`)، و`visudo -c -f` بدل `-cf`. الـ SSH لسه socket-activated (`ssh.socket` + `sshd-socket-generator` في openssh 10.2p1)، فالمنطق زي ما هو |
 | `20-firewall` | ufw: deny incoming، `limit` على منفذ SSH، 80، 443؛ fail2ban (`sshd` + `recidive`) |
-| `30-php` | **PHP 8.4** FPM من PPA ‏`ondrej/php` (`add-apt-repository`، المفتاح من Launchpad عبر HTTPS) + `bcmath intl pdo_mysql redis gd zip mbstring xml curl opcache`؛ `update-alternatives` يثبّت `/usr/bin/php` على 8.4؛ pool مخصص `sroor` على `/run/php/sroor-fpm.sock`؛ `opcache.validate_timestamps=0` (الـ deploy يعمل reload) |
-| `40-mysql` | **MySQL 8.4 LTS** من `repo.mysql.com` (component ‏`mysql-8.4-lts`، مفتاح `RPM-GPG-KEY-mysql-2023` يُرفض لو الـ fingerprint ≠ `MYSQL_APT_KEY_FINGERPRINT`، pin أولوية 1001)؛ يرفض سيرفر عليه إصدار تاني؛ على `127.0.0.1` فقط، `mysqlx=OFF`، `local_infile=0`، utf8mb4، حذف الحسابات المجهولة؛ root يبقى `auth_socket` (لا كلمة مرور) |
+| `30-php` | **[CTO-2026-11-11]** **PHP 8.5** FPM من أرشيف Ubuntu (من غير PPA ولا `add-apt-repository`؛ يفشل لو لقى `ondrej/php` في `/etc/apt/sources.list*`) + `bcmath intl pdo_mysql redis gd zip mbstring xml curl readline`؛ OPcache جوه الـ core (بيتأكد إنه loaded)؛ `update-alternatives` يثبّت `/usr/bin/php` على 8.5؛ pool مخصص `sroor` على `/run/php/sroor-fpm.sock`؛ `opcache.validate_timestamps=0` (الـ deploy يعمل reload) |
+| `40-mysql` | **[CTO-2026-11-11]** **MySQL 8.4 LTS** من أرشيف Ubuntu (`mysql-server` + `mysql-client`)؛ يرفض سيرفر عليه إصدار تاني، ويرفض أي source لـ `repo.mysql.com`، ويتأكد إن candidate الـ apt ‏8.4.x قبل التثبيت؛ debconf ‏`mysql-server/root_password` فاضي (= `auth_socket`)؛ على `127.0.0.1` فقط، `mysqlx=OFF`، `local_infile=0`، utf8mb4، حذف الحسابات المجهولة؛ root يبقى `auth_socket` (لا كلمة مرور) |
 | `41-mysql-users` | DB المركزي + الحسابات الخمسة بأقل صلاحية (§5)، ثم **يقارن `SHOW GRANTS` بالـ runbook ويفشل عند أي اختلاف**، ثم يعيد صلاحيات الجداول للـ audit append-only (`sync-central-grants.sh --as-root`، §5.1) |
 | `50-redis` | Redis على loopback، `requirepass`، `maxmemory-policy noeviction` (لا تُفقد jobs)، `appendonly yes` |
 | `60-tls` | certbot DNS-01 لـ `<domain>` + `*.<domain>`، hook يعمل reload لـ nginx بعد كل تجديد، `certbot.timer` |
@@ -347,12 +347,13 @@ curl -sI https://unknown-shop.<domain> | head -1                                
 - [ ] من OPS-2: إنشاء مستأجر تجريبي بحساب `provisioner` ← DB + مستخدم المستأجر؛ `SHOW GRANTS FOR` مستخدم المستأجر = قائمة stancl على **الاسم المهرَّب** (`tenant\_<id>` مع `\_`) فقط؛ ومستأجران `x_y` و`x-y` لا يصل أي منهما لـ DB الآخر.
 - [ ] رفع APK تجريبي (~80 MB) من شاشة الـ super-admin ← `201` لا `413`.
 - [ ] من OPS-3: deploy + rollback ناجحان، Horizon يعيد التشغيل، الـ scheduler يعمل (`storage/logs`). الترتيب الكامل (ومنه `storage:link --force` في كل release) في `deploy-runbook.md`.
-- [ ] **[CTO-2026-10-09]** `php -v` = 8.4، و`mysql -e 'SELECT VERSION()'` = 8.4.x، و`verify.sh` يعدّي سطري الإصدار.
+- [ ] **[CTO-2026-11-11]** `lsb_release -rs` = 26.04، و`php -v` = 8.5.x، و`mysql -e 'SELECT VERSION()'` = 8.4.x، و`verify.sh` يعدّي سطري الإصدار وسطر حجز `mysql-*`.
+- [ ] **[CTO-2026-11-11]** `sudo -l -U sroor` (من `opsadmin`) يطلع القواعد الأربعة بالظبط، و`sudo -n /usr/bin/systemctl reload php8.5-fpm` ينجح كـ `sroor` (ده اللي `deploy.sh` بيعمله؛ sudo-rs هو الافتراضي على 26.04).
 - [ ] **[CTO-2026-10-09]** §5.1 checklist كامل بعد أول deploy (الجداول المركزية موجودة).
 - [ ] **[CTO-2026-10-09]** إيميل تجريبي يوصل عن طريق الـ SMTP (مثلًا reset password لحساب super-admin تجريبي)، وخطأ تجريبي يظهر في Sentry من غير PII.
 - [ ] من OPS-5: backup يومي مشفّر ← restore إلى DB منفصلة يطابق عدد الصفوف (`php artisan backup:restore-tenant <id> --drop-after-verify --db-user=sroor_provisioner`، [`backup-restore.md`](backup-restore.md) §6).
 - [ ] `reboot` ← كل الخدمات تعود (`verify.sh`).
-- [ ] **قبل go-live: مسح كامل** — Rebuild للخادم من Hetzner على صورة Ubuntu 24.04 نظيفة، **أسرار جديدة كلها** (أسرار البروفة تُعتبر محروقة)، `CERTBOT_STAGING=0`، ثم التهيئة والتحقق من جديد.
+- [ ] **قبل go-live: مسح كامل** — Rebuild للخادم من Hetzner على صورة Ubuntu 26.04 نظيفة **[CTO-2026-11-11]**، **أسرار جديدة كلها** (أسرار البروفة تُعتبر محروقة)، `CERTBOT_STAGING=0`، ثم التهيئة والتحقق من جديد.
 
 ---
 
@@ -388,12 +389,18 @@ curl -sI https://unknown-shop.<domain> | head -1                                
 1. **`CREATE USER` العام للـ provisioner** يسمح له بتعديل/حذف أي حساب لا يحمل `SYSTEM_USER` (أي حساباتنا الأربعة وحسابات المستأجرين، لا root). مقبول لأن stancl يحتاجه؛ كلمة مروره لا توضع إلا حيث يعمل الـ provisioning (OPS-2).
 2. **نمط stancl غير المهرَّب — شرط صلب (blocking) لـ OPS-2، TODO(CTO):** الـ slug يقبل `_` و`-`، فمنحة stancl الأصلية `tenant_shop_a` (بلا escape) تطابق DB المستأجر `shop-a` أيضًا = ثغرة عزل بين المستأجرين. OPS-1 يغلقها بالفشل: الـ provisioner على `tenant\_%` فيُرفض الـ GRANT غير المهرَّب (`ERROR 1044`) ولا يُنشأ مستأجر بهذا الـ manager. **OPS-2 لا يُعتبر منتهيًا** حتى يوجد subclass لـ `PermissionControlledMySQLDatabaseManager` يهرّب `\` و`_` و`%` في هدف الـ `GRANT` (مع اختبار `@group mysql` لمستأجرين `x_y`/`x-y`). بديل أضعف يحتاج قرار CTO: منع `_` في الـ slug (`StoreTenantRequest`) مع إرجاع نمط الـ provisioner إلى `tenant_%` — يعتمد على أن كل مسار ينشئ slug يطبّق نفس الـ validation وعلى عدم وجود slugs قديمة فيها `_`، لذلك الـ escape هو الافتراضي الآمن.
 3. **أسرار الاتصال بالمستأجرين** (اسم/كلمة مرور مستخدم كل مستأجر) يخزنها stancl في `tenants.data` في DB المركزي — قرار OPS-2.
-4. **`opcache.validate_timestamps=0`:** أي تعديل يدوي على الكود لا يظهر بدون `systemctl reload php8.4-fpm` (OPS-3 يعمله تلقائيًا).
+4. **`opcache.validate_timestamps=0`:** أي تعديل يدوي على الكود لا يظهر بدون `systemctl reload php8.5-fpm` (OPS-3 يعمله تلقائيًا).
 5. سكريبتات `public/*.php` القديمة (مثل webhooks) **لا تعمل على الـ VPS** عمدًا (nginx ينفّذ `index.php` فقط). **[W2 batch 5]** ونفس الشيء لملفات `.apk`/`.exe`/`.ipa` تحت `public/` (§4.4): لحد ما قاعدة nginx تتضاف للـ template، أي ملف من دول في `public/` متاح للتحميل العام من غير checksum.
 6. إن وُضع الدومين خلف proxy (مثل Cloudflare orange-cloud) يجب ضبط real IP في nginx و`TrustProxies` — غير مفعّل حاليًا.
 7. **[CTO-2026-10-09] كلمة مرور `audit_pruner` في `shared/.env`:** الـ scheduler بيشتغل كمستخدم التطبيق، فاختراق التطبيق يقدر يوصل لها ويمسح صفوف audit (مش يعدّلها). البديل الأقوى: تشغيل الـ prune من cron لـ root بملف env منفصل — محتاج قرار CTO وتعديل في IDEN-1.15.
-8. **[CTO-2026-10-09] الـ repos الخارجية (ondrej/php، repo.mysql.com) مش داخلة في unattended-upgrades** (بيغطي Ubuntu security بس): تحديث أمني يدوي شهري لـ PHP/MySQL (`apt upgrade` في نافذة صيانة بعد snapshot). ترقية MySQL تلقائية كانت هتعمل restart للـ DB في أي وقت.
-9. **[CTO-2026-10-09] fingerprint مفتاح MySQL** (`BCA43417C3B485DD128EC6D4B7B3B788A8D3785C`) مكتوب من المعرفة ومش متحقَّق منه أونلاين في الـ lane دي: قارنه بـ https://dev.mysql.com/doc/refman/8.4/en/checking-gpg-signature.html قبل أول تشغيل. لو مختلف، الخطوة بتفشل وماتثقش في المفتاح (fail closed).
+8. **[CTO-2026-11-11] التحديثات الأمنية بعد ما كله بقى من أرشيف Ubuntu:** unattended-upgrades بيسحب من `resolute-security` لكل الـ components، فـ PHP وnginx وRedis بقوا بيتحدّثوا **تلقائيًا** (أحسن من الأول، PHP هو اللي على الإنترنت؛ ترقية `php8.5-fpm` بتعمل restart للـ FPM ثانية أو اتنين). **MySQL محجوز** عن طريق `/etc/apt/apt.conf.d/52unattended-upgrades-sroor` (‏`Package-Blacklist "^mysql-"`)، لأن الـ timer ‏`apt-daily-upgrade` شغال 06:00 UTC + لحد 60 دقيقة (= وقت فتح المحلات في مصر)، وترقية تلقائية كانت هتعمل restart للـ DB وقتها. فـ MySQL زي الأول: `apt upgrade` يدوي شهري (أو أول ما يطلع تحديث أمني مهم لـ 8.4) في نافذة صيانة بعد snapshot. عشان تشوف المستني: `apt list --upgradable 2>/dev/null | grep ^mysql-`. لو الـ CTO عايز MySQL تلقائي: امسح الملف ده، ويُفضّل وقتها تنقل الـ timer لساعة هادية (drop-in لـ `apt-daily-upgrade.timer`، بعد الـ backups اللي بتخلص 03:00 UTC).
+   - **باكدجات universe:** `php8.5-fpm/bcmath/intl/zip/redis` و`redis-server` و`supervisor` و`fail2ban` و`certbot` + plugins الـ DNS في **universe**. باكدجات PHP جاية من نفس الـ source اللي في main (‏`php8.5-cli` في main)، فتحديثاتها الأمنية بتنزل معاه (‏`php8.5-fpm` ‏8.5.4-0ubuntu1.5 موجود في `resolute-security`). الباقي دعمه الأمني الرسمي من خلال **Ubuntu Pro (ESM Apps)**، ومجاني لحد 5 أجهزة: `pro attach <token>` بإيد الـ CTO (التوكن من ubuntu.com/pro، مايتكتبش في أي ملف)، والـ origin ‏`UbuntuESMApps` موجود أصلًا في إعدادات unattended-upgrades الافتراضية.
+9. **[CTO-2026-11-11]** ~~fingerprint مفتاح MySQL~~: مابقاش موجود (مفيش `repo.mysql.com` ولا `MYSQL_APT_KEY_*`). لو السيرفر اتجهّز قبل كده بالنسخة القديمة من الخطوة، `40-mysql` هيرفض يكمل لحد ما تشيل `/etc/apt/sources.list.d/mysql-sroor.list` و`/etc/apt/preferences.d/mysql-sroor` و`/usr/share/keyrings/mysql-apt.gpg` يدويًا (بعد snapshot).
+10. **[CTO-2026-11-11] فروق Ubuntu 26.04 اللي بتأثر على السكريبتات (متحقَّق منها من الباكدجات نفسها، مش على السيرفر):**
+    - **sudo-rs** هو `/usr/bin/sudo` و`/usr/sbin/visudo` الافتراضيين. القواعد عندنا arguments بالظبط (مفيش wildcard)، و`sudo -n` مدعوم. لو حصلت مشكلة: `update-alternatives --set sudo /usr/bin/sudo.ws` بيرجّع sudo الكلاسيكي (موجود ومثبّت جنبه).
+    - **coreutils من uutils** (‏`rust-coreutils` 0.10.0) هو الافتراضي. `deploy.sh` بيعتمد على `mv -Tf` و`ln -sfn` و`install -m/-o/-g` و`stat -c` و`readlink -f`، وكلها موجودة فيه (`--no-target-directory` مدعوم). الحل الاحتياطي: `apt install coreutils-from-gnu`. التبديل الذري للـ symlink لازم يتجرب فعليًا في البروفة (§15 خطوة 7 و10).
+    - **SSH:** لسه socket activation (`ssh.socket` + `sshd-socket-generator`)، ومنطق `10-ssh-users` زي ما هو.
+    - **باكدج MySQL في Ubuntu** بيعمل حساب `debian-sys-maint@localhost` (‏`auth_socket AS 'root'`). ده مابيأثرش على فحص `SHOW GRANTS` لأنه بيفحص حساباتنا الخمسة بس.
 
 ---
 
@@ -419,7 +426,7 @@ OPS_TEST_MYSQL_CMD="mysql -h127.0.0.1 -P3399 -uroot" bash scripts/ops/tests/run-
 اختبارات الـ release (OPS-3)، offline بالكامل (stubs لـ `php`/`mysql`/`sudo`/`curl` في `APP_ROOT` مؤقت):
 
 ```bash
-bash scripts/ops/tests/deploy-test.sh        # 94 حالة: deploy، rollback تلقائي ويدوي، preflight، lock، pruning، الأسرار
+bash scripts/ops/tests/deploy-test.sh        # 134 حالة (2026-11-11): deploy، rollback تلقائي ويدوي، preflight، lock، pruning، الأسرار
 bash scripts/ops/tests/render-env-test.sh    # يشمل رفض --optional لـ MAIL_* و BACKUP_ARCHIVE_PASSWORD
 ```
 
@@ -432,19 +439,20 @@ bash scripts/ops/tests/render-env-test.sh    # يشمل رفض --optional لـ M
 | 2026-10-08 | محلي (Git Bash) + MySQL 8.4.3 مؤقت معزول | `run-tests.sh` أخضر بما فيه الفحص الحي |
 | 2026-10-08 | محلي (Git Bash) + MySQL 8.4.3 مؤقت معزول | بعد إصلاح المراجعة: provisioner على `tenant\_%` (fail closed) + حدود رفع APK؛ `run-tests.sh` أخضر بما فيه الفحص الحي |
 | 2026-10-09 | محلي (Git Bash، Windows) + MySQL 8.4.3 مؤقت معزول | W2 (OPS-1 امتداد + OPS-3): `run-tests.sh` = 176/0 بما فيه الجزء الحي (عقد §5.1 عن طريق الـ migrator)؛ `deploy-test.sh` = 94/0؛ `render-env-test.sh` = 27/0؛ shellcheck 0.11.0 (`--severity=warning`) نظيف؛ actionlint 1.7.12 على `release.yml` نظيف |
+| 2026-11-11 | محلي (Linux، PHP 8.5.12) + MySQL 8.4.13 مؤقت معزول (container) | **[CTO-2026-11-11]** النقل لـ Ubuntu 26.04 + PHP 8.5: `run-tests.sh` = 225/0 بما فيه الجزء الحي (224/0 من غير MySQL)؛ `deploy-test.sh` = 134/0؛ `render-env-test.sh` = 38/0؛ `php.ini` بتاعنا اتقرا على PHP 8.5.12 من غير أي deprecation، والـ pool عدّى `php-fpm -t` على 8.5.12. وجود كل الباكدجات اتأكد من `Packages.gz` بتاع `resolute`/`-updates`/`-security`. shellcheck وactionlint مش متثبتين على الجهاز ده (اتعملوش) |
 | — | الـ VPS (بروفة Q-O5) | **لم يُنفَّذ بعد** — يملؤه الـ CTO بعد §10 و§15 |
 
 ---
 
 ## 15. البروفة الحقيقية على الـ VPS — **الحالة: لم تُنفَّذ (NOT EXECUTED)**
 
-> **[CTO-2026-10-09]** محتاجة بنية تحتية عند الـ CTO: (1) VPS على **Hetzner** (Ubuntu 24.04)، (2) GitHub Environment **`production`** بالـ secrets/vars (`secrets.md` §2)، (3) **مفتاح SSH للـ deploy** (المفتاح العام على الخادم، الخاص في `DEPLOY_SSH_PRIVATE_KEY`). ولا agent بيعمل SSH ولا بيشغّل الـ workflow؛ الخطوات دي بإيد الـ CTO، والنتائج تتسجل في §14.
+> **[CTO-2026-10-09]** محتاجة بنية تحتية عند الـ CTO: (1) VPS على **Hetzner** (**[CTO-2026-11-11]** Ubuntu 26.04)، (2) GitHub Environment **`production`** بالـ secrets/vars (`secrets.md` §2)، (3) **مفتاح SSH للـ deploy** (المفتاح العام على الخادم، الخاص في `DEPLOY_SSH_PRIVATE_KEY`). ولا agent بيعمل SSH ولا بيشغّل الـ workflow؛ الخطوات دي بإيد الـ CTO، والنتائج تتسجل في §14.
 
 | # | الخطوة | النتيجة المتوقعة | تم؟ |
 |---|---|---|---|
 | 1 | Snapshot من Hetzner للخادم النظيف | snapshot موجود | ☐ |
 | 2 | §4.1 + §4.2: `provision.sh` كامل بـ `CERTBOT_STAGING=1` | كل الخطوات `done` | ☐ |
-| 3 | `verify.sh` | كله `PASS` (منها PHP 8.4، MySQL 8.4، §5، §5.1، `check-env.sh` يتعمل `SKIP` لأن `.env` فاضي) | ☐ |
+| 3 | `verify.sh` | كله `PASS` (منها PHP 8.5 **[CTO-2026-11-11]**، MySQL 8.4، §5، §5.1، `check-env.sh` يتعمل `SKIP` لأن `.env` فاضي) | ☐ |
 | 4 | `provision.sh` كامل مرة تانية | مفيش أخطاء (idempotency) | ☐ |
 | 5 | `ssh-keyscan -p <port> <host>` من جهازك، وقارن الـ fingerprint بالـ Hetzner console، وحطه في `DEPLOY_SSH_KNOWN_HOSTS` | — | ☐ |
 | 6 | `git tag v0.0.1-rc1` + push للـ tag (أو Actions ← release ← Run workflow مع `allow_no_health_checks` لو الـ health checks لسه مش متسجلة) | `tests` و`build` خضر، `deploy` مستني موافقتك | ☐ |

@@ -1,0 +1,14 @@
+// Managed by scripts/ops (OPS-1). Appends to the Package-Blacklist of the
+// stock 50unattended-upgrades (apt list options accumulate across files).
+//
+// MySQL comes from the Ubuntu archive (CTO decision 2026-11-11), so its
+// security updates land in resolute-security. An unattended upgrade restarts
+// mysqld inside the apt-daily-upgrade window (06:00 UTC + up to 60 min =
+// shop opening hours in Egypt). MySQL stays on manual patching in a
+// maintenance window after a snapshot (vps-runbook.md §12), as before.
+// PHP, nginx, Redis and the rest keep automatic security updates.
+// Regex on the package name: mysql-server, mysql-server-core, mysql-client,
+// mysql-client-core, mysql-common.
+Unattended-Upgrade::Package-Blacklist {
+    "^mysql-";
+};

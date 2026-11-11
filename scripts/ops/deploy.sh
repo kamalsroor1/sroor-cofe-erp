@@ -7,11 +7,11 @@ set -euo pipefail
 #   deploy:   bash deploy.sh --app-root /var/www/sroor --sha <git sha> \
 #                 --artifact release.tar.gz [--artifact-sha256 HEX] \
 #                 --deploy-env deploy.env [--env-file production.env] \
-#                 [--php-version 8.4] [--queue-mode horizon|worker] [--keep 5] \
+#                 [--php-version 8.5] [--queue-mode horizon|worker] [--keep 5] \
 #                 [--health-url https://host/up|none] [--allow-no-health-checks]
 #                 [--skip-pre-migration-backup]
 #   rollback: bash deploy.sh --app-root /var/www/sroor --rollback \
-#                 [--php-version 8.4] [--queue-mode horizon|worker] [--health-url URL|none]
+#                 [--php-version 8.5] [--queue-mode horizon|worker] [--health-url URL|none]
 #
 # Order (every step must succeed; no failure is ever ignored):
 #   preflight (layout, artifact, check-env.sh on the candidate .env: TELESCOPE_ENABLED=false,
@@ -62,7 +62,7 @@ ARTIFACT=""
 ARTIFACT_SHA256=""
 DEPLOY_ENV=""
 NEW_ENV=""
-PHP_VERSION_ARG="8.4"
+PHP_VERSION_ARG="8.5"
 QUEUE_MODE_ARG="horizon"
 KEEP=5
 HEALTH_URL=""
@@ -108,7 +108,7 @@ done
 [[ -n "$APP_ROOT" ]] || usage
 [[ "$APP_ROOT" == /* && "$APP_ROOT" != "/" ]] || die "--app-root must be an absolute path other than /"
 APP_ROOT="${APP_ROOT%/}"
-[[ "$PHP_VERSION_ARG" =~ ^[0-9]+\.[0-9]+$ ]] || die "--php-version must look like 8.4"
+[[ "$PHP_VERSION_ARG" =~ ^[0-9]+\.[0-9]+$ ]] || die "--php-version must look like 8.5"
 [[ "$QUEUE_MODE_ARG" == "horizon" || "$QUEUE_MODE_ARG" == "worker" ]] || die "--queue-mode must be horizon or worker"
 [[ "$KEEP" =~ ^[0-9]+$ && "$KEEP" -ge 2 ]] || die "--keep must be a number >= 2"
 if [[ "$ROLLBACK_ONLY" -eq 0 ]]; then

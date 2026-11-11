@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# Step 00: OS baseline (Ubuntu 24.04 LTS). Idempotent.
+# Step 00: OS baseline (Ubuntu 26.04 LTS "resolute"). Idempotent.
+#
+# CTO decision 2026-11-11: the production VPS runs Ubuntu 26.04 LTS, and every
+# runtime package (PHP 8.5, MySQL 8.4, Redis, nginx) comes from the Ubuntu
+# archive. No third-party apt repository is added by any step.
 set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/common.sh"
 
@@ -9,8 +13,8 @@ require_vars TIMEZONE SWAP_SIZE_GB
 
 # shellcheck source=/dev/null
 . /etc/os-release
-if [[ "${ID:-}" != "ubuntu" || "${VERSION_ID:-}" != "24.04" ]]; then
-    die "supported OS: Ubuntu 24.04 LTS (found ${ID:-unknown} ${VERSION_ID:-unknown})"
+if [[ "${ID:-}" != "ubuntu" || "${VERSION_ID:-}" != "26.04" ]]; then
+    die "supported OS: Ubuntu 26.04 LTS (found ${ID:-unknown} ${VERSION_ID:-unknown})"
 fi
 
 info "apt update + upgrade"
@@ -25,6 +29,8 @@ timedatectl set-timezone "$TIMEZONE"
 
 info "unattended security upgrades"
 install_template auto-upgrades.tmpl /etc/apt/apt.conf.d/20auto-upgrades 0644 root:root
+# MySQL is patched by hand in a maintenance window (no unplanned mysqld restart).
+install_template unattended-upgrades-sroor.tmpl /etc/apt/apt.conf.d/52unattended-upgrades-sroor 0644 root:root
 systemctl enable --now unattended-upgrades
 
 if [[ "$SWAP_SIZE_GB" =~ ^[0-9]+$ && "$SWAP_SIZE_GB" -gt 0 ]]; then

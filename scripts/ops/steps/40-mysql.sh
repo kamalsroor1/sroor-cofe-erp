@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Step 40: MySQL 8.4 LTS from the official MySQL APT repository
-# (repo.mysql.com), loopback only. Idempotent.
+# Step 40: MySQL 8.4 LTS from the Ubuntu 26.04 archive, loopback only. Idempotent.
 #
-# Ubuntu 24.04 ships MySQL 8.0; the CTO decision (W1 Q6) is 8.4 LTS, the same
-# series the CI `mysql` job tests against. The repository signing key is
-# downloaded over HTTPS and its fingerprint is checked BEFORE apt trusts it.
+# CTO decision 2026-11-11: Ubuntu 26.04 ships MySQL 8.4 LTS (`mysql-server`,
+# source package mysql-8.4, component main), the same series the CI `mysql`
+# job tests against. Using the archive instead of repo.mysql.com means no
+# third-party signing key or apt pin, and security updates arrive through
+# resolute-security (Canonical security support for main). Rationale and the
+# trade-off (unattended upgrades now restart mysqld): vps-runbook.md §1 + §11.
 # root keeps auth_socket (only the OS root can log in as MySQL root, no password).
 set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/common.sh"
@@ -14,60 +16,29 @@ apply_defaults
 require_vars MYSQL_INNODB_BUFFER_POOL
 [[ "$MYSQL_INNODB_BUFFER_POOL" =~ ^[0-9]+[MG]$ ]] || die "MYSQL_INNODB_BUFFER_POOL must look like 2G or 512M"
 
-# "MySQL Release Engineering <mysql-build@oss.oracle.com>" key (2023).
-# Verify against https://dev.mysql.com/doc/refman/8.4/en/checking-gpg-signature.html
-# before the first run; override only after that check.
-: "${MYSQL_APT_KEY_FINGERPRINT:=BCA43417C3B485DD128EC6D4B7B3B788A8D3785C}"
-: "${MYSQL_APT_KEY_URL:=https://repo.mysql.com/RPM-GPG-KEY-mysql-2023}"
-MYSQL_APT_COMPONENT="mysql-8.4-lts"
-KEYRING=/usr/share/keyrings/mysql-apt.gpg
-SOURCES=/etc/apt/sources.list.d/mysql-sroor.list
-PIN=/etc/apt/preferences.d/mysql-sroor
-
-# Refuse to silently upgrade an existing non-8.4 server (fresh VPS only).
+# Refuse to silently upgrade/downgrade an existing server that is not 8.4
+# (fresh VPS only; a different major needs a manual upgrade after a backup).
 if command -v mysqld >/dev/null 2>&1; then
     existing="$(mysqld --version | grep -oE 'Ver [0-9]+\.[0-9]+' | awk '{print $2}')"
     [[ "$existing" == "8.4" ]] || die "mysqld $existing is already installed; this step only installs 8.4 LTS on a fresh server (upgrade manually after a backup)"
 fi
 
-if [[ ! -s "$KEYRING" ]]; then
-    info "importing the MySQL APT signing key (fingerprint checked)"
-    tmp="$(mktemp -d)"
-    curl -fsSL --proto '=https' --tlsv1.2 -o "$tmp/mysql.asc" "$MYSQL_APT_KEY_URL"
-    fpr="$(gpg --batch --show-keys --with-colons "$tmp/mysql.asc" | awk -F: '/^fpr:/{print $10; exit}')"
-    if [[ "$fpr" != "$MYSQL_APT_KEY_FINGERPRINT" ]]; then
-        rm -rf "$tmp"
-        die "MySQL APT key fingerprint mismatch (got ${fpr:-none}); not trusting it"
-    fi
-    gpg --batch --dearmor <"$tmp/mysql.asc" >"$tmp/mysql.gpg"
-    install -m 0644 -o root -g root "$tmp/mysql.gpg" "$KEYRING"
-    rm -rf "$tmp"
+# Fail closed on a second MySQL source: mixing repo.mysql.com (mysql-community-*)
+# with the Ubuntu packages would let apt pick either origin.
+if grep -rqsE 'repo\.mysql\.com' /etc/apt/sources.list /etc/apt/sources.list.d/; then
+    die "a repo.mysql.com apt source exists in /etc/apt/sources.list*; MySQL comes from the Ubuntu archive - remove that source (and any mysql pin in /etc/apt/preferences.d/) and re-run"
 fi
-
-# shellcheck source=/dev/null
-. /etc/os-release
-codename="${VERSION_CODENAME:-noble}"
-tmp_src="$(mktemp)"
-printf 'deb [signed-by=%s] https://repo.mysql.com/apt/ubuntu/ %s %s\n' "$KEYRING" "$codename" "$MYSQL_APT_COMPONENT" >"$tmp_src"
-install_file "$tmp_src" "$SOURCES" 0644 root:root
-rm -f "$tmp_src"
-
-# Prefer the MySQL repository over Ubuntu's 8.0 packages for the server/client.
-tmp_pin="$(mktemp)"
-cat >"$tmp_pin" <<'EOF'
-Package: mysql-* libmysqlclient*
-Pin: origin repo.mysql.com
-Pin-Priority: 1001
-EOF
-install_file "$tmp_pin" "$PIN" 0644 root:root
-rm -f "$tmp_pin"
 apt-get update -q
 
-# Empty root password in the installer = root authenticates with auth_socket.
-# Nothing secret is preseeded.
+# Check the series BEFORE installing anything (Ubuntu versions look like 8.4.N-0ubuntu...).
+candidate="$(apt-cache policy mysql-server | awk '/Candidate:/{print $2}')"
+[[ "$candidate" == 8.4.* ]] || die "apt candidate for mysql-server is '${candidate:-none}', expected 8.4.x from the Ubuntu archive"
+
+# Empty root password in the installer = root authenticates with auth_socket
+# (Ubuntu's mysql-server postinst). Nothing secret is preseeded.
 debconf-set-selections <<'EOF'
-mysql-community-server mysql-community-server/root-pass password
-mysql-community-server mysql-community-server/re-root-pass password
+mysql-server mysql-server/root_password password
+mysql-server mysql-server/root_password_again password
 EOF
 apt_install mysql-server mysql-client
 

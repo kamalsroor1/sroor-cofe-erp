@@ -628,7 +628,7 @@ echo "7. Templates render completely"
     export APP_USER="sroor"
     export ADMIN_USER="opsadmin"
     export SSH_PORT="22"
-    export PHP_VERSION="8.4"
+    export PHP_VERSION="8.5"
     export PHP_FPM_MAX_CHILDREN="20"
     export HSTS_MAX_AGE="31536000"
     export REDIS_PASSWORD="FixtureRedisPasswordOnly0000000000"
@@ -684,8 +684,15 @@ assert_file_contains "redis binds to loopback" "$WORK_DIR/redis-sroor.conf" 'bin
 assert_file_contains "redis never evicts queued jobs" "$WORK_DIR/redis-sroor.conf" 'maxmemory-policy noeviction'
 assert_file_contains "mysql binds to loopback" "$WORK_DIR/mysql-sroor.cnf" 'bind-address = 127.0.0.1'
 assert_file_contains "mysql disables LOCAL INFILE" "$WORK_DIR/mysql-sroor.cnf" 'local_infile = 0'
-assert_file_contains "sudoers only allows php-fpm reload" "$WORK_DIR/sudoers-app" 'NOPASSWD: /usr/bin/systemctl reload php8.4-fpm'
+assert_file_contains "sudoers only allows php-fpm reload" "$WORK_DIR/sudoers-app" 'NOPASSWD: /usr/bin/systemctl reload php8.5-fpm'
 assert_file_lacks "sudoers never grants ALL commands" "$WORK_DIR/sudoers-app" 'NOPASSWD: ALL'
+# Ubuntu 26.04 defaults to sudo-rs: no wildcard inside an argument.
+assert_file_contains "sudoers worker rule is an exact group spec (sudo-rs)" "$WORK_DIR/sudoers-app" 'NOPASSWD: /usr/bin/supervisorctl restart sroor-worker\:'
+if grep -v '^#' "$WORK_DIR/sudoers-app" | grep -qF '*'; then
+    fail "sudoers rules contain no wildcard (sudo-rs rejects them in arguments)"
+else
+    pass "sudoers rules contain no wildcard (sudo-rs rejects them in arguments)"
+fi
 assert_file_contains "sshd: password login disabled" "$WORK_DIR/sshd-hardening.conf" 'PasswordAuthentication no'
 assert_file_contains "sshd: keyboard-interactive disabled" "$WORK_DIR/sshd-hardening.conf" 'KbdInteractiveAuthentication no'
 assert_file_contains "sshd: root login disabled" "$WORK_DIR/sshd-hardening.conf" 'PermitRootLogin no'
@@ -748,14 +755,32 @@ else
     fail "render_template fails on an unset variable"
 fi
 
-# Versions decided by the CTO (W1 Q6): PHP 8.4 + MySQL 8.4 LTS from their repos.
-assert_file_contains "provisioning defaults to PHP 8.4" "$OPS_DIR/provision.env.example" 'PHP_VERSION=8.4'
-assert_file_contains "lib default PHP_VERSION is 8.4" "$OPS_DIR/lib/common.sh" ': "${PHP_VERSION:=8.4}"'
-assert_file_contains "step 30 refuses anything but PHP 8.4" "$OPS_DIR/steps/30-php.sh" '[[ "$PHP_VERSION" == "8.4" ]]'
-assert_file_contains "step 30 installs from the ondrej/php PPA" "$OPS_DIR/steps/30-php.sh" 'add-apt-repository -y ppa:ondrej/php'
-assert_file_contains "step 40 uses the MySQL 8.4 LTS repo component" "$OPS_DIR/steps/40-mysql.sh" 'MYSQL_APT_COMPONENT="mysql-8.4-lts"'
-assert_file_contains "step 40 checks the repo key fingerprint before trusting it" "$OPS_DIR/steps/40-mysql.sh" 'MySQL APT key fingerprint mismatch'
+# Versions decided by the CTO (2026-11-11): Ubuntu 26.04 LTS, PHP 8.5 and
+# MySQL 8.4 LTS, both from the Ubuntu archive (no third-party apt repository).
+assert_file_contains "step 00 accepts Ubuntu 26.04 only" "$OPS_DIR/steps/00-base.sh" '"${VERSION_ID:-}" != "26.04"'
+assert_file_contains "provisioning defaults to PHP 8.5" "$OPS_DIR/provision.env.example" 'PHP_VERSION=8.5'
+assert_file_contains "lib default PHP_VERSION is 8.5" "$OPS_DIR/lib/common.sh" ': "${PHP_VERSION:=8.5}"'
+assert_file_contains "step 30 refuses anything but PHP 8.5" "$OPS_DIR/steps/30-php.sh" '[[ "$PHP_VERSION" == "8.5" ]]'
+assert_file_lacks "step 30 adds no ondrej/php PPA" "$OPS_DIR/steps/30-php.sh" 'add-apt-repository'
+assert_file_contains "step 30 refuses a leftover ondrej/php PPA" "$OPS_DIR/steps/30-php.sh" 'an ondrej/php PPA entry exists'
+assert_file_lacks "step 30 installs no php-opcache package (core in 8.5)" "$OPS_DIR/steps/30-php.sh" '-opcache"'
+assert_file_contains "step 30 checks OPcache is loaded" "$OPS_DIR/steps/30-php.sh" "grep -qix 'Zend OPcache'"
+assert_file_contains "php ini keeps the opcache settings" "$WORK_DIR/php-sroor.ini" 'opcache.validate_timestamps = 0'
+assert_file_lacks "step 40 adds no repo.mysql.com source" "$OPS_DIR/steps/40-mysql.sh" 'https://repo.mysql.com/apt'
+assert_file_lacks "step 40 has no third-party apt key" "$OPS_DIR/steps/40-mysql.sh" 'MYSQL_APT_KEY'
+assert_file_contains "step 40 refuses a leftover repo.mysql.com source" "$OPS_DIR/steps/40-mysql.sh" 'a repo.mysql.com apt source exists'
+assert_file_contains "step 40 checks the 8.4 candidate before installing" "$OPS_DIR/steps/40-mysql.sh" '[[ "$candidate" == 8.4.* ]]'
+assert_file_contains "step 40 refuses an existing server that is not 8.4" "$OPS_DIR/steps/40-mysql.sh" '[[ "$existing" == "8.4" ]]'
 assert_file_contains "step 40 refuses a server that is not 8.4" "$OPS_DIR/steps/40-mysql.sh" '[[ "$version" == 8.4.* ]]'
+assert_file_contains "step 40 preseeds the Ubuntu (not community) template" "$OPS_DIR/steps/40-mysql.sh" 'mysql-server mysql-server/root_password password'
+assert_file_contains "unattended-upgrades holds MySQL for the maintenance window" "$WORK_DIR/unattended-upgrades-sroor" '"^mysql-";'
+assert_file_contains "step 00 installs the MySQL unattended-upgrades hold" "$OPS_DIR/steps/00-base.sh" 'unattended-upgrades-sroor.tmpl /etc/apt/apt.conf.d/52unattended-upgrades-sroor'
+assert_file_contains "deploy.sh defaults to PHP 8.5" "$OPS_DIR/deploy.sh" 'PHP_VERSION_ARG="8.5"'
+assert_file_contains "release.yml builds on PHP 8.5 (same as the VPS)" "$REPO_ROOT/.github/workflows/release.yml" "PHP_VERSION: '8.5'"
+assert_file_contains "release.yml deploys with --php-version 8.5" "$REPO_ROOT/.github/workflows/release.yml" '--php-version 8.5 '
+for f in "$OPS_DIR"/steps/*.sh "$OPS_DIR"/provision.sh "$OPS_DIR"/provision.env.example; do
+    assert_file_lacks "no Ubuntu 24.04 leftover in $(basename "$f")" "$f" '24.04'
+done
 assert_file_contains "step 41 re-applies the per-table audit grants" "$OPS_DIR/steps/41-mysql-users.sh" 'sync-central-grants.sh" --as-root'
 assert_file_contains "verify.sh checks the append-only audit grants" "$OPS_DIR/verify.sh" 'sync-central-grants.sh" --as-root --check-only'
 

@@ -16,7 +16,8 @@ require_vars PLATFORM_DOMAIN CERTBOT_EMAIL CERTBOT_DNS_PLUGIN CERTBOT_DNS_CREDEN
 [[ "$CERTBOT_DNS_PROPAGATION_SECONDS" =~ ^[0-9]+$ ]] || die "CERTBOT_DNS_PROPAGATION_SECONDS must be numeric"
 
 # TODO(CTO): confirm the DNS provider of the platform domain. Only plugins
-# packaged in Ubuntu 24.04 that take a credentials file are supported.
+# packaged in Ubuntu 26.04 (universe, python3-certbot-dns-*) that take a
+# credentials file are supported.
 case "$CERTBOT_DNS_PLUGIN" in
     cloudflare | digitalocean | linode | ovh | rfc2136) ;;
     *) die "CERTBOT_DNS_PLUGIN must be one of: cloudflare digitalocean linode ovh rfc2136" ;;

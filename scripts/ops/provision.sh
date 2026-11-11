@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Provisions a fresh Ubuntu 24.04 LTS VPS for the SaaS (OPS-1).
+# Provisions a fresh Ubuntu 26.04 LTS ("resolute") VPS for the SaaS (OPS-1).
 # Idempotent: every step can be re-run safely. Run ON THE SERVER as root:
 #
 #   bash provision.sh --list
@@ -21,8 +21,8 @@ STEPS=(
     "00-base|apt baseline, timezone, swap, unattended security upgrades"
     "10-ssh-users|admin + app accounts, SSH keys only, root login off, sudoers"
     "20-firewall|ufw (SSH, 80, 443) + fail2ban"
-    "30-php|PHP-FPM ${PHP_VERSION:-8.4} (ondrej/php PPA) + extensions, dedicated pool, production ini"
-    "40-mysql|MySQL 8.4 LTS (repo.mysql.com), loopback only, fresh-install hardening"
+    "30-php|PHP-FPM ${PHP_VERSION:-8.5} (Ubuntu archive) + extensions, dedicated pool, production ini"
+    "40-mysql|MySQL 8.4 LTS (Ubuntu archive), loopback only, fresh-install hardening"
     "41-mysql-users|central database + least-privilege accounts: app, migrator, provisioner, backup, audit_pruner"
     "50-redis|Redis, loopback only, password, noeviction"
     "60-tls|wildcard certificate via certbot DNS-01"

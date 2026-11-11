@@ -42,8 +42,10 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Production runtime (vps-runbook.md, CTO decision W1 Q6).
-  PHP_VERSION: '8.4'
+  # Production runtime (vps-runbook.md): PHP 8.5 from the Ubuntu 26.04 archive
+  # on the VPS (CTO decision 2026-11-11). The runner image stays ubuntu-24.04:
+  # setup-php installs 8.5 there, independent of the VPS OS.
+  PHP_VERSION: '8.5'
   PHP_EXTENSIONS: bcmath, ctype, curl, dom, fileinfo, gd, iconv, intl, mbstring, pdo, pdo_sqlite, pdo_mysql, sqlite3, tokenizer, xml, zip
   NODE_VERSION: '24'
 
@@ -92,7 +94,7 @@ jobs:
           cp .env.example .env
           php artisan key:generate --ansi
 
-      - name: PHPUnit (sqlite :memory:, PHP 8.4)
+      - name: PHPUnit (sqlite :memory:, PHP 8.5)
         working-directory: backend
         run: php artisan test
 
@@ -358,7 +360,7 @@ jobs:
           # The upload (incl. both env files) never outlives this run.
           trap 'rm -rf "$incoming"' EXIT
           args=(--app-root "$app_root" --sha "$sha" --artifact "$incoming/release.tar.gz" --artifact-sha256 "$sum"
-            --deploy-env "$incoming/deploy.env" --env-file "$incoming/production.env" --php-version 8.4 --queue-mode horizon)
+            --deploy-env "$incoming/deploy.env" --env-file "$incoming/production.env" --php-version 8.5 --queue-mode horizon)
           if [[ "$health_mode" == "allow-no-health-checks" ]]; then
             args+=(--allow-no-health-checks)
           fi

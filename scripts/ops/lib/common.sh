@@ -208,7 +208,7 @@ apply_defaults() {
     : "${APP_USER:=sroor}"
     : "${ADMIN_USER:=opsadmin}"
     : "${APP_ROOT:=/var/www/sroor}"
-    : "${PHP_VERSION:=8.4}"
+    : "${PHP_VERSION:=8.5}"
     : "${PHP_FPM_MAX_CHILDREN:=20}"
     : "${TIMEZONE:=UTC}"
     : "${SWAP_SIZE_GB:=4}"

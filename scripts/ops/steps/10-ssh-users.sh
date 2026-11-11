@@ -50,7 +50,9 @@ install_authorized_key "$APP_USER" "$DEPLOY_SSH_PUBKEY_FILE"
 info "sudoers for $APP_USER (php-fpm reload + own supervisor programs only)"
 tmp_sudoers="$(mktemp)"
 render_template "$OPS_TEMPLATES_DIR/sudoers-app.tmpl" "$tmp_sudoers"
-visudo -cf "$tmp_sudoers" >/dev/null || die "rendered sudoers file is invalid"
+# Ubuntu 26.04 defaults to sudo-rs (/usr/sbin/visudo -> sudo-rs visudo via
+# update-alternatives); separate -c -f works with it and with classic sudo.
+visudo -c -f "$tmp_sudoers" >/dev/null || die "rendered sudoers file is invalid"
 install_file "$tmp_sudoers" /etc/sudoers.d/sroor-app 0440 root:root
 rm -f "$tmp_sudoers"
 
@@ -63,7 +65,9 @@ OPS_CHANGED=0
 install_template sshd-hardening.conf.tmpl /etc/ssh/sshd_config.d/00-sroor-hardening.conf 0644 root:root
 sshd -t || die "sshd config test failed - not reloading"
 if [[ "$OPS_CHANGED" -eq 1 ]]; then
-    # Ubuntu 24.04 uses socket activation: the port lives in ssh.socket.
+    # Ubuntu 26.04 (as since 22.10) uses socket activation: the port lives in
+    # ssh.socket, regenerated from sshd_config(.d) by sshd-socket-generator on
+    # daemon-reload (verified in openssh-server 1:10.2p1-2ubuntu3).
     systemctl daemon-reload
     if systemctl is-active --quiet ssh.socket; then
         systemctl restart ssh.socket

@@ -269,7 +269,7 @@ run_deploy() {
     shift 3
     local dep="$WORK/deploy.env"
     write_deploy_env "$dep"
-    local args=(--app-root "$ROOT" --sha "$sha" --artifact "$artifact" --deploy-env "$dep" --php-version 8.4)
+    local args=(--app-root "$ROOT" --sha "$sha" --artifact "$artifact" --deploy-env "$dep" --php-version 8.5)
     if [[ "$env" != "-" ]]; then args+=(--env-file "$env"); fi
     : >"$FAKE_LOG"
     rm -f "$FAKE_CURL_COUNT"
@@ -334,7 +334,7 @@ check "first release: no pre-migration backup (nothing to back up yet)" bash -c 
 check "artisan runs with the health deploy gate" log_has "php health:check @$ID1 dbuser= gate=1"
 check "order: storage:link > migrate > grants > tenants:migrate > relocate > caches > smoke > switch > queue > health > /up" \
     in_order "php storage:link" "php migrate" "mysql --defaults-extra-file=" "php tenants:migrate" "php app-releases:relocate @$ID1" "php config:cache" \
-    "php route:cache" "php view:cache" "php event:cache" "php health:check @$ID1" "sudo -n /usr/bin/systemctl reload php8.4-fpm" \
+    "php route:cache" "php view:cache" "php event:cache" "php health:check @$ID1" "sudo -n /usr/bin/systemctl reload php8.5-fpm" \
     "php horizon:terminate @current" "php health:check @current" "curl " "php app-releases:relocate --prune-legacy @current"
 check "pre-switch relocate only copies (no --prune-legacy before the switch)" bash -c "! grep -q 'php app-releases:relocate --prune-legacy @$ID1' '$FAKE_LOG'"
 check "per-table grants applied (app: no UPDATE/DELETE on audit tables)" grep -qF 'REVOKE IF EXISTS ALL PRIVILEGES ON `sroor_central`.`central_audit_logs` FROM `sroor_app`@`localhost`' "$FAKE_SQL"
@@ -405,7 +405,7 @@ check "current back on the previous release" test "$(current_id)" = "$ID2"
 check "failed release removed" test "$(release_count)" -eq 2
 check "shared/.env restored after rollback" grep -q 'Retail ERP two' "$ROOT/shared/.env"
 DETAIL="$(cat "$FAKE_LOG")"
-check "php-fpm reloaded twice (switch + rollback)" test "$(grep -c 'sudo -n /usr/bin/systemctl reload php8.4-fpm' "$FAKE_LOG")" -eq 2
+check "php-fpm reloaded twice (switch + rollback)" test "$(grep -c 'sudo -n /usr/bin/systemctl reload php8.5-fpm' "$FAKE_LOG")" -eq 2
 check "queue restarted on the previous release" log_has "php horizon:terminate @$ID2"
 check "rollback recorded" bash -c "tail -1 '$ROOT/shared/deploy-history.log' | grep -q 'rolled-back:health'"
 check "unhealthy switch: legacy release copies are never pruned" bash -c "! grep -q -- '--prune-legacy' '$FAKE_LOG'"
@@ -490,7 +490,7 @@ DETAIL="$OUT"
 check "--rollback exits 0" test "$RC" -eq 0
 check "--rollback switches current to the previous release" test "$(current_id)" = "$A"
 check "--rollback records the release it left" grep -qx "$B" "$ROOT/.previous_release"
-check "--rollback reloads php-fpm and restarts the queue" bash -c "grep -q 'sudo -n /usr/bin/systemctl reload php8.4-fpm' '$FAKE_LOG' && grep -q 'php horizon:terminate @$A' '$FAKE_LOG'"
+check "--rollback reloads php-fpm and restarts the queue" bash -c "grep -q 'sudo -n /usr/bin/systemctl reload php8.5-fpm' '$FAKE_LOG' && grep -q 'php horizon:terminate @$A' '$FAKE_LOG'"
 OUT="$(bash "$DEPLOY" --app-root "$ROOT" --rollback 2>&1)" || RC=$?
 check "a second --rollback switches back" test "$(current_id)" = "$B"
 RC=0
@@ -527,7 +527,7 @@ check "--prune-legacy failure: the new release stays live" bash -c "[[ '$(curren
 check "--prune-legacy failure is logged for the operator" grep -q 'prune-legacy failed (non-fatal)' <<<"$OUT"
 check "--prune-legacy failure: history records a normal deploy" bash -c "tail -1 '$ROOT/shared/deploy-history.log' | grep -q ' deployed'"
 DETAIL="$(cat "$FAKE_LOG")"
-check "--prune-legacy failure: no rollback (one php-fpm reload)" test "$(grep -c 'sudo -n /usr/bin/systemctl reload php8.4-fpm' "$FAKE_LOG")" -eq 1
+check "--prune-legacy failure: no rollback (one php-fpm reload)" test "$(grep -c 'sudo -n /usr/bin/systemctl reload php8.5-fpm' "$FAKE_LOG")" -eq 1
 
 # ------------------------------------------------------------------------------------
 echo "7b. Pipeline hygiene (BE-06): static guards on the replacement pipeline"

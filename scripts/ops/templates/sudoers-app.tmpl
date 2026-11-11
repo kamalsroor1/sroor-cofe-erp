@@ -1,7 +1,11 @@
 # Managed by scripts/ops (OPS-1). The app/deploy account may only reload
 # php-fpm (opcache reset after a release switch) and inspect/restart its own
 # supervisor programs. Nothing else.
+# Exact arguments only: Ubuntu 26.04 defaults to sudo-rs, which does not
+# support wildcards inside arguments (only ':' ',' '=' '\' are escaped). The
+# worker rule therefore uses the group spec `sroor-worker:` (supervisor treats
+# an empty process name like `:*`, i.e. every process of the group).
 ${APP_USER} ALL=(root) NOPASSWD: /usr/bin/systemctl reload php${PHP_VERSION}-fpm
 ${APP_USER} ALL=(root) NOPASSWD: /usr/bin/supervisorctl status
 ${APP_USER} ALL=(root) NOPASSWD: /usr/bin/supervisorctl restart sroor-horizon
-${APP_USER} ALL=(root) NOPASSWD: /usr/bin/supervisorctl restart sroor-worker\:\*
+${APP_USER} ALL=(root) NOPASSWD: /usr/bin/supervisorctl restart sroor-worker\:
