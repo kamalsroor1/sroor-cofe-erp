@@ -6,7 +6,7 @@
     <!-- Summary KPI Profile Cards -->
     <CustomerStatementSummaryCards
       :summary="summary"
-      :current-balance="customer?.current_balance || 0"
+      :current-balance="customer?.current_balance ?? '0.000'"
       :loading="isLoading"
     />
 

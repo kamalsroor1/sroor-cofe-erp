@@ -81,7 +81,7 @@
           >
         </div>
         <div class="font-mono font-black text-emerald-500">
-          {{ formatMoney(activeShift.current_cash || activeShift.starting_cash) }} {{ currencyLabel }}
+          {{ formatMoney(activeShift.current_cash ?? activeShift.starting_cash) }} {{ currencyLabel }}
         </div>
       </div>
     </DashboardSectionCard>

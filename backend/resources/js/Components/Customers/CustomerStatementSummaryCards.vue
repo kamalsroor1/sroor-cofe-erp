@@ -62,7 +62,7 @@ const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   summary: { type: Object, default: () => ({}) },
-  currentBalance: { type: Number, default: 0 },
+  currentBalance: { type: [Number, String], default: '0.000' },
   loading: { type: Boolean, default: false },
 });
 </script>

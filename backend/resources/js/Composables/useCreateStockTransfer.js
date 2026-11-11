@@ -7,9 +7,11 @@ import { useLoadError } from './useLoadError';
 import { useUnits } from './useUnits';
 import { useRemoteOptions } from './useRemoteOptions';
 import { businessToday } from './useBusinessDate';
+import { useFormatters } from './useFormatters';
 
 export function useCreateStockTransfer() {
     const { unitLabel } = useUnits();
+    const { formatQty } = useFormatters();
     const router = useRouter();
     const { t } = useTrans();
     const { error, errorMessage, clearError, setError } = useLoadError();
@@ -19,7 +21,7 @@ export function useCreateStockTransfer() {
     const { searchFn: searchItems } = useRemoteOptions('items', {
         map: (row) => ({
             value: row.id,
-            label: `${row.name} (${row.code || '—'}) — ${t('inventory.current_stock')}: ${row.current_stock} ${row.unit || ''}`,
+            label: `${row.name} (${row.code || '—'}) — ${t('inventory.current_stock')}: ${formatQty(row.current_stock)} ${row.unit || ''}`,
             raw: row,
         }),
     });

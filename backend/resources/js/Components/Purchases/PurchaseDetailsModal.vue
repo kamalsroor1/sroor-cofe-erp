@@ -49,7 +49,9 @@
           <tbody class="divide-y divide-slate-200 dark:divide-slate-800/50">
             <tr v-for="item in purchase.items" :key="item.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
               <td class="p-2.5 font-bold text-slate-900 dark:text-white">{{ item.item_name }}</td>
-              <td class="p-2.5 text-end font-mono text-theme-primary font-bold">{{ item.quantity }} {{ item.unit }}</td>
+              <td class="p-2.5 text-end font-mono text-theme-primary font-bold">
+                {{ formatQty(item.quantity) }} {{ item.unit }}
+              </td>
               <td class="p-2.5 text-end font-mono text-slate-700 dark:text-slate-300">
                 {{ formatMoney(item.cost_price) }} {{ currencyLabel }}
               </td>
@@ -94,7 +96,7 @@
 import AppModal from '../Common/AppModal.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney, currencyLabel } = useFormatters();
+const { formatMoney, formatQty, currencyLabel } = useFormatters();
 
 defineProps({
   show: { type: Boolean, default: false },

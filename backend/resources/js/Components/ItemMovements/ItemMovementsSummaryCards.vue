@@ -48,7 +48,7 @@
     >
       <div class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('inventory.current_stock') }}</div>
       <div class="text-xl font-black text-slate-900 dark:text-white font-mono">
-        {{ formatQty(stats.current_scope_stock || currentStock || 0) }}
+        {{ formatQty(stats.current_scope_stock ?? currentStock ?? 0) }}
         <span class="text-xs font-normal text-slate-400">{{ unit }}</span>
       </div>
     </div>

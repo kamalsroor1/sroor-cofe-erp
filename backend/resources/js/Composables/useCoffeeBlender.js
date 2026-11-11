@@ -4,17 +4,21 @@ import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 import { useRemoteOptions } from './useRemoteOptions';
-import { currentCurrencyLabel } from './useFormatters';
+import { currentCurrencyLabel, useFormatters } from './useFormatters';
+import { priceFor } from '../helpers/posCartLines';
 
 export function useCoffeeBlender() {
     const router = useRouter();
     const { t } = useTrans();
+    const { formatMoney, formatQty } = useFormatters();
+    // Prices arrive as '0.000' strings, which are truthy: priceFor skips a zero price instead of using it.
+    const retailPrice = (row) => priceFor(row, 'retail');
 
     const { searchFn: searchCustomers } = useRemoteOptions('customers');
     const { searchFn: searchItems } = useRemoteOptions('items', {
         map: (row) => ({
             value: row.id,
-            label: `${row.name} (${row.code || '—'}) — ${t('inventory.retail_price')}: ${row.price_retail || row.selling_price} ${currentCurrencyLabel()} | ${t('inventory.current_stock')}: ${row.current_stock} ${row.unit}`,
+            label: `${row.name} (${row.code || '—'}) — ${t('inventory.retail_price')}: ${formatMoney(retailPrice(row))} ${currentCurrencyLabel()} | ${t('inventory.current_stock')}: ${formatQty(row.current_stock)} ${row.unit}`,
             raw: row,
         }),
     });
@@ -114,7 +118,7 @@ export function useCoffeeBlender() {
             name: item.name,
             percentage: 0,
             cost_price: Number(item.cost_price),
-            selling_price: Number(item.price_retail || item.selling_price),
+            selling_price: Number(retailPrice(item)),
             current_stock: item.current_stock,
         });
 

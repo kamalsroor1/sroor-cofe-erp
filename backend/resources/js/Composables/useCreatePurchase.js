@@ -6,6 +6,10 @@ import { useTrans } from './useTrans';
 import { useLoadError } from './useLoadError';
 import { businessToday } from './useBusinessDate';
 import { useRemoteOptions } from './useRemoteOptions';
+import { isPositive, normalize } from '../helpers/decimal';
+
+/** Prefilled line quantity: the first positive of quantity / suggested qty ('0.000' is not a quantity), else 10. */
+const prefillQuantity = (p) => normalize([p.quantity, p.suggested_reorder_qty].find((q) => isPositive(q)) ?? '10');
 
 const newLine = () => ({ item_id: '', item_option: null, quantity: '1.000', cost_price: '0.000' });
 
@@ -82,8 +86,8 @@ export function useCreatePurchase() {
             form.items = prefilled.map((p, idx) => ({
                 item_id: p.item_id || p.id,
                 item_option: options[idx],
-                quantity: (p.quantity || p.suggested_reorder_qty || 10).toString(),
-                cost_price: (p.cost_price || 0).toString(),
+                quantity: prefillQuantity(p),
+                cost_price: normalize(p.cost_price ?? '0'),
             }));
         } catch (err) {
             setError(err);

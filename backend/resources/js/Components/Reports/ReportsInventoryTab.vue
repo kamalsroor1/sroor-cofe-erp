@@ -87,7 +87,7 @@
                 <td class="p-3 font-bold text-slate-900 dark:text-white font-tajawal">{{ itm.name }}</td>
                 <td class="p-3 font-mono text-slate-500 dark:text-slate-400">{{ itm.code || '—' }}</td>
                 <td class="p-3 text-end font-mono font-bold text-cyan-600 dark:text-cyan-400">
-                  {{ itm.current_stock }} {{ itm.unit }}
+                  {{ formatQty(itm.current_stock) }} {{ itm.unit }}
                 </td>
                 <td class="p-3 text-end font-mono text-slate-700 dark:text-slate-300">
                   {{ formatMoney(itm.cost_price) }}
@@ -120,7 +120,9 @@
                 <span class="text-xs font-mono text-slate-400">{{ itm.code || '—' }}</span>
               </div>
               <div class="text-end">
-                <span class="text-xs font-mono font-bold text-cyan-500">{{ itm.current_stock }} {{ itm.unit }}</span>
+                <span class="text-xs font-mono font-bold text-cyan-500"
+                  >{{ formatQty(itm.current_stock) }} {{ itm.unit }}</span
+                >
                 <span class="text-sm font-black font-mono text-emerald-500 block">+{{ formatMoney(itm.profit) }}</span>
               </div>
             </div>
@@ -152,7 +154,7 @@ import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney, currencyLabel } = useFormatters();
+const { formatMoney, formatQty, currencyLabel } = useFormatters();
 
 defineProps({
   inventoryData: { type: Object, default: () => ({}) },

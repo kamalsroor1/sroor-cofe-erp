@@ -34,7 +34,7 @@
 
       <!-- Live Discrepancy Preview -->
       <div
-        v-if="form.actual_cash_balance !== ''"
+        v-if="diff"
         class="p-3 rounded-xl border text-xs font-bold flex items-center justify-between"
         :class="diffClass"
       >
@@ -78,6 +78,7 @@ import BaseNumberInput from '../Form/BaseNumberInput.vue';
 import BaseButton from '../Common/BaseButton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
+import { drawerDifference } from '../../helpers/shiftCash';
 
 const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
@@ -85,30 +86,28 @@ const { t } = useTrans();
 const props = defineProps({
   show: { type: Boolean, default: false },
   shiftNumber: { type: [String, Number], default: '' },
-  openingCashBalance: { type: Number, default: 0 },
-  expectedCashInDrawer: { type: Number, default: 0 },
+  openingCashBalance: { type: [String, Number], default: '0.000' },
+  expectedCashInDrawer: { type: [String, Number], default: '0.000' },
   form: { type: Object, default: () => ({}) },
   submitting: { type: Boolean, default: false },
 });
 
 defineEmits(['close', 'submit', 'update:field']);
 
-const diff = computed(() => {
-  const actual = parseFloat(props.form.actual_cash_balance);
-  if (isNaN(actual)) return 0;
-  const val = actual - props.expectedCashInDrawer;
-  return Math.abs(val) < 0.0005 ? 0 : val;
-});
+const diff = computed(() => drawerDifference(props.form.actual_cash_balance, props.expectedCashInDrawer));
 
 const diffClass = computed(() => {
-  if (diff.value === 0) return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400';
-  if (diff.value > 0) return 'bg-sky-500/10 border-sky-500/30 text-sky-600 dark:text-sky-400';
+  if (diff.value?.sign === 0) return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400';
+  if (diff.value?.sign > 0) return 'bg-sky-500/10 border-sky-500/30 text-sky-600 dark:text-sky-400';
   return 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400';
 });
 
 const diffText = computed(() => {
-  if (diff.value === 0) return t('treasury.drawer_balanced');
-  if (diff.value > 0) return `+${formatMoney(diff.value)} ${currencyLabel.value} (${t('treasury.drawer_surplus')})`;
-  return `${formatMoney(diff.value)} ${currencyLabel.value} (${t('treasury.drawer_shortage')})`;
+  if (!diff.value) return '';
+  if (diff.value.sign === 0) return t('treasury.drawer_balanced');
+  if (diff.value.sign > 0) {
+    return `+${formatMoney(diff.value.amount)} ${currencyLabel.value} (${t('treasury.drawer_surplus')})`;
+  }
+  return `${formatMoney(diff.value.amount)} ${currencyLabel.value} (${t('treasury.drawer_shortage')})`;
 });
 </script>
