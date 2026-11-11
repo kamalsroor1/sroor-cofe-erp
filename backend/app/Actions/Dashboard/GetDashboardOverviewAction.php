@@ -142,7 +142,7 @@ final class GetDashboardOverviewAction
                 'category' => $it->category,
                 'current_stock' => Decimal::normalize((string) $it->current_stock),
                 'min_stock' => Decimal::normalize((string) (bccomp((string) ($it->min_stock_level ?? '0'), '0', 3) > 0 ? $it->min_stock_level : $lowStockThreshold)),
-                'unit' => $it->unit ?? 'كجم',
+                'unit' => $it->unit ?? __('inventory.unit_weight_short'),
             ]);
 
         $lowStockCount = $this->tenantSettings->whereLowStock(Item::where('is_active', true))->count();
@@ -173,7 +173,7 @@ final class GetDashboardOverviewAction
                 'item_id' => $t->item_id,
                 'name' => $t->item_name,
                 'code' => $t->item_code,
-                'unit' => $t->unit ?? 'كجم',
+                'unit' => $t->unit ?? __('inventory.unit_weight_short'),
                 'total_qty' => Decimal::normalize((string) $t->total_qty),
                 'total_revenue' => Decimal::normalize((string) $t->total_revenue),
             ]);

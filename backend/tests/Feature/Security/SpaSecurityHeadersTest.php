@@ -36,10 +36,13 @@ final class SpaSecurityHeadersTest extends TenantTestCase
         foreach ([
             "default-src 'self'", "frame-src 'none'", "frame-ancestors 'none'", "object-src 'none'",
             "base-uri 'self'", "form-action 'self'", "worker-src 'self'", "manifest-src 'self'",
-            "connect-src 'self'", 'font-src', 'https://fonts.gstatic.com',
+            "connect-src 'self'", "font-src 'self' data:",
         ] as $expected) {
             $this->assertStringContainsString($expected, $csp);
         }
+
+        $this->assertStringNotContainsString('fonts.googleapis.com', $csp);
+        $this->assertStringNotContainsString('fonts.gstatic.com', $csp);
 
         preg_match("/'nonce-([^']+)'/", $csp, $matches);
         $nonce = $matches[1] ?? '';

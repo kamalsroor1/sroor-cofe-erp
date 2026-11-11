@@ -14,6 +14,7 @@ use App\Models\Setting;
 use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Settings\TenantSettings;
 use App\Support\Money\Decimal;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -33,17 +34,23 @@ class GetTenantDetailsAction
         $groupedFeatures = PlanFeature::groupedByModule();
         $plans = PlanResource::collection(Plan::where('is_active', true)->orderBy('sort_order')->get())->resolve();
 
+        $tenantCurrency = (is_array($tenant->settings) && isset($tenant->settings['currency']))
+            ? (string) $tenant->settings['currency']
+            : TenantSettings::DEFAULT_CURRENCY;
+
         $stats = [
             'users_count' => 0,
             'stores_count' => 0,
             'items_count' => 0,
             'invoices_count' => 0,
             'total_sales' => '0.000',
+            'currency' => $tenantCurrency,
+            'currency_label' => $tenantCurrency,
         ];
 
         // `allowed_units` is a stancl virtual attribute (decoded from `data` on retrieval), so
         // it is read through getAttribute(): $tenant->data is always null after hydration.
-        $allowedUnits = $tenant->getAttribute('allowed_units') ?? ['قطعة', 'علبة', 'كرتونة', 'كجم', 'جرام', 'شيكارة', 'طرد', 'دستة', 'لتر'];
+        $allowedUnits = $tenant->getAttribute('allowed_units') ?? explode(',', TenantSettings::DEFAULT_INVENTORY_UNITS);
 
         // OPS-2: a pending / running / failed tenant has no database yet: zero stats.
         if ($tenant->isProvisioned()) {
@@ -73,6 +80,11 @@ class GetTenantDetailsAction
                         default => number_format($sum, 3, '.', ''),
                     });
                 }
+                if (Schema::hasTable('settings')) {
+                    $tenantSettings = app(TenantSettings::class);
+                    $stats['currency'] = $tenantSettings->currency();
+                    $stats['currency_label'] = $tenantSettings->currencyLabel();
+                }
                 $tenantUnits = Setting::get('inventory_units');
                 if ($tenantUnits) {
                     $allowedUnits = array_values(array_filter(array_map('trim', explode(',', $tenantUnits))));
@@ -90,8 +102,11 @@ class GetTenantDetailsAction
         // The platform unit catalog is CENTRAL (platform_settings), never a tenant `settings` row.
         $globalUnits = $this->platformUnits->execute();
 
+        $tenantData = (new TenantResource($tenant))->resolve();
+        $tenantData['currency'] = $stats['currency'];
+
         return [
-            'tenant' => (new TenantResource($tenant))->resolve(),
+            'tenant' => $tenantData,
             // OPS-9: archive request / final backup / purge eligibility (codes and dates only).
             'archive' => (new TenantArchiveResource($tenant))->resolve(),
             'stats' => $stats,

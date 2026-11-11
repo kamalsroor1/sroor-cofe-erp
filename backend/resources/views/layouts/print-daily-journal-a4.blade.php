@@ -4,7 +4,7 @@
     @php $currencyLabel = app(\App\Services\Settings\TenantSettings::class)->currencyLabel(); @endphp
     <meta charset="UTF-8">
     <title>{{ __('treasury.daily_journal_report_title', ['date' => $date]) }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@500;700;900&display=swap" rel="stylesheet">
+    @include('layouts.print-fonts')
     <style>
         @page {
             size: A4 portrait;

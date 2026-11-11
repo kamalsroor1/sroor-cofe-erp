@@ -4,7 +4,7 @@
     @php $currencyLabel = app(\App\Services\Settings\TenantSettings::class)->currencyLabel(); @endphp
     <meta charset="UTF-8">
     <title>{{ __('invoices.receipt_title', ['number' => $invoice->invoice_number]) }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&display=swap" rel="stylesheet">
+    @include('layouts.print-fonts')
     <style>
         @page {
             size: 80mm auto;
@@ -191,11 +191,9 @@
 
     @if($showQr)
     <div class="text-center py-1" style="margin-top: 6px;">
-        <img 
-            src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data={{ urlencode(url('/invoices/' . $invoice->id)) }}" 
-            alt="QR Code" 
-            style="width: 75px; height: 75px; margin: 0 auto; display: block;"
-        >
+        <div style="margin: 0 auto; display: inline-block;">
+            {!! \App\Support\QrCode::svg(url('/invoices/' . $invoice->id), 75, 0) !!}
+        </div>
         <span style="font-size: 9px; color: #555; display: block; margin-top: 2px;">{{ __('invoices.scan_qr_to_verify') }}</span>
     </div>
     @endif

@@ -268,4 +268,23 @@ return [
     'discrete_unit_integer_only' => 'The item \':item\' is sold by piece/box and only accepts whole numbers; fractions are not allowed (:quantity :unit).',
     // BE-08
     'line_discount_exceeds_total' => 'The line discount cannot exceed the line total.',
+    'whatsapp_receipt' => [
+        'title' => '*Sales Invoice - :company*',
+        'invoice_number' => '*Invoice Number:* :number',
+        'date' => '*Date:* :date',
+        'customer' => '*Customer:* :customer',
+        'walk_in_customer' => 'Walk-in Customer',
+        'branch' => '*Branch:* :store',
+        'main_branch' => 'Main Branch',
+        'items_header' => '*Item Details:*',
+        'item_fallback' => 'Item',
+        'net_total' => '*Net Total:* :amount :currency',
+        'paid' => '*Paid:* :amount :currency',
+        'remaining' => '*Remaining:* :amount :currency',
+        'current_balance' => '*Current Account Balance:* :amount :currency',
+        'footer' => 'Thank you for your business with :company',
+    ],
+    'export_limit_exceeded' => 'Cannot export more than :max invoices at once. Please narrow your search or filter criteria.',
+    // BE-03
+    'cancel_cash_requires_admin_pin' => 'Cancelling an invoice with cash payments requires manager PIN approval.',
 ];

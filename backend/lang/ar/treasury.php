@@ -197,4 +197,22 @@ return [
     'transfer_amount_invalid' => 'يرجى إدخال مبلغ تحويل صحيح أكبر من الصفر.',
     'transfer_insufficient_balance' => 'عفواً، رصيد الحساب المحول منه [:account] غير كافٍ لإتمام التحويل (المتاح: :available :currency - المطلوب بالعمولة: :required :currency).',
     'customer_refund_label' => 'رد نقدي للعميل (مرتجع مبيعات)',
+    'payment_methods' => [
+        'cash' => 'نقداً (كاش)',
+        'instapay' => 'إنستاباي (InstaPay)',
+        'e_wallet' => 'محفظة إلكترونية (فودافون/أورانج/اتصالات)',
+        'visa' => 'بطاقة بنكية / فيزا',
+        'bank_transfer' => 'تحويل بنكي',
+        'check' => 'شيك بنكي',
+        'other' => 'أخرى',
+    ],
+    'payment_methods_short' => [
+        'cash' => 'كاش',
+        'instapay' => 'إنستاباي',
+        'e_wallet' => 'محفظة',
+        'visa' => 'فيزا',
+        'bank_transfer' => 'تحويل',
+        'check' => 'شيك',
+        'other' => 'أخرى',
+    ],
 ];

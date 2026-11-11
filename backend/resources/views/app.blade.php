@@ -72,9 +72,20 @@
     </script>
 
     {{-- Ibraa brand fonts are self-hosted (resources/css/app.css @font-face): IBM Plex Sans Arabic for text, Reem Kufi
-         for the wordmark, Cairo as the fallback. Preload the Arabic Plex faces used by first paint. --}}
-    <link rel="preload" href="{{ \Illuminate\Support\Facades\Vite::asset('resources/fonts/ibm-plex-sans-arabic-arabic-400.woff2') }}" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="{{ \Illuminate\Support\Facades\Vite::asset('resources/fonts/ibm-plex-sans-arabic-arabic-700.woff2') }}" as="font" type="font/woff2" crossorigin>
+         for the wordmark, Cairo as the fallback. Preload the Arabic Plex faces used by first paint (skipped when the
+         Vite manifest has no entry, e.g. tests without a build). --}}
+    @php
+        $brandFontPreloads = [];
+        foreach (['resources/fonts/ibm-plex-sans-arabic-arabic-400.woff2', 'resources/fonts/ibm-plex-sans-arabic-arabic-700.woff2'] as $brandFont) {
+            try {
+                $brandFontPreloads[] = \Illuminate\Support\Facades\Vite::asset($brandFont);
+            } catch (\Throwable) {
+            }
+        }
+    @endphp
+    @foreach ($brandFontPreloads as $brandFontUrl)
+        <link rel="preload" href="{{ $brandFontUrl }}" as="font" type="font/woff2" crossorigin>
+    @endforeach
 
     <!-- Favicon & PWA Manifest -->
     <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">

@@ -25,12 +25,52 @@
       </button>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="isLoading" class="no-print p-8 text-center text-slate-600 dark:text-slate-300 font-bold">
-      <div
-        class="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"
-      ></div>
-      <p class="text-xs font-bold">{{ $t('invoices.preparing_receipt') }}</p>
+    <!-- Loading State: Shimmer Skeleton simulating the 80mm thermal receipt -->
+    <div
+      v-if="isLoading"
+      data-testid="print-skeleton"
+      class="no-print w-full max-w-[80mm] bg-white dark:bg-slate-900 p-4 shadow-xl rounded-lg border border-slate-300 dark:border-slate-800 space-y-4"
+    >
+      <div class="text-center space-y-2 pb-3 border-b-2 border-dashed border-slate-200 dark:border-slate-800">
+        <Skeleton width="w-3/4" height="h-5" class-name="mx-auto" />
+        <Skeleton width="w-1/2" height="h-3.5" class-name="mx-auto" />
+        <Skeleton width="w-1/3" height="h-3" class-name="mx-auto" />
+      </div>
+
+      <div class="space-y-2 py-2 border-b-2 border-dashed border-slate-200 dark:border-slate-800">
+        <div class="flex justify-between">
+          <Skeleton width="w-1/3" height="h-3" />
+          <Skeleton width="w-1/4" height="h-3" />
+        </div>
+        <div class="flex justify-between">
+          <Skeleton width="w-1/4" height="h-3" />
+          <Skeleton width="w-1/3" height="h-3" />
+        </div>
+      </div>
+
+      <div class="space-y-2 py-2 border-b-2 border-dashed border-slate-200 dark:border-slate-800">
+        <div v-for="i in 3" :key="i" class="flex justify-between items-center py-1">
+          <Skeleton width="w-2/5" height="h-3.5" />
+          <Skeleton width="w-1/5" height="h-3.5" />
+          <Skeleton width="w-1/5" height="h-3.5" />
+        </div>
+      </div>
+
+      <div class="space-y-2 pt-1">
+        <div class="flex justify-between">
+          <Skeleton width="w-1/3" height="h-3" />
+          <Skeleton width="w-1/4" height="h-3" />
+        </div>
+        <div class="flex justify-between">
+          <Skeleton width="w-1/2" height="h-5" />
+          <Skeleton width="w-1/3" height="h-5" />
+        </div>
+      </div>
+
+      <div class="pt-3 flex flex-col items-center gap-2">
+        <Skeleton width="w-24" height="h-24" rounded="rounded-lg" />
+        <Skeleton width="w-2/3" height="h-3" />
+      </div>
     </div>
 
     <!-- Error State -->
@@ -38,7 +78,13 @@
       v-else-if="error && !invoice"
       class="no-print w-full max-w-[80mm] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl"
     >
-      <ErrorState :message="errorMessage" compact @retry="fetchInvoice" />
+      <ErrorState
+        :message="errorMessage"
+        :status-code="errorStatusCode"
+        :can-retry="canRetry"
+        compact
+        @retry="fetchInvoice"
+      />
     </div>
 
     <!-- 80mm Thermal Receipt Container -->
@@ -175,6 +221,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Printer, ArrowRight } from 'lucide-vue-next';
 import ErrorState from '../../Components/Common/ErrorState.vue';
+import Skeleton from '../../Components/Common/Skeletons/Skeleton.vue';
 import { useLoadError } from '../../Composables/useLoadError';
 import api from '../../Services/api';
 import { useAppConfigStore } from '../../stores/appConfig';
@@ -187,7 +234,7 @@ const appConfigStore = useAppConfigStore();
 const { formatMoney, formatTime, currencyLabel } = useFormatters();
 const { t } = useTrans();
 
-const { error, errorMessage, clearError, setError } = useLoadError();
+const { error, errorMessage, statusCode: errorStatusCode, canRetry, clearError, setError } = useLoadError();
 const invoice = ref(null);
 const isLoading = ref(true);
 

@@ -2,21 +2,25 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../Services/api';
 import { useAppConfigStore } from '../stores/appConfig';
+import { useAuthStore } from '../stores/auth';
 import { currentCurrencyLabel, useFormatters } from './useFormatters';
 import { useTrans } from './useTrans';
+import { useLoadError } from './useLoadError';
 import DarkSwal from '../helpers/alert';
 import { buildCompanyInfo } from '../helpers/companyInfo';
+import { needsManagerApproval, approvalReasons, requestManagerApproval } from './useManagerApproval';
 
 export function useInvoiceShow() {
     const route = useRoute();
     const router = useRouter();
     const appConfigStore = useAppConfigStore();
+    const authStore = useAuthStore();
     const { formatMoney, formatTime } = useFormatters();
     const { t } = useTrans();
 
     const invoice = ref(null);
     const isLoading = ref(true);
-    const error = ref(null);
+    const { error, errorMessage, statusCode: errorStatusCode, canRetry, clearError, setError } = useLoadError();
     const activeMode = ref(route.query.mode || (route.name === 'invoices.print' ? 'thermal' : 'interactive'));
 
     // Cancellation state
@@ -71,12 +75,12 @@ export function useInvoiceShow() {
         const id = route.params.id;
         if (!id) return;
         isLoading.value = true;
-        error.value = null;
+        clearError();
         try {
             const res = await api.get(`/invoices/${id}`);
             invoice.value = res.data?.data || res.data;
         } catch (e) {
-            error.value = e.userMessage || e.response?.data?.message || t('common.error_occurred');
+            setError(e);
         } finally {
             isLoading.value = false;
         }
@@ -157,6 +161,7 @@ export function useInvoiceShow() {
         isCancelling.value = true;
         try {
             await api.post(`/invoices/${invoice.value.id}/cancel`, {
+                reason: cancelReason.value,
                 cancellation_reason: cancelReason.value,
             });
 
@@ -170,6 +175,40 @@ export function useInvoiceShow() {
             cancelReason.value = '';
             await fetchInvoice();
         } catch (e) {
+            if (needsManagerApproval(e)) {
+                const reasons = approvalReasons(e);
+                const defaultUserId = authStore.isAdmin ? authStore.user?.id : null;
+                const override = await requestManagerApproval({ reasons, defaultUserId });
+                if (override) {
+                    try {
+                        await api.post(`/invoices/${invoice.value.id}/cancel`, {
+                            reason: cancelReason.value,
+                            cancellation_reason: cancelReason.value,
+                            override,
+                        });
+
+                        DarkSwal.fire({
+                            icon: 'success',
+                            title: t('common.done'),
+                            text: t('invoices.cancelled_success', { number: invoice.value.invoice_number }),
+                        });
+
+                        showCancelModal.value = false;
+                        cancelReason.value = '';
+                        await fetchInvoice();
+                        return;
+                    } catch (retryErr) {
+                        DarkSwal.fire({
+                            icon: 'error',
+                            title: t('common.error'),
+                            text:
+                                retryErr.response?.data?.message || retryErr.userMessage || t('common.error_occurred'),
+                        });
+                        return;
+                    }
+                }
+                return;
+            }
             DarkSwal.fire({
                 icon: 'error',
                 title: t('common.error'),
@@ -204,6 +243,9 @@ export function useInvoiceShow() {
         setMode,
         isLoading,
         error,
+        errorMessage,
+        errorStatusCode,
+        canRetry,
         retry: fetchInvoice,
         activeMode,
         showCancelModal,

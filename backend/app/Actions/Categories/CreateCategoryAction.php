@@ -12,7 +12,7 @@ final class CreateCategoryAction
     {
         return Category::create([
             'name' => trim((string) $data['name']),
-            'icon' => ! empty($data['icon']) ? trim((string) $data['icon']) : '☕',
+            'icon' => ! empty($data['icon']) ? trim((string) $data['icon']) : 'coffee',
             'sort_order' => isset($data['sort_order']) ? (int) $data['sort_order'] : 0,
             'is_active' => isset($data['is_active']) ? (bool) $data['is_active'] : true,
         ]);

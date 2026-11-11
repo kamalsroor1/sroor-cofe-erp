@@ -34,7 +34,7 @@ final class GetCustomersSalesReportAction
             ->get()
             ->map(fn ($c) => [
                 'customer_id' => $c->customer_id,
-                'name' => $c->customer?->name ?? 'عميل محذوف',
+                'name' => $c->customer?->name ?? __('contacts.deleted_customer'),
                 'phone' => $c->customer?->phone,
                 'current_balance' => Decimal::normalize((string) ($c->customer?->current_balance ?? 0)),
                 'total_invoices' => (int) $c->total_invoices,

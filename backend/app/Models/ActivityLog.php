@@ -74,16 +74,16 @@ class ActivityLog extends Model
     public function getModuleBadgeAttribute(): array
     {
         return match ($this->module) {
-            'sales' => ['icon' => '🛒', 'label' => 'المبيعات و POS'],
-            'inventory' => ['icon' => '📦', 'label' => 'الأصناف والمخزون'],
-            'shifts' => ['icon' => '💵', 'label' => 'الخزينة والورديات'],
-            'purchases' => ['icon' => '🚚', 'label' => 'المشتريات والتوريد'],
-            'expenses' => ['icon' => '💸', 'label' => 'المصروفات'],
-            'contacts' => ['icon' => '👥', 'label' => 'العملاء والموردين'],
-            'auth' => ['icon' => '🔐', 'label' => 'الأمان والدخول'],
-            'treasury' => ['icon' => '🔁', 'label' => 'حسابات الخزينة'],
-            'system' => ['icon' => '⚙️', 'label' => 'إدارة النظام'],
-            default => ['icon' => '📋', 'label' => $this->module ?: 'عام'],
+            'sales' => ['icon' => 'shopping-cart', 'label' => __('activity.modules.sales')],
+            'inventory' => ['icon' => 'package', 'label' => __('activity.modules.inventory')],
+            'shifts' => ['icon' => 'banknote', 'label' => __('activity.modules.shifts')],
+            'purchases' => ['icon' => 'truck', 'label' => __('activity.modules.purchases')],
+            'expenses' => ['icon' => 'receipt', 'label' => __('activity.modules.expenses')],
+            'contacts' => ['icon' => 'users', 'label' => __('activity.modules.contacts')],
+            'auth' => ['icon' => 'lock', 'label' => __('activity.modules.auth')],
+            'treasury' => ['icon' => 'arrow-left-right', 'label' => __('activity.modules.treasury')],
+            'system' => ['icon' => 'sliders', 'label' => __('activity.modules.system')],
+            default => ['icon' => 'clipboard-list', 'label' => $this->module ?: __('activity.modules.general')],
         };
     }
 
@@ -91,27 +91,27 @@ class ActivityLog extends Model
     {
         return match ($this->action) {
             'created', 'invoice_created', 'purchase_created' => [
-                'label' => 'إضافة / إصدار',
+                'label' => __('activity.action_badges.created'),
                 'bg' => 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30',
             ],
             'updated', 'item_price_changed', 'customer_updated' => [
-                'label' => 'تعديل',
+                'label' => __('activity.action_badges.updated'),
                 'bg' => 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30',
             ],
             'cancelled', 'invoice_cancelled' => [
-                'label' => 'إلغاء',
+                'label' => __('activity.action_badges.cancelled'),
                 'bg' => 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30',
             ],
             'deleted', 'expense_deleted' => [
-                'label' => 'حذف / أرشفة',
+                'label' => __('activity.action_badges.deleted'),
                 'bg' => 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30',
             ],
             'transfer', 'treasury_transfer' => [
-                'label' => 'تحويل مالي',
+                'label' => __('activity.action_badges.transfer'),
                 'bg' => 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/30',
             ],
             'login', 'login_success' => [
-                'label' => 'تسجيل دخول',
+                'label' => __('activity.action_badges.login'),
                 'bg' => 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30',
             ],
             default => [
@@ -124,16 +124,16 @@ class ActivityLog extends Model
     public function getActionLabelAttribute(): string
     {
         return match ($this->action) {
-            'invoice_created' => '🧾 إصدار فاتورة مبيعات',
-            'invoice_cancelled' => '🚫 إلغاء فاتورة مبيعات',
-            'purchase_created' => '🛒 توريد فاتورة مشتريات',
-            'item_price_changed' => '🏷️ تعديل سعر صنف',
-            'expense_created' => '💸 تسجيل مصروف تشغيلي',
-            'expense_deleted' => '🗑️ أرشفة / حذف مصروف',
-            'treasury_transfer' => '🔁 تحويل مالي بين الخزن',
-            'customer_created' => '👤 إضافة عميل جديد',
-            'customer_updated' => '✏️ تعديل بيانات عميل',
-            'settings_updated' => '⚙️ تحديث إعدادات النظام',
+            'invoice_created' => __('activity.action_labels.invoice_created'),
+            'invoice_cancelled' => __('activity.action_labels.invoice_cancelled'),
+            'purchase_created' => __('activity.action_labels.purchase_created'),
+            'item_price_changed' => __('activity.action_labels.item_price_changed'),
+            'expense_created' => __('activity.action_labels.expense_created'),
+            'expense_deleted' => __('activity.action_labels.expense_deleted'),
+            'treasury_transfer' => __('activity.action_labels.treasury_transfer'),
+            'customer_created' => __('activity.action_labels.customer_created'),
+            'customer_updated' => __('activity.action_labels.customer_updated'),
+            'settings_updated' => __('activity.action_labels.settings_updated'),
             default => $this->action,
         };
     }

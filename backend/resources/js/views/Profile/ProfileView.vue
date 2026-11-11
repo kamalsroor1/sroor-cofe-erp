@@ -22,6 +22,16 @@
       <!-- Security / Password Card -->
       <ProfileSecurityCard :form="form" @update:field="updateField" />
 
+      <!-- POS Manager Approval PIN Card -->
+      <ProfilePosPinCard
+        v-if="authStore.canActAsApprover"
+        ref="pinCard"
+        :has-pos-pin="hasPosPin"
+        :submitting="isPinSubmitting"
+        @save-pin="onSavePin"
+        @clear-pin="onClearPin"
+      />
+
       <!-- Appearance / Theme Preferences Card -->
       <ProfileThemeCard :form="form" @update:field="updateField" />
 
@@ -42,13 +52,40 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import ErrorState from '../../Components/Common/ErrorState.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import ProfileBasicInfoCard from '../../Components/Profile/ProfileBasicInfoCard.vue';
 import ProfileSecurityCard from '../../Components/Profile/ProfileSecurityCard.vue';
+import ProfilePosPinCard from '../../Components/Profile/ProfilePosPinCard.vue';
 import ProfileThemeCard from '../../Components/Profile/ProfileThemeCard.vue';
 import { useProfile } from '../../Composables/useProfile';
+import { useAuthStore } from '../../stores/auth';
 
-const { error, errorMessage, isLoading, isSubmitting, form, updateField, submitProfile, fetchProfile } = useProfile();
+const {
+  error,
+  errorMessage,
+  isLoading,
+  isSubmitting,
+  isPinSubmitting,
+  hasPosPin,
+  form,
+  updateField,
+  submitProfile,
+  fetchProfile,
+  updateProfilePosPin,
+  clearProfilePosPin,
+} = useProfile();
+
+const authStore = useAuthStore();
+const pinCard = ref(null);
+
+// The card keeps what the user typed until the server accepts it, so a failed attempt can be corrected.
+const onSavePin = async (payload) => {
+  if (await updateProfilePosPin(payload)) pinCard.value?.reset();
+};
+const onClearPin = async (currentPassword) => {
+  if (await clearProfilePosPin(currentPassword)) pinCard.value?.reset();
+};
 </script>

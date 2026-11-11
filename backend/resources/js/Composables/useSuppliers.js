@@ -18,7 +18,14 @@ export function useSuppliers() {
     const searchQuery = ref('');
     const debtStatus = ref('all');
     const isLoading = ref(false);
-    const { error: hasError, errorMessage, clearError, setError } = useLoadError();
+    const {
+        error: hasError,
+        errorMessage,
+        statusCode: errorStatusCode,
+        canRetry,
+        clearError,
+        setError,
+    } = useLoadError();
     const isSubmitting = ref(false);
 
     const pagination = ref({
@@ -240,6 +247,8 @@ export function useSuppliers() {
         isLoading,
         hasError,
         errorMessage,
+        errorStatusCode,
+        canRetry,
         isSubmitting,
         pagination,
         showSupplierModal,

@@ -30,6 +30,7 @@ const icons = { items: Package, customers: Users, suppliers: Truck, categories: 
           :style="
             selected === key ? { borderColor: 'var(--color-primary)', background: 'var(--color-primary-light)' } : null
           "
+          :data-testid="`import-type-${key}`"
           :aria-pressed="selected === key"
           @click="$emit('select', key)"
         >
@@ -61,6 +62,7 @@ const icons = { items: Package, customers: Users, suppliers: Truck, categories: 
           :trailing-icon="ArrowLeft"
           trailing-icon-class="rtl:rotate-0 ltr:rotate-180"
           class="min-h-[44px]"
+          data-testid="import-type-continue"
           @click="$emit('continue')"
         />
       </div>

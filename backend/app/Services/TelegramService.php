@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\Setting;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Services\Settings\TenantSettings;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -20,7 +21,13 @@ class TelegramService
      */
     public function __construct(
         private readonly TenantClock $tenantClock,
+        private readonly ?TenantSettings $tenantSettings = null,
     ) {}
+
+    private function currency(): string
+    {
+        return ($this->tenantSettings ?? app(TenantSettings::class))->currencyLabel();
+    }
 
     /**
      * Get the active bot token from DB settings or config.
@@ -185,13 +192,14 @@ class TelegramService
         $msg .= "📅 <b>تاريخ اليوم:</b> {$targetDate}\n";
         $msg .= "━━━━━━━━━━━━━━━━━━━━\n\n";
 
+        $currency = $this->currency();
         $msg .= "🧾 <b>عدد الفواتير الصادرة:</b> {$invoicesCount} فاتورة\n";
-        $msg .= '💰 <b>إجمالي مبيعات اليوم:</b> <code>'.number_format((float) $totalSales, 2)." ج.م</code>\n";
-        $msg .= '💵 <b>النقدية المحصلة (كاش):</b> <code>'.number_format((float) $cashSales, 2)." ج.م</code>\n";
-        $msg .= '⏳ <b>المبيعات الآجلة (ديون):</b> <code>'.number_format((float) $creditSales, 2)." ج.م</code>\n";
-        $msg .= '💸 <b>إجمالي المصروفات:</b> <code>'.number_format((float) $totalExpenses, 2)." ج.م</code>\n";
+        $msg .= '💰 <b>إجمالي مبيعات اليوم:</b> <code>'.number_format((float) $totalSales, 2)." {$currency}</code>\n";
+        $msg .= '💵 <b>النقدية المحصلة (كاش):</b> <code>'.number_format((float) $cashSales, 2)." {$currency}</code>\n";
+        $msg .= '⏳ <b>المبيعات الآجلة (ديون):</b> <code>'.number_format((float) $creditSales, 2)." {$currency}</code>\n";
+        $msg .= '💸 <b>إجمالي المصروفات:</b> <code>'.number_format((float) $totalExpenses, 2)." {$currency}</code>\n";
         $netCash = bcsub($cashSales, $totalExpenses, 2);
-        $msg .= '🪙 <b>صافي النقدية المتوفرة:</b> <code>'.number_format((float) $netCash, 2)." ج.م</code>\n\n";
+        $msg .= '🪙 <b>صافي النقدية المتوفرة:</b> <code>'.number_format((float) $netCash, 2)." {$currency}</code>\n\n";
 
         // Store breakdown
         $stores = Store::active()->get();
@@ -204,7 +212,7 @@ class TelegramService
                     ->sum('net_total') ?: '0.000';
 
                 $icon = ($st->type === 'wholesale_van') ? '🚚' : '🏢';
-                $msg .= "  {$icon} {$st->name}: <code>".number_format((float) $stSales, 2)." ج.م</code>\n";
+                $msg .= "  {$icon} {$st->name}: <code>".number_format((float) $stSales, 2)." {$currency}</code>\n";
             }
             $msg .= "\n";
         }
@@ -303,7 +311,8 @@ class TelegramService
                 $msg .= "👤 <b>الكاشير:</b> كاشير الصباح\n";
                 $msg .= "🏢 <b>الفرع/الدرج:</b> المخزن الرئيسي\n";
                 $msg .= '⏱️ <b>وقت الفتح:</b> '.$this->tenantClock->now()->subHours(26)->format('Y-m-d h:i A')." (مفتوح منذ 26 ساعة)\n";
-                $msg .= "💰 <b>رصيد البداية:</b> 500.00 ج.م\n\n";
+                $currency = $this->currency();
+                $msg .= "💰 <b>رصيد البداية:</b> 500.00 {$currency}\n\n";
                 $msg .= '⚠️ <i>يُرجى التواصل مع الكاشير فوراً لتقفيل اليومية ومراجعة عهدة الدرج.</i>';
 
                 return $this->sendMessage($msg);
@@ -326,7 +335,8 @@ class TelegramService
             $msg .= "👤 <b>الكاشير:</b> {$cashierName}\n";
             $msg .= "🏢 <b>الفرع/الدرج:</b> {$storeName}\n";
             $msg .= "⏱️ <b>وقت الفتح:</b> {$openTime} (مفتوح منذ {$hours} ساعة)\n";
-            $msg .= '💰 <b>رصيد البداية:</b> '.number_format((float) $shift->opening_cash_balance, 2)." ج.م\n\n";
+            $currency = $this->currency();
+            $msg .= '💰 <b>رصيد البداية:</b> '.number_format((float) $shift->opening_cash_balance, 2)." {$currency}\n\n";
         }
 
         $msg .= '⚠️ <i>يُرجى التواصل مع الكاشير فوراً لتقفيل اليومية ومراجعة عهدة الدرج.</i>';
@@ -415,10 +425,11 @@ class TelegramService
         $msg .= "━━━━━━━━━━━━━━━━━━━━\n\n";
         $msg .= "👤 <b>الكاشير:</b> {$cashierName}\n";
         $msg .= "🏢 <b>الفرع/الدرج:</b> {$storeName}\n";
+        $currency = $this->currency();
         $msg .= "🧾 <b>رقم الوردية:</b> #{$shift->shift_number}\n";
-        $msg .= "💵 <b>النقدية المحسوبة (المفترضة):</b> <code>{$expected} ج.م</code>\n";
-        $msg .= "🪙 <b>النقدية الفعلية (الدرج):</b> <code>{$actual} ج.م</code>\n";
-        $msg .= ($isDeficit ? '🔻 <b>قيمة العجز:</b> ' : '🔺 <b>قيمة الزيادة:</b> ')."<code>{$diffAbs} ج.م</code>\n\n";
+        $msg .= "💵 <b>النقدية المحسوبة (المفترضة):</b> <code>{$expected} {$currency}</code>\n";
+        $msg .= "🪙 <b>النقدية الفعلية (الدرج):</b> <code>{$actual} {$currency}</code>\n";
+        $msg .= ($isDeficit ? '🔻 <b>قيمة العجز:</b> ' : '🔺 <b>قيمة الزيادة:</b> ')."<code>{$diffAbs} {$currency}</code>\n\n";
 
         if (! empty($shift->notes)) {
             $msg .= "📝 <b>ملاحظات الكاشير:</b> <i>{$shift->notes}</i>\n\n";

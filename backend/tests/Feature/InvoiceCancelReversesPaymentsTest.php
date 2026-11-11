@@ -15,12 +15,16 @@ use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Approvals\ManagerPinVerifier;
 use App\Services\AuditLogService;
 use App\Services\CustomerBalanceService;
 use App\Services\InvoiceService;
 use App\Services\ShiftService;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Testing\TestResponse;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Tests\TenantTestCase;
 
@@ -35,6 +39,8 @@ final class InvoiceCancelReversesPaymentsTest extends TenantTestCase
 
     /** @var array<string, string> */
     private array $headers;
+
+    private int $adminId;
 
     private int $storeId;
 
@@ -55,6 +61,10 @@ final class InvoiceCancelReversesPaymentsTest extends TenantTestCase
         $this->headers = $this->tenantHeaders($this->tenant);
 
         $this->inTenant($this->tenant, function (): void {
+            $admin = User::query()->orderBy('id')->firstOrFail();
+            $admin->forceFill(['pos_pin' => Hash::make('4321')])->save();
+            $this->adminId = (int) $admin->id;
+
             $this->customerId = (int) Customer::create(['name' => 'عميل', 'phone' => '01000007103', 'price_tier' => 'retail', 'is_active' => true])->id;
             $this->walkInId = (int) app(ResolveWalkInCustomerAction::class)->execute()->id;
             $this->storeB = (int) Store::query()->create(['name' => 'فرع ب', 'code' => 'BR-B', 'type' => 'retail', 'is_main' => false, 'is_active' => true])->id;
@@ -332,16 +342,155 @@ final class InvoiceCancelReversesPaymentsTest extends TenantTestCase
         $this->openShift();
         $invoiceId = $this->sell($this->customerId, '5.000', 'cash');
 
+        // 1. Without token -> 401
         $this->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', ['reason' => 'x'], $this->tenantGuestHeaders($this->tenant))->assertStatus(401);
+
+        // 2. Without invoices.cancel permission -> 403
         $nobody = $this->createTenantUser($this->tenant, attributes: ['name' => 'بدون صلاحيات']);
         $this->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', ['reason' => 'x'], $this->tenantHeaders($this->tenant, $nobody))->assertStatus(403);
+
+        // 3. User with invoices.cancel, cash sale without PIN -> 422
         $cancelOnly = $this->createTenantUser($this->tenant, permissions: ['invoices.cancel'], attributes: ['name' => 'يلغي فقط']);
-        $this->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', ['reason' => 'x'], $this->tenantHeaders($this->tenant, $cancelOnly))->assertStatus(403);
+        $this->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', ['reason' => 'x'], $this->tenantHeaders($this->tenant, $cancelOnly))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('override');
+
+        // 4. User with invoices.cancel, cash sale with wrong PIN -> 422
+        $this->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', [
+            'reason' => 'x',
+            'override' => ['user_id' => $this->adminId, 'pin' => '9999'],
+        ], $this->tenantHeaders($this->tenant, $cancelOnly))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('override.pin');
+
+        // 5. User with invoices.cancel, PIN of user who is not an admin -> 422
+        $nonAdmin = $this->createTenantUser($this->tenant, permissions: ['invoices.cancel'], attributes: ['name' => 'كاشير برقم سري']);
+        $this->inTenant($this->tenant, fn () => $nonAdmin->forceFill(['pos_pin' => Hash::make('8888')])->save());
+        $this->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', [
+            'reason' => 'x',
+            'override' => ['user_id' => $nonAdmin->id, 'pin' => '8888'],
+        ], $this->tenantHeaders($this->tenant, $cancelOnly))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('override.pin');
+
+        // 6. User with invoices.cancel, cash sale + valid admin PIN -> 200 OK
+        $this->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', [
+            'reason' => 'x',
+            'override' => ['user_id' => $this->adminId, 'pin' => '4321'],
+        ], $this->tenantHeaders($this->tenant, $cancelOnly))->assertOk();
 
         $this->inTenant($this->tenant, function () use ($invoiceId): void {
-            $this->assertSame(0, Payment::query()->refunds()->count());
+            $this->assertSame(1, Payment::query()->refunds()->count());
+            $this->assertSame('cancelled', Invoice::findOrFail($invoiceId)->status);
+        });
+
+        // 7. User with invoices.cancel, unpaid/non-cash sale without PIN -> 200 OK
+        $creditInvoiceId = $this->sell($this->customerId, '5.000', 'credit');
+        $this->postJson('/api/v1/invoices/'.$creditInvoiceId.'/cancel', [
+            'reason' => 'إلغاء آجل بدون كاش',
+        ], $this->tenantHeaders($this->tenant, $cancelOnly))->assertOk();
+
+        $this->inTenant($this->tenant, function () use ($creditInvoiceId): void {
+            $this->assertSame('cancelled', Invoice::findOrFail($creditInvoiceId)->status);
+        });
+    }
+
+    public function test_five_wrong_pins_lock_the_approver_out_with_a_429(): void
+    {
+        $this->openShift();
+        $invoiceId = $this->sell($this->customerId, '5.000', 'cash');
+        $cancelOnly = $this->createTenantUser($this->tenant, permissions: ['invoices.cancel'], attributes: ['name' => 'يلغي فقط']);
+        $headers = $this->tenantHeaders($this->tenant, $cancelOnly);
+        RateLimiter::clear(ManagerPinVerifier::approverKey($this->adminId));
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', [
+                'reason' => 'x',
+                'override' => ['user_id' => $this->adminId, 'pin' => '000'.$i],
+            ], $headers)->assertStatus(422)->assertJsonValidationErrors('override.pin');
+        }
+
+        // The sixth attempt is throttled even with the right PIN.
+        $this->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', [
+            'reason' => 'x',
+            'override' => ['user_id' => $this->adminId, 'pin' => '4321'],
+        ], $headers)->assertStatus(429);
+
+        $this->inTenant($this->tenant, function () use ($invoiceId): void {
             $this->assertSame('confirmed', Invoice::findOrFail($invoiceId)->status);
         });
+        RateLimiter::clear(ManagerPinVerifier::approverKey($this->adminId));
+    }
+
+    public function test_an_approver_without_access_to_the_invoice_store_is_rejected(): void
+    {
+        $this->openShift();
+        $invoiceId = $this->sell($this->customerId, '5.000', 'cash');
+        $cancelOnly = $this->createTenantUser($this->tenant, permissions: ['invoices.cancel'], attributes: ['name' => 'يلغي فقط']);
+
+        // A manager who only works in store B: even with the right PIN he cannot approve a store A invoice.
+        $otherStoreManager = $this->createTenantUser($this->tenant, permissions: ['invoices.cancel'], attributes: [
+            'name' => 'مدير فرع ب',
+            'default_store_id' => $this->storeB,
+        ]);
+        $this->inTenant($this->tenant, fn () => $otherStoreManager->forceFill(['pos_pin' => Hash::make('5555')])->save());
+
+        $this->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', [
+            'reason' => 'x',
+            'override' => ['user_id' => $otherStoreManager->id, 'pin' => '5555'],
+        ], $this->tenantHeaders($this->tenant, $cancelOnly))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('override.pin');
+
+        $this->inTenant($this->tenant, function () use ($invoiceId): void {
+            $this->assertSame('confirmed', Invoice::findOrFail($invoiceId)->status);
+            $this->assertSame(0, Payment::query()->refunds()->count());
+        });
+    }
+
+    public function test_cancelling_without_an_approver_is_rejected_on_the_locked_invoice_when_cash_exists(): void
+    {
+        $this->openShift();
+        $invoiceId = $this->sell($this->customerId, '5.000', 'cash');
+
+        $this->inTenant($this->tenant, function () use ($invoiceId): void {
+            $this->actingAs(User::query()->orderBy('id')->firstOrFail());
+            $invoice = Invoice::findOrFail($invoiceId);
+
+            try {
+                app(InvoiceService::class)->cancelInvoice($invoice, 'race');
+                $this->fail('A cash invoice must not be cancelled without an approver.');
+            } catch (ValidationException $e) {
+                $this->assertArrayHasKey('override', $e->errors());
+            }
+
+            $this->assertSame('confirmed', Invoice::findOrFail($invoiceId)->status);
+            $this->assertSame(0, Payment::query()->refunds()->count());
+        });
+    }
+
+    public function test_user_cannot_cancel_invoice_from_unauthorized_store(): void
+    {
+        $this->openShift();
+        $invoiceInB = (int) $this->inTenant($this->tenant, function (): int {
+            $this->actingAs(User::query()->orderBy('id')->firstOrFail());
+
+            return (int) app(InvoiceService::class)->confirmInvoice([
+                'customer_id' => $this->customerId,
+                'store_id' => $this->storeB,
+                'payment_type' => 'credit',
+                'items' => [['item_id' => $this->itemId, 'quantity' => '1.000', 'unit_price' => '20.000']],
+            ])->id;
+        });
+
+        // Cashier assigned only to store A
+        $storeAOnly = $this->createTenantUser($this->tenant, permissions: ['invoices.cancel'], attributes: [
+            'name' => 'فرع أ فقط',
+            'default_store_id' => $this->storeId,
+        ]);
+
+        $this->postJson('/api/v1/invoices/'.$invoiceInB.'/cancel', ['reason' => 'x'], $this->tenantHeaders($this->tenant, $storeAOnly))
+            ->assertStatus(404);
     }
 
     public function test_another_stores_shift_and_treasury_are_untouched(): void
@@ -407,9 +556,17 @@ final class InvoiceCancelReversesPaymentsTest extends TenantTestCase
         $this->inTenant($this->tenant, fn () => $this->assertSame(0, Payment::query()->count()));
     }
 
-    private function cancel(int $invoiceId): TestResponse
+    /**
+     * @param  array<string, mixed>  $extra
+     */
+    private function cancel(int $invoiceId, array $extra = []): TestResponse
     {
-        return $this->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', ['reason' => 'طلب العميل'], $this->headers);
+        $payload = array_merge([
+            'reason' => 'طلب العميل',
+            'override' => ['user_id' => $this->adminId, 'pin' => '4321'],
+        ], $extra);
+
+        return $this->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', $payload, $this->headers);
     }
 
     private function stock(): string

@@ -100,6 +100,7 @@ export function useUsers() {
             role: rolesList.value[0]?.id || 'cashier',
             default_store_id: storesList.value[0]?.id || null,
             is_active: true,
+            has_pos_pin: false,
         });
         showModal.value = true;
     };
@@ -115,6 +116,7 @@ export function useUsers() {
             role: u.primary_role || 'cashier',
             default_store_id: u.default_store_id,
             is_active: !!u.is_active,
+            has_pos_pin: !!u.has_pos_pin,
         });
         showModal.value = true;
     };
@@ -230,6 +232,73 @@ export function useUsers() {
         }
     };
 
+    const updateUserPosPin = async (userId, pin) => {
+        isSubmitting.value = true;
+        try {
+            const res = await api.put(`/users/${userId}/pos-pin`, { pin });
+            const hasPin = res.data?.has_pos_pin ?? pin !== null;
+            form.has_pos_pin = hasPin;
+            const targetUser = users.value.find((u) => u.id === userId);
+            if (targetUser) {
+                targetUser.has_pos_pin = hasPin;
+            }
+            Swal.fire({
+                icon: 'success',
+                title: t('common.success'),
+                text: res.data?.message || t('pos.pos_pin_updated'),
+                timer: 1500,
+                showConfirmButton: false,
+            });
+            return true;
+        } catch (e) {
+            Swal.fire({
+                icon: 'error',
+                title: t('common.error'),
+                text: e.response?.data?.message || t('common.error'),
+            });
+            return false;
+        } finally {
+            isSubmitting.value = false;
+        }
+    };
+
+    const clearUserPosPin = async (userId) => {
+        const result = await Swal.fire({
+            title: t('users.pos_pin_clear_confirm_title'),
+            text: t('users.pos_pin_clear_confirm_text'),
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#334155',
+            confirmButtonText: t('common.yes'),
+            cancelButtonText: t('common.cancel'),
+        });
+
+        if (!result.isConfirmed) return false;
+
+        const success = await updateUserPosPin(userId, null);
+        if (success) {
+            Swal.fire({
+                icon: 'success',
+                title: t('common.success'),
+                text: t('users.pos_pin_cleared_success'),
+                timer: 1500,
+                showConfirmButton: false,
+            });
+        }
+        return success;
+    };
+
+    const updateEditingUserPosPin = (pin) => {
+        if (!editingId.value) return false;
+        return updateUserPosPin(editingId.value, pin);
+    };
+
+    const clearEditingUserPosPin = () => {
+        if (!editingId.value) return false;
+        return clearUserPosPin(editingId.value);
+    };
+
     onMounted(() => {
         fetchUsers();
     });
@@ -258,5 +327,9 @@ export function useUsers() {
         toggleActive,
         deleteUser,
         unlockLogin,
+        updateUserPosPin,
+        clearUserPosPin,
+        updateEditingUserPosPin,
+        clearEditingUserPosPin,
     };
 }

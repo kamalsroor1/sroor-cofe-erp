@@ -87,6 +87,7 @@ const drop = (event) => {
       ref="fileInput"
       type="file"
       class="hidden"
+      data-testid="import-file-input"
       accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
       @change="pick"
     />

@@ -17,7 +17,7 @@
     </PageHeader>
 
     <!-- Summary Metrics Grid -->
-    <ExpensesMetricsGrid :metrics="metrics" :loading="isLoading" />
+    <ExpensesMetricsGrid :metrics="metrics" :loading="isLoading" :error="hasError" />
 
     <!-- Filters & Search Bar -->
     <ExpensesFilterBar
@@ -40,6 +40,8 @@
       :loading="isLoading"
       :error="hasError"
       :error-message="errorMessage"
+      :can-retry="canRetry"
+      :error-status-code="errorStatusCode"
       @create="openCreateModal"
       @edit="openEditModal"
       @delete="deleteExpense"
@@ -86,6 +88,8 @@ const {
   isLoading,
   hasError,
   errorMessage,
+  errorStatusCode,
+  canRetry,
   isSubmitting,
   pagination,
   showExpenseModal,

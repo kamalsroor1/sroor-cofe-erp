@@ -83,6 +83,7 @@ import BaseSelect from '../Form/BaseSelect.vue';
 import BaseDatePicker from '../Form/BaseDatePicker.vue';
 import BaseTextarea from '../Form/BaseTextarea.vue';
 import BaseButton from '../Common/BaseButton.vue';
+import { computed } from 'vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
 
@@ -98,10 +99,10 @@ defineProps({
 
 defineEmits(['close', 'save', 'update:field']);
 
-const paymentMethodOptions = [
+const paymentMethodOptions = computed(() => [
   { value: 'cash', label: t('contacts.cash') },
   { value: 'instapay', label: t('contacts.instapay') },
   { value: 'wallet', label: t('contacts.wallet') },
   { value: 'bank', label: t('contacts.bank_transfer') },
-];
+]);
 </script>

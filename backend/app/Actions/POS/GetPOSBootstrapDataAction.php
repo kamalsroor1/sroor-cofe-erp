@@ -102,7 +102,7 @@ class GetPOSBootstrapDataAction
                 'cost_price' => $showCost ? Decimal::normalize((string) $it->cost_price) : null,
                 'current_stock' => Decimal::normalize((string) ($it->calculated_stock ?? 0)),
                 'min_stock_level' => Decimal::normalize((string) ($it->min_stock_level ?: 0)),
-                'unit' => (string) ($it->unit ?: 'قطعة'),
+                'unit' => (string) ($it->unit ?: __('common.unit_piece')),
                 'pos_sort_order' => (int) ($it->pos_sort_order ?? 0),
                 'is_pos_pinned' => (bool) ($it->is_pos_pinned ?? false),
                 'pos_sales_count' => (int) ($it->pos_sales_count ?? 0),
@@ -113,7 +113,7 @@ class GetPOSBootstrapDataAction
         // 4. Categories list with icons
         if (Category::count() === 0) {
             $distinctCats = Item::whereNotNull('category')->where('category', '!=', '')->distinct()->pluck('category');
-            $icons = ['☕', '🧃', '🍰', '🥪', '🍪', '🫘', '🥤', '🧊', '🎁', '📦'];
+            $icons = ['coffee', 'cup-soda', 'sparkles', 'utensils', 'star', 'flame', 'droplet', 'layers', 'gift', 'package'];
             $colors = [
                 ['#92400E', '#fef3c7'], // Brown
                 ['#0EA5E9', '#e0f2fe'], // Sky Blue

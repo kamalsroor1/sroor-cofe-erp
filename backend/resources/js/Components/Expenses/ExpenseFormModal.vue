@@ -120,6 +120,7 @@ import BaseSelect from '../Form/BaseSelect.vue';
 import BaseDatePicker from '../Form/BaseDatePicker.vue';
 import BaseTextarea from '../Form/BaseTextarea.vue';
 import BaseButton from '../Common/BaseButton.vue';
+import { computed } from 'vue';
 import { useTrans } from '../../Composables/useTrans';
 
 const { t } = useTrans();
@@ -135,12 +136,12 @@ defineProps({
 
 defineEmits(['close', 'save', 'update:field']);
 
-const paymentMethodOptions = [
+const paymentMethodOptions = computed(() => [
   { value: 'cash', label: t('treasury.method_cash_drawer') },
   { value: 'instapay', label: t('contacts.instapay') },
   { value: 'e_wallet', label: t('contacts.wallet') },
   { value: 'visa', label: t('treasury.method_visa') },
   { value: 'bank_transfer', label: t('contacts.bank_transfer') },
   { value: 'check', label: t('invoices.check') },
-];
+]);
 </script>

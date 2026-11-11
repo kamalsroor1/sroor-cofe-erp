@@ -30,6 +30,15 @@
                 <Lock class="w-3 h-3" />
                 {{ $t('users.login_locked_badge') }}
               </span>
+              <span
+                v-if="row.has_pos_pin"
+                data-testid="pos-pin-table-badge"
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                :title="$t('users.pos_pin_set')"
+              >
+                <KeyRound class="w-3 h-3" />
+                {{ $t('users.pos_pin_short') }}
+              </span>
             </div>
             <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
               {{ row.email || $t('users.no_email') }}
@@ -112,7 +121,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Edit2, Trash2, Lock, LockOpen } from 'lucide-vue-next';
+import { Edit2, Trash2, Lock, LockOpen, KeyRound } from 'lucide-vue-next';
 import DataTable from '@/Components/Common/DataTable.vue';
 import { useTrans } from '../../Composables/useTrans';
 

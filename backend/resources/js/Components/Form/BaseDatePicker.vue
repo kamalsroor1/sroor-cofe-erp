@@ -65,9 +65,11 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import flatpickr from 'flatpickr';
-import { Arabic } from 'flatpickr/dist/l10n/ar.js';
+import { datePickerLocale } from '../../helpers/datePickerLocale';
 import 'flatpickr/dist/flatpickr.min.css';
 import { Calendar, X, AlertCircle } from 'lucide-vue-next';
+
+import { useLocale } from '../../Composables/useLocale';
 
 const props = defineProps({
   modelValue: { type: [String, Array, Date, null], default: null },
@@ -86,26 +88,36 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'change', 'clear']);
 
+const { isRtl } = useLocale();
 const inputRef = ref(null);
 let fpInstance = null;
 
-const isRTL = computed(() => document.documentElement.dir === 'rtl' || !document.documentElement.dir);
+const initFlatpickr = () => {
+  if (fpInstance) {
+    fpInstance.destroy();
+    fpInstance = null;
+  }
+  if (!inputRef.value) return;
+  fpInstance = flatpickr(inputRef.value, {
+    locale: datePickerLocale(isRtl.value),
+    mode: props.mode,
+    enableTime: props.enableTime,
+    dateFormat: props.enableTime ? 'Y-m-d H:i' : 'Y-m-d',
+    defaultDate: props.modelValue || undefined,
+    disableMobile: true,
+    onChange: (selectedDates, dateStr) => {
+      emit('update:modelValue', dateStr);
+      emit('change', dateStr, selectedDates);
+    },
+  });
+};
 
 onMounted(() => {
-  if (inputRef.value) {
-    fpInstance = flatpickr(inputRef.value, {
-      locale: isRTL.value ? Arabic : undefined,
-      mode: props.mode,
-      enableTime: props.enableTime,
-      dateFormat: props.enableTime ? 'Y-m-d H:i' : 'Y-m-d',
-      defaultDate: props.modelValue || undefined,
-      disableMobile: true,
-      onChange: (selectedDates, dateStr) => {
-        emit('update:modelValue', dateStr);
-        emit('change', dateStr, selectedDates);
-      },
-    });
-  }
+  initFlatpickr();
+});
+
+watch(isRtl, () => {
+  initFlatpickr();
 });
 
 watch(

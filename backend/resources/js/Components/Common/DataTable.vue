@@ -111,6 +111,14 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  canRetry: {
+    type: Boolean,
+    default: true,
+  },
+  errorStatusCode: {
+    type: [Number, String],
+    default: null,
+  },
 });
 
 const emit = defineEmits(['sort', 'row-click', 'update:modelValue', 'retry', 'page-change']);
@@ -266,6 +274,8 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
     <InlineErrorBar
       v-if="error && rows && rows.length > 0"
       :message="typeof error === 'string' ? error : errorMessage"
+      :can-retry="canRetry"
+      :status-code="errorStatusCode"
       @retry="$emit('retry')"
     />
 
@@ -540,7 +550,12 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
     <div v-if="!loading && (!rows || rows.length === 0)">
       <template v-if="error">
         <slot name="error">
-          <ErrorState :message="typeof error === 'string' ? error : errorMessage" @retry="$emit('retry')" />
+          <ErrorState
+            :message="typeof error === 'string' ? error : errorMessage"
+            :can-retry="canRetry"
+            :status-code="errorStatusCode"
+            @retry="$emit('retry')"
+          />
         </slot>
       </template>
       <template v-else>

@@ -95,11 +95,11 @@ class TreasuryTransfer extends Model
 
     public function getFromMethodIconAttribute(): string
     {
-        return $this->from_method_enum?->icon() ?? '💵';
+        return $this->from_method_enum?->icon() ?? 'banknote';
     }
 
     public function getToMethodIconAttribute(): string
     {
-        return $this->to_method_enum?->icon() ?? '💵';
+        return $this->to_method_enum?->icon() ?? 'banknote';
     }
 }

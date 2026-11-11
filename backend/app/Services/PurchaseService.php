@@ -11,6 +11,7 @@ use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\Supplier;
+use App\Services\Settings\TenantSettings;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -44,6 +45,11 @@ class PurchaseService
         $this->documentNumbers = $documentNumbers ?: app(DocumentNumberService::class);
         $this->activityLogService = $this->activityLogService ?: app(ActivityLogService::class);
         $this->tenantClock = $this->tenantClock ?: app(TenantClock::class);
+    }
+
+    private function currency(): string
+    {
+        return app(TenantSettings::class)->currencyLabel();
     }
 
     /**
@@ -180,7 +186,7 @@ class PurchaseService
                     source: $purchase,
                     documentNumber: $purchase->purchase_number,
                     movementType: 'purchase_in',
-                    notes: "توريد بضاعة بفاتورة شراء رقم {$purchase->purchase_number}".(bccomp($unitAllocatedExpense, '0.000', 3) > 0 ? " (شامل مصاريف محملة +{$unitAllocatedExpense} ج.م/وحدة)" : ''),
+                    notes: "توريد بضاعة بفاتورة شراء رقم {$purchase->purchase_number}".(bccomp($unitAllocatedExpense, '0.000', 3) > 0 ? " (شامل مصاريف محملة +{$unitAllocatedExpense} {$this->currency()}/وحدة)" : ''),
                     storeId: $storeId,
                     actorId: $this->actorId($data),
                 );
@@ -283,7 +289,7 @@ class PurchaseService
             $this->activityLogService->logPurchase(
                 action: 'created',
                 purchase: $purchase,
-                description: "تم إنشاء فاتورة مشتريات وتوريد بضاعة رقم [{$purchase->purchase_number}] من المورد ({$purchase->supplier?->name}) بإجمالي ".number_format((float) $purchase->net_total, 2).' ج.م'.(bccomp($additionalExpensesTotal, '0.000', 3) > 0 ? ' (شامل مصاريف ملحقة '.number_format((float) $additionalExpensesTotal, 2).' ج.م)' : '')
+                description: "تم إنشاء فاتورة مشتريات وتوريد بضاعة رقم [{$purchase->purchase_number}] من المورد ({$purchase->supplier?->name}) بإجمالي ".number_format((float) $purchase->net_total, 2).' '.$this->currency().(bccomp($additionalExpensesTotal, '0.000', 3) > 0 ? ' (شامل مصاريف ملحقة '.number_format((float) $additionalExpensesTotal, 2).' '.$this->currency().')' : '')
             );
 
             return $purchase;

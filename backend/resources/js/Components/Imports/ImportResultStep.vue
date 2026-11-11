@@ -11,21 +11,36 @@ defineEmits(['restart']);
 </script>
 
 <template>
-  <section class="space-y-5 font-tajawal text-center">
+  <section class="space-y-5 font-tajawal text-center" data-testid="import-result-step">
     <CheckCircle2 class="w-14 h-14 mx-auto text-emerald-500" />
     <h2 class="text-lg font-black text-slate-900 dark:text-white">{{ $t('import.ui.result.title') }}</h2>
 
     <div class="grid grid-cols-3 gap-3">
       <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-        <p class="text-2xl font-black tabular-nums text-emerald-600 dark:text-emerald-400">{{ result.created }}</p>
+        <p
+          data-testid="import-result-created"
+          class="text-2xl font-black tabular-nums text-emerald-600 dark:text-emerald-400"
+        >
+          {{ result.created }}
+        </p>
         <p class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('import.ui.result.created') }}</p>
       </div>
       <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-        <p class="text-2xl font-black tabular-nums text-rose-600 dark:text-rose-400">{{ result.skipped }}</p>
+        <p
+          data-testid="import-result-skipped"
+          class="text-2xl font-black tabular-nums text-rose-600 dark:text-rose-400"
+        >
+          {{ result.skipped }}
+        </p>
         <p class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('import.ui.result.skipped') }}</p>
       </div>
       <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-        <p class="text-2xl font-black tabular-nums text-amber-600 dark:text-amber-400">{{ result.duplicates }}</p>
+        <p
+          data-testid="import-result-duplicates"
+          class="text-2xl font-black tabular-nums text-amber-600 dark:text-amber-400"
+        >
+          {{ result.duplicates }}
+        </p>
         <p class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('import.ui.result.duplicates') }}</p>
       </div>
     </div>

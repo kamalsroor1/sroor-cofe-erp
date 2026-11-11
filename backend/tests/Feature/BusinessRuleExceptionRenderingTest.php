@@ -31,6 +31,8 @@ class BusinessRuleExceptionRenderingTest extends TenantTestCase
 
     private Item $item;
 
+    private int $adminId;
+
     private string $token;
 
     protected function setUp(): void
@@ -53,8 +55,10 @@ class BusinessRuleExceptionRenderingTest extends TenantTestCase
             'password' => Hash::make('password'),
             'is_active' => true,
             'default_store_id' => $this->store->id,
+            'pos_pin' => Hash::make('1234'),
         ]);
         $admin->assignRole(Role::findByName('admin'));
+        $this->adminId = (int) $admin->id;
         $this->token = $admin->createToken('bre')->plainTextToken;
 
         $this->customer = Customer::create([
@@ -119,9 +123,13 @@ class BusinessRuleExceptionRenderingTest extends TenantTestCase
         $id = $this->send('POST', '/api/v1/invoices', $this->sale('1.000'), 'ar')
             ->assertStatus(201)->json('data.id');
 
-        $this->send('POST', "/api/v1/invoices/{$id}/cancel", ['reason' => 'first'], 'ar')->assertStatus(200);
+        $payload = [
+            'reason' => 'first',
+            'override' => ['user_id' => $this->adminId, 'pin' => '1234'],
+        ];
+        $this->send('POST', "/api/v1/invoices/{$id}/cancel", $payload, 'ar')->assertStatus(200);
 
-        $this->send('POST', "/api/v1/invoices/{$id}/cancel", ['reason' => 'again'], 'ar')
+        $this->send('POST', "/api/v1/invoices/{$id}/cancel", array_merge($payload, ['reason' => 'again']), 'ar')
             ->assertStatus(409)
             ->assertExactJson([
                 'success' => false,
@@ -129,7 +137,7 @@ class BusinessRuleExceptionRenderingTest extends TenantTestCase
                 'error_code' => 'invoices.already_cancelled',
             ]);
 
-        $this->send('POST', "/api/v1/invoices/{$id}/cancel", ['reason' => 'again'], 'en')
+        $this->send('POST', "/api/v1/invoices/{$id}/cancel", array_merge($payload, ['reason' => 'again']), 'en')
             ->assertStatus(409)
             ->assertExactJson([
                 'success' => false,

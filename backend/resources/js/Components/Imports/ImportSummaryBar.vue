@@ -52,7 +52,12 @@ const chips = computed(() => [
       :aria-pressed="filter === chip.key"
       @click="$emit('update:filter', chip.key)"
     >
-      <span class="block text-xl font-black tabular-nums" :class="chip.tone">{{ chip.count }}</span>
+      <span
+        class="block text-xl font-black tabular-nums"
+        :class="chip.tone"
+        :data-testid="`import-summary-${chip.key}-count`"
+        >{{ chip.count }}</span
+      >
       <span class="block text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t(chip.label) }}</span>
     </button>
   </div>

@@ -7,7 +7,7 @@
   </div>
 
   <div
-    v-else
+    v-else-if="!error"
     class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 [&>:last-child:nth-child(odd)]:col-span-2 sm:[&>:last-child:nth-child(odd)]:col-span-1"
   >
     <!-- Total Payables -->
@@ -85,5 +85,6 @@ const { formatMoney, currencyLabel } = useFormatters();
 defineProps({
   metrics: { type: Object, default: () => ({}) },
   loading: { type: Boolean, default: false },
+  error: { type: Boolean, default: false },
 });
 </script>
