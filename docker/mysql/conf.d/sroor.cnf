@@ -1,0 +1,12 @@
+# LOCAL DEVELOPMENT ONLY. Mirrors scripts/ops/templates/mysql-sroor.cnf.tmpl.
+# bind-address stays 0.0.0.0 inside the container (the app reaches it over the compose
+# network); compose publishes the port on 127.0.0.1 only.
+[mysqld]
+mysqlx = OFF
+local_infile = 0
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+default-time-zone = '+00:00'
+innodb_buffer_pool_size = 256M
+max_connections = 300
+transaction_isolation = REPEATABLE-READ

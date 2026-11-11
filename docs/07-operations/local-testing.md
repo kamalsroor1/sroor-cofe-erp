@@ -1,5 +1,7 @@
 # بيئة الاختبار المحلية الكاملة (Laragon على Windows)
 
+> **على Linux (Fedora) أو أي جهاز فيه Docker/Podman:** في stack جاهزة بأمر واحد (PHP 8.5 + MySQL 8.4 + Redis + Horizon + scheduler + Vite HMR، ومستأجرين على `*.localhost`، وحسابات MySQL least-privilege زي الإنتاج). شوف [`local-docker.md`](local-docker.md). الملف ده خاص بـ Laragon.
+
 > الهدف: نسخة كاملة من المنصة على جهاز الـ CTO بدومينات وsubdomains حقيقية (central + admin + مستأجرين اتنين) قبل أي deploy على السيرفر.
 > محلي 100%: مفيش أي اتصال بسيرفر خارجي، ومفيش قاعدة بيانات قديمة بتتلمس. كل الـ databases الجديدة اسمها بيبدأ بـ `sroor_local_`.
 

@@ -5,6 +5,8 @@
 .env.backup-*
 .env.testing
 .env.production
+# Local docker dev env (docker/bin/dev.sh init): random dev passwords + APP_KEY
+.env.docker
 .phpactor.json
 .phpunit.result.cache
 /.codex

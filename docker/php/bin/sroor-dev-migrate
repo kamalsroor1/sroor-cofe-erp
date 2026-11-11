@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# LOCAL DEVELOPMENT ONLY (runs inside the `app` container). The same migration order as
+# scripts/ops/deploy.sh on the VPS, with the same least-privilege accounts:
+#   1. php artisan migrate            as the MIGRATOR (the app account cannot CREATE/ALTER)
+#   2. per-table central grants       scripts/ops/sync-central-grants.sh as the migrator,
+#                                     then verifies app + audit_pruner against the contract
+#   3. php artisan tenants:migrate    as the app (each tenant DB through its own MySQL user)
+#   4. php artisan db:seed (--seed)   as the app (plans, permissions, demo tenant)
+#
+# usage: sroor-dev-migrate [--seed]
+# Credentials are read from backend/.env (= backend/.env.docker inside the container) and
+# passed through the environment / 0600 option files only, never argv, never printed.
+set -euo pipefail
+
+BACKEND=/srv/sroor/backend
+OPS=/srv/sroor/scripts/ops
+ENV_FILE="$BACKEND/.env"
+SEED=0
+[[ "${1:-}" == "--seed" ]] && SEED=1
+
+say() { printf '[sroor-dev-migrate] %s\n' "$*"; }
+die() {
+    printf '[sroor-dev-migrate] ERROR %s\n' "$*" >&2
+    exit 1
+}
+
+env_value() {
+    local key="$1" line
+    line="$(grep -E "^${key}=" "$ENV_FILE" | tail -n 1 || true)"
+    line="${line#*=}"
+    line="${line%$'\r'}"
+    line="${line%\"}"
+    line="${line#\"}"
+    printf '%s' "$line"
+}
+
+# ---- guards: docker dev stack only ----------------------------------------------------
+[[ "${SROOR_DEV_CONTAINER:-}" == "1" ]] || die "run this inside the docker dev stack (docker/bin/dev.sh migrate)"
+[[ -r "$ENV_FILE" ]] || die "$ENV_FILE missing"
+[[ "$(env_value APP_ENV)" == "local" ]] || die "APP_ENV must be local"
+[[ "$(env_value DB_HOST)" == "mysql" ]] || die "DB_HOST must be the compose service 'mysql'"
+
+DB_NAME="$(env_value DB_DATABASE)"
+APP_USER="$(env_value DB_USERNAME)"
+APP_PASS="$(env_value DB_PASSWORD)"
+MIG_USER="$(env_value DB_MIGRATOR_USERNAME)"
+MIG_PASS="$(env_value DB_MIGRATOR_PASSWORD)"
+PRUNER_USER="$(env_value DB_AUDIT_PRUNER_USERNAME)"
+PRUNER_PASS="$(env_value DB_AUDIT_PRUNER_PASSWORD)"
+[[ -n "$MIG_USER" && -n "$MIG_PASS" ]] || die "DB_MIGRATOR_USERNAME / DB_MIGRATOR_PASSWORD missing in backend/.env.docker"
+
+cd "$BACKEND"
+
+say "1/4 php artisan migrate (central, as $MIG_USER)"
+DB_USERNAME="$MIG_USER" DB_PASSWORD="$MIG_PASS" php artisan migrate --force --no-interaction
+
+say "2/4 per-table central grants (scripts/ops/sync-central-grants.sh)"
+WORK="$(mktemp -d)"
+trap 'rm -rf "$WORK"' EXIT
+export CENTRAL_DB_NAME="$DB_NAME"
+export TENANT_DB_PREFIX="$(env_value TENANT_DB_PREFIX)"
+export MYSQL_USER_HOST='%'
+export MYSQL_APP_USER="$APP_USER"
+export MYSQL_MIGRATOR_USER="$MIG_USER"
+export MYSQL_PROVISIONER_USER="$(env_value DB_PROVISIONER_USERNAME)"
+export MYSQL_BACKUP_USER="$(env_value DB_BACKUP_USERNAME)"
+export MYSQL_AUDIT_PRUNER_USER="$PRUNER_USER"
+# shellcheck source=../../../scripts/ops/lib/mysql-grants.sh
+source "$OPS/lib/mysql-grants.sh"
+write_mysql_client_file "$WORK/migrator.cnf" "$MIG_USER" "$MIG_PASS" mysql 3306 migrator
+write_mysql_client_file "$WORK/app.cnf" "$APP_USER" "$APP_PASS" mysql 3306 app
+write_mysql_client_file "$WORK/pruner.cnf" "$PRUNER_USER" "$PRUNER_PASS" mysql 3306 audit_pruner
+# Applies the table grants as the migrator (like deploy.sh) and verifies audit_pruner exactly.
+bash "$OPS/sync-central-grants.sh" --client-file "$WORK/migrator.cnf" --verify-pruner "$WORK/pruner.cnf"
+
+# The app account is verified here instead of with --verify-app: the dev stack adds ONE grant
+# to the production contract (SHOW DATABASES, see docker/mysql/init/10-sroor-accounts.sh), which
+# replaces the `USAGE ON *.*` line. Everything else must match the contract exactly.
+mysql --defaults-extra-file="$WORK/migrator.cnf" -N -B -r -e "$(central_tables_sql)" >"$WORK/tables"
+app_acct="$(_acct "$APP_USER")"
+{
+    expected_grants_all | grep -F -- " TO $app_acct"
+    expected_table_grants <"$WORK/tables" | { grep -F -- " TO $app_acct" || [[ $? -eq 1 ]]; }
+} | sed "s/^GRANT USAGE ON \*\.\* TO /GRANT SHOW DATABASES ON *.* TO /" | normalize_grants >"$WORK/app.expected"
+mysql --defaults-extra-file="$WORK/app.cnf" -N -B -r -e "SHOW GRANTS" | normalize_grants >"$WORK/app.actual"
+if ! diff -u "$WORK/app.expected" "$WORK/app.actual"; then
+    die "grants of $APP_USER differ from the production contract (+ dev SHOW DATABASES)"
+fi
+say "grants of $APP_USER match the production contract (+ dev-only SHOW DATABASES)"
+
+say "3/4 php artisan tenants:migrate (per-tenant MySQL users)"
+php artisan tenants:migrate --force --no-interaction
+
+if [[ "$SEED" -eq 1 ]]; then
+    say "4/4 php artisan db:seed (as $APP_USER)"
+    php artisan db:seed --force --no-interaction
+else
+    say "4/4 seeding skipped (pass --seed)"
+fi
+say "done"
