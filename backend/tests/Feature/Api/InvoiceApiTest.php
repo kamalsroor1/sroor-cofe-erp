@@ -74,6 +74,7 @@ class InvoiceApiTest extends TenantTestCase
             'password' => Hash::make('password'),
             'is_active' => true,
             'default_store_id' => $this->mainStore->id,
+            'pos_pin' => Hash::make('1234'),
         ]);
         $this->adminUser->assignRole($adminRole);
         $this->adminToken = $this->adminUser->createToken('test-spa')->plainTextToken;
@@ -430,6 +431,7 @@ class InvoiceApiTest extends TenantTestCase
         $cancelResponse = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
             ->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', [
                 'reason' => 'إلغاء الطلب من العميل',
+                'override' => ['user_id' => $this->adminUser->id, 'pin' => '1234'],
             ]);
 
         $cancelResponse->assertStatus(200)

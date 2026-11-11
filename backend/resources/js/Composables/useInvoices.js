@@ -10,6 +10,7 @@ import DarkSwal, {
 import { trans } from '../helpers/trans';
 import { useAuthStore } from '../stores/auth';
 import { addDays, businessToday, startOfMonth } from './useBusinessDate';
+import { needsManagerApproval, approvalReasons, requestManagerApproval } from './useManagerApproval';
 
 const STORE_ACTIVE = 'active';
 const STORE_ALL = 'all';
@@ -210,7 +211,32 @@ export function useInvoices() {
             notifySuccess(trans('invoices.invoice_cancelled_success'));
             await refreshCurrentPage();
         } catch (e) {
-            notifyError(trans('common.error'), e.userMessage || trans('invoices.invoice_cancelled_failed'));
+            if (needsManagerApproval(e)) {
+                const reasons = approvalReasons(e);
+                const defaultUserId = authStore.isAdmin ? authStore.user?.id : null;
+                const override = await requestManagerApproval({ reasons, defaultUserId });
+                if (override) {
+                    try {
+                        await api.post(`/invoices/${inv.id}/cancel`, { reason, override });
+                        notifySuccess(trans('invoices.invoice_cancelled_success'));
+                        await refreshCurrentPage();
+                        return;
+                    } catch (retryErr) {
+                        notifyError(
+                            trans('common.error'),
+                            retryErr.userMessage ||
+                                retryErr.response?.data?.message ||
+                                trans('invoices.invoice_cancelled_failed')
+                        );
+                        return;
+                    }
+                }
+                return;
+            }
+            notifyError(
+                trans('common.error'),
+                e.userMessage || e.response?.data?.message || trans('invoices.invoice_cancelled_failed')
+            );
         }
     };
 

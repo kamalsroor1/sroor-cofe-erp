@@ -285,4 +285,6 @@ return [
         'footer' => 'Thank you for your business with :company',
     ],
     'export_limit_exceeded' => 'Cannot export more than :max invoices at once. Please narrow your search or filter criteria.',
+    // BE-03
+    'cancel_cash_requires_admin_pin' => 'Cancelling an invoice with cash payments requires manager PIN approval.',
 ];
