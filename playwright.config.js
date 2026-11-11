@@ -33,9 +33,11 @@ export default defineConfig({
     timezoneId: 'Africa/Cairo',
   },
 
+  // Same port as the docker stack (SROOR_HTTP_PORT, see e2e/utils/local-stack.js) so a run on a
+  // non-default port reuses that stack instead of whatever else is listening on 8000.
   webServer: {
-    command: 'php backend/artisan serve --host=127.0.0.1 --port=8000',
-    url: 'http://127.0.0.1:8000',
+    command: `php backend/artisan serve --host=127.0.0.1 --port=${process.env.SROOR_HTTP_PORT || '8000'}`,
+    url: `http://127.0.0.1:${process.env.SROOR_HTTP_PORT || '8000'}`,
     reuseExistingServer: true,
     timeout: 30000,
     cwd: rootDir,
