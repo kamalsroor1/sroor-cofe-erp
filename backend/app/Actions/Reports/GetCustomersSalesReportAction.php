@@ -6,6 +6,7 @@ namespace App\Actions\Reports;
 
 use App\DTOs\Reports\ReportFilterDTO;
 use App\Models\Invoice;
+use App\Support\Money\Decimal;
 use Illuminate\Support\Facades\DB;
 
 final class GetCustomersSalesReportAction
@@ -35,11 +36,11 @@ final class GetCustomersSalesReportAction
                 'customer_id' => $c->customer_id,
                 'name' => $c->customer?->name ?? 'عميل محذوف',
                 'phone' => $c->customer?->phone,
-                'current_balance' => (float) ($c->customer?->current_balance ?? 0),
+                'current_balance' => Decimal::normalize((string) ($c->customer?->current_balance ?? 0)),
                 'total_invoices' => (int) $c->total_invoices,
-                'total_bought' => (float) $c->total_bought,
-                'total_paid' => (float) $c->total_paid,
-                'total_debt_in_period' => (float) $c->total_debt_in_period,
+                'total_bought' => Decimal::normalize((string) $c->total_bought),
+                'total_paid' => Decimal::normalize((string) $c->total_paid),
+                'total_debt_in_period' => Decimal::normalize((string) $c->total_debt_in_period),
             ])
             ->values()
             ->all();

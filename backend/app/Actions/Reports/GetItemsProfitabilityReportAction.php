@@ -6,6 +6,7 @@ namespace App\Actions\Reports;
 
 use App\DTOs\Reports\ReportFilterDTO;
 use App\Models\InvoiceItem;
+use App\Support\Money\Decimal;
 use Illuminate\Support\Facades\DB;
 
 final class GetItemsProfitabilityReportAction
@@ -43,11 +44,11 @@ final class GetItemsProfitabilityReportAction
                     'code' => $row->item?->code,
                     'category' => $row->item?->category,
                     'unit' => $row->item?->unit,
-                    'total_qty' => (float) $row->total_qty,
-                    'total_revenue' => (float) $row->total_revenue,
-                    'total_cogs' => (float) $row->total_cogs,
-                    'profit' => (float) $profit,
-                    'margin' => (float) $margin,
+                    'total_qty' => Decimal::normalize((string) $row->total_qty),
+                    'total_revenue' => Decimal::normalize((string) $row->total_revenue),
+                    'total_cogs' => Decimal::normalize((string) $row->total_cogs),
+                    'profit' => Decimal::normalize((string) $profit),
+                    'margin' => Decimal::normalize((string) $margin, 1),
                 ];
             })
             ->sortByDesc('total_revenue')

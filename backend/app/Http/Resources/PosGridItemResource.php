@@ -8,6 +8,7 @@ use App\Http\Requests\Pos\ListPosItemsRequest;
 use App\Models\Item;
 use App\Models\StorePosSetting;
 use App\Support\CostVisibility;
+use App\Support\Money\Decimal;
 use App\Support\PosItemPrices;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -39,11 +40,11 @@ class PosGridItemResource extends JsonResource
             'category_color_light' => $it->getAttribute('category_color_light'),
             'unit' => (string) $it->unit,
             'is_weighted' => $it->isSoldByWeight(),
-            'price_retail' => (float) $it->selling_price,
+            'price_retail' => Decimal::normalize((string) $it->selling_price),
             ...PosItemPrices::forItem($it, $request->user()),
-            'cost_price' => $showCost ? (float) $it->cost_price : null,
-            'current_stock' => (float) ($it->getAttribute('calculated_stock') ?? $it->current_stock ?? 0),
-            'min_stock_level' => (float) ($it->min_stock_level ?: 0),
+            'cost_price' => $showCost ? Decimal::normalize((string) $it->cost_price) : null,
+            'current_stock' => Decimal::normalize((string) ($it->getAttribute('calculated_stock') ?? $it->current_stock ?? 0)),
+            'min_stock_level' => Decimal::normalize((string) ($it->min_stock_level ?: 0)),
             'is_pos_pinned' => (bool) $it->is_pos_pinned,
             'pos_sales_count' => (int) $it->pos_sales_count,
         ];

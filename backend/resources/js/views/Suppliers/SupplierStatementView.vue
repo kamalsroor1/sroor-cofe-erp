@@ -11,7 +11,7 @@
       <!-- Summary KPI Profile Cards -->
       <SupplierStatementSummaryCards
         :summary="summary"
-        :current-balance="supplier?.current_balance || 0"
+        :current-balance="supplier?.current_balance ?? '0.000'"
         :loading="isLoading"
       />
 

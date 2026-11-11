@@ -13,6 +13,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Support\ActiveStore;
 use App\Support\CostVisibility;
+use App\Support\Money\Decimal;
 use App\Support\PosItemPrices;
 use Illuminate\Support\Facades\DB;
 
@@ -96,11 +97,11 @@ class GetPOSBootstrapDataAction
                 'image' => $it->image,
                 'category' => (string) ($it->category ?: __('inventory.general_category')),
                 'category_id' => $it->category_id ? (int) $it->category_id : null,
-                'price_retail' => (float) $it->selling_price,
+                'price_retail' => Decimal::normalize((string) $it->selling_price),
                 ...PosItemPrices::forItem($it, $user),
-                'cost_price' => $showCost ? (float) $it->cost_price : null,
-                'current_stock' => (float) ($it->calculated_stock ?? 0),
-                'min_stock_level' => (float) ($it->min_stock_level ?: 0),
+                'cost_price' => $showCost ? Decimal::normalize((string) $it->cost_price) : null,
+                'current_stock' => Decimal::normalize((string) ($it->calculated_stock ?? 0)),
+                'min_stock_level' => Decimal::normalize((string) ($it->min_stock_level ?: 0)),
                 'unit' => (string) ($it->unit ?: 'قطعة'),
                 'pos_sort_order' => (int) ($it->pos_sort_order ?? 0),
                 'is_pos_pinned' => (bool) ($it->is_pos_pinned ?? false),

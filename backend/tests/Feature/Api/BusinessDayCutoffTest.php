@@ -97,7 +97,7 @@ final class BusinessDayCutoffTest extends TenantTestCase
         $this->getJson('/api/v1/reports/summary?from_date=2026-10-08&to_date=2026-10-08', $this->tenantHeaders($tenant))
             ->assertStatus(200)
             ->assertJsonPath('summary.invoices_count', 1)
-            ->assertJsonPath('summary.total_sales', 110);
+            ->assertJsonPath('summary.total_sales', '110.000');
         $this->getJson('/api/v1/reports/summary?from_date=2026-10-09&to_date=2026-10-09', $this->tenantHeaders($tenant))
             ->assertStatus(200)
             ->assertJsonPath('summary.invoices_count', 0);
@@ -106,7 +106,7 @@ final class BusinessDayCutoffTest extends TenantTestCase
         $this->getJson('/api/v1/dashboard', $this->tenantHeaders($tenant))
             ->assertStatus(200)
             ->assertJsonPath('metrics.today_invoices_count', 1)
-            ->assertJsonPath('metrics.today_sales', 110);
+            ->assertJsonPath('metrics.today_sales', '110.000');
 
         // Daily journal defaults to the business day.
         $this->getJson('/api/v1/daily-journal', $this->tenantHeaders($tenant))
@@ -155,7 +155,7 @@ final class BusinessDayCutoffTest extends TenantTestCase
             $this->getJson('/api/v1/dashboard', $this->tenantHeaders($tenant))
                 ->assertStatus(200)
                 ->assertJsonPath('metrics.today_invoices_count', 1)
-                ->assertJsonPath('metrics.today_sales', 110);
+                ->assertJsonPath('metrics.today_sales', '110.000');
 
             $this->postJson('/api/v1/shifts/open', ['opening_cash_balance' => '0'], $this->tenantHeaders($tenant))
                 ->assertStatus(201)

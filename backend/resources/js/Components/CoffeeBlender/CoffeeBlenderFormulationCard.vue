@@ -54,7 +54,7 @@
           <div class="text-[10px] text-slate-400 font-mono mt-0.5">
             {{ formatMoney(comp.selling_price) }} {{ currencyLabel }} / {{ $t('inventory.unit_weight_short') }} ({{
               $t('inventory.current_stock')
-            }}: {{ comp.current_stock }} {{ $t('inventory.unit_weight_short') }})
+            }}: {{ formatQty(comp.current_stock) }} {{ $t('inventory.unit_weight_short') }})
           </div>
         </div>
 
@@ -136,7 +136,7 @@ import BaseInput from '../Form/BaseInput.vue';
 import BaseNumberInput from '../Form/BaseNumberInput.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney, currencyLabel } = useFormatters();
+const { formatMoney, formatQty, currencyLabel } = useFormatters();
 
 defineProps({
   components: { type: Array, default: () => [] },

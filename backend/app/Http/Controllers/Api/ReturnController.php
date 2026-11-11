@@ -14,6 +14,7 @@ use App\Models\ReturnDocument;
 use App\Models\User;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
+use App\Support\Money\Decimal;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -73,7 +74,7 @@ final class ReturnController extends Controller
             });
         }
 
-        $totalReturnsValue = (float) (clone $query)->sum('total_amount');
+        $totalReturnsValue = Decimal::normalize((string) (clone $query)->sum('total_amount'));
         $salesReturnsCount = (int) (clone $query)->where('return_type', 'sales_return')->count();
         $purchaseReturnsCount = (int) (clone $query)->where('return_type', 'purchase_return')->count();
 

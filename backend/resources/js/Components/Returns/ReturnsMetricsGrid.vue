@@ -75,15 +75,10 @@ import { TrendingDown, RotateCcw, RotateCw, FileText } from 'lucide-vue-next';
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { currencyLabel } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   summary: { type: Object, default: () => ({ total_value: 0, sales_count: 0, purchase_count: 0, total_count: 0 }) },
   loading: { type: Boolean, default: false },
 });
-
-const formatMoney = (val) => {
-  const num = parseFloat(val) || 0;
-  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
 </script>

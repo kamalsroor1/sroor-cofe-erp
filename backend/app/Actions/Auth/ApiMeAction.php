@@ -13,6 +13,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Branding\TenantBranding;
 use App\Support\ActiveStore;
+use App\Support\Money\Decimal;
 use App\Support\Tenancy\TenantLifecyclePolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -84,7 +85,7 @@ final class ApiMeAction
                 'id' => $activeShift->id,
                 'shift_number' => $activeShift->shift_number ?? $activeShift->id,
                 'opened_at' => $activeShift->opened_at,
-                'opening_cash_balance' => (float) $activeShift->opening_cash_balance,
+                'opening_cash_balance' => Decimal::normalize((string) $activeShift->opening_cash_balance),
             ] : null,
             'system' => $system,
             'subscription' => $subscription,

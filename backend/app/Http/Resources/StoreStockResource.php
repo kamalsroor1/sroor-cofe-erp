@@ -6,6 +6,7 @@ namespace App\Http\Resources;
 
 use App\Models\StoreStock;
 use App\Support\CostVisibility;
+use App\Support\Money\Decimal;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -28,10 +29,10 @@ class StoreStockResource extends JsonResource
             'item_name' => $this->item?->name,
             'item_code' => $this->item?->code,
             'unit' => $this->item?->unit,
-            'quantity' => (float) $quantity,
-            'min_stock_level' => (float) ($this->item?->min_stock_level ?? 0),
-            'cost_price' => $showCost ? (float) $costPrice : null,
-            'total_valuation' => $showCost ? (float) $totalValuation : null,
+            'quantity' => Decimal::normalize((string) $quantity),
+            'min_stock_level' => Decimal::normalize((string) ($this->item?->min_stock_level ?? 0)),
+            'cost_price' => $showCost ? Decimal::normalize((string) $costPrice) : null,
+            'total_valuation' => $showCost ? Decimal::normalize((string) $totalValuation) : null,
             'is_low_stock' => bccomp($quantity, (string) ($this->item?->min_stock_level ?? 0), 3) <= 0,
             'is_out_of_stock' => bccomp($quantity, '0', 3) <= 0,
         ];

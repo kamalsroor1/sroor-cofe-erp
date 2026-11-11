@@ -51,7 +51,7 @@
           <tbody class="divide-y divide-slate-200 dark:divide-slate-800/50">
             <tr v-for="it in returnDetails.items" :key="it.id">
               <td class="p-2.5 font-bold text-slate-900 dark:text-white">{{ it.item_name }}</td>
-              <td class="p-2.5 text-end font-mono text-theme-primary">{{ it.quantity }} {{ it.unit }}</td>
+              <td class="p-2.5 text-end font-mono text-theme-primary">{{ formatQty(it.quantity) }} {{ it.unit }}</td>
               <td class="p-2.5 text-end font-mono text-slate-600 dark:text-slate-300">
                 {{ formatMoney(it.unit_price) }} {{ currencyLabel }}
               </td>
@@ -102,7 +102,7 @@
 import AppModal from '../Common/AppModal.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { currencyLabel } = useFormatters();
+const { formatMoney, formatQty, currencyLabel } = useFormatters();
 
 defineProps({
   show: { type: Boolean, default: false },
@@ -110,9 +110,4 @@ defineProps({
 });
 
 defineEmits(['close']);
-
-const formatMoney = (val) => {
-  const num = parseFloat(val) || 0;
-  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
 </script>

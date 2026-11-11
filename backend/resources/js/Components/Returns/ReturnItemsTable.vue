@@ -70,7 +70,7 @@
               />
             </td>
             <td class="p-3 text-end font-mono font-bold text-rose-600 dark:text-rose-400">
-              {{ formatMoney(item.quantity * item.unit_price) }} {{ currencyLabel }}
+              {{ formatMoney(dMul(item.quantity, item.unit_price)) }} {{ currencyLabel }}
             </td>
             <td class="p-3 text-center">
               <button
@@ -99,8 +99,9 @@
 import { Trash2, Package } from 'lucide-vue-next';
 import BaseSelect from '../Form/BaseSelect.vue';
 import { useFormatters } from '../../Composables/useFormatters';
+import { dMul } from '../../helpers/decimal';
 
-const { currencyLabel } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   itemsList: { type: Array, default: () => [] },
@@ -109,9 +110,4 @@ defineProps({
 });
 
 defineEmits(['update:selected-item', 'add-item', 'remove-item']);
-
-const formatMoney = (val) => {
-  const num = parseFloat(val) || 0;
-  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
 </script>

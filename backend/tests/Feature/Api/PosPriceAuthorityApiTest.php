@@ -521,7 +521,7 @@ final class PosPriceAuthorityApiTest extends TenantTestCase
 
         $id = (int) $this->withHeaders($headers)->postJson('/api/v1/items', [
             'name' => 'W', 'unit' => 'كجم', 'cost_price' => '10', 'selling_price' => '30', 'wholesale_price' => '25.5',
-        ])->assertCreated()->assertJsonPath('data.wholesale_price', 25.5)->json('data.id');
+        ])->assertCreated()->assertJsonPath('data.wholesale_price', '25.500')->json('data.id');
 
         $this->assertSame('25.500', (string) Item::query()->findOrFail($id)->wholesale_price);
         $this->assertSame('0.000', (string) Item::query()->findOrFail($id)->min_selling_price);

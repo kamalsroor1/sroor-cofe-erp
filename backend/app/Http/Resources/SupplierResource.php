@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Supplier;
+use App\Support\Money\Decimal;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -21,7 +22,7 @@ class SupplierResource extends JsonResource
             'company_name' => $this->company_name,
             'phone' => $this->phone,
             'address' => $this->address,
-            'current_balance' => (float) $this->current_balance,
+            'current_balance' => Decimal::normalize((string) $this->current_balance),
             'is_active' => (bool) $this->is_active,
             'notes' => $this->notes,
             'purchases_count' => $this->whenCounted('purchases', $this->purchases_count),

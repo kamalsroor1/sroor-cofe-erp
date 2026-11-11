@@ -21,6 +21,7 @@ use App\Services\Branding\TenantBranding;
 use App\Services\Entitlements\PlanEnforcer;
 use App\Services\Settings\TenantSettings;
 use App\Services\TreasuryService;
+use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Illuminate\Http\Request;
 
@@ -99,13 +100,13 @@ final class GetSystemContextAction
         if ($user->can('daily_journal.view') || $user->hasRole('admin')) {
             try {
                 $balances = $this->treasuryService->getBalances($activeStore?->id);
-                $cashExpected = (float) ($balances['cash']['balance'] ?? 0);
-                if ($cashExpected >= 10000) {
+                $cashExpected = Decimal::normalize((string) ($balances['cash']['balance'] ?? 0));
+                if (Decimal::cmp($cashExpected, '10000') >= 0) {
                     $alerts[] = [
                         'type' => 'info',
                         'icon' => 'wallet',
                         'title' => __('dashboard.system_alerts.high_cash_title'),
-                        'description' => __('dashboard.system_alerts.high_cash_desc', ['amount' => number_format($cashExpected, 0), 'currency' => $this->tenantSettings->currencyLabel()]),
+                        'description' => __('dashboard.system_alerts.high_cash_desc', ['amount' => number_format((float) $cashExpected, 0), 'currency' => $this->tenantSettings->currencyLabel()]),
                         'link' => '/daily-journal',
                         'link_label' => __('dashboard.system_alerts.high_cash_link'),
                     ];
@@ -146,7 +147,7 @@ final class GetSystemContextAction
                 'id' => $activeShift->id,
                 'shift_number' => $activeShift->shift_number ?? $activeShift->id,
                 'opened_at' => $activeShift->opened_at,
-                'opening_cash_balance' => (float) $activeShift->opening_cash_balance,
+                'opening_cash_balance' => Decimal::normalize((string) $activeShift->opening_cash_balance),
             ] : null,
             'system' => [
                 // BRND-1: the platform brand is central (platform_settings), never a tenant setting.

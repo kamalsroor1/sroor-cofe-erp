@@ -61,7 +61,7 @@
                 {{ formatMoney(item.selling_price) }}
               </td>
               <td class="py-3.5 px-4 text-end font-mono text-purple-600 dark:text-purple-400">
-                {{ formatMoney(item.min_selling_price || item.selling_price) }}
+                {{ formatMoney(priceFor(item, 'wholesale')) }}
               </td>
               <td class="py-3.5 px-4 text-end font-mono font-bold">
                 <span
@@ -180,7 +180,7 @@
                 <span class="text-[10px] font-normal font-tajawal">{{ currencyLabel }}</span>
               </span>
               <div class="text-[10px] text-purple-500 dark:text-purple-400 font-mono mt-0.5">
-                {{ $t('inventory.wholesale_price') }}: {{ formatMoney(item.min_selling_price || item.selling_price) }}
+                {{ $t('inventory.wholesale_price') }}: {{ formatMoney(priceFor(item, 'wholesale')) }}
               </div>
             </div>
           </div>
@@ -271,6 +271,7 @@ import ActionMenu from '../ActionMenu.vue';
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { trans } from '../../helpers/trans';
+import { priceFor } from '../../helpers/posCartLines';
 import { useAuthStore } from '../../stores/auth';
 import { useAppConfigStore } from '../../stores/appConfig';
 

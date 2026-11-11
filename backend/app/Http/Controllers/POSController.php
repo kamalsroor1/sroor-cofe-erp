@@ -9,6 +9,7 @@ use App\DTOs\POSInvoiceDTO;
 use App\Http\Requests\StorePOSInvoiceRequest;
 use App\Http\Requests\StoreQuickCustomerRequest;
 use App\Support\ClientStoreGuard;
+use App\Support\Money\Decimal;
 use App\Support\SafeJsonError;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -48,10 +49,10 @@ class POSController extends Controller
                     'invoice' => [
                         'id' => $invoice->id,
                         'invoice_number' => $invoice->invoice_number,
-                        'total_amount' => (float) $invoice->net_total,
-                        'net_total' => (float) $invoice->net_total,
-                        'paid_amount' => (float) $invoice->paid_amount,
-                        'remaining_amount' => (float) $invoice->remaining_amount,
+                        'total_amount' => Decimal::normalize((string) $invoice->net_total),
+                        'net_total' => Decimal::normalize((string) $invoice->net_total),
+                        'paid_amount' => Decimal::normalize((string) $invoice->paid_amount),
+                        'remaining_amount' => Decimal::normalize((string) $invoice->remaining_amount),
                         'print_thermal_url' => route('invoices.print.thermal', $invoice->id),
                         'print_a4_url' => route('invoices.print.a4', $invoice->id),
                     ],

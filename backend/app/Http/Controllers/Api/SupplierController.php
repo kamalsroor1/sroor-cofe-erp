@@ -18,6 +18,7 @@ use App\Http\Requests\StoreSupplierRequest;
 use App\Http\Requests\UpdateSupplierRequest;
 use App\Http\Resources\SupplierResource;
 use App\Models\Supplier;
+use App\Support\Money\Decimal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -72,7 +73,7 @@ final class SupplierController extends Controller
 
         $suppliers = $query->latest('id')->paginate($perPage);
 
-        $totalPayable = (float) Supplier::where('current_balance', '>', 0)->sum('current_balance');
+        $totalPayable = Decimal::normalize((string) Supplier::where('current_balance', '>', 0)->sum('current_balance'));
         $creditorsCount = Supplier::where('current_balance', '>', 0)->count();
         $totalSuppliersCount = Supplier::count();
 

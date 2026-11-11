@@ -7,6 +7,7 @@ namespace App\Actions\Reports;
 use App\DTOs\Reports\ReportFilterDTO;
 use App\Models\Invoice;
 use App\Models\Store;
+use App\Support\Money\Decimal;
 
 final class GetStoresComparativeReportAction
 {
@@ -63,12 +64,12 @@ final class GetStoresComparativeReportAction
                 'id' => $st->id,
                 'name' => $st->name,
                 'invoice_count' => $stInvoices->count(),
-                'total_sales' => (float) $stSales,
-                'total_paid' => (float) $stPaid,
-                'total_remaining' => (float) $stRemaining,
-                'gross_profit' => (float) $stProfit,
-                'margin' => (float) $stMargin,
-                'share_pct' => (float) $sharePct,
+                'total_sales' => Decimal::normalize((string) $stSales),
+                'total_paid' => Decimal::normalize((string) $stPaid),
+                'total_remaining' => Decimal::normalize((string) $stRemaining),
+                'gross_profit' => Decimal::normalize((string) $stProfit),
+                'margin' => Decimal::normalize((string) $stMargin, 2),
+                'share_pct' => Decimal::normalize((string) $sharePct, 1),
             ];
         }
 

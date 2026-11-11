@@ -21,6 +21,7 @@ use App\Services\DashboardAnalyticsService;
 use App\Services\ProfitService;
 use App\Services\Settings\TenantSettings;
 use App\Support\ActiveStore;
+use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\DB;
 
@@ -109,7 +110,7 @@ class GetTenantDashboardAnalyticsAction
         $netCashToday = $cashFlow['net_cash'];
 
         // 7. Customer Debts Total
-        $totalCustomersDebt = (float) Customer::where('is_active', true)->sum('current_balance');
+        $totalCustomersDebt = Decimal::normalize((string) Customer::where('is_active', true)->sum('current_balance'));
 
         // 8. Low Stock Radar
         // SETG-10: own minimum, else the tenant default threshold.
@@ -150,18 +151,18 @@ class GetTenantDashboardAnalyticsAction
 
         $result = [
             'metrics' => [
-                'total_sales' => (float) $totalSales,
+                'total_sales' => Decimal::normalize((string) $totalSales),
                 'invoices_count' => $invoicesCount,
-                'cash_sales' => (float) $cashSales,
-                'credit_sales' => (float) $creditSales,
-                'partial_sales' => (float) $partialSales,
-                'total_cash_collected' => (float) $totalCashCollected,
-                'total_expenses' => (float) $totalExpenses,
-                'supplier_payments' => (float) $supplierPaid,
-                'net_cash_today' => (float) $netCashToday,
+                'cash_sales' => Decimal::normalize((string) $cashSales),
+                'credit_sales' => Decimal::normalize((string) $creditSales),
+                'partial_sales' => Decimal::normalize((string) $partialSales),
+                'total_cash_collected' => Decimal::normalize((string) $totalCashCollected),
+                'total_expenses' => Decimal::normalize((string) $totalExpenses),
+                'supplier_payments' => Decimal::normalize((string) $supplierPaid),
+                'net_cash_today' => Decimal::normalize((string) $netCashToday),
                 'total_customers_debt' => $totalCustomersDebt,
-                'monthly_sales' => (float) $periodic['total_sales'],
-                'monthly_gross_profit' => (float) $periodic['gross_profit'],
+                'monthly_sales' => Decimal::normalize((string) $periodic['total_sales']),
+                'monthly_gross_profit' => Decimal::normalize((string) $periodic['gross_profit']),
                 'monthly_margin' => $periodic['margin_percentage'],
             ],
             'analytics' => $analytics,
@@ -170,8 +171,8 @@ class GetTenantDashboardAnalyticsAction
             'top_selling_items' => $topSellingItems->map(fn ($t) => [
                 'item_id' => $t->item_id,
                 'name' => $t->item_name,
-                'total_qty' => (float) $t->total_qty,
-                'total_revenue' => (float) $t->total_revenue,
+                'total_qty' => Decimal::normalize((string) $t->total_qty),
+                'total_revenue' => Decimal::normalize((string) $t->total_revenue),
             ]),
             'active_shift' => $activeShift ? (new CashShiftResource($activeShift))->resolve() : null,
             'active_store' => $activeStore ? (new StoreResource($activeStore))->resolve() : null,

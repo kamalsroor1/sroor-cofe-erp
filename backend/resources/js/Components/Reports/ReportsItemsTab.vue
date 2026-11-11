@@ -43,7 +43,7 @@
               <td class="p-3 font-mono text-slate-500 dark:text-slate-400">{{ it.code || '—' }}</td>
               <td class="p-3 text-slate-600 dark:text-slate-400 font-tajawal">{{ it.category }}</td>
               <td class="p-3 text-end font-mono font-bold text-cyan-600 dark:text-cyan-400">
-                {{ it.total_qty }} {{ it.unit }}
+                {{ formatQty(it.total_qty) }} {{ it.unit }}
               </td>
               <td class="p-3 text-end font-mono font-bold text-slate-900 dark:text-white">
                 {{ formatMoney(it.total_revenue) }}
@@ -73,7 +73,7 @@
               >
             </div>
             <div class="text-end">
-              <span class="text-xs font-mono font-bold text-cyan-500">{{ it.total_qty }} {{ it.unit }}</span>
+              <span class="text-xs font-mono font-bold text-cyan-500">{{ formatQty(it.total_qty) }} {{ it.unit }}</span>
               <span class="text-sm font-black font-mono text-emerald-500 block">+{{ formatMoney(it.profit) }}</span>
             </div>
           </div>
@@ -101,7 +101,7 @@ import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, formatQty } = useFormatters();
 
 defineProps({
   itemProfits: { type: Array, default: () => [] },

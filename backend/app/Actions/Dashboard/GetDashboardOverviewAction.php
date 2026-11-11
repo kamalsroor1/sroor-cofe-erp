@@ -18,6 +18,7 @@ use App\Services\DashboardAnalyticsService;
 use App\Services\ProfitService;
 use App\Services\Settings\TenantSettings;
 use App\Services\ShiftService;
+use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\DB;
 
@@ -125,8 +126,8 @@ final class GetDashboardOverviewAction
         // 7. Customers & Suppliers Totals
         $customersCount = (int) Customer::where('is_active', true)->count();
         $suppliersCount = (int) Supplier::where('is_active', true)->count();
-        $totalCustomersDebt = $showFinancials ? (float) (Customer::where('is_active', true)->sum('current_balance') ?: 0) : null;
-        $totalSuppliersDebt = $showFinancials ? (float) (Supplier::where('is_active', true)->sum('current_balance') ?: 0) : null;
+        $totalCustomersDebt = $showFinancials ? Decimal::normalize((string) (Customer::where('is_active', true)->sum('current_balance') ?: 0)) : null;
+        $totalSuppliersDebt = $showFinancials ? Decimal::normalize((string) (Supplier::where('is_active', true)->sum('current_balance') ?: 0)) : null;
 
         // 8. Low Stock Items Radar (SETG-10: own minimum, else the tenant default threshold)
         $lowStockThreshold = $this->tenantSettings->lowStockDefaultThreshold();
@@ -139,8 +140,8 @@ final class GetDashboardOverviewAction
                 'name' => $it->name,
                 'code' => $it->code,
                 'category' => $it->category,
-                'current_stock' => (float) $it->current_stock,
-                'min_stock' => (float) (bccomp((string) ($it->min_stock_level ?? '0'), '0', 3) > 0 ? $it->min_stock_level : $lowStockThreshold),
+                'current_stock' => Decimal::normalize((string) $it->current_stock),
+                'min_stock' => Decimal::normalize((string) (bccomp((string) ($it->min_stock_level ?? '0'), '0', 3) > 0 ? $it->min_stock_level : $lowStockThreshold)),
                 'unit' => $it->unit ?? 'كجم',
             ]);
 
@@ -173,8 +174,8 @@ final class GetDashboardOverviewAction
                 'name' => $t->item_name,
                 'code' => $t->item_code,
                 'unit' => $t->unit ?? 'كجم',
-                'total_qty' => (float) $t->total_qty,
-                'total_revenue' => (float) $t->total_revenue,
+                'total_qty' => Decimal::normalize((string) $t->total_qty),
+                'total_revenue' => Decimal::normalize((string) $t->total_revenue),
             ]);
 
         // 11. Active Cash Shift
@@ -191,8 +192,8 @@ final class GetDashboardOverviewAction
                     'id' => $shift->id,
                     'shift_number' => $shift->shift_number,
                     'user_name' => $shift->user?->name ?? __('common.cashier'),
-                    'starting_cash' => (float) $shift->opening_cash_balance,
-                    'current_cash' => (float) $this->shiftService->calculateShiftTotals($shift)['expected_cash_balance'],
+                    'starting_cash' => Decimal::normalize((string) $shift->opening_cash_balance),
+                    'current_cash' => Decimal::normalize((string) $this->shiftService->calculateShiftTotals($shift)['expected_cash_balance']),
                     'opened_at' => $shift->opened_at?->toDateTimeString(),
                 ];
             }
@@ -210,9 +211,9 @@ final class GetDashboardOverviewAction
                 'invoice_number' => $inv->invoice_number,
                 'customer_name' => $inv->customer?->name ?? __('pos.walk_in_customer'),
                 'invoice_date' => $inv->invoice_date?->toDateString() ?? $inv->created_at?->toDateString(),
-                'net_total' => (float) $inv->net_total,
-                'paid_amount' => (float) $inv->paid_amount,
-                'remaining_amount' => (float) $inv->remaining_amount,
+                'net_total' => Decimal::normalize((string) $inv->net_total),
+                'paid_amount' => Decimal::normalize((string) $inv->paid_amount),
+                'remaining_amount' => Decimal::normalize((string) $inv->remaining_amount),
                 'payment_type' => $inv->payment_type,
                 'status' => $inv->status,
             ]);
@@ -225,20 +226,20 @@ final class GetDashboardOverviewAction
                 'type' => $activeStore->type,
             ] : null,
             'metrics' => [
-                'today_sales' => (float) $totalSales,
+                'today_sales' => Decimal::normalize((string) $totalSales),
                 'today_invoices_count' => $invoicesCount,
-                'cash_sales' => (float) $cashSales,
-                'credit_sales' => (float) $creditSales,
-                'total_cash_collected' => (float) $totalCashCollected,
-                'today_expenses' => (float) $totalExpenses,
+                'cash_sales' => Decimal::normalize((string) $cashSales),
+                'credit_sales' => Decimal::normalize((string) $creditSales),
+                'total_cash_collected' => Decimal::normalize((string) $totalCashCollected),
+                'today_expenses' => Decimal::normalize((string) $totalExpenses),
                 'expenses_count' => $expensesCount,
-                'supplier_payments' => (float) $supplierPaid,
-                'net_cash_today' => (float) $netCashToday,
+                'supplier_payments' => Decimal::normalize((string) $supplierPaid),
+                'net_cash_today' => Decimal::normalize((string) $netCashToday),
                 'customers_debt' => $totalCustomersDebt,
                 'suppliers_debt' => $totalSuppliersDebt,
-                'monthly_sales' => (float) $periodic['total_sales'],
-                'monthly_gross_profit' => $showFinancials ? (float) $periodic['gross_profit'] : null,
-                'monthly_margin' => $showFinancials ? (float) $periodic['margin_percentage'] : null,
+                'monthly_sales' => Decimal::normalize((string) $periodic['total_sales']),
+                'monthly_gross_profit' => $showFinancials ? Decimal::normalize((string) $periodic['gross_profit']) : null,
+                'monthly_margin' => $showFinancials ? Decimal::normalize((string) $periodic['margin_percentage'], 2) : null,
                 'customers_count' => $customersCount,
                 'suppliers_count' => $suppliersCount,
                 'low_stock_count' => $lowStockCount,

@@ -9,10 +9,11 @@ import { useRemoteOptions } from './useRemoteOptions';
 import { useUnits } from './useUnits';
 import { businessToday } from './useBusinessDate';
 import { useRefundMethod } from './useRefundMethod';
+import { isPositive } from '../helpers/decimal';
 
 const defaultUnitPrice = (type, item) =>
     type === 'sales_return'
-        ? parseFloat(item.price_retail || item.selling_price) || 0
+        ? parseFloat(isPositive(item.price_retail) ? item.price_retail : item.selling_price) || 0
         : parseFloat(item.cost_price) || 0;
 
 export function useCreateReturn() {

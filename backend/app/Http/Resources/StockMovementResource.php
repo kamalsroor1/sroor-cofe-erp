@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\StockMovement;
+use App\Support\Money\Decimal;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -23,10 +24,10 @@ class StockMovementResource extends JsonResource
             'store_name' => $this->store?->name,
             'movement_type' => $this->movement_type,
             'movement_type_label' => method_exists($this->resource, 'getMovementTypeLabelAttribute') ? $this->movement_type_label : $this->movement_type,
-            'quantity' => (float) $this->quantity,
-            'stock_before' => (float) $this->stock_before,
-            'stock_after' => (float) $this->stock_after,
-            'unit_cost' => (float) $this->unit_cost,
+            'quantity' => Decimal::normalize((string) $this->quantity),
+            'stock_before' => Decimal::normalize((string) $this->stock_before),
+            'stock_after' => Decimal::normalize((string) $this->stock_after),
+            'unit_cost' => Decimal::normalize((string) $this->unit_cost),
             'document_number' => $this->document_number,
             'user_name' => $this->user?->name ?: 'النظام',
             'notes' => $this->notes,

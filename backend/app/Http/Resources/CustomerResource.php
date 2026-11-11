@@ -6,6 +6,7 @@ namespace App\Http\Resources;
 
 use App\Actions\Customers\ResolveWalkInCustomerAction;
 use App\Models\Customer;
+use App\Support\Money\Decimal;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -22,8 +23,8 @@ class CustomerResource extends JsonResource
             'phone' => $this->phone,
             'address' => $this->address,
             'tax_number' => $this->tax_number,
-            'current_balance' => (float) $this->current_balance,
-            'credit_limit' => (float) ($this->credit_limit ?? 0),
+            'current_balance' => Decimal::normalize((string) $this->current_balance),
+            'credit_limit' => Decimal::normalize((string) ($this->credit_limit ?? 0)),
             'is_active' => (bool) $this->is_active,
             'is_walk_in' => app(ResolveWalkInCustomerAction::class)->isWalkIn($this->resource),
             'price_tier' => $this->price_tier ?? 'retail',

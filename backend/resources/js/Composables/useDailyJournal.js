@@ -3,6 +3,7 @@ import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 import { businessToday } from './useBusinessDate';
+import { normalize } from '../helpers/decimal';
 
 export function useDailyJournal() {
     const { t } = useTrans();
@@ -117,7 +118,7 @@ export function useDailyJournal() {
     };
 
     const openCloseShiftModal = () => {
-        closeShiftForm.actual_cash_balance = (summary.value?.expected_cash_in_drawer || 0).toString();
+        closeShiftForm.actual_cash_balance = normalize(summary.value?.expected_cash_in_drawer ?? '0');
         closeShiftForm.notes = '';
         showCloseShiftModal.value = true;
     };
