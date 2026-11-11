@@ -7,11 +7,8 @@ namespace App\Services\Invoices;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\User;
-use App\Support\ActiveStore;
-use App\Support\RateLimitKey;
+use App\Services\Approvals\ManagerPinVerifier;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -24,11 +21,7 @@ use Illuminate\Validation\ValidationException;
  */
 final class InvoiceCancelGuard
 {
-    private const MAX_ATTEMPTS_PER_APPROVER = 5;
-
-    private const MAX_ATTEMPTS_PER_ACTOR = 10;
-
-    private const DECAY_SECONDS = 300;
+    public function __construct(private readonly ManagerPinVerifier $pinVerifier) {}
 
     /**
      * @param  array{user_id?: mixed, pin?: mixed}|null  $override
@@ -84,36 +77,13 @@ final class InvoiceCancelGuard
      */
     private function verifyAdminPin(int $approverId, string $pin, ?User $actor, ?int $storeId): int
     {
-        $scope = RateLimitKey::scope();
-        $approverKey = 'cancel-override:'.$scope.':approver:'.$approverId;
-        $actorKey = 'cancel-override:'.$scope.':actor:'.($actor !== null ? (string) $actor->id : 'guest');
-
-        if (RateLimiter::tooManyAttempts($approverKey, self::MAX_ATTEMPTS_PER_APPROVER)
-            || RateLimiter::tooManyAttempts($actorKey, self::MAX_ATTEMPTS_PER_ACTOR)) {
-            $wait = max(RateLimiter::availableIn($approverKey), RateLimiter::availableIn($actorKey), 1);
-
-            throw new ThrottleRequestsException(__('pos.override_throttled'), null, ['Retry-After' => (string) $wait]);
-        }
-
-        $approver = User::query()->whereKey($approverId)->where('is_active', true)->first();
-
-        $valid = $approver instanceof User
-            && $approver->hasRole('admin')
-            && ($storeId === null || ActiveStore::canAccess($approver, $storeId))
-            && is_string($approver->pos_pin)
-            && $approver->pos_pin !== ''
-            && Hash::check($pin, $approver->pos_pin);
-
-        if (! $valid) {
-            RateLimiter::hit($approverKey, self::DECAY_SECONDS);
-            RateLimiter::hit($actorKey, self::DECAY_SECONDS);
-
-            throw ValidationException::withMessages([
-                'override.pin' => __('pos.override_invalid'),
-            ]);
-        }
-
-        RateLimiter::clear($approverKey);
+        $approver = $this->pinVerifier->verify(
+            $approverId,
+            $pin,
+            $actor,
+            $storeId,
+            static fn (User $candidate): bool => $candidate->hasRole('admin'),
+        );
 
         return (int) $approver->id;
     }

@@ -290,7 +290,7 @@ final class PosPriceAuthorityApiTest extends TenantTestCase
 
     public function test_wrong_pin_attempts_are_rate_limited_even_for_the_right_pin(): void
     {
-        RateLimiter::clear('pos-override:approver:'.$this->manager->id);
+        RateLimiter::clear('manager-pin:'.RateLimitKey::scope().':approver:'.$this->manager->id);
 
         for ($i = 0; $i < 5; $i++) {
             $this->checkout($this->cashier, ['unit_price' => '60.000'], ['override' => ['user_id' => $this->manager->id, 'pin' => '0000']])
@@ -544,7 +544,7 @@ final class PosPriceAuthorityApiTest extends TenantTestCase
 
     public function test_failed_pin_attempts_are_counted_per_tenant(): void
     {
-        $key = 'pos-override:'.RateLimitKey::scope().':approver:'.$this->manager->id;
+        $key = 'manager-pin:'.RateLimitKey::scope().':approver:'.$this->manager->id;
         RateLimiter::clear($key);
 
         $this->checkout($this->cashier, ['unit_price' => '60.000'], ['override' => ['user_id' => $this->manager->id, 'pin' => '0000']])->assertStatus(422);
@@ -552,13 +552,13 @@ final class PosPriceAuthorityApiTest extends TenantTestCase
         $this->assertSame(1, RateLimiter::attempts($key));
         $this->assertStringContainsString('t:', $key);
         // Another tenant (or central) with the same user id uses a different key.
-        $this->assertSame(0, RateLimiter::attempts('pos-override:t:other-tenant:approver:'.$this->manager->id));
-        $this->assertSame(0, RateLimiter::attempts('pos-override:c:approver:'.$this->manager->id));
+        $this->assertSame(0, RateLimiter::attempts('manager-pin:t:other-tenant:approver:'.$this->manager->id));
+        $this->assertSame(0, RateLimiter::attempts('manager-pin:c:approver:'.$this->manager->id));
     }
 
     public function test_failed_pin_hits_survive_the_failed_request(): void
     {
-        $key = 'pos-override:'.RateLimitKey::scope().':approver:'.$this->manager->id;
+        $key = 'manager-pin:'.RateLimitKey::scope().':approver:'.$this->manager->id;
         RateLimiter::clear($key);
 
         for ($i = 1; $i <= 3; $i++) {

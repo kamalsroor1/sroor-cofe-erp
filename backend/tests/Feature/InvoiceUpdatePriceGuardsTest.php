@@ -174,7 +174,7 @@ final class InvoiceUpdatePriceGuardsTest extends TenantTestCase
     {
         $invoice = $this->invoice($this->retail);
         $before = $this->snapshot($invoice);
-        RateLimiter::clear('pos-override:'.RateLimitKey::scope().':approver:'.$this->manager->id);
+        RateLimiter::clear('manager-pin:'.RateLimitKey::scope().':approver:'.$this->manager->id);
 
         try {
             $this->update($invoice, $this->cashier, ['unit_price' => '60.000'], ['override' => ['user_id' => $this->manager->id, 'pin' => '0000']]);
@@ -184,7 +184,7 @@ final class InvoiceUpdatePriceGuardsTest extends TenantTestCase
         }
 
         $this->assertSame($before, $this->snapshot($invoice));
-        $this->assertSame(1, RateLimiter::attempts('pos-override:'.RateLimitKey::scope().':approver:'.$this->manager->id));
+        $this->assertSame(1, RateLimiter::attempts('manager-pin:'.RateLimitKey::scope().':approver:'.$this->manager->id));
     }
 
     #[Test]

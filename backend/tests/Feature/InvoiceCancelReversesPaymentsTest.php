@@ -15,13 +15,16 @@ use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Approvals\ManagerPinVerifier;
 use App\Services\AuditLogService;
 use App\Services\CustomerBalanceService;
 use App\Services\InvoiceService;
 use App\Services\ShiftService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Testing\TestResponse;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Tests\TenantTestCase;
 
@@ -389,6 +392,80 @@ final class InvoiceCancelReversesPaymentsTest extends TenantTestCase
 
         $this->inTenant($this->tenant, function () use ($creditInvoiceId): void {
             $this->assertSame('cancelled', Invoice::findOrFail($creditInvoiceId)->status);
+        });
+    }
+
+    public function test_five_wrong_pins_lock_the_approver_out_with_a_429(): void
+    {
+        $this->openShift();
+        $invoiceId = $this->sell($this->customerId, '5.000', 'cash');
+        $cancelOnly = $this->createTenantUser($this->tenant, permissions: ['invoices.cancel'], attributes: ['name' => 'يلغي فقط']);
+        $headers = $this->tenantHeaders($this->tenant, $cancelOnly);
+        RateLimiter::clear(ManagerPinVerifier::approverKey($this->adminId));
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', [
+                'reason' => 'x',
+                'override' => ['user_id' => $this->adminId, 'pin' => '000'.$i],
+            ], $headers)->assertStatus(422)->assertJsonValidationErrors('override.pin');
+        }
+
+        // The sixth attempt is throttled even with the right PIN.
+        $this->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', [
+            'reason' => 'x',
+            'override' => ['user_id' => $this->adminId, 'pin' => '4321'],
+        ], $headers)->assertStatus(429);
+
+        $this->inTenant($this->tenant, function () use ($invoiceId): void {
+            $this->assertSame('confirmed', Invoice::findOrFail($invoiceId)->status);
+        });
+        RateLimiter::clear(ManagerPinVerifier::approverKey($this->adminId));
+    }
+
+    public function test_an_approver_without_access_to_the_invoice_store_is_rejected(): void
+    {
+        $this->openShift();
+        $invoiceId = $this->sell($this->customerId, '5.000', 'cash');
+        $cancelOnly = $this->createTenantUser($this->tenant, permissions: ['invoices.cancel'], attributes: ['name' => 'يلغي فقط']);
+
+        // A manager who only works in store B: even with the right PIN he cannot approve a store A invoice.
+        $otherStoreManager = $this->createTenantUser($this->tenant, permissions: ['invoices.cancel'], attributes: [
+            'name' => 'مدير فرع ب',
+            'default_store_id' => $this->storeB,
+        ]);
+        $this->inTenant($this->tenant, fn () => $otherStoreManager->forceFill(['pos_pin' => Hash::make('5555')])->save());
+
+        $this->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', [
+            'reason' => 'x',
+            'override' => ['user_id' => $otherStoreManager->id, 'pin' => '5555'],
+        ], $this->tenantHeaders($this->tenant, $cancelOnly))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('override.pin');
+
+        $this->inTenant($this->tenant, function () use ($invoiceId): void {
+            $this->assertSame('confirmed', Invoice::findOrFail($invoiceId)->status);
+            $this->assertSame(0, Payment::query()->refunds()->count());
+        });
+    }
+
+    public function test_cancelling_without_an_approver_is_rejected_on_the_locked_invoice_when_cash_exists(): void
+    {
+        $this->openShift();
+        $invoiceId = $this->sell($this->customerId, '5.000', 'cash');
+
+        $this->inTenant($this->tenant, function () use ($invoiceId): void {
+            $this->actingAs(User::query()->orderBy('id')->firstOrFail());
+            $invoice = Invoice::findOrFail($invoiceId);
+
+            try {
+                app(InvoiceService::class)->cancelInvoice($invoice, 'race');
+                $this->fail('A cash invoice must not be cancelled without an approver.');
+            } catch (ValidationException $e) {
+                $this->assertArrayHasKey('override', $e->errors());
+            }
+
+            $this->assertSame('confirmed', Invoice::findOrFail($invoiceId)->status);
+            $this->assertSame(0, Payment::query()->refunds()->count());
         });
     }
 

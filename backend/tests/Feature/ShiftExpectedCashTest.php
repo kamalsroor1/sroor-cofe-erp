@@ -233,7 +233,7 @@ final class ShiftExpectedCashTest extends TenantTestCase
 
             $kept = $this->sell($this->storeA, '1.000');
             $cancelled = $this->sell($this->storeA, '2.000');
-            app(InvoiceService::class)->cancelInvoice($cancelled, 'test');
+            app(InvoiceService::class)->cancelInvoice($cancelled, 'test', $this->adminId); // BE-03: a cash sale needs an approver
 
             $totals = app(ShiftService::class)->calculateShiftTotals($shift->refresh());
 

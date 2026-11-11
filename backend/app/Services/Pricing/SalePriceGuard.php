@@ -8,12 +8,9 @@ use App\Exceptions\DiscountCapExceededException;
 use App\Models\Customer;
 use App\Models\Item;
 use App\Models\User;
-use App\Support\ActiveStore;
+use App\Services\Approvals\ManagerPinVerifier;
 use App\Support\Money\Decimal;
-use App\Support\RateLimitKey;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -39,13 +36,6 @@ final class SalePriceGuard
     public const SOURCE_RETAIL = 'retail';
 
     public const SOURCE_WHOLESALE = 'wholesale';
-
-    /** Failed PIN attempts allowed per approver and per acting user inside the decay window. */
-    private const MAX_ATTEMPTS_PER_APPROVER = 5;
-
-    private const MAX_ATTEMPTS_PER_ACTOR = 10;
-
-    private const DECAY_SECONDS = 300;
 
     private ?int $approverId = null;
 
@@ -265,37 +255,13 @@ final class SalePriceGuard
             throw ValidationException::withMessages(['override.pin' => __('pos.override_invalid')]);
         }
 
-        $scope = RateLimitKey::scope();
-        $approverKey = 'pos-override:'.$scope.':approver:'.$approverId;
-        $actorKey = 'pos-override:'.$scope.':actor:'.$this->actor->id;
-
-        if (RateLimiter::tooManyAttempts($approverKey, self::MAX_ATTEMPTS_PER_APPROVER)
-            || RateLimiter::tooManyAttempts($actorKey, self::MAX_ATTEMPTS_PER_ACTOR)) {
-            $wait = max(RateLimiter::availableIn($approverKey), RateLimiter::availableIn($actorKey), 1);
-
-            throw new ThrottleRequestsException(__('pos.override_throttled'), null, ['Retry-After' => (string) $wait]);
-        }
-
-        $approver = User::query()->whereKey($approverId)->where('is_active', true)->first();
-
-        // One generic failure for unknown user / no permission / no PIN / wrong PIN / no store access.
-        $valid = $approver instanceof User
-            && $approver->can($permission)
-            && ($storeId === null || ActiveStore::canAccess($approver, $storeId))
-            && is_string($approver->pos_pin)
-            && $approver->pos_pin !== ''
-            && Hash::check($pin, $approver->pos_pin);
-
-        if (! $valid) {
-            RateLimiter::hit($approverKey, self::DECAY_SECONDS);
-            RateLimiter::hit($actorKey, self::DECAY_SECONDS);
-
-            throw ValidationException::withMessages([
-                'override.pin' => __('pos.override_invalid'),
-            ]);
-        }
-
-        RateLimiter::clear($approverKey);
+        $approver = (new ManagerPinVerifier)->verify(
+            $approverId,
+            $pin,
+            $this->actor,
+            $storeId,
+            static fn (User $candidate): bool => $candidate->can($permission),
+        );
         $this->pinApprover = $approver;
 
         return (int) $approver->id;

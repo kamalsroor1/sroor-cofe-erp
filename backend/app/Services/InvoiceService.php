@@ -14,6 +14,7 @@ use App\Models\Payment;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\Invoices\InvoiceCancelGuard;
 use App\Services\Pricing\SaleDiscountGuard;
 use App\Services\Pricing\SalePriceGuard;
 use App\Services\Settings\TenantSettings;
@@ -575,6 +576,14 @@ class InvoiceService
                 throw BusinessRuleException::conflict('invoices.already_cancelled');
             }
 
+            // BE-03: the PIN requirement was decided before the lock. A cash payment may have landed since
+            // (a concurrent request), so re-check on the locked row: no approver now means a PIN is required.
+            if ($approvedBy === null && app(InvoiceCancelGuard::class)->hasActiveCashPayments($lockedInvoice)) {
+                throw ValidationException::withMessages([
+                    'override' => __('invoices.cancel_cash_requires_admin_pin'),
+                ]);
+            }
+
             ReturnSourceService::assertNoLiveReturns($lockedInvoice);
             // BE-03 lock order: document -> party -> items -> number sequences.
             if ($lockedInvoice->customer_id) {
@@ -600,9 +609,6 @@ class InvoiceService
             }
 
             $noteText = ($lockedInvoice->notes ? $lockedInvoice->notes."\n" : '')."تم الإلغاء: {$reason}";
-            if ($approvedBy !== null) {
-                $noteText .= " (موافقة أدمن: #{$approvedBy})";
-            }
 
             $lockedInvoice->update([
                 'status' => 'cancelled',
