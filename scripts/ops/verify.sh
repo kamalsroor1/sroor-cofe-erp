@@ -147,6 +147,11 @@ echo "== app layout"
 check "releases/ and shared/storage exist" test -d "$APP_ROOT/releases" -a -d "$APP_ROOT/shared/storage/logs"
 if [[ -s "$APP_ROOT/shared/.env" ]]; then
     check "shared .env meets production standards (TELESCOPE_ENABLED=false, APP_DEBUG=false...)" env_file_compliant
+    # [CTO-2026-11-11] A rehearsal .env passes the check above with waivers: say so loudly.
+    declare -A SHARED_ENV=()
+    if parse_env_file "$APP_ROOT/shared/.env" SHARED_ENV && [[ "${SHARED_ENV[RELEASE_REHEARSAL]:-}" == [Tt][Rr][Uu][Ee] ]]; then
+        printf 'WARN  REHEARSAL MODE: shared .env has RELEASE_REHEARSAL=true (SMTP / Telegram / Google Drive waived, see check-env.sh output) - NOT production-ready\n'
+    fi
 else
     printf 'SKIP  shared .env is empty (filled by OPS-4)\n'
 fi

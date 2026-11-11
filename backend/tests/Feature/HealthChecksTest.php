@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Health\Checks\BackupArchivePasswordCheck;
 use App\Health\Checks\BackupFreshnessCheck;
 use App\Health\Checks\DiskSpaceCheck;
+use App\Health\Checks\ReleaseRehearsalCheck;
 use App\Models\Tenant;
 use App\Models\TenantBackup;
 use App\Providers\HealthServiceProvider;
@@ -51,7 +52,46 @@ final class HealthChecksTest extends TenantTestCase
             QueueCheck::class,
             ScheduleCheck::class,
             BackupFreshnessCheck::class,
+            ReleaseRehearsalCheck::class,
         ], $this->classes(Health::registeredChecks()->all()));
+    }
+
+    public function test_the_rehearsal_check_never_joins_the_deploy_gate(): void
+    {
+        config(['health.sroor.release_rehearsal' => true]);
+
+        $this->assertNotContains(ReleaseRehearsalCheck::class, $this->classes(HealthServiceProvider::checks(true)));
+        $this->assertContains(ReleaseRehearsalCheck::class, $this->classes(HealthServiceProvider::checks(false)));
+    }
+
+    public function test_the_rehearsal_check_only_runs_when_the_marker_is_on(): void
+    {
+        config(['health.sroor.release_rehearsal' => false]);
+        $this->assertFalse(ReleaseRehearsalCheck::new()->if(static fn (): bool => ReleaseRehearsalCheck::enabled())->shouldRun());
+        $this->assertSame(Status::ok(), ReleaseRehearsalCheck::new()->run()->status);
+
+        config(['health.sroor.release_rehearsal' => true]);
+        $this->assertTrue(ReleaseRehearsalCheck::new()->if(static fn (): bool => ReleaseRehearsalCheck::enabled())->shouldRun());
+    }
+
+    public function test_rehearsal_mode_is_a_warning_naming_the_relaxed_settings(): void
+    {
+        config([
+            'health.sroor.release_rehearsal' => true,
+            'mail.default' => 'log',
+            'backup.tenants.disks' => ['local'],
+        ]);
+
+        $result = ReleaseRehearsalCheck::new()->run();
+
+        $this->assertSame(Status::warning(), $result->status);
+        $this->assertStringContainsString('MAIL_MAILER=log', $result->getNotificationMessage());
+        $this->assertStringContainsString('BACKUP_DISKS=local', $result->getNotificationMessage());
+
+        config(['mail.default' => 'smtp', 'backup.tenants.disks' => ['google']]);
+        $result = ReleaseRehearsalCheck::new()->run();
+        $this->assertSame(Status::warning(), $result->status, 'The marker alone keeps the warning until it is removed.');
+        $this->assertStringNotContainsString('MAIL_MAILER', $result->getNotificationMessage());
     }
 
     public function test_the_deploy_gate_only_runs_release_level_checks(): void

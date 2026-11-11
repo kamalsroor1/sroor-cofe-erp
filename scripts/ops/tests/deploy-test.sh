@@ -17,7 +17,9 @@
 # (TELESCOPE_ENABLED, BACKUP_ARCHIVE_PASSWORD, backup account, Google Drive,
 # SMTP, packaged .env, checksum), the deploy lock, manual rollback, pruning old
 # releases without touching shared/, app-releases:relocate copy-before / prune-after
-# the healthy switch (R1, prune never fatal), and that no secret ever reaches the output.
+# the healthy switch (R1, prune never fatal), rehearsal mode (--rehearsal must match
+# RELEASE_REHEARSAL in the .env, relaxations named, history `deployed-rehearsal`), and
+# that no secret ever reaches the output.
 
 set -euo pipefail
 
@@ -542,6 +544,73 @@ check "no '|| true' on a migrate or backup line" bash -c "! grep -nE '^[^#]*(mig
 check "tenants:migrate --force (all tenants) is present in deploy.sh" grep -q 'tenants:migrate --force' "$REPO_ROOT/scripts/ops/deploy.sh"
 check "pre-migration backup stage comes before migrate-central" bash -c "[[ \$(grep -n 'STAGE=\"pre-migration-backup\"' '$REPO_ROOT/scripts/ops/deploy.sh' | cut -d: -f1) -lt \$(grep -n 'STAGE=\"migrate-central\"' '$REPO_ROOT/scripts/ops/deploy.sh' | cut -d: -f1) ]]"
 check "legacy deploy_root_baraa.py refuses to run without the explicit override" grep -q 'SROOR_ALLOW_LEGACY_DEPLOY' "$REPO_ROOT/deploy_root_baraa.py"
+
+# ------------------------------------------------------------------------------------
+echo "7c. [CTO-2026-11-11] Rehearsal mode (--rehearsal <-> RELEASE_REHEARSAL=true)"
+# ------------------------------------------------------------------------------------
+# What render-env.sh --rehearsal produces when SMTP, Telegram and Drive are missing.
+write_rehearsal_env() {
+    sed -e 's/^MAIL_MAILER=.*/MAIL_MAILER=log/' -e 's/^MAIL_HOST=.*/MAIL_HOST=/' -e 's/^MAIL_PORT=.*/MAIL_PORT=/' \
+        -e 's/^MAIL_USERNAME=.*/MAIL_USERNAME=/' -e 's/^MAIL_PASSWORD=.*/MAIL_PASSWORD=/' \
+        -e 's/^BACKUP_DISKS=.*/BACKUP_DISKS=local/' -e 's/^BACKUP_NOTIFICATION_EMAIL=.*/BACKUP_NOTIFICATION_EMAIL=/' \
+        -e 's/^GOOGLE_DRIVE_CLIENT_ID=.*/GOOGLE_DRIVE_CLIENT_ID=/' -e 's/^GOOGLE_DRIVE_CLIENT_SECRET=.*/GOOGLE_DRIVE_CLIENT_SECRET=/' \
+        -e 's/^GOOGLE_DRIVE_REFRESH_TOKEN=.*/GOOGLE_DRIVE_REFRESH_TOKEN=/' \
+        "$WORK/env-one" >"$1"
+    printf 'TELEGRAM_BOT_TOKEN=\nTELEGRAM_CHAT_ID=\nRELEASE_REHEARSAL=true\n' >>"$1"
+}
+write_rehearsal_env "$WORK/env-rehearsal"
+
+new_root rehearsal
+run_deploy "$SHA1" "$WORK/good1.tar.gz" "$WORK/env-rehearsal"
+DETAIL="$OUT"
+check "rehearsal .env without --rehearsal: refused at preflight (exit 1, nothing extracted)" \
+    bash -c "[[ $RC -eq 1 && \$(find '$ROOT/releases' -mindepth 1 | wc -l) -eq 0 ]]"
+check "rehearsal .env without --rehearsal: the gate says strict was requested" grep -q 'strict mode was requested' <<<"$OUT"
+check "rehearsal .env without --rehearsal: no artisan call" bash -c "! grep -q '^php ' '$FAKE_LOG'"
+
+run_deploy "$SHA1" "$WORK/good1.tar.gz" "$WORK/env-one" --rehearsal
+DETAIL="$OUT"
+check "--rehearsal with a strict .env: refused at preflight (exit 1)" bash -c "[[ $RC -eq 1 && \$(find '$ROOT/releases' -mindepth 1 | wc -l) -eq 0 ]]"
+
+sed -e 's/^BACKUP_ARCHIVE_PASSWORD=.*/BACKUP_ARCHIVE_PASSWORD=/' "$WORK/env-rehearsal" >"$WORK/env-rehearsal-bad"
+run_deploy "$SHA1" "$WORK/good1.tar.gz" "$WORK/env-rehearsal-bad" --rehearsal
+check "--rehearsal never waives BACKUP_ARCHIVE_PASSWORD (D4)" test "$RC" -eq 1
+sed -e 's/^TELESCOPE_ENABLED=.*/TELESCOPE_ENABLED=true/' "$WORK/env-rehearsal" >"$WORK/env-rehearsal-bad"
+run_deploy "$SHA1" "$WORK/good1.tar.gz" "$WORK/env-rehearsal-bad" --rehearsal
+check "--rehearsal never waives TELESCOPE_ENABLED=false" test "$RC" -eq 1
+check "refused rehearsal runs never touched shared/.env" test ! -s "$ROOT/shared/.env"
+
+run_deploy "$SHA1" "$WORK/good1.tar.gz" "$WORK/env-rehearsal" --rehearsal
+DETAIL="$OUT"
+check "first deploy in rehearsal mode exits 0" test "$RC" -eq 0
+R1="$(current_id)"
+check "rehearsal: banner in the server deploy log" grep -q 'WARN  REHEARSAL MODE: this release runs with RELEASE_REHEARSAL=true' <<<"$OUT"
+for note in "MAIL_MAILER=log" "BACKUP_DISKS=local" "TELEGRAM_BOT_TOKEN empty" "TELEGRAM_CHAT_ID empty" "BACKUP_NOTIFICATION_EMAIL empty"; do
+    check "rehearsal: relaxation named in the deploy log: $note" grep -qF "REHEARSAL relaxed: $note" <<<"$OUT"
+done
+check "rehearsal: the live-release line repeats the warning" grep -q "REHEARSAL MODE: release $R1 is live" <<<"$OUT"
+check "rehearsal: history says deployed-rehearsal" grep -q "$R1 $SHA1 deployed-rehearsal" "$ROOT/shared/deploy-history.log"
+DETAIL="$(cat "$FAKE_LOG")"
+check "rehearsal: the health gate still runs before and after the switch" \
+    in_order "php health:check @$R1" "sudo -n /usr/bin/systemctl reload php8.5-fpm" "php health:check @current" "curl "
+check "rehearsal: shared/.env carries the marker" grep -qx 'RELEASE_REHEARSAL=true' "$ROOT/shared/.env"
+
+run_deploy "$SHA2" "$WORK/good2.tar.gz" - --rehearsal
+DETAIL="$(cat "$FAKE_LOG")"
+check "rehearsal second deploy (shared/.env, --rehearsal) exits 0" test "$RC" -eq 0
+check "rehearsal second deploy: pre-migration backup still runs before migrate" in_order "php backup:tenants" "php migrate" "php tenants:migrate"
+
+run_deploy "$SHA3" "$WORK/good3.tar.gz" -
+DETAIL="$OUT"
+check "strict deploy on a rehearsal shared/.env (no --env-file): refused" test "$RC" -eq 1
+check "refused strict deploy: shared/.env still the rehearsal one" grep -qx 'RELEASE_REHEARSAL=true' "$ROOT/shared/.env"
+
+run_deploy "$SHA3" "$WORK/good3.tar.gz" "$WORK/env-two"
+DETAIL="$OUT"
+check "back to strict: deploy with a strict --env-file exits 0" test "$RC" -eq 0
+check "back to strict: no REHEARSAL line in the deploy log" bash -c "! grep -q REHEARSAL <<<'$(printf '%s' "$OUT" | tr -d "'")'"
+check "back to strict: history says deployed (not rehearsal)" bash -c "tail -1 '$ROOT/shared/deploy-history.log' | grep -qE ' deployed$'"
+check "back to strict: shared/.env has no rehearsal marker" bash -c "! grep -q '^RELEASE_REHEARSAL=true' '$ROOT/shared/.env'"
 
 # ------------------------------------------------------------------------------------
 echo "8. Secrets"

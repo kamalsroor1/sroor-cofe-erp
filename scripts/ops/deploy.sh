@@ -9,7 +9,7 @@ set -euo pipefail
 #                 --deploy-env deploy.env [--env-file production.env] \
 #                 [--php-version 8.5] [--queue-mode horizon|worker] [--keep 5] \
 #                 [--health-url https://host/up|none] [--allow-no-health-checks]
-#                 [--skip-pre-migration-backup]
+#                 [--skip-pre-migration-backup] [--rehearsal]
 #   rollback: bash deploy.sh --app-root /var/www/sroor --rollback \
 #                 [--php-version 8.5] [--queue-mode horizon|worker] [--health-url URL|none]
 #
@@ -37,6 +37,11 @@ set -euo pipefail
 # dir (removed on exit), nothing secret is printed. The deploy env (migrator
 # password) is never copied into the release or shared/; the caller deletes it
 # (release.yml removes its upload directory in every case).
+#
+# [CTO-2026-11-11] --rehearsal: the .env must be a rehearsal .env (RELEASE_REHEARSAL=true,
+# from `render-env.sh --rehearsal`) and without the flag it must NOT be one (check-env.sh
+# --mode). The relaxed keys are printed as WARN lines (names only) at preflight and after
+# the release went live, and the history line says `deployed-rehearsal`.
 #
 # Test hooks (scripts/ops/tests/deploy-test.sh): OPS_PHP_BIN, OPS_HEALTH_DELAY,
 # OPS_HEALTH_ATTEMPTS. Nothing else changes behaviour.
@@ -69,6 +74,8 @@ HEALTH_URL=""
 ALLOW_NO_HEALTH_CHECKS=0
 SKIP_PRE_MIGRATION_BACKUP=0
 ROLLBACK_ONLY=0
+RELEASE_MODE="strict"
+REHEARSAL_NOTES=()
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -98,6 +105,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --rollback)
             ROLLBACK_ONLY=1
+            shift
+            ;;
+        --rehearsal)
+            RELEASE_MODE="rehearsal"
             shift
             ;;
         -h | --help) usage ;;
@@ -366,8 +377,8 @@ if [[ -n "$NEW_ENV" ]]; then
     CANDIDATE_ENV="$NEW_ENV"
 fi
 [[ -s "$CANDIDATE_ENV" ]] || die "no production .env: pass --env-file or fill $SHARED/.env"
-info "preflight: production standards of the .env (values are never printed)"
-bash "$SCRIPT_DIR/check-env.sh" "$CANDIDATE_ENV" || die "the .env violates the production standards: release refused"
+info "preflight: production standards of the .env (mode: $RELEASE_MODE, values are never printed)"
+bash "$SCRIPT_DIR/check-env.sh" "$CANDIDATE_ENV" --mode "$RELEASE_MODE" || die "the .env violates the $RELEASE_MODE production standards: release refused"
 
 declare -A ENVV=()
 declare -A DEPV=()
@@ -375,6 +386,22 @@ parse_env_file "$CANDIDATE_ENV" ENVV || die "cannot parse the candidate .env"
 [[ -f "$DEPLOY_ENV" ]] || die "deploy env not found: $DEPLOY_ENV"
 chmod 600 "$DEPLOY_ENV"
 parse_env_file "$DEPLOY_ENV" DEPV || die "cannot parse the deploy env"
+
+# [CTO-2026-11-11] Rehearsal: name every relaxation once, loudly (names only, never values).
+if [[ "$RELEASE_MODE" == "rehearsal" ]]; then
+    mailer_v="${ENVV[MAIL_MAILER]:-}"
+    [[ "${mailer_v,,}" != "log" ]] || REHEARSAL_NOTES+=("MAIL_MAILER=log (no mail leaves the server)")
+    disks_v="${ENVV[BACKUP_TENANT_DISKS]:-${ENVV[BACKUP_DISKS]:-local}}"
+    disks_v=",${disks_v// /},"
+    [[ "$disks_v" == *",google,"* ]] || REHEARSAL_NOTES+=("BACKUP_DISKS=local (backups stay on this server, not on Google Drive)")
+    for key in TELEGRAM_BOT_TOKEN TELEGRAM_CHAT_ID BACKUP_NOTIFICATION_EMAIL; do
+        [[ -n "${ENVV[$key]:-}" ]] || REHEARSAL_NOTES+=("$key empty")
+    done
+    warn "REHEARSAL MODE: this release runs with RELEASE_REHEARSAL=true - NOT production-ready"
+    for note in "${REHEARSAL_NOTES[@]}"; do
+        warn "REHEARSAL relaxed: $note"
+    done
+fi
 
 for key in DB_DATABASE DB_USERNAME DB_PASSWORD DB_AUDIT_PRUNER_USERNAME DB_AUDIT_PRUNER_PASSWORD; do
     [[ -n "${ENVV[$key]:-}" ]] || die "$key missing in the .env"
@@ -524,5 +551,15 @@ for old in "${all_releases[@]}"; do
     excess=$((excess - 1))
 done
 
-record_history "deployed"
+if [[ "$RELEASE_MODE" == "rehearsal" ]]; then
+    record_history "deployed-rehearsal"
+else
+    record_history "deployed"
+fi
 info "release $RELEASE_ID is live (rollback: bash $SCRIPT_DIR/deploy.sh --app-root $APP_ROOT --rollback)"
+if [[ "$RELEASE_MODE" == "rehearsal" ]]; then
+    warn "REHEARSAL MODE: release $RELEASE_ID is live with RELEASE_REHEARSAL=true. Before the first customer: add the waived secrets/vars, delete RELEASE_REHEARSAL in GitHub and release again (docs/07-operations/deploy-runbook.md §7)"
+    for note in "${REHEARSAL_NOTES[@]}"; do
+        warn "REHEARSAL relaxed: $note"
+    done
+fi

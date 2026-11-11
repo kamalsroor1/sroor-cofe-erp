@@ -3,7 +3,7 @@
 # (docs/01-overview/product-overview.md, vps-runbook.md §8) WITHOUT printing
 # any value. Read-only. Exit 0 = compliant, 1 = violations, 2 = usage error.
 #
-#   bash scripts/ops/check-env.sh /var/www/sroor/shared/.env [--check-perms]
+#   bash scripts/ops/check-env.sh /var/www/sroor/shared/.env [--check-perms] [--mode strict|rehearsal]
 #
 # Reused by the release pipeline (OPS-3, scripts/ops/deploy.sh preflight) as
 # the gate for: TELESCOPE_ENABLED=false, BACKUP_ARCHIVE_PASSWORD set (CTO
@@ -11,6 +11,17 @@
 # mandatory SMTP (W1 Q6), the audit_pruner account (IDEN-1.15) and the
 # central hosts CENTRAL_DOMAIN / CENTRAL_ADMIN_DOMAINS / CENTRAL_PASSWORD_RESET_URL.
 # WARN lines never fail the run.
+#
+# [CTO-2026-11-11] Rehearsal: a .env with RELEASE_REHEARSAL=true (written only by
+# `render-env.sh --rehearsal`) prints a REHEARSAL banner and turns exactly these
+# violations into WARN lines (names only): MAIL_MAILER=log instead of SMTP, and
+# BACKUP_DISKS=local instead of google; empty TELEGRAM_* / BACKUP_NOTIFICATION_EMAIL
+# are warned about. Everything else (BACKUP_ARCHIVE_PASSWORD, the backup account,
+# APP_DEBUG, TELESCOPE_ENABLED...) stays mandatory. Without the marker the checks
+# are the strict ones, unchanged.
+#   --mode strict     the file MUST NOT be a rehearsal .env (release.yml / deploy.sh)
+#   --mode rehearsal  the file MUST be a rehearsal .env
+#   (no --mode)       accept either (verify.sh), the banner still shows the mode
 
 set -euo pipefail
 
@@ -19,18 +30,29 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
 
 usage() {
-    printf 'usage: %s <env-file> [--check-perms]\n' "$(basename "$0")" >&2
+    printf 'usage: %s <env-file> [--check-perms] [--mode strict|rehearsal]\n' "$(basename "$0")" >&2
     exit 2
 }
 
 [[ $# -ge 1 ]] || usage
 ENV_FILE="$1"
+shift
 CHECK_PERMS=0
-if [[ "${2:-}" == "--check-perms" ]]; then
-    CHECK_PERMS=1
-elif [[ -n "${2:-}" ]]; then
-    usage
-fi
+EXPECT_MODE=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --check-perms)
+            CHECK_PERMS=1
+            shift
+            ;;
+        --mode)
+            [[ $# -ge 2 && ("$2" == "strict" || "$2" == "rehearsal") ]] || usage
+            EXPECT_MODE="$2"
+            shift 2
+            ;;
+        *) usage ;;
+    esac
+done
 
 if [[ ! -f "$ENV_FILE" ]]; then
     printf 'FAIL  env file not found: %s\n' "$ENV_FILE"
@@ -56,6 +78,11 @@ warning() {
     printf 'WARN  %s\n' "$1"
 }
 
+# [CTO-2026-11-11] Rehearsal relaxations are WARN lines with a fixed prefix.
+rehearsal_warning() {
+    warning "REHEARSAL $1"
+}
+
 # No subshells below: forks are slow on some hosts (Git Bash on Windows).
 must_equal() {
     local key="$1" expected="$2" why="$3"
@@ -71,6 +98,23 @@ must_be_set() {
         violation "$key must be set ($why)"
     fi
 }
+
+# [CTO-2026-11-11] Release mode marker (render-env.sh --rehearsal).
+REHEARSAL=0
+rehearsal_raw="${ENV_VALUES[RELEASE_REHEARSAL]:-}"
+case "${rehearsal_raw,,}" in
+    "" | false) ;;
+    true)
+        REHEARSAL=1
+        warning "REHEARSAL MODE: RELEASE_REHEARSAL=true - this .env is NOT production-ready (SMTP / Telegram / Google Drive may be waived)"
+        ;;
+    *) violation "RELEASE_REHEARSAL must be true, false or absent" ;;
+esac
+if [[ "$EXPECT_MODE" == "strict" && "$REHEARSAL" -eq 1 ]]; then
+    violation "RELEASE_REHEARSAL=true but the strict mode was requested (render without --rehearsal, or deploy with --rehearsal knowingly)"
+elif [[ "$EXPECT_MODE" == "rehearsal" && "$REHEARSAL" -eq 0 ]]; then
+    violation "rehearsal mode was requested but the .env is not a rehearsal .env (RELEASE_REHEARSAL is not true)"
+fi
 
 must_equal APP_ENV production "production standard #2"
 must_equal APP_DEBUG false "production standard #2: no stack traces to clients"
@@ -148,12 +192,17 @@ else
 fi
 
 # Mandatory SMTP (W1 Q6): password resets, 2FA and billing mails must leave the box.
-must_equal MAIL_MAILER smtp "W1 Q6: SMTP is mandatory (Brevo or SES SMTP)"
-must_be_set MAIL_HOST "SMTP host"
-must_be_set MAIL_USERNAME "SMTP user"
-must_be_set MAIL_PASSWORD "SMTP secret"
-if [[ ! "${ENV_VALUES[MAIL_PORT]:-}" =~ ^[0-9]{2,5}$ ]]; then
-    violation "MAIL_PORT must be set to a port number (SMTP)"
+mail_mailer="${ENV_VALUES[MAIL_MAILER]:-}"
+if [[ "$REHEARSAL" -eq 1 && "${mail_mailer,,}" == "log" ]]; then
+    rehearsal_warning "MAIL_MAILER=log: no mail leaves the server (password resets, billing, backup/health alerts are discarded: the log mailer writes at debug level) - waived: MAIL_HOST MAIL_PORT MAIL_USERNAME MAIL_PASSWORD"
+else
+    must_equal MAIL_MAILER smtp "W1 Q6: SMTP is mandatory (Brevo or SES SMTP)"
+    must_be_set MAIL_HOST "SMTP host"
+    must_be_set MAIL_USERNAME "SMTP user"
+    must_be_set MAIL_PASSWORD "SMTP secret"
+    if [[ ! "${ENV_VALUES[MAIL_PORT]:-}" =~ ^[0-9]{2,5}$ ]]; then
+        violation "MAIL_PORT must be set to a port number (SMTP)"
+    fi
 fi
 if [[ "${ENV_VALUES[MAIL_FROM_ADDRESS]:-}" != *?@?* ]]; then
     violation "MAIL_FROM_ADDRESS must be set to an e-mail address"
@@ -184,8 +233,23 @@ if [[ "$backup_disks" == *",google,"* ]]; then
     if [[ -z "${ENV_VALUES[BACKUP_NOTIFICATION_EMAIL]:-}" ]]; then
         warning "BACKUP_NOTIFICATION_EMAIL is empty: backup failures are mailed to MAIL_FROM_ADDRESS"
     fi
+elif [[ "$REHEARSAL" -eq 1 && "$backup_disks" == *",local,"* ]]; then
+    rehearsal_warning "BACKUP_DISKS=local: encrypted archives stay on THIS server, not on Google Drive (production standard #8 waived) - waived: GOOGLE_DRIVE_CLIENT_ID GOOGLE_DRIVE_CLIENT_SECRET GOOGLE_DRIVE_REFRESH_TOKEN"
+    if [[ -z "${ENV_VALUES[BACKUP_NOTIFICATION_EMAIL]:-}" ]]; then
+        rehearsal_warning "BACKUP_NOTIFICATION_EMAIL is empty: backup failures are only logged"
+    fi
 else
     violation "BACKUP_DISKS (or BACKUP_TENANT_DISKS) must include google: backups must leave the server (production standard #8)"
+fi
+
+if [[ "$REHEARSAL" -eq 1 ]]; then
+    tg_missing=()
+    for _k in TELEGRAM_BOT_TOKEN TELEGRAM_CHAT_ID; do
+        [[ -n "${ENV_VALUES[$_k]:-}" ]] || tg_missing+=("$_k")
+    done
+    if [[ ${#tg_missing[@]} -gt 0 ]]; then
+        rehearsal_warning "empty and waived: ${tg_missing[*]} (no Telegram alerts)"
+    fi
 fi
 
 # Sentry (OPS-7): DSN only in this file; never send PII.
@@ -215,4 +279,8 @@ if [[ "$VIOLATIONS" -gt 0 ]]; then
     exit 1
 fi
 
+if [[ "$REHEARSAL" -eq 1 ]]; then
+    printf 'PASS  %s meets the REHEARSAL standards only (%d warning(s)) - NOT production-ready: add the waived keys and delete RELEASE_REHEARSAL\n' "$ENV_FILE" "$WARNINGS"
+    exit 0
+fi
 printf 'PASS  %s meets the production standards (%d warning(s))\n' "$ENV_FILE" "$WARNINGS"

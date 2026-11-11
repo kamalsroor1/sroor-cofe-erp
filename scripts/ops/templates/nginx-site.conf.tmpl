@@ -17,6 +17,33 @@ server {
     return 301 https://$host$request_uri;
 }
 
+# [CTO-2026-11-11] www.<domain> is never a shop (`www` is a reserved signup slug) and
+# is not a central domain: one hop straight to the apex. An exact server_name wins
+# over the *.<domain> wildcard, so these two blocks take www before the app sees it.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name www.${PLATFORM_DOMAIN};
+    return 301 https://${PLATFORM_DOMAIN}$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name www.${PLATFORM_DOMAIN};
+
+    # Same wildcard certificate (*.<domain> covers www).
+    ssl_certificate /etc/letsencrypt/live/${PLATFORM_DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${PLATFORM_DOMAIN}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_session_tickets off;
+
+    add_header Strict-Transport-Security "max-age=${HSTS_MAX_AGE}" always;
+    return 301 https://${PLATFORM_DOMAIN}$request_uri;
+}
+
 # HTTPS for unknown Host / SNI values: refuse the handshake.
 server {
     listen 443 ssl default_server;

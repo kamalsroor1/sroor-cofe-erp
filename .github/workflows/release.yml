@@ -19,6 +19,14 @@
 #
 # Secrets/vars it reads are listed in docs/07-operations/secrets.md §2. No value
 # is ever echoed: they reach scripts through `env:` and files with mode 600.
+#
+# [CTO-2026-11-11] Rehearsal switch: the `production` Environment VARIABLE
+# RELEASE_REHEARSAL=true (set and deleted by the CTO; a tag push has no inputs).
+# Then render-env.sh --rehearsal may leave SMTP, Telegram, Google Drive and
+# BACKUP_NOTIFICATION_EMAIL empty (MAIL_MAILER=log, BACKUP_DISKS=local), the
+# gate and deploy.sh run in rehearsal mode and every relaxation is a WARN line
+# + a ::warning annotation. Absent or `false` = strict mode, unchanged. Any
+# other value fails the job. Runbook: deploy-runbook.md §7.
 
 name: release
 
@@ -241,6 +249,26 @@ jobs:
           EXPECTED_SHA256: ${{ needs.build.outputs.sha256 }}
         run: echo "${EXPECTED_SHA256}  $RUNNER_TEMP/release/release.tar.gz" | sha256sum -c -
 
+      # [CTO-2026-11-11] strict (default) or rehearsal, from the Environment variable.
+      - name: Release mode (RELEASE_REHEARSAL)
+        env:
+          REHEARSAL_SWITCH: ${{ vars.RELEASE_REHEARSAL }}
+        run: |
+          set -euo pipefail
+          case "$REHEARSAL_SWITCH" in
+            "" | false) mode=strict ;;
+            true)
+              mode=rehearsal
+              echo "::warning title=REHEARSAL MODE::RELEASE_REHEARSAL=true: SMTP, Telegram and Google Drive may be empty (MAIL_MAILER=log, BACKUP_DISKS=local). NOT production-ready: delete the variable before the first customer."
+              ;;
+            *)
+              echo "::error::RELEASE_REHEARSAL must be exactly 'true' (rehearsal) or deleted/'false' (strict)"
+              exit 1
+              ;;
+          esac
+          echo "RELEASE_MODE=$mode" >> "$GITHUB_ENV"
+          echo "release mode: $mode"
+
       - name: Render the production .env (values never printed)
         env:
           APP_KEY: ${{ secrets.APP_KEY }}
@@ -271,14 +299,23 @@ jobs:
         run: |
           set -euo pipefail
           umask 077
-          bash scripts/ops/render-env.sh scripts/ops/templates/production.env.example \
-            "$RUNNER_TEMP/production.env" --optional SESSION_DOMAIN,SENTRY_LARAVEL_DSN,GOOGLE_DRIVE_FOLDER_ID
+          if [[ "$RELEASE_MODE" == "rehearsal" ]]; then
+            bash scripts/ops/render-env.sh scripts/ops/templates/production.env.example \
+              "$RUNNER_TEMP/production.env" --optional SESSION_DOMAIN,SENTRY_LARAVEL_DSN,GOOGLE_DRIVE_FOLDER_ID --rehearsal \
+              | tee "$RUNNER_TEMP/render.out"
+            grep '^WARN  ' "$RUNNER_TEMP/render.out" | sed 's/^WARN  /::warning title=REHEARSAL::/' || true
+            rm -f "$RUNNER_TEMP/render.out"
+          else
+            bash scripts/ops/render-env.sh scripts/ops/templates/production.env.example \
+              "$RUNNER_TEMP/production.env" --optional SESSION_DOMAIN,SENTRY_LARAVEL_DSN,GOOGLE_DRIVE_FOLDER_ID
+          fi
 
       # Fails the release if TELESCOPE_ENABLED is not false, BACKUP_ARCHIVE_PASSWORD
       # is empty (CTO decision D4), SMTP is incomplete, APP_DEBUG is on, ...
+      # (rehearsal: SMTP / Google Drive relaxed to WARN lines, nothing else).
       # deploy.sh runs the same gate again on the server.
       - name: Production standards gate
-        run: bash scripts/ops/check-env.sh "$RUNNER_TEMP/production.env"
+        run: bash scripts/ops/check-env.sh "$RUNNER_TEMP/production.env" --mode "$RELEASE_MODE"
 
       - name: Render the deploy-only env (migrator account, never in the app .env)
         env:
@@ -350,19 +387,24 @@ jobs:
           ALLOW_NO_HEALTH_CHECKS: ${{ github.event_name == 'workflow_dispatch' && inputs.allow_no_health_checks && 'allow-no-health-checks' || 'strict' }}
         run: |
           set -euo pipefail
-          ssh -F "$SSH_CONFIG" sroor-vps bash -s -- "$APP_ROOT" "$INCOMING" "$GITHUB_SHA" "$ARTIFACT_SHA256" "$ALLOW_NO_HEALTH_CHECKS" <<'REMOTE'
+          [[ "$RELEASE_MODE" == "strict" || "$RELEASE_MODE" == "rehearsal" ]] || { echo "::error::RELEASE_MODE is not set"; exit 1; }
+          ssh -F "$SSH_CONFIG" sroor-vps bash -s -- "$APP_ROOT" "$INCOMING" "$GITHUB_SHA" "$ARTIFACT_SHA256" "$ALLOW_NO_HEALTH_CHECKS" "$RELEASE_MODE" <<'REMOTE'
           set -euo pipefail
           app_root="$1"
           incoming="$2"
           sha="$3"
           sum="$4"
           health_mode="$5"
+          release_mode="$6"
           # The upload (incl. both env files) never outlives this run.
           trap 'rm -rf "$incoming"' EXIT
           args=(--app-root "$app_root" --sha "$sha" --artifact "$incoming/release.tar.gz" --artifact-sha256 "$sum"
             --deploy-env "$incoming/deploy.env" --env-file "$incoming/production.env" --php-version 8.5 --queue-mode horizon)
           if [[ "$health_mode" == "allow-no-health-checks" ]]; then
             args+=(--allow-no-health-checks)
+          fi
+          if [[ "$release_mode" == "rehearsal" ]]; then
+            args+=(--rehearsal)
           fi
           # </dev/null: nothing in the deploy may read the rest of this script from stdin.
           bash "$incoming/ops/deploy.sh" "${args[@]}" </dev/null

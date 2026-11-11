@@ -587,6 +587,94 @@ else
     fail "templates/production.env.example is production-compliant" "$(printf '%s' "$out" | head -5)"
 fi
 
+# [CTO-2026-11-11] Rehearsal mode: RELEASE_REHEARSAL=true relaxes SMTP / Google Drive
+# to WARN lines (names only); everything else stays mandatory. Strict output unchanged.
+if [[ "$out" != *REHEARSAL* ]]; then
+    pass "strict .env: no REHEARSAL line in the output"
+else
+    fail "strict .env: no REHEARSAL line in the output"
+fi
+run_capture out rc bash "$CHECK_ENV" "$GOOD_ENV"
+if [[ "$rc" -eq 0 && "$out" != *REHEARSAL* && "$out" == *"meets the production standards"* ]]; then
+    pass "compliant strict .env: same PASS line, no REHEARSAL"
+else
+    fail "compliant strict .env: same PASS line, no REHEARSAL" "$(printf '%s' "$out" | head -5)"
+fi
+
+REHEARSAL_ENV="$WORK_DIR/rehearsal.env"
+sed -e 's/^MAIL_MAILER=.*/MAIL_MAILER=log/' \
+    -e 's/^MAIL_HOST=.*/MAIL_HOST=/' -e 's/^MAIL_PORT=.*/MAIL_PORT=/' \
+    -e 's/^MAIL_USERNAME=.*/MAIL_USERNAME=/' -e 's/^MAIL_PASSWORD=.*/MAIL_PASSWORD=/' \
+    -e 's/^BACKUP_DISKS=.*/BACKUP_DISKS=local/' -e 's/^BACKUP_NOTIFICATION_EMAIL=.*/BACKUP_NOTIFICATION_EMAIL=/' \
+    -e 's/^GOOGLE_DRIVE_CLIENT_ID=.*/GOOGLE_DRIVE_CLIENT_ID=/' -e 's/^GOOGLE_DRIVE_CLIENT_SECRET=.*/GOOGLE_DRIVE_CLIENT_SECRET=/' \
+    -e 's/^GOOGLE_DRIVE_REFRESH_TOKEN=.*/GOOGLE_DRIVE_REFRESH_TOKEN=/' \
+    "$GOOD_ENV" >"$REHEARSAL_ENV"
+printf 'TELEGRAM_BOT_TOKEN=\nTELEGRAM_CHAT_ID=\nRELEASE_REHEARSAL=true\n' >>"$REHEARSAL_ENV"
+
+run_capture out rc bash "$CHECK_ENV" "$REHEARSAL_ENV"
+if [[ "$rc" -eq 0 && "$out" == *"WARN  REHEARSAL MODE"* && "$out" == *"meets the REHEARSAL standards only"* ]]; then
+    pass "rehearsal .env passes with the REHEARSAL banner and PASS line"
+else
+    fail "rehearsal .env passes with the REHEARSAL banner and PASS line" "$(printf '%s' "$out" | head -8)"
+fi
+for name in "MAIL_MAILER=log" MAIL_HOST MAIL_PORT MAIL_USERNAME MAIL_PASSWORD "BACKUP_DISKS=local" GOOGLE_DRIVE_CLIENT_ID \
+    GOOGLE_DRIVE_CLIENT_SECRET GOOGLE_DRIVE_REFRESH_TOKEN BACKUP_NOTIFICATION_EMAIL TELEGRAM_BOT_TOKEN TELEGRAM_CHAT_ID; do
+    if grep -q "^WARN  REHEARSAL .*$name" <<<"$out"; then
+        pass "rehearsal WARN names $name"
+    else
+        fail "rehearsal WARN names $name"
+    fi
+done
+if [[ "$out" == *"$FAKE_SECRET"* ]]; then fail "rehearsal: never prints secrets"; else pass "rehearsal: never prints secrets"; fi
+run_capture out rc bash "$CHECK_ENV" "$REHEARSAL_ENV" --mode rehearsal --check-perms
+chmod 600 "$REHEARSAL_ENV"
+run_capture out rc bash "$CHECK_ENV" "$REHEARSAL_ENV" --mode rehearsal --check-perms
+if [[ "$rc" -eq 0 ]]; then pass "rehearsal .env + --mode rehearsal --check-perms passes"; else fail "rehearsal .env + --mode rehearsal --check-perms passes" "$(printf '%s' "$out" | head -5)"; fi
+run_capture out rc bash "$CHECK_ENV" "$REHEARSAL_ENV" --mode strict
+if [[ "$rc" -eq 1 && "$out" == *"strict mode was requested"* ]]; then pass "--mode strict refuses a rehearsal .env"; else fail "--mode strict refuses a rehearsal .env"; fi
+run_capture out rc bash "$CHECK_ENV" "$GOOD_ENV" --mode rehearsal
+if [[ "$rc" -eq 1 ]]; then pass "--mode rehearsal refuses a strict .env"; else fail "--mode rehearsal refuses a strict .env"; fi
+run_capture out rc bash "$CHECK_ENV" "$GOOD_ENV" --mode strict
+if [[ "$rc" -eq 0 ]]; then pass "--mode strict accepts a compliant strict .env"; else fail "--mode strict accepts a compliant strict .env"; fi
+run_capture out rc bash "$CHECK_ENV" "$GOOD_ENV" --mode sometimes
+if [[ "$rc" -eq 2 ]]; then pass "--mode with an unknown value is a usage error"; else fail "--mode with an unknown value is a usage error" "rc=$rc"; fi
+
+# Without the marker the very same waivers are violations (strict is unchanged).
+sed -e '/^RELEASE_REHEARSAL=/d' "$REHEARSAL_ENV" >"$WORK_DIR/rehearsal-nomarker.env"
+run_capture out rc bash "$CHECK_ENV" "$WORK_DIR/rehearsal-nomarker.env"
+if [[ "$rc" -eq 1 && "$out" == *"MAIL_MAILER must be smtp"* && "$out" == *"must include google"* ]]; then
+    pass "same waivers without RELEASE_REHEARSAL=true: strict violations"
+else
+    fail "same waivers without RELEASE_REHEARSAL=true: strict violations" "$(printf '%s' "$out" | head -5)"
+fi
+
+# Rehearsal never relaxes anything else.
+REHEARSAL_BAD_CASES=(
+    "BACKUP_ARCHIVE_PASSWORD empty (D4)|s/^BACKUP_ARCHIVE_PASSWORD=.*/BACKUP_ARCHIVE_PASSWORD=/"
+    "DB_BACKUP_PASSWORD empty|s/^DB_BACKUP_PASSWORD=.*/DB_BACKUP_PASSWORD=/"
+    "APP_DEBUG=true|s/^APP_DEBUG=.*/APP_DEBUG=true/"
+    "TELESCOPE_ENABLED=true|s/^TELESCOPE_ENABLED=.*/TELESCOPE_ENABLED=true/"
+    "QUEUE_CONNECTION=sync|s/^QUEUE_CONNECTION=.*/QUEUE_CONNECTION=sync/"
+    "DB_AUDIT_PRUNER_PASSWORD empty|s/^DB_AUDIT_PRUNER_PASSWORD=.*/DB_AUDIT_PRUNER_PASSWORD=/"
+    "MAIL_MAILER=sendmail (only smtp or log)|s/^MAIL_MAILER=.*/MAIL_MAILER=sendmail/"
+    "MAIL_MAILER=smtp but SMTP incomplete|s/^MAIL_MAILER=.*/MAIL_MAILER=smtp/"
+    "MAIL_FROM_ADDRESS empty|s/^MAIL_FROM_ADDRESS=.*/MAIL_FROM_ADDRESS=/"
+    "BACKUP_DISKS=s3 (neither google nor local)|s/^BACKUP_DISKS=.*/BACKUP_DISKS=s3/"
+    "BACKUP_DISKS=google without Drive credentials|s/^BACKUP_DISKS=.*/BACKUP_DISKS=google/"
+    "RELEASE_REHEARSAL=maybe|s/^RELEASE_REHEARSAL=.*/RELEASE_REHEARSAL=maybe/"
+)
+for case in "${REHEARSAL_BAD_CASES[@]}"; do
+    name="${case%%|*}"
+    expr="${case#*|}"
+    sed -e "$expr" "$REHEARSAL_ENV" >"$WORK_DIR/rehearsal-bad.env"
+    run_capture out rc bash "$CHECK_ENV" "$WORK_DIR/rehearsal-bad.env"
+    if [[ "$rc" -ne 0 ]]; then
+        pass "rehearsal still rejects: $name"
+    else
+        fail "rehearsal still rejects: $name" "check-env.sh exited 0"
+    fi
+done
+
 # --------------------------------------------------------------------------
 echo "6. Safe .env parsing (no code execution)"
 # --------------------------------------------------------------------------
@@ -674,6 +762,20 @@ assert_file_contains "nginx serves the current release only" "$WORK_DIR/nginx-si
 assert_file_contains "nginx resolves the release symlink for PHP" "$WORK_DIR/nginx-site.conf" '$realpath_root$fastcgi_script_name'
 assert_file_contains "nginx keeps nginx runtime variables" "$WORK_DIR/nginx-site.conf" 'return 301 https://$host$request_uri;'
 assert_file_contains "nginx rejects unknown hosts on 443" "$WORK_DIR/nginx-site.conf" 'ssl_reject_handshake on;'
+# [CTO-2026-11-11] www.<domain> -> apex (exact name beats the wildcard), on 80 and 443.
+assert_file_contains "nginx has an exact www server name" "$WORK_DIR/nginx-site.conf" 'server_name www.example.test;'
+if [[ "$(grep -cF 'server_name www.example.test;' "$WORK_DIR/nginx-site.conf")" -eq 2 && "$(grep -cF 'return 301 https://example.test$request_uri;' "$WORK_DIR/nginx-site.conf")" -eq 2 ]]; then
+    pass "nginx redirects www to the apex on 80 and 443 (301)"
+else
+    fail "nginx redirects www to the apex on 80 and 443 (301)"
+fi
+www_tls_block="$(awk '/server_name www\.example\.test;/{n++} n==2{print} n==2&&/^}/{exit}' "$WORK_DIR/nginx-site.conf")"
+if grep -qF 'listen 443 ssl;' <<<"$(awk '/^server \{/{b=""} {b=b $0 "\n"} /server_name www\.example\.test;/{n++; if(n==2){print b; exit}}' "$WORK_DIR/nginx-site.conf")" \
+    && grep -qF '/etc/letsencrypt/live/example.test/fullchain.pem' <<<"$www_tls_block"; then
+    pass "nginx www on 443 uses the wildcard certificate"
+else
+    fail "nginx www on 443 uses the wildcard certificate"
+fi
 assert_file_contains "nginx executes only index.php" "$WORK_DIR/nginx-site.conf" 'location = /index.php'
 assert_file_contains "php-fpm pool runs as the app user" "$WORK_DIR/php-fpm-pool.conf" 'user = sroor'
 assert_file_contains "supervisor runs Horizon from the current release" "$WORK_DIR/supervisor-horizon.conf" 'command=/usr/bin/php /var/www/sroor/current/backend/artisan horizon'
@@ -778,6 +880,27 @@ assert_file_contains "step 00 installs the MySQL unattended-upgrades hold" "$OPS
 assert_file_contains "deploy.sh defaults to PHP 8.5" "$OPS_DIR/deploy.sh" 'PHP_VERSION_ARG="8.5"'
 assert_file_contains "release.yml builds on PHP 8.5 (same as the VPS)" "$REPO_ROOT/.github/workflows/release.yml" "PHP_VERSION: '8.5'"
 assert_file_contains "release.yml deploys with --php-version 8.5" "$REPO_ROOT/.github/workflows/release.yml" '--php-version 8.5 '
+# [CTO-2026-11-11] Rehearsal switch wiring (static: the workflow never runs offline).
+RELEASE_YML="$REPO_ROOT/.github/workflows/release.yml"
+assert_file_contains "release.yml reads the switch from the Environment variable RELEASE_REHEARSAL" "$RELEASE_YML" 'REHEARSAL_SWITCH: ${{ vars.RELEASE_REHEARSAL }}'
+assert_file_contains "release.yml refuses any switch value but true/false/absent" "$RELEASE_YML" "RELEASE_REHEARSAL must be exactly 'true'"
+assert_file_contains "release.yml annotates rehearsal runs" "$RELEASE_YML" '::warning title=REHEARSAL MODE::'
+assert_file_contains "release.yml renders with --rehearsal in rehearsal mode" "$RELEASE_YML" '--optional SESSION_DOMAIN,SENTRY_LARAVEL_DSN,GOOGLE_DRIVE_FOLDER_ID --rehearsal'
+if grep -qE '"\$RUNNER_TEMP/production.env" --optional SESSION_DOMAIN,SENTRY_LARAVEL_DSN,GOOGLE_DRIVE_FOLDER_ID$' "$RELEASE_YML"; then
+    pass "release.yml strict render keeps the same --optional list (no --rehearsal)"
+else
+    fail "release.yml strict render keeps the same --optional list (no --rehearsal)"
+fi
+assert_file_contains "release.yml gate runs check-env.sh with the release mode" "$RELEASE_YML" 'check-env.sh "$RUNNER_TEMP/production.env" --mode "$RELEASE_MODE"'
+assert_file_contains "release.yml passes --rehearsal to deploy.sh in rehearsal mode" "$RELEASE_YML" 'args+=(--rehearsal)'
+if grep -qE '^[[:space:]]*RELEASE_REHEARSAL:' "$RELEASE_YML"; then
+    fail "release.yml never maps RELEASE_REHEARSAL into a step env (render-env.sh reserves it)"
+else
+    pass "release.yml never maps RELEASE_REHEARSAL into a step env (render-env.sh reserves it)"
+fi
+assert_file_contains "deploy.sh gates the .env with the release mode" "$OPS_DIR/deploy.sh" '--mode "$RELEASE_MODE"'
+assert_file_contains "verify.sh flags a rehearsal shared .env" "$OPS_DIR/verify.sh" 'WARN  REHEARSAL MODE: shared .env has RELEASE_REHEARSAL=true'
+assert_file_contains "production template ships the strict marker" "$OPS_DIR/templates/production.env.example" 'RELEASE_REHEARSAL=false'
 for f in "$OPS_DIR"/steps/*.sh "$OPS_DIR"/provision.sh "$OPS_DIR"/provision.env.example; do
     assert_file_lacks "no Ubuntu 24.04 leftover in $(basename "$f")" "$f" '24.04'
 done

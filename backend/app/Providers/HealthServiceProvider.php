@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Health\Checks\BackupArchivePasswordCheck;
 use App\Health\Checks\BackupFreshnessCheck;
 use App\Health\Checks\DiskSpaceCheck;
+use App\Health\Checks\ReleaseRehearsalCheck;
 use Google\Client as GoogleClient;
 use Google\Service\Drive;
 use Illuminate\Contracts\Foundation\Application;
@@ -89,6 +90,8 @@ final class HealthServiceProvider extends ServiceProvider
             QueueCheck::new()->if(static fn (): bool => config('queue.default') !== 'sync'),
             ScheduleCheck::new()->heartbeatMaxAgeInMinutes((int) config('health.sroor.schedule_max_age_minutes', 5)),
             BackupFreshnessCheck::new(),
+            // [CTO-2026-11-11] Monitoring only: never in the gate (the gate must not warn).
+            ReleaseRehearsalCheck::new()->if(static fn (): bool => ReleaseRehearsalCheck::enabled()),
         ];
     }
 

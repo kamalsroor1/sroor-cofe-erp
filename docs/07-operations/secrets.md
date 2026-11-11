@@ -42,7 +42,39 @@
 5. أضف **Environment variables** (ليست سرية، لكن تختلف حسب البيئة): `APP_URL`، `SESSION_DOMAIN`، `SANCTUM_STATEFUL_DOMAINS`، `MAIL_HOST`، `MAIL_PORT`، `MAIL_FROM_ADDRESS`، `CENTRAL_DOMAIN` (مثال `example.com`)، `CENTRAL_ADMIN_DOMAINS` (مثال `admin.example.com`، أكتر من host بفاصلة)، `CENTRAL_PASSWORD_RESET_URL` (مثال `https://admin.example.com/super-admin/reset-password`، الـ host لازم يكون من `CENTRAL_ADMIN_DOMAINS`)، `DEPLOY_HOST`، `DEPLOY_PORT`، `DEPLOY_USER`، و**[CTO-2026-10-09]** `DEPLOY_APP_ROOT` (اختياري، الافتراضي `/var/www/sroor`).
 6. لاحقًا (OPS-5/OPS-2) تُضاف بنفس الطريقة أسرار الـ backup (Google OAuth client/refresh token) وأي حساب DB إضافي، **ومفتاحها يُضاف أولًا إلى `production.env.example` بقيمة فارغة** و**يتربط في `env:` بتاع خطوة «Render the production .env» في `release.yml`**؛ القالب هو الـ allowlist لما يصل للخادم.
 
-قاعدة القرار: أي مفتاح قيمته فارغة في `scripts/ops/templates/production.env.example` = **مطلوب** وقت الـ render، إلا إن مُرّر صراحةً في `--optional`. **[CTO-2026-10-09]** `MAIL_MAILER`/`MAIL_HOST`/`MAIL_PORT`/`MAIL_USERNAME`/`MAIL_PASSWORD`/`MAIL_FROM_ADDRESS`/`BACKUP_ARCHIVE_PASSWORD` مايتعملوش `--optional` أبدًا (`render-env.sh` يخرج بـ 2). `release.yml` بيمرّر `--optional SESSION_DOMAIN,SENTRY_LARAVEL_DSN` بس.
+قاعدة القرار: أي مفتاح قيمته فارغة في `scripts/ops/templates/production.env.example` = **مطلوب** وقت الـ render، إلا إن مُرّر صراحةً في `--optional`. **[CTO-2026-10-09]** `MAIL_MAILER`/`MAIL_HOST`/`MAIL_PORT`/`MAIL_USERNAME`/`MAIL_PASSWORD`/`MAIL_FROM_ADDRESS`/`BACKUP_ARCHIVE_PASSWORD` مايتعملوش `--optional` أبدًا (`render-env.sh` يخرج بـ 2). `release.yml` بيمرّر `--optional SESSION_DOMAIN,SENTRY_LARAVEL_DSN,GOOGLE_DRIVE_FOLDER_ID` بس. الاستثناء الوحيد هو وضع البروفة تحت (§2.1)، ومش عن طريق `--optional`.
+
+### 2.1 وضع البروفة `RELEASE_REHEARSAL` — **[CTO-2026-11-11]**
+
+الهدف: أول deploy على `ibraa.app` كبروفة **من غير** SMTP وTelegram وGoogle Drive، مع بقاء البوابة الصارمة لكل release عادي.
+
+**المفتاح:** متغير (Variable، مش Secret) في الـ Environment `production`:
+Settings → Environments → `production` → **Environment variables** → Add variable → الاسم `RELEASE_REHEARSAL`، القيمة `true` بالظبط.
+
+- **التشغيل:** `RELEASE_REHEARSAL=true`. أي قيمة تانية غير `true` أو `false` (مثلًا `yes` أو `TRUE`) ← الـ job يفشل في خطوة «Release mode» قبل أي render.
+- **الإيقاف (الرجوع للوضع الصارم):** امسح المتغير (أو خليه `false`)، وبعدين اعمل release جديد. مفيش حاجة تانية تتغير.
+- ليه متغير Environment ومش input: الـ deploy بيتعمل بـ push لـ tag، والـ tag push مالوش inputs، و`workflow_dispatch` محتاج الـ workflow على `main` (ممنوع: push على `main` بينشر المحل الحي). ومتغير الـ Environment بيتقري في job ‏`deploy` بس (بعد موافقتك)، ومحدش يقدر يغيّره غير admin الريبو.
+
+**اللي بيتساهل فيه في البروفة بس** (`render-env.sh --rehearsal`، `check-env.sh --mode rehearsal`، `deploy.sh --rehearsal`):
+
+| المفتاح الفاضي | اللي بيحصل |
+|---|---|
+| أي واحد من `MAIL_HOST`، `MAIL_PORT`، `MAIL_USERNAME`، `MAIL_PASSWORD` | `MAIL_MAILER=log`. ومع `LOG_LEVEL=warning` الـ log mailer بيكتب على مستوى `debug`، يعني **الإيميلات بتترمي** (لا بتتبعت ولا بتتكتب في الـ log، فمفيش روابط reset في الـ logs). استرجاع كلمة المرور وأي إيميل مش هيوصل |
+| `MAIL_FROM_ADDRESS` | `noreply@<CENTRAL_DOMAIN>` (عشان الـ mailer مايفشلش في بناء الرسالة) |
+| أي واحد من `GOOGLE_DRIVE_CLIENT_ID`، `GOOGLE_DRIVE_CLIENT_SECRET`، `GOOGLE_DRIVE_REFRESH_TOKEN` | `BACKUP_DISKS=local`: الـ backups **بتشتغل عادي ومشفّرة** (`backup:tenants` 01:30، `backup:run --only-files` 02:30، والـ backup قبل الـ migrate من تاني deploy) بس بتفضل على **نفس الخادم** في `shared/storage/app/private/sroor-backups` (مش web-served). مفيش أي اتصال بـ Drive، فمفيش crash ولا error loop |
+| `TELEGRAM_BOT_TOKEN`، `TELEGRAM_CHAT_ID` | ولا حاجة (الـ jobs بتاعتهم مقفولة أصلًا `TELEGRAM_*_ENABLED=false`) |
+| `BACKUP_NOTIFICATION_EMAIL` | إيميلات فشل الـ backup/health مش هتوصل (وكده كده الـ mailer ‏`log`) |
+
+**اللي بيفضل إلزامي حتى في البروفة:** `BACKUP_ARCHIVE_PASSWORD` (D4)، `DB_BACKUP_PASSWORD`، `APP_KEY`، كل كلمات مرور الـ DB وRedis، `CENTRAL_*`، `APP_DEBUG=false`، `TELESCOPE_ENABLED=false`، `QUEUE_CONNECTION=redis`، `SESSION_SECURE_COOKIE=true`... وقائمة `--optional` الممنوعة زي ما هي.
+
+**ماينفعش يتنسي:**
+- `.env` البروفة فيه `RELEASE_REHEARSAL=true` (المفتاح محجوز: `render-env.sh` بيرفضه لو جه من البيئة، وبيكتبه `--rehearsal` بس).
+- في الـ runner: annotation ‏`REHEARSAL MODE` + annotation لكل تساهل، وسطور `WARN  REHEARSAL ...` بأسماء المفاتيح بس (عمر ما قيمة اتطبعت).
+- على الخادم: `deploy.sh` بيطبع `WARN REHEARSAL MODE` + `REHEARSAL relaxed: ...` في أول الـ deploy وفي آخره، وسطر `shared/deploy-history.log` بيبقى `deployed-rehearsal`.
+- `check-env.sh` بيطبع `PASS ... meets the REHEARSAL standards only`، و`verify.sh` بيطبع `WARN  REHEARSAL MODE: shared .env has RELEASE_REHEARSAL=true`، و`php artisan health:check` بيطلع check ‏`Release Rehearsal` بـ warning (من غير إيميل، ومش جزء من بوابة الـ deploy).
+- الحماية من اللخبطة: `deploy.sh` من غير `--rehearsal` بيرفض `.env` بروفة، و`--rehearsal` بيرفض `.env` صارم (`check-env.sh --mode`). فـ deploy يدوي من `shared/.env` بعد البروفة لازم يكون صريح.
+
+**قبل أول عميل (الخروج من البروفة):** ضيف `MAIL_HOST`/`MAIL_PORT`/`MAIL_FROM_ADDRESS`/`BACKUP_NOTIFICATION_EMAIL` (Variables) و`MAIL_USERNAME`/`MAIL_PASSWORD`/`TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`/`GOOGLE_DRIVE_CLIENT_ID`/`GOOGLE_DRIVE_CLIENT_SECRET`/`GOOGLE_DRIVE_REFRESH_TOKEN` (Secrets) ← امسح `RELEASE_REHEARSAL` ← tag جديد. الـ release ده لازم يعدّي الوضع الصارم، وإلا بيفشل في الـ runner قبل الاتصال بالخادم. الـ backups المحلية بتاعة البروفة بتفضل على القرص لحد ما تمسحها يدويًا (الـ retention بيشتغل على الـ disk اللي في الإعدادات بس).
 
 ## 3. كيف يُبنى `.env` على الـ VPS
 

@@ -119,5 +119,7 @@ return [
         // true on the VPS (queue-mode horizon); the staging box has no Horizon.
         'horizon' => (bool) env('HEALTH_CHECK_HORIZON', false),
         'schedule_max_age_minutes' => (int) env('HEALTH_SCHEDULE_MAX_AGE_MINUTES', 5),
+        // [CTO-2026-11-11] true only in a first-deploy rehearsal .env (render-env.sh --rehearsal).
+        'release_rehearsal' => filter_var(env('RELEASE_REHEARSAL', false), FILTER_VALIDATE_BOOL),
     ],
 ];

@@ -189,6 +189,8 @@ return [
         'backup_fresh' => ':count database(s) have a verified backup younger than :hours hours.',
         'disk_unknown' => 'The free disk space could not be read.',
         'disk_usage' => 'The disk is :percent% full.',
+        'release_rehearsal_short' => 'Rehearsal mode',
+        'release_rehearsal' => 'REHEARSAL MODE (RELEASE_REHEARSAL=true): not production-ready. Relaxed: :relaxed. Add the SMTP / Telegram / Google Drive settings and release again in strict mode.',
     ],
     'tenants' => [
         'skipped_not_provisioned' => 'Skipped :count tenant(s) that are not provisioned yet (pending, running or failed: no database).',

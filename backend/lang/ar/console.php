@@ -189,6 +189,8 @@ return [
         'backup_fresh' => ':count قاعدة بيانات لها نسخة احتياطية متحقق منها أحدث من :hours ساعة.',
         'disk_unknown' => 'تعذرت قراءة المساحة الفاضية على القرص.',
         'disk_usage' => 'القرص ممتلئ بنسبة :percent%.',
+        'release_rehearsal_short' => 'وضع البروفة',
+        'release_rehearsal' => 'وضع البروفة (RELEASE_REHEARSAL=true): البيئة مش جاهزة للإنتاج. المتساهَل فيه: :relaxed. ضيف إعدادات SMTP و Telegram و Google Drive واعمل release تاني في الوضع الصارم.',
     ],
     'tenants' => [
         'skipped_not_provisioned' => 'تم تخطي :count مستأجر لسه ما اتجهزش (في الانتظار أو جاري التجهيز أو فشل: مفيش قاعدة بيانات).',

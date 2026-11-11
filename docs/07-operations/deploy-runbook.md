@@ -16,9 +16,11 @@
 |---|---|
 | `tests` | PHP **8.5** (نفس الـ VPS، **[CTO-2026-11-11]** من أرشيف Ubuntu 26.04؛ الـ runner نفسه لسه `ubuntu-24.04` وsetup-php بيركّب 8.5 عليه): `composer install` ← `php artisan test` (sqlite) ← `scripts/ops/tests/run-tests.sh` ← `render-env-test.sh` ← `deploy-test.sh` |
 | `build` | `composer install` (كامل، عشان `lang:export`) ← `npm ci && npm run build` ← `composer install --no-dev --optimize-autoloader` ← tar لـ `backend/` + `scripts/ops/` بس (من الـ checkout، فمفيش scratch scripts ولا backups ولا `*.py`)، من غير `node_modules`/`tests`/`android`/`storage`/`.env*`/caches الـ build. بيتأكد إن مفيش `.env` ولا `vendor/phpunit` جوه، ويطلع sha256. الـ artifact بيتحفظ 7 أيام |
-| `deploy` | `environment: production` (موافقة). checksum ← `render-env.sh` للـ `.env` ← **بوابة `check-env.sh`** ← `render-env.sh` لـ `deploy.env` (الـ migrator) ← SSH config من الـ secrets (`StrictHostKeyChecking yes` بـ known_hosts مثبّت، `BatchMode`، مفيش passwords) ← رفع الـ artifact والملفين و`scripts/ops` لـ `<APP_ROOT>/incoming/<sha>-<run>-<attempt>/` (`umask 077`) ← `ssh ... bash -s` يشغّل `deploy.sh` ويمسح مجلد الرفع في كل الحالات ← مسح الأسرار من الـ runner (`if: always()`) |
+| `deploy` | `environment: production` (موافقة). checksum ← **[CTO-2026-11-11]** «Release mode» (`vars.RELEASE_REHEARSAL`: فاضي/`false` = strict، `true` = rehearsal، غير كده = فشل) ← `render-env.sh` للـ `.env` (مع `--rehearsal` في البروفة بس) ← **بوابة `check-env.sh`** ← `render-env.sh` لـ `deploy.env` (الـ migrator) ← SSH config من الـ secrets (`StrictHostKeyChecking yes` بـ known_hosts مثبّت، `BatchMode`، مفيش passwords) ← رفع الـ artifact والملفين و`scripts/ops` لـ `<APP_ROOT>/incoming/<sha>-<run>-<attempt>/` (`umask 077`) ← `ssh ... bash -s` يشغّل `deploy.sh` ويمسح مجلد الرفع في كل الحالات ← مسح الأسرار من الـ runner (`if: always()`) |
 
 **بوابة الـ preflight** (في الـ runner وتاني على الخادم، `check-env.sh`) بتفشل الـ release لو: `TELESCOPE_ENABLED` مش `false` (أو غايب)، `BACKUP_ARCHIVE_PASSWORD` فاضي (**قرار D4**)، أي `MAIL_*` ناقص أو `MAIL_MAILER` مش `smtp` (**W1 Q6**)، `DB_AUDIT_PRUNER_*` ناقص، `APP_DEBUG` مش `false`، `SENTRY_SEND_DEFAULT_PII` مش `false`، وباقي معايير `vps-runbook.md` §8. `SENTRY_LARAVEL_DSN` فاضي = تحذير بس.
+
+**[CTO-2026-11-11] وضع البروفة:** لو متغير الـ Environment ‏`RELEASE_REHEARSAL=true`، البوابة (`check-env.sh --mode rehearsal`) بتحوّل **بس** شرط SMTP (`MAIL_MAILER=log`) وشرط Google Drive (`BACKUP_DISKS=local`) لسطور `WARN  REHEARSAL ...` بأسماء المفاتيح، وكل الباقي (D4، Telescope، `APP_DEBUG`...) زي ما هو. التفاصيل والإيقاف في [`secrets.md`](secrets.md) §2.1، وخطوات أول deploy في §7 هنا. من غير المتغير: البوابة الصارمة بالظبط زي الأول.
 
 ---
 
@@ -29,7 +31,7 @@
 | # | المرحلة (`STAGE`) | الخطوة | لو فشلت |
 |---|---|---|---|
 | 0 | — | lock: `mkdir <APP_ROOT>/.deploy.lock` (deploy واحد في المرة) | exit ≠ 0، مفيش أي تغيير |
-| 1 | `preflight` | الـ layout موجود؛ الـ artifact: sha256، فيه `backend/artisan`، مفيش مسارات مطلقة أو `../`، مفيش `backend/.env`؛ `check-env.sh` على الـ `.env` الجديد (أو `shared/.env`)؛ ملفات MySQL option (600) للـ migrator والـ app والـ pruner في مجلد مؤقت خاص | exit 1 |
+| 1 | `preflight` | الـ layout موجود؛ الـ artifact: sha256، فيه `backend/artisan`، مفيش مسارات مطلقة أو `../`، مفيش `backend/.env`؛ `check-env.sh --mode strict|rehearsal` على الـ `.env` الجديد (أو `shared/.env`) — **[CTO-2026-11-11]** `--rehearsal` لازم يطابق `RELEASE_REHEARSAL` في الـ `.env` والعكس، وفي البروفة بيطبع كل تساهل بالاسم؛ ملفات MySQL option (600) للـ migrator والـ app والـ pruner في مجلد مؤقت خاص | exit 1 |
 | 2 | `extract` | `tar -xzf` في `releases/<id>`؛ حذف `storage/` و`.env` وcaches الـ build اللي جت مع الـ artifact | exit 1، الـ release يتمسح |
 | 3 | `env` | لو فيه `--env-file`: نسخة من `shared/.env` الحالي ← `shared/.env.previous`، والجديد يتركّب ذريًا (600)؛ ثم `backend/.env` ← `shared/.env` و`backend/storage` ← `shared/storage` (symlinks) | exit 1 + استرجاع `.env` |
 | 4 | `storage-link` | `php artisan storage:link --force` (روابط `public/storage` و`public/central-assets` لازم في **كل** release لأن `public/` جزء منه) | exit 1 |
@@ -111,4 +113,65 @@ bash /var/www/sroor/current/scripts/ops/deploy.sh --app-root /var/www/sroor --ro
 bash scripts/ops/tests/deploy-test.sh
 ```
 
-offline بالكامل: stubs لـ `php` و`mysql` و`sudo` و`curl` في أول الـ PATH، و`APP_ROOT` مؤقت. يغطي: أول deploy وتاني، الترتيب الكامل للأوامر، **[OPS-5]** الـ backup قبل الـ migrations (مش في أول release، فشله يوقف الـ release من غير أي migration، و`--skip-pre-migration-backup` بيتسجل)، وإن كل استدعاء artisan بـ `SROOR_HEALTH_DEPLOY_GATE=1`، ورفض الـ preflight لـ `DB_BACKUP_PASSWORD` فاضي و`GOOGLE_DRIVE_REFRESH_TOKEN` فاضي و`BACKUP_DISKS=local`، الحساب المستخدم في كل migrate، فشل قبل التبديل (central migrate، `tenants:migrate`، `config:cache`، مفيش health checks، صلاحيات audit غلط)، rollback تلقائي (health بعد التبديل، `/up`، restart الـ queue)، أول release يفشل بعد التبديل، رفض الـ preflight (Telescope، D4، SMTP، pruner، `APP_DEBUG`، `.env` جوه الـ artifact، checksum، sha غلط)، الـ lock، الـ rollback اليدوي والرجوع منه، الـ pruning من غير ما يمشي ورا الـ symlinks، وإن مفيش سر ظهر في أي output.
+offline بالكامل: stubs لـ `php` و`mysql` و`sudo` و`curl` في أول الـ PATH، و`APP_ROOT` مؤقت. يغطي: أول deploy وتاني، الترتيب الكامل للأوامر، **[OPS-5]** الـ backup قبل الـ migrations (مش في أول release، فشله يوقف الـ release من غير أي migration، و`--skip-pre-migration-backup` بيتسجل)، وإن كل استدعاء artisan بـ `SROOR_HEALTH_DEPLOY_GATE=1`، ورفض الـ preflight لـ `DB_BACKUP_PASSWORD` فاضي و`GOOGLE_DRIVE_REFRESH_TOKEN` فاضي و`BACKUP_DISKS=local`، الحساب المستخدم في كل migrate، فشل قبل التبديل (central migrate، `tenants:migrate`، `config:cache`، مفيش health checks، صلاحيات audit غلط)، rollback تلقائي (health بعد التبديل، `/up`، restart الـ queue)، أول release يفشل بعد التبديل، رفض الـ preflight (Telescope، D4، SMTP، pruner، `APP_DEBUG`، `.env` جوه الـ artifact، checksum، sha غلط)، الـ lock، الـ rollback اليدوي والرجوع منه، الـ pruning من غير ما يمشي ورا الـ symlinks، **[CTO-2026-11-11]** وضع البروفة (`.env` بروفة من غير `--rehearsal` مرفوض والعكس، D4 وTelescope مش بيتساهل فيهم، التساهلات مكتوبة بالاسم في الـ log، `deployed-rehearsal` في الـ history، والرجوع للصارم)، وإن مفيش سر ظهر في أي output.
+
+---
+
+## 7. أول deploy على `ibraa.app` (بروفة) — **[CTO-2026-11-11]** — خطوات الـ CTO بالترتيب
+
+> لا يقوم بها أي agent: push الـ tag والموافقة والـ SSH كلها بإيدك. **عمرك ما تعمل push لـ `main`** (بينشر المحل الحي عبر `deploy.yml`)، ولا `git push --tags`، ولا `git push` من غير refspec.
+
+**7.1 GitHub (مرة واحدة)**
+1. Settings → Environments → `production` → Environment variables → **Add variable**: `RELEASE_REHEARSAL` = `true`.
+2. اتأكد إن قواعد الـ Environment زي ما هي: Required reviewer = إنت، Deployment tags = `v*`.
+
+**7.2 الكود**
+3. التعديلات دي لسه مش committed. اعمل commit على `feature/multi-tenant` وبعدين `git push origin feature/multi-tenant` (ده بيشغّل `ci.yml` بس؛ `deploy.yml` بيشتغل على `main`/`master` بس). استنى الـ CI يخضر.
+
+**7.3 nginx لـ `www` (قبل أو بعد الـ deploy، مستقل عنه)**
+4. `dig +short www.ibraa.app` لازم يرجّع الخادم (سجل الـ DNS الـ wildcard بيغطيه).
+5. القالب `scripts/ops/templates/nginx-site.conf.tmpl` اتغير (301 من `www.<domain>` للـ apex على 80 و443 بنفس الشهادة الـ wildcard). ارفع نسخة `scripts/ops` الجديدة وأعد الخطوة 70 بس:
+   ```bash
+   # من جهازك (جذر الريبو):
+   scp -r scripts/ops opsadmin@<server>:~/ops-new
+   # على الخادم كـ opsadmin:
+   sudo rsync -a --chown=root:root ~/ops-new/ /root/ops/ && rm -rf ~/ops-new
+   sudo bash /root/ops/provision.sh --env-file /root/sroor-provision.env --only 70-nginx   # بيعمل nginx -t قبل الـ reload
+   curl -sSI http://www.ibraa.app/x  | grep -iE '^(HTTP|location)'    # 301 -> https://ibraa.app/x
+   curl -sSI https://www.ibraa.app/x | grep -iE '^(HTTP|location)'    # 301 -> https://ibraa.app/x
+   ```
+
+**7.4 الـ tag**
+6. من جهازك:
+   ```bash
+   git fetch origin
+   git log -1 --oneline origin/feature/multi-tenant          # الـ commit اللي هيتنشر
+   git tag -a v0.1.0-rc.1 origin/feature/multi-tenant -m "SaaS first deploy (rehearsal)"
+   git push origin v0.1.0-rc.1                                # الـ tag ده بس
+   ```
+   لو احتجت تعيد بعد إصلاح: tag جديد (`v0.1.0-rc.2`)، ماتحركش tag اتعمله push. لو الفشل مؤقت (شبكة) ممكن «Re-run failed jobs» لنفس الـ run.
+
+**7.5 الموافقة ومتابعة الـ log**
+7. Actions → `release` → run الـ tag: `tests` ثم `build` لازم يخضروا، و`deploy` يقف على «Waiting» ← **Review deployments** ← `production` ← **Approve**.
+8. المتوقع في الـ log: خطوة «Release mode» تطبع `release mode: rehearsal` مع annotation أصفر `REHEARSAL MODE`؛ الـ render يطبع `WARN  rehearsal: empty and waived: ...` و`MAIL_MAILER=log` و`BACKUP_DISKS=local`؛ البوابة `PASS ... meets the REHEARSAL standards only`؛ و`deploy.sh`: `REHEARSAL MODE` ← `first release on this server: no pre-migration backup` ← migrate ← grants ← `tenants:migrate` ← relocate ← caches ← smoke ← switch ← `horizon:terminate` ← health + `/up` ← `release ... is live` ← `REHEARSAL MODE: release ... is live`.
+9. لو فشل: exit 1 = مفيش حاجة اتغيرت (صلّح واعمل tag جديد)؛ exit 4 في أول release = `current` اتشال (مفيش release سابق نرجع له)، الموقع مش هيشتغل لحد release ناجح. الأكواد في §2.
+
+**7.6 على الخادم بعد النجاح** (SSH بالمفتاح؛ `sroor` للأوامر العادية و`opsadmin` لـ `sudo`). ماتعملش `cat` لـ `shared/.env`:
+   ```bash
+   readlink /var/www/sroor/current
+   tail -n 3 /var/www/sroor/shared/deploy-history.log                  # ... deployed-rehearsal
+   stat -c '%a %U' /var/www/sroor/shared/.env                           # 600 sroor
+   grep -c '^RELEASE_REHEARSAL=true$' /var/www/sroor/shared/.env        # 1
+   cd /var/www/sroor/current/backend
+   php artisan health:check          # Release Rehearsal = warning، Backup Freshness أحمر لحد أول backup، الباقي ok
+   php artisan backup:tenants        # أول backup (مشفّر، local) -> exit 0
+   ls -l /var/www/sroor/shared/storage/app/private/sroor-backups/
+   php artisan central:create-super-admin <email>   # لو مفيش super-admin؛ الباسورد بيتسأل تفاعليًا، و2FA بتطبيق authenticator مش بالإيميل
+   curl -sS -o /dev/null -w '%{http_code}\n' https://ibraa.app/up      # 200
+   # كـ opsadmin:
+   sudo supervisorctl status                                            # horizon RUNNING
+   sudo bash /root/ops/verify.sh --env-file /root/sroor-provision.env   # كله PASS + سطر WARN REHEARSAL MODE
+   ```
+   بعدها: checklist البروفة في §5 (release تاني ← الـ backup قبل الـ migrate بيشتغل على القرص المحلي، rollback يدوي...).
+
+**7.7 الخروج من البروفة (قبل أول عميل):** [`secrets.md`](secrets.md) §2.1 — ضيف أسرار SMTP وTelegram وDrive ← امسح `RELEASE_REHEARSAL` ← tag جديد (`v0.1.0` مثلًا) لازم يعدّي الوضع الصارم.
