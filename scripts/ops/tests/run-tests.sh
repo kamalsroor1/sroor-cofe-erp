@@ -784,6 +784,16 @@ done
 assert_file_contains "step 41 re-applies the per-table audit grants" "$OPS_DIR/steps/41-mysql-users.sh" 'sync-central-grants.sh" --as-root'
 assert_file_contains "verify.sh checks the append-only audit grants" "$OPS_DIR/verify.sh" 'sync-central-grants.sh" --as-root --check-only'
 
+# Ubuntu 26.04 stock nginx.conf sets server_tokens; step 70 must comment it out
+# (once) so conf.d/00-sroor-hardening.conf does not duplicate it.
+nginx_sed="$(grep -E "^[[:space:]]*sed -i -E 's/\^\(\[\[:space:\]\]\*\)\(server_tokens" "$OPS_DIR/steps/70-nginx.sh" | sed -E "s/^[[:space:]]*sed -i -E '//; s/' \/etc\/nginx\/nginx.conf$//")"
+nginx_conf_out="$(printf 'http {\n\tserver_tokens build; # Recommended practice is to turn this off\n}\n' | sed -E "$nginx_sed" | sed -E "$nginx_sed")"
+if [[ -n "$nginx_sed" ]] && ! grep -qE '^[[:space:]]*server_tokens[[:space:]]' <<<"$nginx_conf_out" && [[ "$(grep -c 'sroor: set in conf.d' <<<"$nginx_conf_out")" -eq 1 ]]; then
+    pass "step 70 comments out the stock server_tokens line (idempotent)"
+else
+    fail "step 70 comments out the stock server_tokens line (idempotent)" "got: $nginx_conf_out"
+fi
+
 # --------------------------------------------------------------------------
 echo "8. Orchestrator"
 # --------------------------------------------------------------------------

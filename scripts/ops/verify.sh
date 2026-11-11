@@ -34,7 +34,11 @@ check() {
 
 sshd_effective() {
     local key="$1" expected="$2"
-    sshd -T 2>/dev/null | grep -qix "$key $expected"
+    # Capture first: `sshd -T | grep -q` lets grep exit early, sshd dies of
+    # SIGPIPE and pipefail turns a match into a failure (keys near the top).
+    local effective
+    effective="$(sshd -T 2>/dev/null)" || return 1
+    grep -qix "$key $expected" <<<"$effective"
 }
 
 listens_only_on_loopback() {

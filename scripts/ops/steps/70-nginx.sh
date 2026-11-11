@@ -13,6 +13,13 @@ require_vars PLATFORM_DOMAIN APP_ROOT HSTS_MAX_AGE
 apt_install nginx
 
 OPS_CHANGED=0
+# Ubuntu 26.04's stock nginx.conf sets `server_tokens build;` at http level,
+# which makes ours in conf.d a duplicate (nginx -t fails). Comment the stock
+# line out; conf.d/00-sroor-hardening.conf is the single source.
+if grep -qE '^[[:space:]]*server_tokens[[:space:]]' /etc/nginx/nginx.conf; then
+    sed -i -E 's/^([[:space:]]*)(server_tokens[[:space:]].*)$/\1# \2 # sroor: set in conf.d\/00-sroor-hardening.conf/' /etc/nginx/nginx.conf
+    OPS_CHANGED=1
+fi
 install_template nginx-hardening.conf.tmpl /etc/nginx/conf.d/00-sroor-hardening.conf 0644 root:root
 install_template nginx-site.conf.tmpl /etc/nginx/sites-available/sroor.conf 0644 root:root
 if [[ "$(readlink -f /etc/nginx/sites-enabled/sroor.conf 2>/dev/null)" != "/etc/nginx/sites-available/sroor.conf" ]]; then
