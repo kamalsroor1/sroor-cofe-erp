@@ -33,11 +33,11 @@
           <component
             :is="Component"
             v-if="appConfigStore.hasFeature(currentRoute.meta.feature)"
-            :key="`${currentRoute.fullPath}-${authStore.activeStoreId}`"
+            :key="routeViewKey(currentRoute, authStore.activeStoreId)"
           />
           <FeatureGate
             v-else
-            :key="`${currentRoute.fullPath}-${authStore.activeStoreId}`"
+            :key="routeViewKey(currentRoute, authStore.activeStoreId)"
             :feature="currentRoute.meta.feature"
             page
           />
@@ -63,6 +63,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAppConfigStore } from './stores/appConfig';
 import { useAuthStore } from './stores/auth';
+import { routeViewKey } from './helpers/routeViewKey';
 import { useTabsStore } from './stores/tabs';
 import { useAppUpdate } from './Composables/useAppUpdate';
 import { useLocaleSync } from './Composables/useLocale';

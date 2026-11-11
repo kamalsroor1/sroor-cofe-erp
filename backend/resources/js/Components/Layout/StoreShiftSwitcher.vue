@@ -63,7 +63,7 @@ const shiftBadgeClass = computed(() =>
   <div v-if="isChip" class="relative">
     <button
       type="button"
-      class="min-h-[38px] sm:min-h-[44px] max-w-[120px] sm:max-w-[160px] px-2 sm:px-3 flex items-center gap-1 sm:gap-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl sm:rounded-2xl text-xs font-bold text-slate-800 dark:text-cyan-400 cursor-pointer font-tajawal shadow-2xs"
+      class="min-h-[44px] max-w-[120px] sm:max-w-[160px] px-2 sm:px-3 flex items-center gap-1 sm:gap-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl sm:rounded-2xl text-xs font-bold text-slate-800 dark:text-cyan-400 cursor-pointer font-tajawal shadow-2xs"
       :aria-label="$t('nav.layout.store_and_shift')"
       :aria-expanded="isOpen"
       @click="isOpen = !isOpen"

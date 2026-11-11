@@ -1,37 +1,24 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { routeViewKey } from '../../resources/js/helpers/routeViewKey.js';
 
-test('authStore activeStoreId getter returns empty string when no store is selected', () => {
-    const state = { currentStore: null };
-    const activeStoreId = state.currentStore?.id || '';
-    assert.equal(activeStoreId, '');
+const page = (fullPath, name = 'other') => ({ fullPath, name });
+
+test('router-view key changes when the branch is switched on the same route', () => {
+    assert.equal(routeViewKey(page('/invoices'), 1), '/invoices-1');
+    assert.notEqual(routeViewKey(page('/invoices'), 1), routeViewKey(page('/invoices'), 2));
 });
 
-test('authStore activeStoreId getter returns current store id when set', () => {
-    const state = { currentStore: { id: 42, name: 'Main Branch' } };
-    const activeStoreId = state.currentStore?.id || '';
-    assert.equal(activeStoreId, 42);
+test('router-view key stays stable when the store id and route do not change', () => {
+    assert.equal(routeViewKey(page('/dashboard'), 5), routeViewKey(page('/dashboard'), 5));
 });
 
-test('router-view key changes when branch is switched on the same route', () => {
-    const fullPath = '/invoices';
-    const storeA = 1;
-    const storeB = 2;
-
-    const keyBefore = `${fullPath}-${storeA}`;
-    const keyAfter = `${fullPath}-${storeB}`;
-
-    assert.equal(keyBefore, '/invoices-1');
-    assert.equal(keyAfter, '/invoices-2');
-    assert.notEqual(keyBefore, keyAfter);
+test('the POS keeps its key (and its open cart) when the branch is switched', () => {
+    const pos = page('/pos', 'pos.index');
+    assert.equal(routeViewKey(pos, 1), '/pos');
+    assert.equal(routeViewKey(pos, 1), routeViewKey(pos, 2));
 });
 
-test('router-view key stays stable when store id and route do not change', () => {
-    const fullPath = '/dashboard';
-    const storeId = 5;
-
-    const key1 = `${fullPath}-${storeId}`;
-    const key2 = `${fullPath}-${storeId}`;
-
-    assert.equal(key1, key2);
+test('an empty store id still yields a stable key', () => {
+    assert.equal(routeViewKey(page('/invoices'), ''), '/invoices-');
 });
