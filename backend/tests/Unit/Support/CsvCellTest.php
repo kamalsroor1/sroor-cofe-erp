@@ -35,6 +35,11 @@ class CsvCellTest extends TestCase
             'negative integer stays numeric' => ['-5', '"-5"'],
             'minus text is prefixed' => ['-5abc', '"\'-5abc"'],
             'dash inside is fine' => ['a-b', '"a-b"'],
+            'formatted negative money stays numeric' => ['-1,234.50', '"-1,234.50"'],
+            'negative percentage stays numeric' => ['-12.5%', '"-12.5%"'],
+            'lone dash placeholder untouched' => ['-', '"-"'],
+            'grouped-looking formula is prefixed' => ['-1,23+4', '"\'-1,23+4"'],
+            'item named one plus one' => ['=1+1', '"\'=1+1"'],
         ];
     }
 

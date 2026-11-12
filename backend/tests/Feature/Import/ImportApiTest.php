@@ -14,16 +14,13 @@ use App\Models\StoreStock;
 use App\Models\Supplier;
 use App\Models\Tenant;
 use App\Services\CustomerBalanceService;
-use App\Services\DocumentNumberService;
-use App\Services\StockService;
 use App\Services\SupplierBalanceService;
 use App\Support\TenantCache;
-use App\Support\TenantClock;
 use Database\Seeders\Catalog\FeatureCatalog;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use OpenSpout\Common\Entity\Row;
@@ -299,6 +296,123 @@ class ImportApiTest extends TenantTestCase
         $this->assertSame(602, $response->json('data.rows.500.row_number'));
     }
 
+    public function test_preview_of_a_5100_row_file_with_blank_lines_is_refused_not_silently_truncated(): void
+    {
+        // IMP-02: the old reader stopped after 5,001 LINES, so blank lines pushed real rows past the
+        // cut and a 5,100-row file came back "valid, total 4,993" with the last rows lost.
+        $rows = [$this->headers('items')];
+        for ($i = 1; $i <= 5100; $i++) {
+            if ($i % 600 === 0) {
+                $rows[] = array_fill(0, 11, '');
+            }
+            $rows[] = $this->itemRow(['T-'.$i, 'صنف '.$i, '', 'كجم', '5', '8']);
+        }
+
+        foreach ([$this->csv($rows), $this->xlsx($rows)] as $file) {
+            $this->preview('items', $file)->assertStatus(422)
+                ->assertJsonValidationErrors('file')
+                ->assertJsonPath('errors.file.0', __('import.errors.too_many_rows', ['max' => 5000]));
+        }
+    }
+
+    public function test_preview_warns_about_a_sale_price_below_cost_without_invalidating_the_row(): void
+    {
+        $sheet = [
+            $this->headers('items'),
+            $this->itemRow(['W-1', 'بخسارة', '', 'كجم', '100', '50']),
+            $this->itemRow(['W-2', 'أرضية أعلى', '', 'كجم', '10', '50', '60']),
+            $this->itemRow(['W-3', 'سليم', '', 'كجم', '10', '50', '40']),
+            // No cost column: the opening cost is the cost the item will carry.
+            $this->itemRow(['W-4', 'تكلفة افتتاحية', '', 'كجم', '', '50', '', '', '', '2', '70']),
+        ];
+
+        $response = $this->preview('items', $this->xlsx($sheet))->assertOk()
+            ->assertJsonPath('data.summary', ['total' => 4, 'valid' => 4, 'invalid' => 0, 'duplicates' => 0])
+            ->assertJsonPath('data.rows.0.status', 'valid')
+            ->assertJsonPath('data.rows.0.errors', [])
+            ->assertJsonPath('data.rows.0.warnings', [__('import.warnings.selling_below_cost', [
+                'selling' => __('import.columns.items.selling_price'), 'cost' => __('import.columns.items.cost_price'),
+            ])])
+            ->assertJsonPath('data.rows.1.status', 'valid')
+            ->assertJsonPath('data.rows.1.warnings', [__('import.warnings.min_above_selling', [
+                'min' => __('import.columns.items.min_selling_price'), 'selling' => __('import.columns.items.selling_price'),
+            ])])
+            ->assertJsonPath('data.rows.2.warnings', [])
+            ->assertJsonPath('data.rows.3.status', 'valid');
+        $this->assertCount(1, $response->json('data.rows.3.warnings'));
+
+        // A warning never blocks the commit (no skip_invalid needed).
+        $this->commit('items', (string) $response->json('data.token'))->assertOk()->assertJsonPath('data.created', 4);
+        $this->assertSame('50.000', $this->inTenant($this->tenant, fn (): string => (string) Item::query()->where('code', 'W-1')->value('selling_price')));
+    }
+
+    public function test_rows_with_a_warning_are_returned_even_beyond_the_preview_cap(): void
+    {
+        $rows = [$this->headers('items')];
+        for ($i = 1; $i <= 520; $i++) {
+            $rows[] = $this->itemRow(['C-'.$i, 'صنف '.$i, '', 'كجم', '5', '8']);
+        }
+        $rows[] = $this->itemRow(['C-LOSS', 'بخسارة', '', 'كجم', '100', '50']);
+
+        $response = $this->preview('items', $this->csv($rows))->assertOk()->assertJsonPath('data.rows_truncated', true);
+
+        $this->assertCount(501, $response->json('data.rows'));
+        $this->assertSame(522, $response->json('data.rows.500.row_number'));
+        $this->assertNotEmpty($response->json('data.rows.500.warnings'));
+    }
+
+    public function test_more_than_three_decimals_has_its_own_message_and_trailing_zeros_are_fine(): void
+    {
+        $sheet = [
+            $this->headers('items'),
+            $this->itemRow(['D-1', 'كمية دقيقة', '', 'كجم', '5', '8', '', '', '', '0.0005']),
+            $this->itemRow(['D-2', 'أصفار زيادة', '', 'كجم', '5', '8.2500', '', '', '', '0.2500']),
+            $this->itemRow(['D-3', 'مش رقم', '', 'كجم', '5', '8', '', '', '', '1.2.3']),
+        ];
+
+        $field = __('import.columns.items.opening_quantity');
+        $this->preview('items', $this->csv($sheet))->assertOk()
+            ->assertJsonPath('data.rows.0.status', 'invalid')
+            ->assertJsonPath('data.rows.0.errors', [__('import.errors.too_many_decimals', ['field' => $field, 'max' => 3])])
+            ->assertJsonPath('data.rows.1.status', 'valid')
+            ->assertJsonPath('data.rows.1.data.selling_price', '8.250')
+            ->assertJsonPath('data.rows.1.data.opening_quantity', '0.250')
+            ->assertJsonPath('data.rows.2.errors', [__('import.errors.invalid_number', ['field' => $field])]);
+    }
+
+    public function test_html_markup_is_stripped_from_imported_names_and_formulas_are_kept_as_typed(): void
+    {
+        $sheet = [
+            $this->headers('items'),
+            $this->itemRow(['H-1', '<script>alert(1)</script>بن <b>محوج</b>', '<i>بن</i>', 'كجم', '5', '8']),
+            $this->itemRow(['H-2', '=HYPERLINK("http://x","اضغط")', '', 'كجم', '5', '8']),
+            $this->itemRow(['H-3', 'أقل من < 5 جنيه', '', 'كجم', '5', '8']),
+            $this->itemRow(['H-4', '<b></b>', '', 'كجم', '5', '8']),
+            $this->itemRow([str_repeat('X', 51), 'كود طويل', '', 'كجم', '5', '8']),
+            // An unclosed `<` is not a tag: the rest of the cell (and the code) is kept as typed.
+            $this->itemRow(['A<B1', 'مقاس<M 250g', '', 'كجم', '5', '8']),
+            $this->itemRow(['A<B2', 'بن <برازيلي 250g', '', 'كجم', '5', '8']),
+        ];
+
+        $response = $this->preview('items', $this->csv($sheet))->assertOk()
+            ->assertJsonPath('data.rows.5.status', 'valid')
+            ->assertJsonPath('data.rows.5.data.code', 'A<B1')
+            ->assertJsonPath('data.rows.5.data.name', 'مقاس<M 250g')
+            ->assertJsonPath('data.rows.6.status', 'valid')
+            ->assertJsonPath('data.rows.6.data.code', 'A<B2')
+            ->assertJsonPath('data.rows.0.data.name', 'بن محوج')
+            ->assertJsonPath('data.rows.0.data.category', 'بن')
+            ->assertJsonPath('data.rows.1.data.name', '=HYPERLINK("http://x","اضغط")')
+            ->assertJsonPath('data.rows.2.data.name', 'أقل من < 5 جنيه')
+            // Nothing left after stripping: the required name is missing.
+            ->assertJsonPath('data.rows.3.status', 'invalid')
+            // items.code is VARCHAR(50): a longer code is rejected in the preview, not by the database.
+            ->assertJsonPath('data.rows.4.status', 'invalid');
+
+        $this->commit('items', (string) $response->json('data.token'), true)->assertOk()->assertJsonPath('data.created', 5);
+        $this->assertSame('بن محوج', $this->inTenant($this->tenant, fn (): string => (string) Item::query()->where('code', 'H-1')->value('name')));
+    }
+
     // ---------------------------------------------------------------- commit: items
 
     public function test_commit_items_posts_opening_stock_through_the_stock_engine(): void
@@ -388,16 +502,19 @@ class ImportApiTest extends TenantTestCase
         $token = $this->previewToken('items', $this->xlsx([$this->headers('items'), $this->itemRow(['RACE-1', 'سباق', '', 'كجم', '', '10'])]));
 
         // Simulate the race: a concurrent request takes the code right before our insert.
+        // IMP-02: items are batch-inserted (no per-row Item::creating event any more), so the race is
+        // injected right after the commit's locked ITM-code read, the last query before the insert.
         $taken = false;
-        Item::creating(function (Item $item) use (&$taken): void {
-            if (! $taken && $item->code === 'RACE-1') {
+        Event::listen(QueryExecuted::class, function (QueryExecuted $query) use (&$taken): void {
+            if (! $taken && preg_match('/from [`"]items[`"] where [`"]code[`"] like/i', $query->sql) === 1) {
                 $taken = true;
-                DB::table('items')->insert(['name' => 'سبق', 'code' => 'RACE-1', 'unit' => 'كجم', 'cost_price' => '1.000', 'selling_price' => '2.000', 'weighted_avg_cost' => '1.000', 'min_stock_level' => '0.000', 'current_stock' => '0.000', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()]);
+                $query->connection->table('items')->insert(['name' => 'سبق', 'code' => 'RACE-1', 'unit' => 'كجم', 'cost_price' => '1.000', 'selling_price' => '2.000', 'weighted_avg_cost' => '1.000', 'min_stock_level' => '0.000', 'current_stock' => '0.000', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()]);
             }
         });
 
         $this->commit('items', $token)->assertStatus(422)
             ->assertJsonValidationErrors(['file']);
+        $this->assertTrue($taken);
         // The racing insert shares the import transaction, so everything is rolled back together.
         $this->assertSame(0, $this->inTenant($this->tenant, fn (): int => Item::query()->count()));
     }
@@ -448,19 +565,16 @@ class ImportApiTest extends TenantTestCase
 
     public function test_commit_is_all_or_nothing(): void
     {
-        $failing = new class(app(TenantClock::class), app(DocumentNumberService::class)) extends StockService
-        {
-            private int $calls = 0;
-
-            public function addStock(Item $item, string $quantity, string $unitCost, Model $source, string $documentNumber, string $movementType = 'purchase_in', ?string $notes = null, ?int $storeId = null, ?int $actorId = null): StockMovement
-            {
-                if (++$this->calls === 2) {
-                    throw new \RuntimeException('forced failure');
-                }
-
-                return parent::addStock($item, $quantity, $unitCost, $source, $documentNumber, $movementType, $notes, $storeId, $actorId);
+        // IMP-02: opening stock is batch-inserted (StockService::addStock is no longer called per row),
+        // so the failure is forced on the opening-stock movement insert, after the categories, items
+        // and store stocks of the same import were already written in the transaction.
+        $failed = false;
+        Event::listen(QueryExecuted::class, function (QueryExecuted $query) use (&$failed): void {
+            if (! $failed && preg_match('/^insert into [`"]stock_movements[`"]/i', $query->sql) === 1) {
+                $failed = true;
+                throw new \RuntimeException('forced failure');
             }
-        };
+        });
 
         $sheet = [
             $this->headers('items'),
@@ -469,8 +583,8 @@ class ImportApiTest extends TenantTestCase
         ];
         $token = $this->previewToken('items', $this->xlsx($sheet));
 
-        $this->instance(StockService::class, $failing);
         $this->commit('items', $token)->assertStatus(500);
+        $this->assertTrue($failed);
 
         $this->inTenant($this->tenant, function (): void {
             $this->assertSame(0, Item::query()->count());

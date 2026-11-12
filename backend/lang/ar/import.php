@@ -15,6 +15,7 @@ return [
         'required' => 'الحقل «:field» مطلوب.',
         'too_long' => 'الحقل «:field» أطول من :max حرف.',
         'invalid_number' => 'القيمة في «:field» مش رقم صحيح.',
+        'too_many_decimals' => 'القيمة في «:field» فيها أكتر من :max أرقام بعد العلامة العشرية.',
         'negative_not_allowed' => 'القيمة في «:field» لازم تكون صفر أو أكبر.',
         'invalid_price_tier' => 'القيمة في «:field» لازم تكون تجزئة أو جملة.',
         'invalid_boolean' => 'القيمة في «:field» لازم تكون نعم أو لا.',
@@ -24,6 +25,11 @@ return [
         'already_running' => 'هناك عملية استيراد جارية لنفس الملف. انتظر حتى تنتهي.',
         'conflict' => 'تعارض الاستيراد مع سجل أُنشئ في الأثناء (كود أو اسم مكرر). لم يتم استيراد أي شيء؛ ارفع الملف مرة أخرى.',
         'template_failed' => 'حصلت مشكلة أثناء تجهيز ملف النموذج.',
+    ],
+
+    'warnings' => [
+        'selling_below_cost' => '«:selling» أقل من «:cost»: الصنف هيتباع بخسارة.',
+        'min_above_selling' => '«:min» أكبر من «:selling».',
     ],
 
     'columns' => [
@@ -154,6 +160,7 @@ return [
             'invalid' => 'خطأ',
             'duplicate' => 'مكرر',
         ],
+        'warning' => 'تنبيه',
         'row_number' => 'صف :number',
         'row_column' => 'الصف',
         'status_column' => 'الحالة',

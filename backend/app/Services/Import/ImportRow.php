@@ -18,16 +18,18 @@ final readonly class ImportRow
     /**
      * @param  array<string, string|bool|null>  $data  normalized values keyed by column key
      * @param  list<string>  $errors  translated messages
+     * @param  list<string>  $warnings  IMP-02: translated non-blocking remarks (the row stays valid and importable)
      */
     public function __construct(
         public int $rowNumber,
         public array $data,
         public string $status,
         public array $errors = [],
+        public array $warnings = [],
     ) {}
 
     /**
-     * @return array{row_number: int, data: array<string, string|bool|null>, status: string, errors: list<string>}
+     * @return array{row_number: int, data: array<string, string|bool|null>, status: string, errors: list<string>, warnings: list<string>}
      */
     public function toArray(): array
     {
@@ -36,6 +38,7 @@ final readonly class ImportRow
             'data' => $this->data,
             'status' => $this->status,
             'errors' => $this->errors,
+            'warnings' => $this->warnings,
         ];
     }
 }

@@ -45,6 +45,18 @@ abstract class AbstractImportHandler
      */
     abstract protected function normalize(array $raw, array &$errors): array;
 
+    /**
+     * IMP-02: non-blocking remarks on a VALID row (the row is still imported), e.g. a sale price
+     * below cost. Translated messages.
+     *
+     * @param  array<string, string|bool|null>  $data  the normalized row
+     * @return list<string>
+     */
+    protected function warnings(array $data): array
+    {
+        return [];
+    }
+
     /** Value that identifies the record in the tenant DB, null when the row can never be a duplicate. */
     abstract protected function duplicateKey(array $data): ?string;
 
@@ -139,7 +151,7 @@ abstract class AbstractImportHandler
             if ($key !== null) {
                 $seen[$key] = true;
             }
-            $result[] = new ImportRow($number, $data, ImportRow::STATUS_VALID);
+            $result[] = new ImportRow($number, $data, ImportRow::STATUS_VALID, [], $this->warnings($data));
         }
 
         return $result;
@@ -206,7 +218,7 @@ abstract class AbstractImportHandler
      */
     protected function requireText(array $raw, string $column, int $max, array &$errors, bool $required = true): ?string
     {
-        $value = trim($raw[$column]);
+        $value = $this->stripMarkup($raw[$column]);
 
         if ($value === '') {
             if ($required) {
@@ -223,6 +235,24 @@ abstract class AbstractImportHandler
         }
 
         return $value;
+    }
+
+    /**
+     * IMP-02: HTML/script markup is STRIPPED from imported text (`<b>بن</b>` -> `بن`, a `<script>`
+     * block disappears with its content). Text that merely contains `<` (`أقل من < 5`) is kept.
+     * Formula-looking text (`=HYPERLINK(...)`) is stored as typed and neutralised on export (CsvCell).
+     */
+    private function stripMarkup(string $value): string
+    {
+        if (preg_match('/<[a-z!\/?]/i', $value) !== 1) {
+            return trim($value);
+        }
+
+        $value = (string) preg_replace('/<(script|style)\b[^>]*>.*?<\/\1\s*>/isu', ' ', $value);
+        // Only a CLOSED tag is removed: a lone `<` (`Size<M`, code `A<B1`) is kept as typed.
+        $value = (string) preg_replace('/<[a-z!\/?][^<>]*>/iu', ' ', $value);
+
+        return trim((string) preg_replace('/\s{2,}/u', ' ', $value));
     }
 
     /**
@@ -245,7 +275,9 @@ abstract class AbstractImportHandler
 
         $number = NumberNormalizer::decimal($value);
         if ($number === null) {
-            $errors[] = (string) __('import.errors.invalid_number', ['field' => $this->label($column)]);
+            $errors[] = NumberNormalizer::exceedsScale($value)
+                ? (string) __('import.errors.too_many_decimals', ['field' => $this->label($column), 'max' => NumberNormalizer::SCALE])
+                : (string) __('import.errors.invalid_number', ['field' => $this->label($column)]);
 
             return $default;
         }

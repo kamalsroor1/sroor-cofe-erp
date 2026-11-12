@@ -15,6 +15,7 @@ return [
         'required' => 'The field ":field" is required.',
         'too_long' => 'The field ":field" is longer than :max characters.',
         'invalid_number' => 'The value in ":field" is not a valid number.',
+        'too_many_decimals' => 'The value in ":field" has more than :max decimal places.',
         'negative_not_allowed' => 'The value in ":field" must be zero or greater.',
         'invalid_price_tier' => 'The value in ":field" must be retail or wholesale.',
         'invalid_boolean' => 'The value in ":field" must be yes or no.',
@@ -24,6 +25,11 @@ return [
         'already_running' => 'An import with this file is already running. Wait for it to finish.',
         'conflict' => 'The import hit a record that was created in the meantime (duplicate code or name). Nothing was imported; upload the file again.',
         'template_failed' => 'Something went wrong while preparing the template file.',
+    ],
+
+    'warnings' => [
+        'selling_below_cost' => '":selling" is below ":cost": the item would sell at a loss.',
+        'min_above_selling' => '":min" is above ":selling".',
     ],
 
     'columns' => [
@@ -154,6 +160,7 @@ return [
             'invalid' => 'Error',
             'duplicate' => 'Duplicate',
         ],
+        'warning' => 'Warning',
         'row_number' => 'Row :number',
         'row_column' => 'Row',
         'status_column' => 'Status',

@@ -28,6 +28,9 @@ const display = (column, value) => {
   return String(value);
 };
 
+// IMP-02: a valid row can carry non-blocking warnings (e.g. sale price below cost).
+const WARNING_BADGE = 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400';
+
 const badgeClass = (status) =>
   ({
     valid: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
@@ -67,8 +70,22 @@ const badgeClass = (status) =>
               <span class="inline-block px-2.5 py-1 rounded-lg text-[11px] font-black" :class="badgeClass(row.status)">
                 {{ $t(`import.ui.status.${row.status}`) }}
               </span>
+              <span
+                v-if="row.warnings?.length"
+                class="inline-block ms-1 px-2.5 py-1 rounded-lg text-[11px] font-black"
+                :class="WARNING_BADGE"
+              >
+                {{ $t('import.ui.warning') }}
+              </span>
               <ul v-if="row.errors?.length" class="text-xs font-bold text-rose-600 dark:text-rose-400 space-y-0.5">
                 <li v-for="(message, index) in row.errors" :key="index">{{ message }}</li>
+              </ul>
+              <ul
+                v-if="row.warnings?.length"
+                class="text-xs font-bold text-amber-600 dark:text-amber-400 space-y-0.5"
+                :data-testid="`import-preview-warnings-${row.row_number}`"
+              >
+                <li v-for="(message, index) in row.warnings" :key="index">{{ message }}</li>
               </ul>
             </td>
           </tr>
@@ -86,8 +103,17 @@ const badgeClass = (status) =>
           <span class="text-xs font-black text-slate-500 tabular-nums">{{
             $t('import.ui.row_number', { number: row.row_number })
           }}</span>
-          <span class="px-2.5 py-1 rounded-lg text-[11px] font-black" :class="badgeClass(row.status)">
-            {{ $t(`import.ui.status.${row.status}`) }}
+          <span class="flex items-center gap-1">
+            <span
+              v-if="row.warnings?.length"
+              class="px-2.5 py-1 rounded-lg text-[11px] font-black"
+              :class="WARNING_BADGE"
+            >
+              {{ $t('import.ui.warning') }}
+            </span>
+            <span class="px-2.5 py-1 rounded-lg text-[11px] font-black" :class="badgeClass(row.status)">
+              {{ $t(`import.ui.status.${row.status}`) }}
+            </span>
           </span>
         </div>
         <dl class="grid grid-cols-2 gap-x-3 gap-y-2">
@@ -102,6 +128,9 @@ const badgeClass = (status) =>
         </dl>
         <ul v-if="row.errors?.length" class="text-xs font-bold text-rose-600 dark:text-rose-400 space-y-0.5">
           <li v-for="(message, index) in row.errors" :key="index">{{ message }}</li>
+        </ul>
+        <ul v-if="row.warnings?.length" class="text-xs font-bold text-amber-600 dark:text-amber-400 space-y-0.5">
+          <li v-for="(message, index) in row.warnings" :key="index">{{ message }}</li>
         </ul>
       </li>
     </ul>

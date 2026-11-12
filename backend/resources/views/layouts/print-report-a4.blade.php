@@ -132,7 +132,7 @@
                 <td class="border border-slate-400 p-1.5 text-center font-mono text-[10px]">{{ $idx + 1 }}</td>
                 @foreach($row as $cell)
                 <td class="border border-slate-400 p-1.5 {{ $cell['class'] ?? '' }}">
-                    {!! $cell['value'] !!}
+                    {{ $cell['value'] }}
                 </td>
                 @endforeach
             </tr>

@@ -11,7 +11,7 @@ use App\Services\Import\ImportSessionStore;
 
 final class PreviewImportAction
 {
-    /** Rows returned besides every invalid one. */
+    /** Rows returned besides every invalid one and every row carrying a warning (IMP-02). */
     public const PREVIEW_ROW_CAP = 500;
 
     public function __construct(
@@ -42,7 +42,7 @@ final class PreviewImportAction
                 default => $summary['duplicates']++,
             };
 
-            if ($index < self::PREVIEW_ROW_CAP || $row->status === ImportRow::STATUS_INVALID) {
+            if ($index < self::PREVIEW_ROW_CAP || $row->status === ImportRow::STATUS_INVALID || $row->warnings !== []) {
                 $shown[] = $row->toArray();
             }
         }

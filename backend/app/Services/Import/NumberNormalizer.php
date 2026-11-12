@@ -23,11 +23,50 @@ final class NumberNormalizer
         return strtr($value, self::DIGITS);
     }
 
+    /** Decimal places a DECIMAL(12,3) column keeps. */
+    public const SCALE = 3;
+
     /**
-     * @return string|null canonical `-?\d{1,9}.\d{3}` string, null when the text is not a number
-     *                     or does not fit DECIMAL(12,3)
+     * @return string|null canonical `-?\d{1,9}.\d{3}` string, null when the text is not a number,
+     *                     does not fit DECIMAL(12,3) or carries more than 3 significant decimals
+     *                     (never truncated silently: see exceedsScale())
      */
     public static function decimal(string $value): ?string
+    {
+        $parts = self::parts($value);
+        if ($parts === null) {
+            return null;
+        }
+
+        [$negative, $int, $fraction] = $parts;
+        if (strlen($int) > 9 || self::significantDecimals($fraction) > self::SCALE) {
+            return null;
+        }
+
+        $fraction = substr(str_pad($fraction, self::SCALE, '0'), 0, self::SCALE);
+        $negative = $negative && ($int !== '0' || trim($fraction, '0') !== '');
+
+        return ($negative ? '-' : '').$int.'.'.$fraction;
+    }
+
+    /**
+     * IMP-02: a well-formed number that only fails because it has more than 3 significant decimals
+     * ("0.0005"), so the caller can say exactly that instead of "not a valid number".
+     * Trailing zeros do not count ("1.2500" is fine).
+     */
+    public static function exceedsScale(string $value): bool
+    {
+        $parts = self::parts($value);
+
+        return $parts !== null && self::significantDecimals($parts[2]) > self::SCALE;
+    }
+
+    /**
+     * Arabic digits, decimal comma and thousands separators resolved into sign / integer / fraction digits.
+     *
+     * @return array{0: bool, 1: string, 2: string}|null [negative, integer digits without leading zeros, fraction digits]
+     */
+    private static function parts(string $value): ?array
     {
         $clean = self::latinDigits(trim($value));
         $clean = str_replace(["\u{00A0}", ' ', "\u{066C}", "\u{2212}"], ['', '', ',', '-'], $clean);
@@ -49,17 +88,13 @@ final class NumberNormalizer
         }
 
         $int = ltrim($m[1], '0');
-        if ($int === '') {
-            $int = '0';
-        }
-        if (strlen($int) > 9) {
-            return null;
-        }
 
-        $fraction = substr(str_pad($m[2] ?? '', 3, '0'), 0, 3);
-        $negative = str_starts_with($clean, '-') && ($int !== '0' || trim($fraction, '0') !== '');
+        return [str_starts_with($clean, '-'), $int === '' ? '0' : $int, $m[2] ?? ''];
+    }
 
-        return ($negative ? '-' : '').$int.'.'.$fraction;
+    private static function significantDecimals(string $fraction): int
+    {
+        return strlen(rtrim($fraction, '0'));
     }
 
     /** Phone: ASCII digits, optional leading +, separators removed; a bare 10-digit Egyptian mobile gets its 0 back. */

@@ -10,6 +10,7 @@ use App\Models\Purchase;
 use App\Models\ReturnDocument;
 use App\Models\StockMovement;
 use App\Models\Supplier;
+use App\Support\Csv\CsvCell;
 use App\Support\StockMovementTypes;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -26,10 +27,12 @@ class ExportService
             // Output UTF-8 BOM for Microsoft Excel Arabic support
             fwrite($handle, "\xEF\xBB\xBF");
 
-            fputcsv($handle, $headers);
+            // IMP-02: CsvCell neutralises formula-looking text (an item named "=1+1", "=HYPERLINK(...)")
+            // so Excel shows it as text, while real numbers stay numbers.
+            fwrite($handle, CsvCell::row($headers));
 
             foreach ($rows as $row) {
-                fputcsv($handle, $row);
+                fwrite($handle, CsvCell::row($row));
             }
 
             fclose($handle);

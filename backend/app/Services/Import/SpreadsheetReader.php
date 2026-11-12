@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Import;
 
 use DateTimeInterface;
+use Generator;
 use Illuminate\Validation\ValidationException;
 use OpenSpout\Reader\XLSX\Reader as XlsxReader;
 use Throwable;
@@ -19,6 +20,9 @@ use Throwable;
 final class SpreadsheetReader
 {
     public const MAX_DATA_ROWS = 5000;
+
+    /** Physical lines scanned before giving up, so a file of blank rows cannot run to the time limit. */
+    public const MAX_SCANNED_LINES = 50000;
 
     /**
      * @return array{headers: list<string>, rows: list<array{row_number: int, cells: list<string>}>}
@@ -38,15 +42,26 @@ final class SpreadsheetReader
                 continue;
             }
 
-            if (! $this->isBlank($cells)) {
-                $rows[] = ['row_number' => $number, 'cells' => $cells];
-            }
-
-            if (count($rows) > self::MAX_DATA_ROWS) {
+            if ($number > self::MAX_SCANNED_LINES) {
                 throw ValidationException::withMessages([
                     'file' => __('import.errors.too_many_rows', ['max' => self::MAX_DATA_ROWS]),
                 ]);
             }
+
+            // Blank lines never count as data rows, wherever they sit in the file.
+            if ($this->isBlank($cells)) {
+                continue;
+            }
+
+            // IMP-02: the readers stream EVERY line (no line cap of their own), so a file with one
+            // data row past the limit is refused here instead of being silently cut at a line count.
+            if (count($rows) === self::MAX_DATA_ROWS) {
+                throw ValidationException::withMessages([
+                    'file' => __('import.errors.too_many_rows', ['max' => self::MAX_DATA_ROWS]),
+                ]);
+            }
+
+            $rows[] = ['row_number' => $number, 'cells' => $cells];
         }
 
         if ($this->isBlank($headers) || $rows === []) {
@@ -57,25 +72,23 @@ final class SpreadsheetReader
     }
 
     /**
-     * @return array<int, list<string>> sheet line number => cells
+     * Streams the first sheet; the caller stops consuming as soon as it has seen too many data rows.
+     *
+     * @return Generator<int, list<string>> sheet line number => cells
      */
-    private function readXlsx(string $path): array
+    private function readXlsx(string $path): Generator
     {
         $reader = new XlsxReader;
-        $lines = [];
 
+        // Only failures raised by the XLSX reader land in the catch: an exception thrown by the
+        // consumer (too_many_rows) never enters the generator, it just stops pulling and the
+        // finally block releases the file.
         try {
             $reader->open($path);
             foreach ($reader->getSheetIterator() as $sheet) {
                 $number = 0;
                 foreach ($sheet->getRowIterator() as $row) {
-                    $number++;
-                    $lines[$number] = array_map($this->cellToString(...), $row->toArray());
-
-                    // Stop early on absurd sheets: MAX + header + 1 sentinel row is enough to reject.
-                    if ($number > self::MAX_DATA_ROWS + 1) {
-                        break;
-                    }
+                    yield ++$number => array_map($this->cellToString(...), $row->toArray());
                 }
                 break; // first sheet only
             }
@@ -88,14 +101,12 @@ final class SpreadsheetReader
                 // nothing left to release
             }
         }
-
-        return $lines;
     }
 
     /**
-     * @return array<int, list<string>>
+     * @return Generator<int, list<string>> line number => cells
      */
-    private function readCsv(string $path): array
+    private function readCsv(string $path): Generator
     {
         $content = file_get_contents($path);
         if ($content === false) {
@@ -128,19 +139,14 @@ final class SpreadsheetReader
         fwrite($stream, $content);
         rewind($stream);
 
-        $lines = [];
-        $number = 0;
-        while (($record = fgetcsv($stream, 0, $delimiter, '"', '')) !== false) {
-            $number++;
-            $lines[$number] = array_map(static fn (?string $cell): string => trim((string) $cell), $record);
-
-            if ($number > self::MAX_DATA_ROWS + 1) {
-                break;
+        try {
+            $number = 0;
+            while (($record = fgetcsv($stream, 0, $delimiter, '"', '')) !== false) {
+                yield ++$number => array_map(static fn (?string $cell): string => trim((string) $cell), $record);
             }
+        } finally {
+            fclose($stream);
         }
-        fclose($stream);
-
-        return $lines;
     }
 
     private function cellToString(mixed $value): string

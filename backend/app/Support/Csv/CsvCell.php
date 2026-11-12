@@ -26,8 +26,9 @@ final class CsvCell
 
     private static function isDangerous(string $text): bool
     {
-        // Plain numbers (negative money included) are data, not formulas.
-        if (preg_match('/^-?\d+(\.\d+)?$/', $text) === 1) {
+        // Numbers (negative money included, also as number_format() renders them: "-1,234.50",
+        // or a percentage "-12.5%") and the lone "-" placeholder are data, not formulas.
+        if ($text === '-' || preg_match('/^-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?%?$/', $text) === 1) {
             return false;
         }
 
