@@ -274,6 +274,8 @@ return [
 
     // IDEN-1.4 / IDEN-4.6 ext (backend): central control-plane responses
     'tenant_not_found' => 'المستأجر غير موجود.',
+    'owner_password_reset_success' => 'تم تعيين كلمة مرور مؤقتة لمالك المتجر وإنهاء كل جلساته. سلّمها له، مش هتظهر تاني، وهيُطلب منه تغييرها أول ما يدخل.',
+    'tenant_owner_not_found' => 'لا يوجد حساب مدير مفعّل في هذا المتجر لإعادة تعيين كلمة مروره.',
     'plan_pos_requires' => 'ميزة نقطة البيع (pos.access) لازم تتفعّل معاها الميزة :feature في نفس الباقة.',
     'plan_not_found' => 'الباقة غير موجودة.',
     'tenant_provisioning_failed' => 'تعذر تجهيز المستأجر. راجع سجلات الخادم وحاول مرة أخرى.',
@@ -473,5 +475,21 @@ return [
         'laravel_version' => 'إصدار Laravel',
         'db_engine' => 'قاعدة البيانات',
         'environment' => 'بيئة التشغيل',
+    ],
+
+    // SELL-01: reset the shop owner's forgotten password from the tenant page
+    'owner_reset' => [
+        'action' => 'إعادة تعيين كلمة مرور المالك',
+        'confirm_title' => 'إعادة تعيين كلمة مرور مالك :name؟',
+        'confirm_text' => 'هيتم إنشاء كلمة مرور مؤقتة وإنهاء كل جلسات المالك الحالية. هتظهر لك مرة واحدة بس.',
+        'confirm_button' => 'أيوه، أعد التعيين',
+        'modal_title' => 'كلمة مرور المالك المؤقتة',
+        'owner_label' => 'صاحب الحساب',
+        'name' => 'الاسم',
+        'email' => 'البريد الإلكتروني',
+        'phone' => 'الموبايل',
+        'fallback_title' => 'مفيش مدير ببريد المتجر',
+        'fallback_text' => 'مفيش مدير نشط ببريد المتجر، فاتعيّنت كلمة المرور لأقدم مدير نشط في المتجر. اتأكد إنك بتكلم صاحب الحساب ده قبل ما تسلّمها.',
+        'failed' => 'تعذّرت إعادة تعيين كلمة مرور المالك.',
     ],
 ];

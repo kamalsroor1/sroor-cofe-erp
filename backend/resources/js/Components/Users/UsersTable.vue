@@ -96,6 +96,18 @@
             <LockOpen class="w-3.5 h-3.5" />
           </button>
           <button
+            v-if="canResetFor(row)"
+            type="button"
+            @click="$emit('reset-password', row)"
+            data-testid="action-reset-password"
+            :disabled="resettingId === row.id"
+            class="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0 p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 border border-slate-300 dark:border-slate-700 rounded-xl transition cursor-pointer active:scale-95 flex items-center justify-center disabled:opacity-50"
+            :title="$t('users.reset_password.action')"
+            :aria-label="$t('users.reset_password.action')"
+          >
+            <KeyRound class="w-3.5 h-3.5" />
+          </button>
+          <button
             type="button"
             @click="$emit('edit', row)"
             data-testid="action-edit"
@@ -131,9 +143,12 @@ defineProps({
   users: { type: Array, default: () => [] },
   pagination: { type: Object, default: () => ({ current_page: 1, last_page: 1, total: 0, per_page: 15 }) },
   loading: { type: Boolean, default: false },
+  // SELL-01: per-row gate for the reset-password action (not for yourself, admins only for admins).
+  canResetFor: { type: Function, default: () => false },
+  resettingId: { type: [Number, String], default: null },
 });
 
-defineEmits(['edit', 'delete', 'toggle-active', 'unlock-login', 'page-change']);
+defineEmits(['edit', 'delete', 'toggle-active', 'unlock-login', 'reset-password', 'page-change']);
 
 const columns = computed(() => [
   { key: 'name', label: t('users.employee_col') },

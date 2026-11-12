@@ -118,4 +118,27 @@ return [
     'cannot_change_own_role' => 'You cannot change your own role.',
     'cannot_modify_admin_identity' => 'Only a system admin can change the name, phone or email of an admin account.',
     'telegram_account_locked' => "🔒 <b>Account temporarily locked</b>\nShop: :shop\nUser: :name\nLogin: :login\nTime: :time\nLock duration: :minutes minute(s)\nIP: :ip",
+
+    // SELL-01: forced password change
+    'password_change_required' => 'You must change your password before you continue.',
+    'password_must_differ' => 'The new password must be different from the current one.',
+    'password_changed_success' => 'Password changed. Your sessions on other devices were ended.',
+    'activity_password_changed' => 'User [:name] changed their own password; their other sessions were ended',
+
+    'change_password' => [
+        'page_title' => 'Change password',
+        'title' => 'Change your password to continue',
+        'subtitle' => 'Welcome :name. Your current password is temporary. Choose a new one that only you know to use the system.',
+        'current_label' => 'Current (temporary) password',
+        'new_label' => 'New password',
+        'confirm_label' => 'Confirm new password',
+        'policy_hint' => 'At least 8 characters, and different from your current password.',
+        'submit' => 'Save and continue',
+        'logout' => 'Sign out',
+        'current_required' => 'Enter your current password.',
+        'too_short' => 'The new password must be at least 8 characters.',
+        'must_differ' => 'The new password must be different from the current one.',
+        'mismatch' => 'The confirmation does not match.',
+        'throttled' => 'Too many attempts in a short time. Wait a moment and try again.',
+    ],
 ];

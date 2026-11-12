@@ -48,10 +48,13 @@ const {
       :errors="approval.errors"
       :is-submitting="approval.isSubmitting"
       :is-preparing="approval.isPreparing"
+      :credentials="approval.credentials"
+      :can-whatsapp="approval.canSendWhatsApp"
       @close="approval.close"
       @submit="approval.submit"
       @regenerate="approval.regenerate"
       @copy="approval.copyPassword"
+      @whatsapp="approval.sendWhatsApp"
     />
   </div>
 </template>

@@ -5,6 +5,11 @@
       <StatCardSkeleton v-for="n in 4" :key="n" />
     </div>
 
+    <!-- 1b. Quick actions skeleton -->
+    <div class="flex flex-wrap gap-2">
+      <Skeleton v-for="n in 5" :key="n" width="w-24" height="h-11" rounded="rounded-2xl" />
+    </div>
+
     <!-- 2. Analytics Row Skeleton (Bar Chart + Payment Dist) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <!-- Weekly Chart Skeleton -->

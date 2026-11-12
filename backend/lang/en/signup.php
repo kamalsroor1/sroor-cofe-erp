@@ -129,5 +129,10 @@ return [
         'reject_confirm' => 'Confirm rejection',
         'reject_reason_length' => 'The rejection reason must be 3 to 500 characters.',
         'action_failed' => 'The operation could not be completed.',
+        'password_mode_auto' => 'Generate the password automatically (recommended)',
+        'password_mode_auto_hint' => 'The system creates a temporary password and shows it to you once after approval. The owner changes it at first sign-in.',
+        'password_mode_manual' => 'I will type the password myself',
+        'password_manual_required' => 'Type a password or choose automatic generation.',
+        'credentials_title' => 'Shop owner sign-in details',
     ],
 ];

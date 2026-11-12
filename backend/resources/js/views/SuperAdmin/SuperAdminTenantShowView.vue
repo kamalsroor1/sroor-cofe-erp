@@ -12,11 +12,13 @@
         :archive-in-progress="archiveInProgress"
         :is-archiving="isArchiving"
         :is-unarchiving="isUnarchiving"
+        :is-resetting-owner="isResettingOwner"
         @impersonate="impersonateTenant"
         @open-status="openStatusModal"
         @run-migrations="runMigrations"
         @archive-tenant="deleteTenant"
         @unarchive-tenant="restoreArchivedTenant"
+        @reset-owner-password="requestOwnerReset"
       />
 
       <TenantArchivePanel v-if="showArchivePanel" :archive="archiveInfo" :status="tenant.status || ''" />
@@ -49,6 +51,17 @@
 
       <TenantBillingSection :tenant-id="tenant.id" :tenant-name="tenant.name || ''" />
 
+      <TenantOwnerPasswordModal
+        :show="!!revealedOwner"
+        :tenant-name="revealedOwner?.tenantName || ''"
+        :owner="revealedOwner?.owner || {}"
+        :matched-by="revealedOwner?.matchedBy || 'email'"
+        :password="revealedOwner?.password || ''"
+        :can-whatsapp="canSendWhatsApp"
+        @whatsapp="sendOwnerWhatsApp"
+        @close="closeOwnerReveal"
+      />
+
       <EditTenantStatusModal
         :show="showStatusModal"
         :tenant-name="tenant.name || ''"
@@ -72,8 +85,10 @@ import TenantStatsGrid from '../../Components/SuperAdmin/TenantStatsGrid.vue';
 import TenantUnitsCard from '../../Components/SuperAdmin/TenantUnitsCard.vue';
 import TenantFeaturesMatrixCard from '../../Components/SuperAdmin/TenantFeaturesMatrixCard.vue';
 import TenantBillingSection from '../../Components/SuperAdmin/Billing/TenantBillingSection.vue';
+import TenantOwnerPasswordModal from '../../Components/SuperAdmin/TenantOwnerPasswordModal.vue';
 import EditTenantStatusModal from '../../Components/SuperAdmin/EditTenantStatusModal.vue';
 import { useSuperAdminTenantShow } from '../../Composables/useSuperAdminTenantShow';
+import { useTenantOwnerPasswordReset } from '../../Composables/useTenantOwnerPasswordReset';
 
 const {
   tenant,
@@ -110,4 +125,13 @@ const {
   isArchiving,
   isUnarchiving,
 } = useSuperAdminTenantShow();
+
+const {
+  revealed: revealedOwner,
+  isResetting: isResettingOwner,
+  canSendWhatsApp,
+  requestReset: requestOwnerReset,
+  sendWhatsApp: sendOwnerWhatsApp,
+  closeReveal: closeOwnerReveal,
+} = useTenantOwnerPasswordReset(() => tenant.value);
 </script>

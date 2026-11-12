@@ -159,6 +159,8 @@ return [
 
     // SEC-1 (W2 batch 6)
     'operation_failed' => 'The operation could not be completed. Please try again or contact support.',
+    // BUG-07: a lock conflict survived the automatic retries (HTTP 409, App\Exceptions\DatabaseBusyException).
+    'database_busy' => 'The system is busy with other operations on the same data right now and nothing was saved. Please try again in a moment.',
     'record_not_found' => 'The requested record was not found.',
     'trash_invalid_type' => 'This record type cannot be restored or deleted from the recycle bin.',
     'no_access' => 'You do not have access to this page.',
@@ -176,4 +178,16 @@ return [
     'quick_search' => 'Quick search...',
     'clear_search_esc' => 'Clear search (Esc)',
     'preview' => 'Preview',
+
+    'temporary_password' => [
+        'label' => 'Temporary password',
+        'copy' => 'Copy password',
+        'copied' => 'Password copied.',
+        'copy_failed' => 'It could not be copied automatically. Select it and copy it by hand.',
+        'shown_once' => 'This password is shown only once and cannot be displayed again. Copy it and hand it over now; they must change it at their first sign-in.',
+        'login_label' => 'Login',
+        'whatsapp' => 'Send on WhatsApp',
+        'whatsapp_message' => "Hello, here are the temporary sign-in details for your account:\nLogin: :login\nTemporary password: :password\nThe system will ask you to change the password when you first sign in.",
+        'done' => 'Done, I handed it over',
+    ],
 ];

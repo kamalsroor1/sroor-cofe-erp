@@ -118,8 +118,8 @@ return [
     'all_stock_safe' => 'All items are currently at safe inventory levels 👍',
 
     // App Navigation Menu Hub Keys
-    'menu_hub_title' => 'Quick Operations & Documents Hub (App Menu)',
-    'menu_hub_subtitle' => 'Direct 1-touch visual access to all system screens and documents',
+    'menu_hub_title' => 'All screens',
+    'menu_hub_subtitle' => 'Open any screen in the system with one tap',
     'search_screens_placeholder' => 'Search any screen or document (e.g. sale, purchase, stock)...',
     'no_screens_found' => 'No screens matching your search query',
 
@@ -242,4 +242,22 @@ return [
     'returns_month' => 'Returns this month',
     'credit_label' => 'Credit',
     'cash_credit_before_returns' => 'Before returns - Cash :cash / Credit :credit',
+
+    // UI-05: numbers-first home screen
+    'pos_short' => 'POS',
+    'today_invoices' => 'Invoices today',
+    'quick_actions' => [
+        'title' => 'Quick actions',
+        'sale' => 'Sale',
+        'purchase' => 'Purchase invoice',
+        'item' => 'New item',
+        'return' => 'Return',
+        'collect' => 'Collect payment',
+        'all_screens' => 'All screens',
+    ],
+    'first_sale' => [
+        'title' => 'No sales yet',
+        'description' => 'Once you record your first sale, today\'s numbers and the chart will show up here.',
+        'action' => 'Start your first sale',
+    ],
 ];

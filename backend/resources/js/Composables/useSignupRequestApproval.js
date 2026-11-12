@@ -1,7 +1,8 @@
-import { ref } from 'vue';
+import { onBeforeUnmount, ref, watch } from 'vue';
 import api from '../Services/centralApi';
 import { useTrans } from './useTrans';
 import { notifySuccess, notifyWarning } from '../helpers/alert';
+import { useWhatsAppCredentials } from './useWhatsAppCredentials';
 
 const PASSWORD_LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz';
 const PASSWORD_DIGITS = '23456789';
@@ -46,7 +47,11 @@ export function useSignupRequestApproval(onChanged) {
 
     const request = ref(null);
     const plans = ref([]);
-    const form = ref({ subdomain: '', plan_code: '', owner_email: '', owner_password: '' });
+    // generate_password: the server creates the owner's temporary password (SELL-01 default).
+    const form = ref({ subdomain: '', plan_code: '', owner_email: '', owner_password: '', generate_password: true });
+    // Owner sign-in details returned once by the approval: { login, password, phone }.
+    const credentials = ref(null);
+    const whatsapp = useWhatsAppCredentials();
     const errors = ref({});
     const isSubmitting = ref(false);
     const isPreparing = ref(false);
@@ -68,19 +73,31 @@ export function useSignupRequestApproval(onChanged) {
         request.value = signup;
         errors.value = {};
         isPreparing.value = false;
+        credentials.value = null;
         form.value = {
             subdomain: signup.preferred_subdomain || '',
             plan_code: signup.plan_code || '',
             owner_email: signup.email || '',
-            owner_password: generateOwnerPassword(),
+            owner_password: '',
+            generate_password: true,
         };
         loadPlans();
     };
+
+    // Typing the password yourself starts from a strong suggestion; going back to automatic drops it.
+    watch(
+        () => form.value.generate_password,
+        (automatic) => {
+            if (automatic) form.value.owner_password = '';
+            else if (!form.value.owner_password) form.value.owner_password = generateOwnerPassword();
+        }
+    );
 
     const close = () => {
         const wasPreparing = isPreparing.value;
         request.value = null;
         isPreparing.value = false;
+        credentials.value = null;
         if (wasPreparing) onChanged();
     };
 
@@ -102,9 +119,24 @@ export function useSignupRequestApproval(onChanged) {
         isSubmitting.value = true;
         errors.value = {};
         try {
-            const payload = { ...form.value };
+            const { generate_password: automatic, ...payload } = form.value;
             if (!payload.plan_code) delete payload.plan_code;
-            await api.post(`/super-admin/signup-requests/${request.value.id}/approve`, payload);
+            if (automatic) {
+                delete payload.owner_password;
+            } else if (!String(payload.owner_password || '').trim()) {
+                errors.value = { owner_password: t('signup.console.password_manual_required') };
+                return;
+            }
+            const response = await api.post(`/super-admin/signup-requests/${request.value.id}/approve`, payload);
+            const issued = response.data?.owner_credentials;
+            if (issued?.temporary_password) {
+                credentials.value = {
+                    login: issued.login || payload.owner_email,
+                    password: issued.temporary_password,
+                    phone: request.value.phone || '',
+                };
+                whatsapp.prepare();
+            }
             isPreparing.value = true;
         } catch (e) {
             const status = e.response?.status;
@@ -124,7 +156,20 @@ export function useSignupRequestApproval(onChanged) {
         }
     };
 
+    const sendWhatsApp = () => {
+        if (!credentials.value) return;
+        const { phone, login, password } = credentials.value;
+        whatsapp.send({ phone, login, password });
+    };
+
+    onBeforeUnmount(() => {
+        credentials.value = null;
+    });
+
     return {
+        credentials,
+        canSendWhatsApp: whatsapp.isReady,
+        sendWhatsApp,
         request,
         plans,
         form,

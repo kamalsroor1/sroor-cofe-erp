@@ -65,7 +65,13 @@ const statusVariant = { pending: 'warning', approved: 'success', rejected: 'dang
     </p>
 
     <footer v-if="canManage && request.status === 'pending'" class="flex flex-wrap gap-2 pt-1">
-      <BaseButton variant="success" size="md" :icon="Check" @click="$emit('approve', request)">
+      <BaseButton
+        variant="success"
+        size="md"
+        :icon="Check"
+        data-testid="signup-approve"
+        @click="$emit('approve', request)"
+      >
         {{ $t('signup.console.approve') }}
       </BaseButton>
       <BaseButton variant="danger" size="md" :icon="X" @click="$emit('reject', request)">

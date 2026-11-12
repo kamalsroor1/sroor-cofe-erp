@@ -74,6 +74,7 @@ return [
         'plan_change_cancelled' => 'Plan change request cancelled',
         'plan_change_invoiced' => 'Plan change request invoiced',
         'plan_change_rejected' => 'Plan change request rejected',
+        'tenant_owner_password_reset' => 'Shop owner password reset',
     ],
     'prune' => [
         'done' => 'Deleted :count platform audit rows older than :date.',

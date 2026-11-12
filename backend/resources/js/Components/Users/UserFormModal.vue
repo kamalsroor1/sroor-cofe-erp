@@ -63,7 +63,9 @@
         @update:model-value="$emit('update:field', 'password', $event)"
         :label="isEditing ? $t('users.password_edit_label') : $t('users.password_create_label')"
         :required="!isEditing"
+        :hint="isEditing ? $t('users.password_edit_flags_hint') : ''"
         type="password"
+        autocomplete="new-password"
         :minlength="8"
         placeholder="••••••••"
       />

@@ -74,6 +74,7 @@ return [
         'plan_change_cancelled' => 'إلغاء طلب تغيير باقة',
         'plan_change_invoiced' => 'إصدار فاتورة لطلب تغيير باقة',
         'plan_change_rejected' => 'رفض طلب تغيير باقة',
+        'tenant_owner_password_reset' => 'إعادة تعيين كلمة مرور مالك المتجر',
     ],
     'prune' => [
         'done' => 'تم حذف :count من سجلات مراجعة المنصة الأقدم من :date.',

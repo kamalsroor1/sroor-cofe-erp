@@ -118,8 +118,8 @@ return [
     'all_stock_safe' => 'جميع الأصناف متوفرة بمستويات آمنة 👍',
 
     // App Navigation Menu Hub Keys
-    'menu_hub_title' => 'لوحة المستندات والعمليات السريعة (App Hub)',
-    'menu_hub_subtitle' => 'الوصول المباشر لكافة شاشات ومستندات المنظومة بلمسة واحدة',
+    'menu_hub_title' => 'كل الشاشات',
+    'menu_hub_subtitle' => 'افتح أي شاشة في النظام بلمسة واحدة',
     'search_screens_placeholder' => 'ابحث عن أي شاشة أو مستند (مثال: بيع، شراء، جرد، خزينة)...',
     'no_screens_found' => 'لم يتم العثور على أي شاشة مطابقة لبحثك',
 
@@ -242,4 +242,22 @@ return [
     'returns_month' => 'مرتجعات الشهر',
     'credit_label' => 'آجل',
     'cash_credit_before_returns' => 'قبل المرتجعات - نقد :cash / آجل :credit',
+
+    // UI-05: numbers-first home screen
+    'pos_short' => 'الكاشير',
+    'today_invoices' => 'فواتير اليوم',
+    'quick_actions' => [
+        'title' => 'إجراءات سريعة',
+        'sale' => 'بيع',
+        'purchase' => 'فاتورة مشتريات',
+        'item' => 'صنف جديد',
+        'return' => 'مرتجع',
+        'collect' => 'تحصيل',
+        'all_screens' => 'كل الشاشات',
+    ],
+    'first_sale' => [
+        'title' => 'لسه مفيش مبيعات',
+        'description' => 'أول فاتورة بتتسجل هنا هتظهر أرقام اليوم والرسم البياني.',
+        'action' => 'ابدأ أول عملية بيع',
+    ],
 ];

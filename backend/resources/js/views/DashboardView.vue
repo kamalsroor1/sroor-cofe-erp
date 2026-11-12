@@ -1,22 +1,12 @@
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto font-tajawal transition-colors duration-300">
+  <div class="space-y-4 sm:space-y-5 max-w-7xl mx-auto font-tajawal transition-colors duration-300">
     <DashboardWelcomeBanner
       :company-name="appConfigStore.companyName || appConfigStore.platformName"
       :loading="isLoading"
+      :can-sell="canSell"
       @refresh="retry"
     />
 
-    <DashboardSetupChecklist
-      v-if="isChecklistVisible"
-      :steps="checklistSteps"
-      :progress="setupProgress"
-      @dismiss="dismissChecklist"
-    />
-
-    <!-- 🚀 Metro App Menu Hub (Tiles & Operations Launcher) -->
-    <DashboardAppMenuHub />
-
-    <!-- 🔄 Facebook-Style Skeleton Loading State -->
     <DashboardSkeleton v-if="isLoading && !dashboardData" />
 
     <ErrorState v-else-if="error && !dashboardData" :message="errorMessage" :loading="isLoading" @retry="retry" />
@@ -24,40 +14,55 @@
     <template v-else>
       <InlineErrorBar v-if="error" :message="errorMessage" @retry="retry" />
       <DashboardKpiGrid :metrics="metrics" />
+      <DashboardQuickActions :actions="quickActions" />
 
-      <DashboardAnalyticsRow
-        :daily-trend="dailyTrend"
-        :period="periodAnalytics"
-        :payment-distribution="paymentDistribution"
-        :active-shift="activeShift"
+      <DashboardSetupChecklist
+        v-if="isChecklistVisible"
+        :steps="checklistSteps"
+        :progress="setupProgress"
+        @dismiss="dismissChecklist"
       />
 
-      <DashboardPeakHours :hourly-sales="hourlySales" :peak-hour="peakHour" />
+      <DashboardFirstSale v-if="isNewShop" :can-sell="canSell" />
+      <template v-else>
+        <DashboardAnalyticsRow
+          :daily-trend="dailyTrend"
+          :period="periodAnalytics"
+          :payment-distribution="paymentDistribution"
+          :active-shift="activeShift"
+        />
 
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div class="lg:col-span-8">
-          <DashboardRecentInvoices :invoices="recentInvoices" @preview="previewInvoice" />
+        <DashboardPeakHours :hourly-sales="hourlySales" :peak-hour="peakHour" />
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="lg:col-span-8">
+            <DashboardRecentInvoices :invoices="recentInvoices" @preview="previewInvoice" />
+          </div>
+          <div class="lg:col-span-4">
+            <DashboardLowStock :items="lowStockItems" />
+          </div>
         </div>
-        <div class="lg:col-span-4">
-          <DashboardLowStock :items="lowStockItems" />
-        </div>
-      </div>
+      </template>
     </template>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAppConfigStore } from '../stores/appConfig';
 import { useDashboard } from '../Composables/useDashboard';
+import { useDashboardQuickActions } from '../Composables/useDashboardQuickActions';
 import { useSetupChecklist } from '../Composables/useSetupChecklist';
+import { isEmptyShop } from '../helpers/dashboardMetrics';
 
 import ErrorState from '../Components/Common/ErrorState.vue';
 import InlineErrorBar from '../Components/Common/InlineErrorBar.vue';
 import DashboardWelcomeBanner from '../Components/Dashboard/DashboardWelcomeBanner.vue';
-import DashboardSetupChecklist from '../Components/Dashboard/DashboardSetupChecklist.vue';
-import DashboardAppMenuHub from '../Components/Dashboard/DashboardAppMenuHub.vue';
 import DashboardKpiGrid from '../Components/Dashboard/DashboardKpiGrid.vue';
+import DashboardQuickActions from '../Components/Dashboard/DashboardQuickActions.vue';
+import DashboardSetupChecklist from '../Components/Dashboard/DashboardSetupChecklist.vue';
+import DashboardFirstSale from '../Components/Dashboard/DashboardFirstSale.vue';
 import DashboardAnalyticsRow from '../Components/Dashboard/DashboardAnalyticsRow.vue';
 import DashboardPeakHours from '../Components/Dashboard/DashboardPeakHours.vue';
 import DashboardRecentInvoices from '../Components/Dashboard/DashboardRecentInvoices.vue';
@@ -84,12 +89,18 @@ const {
   activeShift,
 } = useDashboard();
 
+const { actions: quickActions, canSell } = useDashboardQuickActions();
+
 const {
   steps: checklistSteps,
   progress: setupProgress,
   isVisible: isChecklistVisible,
   dismiss: dismissChecklist,
 } = useSetupChecklist();
+
+const isNewShop = computed(() =>
+  isEmptyShop({ metrics: metrics.value, recentInvoices: recentInvoices.value, period: periodAnalytics.value })
+);
 
 const previewInvoice = (inv) => router.push('/invoices?view=' + inv.id);
 </script>

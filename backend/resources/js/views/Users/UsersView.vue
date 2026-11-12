@@ -58,10 +58,20 @@
         @edit="openEditModal"
         @delete="deleteUser"
         @unlock-login="unlockLogin"
+        :can-reset-for="canResetFor"
+        :resetting-id="resettingId"
+        @reset-password="requestReset"
         @toggle-active="toggleActive"
         @page-change="changePage"
       />
     </template>
+
+    <TemporaryPasswordModal
+      :show="!!revealed"
+      :title="$t('users.reset_password.done_title', { name: revealed?.name || '' })"
+      :password="revealed?.password || ''"
+      @close="closeReveal"
+    />
 
     <!-- Create / Edit User Modal -->
     <UserFormModal
@@ -91,7 +101,9 @@ import BaseButton from '../../Components/Common/BaseButton.vue';
 import UsersFilterBar from '../../Components/Users/UsersFilterBar.vue';
 import UsersTable from '../../Components/Users/UsersTable.vue';
 import UserFormModal from '../../Components/Users/UserFormModal.vue';
+import TemporaryPasswordModal from '../../Components/Common/TemporaryPasswordModal.vue';
 import { useUsers } from '../../Composables/useUsers';
+import { useUserPasswordReset } from '../../Composables/useUserPasswordReset';
 
 const {
   users,
@@ -120,6 +132,8 @@ const {
   updateEditingUserPosPin,
   clearEditingUserPosPin,
 } = useUsers();
+
+const { revealed, resettingId, canResetFor, requestReset, closeReveal } = useUserPasswordReset();
 
 const userModal = ref(null);
 

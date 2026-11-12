@@ -193,7 +193,9 @@ export const useAppConfigStore = defineStore('appConfig', {
             if (!isSupportedLocale(locale) || locale === this.locale) return true;
             await this.fetchTranslations(locale);
             const { useAuthStore } = await import('./auth');
-            if (!useAuthStore().isAuthenticated || isCentralAppContext()) return true;
+            const auth = useAuthStore();
+            // SELL-01: a flagged account may not write its profile yet; the choice stays in this browser.
+            if (!auth.isAuthenticated || auth.mustChangePassword || isCentralAppContext()) return true;
             try {
                 await api.put('/profile/locale', { locale });
             } catch {

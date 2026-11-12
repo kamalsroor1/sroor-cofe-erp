@@ -4,6 +4,7 @@ import { trans } from '../helpers/trans';
 import { isNetworkError, reportRequestFailure, reportServerReachable } from '../helpers/connectivity';
 import { storeAccessRetryConfig } from '../helpers/storeAccessRecovery';
 import { isCentralAppContext } from './centralApi';
+import { PASSWORD_CHANGE_ROUTE, isPasswordChangeRequired, safeInternalRedirect } from '../helpers/passwordChange';
 
 // Tenant client only. The platform console uses Services/centralApi.js (IDEN-1.9); on the admin
 // host (central mode) this client never sends a tenant token, store or tenant header.
@@ -20,6 +21,22 @@ const canOfferPayment = async () => {
     if (window.location.pathname.startsWith('/billing')) return false;
     const { useAuthStore } = await import('../stores/auth');
     return useAuthStore().hasPermission('billing.manage');
+};
+
+// SELL-01: the account is flagged must_change_password (possibly while this session was open).
+// Every guarded call answers 403 auth.password_change_required; send the user to the change screen.
+const goToPasswordChange = async () => {
+    const { useAuthStore } = await import('../stores/auth');
+    useAuthStore().markPasswordChangeRequired();
+    const router = window.spaRouter;
+    if (!router) {
+        window.location.assign('/change-password');
+        return;
+    }
+    const current = router.currentRoute.value;
+    if (current.name === PASSWORD_CHANGE_ROUTE) return;
+    const redirect = safeInternalRedirect(current.fullPath);
+    router.replace({ name: PASSWORD_CHANGE_ROUTE, query: redirect && redirect !== '/' ? { redirect } : undefined });
 };
 
 const showLifecycleAlert = async ({ titleKey, message, offerPayment }) => {
@@ -145,8 +162,14 @@ apiClient.interceptors.response.use(
             showLifecycleAlert({ titleKey, message, offerPayment: status === 423 });
         }
 
+        const passwordChangeRequired = !isCentralMode && isPasswordChangeRequired(error);
+        if (passwordChangeRequired) {
+            error.passwordChangeRequired = true;
+            goToPasswordChange();
+        }
+
         // 403 Forbidden: Insufficient Permissions
-        if (status === 403 && !isLifecycleError) {
+        if (status === 403 && !isLifecycleError && !passwordChangeRequired) {
             Swal.fire({
                 icon: 'warning',
                 title: trans('common.permission_alert'),

@@ -4,6 +4,7 @@ return [
     'title' => 'ابدأ من هنا',
     'subtitle' => 'خطوات سريعة لتجهيز محلك وبدء البيع',
     'progress' => ':completed من :total خطوات',
+    'collapsed_title' => ':completed من :total — كمّل الإعداد',
     'forbidden' => 'ليس لديك صلاحية عرض تقدم الإعداد',
     'dismiss' => 'إخفاء قائمة البداية',
     'go' => 'ابدأ',

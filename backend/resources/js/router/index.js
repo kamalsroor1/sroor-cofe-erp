@@ -8,6 +8,7 @@ import { trans } from '../helpers/trans';
 import { notifyError } from '../helpers/alert';
 import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
 import { isPublicLandingHost } from '../helpers/platformHosts';
+import { PASSWORD_CHANGE_ROUTE, safeInternalRedirect } from '../helpers/passwordChange';
 
 /**
  * Two disjoint route tables (IDEN-1.9). The server decides the mode:
@@ -95,12 +96,33 @@ const tenantRoutes = [
         },
     },
     {
+        // SELL-01: full-screen forced change (flagged accounts); the guard keeps every other route closed.
+        path: '/change-password',
+        name: PASSWORD_CHANGE_ROUTE,
+        component: () => import('../views/Auth/ChangePasswordView.vue'),
+        meta: {
+            titleKey: 'auth.change_password.page_title',
+            requiresAuth: true,
+            layout: 'blank',
+            passwordChange: true,
+        },
+    },
+    {
         path: '/',
         alias: '/dashboard',
         name: 'dashboard',
         component: () => import('../views/DashboardView.vue'),
         meta: {
             titleKey: 'nav.page_titles.dashboard',
+            requiresAuth: true,
+        },
+    },
+    {
+        path: '/all-screens',
+        name: 'all_screens',
+        component: () => import('../views/AllScreensView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.all_screens',
             requiresAuth: true,
         },
     },
@@ -623,6 +645,19 @@ async function tenantGuard(to, from, next) {
     // 2. Set document title
     const appName = appConfigStore.platformName || trans('nav.page_titles.default_app_name');
     document.title = to.meta.titleKey ? `${trans(to.meta.titleKey)} - ${appName}` : appName;
+
+    // 2b. SELL-01: a flagged account sees only the change screen; an unflagged one never sees it.
+    if (authStore.mustChangePassword && !to.meta.passwordChange) {
+        const redirect = safeInternalRedirect(to.name === 'login' ? to.query.redirect : to.fullPath);
+        return next({
+            name: PASSWORD_CHANGE_ROUTE,
+            query: redirect && redirect !== '/' ? { redirect } : undefined,
+            replace: true,
+        });
+    }
+    if (to.meta.passwordChange && authStore.isAuthenticated && !authStore.mustChangePassword) {
+        return next({ name: 'dashboard', replace: true });
+    }
 
     // 3. Guest-only check (e.g. Login page)
     if (to.meta.guestOnly && authStore.isAuthenticated) {

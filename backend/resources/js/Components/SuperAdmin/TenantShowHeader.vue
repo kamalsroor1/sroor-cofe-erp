@@ -85,6 +85,19 @@
 
       <template v-if="canManage">
         <BaseButton
+          v-if="tenant?.status !== 'archived'"
+          type="button"
+          variant="secondary"
+          size="md"
+          :loading="isResettingOwner"
+          data-testid="reset-owner-password"
+          class="min-h-11 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800"
+          @click="$emit('reset-owner-password')"
+        >
+          <KeyRound class="w-4 h-4" />
+          <span>{{ $t('super.owner_reset.action') }}</span>
+        </BaseButton>
+        <BaseButton
           v-if="canUnarchive"
           type="button"
           variant="secondary"
@@ -124,6 +137,7 @@ import {
   Database,
   Archive,
   ArchiveRestore,
+  KeyRound,
 } from 'lucide-vue-next';
 import BaseButton from '../Common/BaseButton.vue';
 import { tenantStatusBadgeClass, tenantStatusLabel } from '../../helpers/tenantStatus';
@@ -140,7 +154,15 @@ defineProps({
   archiveInProgress: { type: Boolean, default: false },
   isArchiving: { type: Boolean, default: false },
   isUnarchiving: { type: Boolean, default: false },
+  isResettingOwner: { type: Boolean, default: false },
 });
 
-defineEmits(['impersonate', 'open-status', 'run-migrations', 'archive-tenant', 'unarchive-tenant']);
+defineEmits([
+  'impersonate',
+  'open-status',
+  'run-migrations',
+  'archive-tenant',
+  'unarchive-tenant',
+  'reset-owner-password',
+]);
 </script>

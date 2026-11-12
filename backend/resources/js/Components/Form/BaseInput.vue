@@ -72,7 +72,7 @@
 
         <!-- Password Visibility Toggle -->
         <button
-          v-if="type === 'password'"
+          v-if="type === 'password' && passwordToggle"
           type="button"
           tabindex="-1"
           @click="showPassword = !showPassword"
@@ -135,6 +135,8 @@ const props = defineProps({
   maxlength: { type: [Number, String], default: null },
   minlength: { type: [Number, String], default: null },
   clearable: { type: Boolean, default: false },
+  // false when the parent supplies its own (larger) visibility toggle through the trailing slot.
+  passwordToggle: { type: Boolean, default: true },
   leadingIcon: { type: [Object, Function, String], default: null },
   trailingIcon: { type: [Object, Function, String], default: null },
   wrapperClass: { type: String, default: '' },

@@ -274,6 +274,8 @@ return [
 
     // IDEN-1.4 / IDEN-4.6 ext (backend): central control-plane responses
     'tenant_not_found' => 'Tenant not found.',
+    'owner_password_reset_success' => 'A temporary password was set for the shop owner and all their sessions were ended. Hand it to them; it will not be shown again. They must change it at their next sign-in.',
+    'tenant_owner_not_found' => 'This shop has no active admin account whose password could be reset.',
     'plan_pos_requires' => 'The POS feature (pos.access) requires :feature to be enabled on the same plan.',
     'plan_not_found' => 'Plan not found.',
     'tenant_provisioning_failed' => 'The tenant could not be set up. Check the server logs and try again.',
@@ -473,5 +475,21 @@ return [
         'laravel_version' => 'Laravel version',
         'db_engine' => 'Database engine',
         'environment' => 'Runtime environment',
+    ],
+
+    // SELL-01: reset the shop owner's forgotten password from the tenant page
+    'owner_reset' => [
+        'action' => 'Reset owner password',
+        'confirm_title' => 'Reset the password of the owner of :name?',
+        'confirm_text' => 'A temporary password will be created and all of the owner\'s sessions will end. It is shown to you only once.',
+        'confirm_button' => 'Yes, reset it',
+        'modal_title' => 'Owner temporary password',
+        'owner_label' => 'Account holder',
+        'name' => 'Name',
+        'email' => 'Email',
+        'phone' => 'Mobile',
+        'fallback_title' => 'No admin uses the shop email',
+        'fallback_text' => 'No active admin has the shop email, so the password was set for the oldest active admin of the shop. Make sure you are talking to this account holder before you hand it over.',
+        'failed' => 'The owner password could not be reset.',
     ],
 ];

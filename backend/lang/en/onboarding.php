@@ -4,6 +4,7 @@ return [
     'title' => 'Getting started',
     'subtitle' => 'A few quick steps to set up your shop and start selling',
     'progress' => ':completed of :total steps',
+    'collapsed_title' => ':completed of :total - finish setting up',
     'forbidden' => 'You are not allowed to view the setup progress.',
     'dismiss' => 'Hide the getting started list',
     'go' => 'Start',

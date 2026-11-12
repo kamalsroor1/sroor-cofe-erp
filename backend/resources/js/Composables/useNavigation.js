@@ -27,6 +27,7 @@ import {
     FileUp,
     CreditCard,
     LifeBuoy,
+    LayoutGrid,
 } from 'lucide-vue-next';
 
 export function useNavigation() {
@@ -196,6 +197,11 @@ export function useNavigation() {
                     key: 'billing',
                     path: '/billing',
                     icon: CreditCard,
+                },
+                {
+                    key: 'all-screens',
+                    path: '/all-screens',
+                    icon: LayoutGrid,
                 },
                 {
                     key: 'help',

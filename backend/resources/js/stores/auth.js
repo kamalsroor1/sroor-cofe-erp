@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import api from '../Services/api';
 import { trans } from '../helpers/trans';
 import { isCentralAppContext } from '../Services/centralApi';
+import { mustChangeFromPayload } from '../helpers/passwordChange';
 
 export const useAuthStore = defineStore('auth', {
     state: () => {
@@ -43,6 +44,8 @@ export const useAuthStore = defineStore('auth', {
         // Tenant session only. Platform operators sign in separately (stores/centralAuth.js, IDEN-1.9).
         isAuthenticated: (state) => !!state.token && !!state.user,
         isAdmin: (state) => state.roles.includes('admin'),
+        // SELL-01: the account must pick its own password before anything else works.
+        mustChangePassword: (state) => !!state.token && state.user?.must_change_password === true,
         userName: (state) => state.user?.name || trans('common.default_user_name'),
         activeStoreName: (state) => state.currentStore?.name || trans('common.main_branch'),
         activeStoreId: (state) => state.currentStore?.id || '',
@@ -96,7 +99,7 @@ export const useAuthStore = defineStore('auth', {
             }
 
             this.token = payload.token;
-            this.user = payload.user;
+            this.user = { ...payload.user, must_change_password: mustChangeFromPayload(payload) };
             this.roles = payload.user?.roles || [];
             this.permissions = payload.user?.permissions || [];
             this.currentStore = payload.store;
@@ -124,7 +127,7 @@ export const useAuthStore = defineStore('auth', {
                 const payload = response.data?.data;
 
                 if (payload && payload.user) {
-                    this.user = payload.user;
+                    this.user = { ...payload.user, must_change_password: mustChangeFromPayload(payload) };
                     this.roles = payload.user.roles || [];
                     this.permissions = payload.user.permissions || [];
                     if (payload.store) {
@@ -135,7 +138,7 @@ export const useAuthStore = defineStore('auth', {
                     if (payload.stores) {
                         this.stores = payload.stores;
                     }
-                    localStorage.setItem('auth_user', JSON.stringify(payload.user));
+                    localStorage.setItem('auth_user', JSON.stringify(this.user));
                 }
                 return payload;
             } catch (error) {
@@ -146,6 +149,33 @@ export const useAuthStore = defineStore('auth', {
             } finally {
                 this.isLoading = false;
             }
+        },
+
+        /**
+         * SELL-01: the API answered 403 auth.password_change_required (flag set while the session was open).
+         */
+        markPasswordChangeRequired() {
+            if (!this.user || this.user.must_change_password === true) return;
+            this.user = { ...this.user, must_change_password: true };
+            localStorage.setItem('auth_user', JSON.stringify(this.user));
+        },
+
+        /**
+         * SELL-01: replace the signed-in user's own password. The current token stays valid; the server
+         * clears the flag and returns the fresh user. Passwords are never kept in the store.
+         */
+        async changePassword({ current_password, password, password_confirmation }) {
+            const response = await api.post('/auth/change-password', {
+                current_password,
+                password,
+                password_confirmation,
+            });
+            const fresh = response.data?.data?.user;
+            this.user = { ...this.user, ...fresh, must_change_password: false };
+            if (fresh?.roles) this.roles = fresh.roles;
+            if (fresh?.permissions) this.permissions = fresh.permissions;
+            localStorage.setItem('auth_user', JSON.stringify(this.user));
+            return response.data;
         },
 
         /**
