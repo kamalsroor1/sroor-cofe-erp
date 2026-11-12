@@ -2,12 +2,18 @@
 
 namespace App\Models;
 
+use App\Policies\ShiftPolicy;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
+ * SHIFT-01: the policy is bound explicitly. Auto-discovery looks for App\Policies\CashShiftPolicy,
+ * which does not exist, so every Gate check on a shift ('close', 'zReport') was denied for all but
+ * the admin role (Gate::before) and ShiftController answered 404.
+ *
  * @property int $id
  * @property int|null $user_id
  * @property string $shift_number
@@ -28,6 +34,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $store_id
  * @property Carbon|null $deleted_at
  */
+#[UsePolicy(ShiftPolicy::class)]
 class CashShift extends Model
 {
     use SoftDeletes;

@@ -86,11 +86,14 @@
       :show="showCloseShiftModal"
       :shift-number="activeShift?.shift_number"
       :opening-cash-balance="activeShift?.opening_cash_balance"
-      :expected-cash-in-drawer="summary?.expected_cash_in_drawer"
+      :expected-cash-in-drawer="shiftMetrics?.expected_cash_balance"
+      :metrics-loading="isShiftMetricsLoading"
+      :metrics-failed="shiftMetricsFailed"
       :form="closeShiftForm"
       :submitting="isSubmitting"
       @close="showCloseShiftModal = false"
       @submit="submitCloseShift"
+      @retry-metrics="loadShiftMetrics"
       @update:field="updateCloseShiftField"
     />
 
@@ -135,6 +138,9 @@ const {
   openShiftForm,
   showCloseShiftModal,
   closeShiftForm,
+  shiftMetrics,
+  isShiftMetricsLoading,
+  shiftMetricsFailed,
   showExpenseModal,
   expenseForm,
   fetchDailyJournal,
@@ -143,6 +149,7 @@ const {
   updateExpenseField,
   submitOpenShift,
   openCloseShiftModal,
+  loadShiftMetrics,
   submitCloseShift,
   submitExpense,
   printActiveZReport,

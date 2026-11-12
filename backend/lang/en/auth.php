@@ -47,6 +47,8 @@ return [
     'user_status_updated_success' => 'User status updated successfully',
     'account_disabled' => 'This account is disabled, please contact administrator',
     'unauthorized' => 'Unauthorized - Please sign in first',
+    // SHIFT-01: the generic API 403 (a refused permission / policy), instead of the framework default.
+    'forbidden' => 'You do not have permission to perform this action.',
     'session_expired' => 'Session expired, please sign in again',
     'tenant_not_found' => 'Tenant or organization not found',
     'workspace_selection_title' => 'Connect to Workspace',

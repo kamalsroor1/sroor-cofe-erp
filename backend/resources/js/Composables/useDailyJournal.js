@@ -3,7 +3,6 @@ import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 import { businessToday } from './useBusinessDate';
-import { normalize } from '../helpers/decimal';
 
 export function useDailyJournal() {
     const { t } = useTrans();
@@ -41,6 +40,11 @@ export function useDailyJournal() {
     });
 
     const showCloseShiftModal = ref(false);
+    // SHIFT-01: the close dialog shows the server's per-shift totals (GET /shifts/current →
+    // ShiftService::calculateShiftTotals), never the journal's per-day summary.
+    const shiftMetrics = ref(null);
+    const isShiftMetricsLoading = ref(false);
+    const shiftMetricsFailed = ref(false);
     const closeShiftForm = reactive({
         actual_cash_balance: '',
         notes: '',
@@ -117,14 +121,38 @@ export function useDailyJournal() {
         }
     };
 
+    const loadShiftMetrics = async () => {
+        isShiftMetricsLoading.value = true;
+        shiftMetricsFailed.value = false;
+        shiftMetrics.value = null;
+        try {
+            const { data } = await api.get('/shifts/current');
+            if (data?.has_active && data.active_shift?.id === activeShift.value?.id) {
+                shiftMetrics.value = data.metrics;
+            } else {
+                // The shift on screen is no longer the store's open shift (closed elsewhere).
+                showCloseShiftModal.value = false;
+                await fetchDailyJournal();
+            }
+        } catch (error) {
+            console.error('Failed to load shift totals:', error);
+            shiftMetricsFailed.value = true;
+        } finally {
+            isShiftMetricsLoading.value = false;
+        }
+    };
+
     const openCloseShiftModal = () => {
-        closeShiftForm.actual_cash_balance = normalize(summary.value?.expected_cash_in_drawer ?? '0');
+        // The counted cash starts empty: the cashier types what was actually counted.
+        closeShiftForm.actual_cash_balance = '';
         closeShiftForm.notes = '';
         showCloseShiftModal.value = true;
+        loadShiftMetrics();
     };
 
     const submitCloseShift = async () => {
         if (!activeShift.value) return;
+        if (String(closeShiftForm.actual_cash_balance ?? '').trim() === '') return;
         isSubmitting.value = true;
         try {
             const response = await api.post('/shifts/close', {
@@ -190,6 +218,14 @@ export function useDailyJournal() {
             }
         } catch (error) {
             console.error('Failed to get Z-report:', error);
+            // A 403 is already announced by the API interceptor.
+            if (error?.response?.status !== 403) {
+                Swal.fire({
+                    icon: 'error',
+                    title: t('common.error'),
+                    text: error.userMessage || t('common.error'),
+                });
+            }
         }
     };
 
@@ -212,6 +248,9 @@ export function useDailyJournal() {
         openShiftForm,
         showCloseShiftModal,
         closeShiftForm,
+        shiftMetrics,
+        isShiftMetricsLoading,
+        shiftMetricsFailed,
         showExpenseModal,
         expenseForm,
         fetchDailyJournal,
@@ -220,6 +259,7 @@ export function useDailyJournal() {
         updateExpenseField,
         submitOpenShift,
         openCloseShiftModal,
+        loadShiftMetrics,
         submitCloseShift,
         submitExpense,
         printActiveZReport,

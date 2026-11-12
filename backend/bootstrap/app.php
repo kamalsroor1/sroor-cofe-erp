@@ -15,6 +15,7 @@ use App\Http\Middleware\StoreScope;
 use App\Http\Middleware\ThrottleTenantMisses;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -28,6 +29,8 @@ use Spatie\Permission\Exceptions\UnauthorizedException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -145,6 +148,32 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'success' => false,
                     'message' => __('auth.unauthorized'),
+                ], 403);
+            }
+        });
+
+        // SHIFT-01: a missing record (findOrFail / route-model binding) is answered with one
+        // translated message. The framework default names the model class and the id
+        // ("No query results for model [App\Models\CashShift] 2"). Still 404; other 404s keep theirs.
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
+            if ($e->getPrevious() instanceof ModelNotFoundException
+                && ($request->is('api/*') || $request->expectsJson())) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('common.record_not_found'),
+                ], 404);
+            }
+        });
+
+        // SHIFT-01: a refused `can:` middleware / FormRequest::authorize() / Gate::authorize() answers
+        // the framework's untranslated default. Translate only that default: a policy that denies
+        // with its own (already translated) message keeps it. Still 403.
+        $exceptions->render(function (AccessDeniedHttpException $e, Request $request) {
+            if ($e->getMessage() === 'This action is unauthorized.'
+                && ($request->is('api/*') || $request->expectsJson())) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('auth.forbidden'),
                 ], 403);
             }
         });

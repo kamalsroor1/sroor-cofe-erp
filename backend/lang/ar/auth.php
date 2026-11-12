@@ -42,6 +42,8 @@ return [
     'user_status_updated_success' => 'تم تحديث حالة حساب المستخدم بنجاح',
     'account_disabled' => 'هذا الحساب معطل، يرجى مراجعة إدارة النظام',
     'unauthorized' => 'غير مصرح - يرجى تسجيل الدخول أولاً',
+    // SHIFT-01: the generic API 403 (a refused permission / policy), instead of the framework default.
+    'forbidden' => 'ليس لديك صلاحية لتنفيذ هذا الإجراء.',
     'session_expired' => 'انتهت صلاحية الجلسة، يرجى إعادة تسجيل الدخول',
     'tenant_not_found' => 'المؤسسة أو المستأجر غير موجود',
     'workspace_selection_title' => 'الاتصال ببيئة العمل',

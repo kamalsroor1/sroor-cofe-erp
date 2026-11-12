@@ -16,9 +16,21 @@
           <span class="text-slate-500 dark:text-slate-400 font-bold">{{
             $t('treasury.shift_expected_balance_label')
           }}</span>
-          <span class="font-mono text-theme-primary font-black text-sm"
+          <span
+            v-if="metricsLoading"
+            class="h-5 w-28 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse"
+            aria-busy="true"
+          ></span>
+          <span v-else-if="hasExpected" class="font-mono text-theme-primary font-black text-sm"
             >{{ formatMoney(expectedCashInDrawer) }} {{ currencyLabel }}</span
           >
+          <span v-else class="font-mono text-slate-400 font-black text-sm">—</span>
+        </div>
+        <div v-if="metricsFailed" class="flex items-center justify-between gap-2" role="alert">
+          <span class="text-xs font-bold text-rose-600 dark:text-rose-400">{{ $t('pos.shift_report_failed') }}</span>
+          <BaseButton type="button" variant="secondary" size="sm" @click="$emit('retry-metrics')">
+            {{ $t('common.retry') }}
+          </BaseButton>
         </div>
       </div>
 
@@ -61,6 +73,7 @@
           variant="primary"
           size="md"
           :loading="submitting"
+          :disabled="!hasCounted"
           class="font-black shadow-theme-primary shadow-lg"
         >
           {{ $t('treasury.confirm_close_shift_btn') }}
@@ -87,14 +100,23 @@ const props = defineProps({
   show: { type: Boolean, default: false },
   shiftNumber: { type: [String, Number], default: '' },
   openingCashBalance: { type: [String, Number], default: '0.000' },
-  expectedCashInDrawer: { type: [String, Number], default: '0.000' },
+  // Per-shift expected cash from the server; null until it is loaded (never a client guess).
+  expectedCashInDrawer: { type: [String, Number], default: null },
+  metricsLoading: { type: Boolean, default: false },
+  metricsFailed: { type: Boolean, default: false },
   form: { type: Object, default: () => ({}) },
   submitting: { type: Boolean, default: false },
 });
 
-defineEmits(['close', 'submit', 'update:field']);
+defineEmits(['close', 'submit', 'update:field', 'retry-metrics']);
 
-const diff = computed(() => drawerDifference(props.form.actual_cash_balance, props.expectedCashInDrawer));
+const hasExpected = computed(() => props.expectedCashInDrawer !== null && props.expectedCashInDrawer !== '');
+const hasCounted = computed(() => String(props.form.actual_cash_balance ?? '').trim() !== '');
+
+// No difference is shown before the cashier counted, or while the expected cash is unknown.
+const diff = computed(() =>
+  hasExpected.value ? drawerDifference(props.form.actual_cash_balance, props.expectedCashInDrawer) : null
+);
 
 const diffClass = computed(() => {
   if (diff.value?.sign === 0) return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400';
