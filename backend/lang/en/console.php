@@ -406,4 +406,23 @@ return [
             'stock_vs_baseline' => 'Branch balances that differ from start - sold + returned: :count',
         ],
     ],
+    // BUG-06: shifts:recalculate-totals
+    'shift_totals' => [
+        'description' => 'Recompute the cash expenses and cash supplier payments of closed shifts from their own window (expected, actual and difference are never changed).',
+        'tenant_not_found' => 'Tenant not found: :tenant',
+        'no_tenants' => 'No tenants to inspect.',
+        'tenant_failed' => 'Could not process tenant :tenant: :error',
+        'col_tenant' => 'Tenant',
+        'col_shift' => 'Shift',
+        'col_expenses' => 'Expenses (cash)',
+        'col_supplier_paid' => 'Supplier payments (cash)',
+        'col_lines_total' => 'Z lines total',
+        'col_expected' => 'Stored expected',
+        'col_status' => 'Status',
+        'status_ok' => 'Matches',
+        'status_mismatch' => 'Mismatch',
+        'dry_run' => 'Dry run: checked :checked closed shift(s) in :total tenant(s); :changed would change. Nothing was written.',
+        'done' => 'Checked :checked closed shift(s) in :total tenant(s); :changed updated.',
+        'mismatches' => ':count shift(s) whose lines do not add up to the stored expected balance (data edited after the close; expected left unchanged): :shifts',
+    ],
 ];

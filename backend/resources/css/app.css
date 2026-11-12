@@ -1347,6 +1347,18 @@ html.dark {
         padding: 2mm !important;
     }
 
+    /* 🧾 80mm Z-report (teleported to body, everything else hidden) */
+    body.print-z-report-mode #app {
+        display: none !important;
+    }
+
+    body.print-z-report-mode #z-report-print-area {
+        width: 78mm !important;
+        max-width: 78mm !important;
+        margin: 0 auto !important;
+        padding: 2mm !important;
+    }
+
     /* 📄 A4 Official Tax Document Mode */
     body.print-a4-mode,
     body:not(.print-thermal-mode) {

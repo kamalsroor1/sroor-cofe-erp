@@ -223,6 +223,10 @@ class ShiftService
                 'total_cash_sales' => $totals['total_cash_sales'],
                 'total_credit_sales' => $totals['total_credit_sales'],
                 'total_payments_collected' => $totals['total_payments_collected'],
+                // BUG-06: both are subtracted in expected_cash_balance, so the Z report lines
+                // only add up to it when they are stored with it.
+                'total_expenses' => $totals['total_expenses'],
+                'total_supplier_paid' => $totals['total_supplier_paid'],
                 'total_refunds' => $totals['total_refunds'],
                 'expected_cash_balance' => $totals['expected_cash_balance'],
                 'actual_cash_balance' => $actualCash,

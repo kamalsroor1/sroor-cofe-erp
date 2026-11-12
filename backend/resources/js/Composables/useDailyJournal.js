@@ -1,4 +1,4 @@
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, nextTick, onMounted } from 'vue';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
@@ -19,6 +19,7 @@ export function useDailyJournal() {
     const activeShift = ref(null);
     const isOwnShiftScope = ref(false);
     const canPrint = ref(false);
+    const zReport = ref(null);
     const summary = ref({
         total_sales: 0,
         cash_sales: 0,
@@ -192,9 +193,17 @@ export function useDailyJournal() {
         try {
             const response = await api.get(`/shifts/${activeShift.value.id}/z-report`);
             const report = response.data?.report;
-            if (report) {
-                window.print();
-            }
+            if (!report) return;
+            zReport.value = report;
+            await nextTick();
+            document.body.classList.add('print-z-report-mode');
+            const cleanup = () => {
+                document.body.classList.remove('print-z-report-mode');
+                zReport.value = null;
+                window.removeEventListener('afterprint', cleanup);
+            };
+            window.addEventListener('afterprint', cleanup);
+            setTimeout(() => window.print(), 150);
         } catch (error) {
             console.error('Failed to get Z-report:', error);
         }
@@ -214,6 +223,7 @@ export function useDailyJournal() {
         activeShift,
         isOwnShiftScope,
         canPrint,
+        zReport,
         summary,
         invoices,
         expenses,

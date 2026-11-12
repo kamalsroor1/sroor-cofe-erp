@@ -52,6 +52,7 @@ class CashShiftResource extends JsonResource
             'total_credit_sales' => Decimal::normalize((string) ($this->total_credit_sales ?? 0)),
             'total_payments_collected' => Decimal::normalize((string) ($this->total_payments_collected ?? 0)),
             'total_expenses' => Decimal::normalize((string) ($this->total_expenses ?? 0)),
+            'total_supplier_paid' => Decimal::normalize((string) ($this->total_supplier_paid ?? 0)),
             'total_refunds' => Decimal::normalize((string) ($this->total_refunds ?? 0)),
             'expected_cash_balance' => Decimal::normalize((string) ($this->expected_cash_balance ?? 0)),
             'actual_cash_balance' => Decimal::normalize((string) ($this->actual_cash_balance ?? 0)),

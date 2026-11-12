@@ -406,4 +406,23 @@ return [
             'stock_vs_baseline' => 'أرصدة فروع مختلفة عن البداية − المباع + المرتجع: :count',
         ],
     ],
+    // BUG-06: shifts:recalculate-totals
+    'shift_totals' => [
+        'description' => 'إعادة حساب المصروفات النقدية وسداد الموردين النقدي للورديات المقفولة من حركات نافذة كل وردية (لا يغيّر المتوقع ولا الفعلي ولا الفارق).',
+        'tenant_not_found' => 'المستأجر غير موجود: :tenant',
+        'no_tenants' => 'لا يوجد مستأجرين للفحص.',
+        'tenant_failed' => 'تعذر معالجة المستأجر :tenant: :error',
+        'col_tenant' => 'المستأجر',
+        'col_shift' => 'الوردية',
+        'col_expenses' => 'المصروفات (كاش)',
+        'col_supplier_paid' => 'سداد موردين (كاش)',
+        'col_lines_total' => 'مجموع بنود Z',
+        'col_expected' => 'المتوقع المخزّن',
+        'col_status' => 'الحالة',
+        'status_ok' => 'متطابق',
+        'status_mismatch' => 'غير متطابق',
+        'dry_run' => 'تجربة بدون حفظ: اتفحصت :checked وردية مقفولة في :total مستأجر، :changed وردية هتتعدل. لم يتم حفظ أي شيء.',
+        'done' => 'اتفحصت :checked وردية مقفولة في :total مستأجر، واتعدلت :changed وردية.',
+        'mismatches' => ':count وردية بنودها مش بتجمع على المتوقع المخزّن (اتعدلت بيانات بعد القفل، المتوقع متغيرش): :shifts',
+    ],
 ];

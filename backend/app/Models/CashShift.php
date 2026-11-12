@@ -18,6 +18,8 @@ use Illuminate\Support\Carbon;
  * @property string $total_cash_sales
  * @property string $total_credit_sales
  * @property string $total_payments_collected
+ * @property string $total_expenses
+ * @property string $total_supplier_paid
  * @property string $total_refunds
  * @property string $expected_cash_balance
  * @property string $actual_cash_balance
@@ -43,6 +45,8 @@ class CashShift extends Model
         'total_cash_sales',
         'total_credit_sales',
         'total_payments_collected',
+        'total_expenses',
+        'total_supplier_paid',
         'total_refunds',
         'expected_cash_balance',
         'actual_cash_balance',
@@ -57,6 +61,8 @@ class CashShift extends Model
         'total_cash_sales' => 'decimal:3',
         'total_credit_sales' => 'decimal:3',
         'total_payments_collected' => 'decimal:3',
+        'total_expenses' => 'decimal:3',
+        'total_supplier_paid' => 'decimal:3',
         'total_refunds' => 'decimal:3',
         'expected_cash_balance' => 'decimal:3',
         'actual_cash_balance' => 'decimal:3',

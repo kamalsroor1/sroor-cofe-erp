@@ -79,6 +79,8 @@
       @update:field="updateCloseShiftField"
     />
 
+    <ShiftZReportPrint :report="zReport" />
+
     <!-- Quick Journal Expense Modal -->
     <QuickExpenseModal
       :show="showExpenseModal"
@@ -102,6 +104,7 @@ import DailyJournalShiftBanner from '../../Components/DailyJournal/DailyJournalS
 import DailyJournalMetricsGrid from '../../Components/DailyJournal/DailyJournalMetricsGrid.vue';
 import DailyJournalTabs from '../../Components/DailyJournal/DailyJournalTabs.vue';
 import OpenShiftModal from '../../Components/DailyJournal/OpenShiftModal.vue';
+import ShiftZReportPrint from '../../Components/DailyJournal/ShiftZReportPrint.vue';
 import CloseShiftModal from '../../Components/DailyJournal/CloseShiftModal.vue';
 import QuickExpenseModal from '../../Components/DailyJournal/QuickExpenseModal.vue';
 import { useDailyJournal } from '../../Composables/useDailyJournal';
@@ -118,6 +121,7 @@ const {
   activeShift,
   isOwnShiftScope,
   canPrint,
+  zReport,
   summary,
   invoices,
   expenses,
