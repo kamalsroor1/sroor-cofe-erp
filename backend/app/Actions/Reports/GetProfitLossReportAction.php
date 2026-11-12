@@ -10,10 +10,15 @@ use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Item;
 use App\Models\StoreStock;
+use App\Services\Reports\SalesReturnAggregates;
 use App\Support\Money\Decimal;
 
 final class GetProfitLossReportAction
 {
+    public function __construct(
+        private readonly SalesReturnAggregates $salesReturns,
+    ) {}
+
     /**
      * Compute Executive Profit & Loss summary metrics
      */
@@ -25,18 +30,24 @@ final class GetProfitLossReportAction
             ->when($dto->store_id, fn ($q) => $q->where('store_id', $dto->store_id));
 
         $invoices = (clone $invoicesQuery)->get();
-        $totalSales = '0.000';
+        $grossSales = '0.000';
         $totalPaid = '0.000';
         $totalRemaining = '0.000';
-        $totalCost = '0.000'; // COGS
+        $grossCost = '0.000'; // COGS of the invoices, before returns
         $invoicesCount = $invoices->count();
 
         foreach ($invoices as $inv) {
-            $totalSales = bcadd($totalSales, (string) $inv->net_total, 3);
+            $grossSales = bcadd($grossSales, (string) $inv->net_total, 3);
             $totalPaid = bcadd($totalPaid, (string) $inv->paid_amount, 3);
             $totalRemaining = bcadd($totalRemaining, (string) $inv->remaining_amount, 3);
-            $totalCost = bcadd($totalCost, (string) $inv->total_cost, 3);
+            $grossCost = bcadd($grossCost, (string) $inv->total_cost, 3);
         }
+
+        // BUG-01: the period's sales returns (by return date) reduce sales by their value and
+        // COGS by the original lines' cost; profit is computed on the net figures.
+        $returns = $this->salesReturns->totals($dto->from_date, $dto->to_date, $dto->store_id);
+        $totalSales = bcsub($grossSales, $returns['value'], 3);
+        $totalCost = bcsub($grossCost, $returns['cost'], 3);
 
         $grossProfit = bcsub($totalSales, $totalCost, 3);
         $marginPct = '0.00';
@@ -44,7 +55,8 @@ final class GetProfitLossReportAction
             $marginPct = bcmul(bcdiv($grossProfit, $totalSales, 4), '100', 2);
         }
 
-        $avgInvoice = $invoicesCount > 0 ? bcdiv($totalSales, (string) $invoicesCount, 2) : '0.00';
+        // Average value of an issued invoice (returns are separate documents).
+        $avgInvoice = $invoicesCount > 0 ? bcdiv($grossSales, (string) $invoicesCount, 2) : '0.00';
 
         // Expenses
         $expensesQuery = Expense::whereDate('expense_date', '>=', $dto->from_date)
@@ -101,7 +113,14 @@ final class GetProfitLossReportAction
                 'to_date' => $dto->to_date,
             ],
             'summary' => [
+                // total_sales, total_cogs, gross_profit, margin and net_profit are NET of returns.
                 'total_sales' => Decimal::normalize((string) $totalSales),
+                'gross_sales' => Decimal::normalize((string) $grossSales),
+                'total_returns' => $returns['value'],
+                'returns_count' => $returns['count'],
+                'returns_cost' => $returns['cost'],
+                'net_sales' => Decimal::normalize((string) $totalSales),
+                'gross_cogs' => Decimal::normalize((string) $grossCost),
                 'total_cogs' => Decimal::normalize((string) $totalCost),
                 'gross_profit' => Decimal::normalize((string) $grossProfit),
                 'margin_percentage' => Decimal::normalize((string) $marginPct, 2),

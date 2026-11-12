@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Services\DailyCashFlowService;
 use App\Services\DashboardAnalyticsService;
 use App\Services\ProfitService;
+use App\Services\Reports\SalesReturnAggregates;
 use App\Services\Settings\TenantSettings;
 use App\Services\ShiftService;
 use App\Support\Money\Decimal;
@@ -31,6 +32,7 @@ final class GetDashboardOverviewAction
         private readonly TenantSettings $tenantSettings,
         private readonly ShiftService $shiftService,
         private readonly DailyCashFlowService $dailyCashFlow,
+        private readonly SalesReturnAggregates $salesReturns,
     ) {}
 
     /**
@@ -81,7 +83,7 @@ final class GetDashboardOverviewAction
             ->when($storeFilter, fn ($q) => $q->where('store_id', $storeFilter));
 
         $todayInvoices = (clone $todayInvoicesQuery)->latest('id')->get();
-        $totalSales = '0.000';
+        $grossSales = '0.000';
         $totalPaid = '0.000';
         $totalRemaining = '0.000';
         $cashSales = '0.000';
@@ -90,7 +92,7 @@ final class GetDashboardOverviewAction
         $invoicesCount = $todayInvoices->count();
 
         foreach ($todayInvoices as $inv) {
-            $totalSales = bcadd($totalSales, (string) $inv->net_total, 3);
+            $grossSales = bcadd($grossSales, (string) $inv->net_total, 3);
             $totalPaid = bcadd($totalPaid, (string) $inv->paid_amount, 3);
             $totalRemaining = bcadd($totalRemaining, (string) $inv->remaining_amount, 3);
 
@@ -102,6 +104,10 @@ final class GetDashboardOverviewAction
                 $partialSales = bcadd($partialSales, (string) $inv->net_total, 3);
             }
         }
+
+        // BUG-01: today's sales are net of the sales returns booked today.
+        $todayReturns = $this->salesReturns->totals($today, $today, $storeFilter);
+        $totalSales = bcsub($grossSales, $todayReturns['value'], 3);
 
         // 4. Cash collected today (BUG-01): the cash vouchers of the store(s) in scope only. The
         // invoice writes its own sale voucher, so adding invoices.paid_amount counted it twice.
@@ -151,17 +157,20 @@ final class GetDashboardOverviewAction
         $startOfMonth = $this->tenantClock->businessNow()->startOfMonth()->toDateString();
         $periodic = $this->profitService->getPeriodicProfits($startOfMonth, $today, $storeFilter);
 
-        // 10. Top Selling Items this Month
+        // 10. Top Selling Items this Month (BUG-01: net of this month's sales returns; the
+        // returns are pre-grouped per item, so the join never multiplies the invoice lines)
+        $monthReturns = $this->salesReturns->byItemSubquery($startOfMonth, $today, $storeFilter);
         $topSellingItems = InvoiceItem::select(
             'items.id as item_id',
             'items.name as item_name',
             'items.code as item_code',
             'items.unit',
-            DB::raw('SUM(invoice_items.quantity) as total_qty'),
-            DB::raw('SUM(invoice_items.total_price) as total_revenue')
+            DB::raw('SUM(invoice_items.quantity) - COALESCE(MAX(item_returns.returned_qty), 0) as total_qty'),
+            DB::raw('SUM(invoice_items.total_price) - COALESCE(MAX(item_returns.returned_value), 0) as total_revenue')
         )
             ->join('items', 'items.id', '=', 'invoice_items.item_id')
             ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
+            ->leftJoinSub($monthReturns, 'item_returns', 'item_returns.returned_item_id', '=', 'items.id')
             ->where('invoices.status', 'confirmed')
             ->whereDate('invoices.invoice_date', '>=', $startOfMonth)
             ->when($storeFilter, fn ($q) => $q->where('invoices.store_id', $storeFilter))
@@ -226,7 +235,11 @@ final class GetDashboardOverviewAction
                 'type' => $activeStore->type,
             ] : null,
             'metrics' => [
+                // BUG-01: today_sales, monthly_sales, monthly_gross_profit and monthly_margin are NET of returns.
                 'today_sales' => Decimal::normalize((string) $totalSales),
+                'today_gross_sales' => Decimal::normalize((string) $grossSales),
+                'today_returns' => $todayReturns['value'],
+                'today_returns_count' => $todayReturns['count'],
                 'today_invoices_count' => $invoicesCount,
                 'cash_sales' => Decimal::normalize((string) $cashSales),
                 'credit_sales' => Decimal::normalize((string) $creditSales),
@@ -238,6 +251,8 @@ final class GetDashboardOverviewAction
                 'customers_debt' => $totalCustomersDebt,
                 'suppliers_debt' => $totalSuppliersDebt,
                 'monthly_sales' => Decimal::normalize((string) $periodic['total_sales']),
+                'monthly_gross_sales' => Decimal::normalize((string) $periodic['gross_sales']),
+                'monthly_returns' => Decimal::normalize((string) $periodic['total_returns']),
                 'monthly_gross_profit' => $showFinancials ? Decimal::normalize((string) $periodic['gross_profit']) : null,
                 'monthly_margin' => $showFinancials ? Decimal::normalize((string) $periodic['margin_percentage'], 2) : null,
                 'customers_count' => $customersCount,

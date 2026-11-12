@@ -204,13 +204,10 @@ final class ReportController extends Controller
     /**
      * Top Selling & Most Profitable Coffee Items
      */
-    public function topItems(Request $request, ActiveStore $activeStore): JsonResponse
+    public function topItems(FilterReportRequest $request, ActiveStore $activeStore): JsonResponse
     {
-        $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('reports.view')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
-        }
-
+        // BUG-01 review: validated like every other report (an unparseable date is a 422, not a
+        // 500); FilterReportRequest::authorize() is the same admin-or-reports.view check.
         $dto = $this->buildDTO($request, $activeStore);
         $items = $this->getItemsProfitabilityReportAction->execute($dto);
 

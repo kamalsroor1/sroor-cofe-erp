@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Services\Reports\SalesReturnAggregates;
 use App\Services\Settings\TenantSettings;
+use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Carbon\Carbon;
 
@@ -12,6 +14,7 @@ class DashboardAnalyticsService
 {
     public function __construct(
         private readonly TenantClock $tenantClock,
+        private readonly SalesReturnAggregates $salesReturns,
     ) {}
 
     /**
@@ -32,12 +35,18 @@ class DashboardAnalyticsService
             $todayInvoicesQuery->where('store_id', $storeId);
         }
 
+        // BUG-01: sales figures are NET of the sales returns booked on the same days. The basket
+        // size stays the average issued invoice (returns are separate documents).
+        $returnsByDay = $this->salesReturns->valueByDate($startDate, $today, $storeId);
+
         $todayInvoices = $todayInvoicesQuery->get();
-        $todaySales = (string) ($todayInvoices->sum('net_total') ?: '0.000');
+        $todayGrossSales = $this->sumNetTotal($todayInvoices);
+        $todayReturns = $returnsByDay[$today] ?? '0.000';
+        $todaySales = bcsub($todayGrossSales, $todayReturns, 3);
         $todayInvoicesCount = $todayInvoices->count();
 
         $todayBasketSize = $todayInvoicesCount > 0
-            ? bcdiv($todaySales, (string) $todayInvoicesCount, 2)
+            ? bcdiv($todayGrossSales, (string) $todayInvoicesCount, 2)
             : '0.00';
 
         // 2. Period Invoices (Last N days)
@@ -50,11 +59,16 @@ class DashboardAnalyticsService
         }
 
         $periodInvoices = $periodInvoicesQuery->get();
-        $periodSales = (string) ($periodInvoices->sum('net_total') ?: '0.000');
+        $periodGrossSales = $this->sumNetTotal($periodInvoices);
+        $periodReturns = '0.000';
+        foreach ($returnsByDay as $dayReturns) {
+            $periodReturns = bcadd($periodReturns, $dayReturns, 3);
+        }
+        $periodSales = bcsub($periodGrossSales, $periodReturns, 3);
         $periodInvoicesCount = $periodInvoices->count();
 
         $periodBasketSize = $periodInvoicesCount > 0
-            ? bcdiv($periodSales, (string) $periodInvoicesCount, 2)
+            ? bcdiv($periodGrossSales, (string) $periodInvoicesCount, 2)
             : '0.00';
 
         // 3. Daily Sales Trend (Last N days)
@@ -63,7 +77,8 @@ class DashboardAnalyticsService
             $date = $now->subDays($i)->toDateString();
             $dayName = $now->subDays($i)->locale('ar')->isoFormat('dddd D/M');
             $dayInvoices = $periodInvoices->filter(fn ($inv) => Carbon::parse($inv->invoice_date)->toDateString() === $date);
-            $daySales = (string) ($dayInvoices->sum('net_total') ?: '0.000');
+            $dayReturns = $returnsByDay[$date] ?? '0.000';
+            $daySales = bcsub($this->sumNetTotal($dayInvoices), $dayReturns, 3);
             $dayCount = $dayInvoices->count();
 
             $dailyTrend[] = [
@@ -72,6 +87,7 @@ class DashboardAnalyticsService
                 'sales' => (float) $daySales,
                 'sales_formatted' => number_format((float) $daySales, 2).' '.app(TenantSettings::class)->currencyLabel(),
                 'invoices' => $dayCount,
+                'returns' => $dayReturns,
             ];
         }
 
@@ -147,12 +163,16 @@ class DashboardAnalyticsService
         return [
             'today' => [
                 'sales' => $todaySales,
+                'gross_sales' => $todayGrossSales,
+                'returns' => $todayReturns,
                 'invoices_count' => $todayInvoicesCount,
                 'basket_size' => $todayBasketSize,
             ],
             'period' => [
                 'days' => $trendDays,
                 'sales' => $periodSales,
+                'gross_sales' => $periodGrossSales,
+                'returns' => $periodReturns,
                 'invoices_count' => $periodInvoicesCount,
                 'basket_size' => $periodBasketSize,
             ],
@@ -161,5 +181,20 @@ class DashboardAnalyticsService
             'peak_hour' => $peakHourData,
             'payment_distribution' => $paymentDistribution,
         ];
+    }
+
+    /**
+     * SUM(net_total) of loaded invoices as an exact scale-3 string (bcmath, never a float sum).
+     *
+     * @param  iterable<Invoice>  $invoices
+     */
+    private function sumNetTotal(iterable $invoices): string
+    {
+        $total = '0.000';
+        foreach ($invoices as $invoice) {
+            $total = bcadd($total, Decimal::normalize((string) $invoice->net_total), 3);
+        }
+
+        return $total;
     }
 }

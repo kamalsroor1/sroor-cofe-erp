@@ -7,12 +7,20 @@ namespace App\Actions\Reports;
 use App\DTOs\Reports\ReportFilterDTO;
 use App\Models\Invoice;
 use App\Models\Store;
+use App\Services\Reports\SalesReturnAggregates;
 use App\Support\Money\Decimal;
 
 final class GetStoresComparativeReportAction
 {
+    public function __construct(
+        private readonly SalesReturnAggregates $salesReturns,
+    ) {}
+
     /**
-     * Compute comparative performance across all active stores/branches
+     * Compute comparative performance across all active stores/branches.
+     *
+     * BUG-01: total_sales, gross_profit, margin and share_pct are NET of each store's sales
+     * returns dated in the period; gross_sales / total_returns / net_sales expose the parts.
      */
     public function execute(ReportFilterDTO $dto): array
     {
@@ -30,6 +38,11 @@ final class GetStoresComparativeReportAction
             $overallSales = bcadd($overallSales, (string) $ai->net_total, 3);
         }
 
+        $returnsByStore = $this->salesReturns->byStore($dto->from_date, $dto->to_date);
+        foreach ($returnsByStore as $storeReturns) {
+            $overallSales = bcsub($overallSales, $storeReturns['value'], 3);
+        }
+
         foreach ($stores as $st) {
             $stInvoices = Invoice::where('status', 'confirmed')
                 ->where('store_id', $st->id)
@@ -37,17 +50,21 @@ final class GetStoresComparativeReportAction
                 ->whereDate('invoice_date', '<=', $dto->to_date)
                 ->get();
 
-            $stSales = '0.000';
+            $stGrossSales = '0.000';
             $stPaid = '0.000';
             $stRemaining = '0.000';
             $stCost = '0.000';
 
             foreach ($stInvoices as $si) {
-                $stSales = bcadd($stSales, (string) $si->net_total, 3);
+                $stGrossSales = bcadd($stGrossSales, (string) $si->net_total, 3);
                 $stPaid = bcadd($stPaid, (string) $si->paid_amount, 3);
                 $stRemaining = bcadd($stRemaining, (string) $si->remaining_amount, 3);
                 $stCost = bcadd($stCost, (string) $si->total_cost, 3);
             }
+
+            $stReturns = $returnsByStore[(int) $st->id] ?? ['value' => '0.000', 'cost' => '0.000', 'count' => 0];
+            $stSales = bcsub($stGrossSales, $stReturns['value'], 3);
+            $stCost = bcsub($stCost, $stReturns['cost'], 3);
 
             $stProfit = bcsub($stSales, $stCost, 3);
             $stMargin = '0.00';
@@ -65,6 +82,10 @@ final class GetStoresComparativeReportAction
                 'name' => $st->name,
                 'invoice_count' => $stInvoices->count(),
                 'total_sales' => Decimal::normalize((string) $stSales),
+                'gross_sales' => Decimal::normalize((string) $stGrossSales),
+                'total_returns' => $stReturns['value'],
+                'returns_count' => $stReturns['count'],
+                'net_sales' => Decimal::normalize((string) $stSales),
                 'total_paid' => Decimal::normalize((string) $stPaid),
                 'total_remaining' => Decimal::normalize((string) $stRemaining),
                 'gross_profit' => Decimal::normalize((string) $stProfit),

@@ -3,9 +3,14 @@
 namespace App\Services;
 
 use App\Models\Invoice;
+use App\Services\Reports\SalesReturnAggregates;
 
 class ProfitService
 {
+    public function __construct(
+        private readonly SalesReturnAggregates $salesReturns,
+    ) {}
+
     /**
      * Calculate financial and profit metrics for an invoice
      */
@@ -42,13 +47,18 @@ class ProfitService
 
         $invoices = $query->get();
 
-        $totalSales = '0.000';
-        $totalCost = '0.000';
+        $grossSales = '0.000';
+        $grossCost = '0.000';
 
         foreach ($invoices as $inv) {
-            $totalSales = bcadd($totalSales, $inv->net_total, 3);
-            $totalCost = bcadd($totalCost, $inv->total_cost, 3);
+            $grossSales = bcadd($grossSales, $inv->net_total, 3);
+            $grossCost = bcadd($grossCost, $inv->total_cost, 3);
         }
+
+        // BUG-01: sales returns dated in the period reduce its sales and its cost.
+        $returns = $this->salesReturns->totals($fromDate, $toDate, $storeId);
+        $totalSales = bcsub($grossSales, $returns['value'], 3);
+        $totalCost = bcsub($grossCost, $returns['cost'], 3);
 
         $grossProfit = bcsub($totalSales, $totalCost, 3);
         $marginPct = '0.00';
@@ -58,7 +68,13 @@ class ProfitService
 
         return [
             'invoice_count' => $invoices->count(),
+            // total_sales / total_cost are NET of the period's sales returns.
             'total_sales' => $totalSales,
+            'gross_sales' => $grossSales,
+            'total_returns' => $returns['value'],
+            'returns_cost' => $returns['cost'],
+            'returns_count' => $returns['count'],
+            'net_sales' => $totalSales,
             'total_cost' => $totalCost,
             'gross_profit' => $grossProfit,
             'margin_percentage' => $marginPct,
