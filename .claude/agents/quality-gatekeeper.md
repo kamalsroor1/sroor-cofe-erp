@@ -2,7 +2,8 @@
 name: quality-gatekeeper
 description: Code-quality tooling owner for Sroor ERP — Laravel Pint, Larastan/PHPStan (level 5 + baseline), ESLint and Prettier for the Vue SPA and Electron shell. Use to run the quality gate before a commit, fix lint/format/static-analysis errors, shrink the Larastan baseline, change tool configs, or perform the one-time codebase format pass. Use PROACTIVELY when CI's php/frontend/desktop job fails on lint, format or analyse.
 tools: Read, Edit, Write, Glob, Grep, Bash
-model: inherit
+model: sonnet
+effort: medium
 skills: quality-gate, larastan-fixing
 ---
 

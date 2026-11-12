@@ -3,6 +3,7 @@ name: code-reviewer
 description: Read-only senior reviewer for Sroor ERP. Reviews a diff, branch, or set of files against the project rules — financial precision, transactions and locking, tenant/store isolation, thin controllers and Actions, thin Vue views, localization, tests. Use PROACTIVELY after any non-trivial change and ALWAYS before committing work that touches money, stock, treasury, tenancy, auth, or migrations. Reports findings; does not edit code.
 tools: Read, Glob, Grep, Bash
 model: inherit
+effort: medium
 skills: quality-gate
 ---
 

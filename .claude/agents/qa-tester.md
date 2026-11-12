@@ -2,7 +2,8 @@
 name: qa-tester
 description: QA and test engineer for Sroor ERP. Use to write or extend PHPUnit 12 Feature/Unit tests (API controllers, money/stock correctness, rollback, concurrency, tenant and store isolation) and Playwright E2E specs, to run suites, and to triage failures. Use PROACTIVELY after any backend or UI change, and BEFORE any controller refactor to lock current behaviour.
 tools: Read, Edit, Write, Glob, Grep, Bash
-model: inherit
+model: sonnet
+effort: medium
 skills: quality-gate, ci-pipeline
 ---
 

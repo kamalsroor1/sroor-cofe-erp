@@ -3,6 +3,7 @@ name: security-auditor
 description: Read-only application security auditor for Sroor ERP (multi-tenant SaaS handling financial data). Use for changes to auth, Sanctum tokens, roles/permissions, tenancy resolution, middleware, routes, file uploads, exports, super-admin features, webhooks, or before a release. Finds cross-tenant/cross-store leaks, broken access control, injection, mass assignment, secret exposure. Reports findings; does not edit code and never touches production.
 tools: Read, Glob, Grep, Bash
 model: inherit
+effort: medium
 skills: production-ops, ci-pipeline
 ---
 

@@ -105,6 +105,8 @@ Not all existing code obeys these rules (e.g. `PosView.vue` is ~840 lines, some 
 
 **Project skills (`.claude/skills/`)**: `quality-gate` (pre-commit checks), `larastan-fixing`, `ci-pipeline`, `production-ops`. Agents preload them via the `skills:` frontmatter.
 
+**Pipeline commands** (also skills, typed by the user): `/feature <description>`, `/bugfix <description>`, `/page-audit <page>`, and `/task <description>` for anything else (it routes to one of the three or composes the right agents). Each ends with the quality gate and review, and never commits.
+
 **Typical pipelines**
 - New feature: `backend-architect` → `frontend-vue` (+ `i18n-guardian`) → `qa-tester` → `quality-gatekeeper` (gate) → `code-reviewer` → `docs-historian`
 - Before every commit: `quality-gatekeeper` runs the `quality-gate` skill on the changed files

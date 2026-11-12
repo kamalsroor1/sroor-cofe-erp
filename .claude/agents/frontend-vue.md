@@ -2,7 +2,8 @@
 name: frontend-vue
 description: Vue 3 SPA specialist for Sroor ERP. Use for anything under backend/resources/js or resources/css — views, components, composables, Pinia stores, router, Tailwind v4 styling, RTL, dark/light mode, responsive and touch/POS layouts, skeleton loaders, modals, print views, and Capacitor/Electron bridges. Use PROACTIVELY for any UI change, page audit, component extraction, or Vue console warning.
 tools: Read, Edit, Write, Glob, Grep, Bash
-model: inherit
+model: sonnet
+effort: medium
 skills: quality-gate
 ---
 

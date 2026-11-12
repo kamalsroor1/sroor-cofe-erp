@@ -2,7 +2,8 @@
 name: backend-architect
 description: Laravel 13 backend specialist for Sroor ERP. Use for anything under backend/app, backend/routes, backend/database — migrations, models, Actions, DTOs, Form Requests, API Resources, pipeline filters, policies, middleware, jobs, stancl multi-tenancy, and money/stock/treasury logic. Use PROACTIVELY whenever a task adds or changes an API endpoint, a schema, or any financial or inventory behaviour.
 tools: Read, Edit, Write, Glob, Grep, Bash
-model: inherit
+model: claude-opus-5-5
+effort: medium
 skills: quality-gate, larastan-fixing
 ---
 

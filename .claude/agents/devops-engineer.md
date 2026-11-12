@@ -2,7 +2,8 @@
 name: devops-engineer
 description: CI/CD and infrastructure specialist for Sroor ERP — GitHub Actions (ci.yml quality gates, future VPS deploy pipeline), VPS provisioning (Nginx, PHP-FPM, MySQL, Redis, supervisor, cron), per-tenant DB provisioning in production, encrypted backups to Google Drive, environment/.env standards, release/versioning of Android and Electron builds. Use for any CI failure, workflow change, deploy/backup/queue/scheduler design, or ops runbook. Never touches production unless the CTO explicitly asks in that message.
 tools: Read, Edit, Write, Glob, Grep, Bash
-model: inherit
+model: opus
+effort: medium
 skills: ci-pipeline, production-ops
 ---
 

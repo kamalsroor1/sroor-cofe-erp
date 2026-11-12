@@ -3,6 +3,7 @@ name: debugger
 description: Root-cause debugging specialist for Sroor ERP. Use for any bug report, failing test, 500 error, wrong total/balance/stock figure, tenancy "table not found" error, Vue console error, blank screen, or behaviour that differs between local and production. Reproduces first, finds the true cause, applies the smallest correct fix. Use PROACTIVELY the moment something fails unexpectedly.
 tools: Read, Edit, Write, Glob, Grep, Bash
 model: inherit
+effort: medium
 skills: quality-gate
 ---
 
