@@ -97,6 +97,22 @@ php_is_expected() {
     [[ "$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')" == "$PHP_VERSION" ]]
 }
 
+# OPS-23: backup:tenants dumps with whatever `mysqldump` is on PATH. On many distributions that
+# name is the MariaDB client (mariadb-dump): another INSERT layout and a MariaDB-only first line.
+# Production pins both clients to Oracle MySQL 8.4, like the server (backup-restore.md section 1.1).
+client_version() {
+    # Empty output (not a failure) when the client is missing: the check below reports it.
+    command -v "$1" >/dev/null 2>&1 || return 0
+    "$1" --version 2>/dev/null | head -n 1
+}
+
+client_is_oracle_84() {
+    local version
+    version="$(client_version "$1")"
+    [[ -n "$version" ]] || return 1
+    ! grep -qi mariadb <<<"$version" && grep -qE "^$1 +Ver 8\.4\." <<<"$version"
+}
+
 central_grants_append_only() {
     bash "$SCRIPT_DIR/sync-central-grants.sh" --as-root --check-only
 }
@@ -130,6 +146,11 @@ check "php-fpm config test" "php-fpm$PHP_VERSION" -t
 
 echo "== mysql"
 check "MySQL server is 8.4 LTS" mysql_is_84
+for client in mysqldump mysql; do
+    # Recorded for the backup runbook, never a secret: the client name and version string only.
+    printf 'INFO  %s --version: %s\n' "$client" "$(client_version "$client")"
+    check "$client client is Oracle MySQL 8.4 (not the MariaDB client)" client_is_oracle_84 "$client"
+done
 check "SHOW GRANTS of app/migrator/provisioner/backup/audit_pruner == runbook" grants_match_runbook
 check "central database exists" mysql --protocol=socket -uroot -N -B -e "USE \`$CENTRAL_DB_NAME\`"
 check "per-table central grants: app has no UPDATE/DELETE on $CENTRAL_AUDIT_TABLES $CENTRAL_APPEND_ONLY_TABLES" central_grants_append_only

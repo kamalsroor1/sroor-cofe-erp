@@ -14,7 +14,7 @@
 | بيعمل backup لـ | الـ DB المركزية (`central`) + **كل مستأجر حالته مش `archived`**. مستأجر `archived` بياخد backup بس لو اتطلب صراحةً بـ `--tenant=<id>` (الـ backup النهائي بتاع OPS-9) |
 | الـ dump | MySQL: `mysqldump --single-transaction --skip-lock-tables --quick --no-tablespaces --hex-blob` عن طريق spatie/db-dumper، بحساب `sroor_backup` اللي صلاحياته قراءة بس (`DB_BACKUP_USERNAME`/`DB_BACKUP_PASSWORD`، الخيارات في `config/database.php` → `dump`). sqlite (dev/tests): `VACUUM INTO` |
 | السياق | الـ dump بتاع كل مستأجر بيتعمل جوه `$tenant->run()` والـ tenancy بتتقفل في `finally`. الرفع والسجل من السياق المركزي بس |
-| الأرشيف | zip واحد لكل DB: `database.sql` (أو `.sqlite`) + `manifest.json` (عدد صفوف كل جدول وقت الـ backup). **كل entry مشفّر AES-256** بـ `BACKUP_ARCHIVE_PASSWORD`، وبيتفتح تاني محليًا ويتقري لآخره (CRC) قبل الرفع |
+| الأرشيف | zip واحد لكل DB: `database.sql` (أو `.sqlite`) + `manifest.json` (عدد صفوف كل جدول **مقروء من ملف الـ dump نفسه**، ومتراجع على الـ DB الحية قبل الأرشفة — §1.1). **كل entry مشفّر AES-256** بـ `BACKUP_ARCHIVE_PASSWORD`، وبيتفتح تاني محليًا ويتقري لآخره (CRC) قبل الرفع |
 | المكان | `<disk>:<BACKUP_PATH_PREFIX>/<subject>/<subject>-YYYY-mm-dd-HH-ii-ss.zip` (مثال: `sroor-backups/shop1/shop1-2026-10-11-01-30-02.zip`) |
 | الـ disk | `google` على الـ VPS (`BACKUP_DISKS=google`)، `local` في dev/staging |
 | السجل | جدول مركزي `tenant_backups` (`tenant_id` NULL = المركزي، `disk`، `path`، `sha256`، `size_bytes`، `created_at`، `verified_at`). `verified_at` بيتحط بس بعد ما النسخة المرفوعة تتنزّل تاني والـ sha256 يطابق |
@@ -24,6 +24,22 @@
 | ملفات المستخدمين | `backup:run --only-files` (spatie، `storage/` من غير `.env` والمفاتيح، `tests/Unit/BackupConfigTest.php`) الساعة `02:30` + `backup:clean` الساعة `03:00`، بنفس الباسورد ونفس الـ disks |
 | الفشل | أي DB تفشل **ماتوقفش الباقي**. في الآخر: exit 1، سطر `error` في الـ log لكل DB، وإيميل واحد (`BackupFailedNotification`) لـ `BACKUP_NOTIFICATION_EMAIL` فيه كل DB فشلت والسبب |
 | D4 | `BACKUP_ARCHIVE_PASSWORD` فاضي و`APP_ENV=production` ← الأمرين (`backup:tenants` و`backup:restore-tenant`) بيرفضوا قبل أي dump (رسالة مترجمة، exit 1، إيميل)، وspatie `backup:run` مالوش destination فبيفشل بصوت عالي. بره الإنتاج: تحذير والأرشيف بيطلع **من غير تشفير** |
+
+### 1.1 عميل الـ dump وفحص الـ manifest (OPS-23)
+
+**عميل الـ dump المطلوب:** spatie بينادي برنامج اسمه `mysqldump` من الـ `PATH`. على توزيعات كتير (Fedora، Debian، Ubuntu لو اتسطّب `mariadb-client`) الاسم ده بيكون **عميل MariaDB** (`mariadb-dump`) حتى لو السيرفر MySQL. الاتنين شغالين مع الكود، بس:
+
+| | `mysqldump` بتاع Oracle (8.x) | `mariadb-dump` (10.x / 11.x) |
+|---|---|---|
+| شكل الـ INSERT | ``INSERT INTO `t` VALUES (1,…),(2,…);`` على سطر واحد | ``INSERT INTO `t` VALUES`` وبعدين كل صف على سطر لوحده |
+| أول سطر | عادي | `/*M!999999\- enable the sandbox mode */` — عميل `mysql` 8.4.13 بتاع Oracle استورده عادي (اتجرب في OPS-23)، بس فيه بلاغات إن عملاء Oracle الأقدم (8.0) بيوقفوا عنده بـ `Unknown command '\-'` (ماتجربش هنا) |
+
+- **المطلوب على الـ VPS (MySQL 8.4):** `mysql-client` بتاع Oracle **8.4** (نفس إصدار السيرفر) للـ dump والاستعادة، ومش `mariadb-client`. اتأكد بـ `mysqldump --version` (لازم يطلع `Distrib 8.4.x`، مش `MariaDB`)؛ `scripts/ops/verify.sh` بيسجّله في قسم `== mysql`. لو الاتنين لازم يفضلوا، خلّي **عميل الـ dump وعميل الاستعادة (`mysql`) من نفس العيلة** عشان الـ drill مايقعش في فرق زي سطر الـ sandbox.
+- **الخيارات المثبّتة في الكود** (`BackupTenantsCommand::mysqlDumper()`، بغض النظر عن `config/database.php`): `--single-transaction` (snapshot واحدة)، **الـ comments شغالة** (عشان العميلين يكتبوا في الآخر `-- Dump completed`؛ spatie بيقفلها افتراضيًا)، و`--extended-insert`. الباقي من `config/database.php` → `dump` (`--skip-lock-tables --quick --no-tablespaces --hex-blob`). **ماتضيفش `--compact` ولا `--skip-comments`**: من غير سطر الختام كل backup هيفشل كـ «ناقص».
+- **عدّ الصفوف من الـ dump** (`App\Support\Backup\MysqlDumpRowCounter`): state machine بيقرا الملف stream (حتى لو gzip)، بيفهم الشكلين (الصفوف على نفس سطر الـ INSERT أو على السطور اللي بعده لحد `;`)، وبيتجاهل الأقواس والفواصل و`;` والـ quotes المهرّبة و`\n` جوه النصوص والـ hex/binary. قبل OPS-23 العدّاد كان بيقرا السطر الأول بس، فمع `mariadb-dump` الـ manifest كان **كله أصفار** والـ backup يتسجل «متحقق منه»، والـ drill يفشل بـ «22 جدول مش مطابقين» مع إن الاستعادة كانت سليمة.
+- **التراجع على الـ DB الحية (قاعدة المقارنة):** الـ snapshot بتاعة `--single-transaction` مش ممكن تتشارك مع session تانية، فالمقارنة بالتساوي مع `COUNT(*)` الحي ممكن تفشل غلط على محل شغال. بدالها «قوس» حوالين الـ dump: قبله عدّاد `AUTO_INCREMENT` ثم `COUNT(*)` لكل جدول، وبعده `COUNT(*)` ثم `AUTO_INCREMENT` (من `SHOW CREATE TABLE`، لأن `information_schema` في MySQL 8 قيمته متخزنة مؤقتًا). لكل جدول فيه عمود auto-increment: `I = بعد − قبل` = أقصى عدد صفوف اتضافت وقت الـ dump، فعدد صفوف الـ dump لازم يكون في **[عدد_بعد − I ، عدد_قبل + I]**. جدول محدش كتب فيه (`I = 0` ونفس العدد) لازم **يطابق بالظبط**؛ جدول شغال مسموحله يتحرك بقدر اللي اتضاف بس؛ الحذف لوحده بيوسّع النطاق بس. الجداول اللي من غير auto-increment (cache، pivots، sessions) بيتشاف إنها موجودة في الـ dump بس. وكمان: الـ dump لازم يكون **كامل** (سطر الختام موجود ومفيش جملة مفتوحة) وفيه كل جدول كان موجود قبل وبعد. أي مخالفة ← الـ DB دي تفشل (exit 1، log، إيميل/Telegram) **قبل** الأرشفة والرفع، ومفيش صف في `tenant_backups`.
+- **الافتراض الوحيد:** محدش بيعمل insert بـ id صريح **أقل** من العدّاد وقت الـ backup (التطبيق مابيعملش كده). لو حصل (import يدوي الساعة 01:30) أسوأ حاجة إن الـ backup يفشل ويتعاد — عمره ما هيسجّل نسخة غلط على إنها متحقق منها.
+- **التكلفة المقاسة (OPS-23):** على dump مولّد 110–115MB (900 ألف صف، 3 نصوص فيها escapes وأقواس في كل صف — أسوأ من بيانات حقيقية)، على جهاز تطوير عليه حمل: شكل `mysqldump` ‏1.5–1.8 ثانية (العدّاد القديم 1.4–2.9 ثانية على نفس الملف)، شكل `mariadb-dump` ‏2.4–2.8 ثانية، ونسخة gzip ‏2.3–2.9 ثانية، والذاكرة ~2MB ثابتة (القراية على أجزاء 1MB). يعني ثواني قليلة جنب 9.5 ثانية dump + الضغط والتشفير والرفع. القوس = `COUNT(*)` مرتين لكل جدول + `SHOW CREATE TABLE` للجداول اللي فيها auto-increment.
 
 **تنبيه Telegram (OPS-04):** `backup:telegram` اتشال نهائيًا (كان بيبعت dump مش مشفّر)، وكمان اتمسح الكود الميت اللي كان ممكن يرجّعه (`DatabaseBackupService` و`TelegramService::sendDatabaseBackupNotification`)، وفيه اختبار (`BackupTelegramAlertTest`) بيضمن إنهم مش موجودين. Telegram دلوقتي **رسالة نصية بس** عند الفشل (`App\Support\Backup\BackupTelegramAlert`: عنوان + subject + اسم الـ exception class، ولا ملف ولا مسار ولا رسالة exception): بتشتغل لما `TELEGRAM_BOT_TOKEN` و`BACKUP_TELEGRAM_CHAT_ID` يتحطوا في `.env`، وفاضيين = مفيش تنبيه Telegram. التنبيه إيميل + Telegram + log + الـ health check (§7).
 
@@ -100,7 +116,7 @@ php artisan backup:restore-tenant shop1 --drop-after-verify --db-user=sroor_prov
 الخطوات: تنزيل في مجلد مؤقت خاص ← مقارنة الـ sha256 بالسجل (اختلاف = رفض) ← فك التشفير ← التأكد إن الـ manifest بتاع نفس الـ subject ← `CREATE DATABASE` + `mysql < dump` (كلمة المرور في option file بصلاحية 600 بيتمسح، مش في argv) ← **عدد صفوف كل جدول = الـ manifest** ← `--drop-after-verify` يحذف النسخة. لو العدد مختلف: exit 1، جدول بالفروق، والـ DB **بتفضل** للفحص. لو الاستيراد فشل: الـ DB الجديدة بتتمسح.
 
 - `--db-user`: الحساب اللي يقدر يعمل `CREATE DATABASE` على `tenant\_%` (على الـ VPS = `sroor_provisioner`). الباسورد بيتسأل مخفي (الـ config متخزن على الـ VPS، فمتغيرات البيئة وقت التشغيل مش بتتقري). من غيره: `DB_RESTORE_*` ثم حساب الـ DB المركزي.
-- عدد الصفوف في الـ manifest بيتحسب قبل الـ dump مباشرةً (الـ dump snapshot منفصل): على مستأجر شغال وقت الـ backup ممكن يطلع فرق صغير حقيقي. الـ drill يتعمل على نسخة الليل (01:30) أو نسخة الـ deploy.
+- عدد الصفوف في الـ manifest **مقروء من ملف الـ dump نفسه** (§1.1)، فهو بالظبط اللي الاستعادة المفروض ترجّعه حتى لو المستأجر كان شغال وقت الـ backup. لو الـ drill طلع «N جدول مش مطابقين» والـ manifest كله أصفار: ده أرشيف اتعمل قبل OPS-23 بـ `mariadb-dump` (الاستعادة نفسها غالبًا سليمة — قارن بـ `--keep-restored`)؛ خد backup جديد وكرّر الـ drill.
 
 **استعادة حقيقية لمستأجر (حادثة):** الأمر بيجهّز نسخة مستعادة ومتحقق منها بس. تحويل المستأجر عليها خطوة يدوية للـ CTO: المحل read-only/صيانة ← تعديل `tenancy_db_name` بتاع المستأجر عن طريق `UpdateTenantDatabaseConfigAction` (OPS-9: step-up + audit) ← تجربة ← الـ DB القديمة تفضل لحد ما يتأكد. ممنوع `DROP` للـ DB القديمة من غير backup نهائي متحقق منه.
 
@@ -161,6 +177,8 @@ php artisan backup:restore-tenant shop1 --drop-after-verify --db-user=sroor_prov
 | `Access denied for user 'sroor_backup'` | الحساب/الصلاحيات | `vps-runbook.md` §5، `--only 41-mysql-users` |
 | `النسخة المرفوعة ... مش مطابقة` | رفع ناقص/تالف | يتعاد الليلة الجاية تلقائيًا؛ لو اتكرر: مساحة الـ Drive/الشبكة |
 | `جدول سجل النسخ tenant_backups ... مش موجود` | الـ release اللي فيه OPS-5 لسه ماعملش migrate | طبيعي في أول deploy (الأرشيفات بتترفع من غير سجل)؛ بعد الـ migrate بيختفي |
+| `ملف التفريغ مش مطابق لقاعدة البيانات الحية` | dump ناقص (الـ disk اتملى، الـ timeout، `--compact`/`--skip-comments` في الخيارات) أو جدول فيه بيانات طلع فاضي في الـ dump | التفاصيل لكل جدول في الـ log؛ اتأكد من `mysqldump --version` (§1.1) والمساحة، وشغّل `backup:tenants --tenant=<id>` تاني |
+| الـ drill: `Unknown command '\-'` في السطر الأول | dump معمول بـ `mariadb-dump` ومستعاد بعميل `mysql` قديم بتاع Oracle | نفس عيلة العميل للاتنين (§1.1) |
 | `BackupFreshness` أحمر | فشل الليلة (شوف الإيميل) أو الـ scheduler واقف | `php artisan backup:tenants` يدويًا بعد إصلاح السبب |
 
 ---
@@ -170,6 +188,9 @@ php artisan backup:restore-tenant shop1 --drop-after-verify --db-user=sroor_prov
 ```bash
 cd backend
 php artisan test --filter='BackupTenantsCommandTest|RestoreTenantBackupCommandTest|BackupTelegramAlertTest|HealthChecksTest|ScheduledTelegramJobsGuardTest|BackupConfigTest'
+php artisan test --filter='MysqlDumpRowCounterTest|BackupDumpCountCheckTest|BackupManifestFromDumpTest'
+# OPS-23 على MySQL حقيقي (group mysql، محتاج mysqldump + mysql على الـ PATH، سيرفر رمي بس):
+DB_HOST=127.0.0.1 DB_PORT=3306 DB_USERNAME=root DB_PASSWORD= php artisan test -c phpunit.mysql.xml --filter=BackupMysqlRoundTripTest
 bash ../scripts/ops/tests/deploy-test.sh
 ```
 

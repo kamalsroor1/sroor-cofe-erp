@@ -9,6 +9,7 @@ use App\Health\Notifications\BackupFailedNotification;
 use App\Models\Tenant;
 use App\Models\TenantBackup;
 use App\Support\Backup\BackupTelegramAlert;
+use App\Support\Backup\MysqlDumpRowCounter;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Console\Command;
@@ -23,6 +24,8 @@ use Illuminate\Support\LazyCollection;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Spatie\Backup\Tasks\Backup\DbDumperFactory;
+use Spatie\DbDumper\Databases\MySql;
+use Spatie\DbDumper\DbDumper;
 use Throwable;
 use ZipArchive;
 
@@ -36,7 +39,10 @@ use ZipArchive;
  *      is always ended afterwards;
  *   2. row count of every table READ FROM THE DUMP (manifest `tables`, `tables_source`
  *      = dump), the numbers backup:restore-tenant verifies: exact even while the live
- *      tables keep growing during the dump;
+ *      tables keep growing during the dump. OPS-23: the counter reads both the mysqldump
+ *      and the mariadb-dump INSERT layouts, and the dump counts must fit a live bracket
+ *      taken around the dump (dumpCountProblems()) or the subject fails: an empty,
+ *      truncated or mis-read dump is never archived nor marked verified;
  *   3. AES-256 zip (BACKUP_ARCHIVE_PASSWORD) holding the dump + manifest.json, opened
  *      again locally to prove it decrypts;
  *   4. upload to every configured disk (Google Drive on the VPS), a row in the central
@@ -484,25 +490,58 @@ final class BackupTenantsCommand extends Command
         // snapshot made busy tables (sales, audit, tokens) mismatch on restore (code review,
         // W2 lane 3I). sqlite: the VACUUM INTO copy is opened and counted; MySQL/MariaDB: the
         // CREATE TABLE / INSERT rows of the .sql file are counted (countDumpRows()).
-        switch ($driver) {
-            case 'sqlite':
-                $file = $dumpBase.'.sqlite';
-                $connection->statement('VACUUM INTO ?', [$file]);
-                $this->assertDumpWritten($file);
-                $tables = self::countSqliteFileRows($file);
-                break;
-            case 'mysql':
-            case 'mariadb':
-                $file = $dumpBase.'.sql';
-                DbDumperFactory::createFromConnection($connectionName)->dumpToFile($file);
-                $this->assertDumpWritten($file);
-                $tables = self::countDumpRows($file);
-                break;
-            default:
-                throw new RuntimeException((string) __('console.backups.unsupported_driver', ['driver' => $driver]));
+        //
+        // OPS-23: those dump counts are then checked against a live bracket taken around the dump
+        // (dumpCountProblems()): an empty, truncated or mis-parsed dump fails the subject here,
+        // before anything is archived, uploaded or marked verified.
+        if (! in_array($driver, ['sqlite', 'mysql', 'mariadb'], true)) {
+            throw new RuntimeException((string) __('console.backups.unsupported_driver', ['driver' => $driver]));
         }
 
+        $autoBefore = self::autoIncrementCounters($connection);
+        $countsBefore = self::countRows($connection);
+
+        if ($driver === 'sqlite') {
+            $file = $dumpBase.'.sqlite';
+            $connection->statement('VACUUM INTO ?', [$file]);
+            $this->assertDumpWritten($file);
+            $tables = self::countSqliteFileRows($file);
+            $complete = true; // VACUUM INTO either writes a whole database or fails
+        } else {
+            $file = $dumpBase.'.sql';
+            self::mysqlDumper($connectionName)->dumpToFile($file);
+            $this->assertDumpWritten($file);
+            $scan = MysqlDumpRowCounter::scanFile($file);
+            $tables = $scan['tables'];
+            $complete = $scan['complete'];
+        }
+
+        $countsAfter = self::countRows($connection);
+        $autoAfter = self::autoIncrementCounters($connection);
+
+        $this->assertDumpConsistent(self::dumpCountProblems($tables, $complete, $countsBefore, $countsAfter, $autoBefore, $autoAfter));
+
         return [$file, ['driver' => $driver, 'dump' => basename($file), 'tables_source' => self::TABLES_SOURCE_DUMP, 'tables' => $tables]];
+    }
+
+    /**
+     * spatie dumper for a MySQL/MariaDB connection, with the options the manifest check depends
+     * on pinned whatever config/database.php `dump` says (OPS-23):
+     *  - --single-transaction: one consistent snapshot, the instant the live bracket brackets;
+     *  - comments on: both clients then end the file with `-- Dump completed` (the completeness
+     *    check; spatie skips comments by default);
+     *  - --extended-insert: the layout the counter is tuned for (it reads one-row inserts too).
+     * The INSERT layout itself (mysqldump 8 one line, mariadb-dump one row per line) is NOT forced:
+     * the counter reads both.
+     */
+    public static function mysqlDumper(string $connectionName): DbDumper
+    {
+        $dumper = DbDumperFactory::createFromConnection($connectionName);
+        if ($dumper instanceof MySql) {
+            $dumper->useSingleTransaction()->doNotSkipComments()->useExtendedInserts();
+        }
+
+        return $dumper;
     }
 
     private function assertDumpWritten(string $file): void
@@ -537,93 +576,153 @@ final class BackupTenantsCommand extends Command
     }
 
     /**
-     * Row count per table of a mysqldump file, read from the file itself: every
-     * `CREATE TABLE` starts a table at 0, every `INSERT INTO` line adds its top-level value
-     * tuples (extended inserts included). Streams the file line by line. Sorted by name.
+     * Row count per table of a mysqldump / mariadb-dump file (plain or gzip), read from the file
+     * itself by MysqlDumpRowCounter (OPS-23: rows on the INSERT line or on the following lines).
+     * Sorted by table name.
      *
      * @return array<string, int>
      */
     public static function countDumpRows(string $file): array
     {
-        $handle = fopen($file, 'rb');
-        if ($handle === false) {
-            throw new RuntimeException((string) __('console.backups.dump_empty'));
-        }
-
-        $counts = [];
-        try {
-            while (($line = fgets($handle)) !== false) {
-                if (str_starts_with($line, 'CREATE TABLE `')) {
-                    if (preg_match('/^CREATE TABLE `((?:[^`]|``)+)`/', $line, $m) === 1) {
-                        $counts[str_replace('``', '`', $m[1])] ??= 0;
-                    }
-
-                    continue;
-                }
-
-                if (! str_starts_with($line, 'INSERT INTO `')
-                    || preg_match('/^INSERT INTO `((?:[^`]|``)+)`/', $line, $m) !== 1) {
-                    continue;
-                }
-
-                $values = strpos($line, ' VALUES ');
-                if ($values === false) {
-                    continue;
-                }
-
-                $table = str_replace('``', '`', $m[1]);
-                $counts[$table] = ($counts[$table] ?? 0) + self::countInsertTuples(substr($line, $values + 8));
-            }
-        } finally {
-            fclose($handle);
-        }
-
-        ksort($counts);
-
-        return $counts;
+        return MysqlDumpRowCounter::scanFile($file)['tables'];
     }
 
     /**
-     * Top-level `( ... )` tuples of the VALUES part of one mysqldump INSERT statement.
-     * Quoted strings are skipped with mysqldump's escaping (backslash escapes, '' doubling),
-     * so parentheses or commas inside data never count.
+     * Top-level `( ... )` tuples of the VALUES part of one INSERT statement (quoted strings,
+     * escapes and doubled quotes skipped, so parentheses or commas inside data never count).
      */
     public static function countInsertTuples(string $values): int
     {
-        $count = 0;
-        $depth = 0;
-        $inQuote = false;
-        $length = strlen($values);
-        $i = 0;
+        return MysqlDumpRowCounter::countTuples($values);
+    }
 
-        while ($i < $length) {
-            $i += strcspn($values, $inQuote ? "\\'" : "'()", $i);
-            if ($i >= $length) {
+    /**
+     * OPS-23: AUTO_INCREMENT counter of every table that has an auto-increment column, read
+     * live (SHOW CREATE TABLE on MySQL/MariaDB: information_schema.TABLES.AUTO_INCREMENT is a
+     * cached statistic on MySQL 8; sqlite_sequence on sqlite). A table that never received a
+     * row reports 1. Tables without such a column are absent.
+     *
+     * @return array<string, int>
+     */
+    public static function autoIncrementCounters(Connection $connection): array
+    {
+        $counters = [];
+
+        switch ($connection->getDriverName()) {
+            case 'mysql':
+            case 'mariadb':
+                $tables = $connection->select(
+                    'select distinct c.TABLE_NAME as name from information_schema.COLUMNS c
+                        join information_schema.TABLES t on t.TABLE_SCHEMA = c.TABLE_SCHEMA and t.TABLE_NAME = c.TABLE_NAME
+                        where c.TABLE_SCHEMA = database() and t.TABLE_TYPE = ? and c.EXTRA like ?',
+                    ['BASE TABLE', '%auto_increment%'],
+                );
+                foreach ($tables as $row) {
+                    $name = (string) ((array) $row)['name'];
+                    $create = (array) $connection->selectOne('show create table `'.str_replace('`', '``', $name).'`');
+                    $sql = (string) (array_values($create)[1] ?? '');
+                    // The table options come last: take the last AUTO_INCREMENT=n of the statement.
+                    $counters[$name] = preg_match_all('/\bAUTO_INCREMENT=(\d+)/', $sql, $m) > 0
+                        ? (int) end($m[1])
+                        : 1;
+                }
                 break;
-            }
-
-            $char = $values[$i];
-            if ($inQuote) {
-                if ($char === '\\') {
-                    $i += 2;
-
-                    continue;
+            case 'sqlite':
+                $tables = $connection->select(
+                    "select name from sqlite_master where type = 'table' and lower(sql) like '%autoincrement%'",
+                );
+                $sequence = [];
+                if ($connection->select("select name from sqlite_master where type = 'table' and name = 'sqlite_sequence'") !== []) {
+                    foreach ($connection->select('select name, seq from sqlite_sequence') as $row) {
+                        $row = (array) $row;
+                        $sequence[(string) $row['name']] = (int) $row['seq'];
+                    }
                 }
-                $inQuote = false;
-            } elseif ($char === "'") {
-                $inQuote = true;
-            } elseif ($char === '(') {
-                if ($depth === 0) {
-                    $count++;
+                foreach ($tables as $row) {
+                    $name = (string) ((array) $row)['name'];
+                    $counters[$name] = ($sequence[$name] ?? 0) + 1;
                 }
-                $depth++;
-            } else {
-                $depth = max(0, $depth - 1);
-            }
-            $i++;
+                break;
+            default:
+                throw new RuntimeException((string) __('console.backups.unsupported_driver', ['driver' => $connection->getDriverName()]));
+        }
+        ksort($counters);
+
+        return $counters;
+    }
+
+    /**
+     * OPS-23: does the dump describe the live database? The dump's snapshot cannot be shared
+     * with another session, so the live side is a BRACKET around the dump:
+     *
+     *   before: AUTO_INCREMENT counters, then row counts   (just before the dump starts)
+     *   after:  row counts, then AUTO_INCREMENT counters   (just after it ends)
+     *
+     * For a table with an auto-increment column, I = after.ai - before.ai bounds the inserts made
+     * while the dump ran, so the rows at the dump's snapshot lie in
+     * [after.count - I, before.count + I]. A table nobody wrote to (I = 0, same count) must match
+     * EXACTLY; a busy table can only drift by what was inserted. Deletes alone can only lower
+     * after.count, which only widens the window. Tables without such a column (cache, pivots,
+     * sessions) are only checked for presence. Also: the dump must be complete (trailer, no open
+     * statement) and contain every table that existed before and after it.
+     *
+     * Assumption: rows are not inserted with an explicit id BELOW the counter while a backup runs
+     * (true for the application; a manual import during a backup could false-fail it, which only
+     * means "retry", never a wrong backup marked verified).
+     *
+     * @param  array<string, int>  $dump  rows per table read from the dump
+     * @param  array<string, int>  $countsBefore
+     * @param  array<string, int>  $countsAfter
+     * @param  array<string, int>  $autoBefore
+     * @param  array<string, int>  $autoAfter
+     * @return list<string> one problem per table (`*` = the whole dump), empty = consistent
+     */
+    public static function dumpCountProblems(array $dump, bool $complete, array $countsBefore, array $countsAfter, array $autoBefore, array $autoAfter): array
+    {
+        $problems = [];
+        if (! $complete) {
+            $problems[] = '*: '.__('console.backups.dump_incomplete');
         }
 
-        return $count;
+        foreach (array_keys(array_intersect_key($countsBefore, $countsAfter)) as $table) {
+            if (! array_key_exists($table, $dump)) {
+                $problems[] = $table.': '.__('console.backups.dump_table_missing');
+
+                continue;
+            }
+            if (! isset($autoBefore[$table], $autoAfter[$table])) {
+                continue;
+            }
+            $inserted = max(0, $autoAfter[$table] - $autoBefore[$table]);
+            $low = max(0, $countsAfter[$table] - $inserted);
+            $high = $countsBefore[$table] + $inserted;
+            if ($dump[$table] < $low || $dump[$table] > $high) {
+                $problems[] = $table.': '.__('console.backups.dump_rows_out_of_range', [
+                    'rows' => $dump[$table],
+                    'low' => $low,
+                    'high' => $high,
+                ]);
+            }
+        }
+
+        return $problems;
+    }
+
+    /**
+     * @param  list<string>  $problems
+     */
+    private function assertDumpConsistent(array $problems): void
+    {
+        if ($problems === []) {
+            return;
+        }
+
+        Log::error('backup:tenants dump does not match the live database', ['problems' => $problems]);
+
+        throw new RuntimeException((string) __('console.backups.dump_mismatch', [
+            'count' => count($problems),
+            'tables' => implode('; ', array_slice($problems, 0, 5)),
+        ]));
     }
 
     /**
