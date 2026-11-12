@@ -21,10 +21,12 @@ use App\Models\Item;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\User;
+use App\Services\Reports\CarryingCost;
 use App\Services\Settings\TenantSettings;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use App\Support\CostVisibility;
+use App\Support\ItemCostFields;
 use App\Support\Money\Decimal;
 use Closure;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -116,8 +118,9 @@ final class ItemController extends Controller
         $totalItemsCount = Item::count();
         $lowStockCount = $this->tenantSettings->whereLowStock(Item::query())->where('is_active', true)->count();
         // SEC-1 (M6): stock valuation is cost-derived: items.view_cost only.
+        // BUG-02: valued at the carrying cost (weighted average), not the last purchase price.
         $totalStockValue = CostVisibility::allows($user)
-            ? Decimal::normalize((string) Item::selectRaw('SUM(current_stock * cost_price) as total_val')->value('total_val'))
+            ? Decimal::normalize((string) Item::selectRaw('SUM(current_stock * '.CarryingCost::sql().') as total_val')->value('total_val'))
             : null;
 
         return response()->json([
@@ -296,12 +299,11 @@ final class ItemController extends Controller
         $storeId = ClientStoreGuard::concreteOrDefault($request);
 
         $threshold = $this->tenantSettings->lowStockDefaultThreshold();
-        $showCost = CostVisibility::allows($user);
 
         $items = $this->tenantSettings->whereLowStock(Item::query()->active())
             ->orderBy('current_stock', 'asc')
             ->get()
-            ->map(function (Item $item) use ($storeId, $threshold, $showCost) {
+            ->map(function (Item $item) use ($storeId, $threshold, $user) {
                 $stock = (string) $item->getStockInStore($storeId);
                 $min = (string) $item->min_stock_level;
                 // An item without its own minimum is measured against the tenant default threshold.
@@ -317,7 +319,7 @@ final class ItemController extends Controller
                     'name' => $item->name,
                     'category' => $item->category,
                     'unit' => $item->unit,
-                    'cost_price' => $showCost ? (string) $item->cost_price : null,
+                    ...ItemCostFields::forItem($item, $user),
                     'selling_price' => (string) $item->selling_price,
                     'current_stock' => $stock,
                     'min_stock_level' => $min,

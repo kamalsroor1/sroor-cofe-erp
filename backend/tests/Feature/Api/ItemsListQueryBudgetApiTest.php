@@ -72,6 +72,8 @@ final class ItemsListQueryBudgetApiTest extends TenantTestCase
             'pos_sales_count' => 0,
             'unit' => 'كجم',
             'cost_price' => '8.125',
+            'average_cost' => '4.000',
+            'last_purchase_price' => '8.125',
             'min_selling_price' => '9.000',
             'has_min_price' => true,
             'wholesale_price' => null,
@@ -112,7 +114,7 @@ final class ItemsListQueryBudgetApiTest extends TenantTestCase
         ], $rows['ITM-HIST']['deletion_blockers']);
 
         $response->assertJsonPath('summary.total_items', 4)
-            ->assertJsonPath('summary.total_stock_value', '42.656')
+            ->assertJsonPath('summary.total_stock_value', '21.000') // BUG-02: 5.250 × weighted average 4.000, not × last purchase price 8.125
             ->assertJsonPath('meta.total', 4);
     }
 
@@ -127,6 +129,8 @@ final class ItemsListQueryBudgetApiTest extends TenantTestCase
             ->json('data.0');
 
         $this->assertNull($row['cost_price']);
+        $this->assertNull($row['average_cost']);
+        $this->assertNull($row['last_purchase_price']);
         $this->assertNull($row['min_selling_price']);
         $this->assertTrue($row['has_min_price']);
     }

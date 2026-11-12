@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\InvoiceItem;
+use App\Services\Reports\CarryingCost;
 use App\Services\Reports\ReportDateRange;
 use App\Support\Money\Decimal;
 use App\Support\TenantCache;
@@ -57,9 +58,9 @@ class InventoryAnalyticsService
 
                 $qtySold = $salesData['quantity'] ?? '0.000';
                 $revenue = $salesData['revenue'] ?? '0.000';
-                $weightedCost = $this->decimalOrNull($item->weighted_avg_cost);
-                $costPrice = $this->decimalOrNull($item->cost_price);
-                $unitCost = $weightedCost ?? ($costPrice ?? '0.000');
+                // BUG-02: the carrying cost (average, the last purchase cost only while the average
+                // is zero / NULL), the same unit cost as the inventory valuation.
+                $unitCost = CarryingCost::of($item->weighted_avg_cost, $item->cost_price);
                 $cogs = Decimal::mul($qtySold, $unitCost); // PERF-01: half-up per line (money rule); was truncated
                 $grossProfit = bcsub($revenue, $cogs, 3);
 

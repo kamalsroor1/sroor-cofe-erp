@@ -10,6 +10,12 @@ use App\Services\Reports\InventoryValuation;
 
 final class GetInventoryValuationReportAction
 {
+    /** Per-unit cost keys of a valued row, null without items.view_cost. */
+    private const ROW_UNIT_COST_KEYS = ['average_cost', 'last_purchase_price', 'cost_price'];
+
+    /** Per-unit cost key of an ABC row, null without items.view_cost. */
+    private const ABC_UNIT_COST_KEYS = ['unit_cost'];
+
     public function __construct(
         private readonly InventoryAnalyticsService $inventoryAnalyticsService,
         private readonly InventoryValuation $inventoryValuation,
@@ -25,9 +31,13 @@ final class GetInventoryValuationReportAction
      *
      * @param  array<int, array{quantity: string, revenue: string}>|null  $salesByItem  the period's
      *                                                                                  sales per item, when the caller already has them (comprehensive bundle)
+     * @param  bool  $showUnitCost  BUG-02 review: whether the caller holds items.view_cost (CostVisibility).
+     *                              Without it the PER-UNIT costs of the rows (average_cost,
+     *                              last_purchase_price, cost_price, ABC unit_cost) are null; the
+     *                              totals and per-row values (cost_val) stay as before.
      * @return array<string, mixed>
      */
-    public function execute(ReportFilterDTO $dto, ?array $salesByItem = null): array
+    public function execute(ReportFilterDTO $dto, ?array $salesByItem = null, bool $showUnitCost = false): array
     {
         $storeId = $dto->store_id ?: null;
 
@@ -40,6 +50,13 @@ final class GetInventoryValuationReportAction
         $abcData['items'] = array_slice($abcData['items'], 0, $dto->per_page);
         $abcData['dead_stock'] = array_slice($abcData['dead_stock'], 0, $dto->per_page);
         $abcData['dead_stock_count'] = $deadStockTotal;
+
+        // Masked here, after the ABC TenantCache read: the cached payload is shared by every user.
+        if (! $showUnitCost) {
+            $page['rows'] = self::withoutKeys($page['rows'], self::ROW_UNIT_COST_KEYS);
+            $abcData['items'] = self::withoutKeys($abcData['items'], self::ABC_UNIT_COST_KEYS);
+            $abcData['dead_stock'] = self::withoutKeys($abcData['dead_stock'], self::ABC_UNIT_COST_KEYS);
+        }
 
         return [
             'stock_cost_valuation' => $totals['cost'],
@@ -58,5 +75,25 @@ final class GetInventoryValuationReportAction
                 'dead_stock_shown' => count($abcData['dead_stock']),
             ],
         ];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $rows
+     * @param  list<string>  $keys
+     * @return list<array<string, mixed>>
+     */
+    private static function withoutKeys(array $rows, array $keys): array
+    {
+        $out = [];
+        foreach ($rows as $row) {
+            foreach ($keys as $key) {
+                if (array_key_exists($key, $row)) {
+                    $row[$key] = null;
+                }
+            }
+            $out[] = $row;
+        }
+
+        return $out;
     }
 }

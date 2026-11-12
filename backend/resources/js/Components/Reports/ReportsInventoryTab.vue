@@ -78,7 +78,7 @@
                 <th class="p-3 text-start font-bold">{{ $t('inventory.item_name') }}</th>
                 <th class="p-3 text-start font-bold">{{ $t('inventory.code') }}</th>
                 <th class="p-3 text-end font-bold">{{ $t('inventory.current_stock') }}</th>
-                <th class="p-3 text-end font-bold">{{ $t('inventory.cost_price') }}</th>
+                <th class="p-3 text-end font-bold">{{ $t('inventory.average_cost') }}</th>
                 <th class="p-3 text-end font-bold">{{ $t('inventory.selling_price') }}</th>
                 <th class="p-3 text-end font-bold">{{ $t('reports.cost_valuation') }}</th>
                 <th class="p-3 text-end font-bold">{{ $t('reports.selling_valuation') }}</th>
@@ -97,7 +97,9 @@
                   {{ formatQty(itm.current_stock) }} {{ itm.unit }}
                 </td>
                 <td class="p-3 text-end font-mono text-slate-700 dark:text-slate-300">
-                  {{ formatMoney(itm.cost_price) }}
+                  <template v-if="effectiveAverageCost(itm) != null">
+                    {{ formatMoney(effectiveAverageCost(itm)) }}
+                  </template>
                 </td>
                 <td class="p-3 text-end font-mono text-emerald-500 dark:text-emerald-400">
                   {{ formatMoney(itm.selling_price) }}
@@ -169,6 +171,7 @@ import EmptyState from '../Common/EmptyState.vue';
 import ErrorState from '../Common/ErrorState.vue';
 import Pagination from '../Common/Pagination.vue';
 import { useFormatters } from '../../Composables/useFormatters';
+import { effectiveAverageCost } from '../../helpers/itemCost';
 
 const { formatMoney, formatQty, currencyLabel } = useFormatters();
 

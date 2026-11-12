@@ -4,7 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\Item;
 use App\Models\StoreStock;
-use App\Support\CostVisibility;
+use App\Support\ItemCostFields;
 use App\Support\Money\Decimal;
 use App\Support\PosItemPrices;
 use Illuminate\Http\Request;
@@ -22,9 +22,7 @@ class POSItemResource extends JsonResource
             ? Decimal::normalize((string) (StoreStock::where('store_id', $storeId)->where('item_id', $this->id)->value('quantity') ?? $this->current_stock))
             : Decimal::normalize((string) $this->current_stock);
 
-        // SEC-1 (M6): cost only with items.view_cost.
-        $showCost = CostVisibility::allows($request->user());
-
+        // SEC-1 (M6) / BUG-02: the cost figures only with items.view_cost (ItemCostFields).
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -33,7 +31,7 @@ class POSItemResource extends JsonResource
             'category_id' => $this->category_id,
             'price_retail' => Decimal::normalize((string) ($this->price_retail ?? $this->selling_price ?? 0)),
             ...PosItemPrices::forItem($this->resource, $request->user()),
-            'cost_price' => $showCost ? Decimal::normalize((string) $this->cost_price) : null,
+            ...ItemCostFields::forItem($this->resource, $request->user()),
             'current_stock' => $stock,
             'min_stock_level' => Decimal::normalize((string) ($this->min_stock_level ?: 0)),
             'unit' => $this->unit ?: 'كجم',

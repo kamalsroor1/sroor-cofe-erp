@@ -65,7 +65,7 @@
           v-if="form.cost_price != null"
           :model-value="form.cost_price"
           @update:model-value="updateForm('cost_price', $event)"
-          :label="$t('inventory.cost_price')"
+          :label="$t('inventory.last_purchase_price')"
           :required="true"
           :min="0"
           :step="0.001"

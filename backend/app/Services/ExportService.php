@@ -10,7 +10,9 @@ use App\Models\Purchase;
 use App\Models\ReturnDocument;
 use App\Models\StockMovement;
 use App\Models\Supplier;
+use App\Services\Reports\CarryingCost;
 use App\Support\Csv\CsvCell;
+use App\Support\Money\Decimal;
 use App\Support\StockMovementTypes;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -218,7 +220,7 @@ class ExportService
             __('inventory.category'),
             __('inventory.unit'),
             __('inventory.current_stock'),
-            __('inventory.cost_price'),
+            __('inventory.average_cost'),
             __('inventory.selling_price'),
             __('reports.stock_cost_val_label'),
             __('reports.stock_sell_val_label'),
@@ -229,8 +231,10 @@ class ExportService
         $rows = [];
 
         foreach ($items as $itm) {
-            $costVal = bcmul($itm->current_stock, $itm->cost_price, 3);
-            $sellVal = bcmul($itm->current_stock, $itm->selling_price, 3);
+            // BUG-02: valued at the carrying cost (weighted average), half-up like the report.
+            $unitCost = CarryingCost::forItem($itm);
+            $costVal = Decimal::mul((string) $itm->current_stock, $unitCost);
+            $sellVal = Decimal::mul((string) $itm->current_stock, (string) $itm->selling_price);
             $profitExp = bcsub($sellVal, $costVal, 3);
 
             $rows[] = [
@@ -239,7 +243,7 @@ class ExportService
                 $itm->category ?? __('inventory.general_category'),
                 $itm->unit,
                 number_format((float) $itm->current_stock, 3),
-                number_format((float) $itm->cost_price, 2),
+                number_format((float) $unitCost, 2),
                 number_format((float) $itm->selling_price, 2),
                 number_format((float) $costVal, 2),
                 number_format((float) $sellVal, 2),

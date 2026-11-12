@@ -171,6 +171,8 @@ return [
     'low_stock_count_sub' => 'Items reaching reorder level needing reorder',
     'total_items_sub' => 'Total item cards registered in system',
     'cost_price' => 'Cost Price',
+    'average_cost' => 'Average cost',
+    'last_purchase_price' => 'Last purchase price',
     'selling_price' => 'Selling Price',
     'code' => 'Item Code',
     'min_stock_reorder_badge' => 'Min (:qty)',

@@ -13,9 +13,16 @@ use Illuminate\Support\Facades\DB;
  * PERF-01: stock valuation (at cost and at selling price) of the active items, shared by the
  * P&L summary and the inventory valuation report.
  *
- * - One branch: store_stocks.quantity x items.cost_price, selling at the branch's
+ * - One branch: store_stocks.quantity x the item's carrying cost, selling at the branch's
  *   custom_selling_price when set, else items.selling_price.
- * - Every branch (no store): items.current_stock x items.cost_price / selling_price.
+ * - Every branch (no store): items.current_stock x the carrying cost / selling_price.
+ *
+ * BUG-02: the carrying cost is CarryingCost (weighted average per item, the last purchase cost
+ * only while no average exists), the cost the sales are costed at. It used to be
+ * items.cost_price (the LAST purchase price), so one purchase at a new price revalued the
+ * whole stock. A branch is valued at the item's single average (owner decision: one average
+ * per item, not per branch), so a transfer moves value between branches without changing
+ * the total.
  *
  * Each line value is quantity x price rounded half-up to 3 decimals (Decimal::mul, the money
  * rule), and the totals are the exact sum of those line values over EVERY row, streamed from a
@@ -69,9 +76,10 @@ final class InventoryValuation
 
         $rows = $query
             ->select(array_merge($this->valueColumns($storeId), [
+                'items.cost_price as last_purchase_price',
                 'items.id', 'items.name', 'items.code', 'items.category', 'items.unit',
             ]))
-            ->orderByRaw('(COALESCE('.$qtyColumn.', 0) * COALESCE(items.cost_price, 0)) DESC')
+            ->orderByRaw('(COALESCE('.$qtyColumn.', 0) * '.CarryingCost::sql().') DESC')
             ->orderBy('items.id')
             ->forPage($page, $perPage)
             ->get();
@@ -80,6 +88,7 @@ final class InventoryValuation
         foreach ($rows as $row) {
             $qty = Decimal::normalize(InvoiceAggregates::scalar($row->qty));
             $costPrice = Decimal::normalize(InvoiceAggregates::scalar($row->unit_cost));
+            $lastPurchasePrice = Decimal::normalize(InvoiceAggregates::scalar($row->last_purchase_price));
             $sellingPrice = Decimal::normalize(InvoiceAggregates::scalar($row->unit_price));
             $costVal = Decimal::mul($qty, $costPrice);
             $sellVal = Decimal::mul($qty, $sellingPrice);
@@ -91,7 +100,11 @@ final class InventoryValuation
                 'category' => $row->category,
                 'unit' => $row->unit,
                 'current_stock' => $qty,
-                'cost_price' => $costPrice,
+                // BUG-02: average_cost is the unit cost cost_val is computed at; cost_price keeps
+                // its historical meaning (= last_purchase_price) for older clients.
+                'average_cost' => $costPrice,
+                'last_purchase_price' => $lastPurchasePrice,
+                'cost_price' => $lastPurchasePrice,
                 'selling_price' => $sellingPrice,
                 'cost_val' => $costVal,
                 'sell_val' => $sellVal,
@@ -127,7 +140,7 @@ final class InventoryValuation
             return [
                 'store_stocks.id as id_key',
                 'store_stocks.quantity as qty',
-                'items.cost_price as unit_cost',
+                DB::raw(CarryingCost::sql().' as unit_cost'),
                 DB::raw('COALESCE(store_stocks.custom_selling_price, items.selling_price) as unit_price'),
             ];
         }
@@ -135,7 +148,7 @@ final class InventoryValuation
         return [
             'items.id as id_key',
             'items.current_stock as qty',
-            'items.cost_price as unit_cost',
+            DB::raw(CarryingCost::sql().' as unit_cost'),
             'items.selling_price as unit_price',
         ];
     }

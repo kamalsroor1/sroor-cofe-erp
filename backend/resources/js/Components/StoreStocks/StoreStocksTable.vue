@@ -52,10 +52,10 @@
         <span class="font-mono text-slate-400">{{ formatQty(row.min_stock_level) }}</span>
       </template>
 
-      <!-- Cost Price -->
-      <template #cell-cost_price="{ row }">
-        <span class="font-mono text-slate-700 dark:text-slate-300">
-          {{ formatMoney(row.cost_price) }} {{ currencyLabel }}
+      <!-- Average cost (the unit cost total_valuation is computed on) -->
+      <template #cell-average_cost="{ row }">
+        <span v-if="effectiveAverageCost(row) != null" class="font-mono text-slate-700 dark:text-slate-300">
+          {{ formatMoney(effectiveAverageCost(row)) }} {{ currencyLabel }}
         </span>
       </template>
 
@@ -98,6 +98,7 @@ import DataTable from '@/Components/Common/DataTable.vue';
 import EmptyState from '@/Components/Common/EmptyState.vue';
 import { useFormatters } from '@/Composables/useFormatters';
 import { useTrans } from '@/Composables/useTrans';
+import { effectiveAverageCost } from '@/helpers/itemCost';
 
 const { t } = useTrans();
 const { formatMoney, formatQty, currencyLabel } = useFormatters();
@@ -116,7 +117,7 @@ const columns = computed(() => [
   { key: 'unit', label: t('inventory.unit'), align: 'center' },
   { key: 'quantity', label: t('inventory.current_stock'), align: 'center', mono: true },
   { key: 'min_stock_level', label: t('inventory.min_stock_level'), align: 'center', mono: true },
-  { key: 'cost_price', label: t('inventory.cost_price'), align: 'end', mono: true },
+  { key: 'average_cost', label: t('inventory.average_cost'), align: 'end', mono: true },
   { key: 'total_valuation', label: t('inventory.total_valuation'), align: 'end', mono: true },
   { key: 'status', label: t('common.status'), align: 'center' },
 ]);

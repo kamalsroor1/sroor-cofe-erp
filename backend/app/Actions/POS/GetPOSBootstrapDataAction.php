@@ -12,7 +12,7 @@ use App\Models\Item;
 use App\Models\Store;
 use App\Models\User;
 use App\Support\ActiveStore;
-use App\Support\CostVisibility;
+use App\Support\ItemCostFields;
 use App\Support\Money\Decimal;
 use App\Support\PosItemPrices;
 use Illuminate\Support\Facades\DB;
@@ -61,6 +61,7 @@ class GetPOSBootstrapDataAction
                     'items.category_id',
                     'items.unit',
                     'items.cost_price',
+                    'items.weighted_avg_cost',
                     'items.selling_price',
                     'items.min_selling_price',
                     'items.wholesale_price',
@@ -77,7 +78,7 @@ class GetPOSBootstrapDataAction
             $rawItems = Item::where('is_active', true)
                 ->select([
                     'id', 'code', 'name', 'image', 'category', 'category_id', 'unit',
-                    'cost_price', 'selling_price', 'min_selling_price', 'wholesale_price', 'min_stock_level',
+                    'cost_price', 'weighted_avg_cost', 'selling_price', 'min_selling_price', 'wholesale_price', 'min_stock_level',
                     'pos_sort_order', 'is_pos_pinned', 'pos_sales_count', 'is_weighted',
                     'current_stock as calculated_stock',
                 ])
@@ -85,11 +86,9 @@ class GetPOSBootstrapDataAction
                 ->get();
         }
 
-        // SEC-1 (M6): cashiers sell with the selling price; the cost (and the cost fallback of
-        // the minimum price) only reaches users with items.view_cost.
-        $showCost = CostVisibility::allows($user);
-
-        $items = $rawItems->map(function ($it) use ($user, $showCost) {
+        // SEC-1 (M6) / BUG-02: cashiers sell with the selling price; the cost figures (average
+        // cost, last purchase price) only reach users with items.view_cost (ItemCostFields).
+        $items = $rawItems->map(function ($it) use ($user) {
             return [
                 'id' => (int) $it->id,
                 'name' => (string) $it->name,
@@ -99,7 +98,7 @@ class GetPOSBootstrapDataAction
                 'category_id' => $it->category_id ? (int) $it->category_id : null,
                 'price_retail' => Decimal::normalize((string) $it->selling_price),
                 ...PosItemPrices::forItem($it, $user),
-                'cost_price' => $showCost ? Decimal::normalize((string) $it->cost_price) : null,
+                ...ItemCostFields::forItem($it, $user),
                 'current_stock' => Decimal::normalize((string) ($it->calculated_stock ?? 0)),
                 'min_stock_level' => Decimal::normalize((string) ($it->min_stock_level ?: 0)),
                 'unit' => (string) ($it->unit ?: __('common.unit_piece')),

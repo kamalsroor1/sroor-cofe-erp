@@ -6,6 +6,7 @@ import { useTrans } from './useTrans';
 import { useRemoteOptions } from './useRemoteOptions';
 import { currentCurrencyLabel, useFormatters } from './useFormatters';
 import { priceFor } from '../helpers/posCartLines';
+import { effectiveAverageCost } from '../helpers/itemCost';
 
 export function useCoffeeBlender() {
     const router = useRouter();
@@ -117,7 +118,7 @@ export function useCoffeeBlender() {
             item_id: item.id,
             name: item.name,
             percentage: 0,
-            cost_price: Number(item.cost_price),
+            cost_price: Number(effectiveAverageCost(item)) || 0,
             selling_price: Number(retailPrice(item)),
             current_stock: item.current_stock,
         });

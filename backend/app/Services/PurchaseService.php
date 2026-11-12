@@ -11,6 +11,7 @@ use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\Supplier;
+use App\Services\Reports\CarryingCost;
 use App\Services\Settings\TenantSettings;
 use App\Support\Database\TransactionRetry;
 use App\Support\Money\Decimal;
@@ -630,13 +631,11 @@ class PurchaseService
 
     /**
      * The average an item is carried at: weighted_avg_cost, or cost_price while no average
-     * exists yet. Compared with bccomp because the decimal cast yields '0.000' (truthy).
+     * exists yet. BUG-02: the one rule lives in CarryingCost (also used by the stock valuation).
      */
     public function effectiveWeightedAverageCost(Item $item): string
     {
-        $wac = (string) $item->weighted_avg_cost;
-
-        return bccomp($wac, '0.000', 3) > 0 ? $wac : (string) ($item->cost_price ?? '0.000');
+        return CarryingCost::forItem($item);
     }
 
     /**

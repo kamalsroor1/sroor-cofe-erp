@@ -9,6 +9,7 @@ use App\Services\Settings\TenantSettings;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use App\Support\CostVisibility;
+use App\Support\ItemCostFields;
 use App\Support\Money\Decimal;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -43,7 +44,8 @@ class ItemResource extends JsonResource
             'category_id' => $this->category_id,
             'pos_sales_count' => (int) ($this->pos_sales_count ?? 0),
             'unit' => $this->unit ?? 'كجم',
-            'cost_price' => $showCost ? Decimal::normalize((string) $this->cost_price) : null,
+            // BUG-02: cost_price (= last_purchase_price) + average_cost, items.view_cost only.
+            ...ItemCostFields::forItem($this->resource, $request->user()),
             'min_selling_price' => $minSellingPrice,
             'has_min_price' => bccomp((string) ($this->min_selling_price ?? '0'), '0', 3) > 0,
             // BE-08: NULL/0 = not set (wholesale customers pay retail).

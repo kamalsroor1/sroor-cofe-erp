@@ -8,6 +8,7 @@ use App\Http\Resources\ItemMovementResource;
 use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\StoreStock;
+use App\Support\ItemCostFields;
 use App\Support\Money\Decimal;
 use App\Support\StockMovementTypes;
 
@@ -70,7 +71,8 @@ final class GetItemMovementsAction
                 'category' => $item->category,
                 'unit' => $item->unit,
                 'current_stock' => Decimal::normalize((string) $item->current_stock),
-                'cost_price' => $includeCost ? Decimal::normalize((string) $item->cost_price) : null,
+                // BUG-02: cost_price (= last_purchase_price) and average_cost, null without items.view_cost.
+                ...ItemCostFields::when($item, $includeCost),
                 'selling_price' => Decimal::normalize((string) $item->selling_price),
             ],
             'filters' => [

@@ -175,7 +175,7 @@ final class ReportController extends Controller
     public function inventory(FilterReportRequest $request, ActiveStore $activeStore): JsonResponse
     {
         $dto = $this->buildDTO($request, $activeStore);
-        $inventory = $this->getInventoryValuationReportAction->execute($dto);
+        $inventory = $this->getInventoryValuationReportAction->execute($dto, showUnitCost: CostVisibility::allows($request->user()));
 
         return response()->json([
             'success' => true,
@@ -213,7 +213,7 @@ final class ReportController extends Controller
         $customers = $this->getCustomersSalesReportAction->execute($dto);
         $expenses = $this->getExpensesBreakdownReportAction->execute($dto);
         // The ABC analysis reuses the per-item sales the items report has just grouped.
-        $inventory = $this->getInventoryValuationReportAction->execute($dto, $items['sold_by_item']);
+        $inventory = $this->getInventoryValuationReportAction->execute($dto, $items['sold_by_item'], CostVisibility::allows($request->user()));
         $treasury = $this->getTreasuryReportAction->execute($dto, self::COMPREHENSIVE_LIST_LIMIT, 1);
         $treasury['meta'] = $this->pageMeta(1, self::COMPREHENSIVE_LIST_LIMIT, $treasury['ledger_total']);
 

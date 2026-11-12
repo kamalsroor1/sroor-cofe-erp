@@ -7,7 +7,7 @@ namespace App\Http\Resources;
 use App\Http\Requests\Pos\ListPosItemsRequest;
 use App\Models\Item;
 use App\Models\StorePosSetting;
-use App\Support\CostVisibility;
+use App\Support\ItemCostFields;
 use App\Support\Money\Decimal;
 use App\Support\PosItemPrices;
 use Illuminate\Http\Request;
@@ -29,7 +29,6 @@ class PosGridItemResource extends JsonResource
     {
         /** @var Item $it */
         $it = $this->resource;
-        $showCost = CostVisibility::allows($request->user());
         $data = [
             'id' => (int) $it->id,
             'code' => (string) ($it->code ?? ''),
@@ -42,7 +41,7 @@ class PosGridItemResource extends JsonResource
             'is_weighted' => $it->isSoldByWeight(),
             'price_retail' => Decimal::normalize((string) $it->selling_price),
             ...PosItemPrices::forItem($it, $request->user()),
-            'cost_price' => $showCost ? Decimal::normalize((string) $it->cost_price) : null,
+            ...ItemCostFields::forItem($it, $request->user()),
             'current_stock' => Decimal::normalize((string) ($it->getAttribute('calculated_stock') ?? $it->current_stock ?? 0)),
             'min_stock_level' => Decimal::normalize((string) ($it->min_stock_level ?: 0)),
             'is_pos_pinned' => (bool) $it->is_pos_pinned,

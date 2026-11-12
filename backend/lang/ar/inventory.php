@@ -171,6 +171,8 @@ return [
     'low_stock_count_sub' => 'أصناف قاربت على النفاد وبحاجة لإعادة الطلب',
     'total_items_sub' => 'إجمالي بطاقات الأصناف المسجلة بالنظام',
     'cost_price' => 'سعر التكلفة / الشراء',
+    'average_cost' => 'متوسط التكلفة',
+    'last_purchase_price' => 'آخر سعر شراء',
     'selling_price' => 'سعر البيع',
     'code' => 'كود الصنف',
     'min_stock_reorder_badge' => 'حد أدنى (:qty)',

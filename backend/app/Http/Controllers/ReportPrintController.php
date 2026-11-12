@@ -11,9 +11,11 @@ use App\Models\Store;
 use App\Services\InventoryAnalyticsService;
 use App\Services\ProfitLossService;
 use App\Services\ProfitService;
+use App\Services\Reports\CarryingCost;
 use App\Services\Settings\TenantSettings;
 use App\Services\TreasuryService;
 use App\Support\ClientStoreGuard;
+use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -388,8 +390,10 @@ class ReportPrintController extends Controller
 
         $tableRows = [];
         foreach ($items as $itm) {
-            $costVal = bcmul((string) $itm->current_stock, (string) $itm->cost_price, 3);
-            $sellVal = bcmul((string) $itm->current_stock, (string) $itm->selling_price, 3);
+            // BUG-02: valued at the carrying cost (weighted average), half-up like the report.
+            $unitCost = CarryingCost::forItem($itm);
+            $costVal = Decimal::mul((string) $itm->current_stock, $unitCost);
+            $sellVal = Decimal::mul((string) $itm->current_stock, (string) $itm->selling_price);
             $expProfit = bcsub($sellVal, $costVal, 3);
 
             $totalCostVal = bcadd($totalCostVal, $costVal, 3);
@@ -400,7 +404,7 @@ class ReportPrintController extends Controller
                 ['value' => $itm->name, 'class' => 'font-bold'],
                 ['value' => $itm->category ?: 'عام'],
                 ['value' => number_format((float) $itm->current_stock, 3).' '.$itm->unit, 'class' => 'font-mono font-bold'],
-                ['value' => number_format((float) $itm->cost_price, 2), 'class' => 'font-mono'],
+                ['value' => number_format((float) $unitCost, 2), 'class' => 'font-mono'],
                 ['value' => number_format((float) $itm->selling_price, 2), 'class' => 'font-mono font-bold text-emerald-700'],
                 ['value' => number_format((float) $costVal, 2).' '.$this->currency(), 'class' => 'font-mono'],
                 ['value' => number_format((float) $sellVal, 2).' '.$this->currency(), 'class' => 'font-mono font-bold'],

@@ -118,7 +118,9 @@ class GetTenantDashboardAnalyticsAction
             ->orderBy('current_stock', 'asc')
             ->take(6);
 
-        $lowStockItems = $lowStockQuery->get(['id', 'name', 'code', 'current_stock', 'min_stock_level', 'unit']);
+        // BUG-02: both cost columns, so POSItemResource's cost keys are the real figures (still
+        // null without items.view_cost) instead of 0.000.
+        $lowStockItems = $lowStockQuery->get(['id', 'name', 'code', 'current_stock', 'min_stock_level', 'unit', 'cost_price', 'weighted_avg_cost']);
 
         // 9. Periodic Profits (Monthly Gross & Margin)
         $startOfMonth = $this->tenantClock->businessNow()->startOfMonth()->toDateString();

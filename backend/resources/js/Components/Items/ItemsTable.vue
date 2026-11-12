@@ -20,10 +20,18 @@
               <th class="py-3 px-4 text-start font-bold whitespace-nowrap">{{ $t('inventory.item_name') }}</th>
               <th class="py-3 px-4 text-start font-bold whitespace-nowrap">{{ $t('inventory.category') }}</th>
               <th
+                v-if="showCost"
                 class="hidden xl:table-cell py-3 px-4 text-end font-bold whitespace-nowrap"
-                :title="$t('inventory.cost_price')"
+                :title="$t('inventory.average_cost')"
               >
-                {{ $t('inventory.col_cost') }}
+                {{ $t('inventory.average_cost') }}
+              </th>
+              <th
+                v-if="showCost"
+                class="hidden xl:table-cell py-3 px-4 text-end font-bold whitespace-nowrap"
+                :title="$t('inventory.last_purchase_price')"
+              >
+                {{ $t('inventory.last_purchase_price') }}
               </th>
               <th class="py-3 px-4 text-end font-bold whitespace-nowrap" :title="$t('inventory.retail_price')">
                 {{ $t('inventory.col_retail') }}
@@ -71,9 +79,18 @@
                 <span v-else class="text-slate-400 font-mono">—</span>
               </td>
               <td
+                v-if="showCost"
                 class="hidden xl:table-cell py-3.5 px-4 text-end font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap"
               >
-                {{ formatMoney(item.cost_price) }}
+                <template v-if="effectiveAverageCost(item) != null">{{
+                  formatMoney(effectiveAverageCost(item))
+                }}</template>
+              </td>
+              <td
+                v-if="showCost"
+                class="hidden xl:table-cell py-3.5 px-4 text-end font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap"
+              >
+                <template v-if="lastPurchasePrice(item) != null">{{ formatMoney(lastPurchasePrice(item)) }}</template>
               </td>
               <td class="py-3.5 px-4 text-end font-mono font-bold text-emerald-500 whitespace-nowrap">
                 {{ formatMoney(item.selling_price) }}
@@ -284,6 +301,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { Sliders, History, Pencil, Trash2, Plus, AlertTriangle } from 'lucide-vue-next';
 import EmptyState from '../Common/EmptyState.vue';
 import BaseButton from '../Common/BaseButton.vue';
@@ -293,6 +311,7 @@ import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { trans } from '../../helpers/trans';
 import { priceFor } from '../../helpers/posCartLines';
+import { effectiveAverageCost, lastPurchasePrice } from '../../helpers/itemCost';
 import { useAuthStore } from '../../stores/auth';
 import { useAppConfigStore } from '../../stores/appConfig';
 
@@ -310,6 +329,7 @@ defineProps({
 const emit = defineEmits(['create', 'edit', 'adjust', 'delete', 'page-change']);
 const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
+const showCost = computed(() => authStore.hasPermission('items.view_cost'));
 
 const getItemActions = (item) => [
   {
