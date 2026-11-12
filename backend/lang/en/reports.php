@@ -190,4 +190,18 @@ return [
     'stock_drift_empty_title' => 'No Stock Drift Found',
     'stock_drift_empty_desc' => 'All items have matching branch stock sums and item total stock.',
     'stock_drift_search_placeholder' => 'Search by item name or code...',
+
+    // Sales returns (net of returns display)
+    'sales_summary_title' => 'Sales summary',
+    'gross_sales_label' => 'Gross sales',
+    'returns_label' => 'Returns',
+    'net_sales_label' => 'Net sales',
+    'gross_sales_hint' => 'Before returns',
+    'returns_count_hint' => ':count return(s)',
+    'returns_none_hint' => 'No returns in this period',
+    'net_sales_hint' => 'Gross sales minus returns',
+    'profit_on_net_note' => 'Cost, gross profit and margin are calculated on net sales (after returns).',
+    'gross_minus_returns' => 'Gross :gross - Returns :returns',
+    'net_bought_label' => 'Net Purchased',
+    'returned_qty_detail' => 'Returned: :qty',
 ];

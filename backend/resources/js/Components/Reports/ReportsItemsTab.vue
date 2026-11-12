@@ -27,7 +27,7 @@
               <th class="p-3 text-start font-bold">{{ $t('inventory.code') }}</th>
               <th class="p-3 text-start font-bold">{{ $t('inventory.category') }}</th>
               <th class="p-3 text-end font-bold">{{ $t('reports.sold_quantity') }}</th>
-              <th class="p-3 text-end font-bold">{{ $t('reports.total_sales_revenue') }}</th>
+              <th class="p-3 text-end font-bold">{{ $t('reports.net_sales_label') }}</th>
               <th class="p-3 text-end font-bold">{{ $t('reports.total_cogs_label') }}</th>
               <th class="p-3 text-end font-bold">{{ $t('reports.gross_profit_label') }}</th>
               <th class="p-3 text-end font-bold">{{ $t('dashboard.profit_margin_pct') }}</th>
@@ -42,11 +42,18 @@
               <td class="p-3 font-bold text-slate-900 dark:text-white font-tajawal">{{ it.name }}</td>
               <td class="p-3 font-mono text-slate-500 dark:text-slate-400">{{ it.code || '—' }}</td>
               <td class="p-3 text-slate-600 dark:text-slate-400 font-tajawal">{{ it.category }}</td>
-              <td class="p-3 text-end font-mono font-bold text-cyan-600 dark:text-cyan-400">
-                {{ formatQty(it.total_qty) }} {{ it.unit }}
+              <td class="p-3 text-end">
+                <ReportsNetValue
+                  :value="`${formatQty(it.total_qty)} ${it.unit}`"
+                  :detail="qtyDetail(it.returned_qty, it.unit)"
+                  value-class="font-mono font-bold text-cyan-600 dark:text-cyan-400"
+                />
               </td>
-              <td class="p-3 text-end font-mono font-bold text-slate-900 dark:text-white">
-                {{ formatMoney(it.total_revenue) }}
+              <td class="p-3 text-end">
+                <ReportsNetValue
+                  :value="formatMoney(it.total_revenue)"
+                  :detail="moneyDetail(it.gross_revenue, it.returned_value)"
+                />
               </td>
               <td class="p-3 text-end font-mono text-rose-500 dark:text-rose-400">{{ formatMoney(it.total_cogs) }}</td>
               <td class="p-3 text-end font-mono font-black text-emerald-500 dark:text-emerald-400">
@@ -73,17 +80,23 @@
               >
             </div>
             <div class="text-end">
-              <span class="text-xs font-mono font-bold text-cyan-500">{{ formatQty(it.total_qty) }} {{ it.unit }}</span>
+              <ReportsNetValue
+                :value="`${formatQty(it.total_qty)} ${it.unit}`"
+                :detail="qtyDetail(it.returned_qty, it.unit)"
+                value-class="text-xs font-mono font-bold text-cyan-500"
+              />
               <span class="text-sm font-black font-mono text-emerald-500 block">+{{ formatMoney(it.profit) }}</span>
             </div>
           </div>
           <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
             <span class="text-slate-500"
-              >{{ $t('reports.total_sales_revenue') }}:
-              <span class="font-mono font-bold text-slate-900 dark:text-white">{{
-                formatMoney(it.total_revenue)
-              }}</span></span
-            >
+              >{{ $t('reports.net_sales_label') }}:
+              <ReportsNetValue
+                class="inline-block align-top"
+                :value="formatMoney(it.total_revenue)"
+                :detail="moneyDetail(it.gross_revenue, it.returned_value)"
+              />
+            </span>
             <span class="font-mono font-bold text-theme-primary"
               >{{ $t('dashboard.profit_margin_pct') }}: {{ it.margin }}%</span
             >
@@ -99,9 +112,12 @@
 <script setup>
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
+import ReportsNetValue from './ReportsNetValue.vue';
 import { useFormatters } from '../../Composables/useFormatters';
+import { useReturnsDisplay } from '../../Composables/useReturnsDisplay';
 
 const { formatMoney, formatQty } = useFormatters();
+const { moneyDetail, qtyDetail } = useReturnsDisplay();
 
 defineProps({
   itemProfits: { type: Array, default: () => [] },

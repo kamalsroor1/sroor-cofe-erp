@@ -9,9 +9,16 @@
       icon-bg="bg-emerald-500/10"
       icon-color="text-emerald-500"
       :footer-left="`${metrics.today_invoices_count || 0} ${$t('dashboard.approved_invoices')}`"
-      :footer-right="`${$t('dashboard.cash_label')}: ${formatMoney(metrics.cash_sales || 0)}`"
+      :footer-right="hasAmount(metrics.today_returns) ? '' : cashLabel"
       footer-right-class="text-emerald-500"
-    />
+    >
+      <DashboardSalesNotes
+        :returns="metrics.today_returns"
+        :returns-label="$t('dashboard.returns_today', { count: metrics.today_returns_count || 0 })"
+        :cash="metrics.cash_sales"
+        :credit="metrics.credit_sales"
+      />
+    </MetricCard>
     <MetricCard
       :title="$t('dashboard.monthly_gross_profit')"
       :value="formatMoney(metrics.monthly_gross_profit || 0)"
@@ -47,13 +54,22 @@
       :footer-left="$t('dashboard.net_cash_today') + ':'"
       :footer-right="`${formatMoney(metrics.net_cash_today || 0)} ${currencyLabel}`"
       footer-right-class="text-emerald-500"
-    />
+    >
+      <DashboardSalesNotes :returns="metrics.monthly_returns" :returns-label="$t('dashboard.returns_month')" />
+    </MetricCard>
   </div>
 </template>
 <script setup>
+import { computed } from 'vue';
 import { TrendingUp, CreditCard, BarChart3, Banknote } from 'lucide-vue-next';
 import MetricCard from '../Common/MetricCard.vue';
+import DashboardSalesNotes from './DashboardSalesNotes.vue';
 import { useFormatters } from '../../Composables/useFormatters';
+import { useReturnsDisplay } from '../../Composables/useReturnsDisplay';
+import { useTrans } from '../../Composables/useTrans';
 const { formatMoney, currencyLabel } = useFormatters();
-defineProps({ metrics: { type: Object, default: () => ({}) } });
+const { hasAmount } = useReturnsDisplay();
+const { t } = useTrans();
+const props = defineProps({ metrics: { type: Object, default: () => ({}) } });
+const cashLabel = computed(() => `${t('dashboard.cash_label')}: ${formatMoney(props.metrics.cash_sales || 0)}`);
 </script>

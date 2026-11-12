@@ -235,4 +235,11 @@ return [
             ],
         ],
     ],
+
+    // Sales returns (net of returns display)
+    'before_returns' => 'Before returns',
+    'returns_today' => 'Returns (:count)',
+    'returns_month' => 'Returns this month',
+    'credit_label' => 'Credit',
+    'cash_credit_before_returns' => 'Before returns - Cash :cash / Credit :credit',
 ];

@@ -113,5 +113,8 @@ const valueColorClass = computed(() => {
     >
       {{ subtitle }}
     </p>
+
+    <!-- Optional extra rows under the footer (e.g. returns note) -->
+    <slot />
   </div>
 </template>

@@ -190,4 +190,18 @@ return [
     'stock_drift_empty_title' => 'لا توجد فروق في المخزون',
     'stock_drift_empty_desc' => 'جميع الأصناف متطابقة تماماً بين مجموع أرصدة الفروع ورصيد الصنف الإجمالي.',
     'stock_drift_search_placeholder' => 'بحث باسم الصنف أو الكود...',
+
+    // Sales returns (net of returns display)
+    'sales_summary_title' => 'ملخص المبيعات',
+    'gross_sales_label' => 'إجمالي المبيعات',
+    'returns_label' => 'المرتجعات',
+    'net_sales_label' => 'صافي المبيعات',
+    'gross_sales_hint' => 'قبل المرتجعات',
+    'returns_count_hint' => ':count مرتجع',
+    'returns_none_hint' => 'مفيش مرتجعات في الفترة دي',
+    'net_sales_hint' => 'الإجمالي ناقص المرتجعات',
+    'profit_on_net_note' => 'التكلفة ومجمل الربح والهامش محسوبين على صافي المبيعات (بعد المرتجعات).',
+    'gross_minus_returns' => 'الإجمالي :gross - المرتجعات :returns',
+    'net_bought_label' => 'صافي المسحوبات',
+    'returned_qty_detail' => 'مرتجع: :qty',
 ];

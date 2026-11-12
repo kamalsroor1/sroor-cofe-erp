@@ -22,7 +22,7 @@
               <th class="p-3 text-start font-bold">{{ $t('contacts.customer') }}</th>
               <th class="p-3 text-start font-bold">{{ $t('contacts.phone') }}</th>
               <th class="p-3 text-center font-bold">{{ $t('invoices.invoices_count_label') }}</th>
-              <th class="p-3 text-end font-bold">{{ $t('reports.total_bought') }}</th>
+              <th class="p-3 text-end font-bold">{{ $t('reports.net_bought_label') }}</th>
               <th class="p-3 text-end font-bold">{{ $t('invoices.paid') }}</th>
               <th class="p-3 text-end font-bold">{{ $t('reports.remaining_in_period') }}</th>
               <th class="p-3 text-end font-bold">{{ $t('contacts.current_balance') }}</th>
@@ -39,8 +39,11 @@
               <td class="p-3 text-center font-mono font-bold text-slate-700 dark:text-slate-300">
                 {{ c.total_invoices }}
               </td>
-              <td class="p-3 text-end font-mono font-bold text-slate-900 dark:text-white">
-                {{ formatMoney(c.total_bought) }}
+              <td class="p-3 text-end">
+                <ReportsNetValue
+                  :value="formatMoney(c.total_bought)"
+                  :detail="moneyDetail(c.gross_bought, c.total_returns)"
+                />
               </td>
               <td class="p-3 text-end font-mono text-emerald-500 dark:text-emerald-400">
                 {{ formatMoney(c.total_paid) }}
@@ -82,11 +85,13 @@
           </div>
           <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
             <span class="text-slate-500"
-              >{{ $t('reports.total_bought') }}:
-              <span class="font-mono font-bold text-slate-900 dark:text-white">{{
-                formatMoney(c.total_bought)
-              }}</span></span
-            >
+              >{{ $t('reports.net_bought_label') }}:
+              <ReportsNetValue
+                class="inline-block align-top"
+                :value="formatMoney(c.total_bought)"
+                :detail="moneyDetail(c.gross_bought, c.total_returns)"
+              />
+            </span>
             <span class="text-emerald-500 font-mono font-bold"
               >{{ $t('invoices.paid') }}: {{ formatMoney(c.total_paid) }}</span
             >
@@ -102,9 +107,12 @@
 <script setup>
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
+import ReportsNetValue from './ReportsNetValue.vue';
 import { useFormatters } from '../../Composables/useFormatters';
+import { useReturnsDisplay } from '../../Composables/useReturnsDisplay';
 
 const { formatMoney, currencyLabel } = useFormatters();
+const { moneyDetail } = useReturnsDisplay();
 
 defineProps({
   customerSales: { type: Array, default: () => [] },

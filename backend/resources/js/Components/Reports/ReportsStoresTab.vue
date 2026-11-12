@@ -20,7 +20,7 @@
             >
               <th class="p-3 text-start font-bold">{{ $t('inventory.store_name') }}</th>
               <th class="p-3 text-center font-bold">{{ $t('invoices.invoices_count_label') }}</th>
-              <th class="p-3 text-end font-bold">{{ $t('reports.total_sales_revenue') }}</th>
+              <th class="p-3 text-end font-bold">{{ $t('reports.net_sales_label') }}</th>
               <th class="p-3 text-end font-bold">{{ $t('invoices.paid') }}</th>
               <th class="p-3 text-end font-bold">{{ $t('invoices.remaining_due') }}</th>
               <th class="p-3 text-end font-bold">{{ $t('reports.gross_profit_label') }}</th>
@@ -38,8 +38,11 @@
               <td class="p-3 text-center font-mono font-bold text-slate-700 dark:text-slate-300">
                 {{ st.invoice_count }}
               </td>
-              <td class="p-3 text-end font-mono font-bold text-slate-900 dark:text-white">
-                {{ formatMoney(st.total_sales) }}
+              <td class="p-3 text-end">
+                <ReportsNetValue
+                  :value="formatMoney(st.total_sales)"
+                  :detail="moneyDetail(st.gross_sales, st.total_returns)"
+                />
               </td>
               <td class="p-3 text-end font-mono text-emerald-500 dark:text-emerald-400">
                 {{ formatMoney(st.total_paid) }}
@@ -70,11 +73,13 @@
           </div>
           <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
             <span class="text-slate-500"
-              >{{ $t('reports.total_sales_revenue') }}:
-              <span class="font-mono font-bold text-slate-900 dark:text-white">{{
-                formatMoney(st.total_sales)
-              }}</span></span
-            >
+              >{{ $t('reports.net_sales_label') }}:
+              <ReportsNetValue
+                class="inline-block align-top"
+                :value="formatMoney(st.total_sales)"
+                :detail="moneyDetail(st.gross_sales, st.total_returns)"
+              />
+            </span>
             <span class="font-mono font-black text-emerald-500">+{{ formatMoney(st.gross_profit) }}</span>
           </div>
         </div>
@@ -93,9 +98,12 @@
 <script setup>
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
+import ReportsNetValue from './ReportsNetValue.vue';
 import { useFormatters } from '../../Composables/useFormatters';
+import { useReturnsDisplay } from '../../Composables/useReturnsDisplay';
 
 const { formatMoney } = useFormatters();
+const { moneyDetail } = useReturnsDisplay();
 
 defineProps({
   storeBreakdown: { type: Array, default: () => [] },

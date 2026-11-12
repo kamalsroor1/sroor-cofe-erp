@@ -235,4 +235,11 @@ return [
             ],
         ],
     ],
+
+    // Sales returns (net of returns display)
+    'before_returns' => 'قبل المرتجعات',
+    'returns_today' => 'المرتجعات (:count)',
+    'returns_month' => 'مرتجعات الشهر',
+    'credit_label' => 'آجل',
+    'cash_credit_before_returns' => 'قبل المرتجعات - نقد :cash / آجل :credit',
 ];
