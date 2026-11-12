@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import { bestOnColor } from '../helpers/contrast.js';
 
 export const PRESET_PALETTES = {
     ibraa: {
@@ -17,43 +18,43 @@ export const PRESET_PALETTES = {
         hex: '#10b981',
         hover: '#059669',
         rgb: '16, 185, 129',
-        text: '#ffffff',
+        text: '#020617',
     },
     blue: {
         hex: '#3b82f6',
         hover: '#2563eb',
         rgb: '59, 130, 246',
-        text: '#ffffff',
+        text: '#020617',
     },
     purple: {
         hex: '#a855f7',
         hover: '#9333ea',
         rgb: '168, 85, 247',
-        text: '#ffffff',
+        text: '#020617',
     },
     rose: {
         hex: '#f43f5e',
         hover: '#e11d48',
         rgb: '244, 63, 94',
-        text: '#ffffff',
+        text: '#020617',
     },
     orange: {
         hex: '#f97316',
         hover: '#ea580c',
         rgb: '249, 115, 22',
-        text: '#ffffff',
+        text: '#020617',
     },
     teal: {
         hex: '#14b8a6',
         hover: '#0d9488',
         rgb: '20, 184, 166',
-        text: '#ffffff',
+        text: '#020617',
     },
     indigo: {
         hex: '#6366f1',
         hover: '#4f46e5',
         rgb: '99, 102, 241',
-        text: '#ffffff',
+        text: '#020617',
     },
 };
 
@@ -83,9 +84,8 @@ export function adjustBrightness(hex, percent) {
 
 export function getContrastTextColor(hex) {
     const { r, g, b } = hexToRgb(hex);
-    // YIQ formula for high contrast readability
-    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-    return yiq >= 155 ? '#020617' : '#ffffff';
+    // WCAG 2.1 ratio, not YIQ: YIQ picked white on emerald/teal/orange where it is only 2.5:1.
+    return bestOnColor([r, g, b]).color;
 }
 
 export function useTheme(defaultTheme = 'dark', defaultColor = 'ibraa') {

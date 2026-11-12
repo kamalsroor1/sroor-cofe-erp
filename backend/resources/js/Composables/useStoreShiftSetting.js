@@ -12,8 +12,11 @@ export function useStoreShiftSetting() {
     const available = ref(false);
     const value = ref(true);
     const original = ref(true);
+    // SET-02: the server's reason when a save is refused (e.g. turning it off while a shift is open).
+    const error = ref('');
 
     const reset = () => {
+        error.value = '';
         available.value = false;
         value.value = true;
         original.value = true;
@@ -37,14 +40,16 @@ export function useStoreShiftSetting() {
     /** Saves only when the switch changed. Returns false when saving failed. */
     const save = async (storeId) => {
         if (!available.value || value.value === original.value) return true;
+        error.value = '';
         try {
             await api.put(`/stores/${storeId}/pos-settings/shift-rule`, { require_shift_for_sales: value.value });
             original.value = value.value;
             return true;
-        } catch {
+        } catch (err) {
+            error.value = err.response?.data?.message || '';
             return false;
         }
     };
 
-    return { available, value, load, save, reset };
+    return { available, value, error, load, save, reset };
 }

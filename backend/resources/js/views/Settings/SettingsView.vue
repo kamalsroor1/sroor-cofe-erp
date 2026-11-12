@@ -81,6 +81,7 @@
             :default-presets="defaultPresets"
             :new-unit-input="newUnitInput"
             :is-testing-telegram="isTestingTelegram"
+            :telegram-needs-reentry="telegramNeedsReentry"
             @update:field="updateFormField"
             @update:custom-color="onCustomColorChange"
             @upload-logo="uploadLogo"
@@ -126,6 +127,7 @@ const {
   fetchSettings,
   isSaving,
   isTestingTelegram,
+  telegramNeedsReentry,
   colorPalettes,
   newUnitInput,
   defaultPresets,

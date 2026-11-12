@@ -47,6 +47,16 @@
         </div>
       </div>
 
+      <div
+        v-if="needsReentry"
+        role="alert"
+        data-testid="telegram-token-reentry"
+        class="flex items-start gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs font-bold text-amber-700 dark:text-amber-400"
+      >
+        <AlertTriangle class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+        <span>{{ $t('settings.telegram_token_needs_reentry') }}</span>
+      </div>
+
       <!-- Credentials -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <BaseInput
@@ -125,7 +135,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Bot, Send, Save } from 'lucide-vue-next';
+import { Bot, Send, Save, AlertTriangle } from 'lucide-vue-next';
 import BaseInput from '../Form/BaseInput.vue';
 import BaseButton from '../Common/BaseButton.vue';
 
@@ -135,6 +145,7 @@ const props = defineProps({
   canManage: { type: Boolean, default: true },
   isSaving: { type: Boolean, default: false },
   isTesting: { type: Boolean, default: false },
+  needsReentry: { type: Boolean, default: false },
   initialForm: { type: Object, default: null },
 });
 

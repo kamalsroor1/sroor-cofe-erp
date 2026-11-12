@@ -139,7 +139,7 @@ export function useSuperAdminAppVersions() {
             showCancelButton: true,
             confirmButtonText: t('common.yes'),
             cancelButtonText: t('common.cancel'),
-            confirmButtonColor: '#ef4444',
+            confirmButtonColor: 'var(--color-danger-solid)',
         });
 
         if (result.isConfirmed) {

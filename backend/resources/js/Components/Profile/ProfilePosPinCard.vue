@@ -137,7 +137,7 @@ const handleSubmit = () => {
     return;
   }
 
-  if (!/^\d{4,6}$/.test(pin)) {
+  if (!/^\d{6}$/.test(pin)) {
     validationError.value = t('users.pos_pin_format');
     return;
   }

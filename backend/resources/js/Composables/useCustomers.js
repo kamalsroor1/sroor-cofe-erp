@@ -207,7 +207,7 @@ export function useCustomers() {
             showCancelButton: true,
             confirmButtonText: t('common.yes'),
             cancelButtonText: t('common.cancel'),
-            confirmButtonColor: '#f43f5e',
+            confirmButtonColor: 'var(--color-danger-solid)',
         });
 
         if (result.isConfirmed) {

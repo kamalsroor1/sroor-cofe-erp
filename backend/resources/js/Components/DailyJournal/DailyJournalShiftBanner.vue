@@ -3,7 +3,7 @@
     <!-- Active Open Shift Banner -->
     <div
       v-if="activeShift"
-      class="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-950 border border-emerald-500/30 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 font-tajawal"
+      class="p-4 rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-950 border border-emerald-500/30 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 font-tajawal"
     >
       <div class="flex items-center gap-3">
         <div
@@ -34,7 +34,7 @@
       >
         <div class="text-start md:text-end">
           <span class="text-[10px] text-slate-400 block font-bold">{{ $t('treasury.opening_float_balance') }}</span>
-          <span class="text-sm font-black text-theme-primary font-mono"
+          <span class="text-sm font-black text-emerald-400 font-mono"
             >{{ formatMoney(activeShift.opening_cash_balance) }} {{ currencyLabel }}</span
           >
         </div>
@@ -44,7 +44,7 @@
           @click="$emit('print-z')"
           class="min-h-[38px] px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95"
         >
-          <Printer class="w-3.5 h-3.5 text-theme-primary" />
+          <Printer class="w-3.5 h-3.5 text-emerald-400" />
           <span>{{ $t('treasury.print_z_report') }}</span>
         </button>
       </div>

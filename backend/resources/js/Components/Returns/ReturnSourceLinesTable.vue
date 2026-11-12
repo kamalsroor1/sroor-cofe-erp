@@ -46,6 +46,7 @@
                 step="0.001"
                 min="0"
                 :max="line.remaining_quantity"
+                data-testid="return-line-qty"
                 class="w-24 min-h-[44px] lg:min-h-0 lg:h-8 px-2 text-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none"
               />
             </td>

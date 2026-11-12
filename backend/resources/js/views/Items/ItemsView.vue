@@ -332,7 +332,7 @@ const deleteItem = async (item) => {
     showCancelButton: true,
     confirmButtonText: trans('common.delete'),
     cancelButtonText: trans('common.cancel'),
-    confirmButtonColor: '#f43f5e',
+    confirmButtonColor: 'var(--color-danger-solid)',
   });
 
   if (result.isConfirmed) {

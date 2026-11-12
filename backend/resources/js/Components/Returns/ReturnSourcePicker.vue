@@ -49,6 +49,7 @@
         <li v-for="source in sources" :key="source.id">
           <button
             type="button"
+            data-testid="return-source-option"
             @click="$emit('select', source)"
             class="w-full min-h-[44px] py-2 px-2 flex items-center justify-between gap-3 text-start hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-lg cursor-pointer"
           >

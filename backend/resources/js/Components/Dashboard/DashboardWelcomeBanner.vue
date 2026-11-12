@@ -21,7 +21,7 @@
         v-if="canSell"
         to="/pos"
         data-testid="dashboard-pos-btn"
-        class="min-h-[44px] px-4 bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs rounded-2xl shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap transition active:scale-95 cursor-pointer select-none"
+        class="min-h-[44px] px-4 bg-theme-gradient hover:brightness-110 text-white font-black text-xs rounded-2xl shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap transition active:scale-95 cursor-pointer select-none"
       >
         <Zap class="w-4 h-4 shrink-0" />
         <span>{{ $t('dashboard.pos_short') }}</span>

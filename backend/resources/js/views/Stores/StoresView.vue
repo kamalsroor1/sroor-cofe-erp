@@ -198,7 +198,9 @@ const saveStore = async () => {
       Swal.fire({
         icon: shiftSaved ? 'success' : 'warning',
         title: t('common.success'),
-        text: shiftSaved ? t('inventory.store_updated_success') : t('pos.shift_setting_save_failed'),
+        text: shiftSaved
+          ? t('inventory.store_updated_success')
+          : shiftSetting.error.value || t('pos.shift_setting_save_failed'),
         timer: shiftSaved ? 1500 : undefined,
         showConfirmButton: !shiftSaved,
       });
@@ -255,7 +257,7 @@ const deleteStore = async (store) => {
     showCancelButton: true,
     confirmButtonText: t('common.yes'),
     cancelButtonText: t('common.cancel'),
-    confirmButtonColor: '#f43f5e',
+    confirmButtonColor: 'var(--color-danger-solid)',
   });
   if (result.isConfirmed) {
     try {

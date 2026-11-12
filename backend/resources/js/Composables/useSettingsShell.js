@@ -106,6 +106,7 @@ export function useSettingsShell(options = {}) {
             branding: t('settings.tab_branding'),
             printing: t('settings.sec_printing_label'),
             inventory: t('settings.tab_inventory'),
+            pos: t('settings.tab_pos'),
             notifications: t('settings.tab_notifications'),
             device: t('settings.tab_device'),
         };
@@ -119,6 +120,7 @@ export function useSettingsShell(options = {}) {
             branding: t('settings.branding_section_sub'),
             printing: t('settings.tab_printing_sub'),
             inventory: t('settings.tab_inventory_sub'),
+            pos: t('settings.tab_pos_sub'),
             notifications: t('settings.tab_notifications_sub'),
             device: t('settings.tab_device_sub'),
         };

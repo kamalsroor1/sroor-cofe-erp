@@ -4,6 +4,7 @@ import { trans } from '../helpers/trans';
 import { isNetworkError, reportRequestFailure, reportServerReachable } from '../helpers/connectivity';
 import { storeAccessRetryConfig } from '../helpers/storeAccessRecovery';
 import { isCentralAppContext } from './centralApi';
+import { writeStarted, writeFinished } from '../helpers/pendingWrites';
 import { PASSWORD_CHANGE_ROUTE, isPasswordChangeRequired, safeInternalRedirect } from '../helpers/passwordChange';
 
 // Tenant client only. The platform console uses Services/centralApi.js (IDEN-1.9); on the admin
@@ -48,7 +49,7 @@ const showLifecycleAlert = async ({ titleKey, message, offerPayment }) => {
         title: trans(titleKey),
         text: message,
         confirmButtonText: trans('common.ok'),
-        confirmButtonColor: '#f59e0b',
+        confirmButtonColor: 'var(--color-warning-solid)',
         showDenyButton: canPay,
         denyButtonText: trans('subscription.billing.plan.pay_now'),
         background: isDark ? '#0f172a' : '#ffffff',
@@ -70,6 +71,8 @@ const apiClient = axios.create({
 // 2. Request Interceptor: Attach Auth Token, Store ID, Tenant, and Locale
 apiClient.interceptors.request.use(
     (config) => {
+        writeStarted(config);
+
         if (isCentralMode) {
             config.headers['X-Locale'] = localStorage.getItem('app_locale') || 'ar';
             return config;
@@ -107,10 +110,13 @@ apiClient.interceptors.request.use(
 // 3. Response Interceptor: Global Error Handling & Toast Notifications
 apiClient.interceptors.response.use(
     (response) => {
+        writeFinished(response.config);
         reportServerReachable();
         return response;
     },
     (error) => {
+        writeFinished(error.config);
+
         // Feeds the offline banner (OFFL-1): any HTTP answer means the server is reachable.
         if (error.response) reportServerReachable();
         else reportRequestFailure(error);
@@ -175,7 +181,7 @@ apiClient.interceptors.response.use(
                 title: trans('common.permission_alert'),
                 text: message,
                 confirmButtonText: trans('common.ok'),
-                confirmButtonColor: '#f59e0b',
+                confirmButtonColor: 'var(--color-warning-solid)',
                 background: document.documentElement.classList.contains('dark') ? '#0f172a' : '#ffffff',
                 color: document.documentElement.classList.contains('dark') ? '#f8fafc' : '#0f172a',
             });

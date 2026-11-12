@@ -125,7 +125,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Building2, Palette, Printer, Package, Bot, Laptop } from 'lucide-vue-next';
+import { Building2, Palette, Printer, Package, Bot, Laptop, ShoppingCart } from 'lucide-vue-next';
 import { useTrans } from '../../../Composables/useTrans';
 
 defineProps({
@@ -186,6 +186,15 @@ const visibleTabs = computed(() => [
     iconBg: 'bg-emerald-500/10 border border-emerald-500/20',
     iconColor: 'text-emerald-500 dark:text-emerald-400',
     badge: t('settings.sec_units_badge'),
+  },
+  {
+    id: 'pos',
+    label: t('settings.tab_pos'),
+    subtitle: t('settings.tab_pos_sub'),
+    icon: ShoppingCart,
+    iconBg: 'bg-rose-500/10 border border-rose-500/20',
+    iconColor: 'text-rose-500 dark:text-rose-400',
+    badge: t('settings.tab_pos_badge'),
   },
   {
     id: 'notifications',

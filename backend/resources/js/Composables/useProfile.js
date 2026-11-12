@@ -105,7 +105,7 @@ export function useProfile() {
             text: t('profile.pos_pin_clear_confirm_text'),
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#ef4444',
+            confirmButtonColor: 'var(--color-danger-solid)',
             cancelButtonColor: '#334155',
             confirmButtonText: t('common.yes'),
             cancelButtonText: t('common.cancel'),

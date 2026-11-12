@@ -228,7 +228,7 @@ const handleSavePin = () => {
   const pin = (pinForm.value.pin || '').trim();
   const confirmation = (pinForm.value.pin_confirmation || '').trim();
 
-  if (!/^\d{4,6}$/.test(pin)) {
+  if (!/^\d{6}$/.test(pin)) {
     pinError.value = t('users.pos_pin_format');
     return;
   }

@@ -1,11 +1,11 @@
 import { ref, computed } from 'vue';
-import api from '../../Services/api';
 import { useTrans } from '../useTrans';
 import { useReturnSource } from '../useReturnSource';
 import { usePosBusinessDate } from './usePosBusinessDate';
 import { mapApiError } from '../../helpers/planFeatures';
 import { useRefundMethod } from '../useRefundMethod';
 import { notifySuccess, notifyError } from '../../helpers/alert';
+import { postReturnWithWindowOverride } from '../useReturnWindowOverride';
 
 /**
  * POS-11: book a sales return against one invoice picked in the recent-sales drawer.
@@ -42,7 +42,9 @@ export function usePosQuickReturn({ isOnline, onDone }) {
         try {
             const returnDate = await refreshBusinessDate();
             if (!returnDate) throw new Error('no business date');
-            const res = await api.post('/returns', {
+            // SET-02: past the return window the server answers returns.window_expired; this asks for a
+            // manager PIN and resends. Null means the manager dialog was cancelled.
+            const res = await postReturnWithWindowOverride({
                 return_type: 'sales_return',
                 invoice_id: source.selected.value.id,
                 customer_id: source.selected.value.party_id,
@@ -50,6 +52,7 @@ export function usePosQuickReturn({ isOnline, onDone }) {
                 refund_method: refund.method.value,
                 items: source.payloadItems(),
             });
+            if (!res) return;
             notifySuccess(res.data?.message || t('pos.quick_return_success'));
             close();
             onDone?.();

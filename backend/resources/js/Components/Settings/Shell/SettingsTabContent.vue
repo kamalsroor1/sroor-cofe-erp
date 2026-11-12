@@ -61,6 +61,16 @@
       @save="$emit('save', 'inventory')"
       @reset-default="$emit('reset-default', $event)"
     />
+    <PosPoliciesTab
+      v-else-if="selectedTab === 'pos'"
+      :form="form"
+      :errors="errors"
+      :can-manage="canManage"
+      :is-saving="isSaving"
+      :initial-form="initialForm"
+      @update:field="(field, val) => $emit('update:field', field, val)"
+      @save="$emit('save', 'pos')"
+    />
     <SettingsTelegramSection
       v-else-if="selectedTab === 'notifications'"
       :form="form"
@@ -68,6 +78,7 @@
       :can-manage="canManage"
       :is-saving="isSaving"
       :is-testing="isTestingTelegram"
+      :needs-reentry="telegramNeedsReentry"
       :initial-form="initialForm"
       @update:field="(field, val) => $emit('update:field', field, val)"
       @test-telegram="$emit('test-telegram')"
@@ -90,6 +101,7 @@ import GeneralTab from '../General/GeneralTab.vue';
 import BrandingTab from '../BrandingTab.vue';
 import SettingsPrintingSection from '../SettingsPrintingSection.vue';
 import InventoryTab from '../Inventory/InventoryTab.vue';
+import PosPoliciesTab from '../Pos/PosPoliciesTab.vue';
 import SettingsTelegramSection from '../SettingsTelegramSection.vue';
 import DeviceTab from '../DeviceTab.vue';
 
@@ -111,6 +123,7 @@ defineProps({
   defaultPresets: { type: Array, default: () => [] },
   newUnitInput: { type: String, default: '' },
   isTestingTelegram: { type: Boolean, default: false },
+  telegramNeedsReentry: { type: Boolean, default: false },
 });
 
 defineEmits([

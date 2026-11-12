@@ -152,7 +152,7 @@ const cancelTransferDoc = async (trf) => {
     showCancelButton: true,
     confirmButtonText: trans('inventory.cancel_transfer_btn'),
     cancelButtonText: trans('common.cancel'),
-    confirmButtonColor: '#f43f5e',
+    confirmButtonColor: 'var(--color-danger-solid)',
   });
 
   if (reason !== undefined) {

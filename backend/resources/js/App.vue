@@ -55,6 +55,9 @@
       <DesktopPrinterSettingsModal :show="isDesktopHardwareOpen" @close="isDesktopHardwareOpen = false" />
       <DesktopShortcutsModal :show="isDesktopShortcutsOpen" @close="isDesktopShortcutsOpen = false" />
     </template>
+
+    <!-- 6. SET-02: idle lock screen. Mounted once here, above every layout, modal and the POS. -->
+    <ScreenLockOverlay :visible="showLock" />
   </div>
 </template>
 
@@ -68,6 +71,7 @@ import { useTabsStore } from './stores/tabs';
 import { useAppUpdate } from './Composables/useAppUpdate';
 import { useLocaleSync } from './Composables/useLocale';
 import { useDesktopHardware } from './Composables/useDesktopHardware';
+import { useIdleLock } from './Composables/useIdleLock';
 import FeatureGate from './Components/FeatureGate.vue';
 import SpaLayout from './Layouts/SpaLayout.vue';
 import SuperAdminLayout from './Layouts/SuperAdminLayout.vue';
@@ -76,6 +80,7 @@ import SystemBootSplash from './Components/Common/SystemBootSplash.vue';
 import DesktopTitlebar from './Components/Common/DesktopTitlebar.vue';
 import DesktopPrinterSettingsModal from './Components/Common/DesktopPrinterSettingsModal.vue';
 import DesktopShortcutsModal from './Components/Common/DesktopShortcutsModal.vue';
+import ScreenLockOverlay from './Components/Auth/ScreenLockOverlay.vue';
 
 const route = useRoute();
 useLocaleSync();
@@ -84,6 +89,7 @@ const authStore = useAuthStore();
 useTabsStore(); // instantiate the tabs store at boot (side effect kept; the binding was unused)
 const { checkForUpdates } = useAppUpdate();
 const { isDesktop, openCashDrawer } = useDesktopHardware();
+const { showLock } = useIdleLock();
 
 const isDesktopHardwareOpen = ref(false);
 const isDesktopShortcutsOpen = ref(false);

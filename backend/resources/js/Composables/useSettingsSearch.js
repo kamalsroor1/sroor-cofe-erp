@@ -171,6 +171,26 @@ export const SETTINGS_REGISTRY = [
         isAdvanced: false,
     },
 
+    // 3b. POS & Returns Tab Settings
+    {
+        id: 'returns_max_days',
+        key: 'returns.max_days',
+        labelKey: 'settings.returns_max_days',
+        descKey: 'settings.returns_max_days_desc',
+        tabId: 'pos',
+        keywordsKey: 'settings.search_keywords.returns_max_days',
+        isAdvanced: false,
+    },
+    {
+        id: 'pos_idle_lock_minutes',
+        key: 'pos.idle_lock_minutes',
+        labelKey: 'settings.pos_idle_lock_minutes',
+        descKey: 'settings.pos_idle_lock_minutes_desc',
+        tabId: 'pos',
+        keywordsKey: 'settings.search_keywords.pos_idle_lock_minutes',
+        isAdvanced: false,
+    },
+
     // 4. Branding Tab Settings
     {
         id: 'logo_light',

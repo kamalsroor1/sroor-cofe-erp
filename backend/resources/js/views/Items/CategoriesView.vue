@@ -155,7 +155,7 @@ const deleteCategory = async (cat) => {
     text: trans('inventory.delete_category_confirm_text', { name: cat.name }),
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: '#ef4444',
+    confirmButtonColor: 'var(--color-danger-solid)',
     confirmButtonText: trans('common.yes_delete'),
     cancelButtonText: trans('common.cancel'),
   });

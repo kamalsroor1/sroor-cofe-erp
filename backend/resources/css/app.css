@@ -728,6 +728,9 @@ textarea,
     --color-primary-rgb: 15, 110, 94;
     --color-primary-light: rgba(15, 110, 94, 0.15);
     --color-primary-border: rgba(15, 110, 94, 0.35);
+    --color-primary-text: #ffffff;
+    --color-primary-badge: rgb(0 0 0 / 0.22);
+    --color-primary-ink: #0f6e5e;
 }
 
 /* Brand rule: «صافي» on dark backgrounds is #4CC3A8 (#0F6E5E is too dark there).
@@ -740,6 +743,7 @@ html.dark[data-theme-color='ibraa'] body {
     --color-primary-light: rgba(76, 195, 168, 0.15) !important;
     --color-primary-border: rgba(76, 195, 168, 0.35) !important;
     --color-primary-text: #13201c !important;
+    --color-primary-badge: rgb(255 255 255 / 0.25) !important;
 }
 
 [data-theme-color='amber'] {
@@ -748,6 +752,9 @@ html.dark[data-theme-color='ibraa'] body {
     --color-primary-rgb: 245, 158, 11;
     --color-primary-light: rgba(245, 158, 11, 0.15);
     --color-primary-border: rgba(245, 158, 11, 0.35);
+    --color-primary-text: #020617;
+    --color-primary-badge: rgb(255 255 255 / 0.25);
+    --color-primary-ink: #92400e;
 }
 
 [data-theme-color='emerald'] {
@@ -756,6 +763,9 @@ html.dark[data-theme-color='ibraa'] body {
     --color-primary-rgb: 16, 185, 129;
     --color-primary-light: rgba(16, 185, 129, 0.15);
     --color-primary-border: rgba(16, 185, 129, 0.35);
+    --color-primary-text: #020617;
+    --color-primary-badge: rgb(255 255 255 / 0.25);
+    --color-primary-ink: #047857;
 }
 
 [data-theme-color='blue'] {
@@ -764,6 +774,9 @@ html.dark[data-theme-color='ibraa'] body {
     --color-primary-rgb: 59, 130, 246;
     --color-primary-light: rgba(59, 130, 246, 0.15);
     --color-primary-border: rgba(59, 130, 246, 0.35);
+    --color-primary-text: #020617;
+    --color-primary-badge: rgb(255 255 255 / 0.25);
+    --color-primary-ink: #1d4ed8;
 }
 
 [data-theme-color='purple'] {
@@ -772,6 +785,9 @@ html.dark[data-theme-color='ibraa'] body {
     --color-primary-rgb: 168, 85, 247;
     --color-primary-light: rgba(168, 85, 247, 0.15);
     --color-primary-border: rgba(168, 85, 247, 0.35);
+    --color-primary-text: #020617;
+    --color-primary-badge: rgb(255 255 255 / 0.25);
+    --color-primary-ink: #7e22ce;
 }
 
 [data-theme-color='rose'] {
@@ -780,6 +796,9 @@ html.dark[data-theme-color='ibraa'] body {
     --color-primary-rgb: 244, 63, 94;
     --color-primary-light: rgba(244, 63, 94, 0.15);
     --color-primary-border: rgba(244, 63, 94, 0.35);
+    --color-primary-text: #020617;
+    --color-primary-badge: rgb(255 255 255 / 0.25);
+    --color-primary-ink: #be123c;
 }
 
 [data-theme-color='orange'] {
@@ -788,6 +807,9 @@ html.dark[data-theme-color='ibraa'] body {
     --color-primary-rgb: 249, 115, 22;
     --color-primary-light: rgba(249, 115, 22, 0.15);
     --color-primary-border: rgba(249, 115, 22, 0.35);
+    --color-primary-text: #020617;
+    --color-primary-badge: rgb(255 255 255 / 0.25);
+    --color-primary-ink: #9a3412;
 }
 
 [data-theme-color='teal'] {
@@ -796,6 +818,9 @@ html.dark[data-theme-color='ibraa'] body {
     --color-primary-rgb: 20, 184, 166;
     --color-primary-light: rgba(20, 184, 166, 0.15);
     --color-primary-border: rgba(20, 184, 166, 0.35);
+    --color-primary-text: #020617;
+    --color-primary-badge: rgb(255 255 255 / 0.25);
+    --color-primary-ink: #0f766e;
 }
 
 [data-theme-color='indigo'] {
@@ -804,6 +829,363 @@ html.dark[data-theme-color='ibraa'] body {
     --color-primary-rgb: 99, 102, 241;
     --color-primary-light: rgba(99, 102, 241, 0.15);
     --color-primary-border: rgba(99, 102, 241, 0.35);
+    --color-primary-text: #020617;
+    --color-primary-badge: rgb(255 255 255 / 0.25);
+    --color-primary-ink: #4338ca;
+}
+
+/* Primary-coloured TEXT on dark surfaces (COLOR-01): the light-mode ink is too dark there. */
+html.dark[data-theme-color='amber'],
+html.dark[data-theme-color='amber'] body {
+    --color-primary-ink: #f59e0b;
+}
+html.dark[data-theme-color='emerald'],
+html.dark[data-theme-color='emerald'] body {
+    --color-primary-ink: #10b981;
+}
+html.dark[data-theme-color='blue'],
+html.dark[data-theme-color='blue'] body {
+    --color-primary-ink: #60a5fa;
+}
+html.dark[data-theme-color='purple'],
+html.dark[data-theme-color='purple'] body {
+    --color-primary-ink: #c084fc;
+}
+html.dark[data-theme-color='rose'],
+html.dark[data-theme-color='rose'] body {
+    --color-primary-ink: #fb7185;
+}
+html.dark[data-theme-color='orange'],
+html.dark[data-theme-color='orange'] body {
+    --color-primary-ink: #f97316;
+}
+html.dark[data-theme-color='teal'],
+html.dark[data-theme-color='teal'] body {
+    --color-primary-ink: #14b8a6;
+}
+html.dark[data-theme-color='indigo'],
+html.dark[data-theme-color='indigo'] body {
+    --color-primary-ink: #818cf8;
+}
+html.dark[data-theme-color='ibraa'],
+html.dark[data-theme-color='ibraa'] body {
+    --color-primary-ink: #4cc3a8;
+}
+/* Tenant-defined custom colour: no hand-picked ink exists, so darken (light) or lighten (dark) the colour
+   itself. Lightness-only shift, not verified per colour; --color-primary-text comes from useTheme (WCAG pick). */
+[data-theme-color='custom'],
+[data-theme-color='custom'] body {
+    --color-primary-ink: color-mix(in srgb, var(--color-primary) 55%, black);
+}
+html.dark[data-theme-color='custom'],
+html.dark[data-theme-color='custom'] body {
+    --color-primary-ink: color-mix(in srgb, var(--color-primary) 70%, white);
+}
+
+/* ==========================================================================
+   Semantic text colours (COLOR-01). WCAG 2.1 AA, measured against the surfaces the app actually uses:
+   light = white / slate-50 / slate-100 / 10% colour tints, dark = slate-950 / 900 / 800.
+   Ratios on white (light) and slate-900 (dark):
+     muted   #475569 7.6 | #cbd5e1 12.0      subtle  #556579 6.0 | #94a3b8 7.0
+     success #046c4e 6.4 | #34d399 9.3       danger  #be123c 6.3 | #fb7185 6.6
+     warning #92400e 7.1 | #fbbf24 10.7      info    #0c6a85 6.2 | #22d3ee 9.9
+   Use text-fg-muted / text-fg-subtle / text-success-fg / text-danger-fg / text-warning-fg / text-info-fg in new code.
+   ========================================================================== */
+:root {
+    --color-text-muted: #475569;
+    --color-text-subtle: #556579;
+    --color-success-text: #046c4e;
+    --color-danger-text: #be123c;
+    --color-warning-text: #92400e;
+    --color-info-text: #0c6a85;
+    --color-indigo-text: #4338ca;
+    --color-purple-text: #7e22ce;
+    --color-pink-text: #be185d;
+    /* Solid fills that carry WHITE text (danger badge/button, SweetAlert confirm). */
+    --color-danger-solid: #e11d48;
+    --color-warning-solid: #b45309;
+    --color-success-solid: #047857;
+}
+html.dark {
+    --color-text-muted: #cbd5e1;
+    --color-text-subtle: #94a3b8;
+    --color-success-text: #34d399;
+    --color-danger-text: #fb7185;
+    --color-warning-text: #fbbf24;
+    --color-info-text: #22d3ee;
+    --color-indigo-text: #a5b4fc;
+    --color-purple-text: #d8b4fe;
+    --color-pink-text: #f9a8d4;
+}
+@theme inline {
+    --color-fg-muted: var(--color-text-muted);
+    --color-fg-subtle: var(--color-text-subtle);
+    --color-success-fg: var(--color-success-text);
+    --color-danger-fg: var(--color-danger-text);
+    --color-warning-fg: var(--color-warning-text);
+    --color-info-fg: var(--color-info-text);
+}
+
+/* Placeholders: Tailwind's default is currentColor at 50%, which fails AA on white. */
+::placeholder {
+    color: var(--color-text-subtle);
+    opacity: 1;
+}
+
+/* Legacy palette text classes (several hundred call sites) are re-pointed at the tokens instead of being
+   edited one by one. Zero-specificity scopes (:where) keep hover:/focus:/group-hover: variants and any
+   explicit dark: class winning exactly as before; only the base colour changes.
+   Light: 300-600 shades are too pale on white, so they read the dark token. Text sitting on a dark surface
+   (bg-slate-800/900/950, black, primary, gradients, .on-dark) keeps its original pale shade. */
+@layer utilities {
+    :where(html:not(.dark))
+        :is(.text-slate-300, .text-slate-400):where(
+            :not(
+                :is(
+                        .bg-slate-800,
+                        .bg-slate-900,
+                        .bg-slate-950,
+                        .bg-black,
+                        .bg-theme-primary,
+                        .bg-theme-gradient,
+                        [class*='bg-gradient'],
+                        [class*='bg-linear'],
+                        .on-dark
+                    )
+                    *
+            )
+        ),
+    :where(html:not(.dark)) .placeholder\:text-slate-400::placeholder,
+    :where(html:not(.dark)) .placeholder\:text-slate-300::placeholder {
+        color: var(--color-text-subtle);
+    }
+    :where(html:not(.dark))
+        .text-slate-500:where(
+            :not(
+                :is(
+                        .bg-slate-800,
+                        .bg-slate-900,
+                        .bg-slate-950,
+                        .bg-black,
+                        .bg-theme-primary,
+                        .bg-theme-gradient,
+                        [class*='bg-gradient'],
+                        [class*='bg-linear'],
+                        .on-dark
+                    )
+                    *
+            )
+        ),
+    :where(html:not(.dark)) .placeholder\:text-slate-500::placeholder {
+        color: var(--color-text-muted);
+    }
+    :where(html:not(.dark))
+        :is(
+            .text-emerald-500,
+            .text-emerald-600,
+            .text-green-500,
+            .text-green-600,
+            .text-teal-500,
+            .text-teal-600
+        ):where(
+            :not(
+                :is(
+                        .bg-slate-800,
+                        .bg-slate-900,
+                        .bg-slate-950,
+                        .bg-black,
+                        .bg-theme-primary,
+                        .bg-theme-gradient,
+                        [class*='bg-gradient'],
+                        [class*='bg-linear'],
+                        .on-dark
+                    )
+                    *
+            )
+        ) {
+        color: var(--color-success-text);
+    }
+    :where(html:not(.dark))
+        :is(.text-rose-500, .text-rose-600, .text-red-500, .text-red-600):where(
+            :not(
+                :is(
+                        .bg-slate-800,
+                        .bg-slate-900,
+                        .bg-slate-950,
+                        .bg-black,
+                        .bg-theme-primary,
+                        .bg-theme-gradient,
+                        [class*='bg-gradient'],
+                        [class*='bg-linear'],
+                        .on-dark
+                    )
+                    *
+            )
+        ) {
+        color: var(--color-danger-text);
+    }
+    :where(html:not(.dark))
+        :is(
+            .text-amber-500,
+            .text-amber-600,
+            .text-orange-500,
+            .text-orange-600,
+            .text-yellow-500,
+            .text-yellow-600
+        ):where(
+            :not(
+                :is(
+                        .bg-slate-800,
+                        .bg-slate-900,
+                        .bg-slate-950,
+                        .bg-black,
+                        .bg-theme-primary,
+                        .bg-theme-gradient,
+                        [class*='bg-gradient'],
+                        [class*='bg-linear'],
+                        .on-dark
+                    )
+                    *
+            )
+        ) {
+        color: var(--color-warning-text);
+    }
+    :where(html:not(.dark))
+        :is(.text-cyan-500, .text-cyan-600, .text-sky-500, .text-sky-600, .text-blue-500, .text-blue-600):where(
+            :not(
+                :is(
+                        .bg-slate-800,
+                        .bg-slate-900,
+                        .bg-slate-950,
+                        .bg-black,
+                        .bg-theme-primary,
+                        .bg-theme-gradient,
+                        [class*='bg-gradient'],
+                        [class*='bg-linear'],
+                        .on-dark
+                    )
+                    *
+            )
+        ) {
+        color: var(--color-info-text);
+    }
+    :where(html:not(.dark))
+        :is(.text-indigo-500, .text-indigo-600):where(
+            :not(
+                :is(
+                        .bg-slate-800,
+                        .bg-slate-900,
+                        .bg-slate-950,
+                        .bg-black,
+                        .bg-theme-primary,
+                        .bg-theme-gradient,
+                        [class*='bg-gradient'],
+                        [class*='bg-linear'],
+                        .on-dark
+                    )
+                    *
+            )
+        ) {
+        color: var(--color-indigo-text);
+    }
+    :where(html:not(.dark))
+        :is(
+            .text-purple-500,
+            .text-purple-600,
+            .text-violet-500,
+            .text-violet-600,
+            .text-fuchsia-500,
+            .text-fuchsia-600
+        ):where(
+            :not(
+                :is(
+                        .bg-slate-800,
+                        .bg-slate-900,
+                        .bg-slate-950,
+                        .bg-black,
+                        .bg-theme-primary,
+                        .bg-theme-gradient,
+                        [class*='bg-gradient'],
+                        [class*='bg-linear'],
+                        .on-dark
+                    )
+                    *
+            )
+        ) {
+        color: var(--color-purple-text);
+    }
+    :where(html:not(.dark))
+        :is(.text-pink-500, .text-pink-600):where(
+            :not(
+                :is(
+                        .bg-slate-800,
+                        .bg-slate-900,
+                        .bg-slate-950,
+                        .bg-black,
+                        .bg-theme-primary,
+                        .bg-theme-gradient,
+                        [class*='bg-gradient'],
+                        [class*='bg-linear'],
+                        .on-dark
+                    )
+                    *
+            )
+        ) {
+        color: var(--color-pink-text);
+    }
+
+    /* White text on a rose-500 fill is 3.75:1; the fill moves to --color-danger-solid (rose-600, 4.7:1).
+       Hover variants keep working because this rule has the same single-class specificity as the utility. */
+    .bg-rose-500:where(.text-white) {
+        background-color: var(--color-danger-solid);
+    }
+
+    /* SweetAlert2 warning icon is #f8bb86 (1.7:1) on the default white popup; dark-background popups keep it. */
+    :where(html:not(.dark)) .swal2-popup:not([style*='background']) .swal2-icon.swal2-warning {
+        color: var(--color-warning-text);
+        border-color: color-mix(in srgb, var(--color-warning-text) 45%, transparent);
+    }
+
+    /* Dark: slate-500/600/700 text is 2-4:1 on slate-900/950; coloured 500/600 shades are marginal on slate-800.
+       Elements that carry their own dark:text-* class are left alone (they already chose a dark colour). */
+    :where(html.dark) :is(.dark\:text-slate-500, .dark\:text-slate-600, .dark\:text-slate-700),
+    :where(html.dark) :is(.text-slate-500, .text-slate-600, .text-slate-700):where(:not([class*='dark:text-'])),
+    :where(html.dark) .placeholder\:text-slate-500::placeholder {
+        color: var(--color-text-subtle);
+    }
+    :where(html.dark) :is(.dark\:text-emerald-500, .dark\:text-emerald-600),
+    :where(html.dark)
+        :is(
+            .text-emerald-500,
+            .text-emerald-600,
+            .text-green-500,
+            .text-green-600,
+            .text-teal-500,
+            .text-teal-600
+        ):where(:not([class*='dark:text-'])) {
+        color: var(--color-success-text);
+    }
+    :where(html.dark) :is(.dark\:text-rose-500, .dark\:text-rose-600),
+    :where(html.dark)
+        :is(.text-rose-500, .text-rose-600, .text-red-500, .text-red-600):where(:not([class*='dark:text-'])) {
+        color: var(--color-danger-text);
+    }
+    :where(html.dark) :is(.dark\:text-amber-500, .dark\:text-amber-600),
+    :where(html.dark) :is(.text-amber-600, .text-orange-600, .text-yellow-600):where(:not([class*='dark:text-'])) {
+        color: var(--color-warning-text);
+    }
+    :where(html.dark) :is(.dark\:text-cyan-500, .dark\:text-cyan-600, .dark\:text-blue-500, .dark\:text-blue-600),
+    :where(html.dark)
+        :is(.text-cyan-600, .text-sky-600, .text-blue-500, .text-blue-600):where(:not([class*='dark:text-'])) {
+        color: var(--color-info-text);
+    }
+    :where(html.dark) :is(.text-indigo-500, .text-indigo-600):where(:not([class*='dark:text-'])) {
+        color: var(--color-indigo-text);
+    }
+    :where(html.dark)
+        :is(.text-purple-500, .text-purple-600, .text-violet-500, .text-violet-600):where(:not([class*='dark:text-'])) {
+        color: var(--color-purple-text);
+    }
 }
 
 /* 🎯 High-Performance Dynamic Theme Utility Engine */
@@ -830,15 +1212,34 @@ html.dark[data-theme-color='ibraa'] body {
 }
 
 .text-theme-primary {
-    color: var(--color-primary) !important;
+    color: var(--color-primary-ink, var(--color-primary)) !important;
 }
 
 .hover\:text-theme-primary:hover {
-    color: var(--color-primary) !important;
+    color: var(--color-primary-ink, var(--color-primary)) !important;
 }
 
 .group:hover .group-hover\:text-theme-primary {
-    color: var(--color-primary) !important;
+    color: var(--color-primary-ink, var(--color-primary)) !important;
+}
+
+/* Text ON a primary fill (COLOR-01): the label colour classes written in the templates (white, or slate-950 that
+   was only right on the pale dark-mode primary) are replaced by --color-primary-text, which is the WCAG pick
+   (white or near-black) for the active theme colour in the active mode. */
+.bg-theme-primary:is(.text-white, .text-slate-900, .text-slate-950),
+.bg-theme-primary :is(.text-white, .text-slate-900, .text-slate-950),
+.bg-theme-gradient:is(.text-white, .text-slate-900, .text-slate-950),
+.bg-theme-gradient :is(.text-white, .text-slate-900, .text-slate-950),
+[style*='background-color: var(--color-primary']:is(.text-white, .text-slate-900, .text-slate-950),
+[style*='background-color: var(--color-primary'] :is(.text-white, .text-slate-900, .text-slate-950) {
+    color: var(--color-primary-text, #ffffff);
+}
+
+/* Count badges inside a primary button: a white wash lowers the contrast of white labels, so themes whose label
+   is white use a dark wash instead (--color-primary-badge). */
+:is(.bg-theme-primary, .bg-theme-gradient, [style*='background-color: var(--color-primary'])
+    :is(.bg-white\/20, .bg-white\/25, .bg-black\/15) {
+    background-color: var(--color-primary-badge, rgb(255 255 255 / 0.25));
 }
 
 .border-theme-primary {

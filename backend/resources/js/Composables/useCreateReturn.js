@@ -2,13 +2,14 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useReturnSource } from './useReturnSource';
 import { useRouter } from 'vue-router';
-import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 import { useRemoteOptions } from './useRemoteOptions';
 import { useUnits } from './useUnits';
 import { businessToday } from './useBusinessDate';
 import { useRefundMethod } from './useRefundMethod';
+import { useReturnWindow } from './useReturnWindow';
+import { postReturnWithWindowOverride } from './useReturnWindowOverride';
 import { isPositive } from '../helpers/decimal';
 
 const defaultUnitPrice = (type, item) =>
@@ -50,6 +51,7 @@ export function useCreateReturn() {
         if (!isSalesReturn.value) return null;
         return (usingSource.value ? source.selected.value?.party_id : form.customer_id) || null;
     });
+    const returnWindow = useReturnWindow(source.selected, isSalesReturn);
     const refund = useRefundMethod({
         source: computed(() => (isSalesReturn.value && usingSource.value ? source.selected.value : null)),
         total: source.total,
@@ -150,7 +152,9 @@ export function useCreateReturn() {
                 payload[isSales ? 'invoice_id' : 'purchase_id'] = source.selected.value?.id;
             }
 
-            const response = await api.post('/returns', payload);
+            // Past the return window the server asks for a manager PIN; null = the manager cancelled the prompt.
+            const response = await postReturnWithWindowOverride(payload);
+            if (!response) return;
             Swal.fire({
                 icon: 'success',
                 title: t('returns.return_confirmed_title'),
@@ -182,6 +186,7 @@ export function useCreateReturn() {
         selectedItemToAdd,
         form,
         refund,
+        returnWindow,
         isSalesReturn,
         netTotal,
         itemsCount,

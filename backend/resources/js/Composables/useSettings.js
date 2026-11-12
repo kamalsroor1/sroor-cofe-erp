@@ -6,6 +6,7 @@ import { useAppConfigStore } from '../stores/appConfig';
 import { useAuthStore } from '../stores/auth';
 import { useUnits } from './useUnits';
 import { normalize } from '../helpers/decimal';
+import { toWesternDigits } from '../helpers/digits';
 import { Building2, Palette, Printer, Bot, Package } from 'lucide-vue-next';
 
 export function useSettings() {
@@ -20,6 +21,8 @@ export function useSettings() {
     const loadError = ref(false);
     const loadErrorMessage = ref('');
     const isSaving = ref(false);
+    // The stored Telegram bot token can no longer be decrypted (key change): the owner must type it again.
+    const telegramNeedsReentry = ref(false);
     const isTestingTelegram = ref(false);
 
     const colorPalettes = [
@@ -139,6 +142,8 @@ export function useSettings() {
         allow_negative_stock: false,
         receipt_header_lines: '',
         receipt_footer_text: '',
+        returns_max_days: '',
+        pos_idle_lock_minutes: '0',
     });
 
     const newUnitInput = ref('');
@@ -358,6 +363,8 @@ export function useSettings() {
         telegram_notifications_enabled: true,
         receipt_header_lines: '',
         receipt_footer_text: '',
+        returns_max_days: '',
+        pos_idle_lock_minutes: '0',
     };
 
     const isFieldModified = (field) => {
@@ -410,7 +417,10 @@ export function useSettings() {
                 allow_negative_stock: !!s.allow_negative_stock,
                 receipt_header_lines: s.receipt_header_lines || '',
                 receipt_footer_text: s.receipt_footer_text || '',
+                returns_max_days: s.returns_max_days == null ? '' : String(s.returns_max_days),
+                pos_idle_lock_minutes: String(s.pos_idle_lock_minutes ?? 0),
             };
+            telegramNeedsReentry.value = s.telegram_bot_token_needs_reentry === true;
             logo_light_url.value = s.logo_light_url || null;
             logo_dark_url.value = s.logo_dark_url || null;
             initialForm.value = JSON.parse(JSON.stringify(form.value));
@@ -426,15 +436,54 @@ export function useSettings() {
         }
     };
 
+    /** SET-02: whole digits only (Arabic-Indic digits accepted); anything else is left for the validator to reject. */
+    const policyDigits = (value) => toWesternDigits(value).trim();
+
+    const validatePolicies = () => {
+        const found = {};
+        const days = policyDigits(form.value.returns_max_days);
+        if (days !== '' && !(/^\d+$/.test(days) && Number(days) >= 1 && Number(days) <= 3650)) {
+            found.returns_max_days = [t('settings.returns_max_days_invalid')];
+        }
+        const minutes = policyDigits(form.value.pos_idle_lock_minutes);
+        if (minutes !== '' && !(/^\d+$/.test(minutes) && Number(minutes) <= 240)) {
+            found.pos_idle_lock_minutes = [t('settings.pos_idle_lock_minutes_invalid')];
+        }
+        return found;
+    };
+
+    /** The form as the API wants it: empty window = null (no limit), empty idle lock = 0 (off), both as integers. */
+    const settingsPayload = () => {
+        const days = policyDigits(form.value.returns_max_days);
+        const minutes = policyDigits(form.value.pos_idle_lock_minutes);
+        return {
+            ...form.value,
+            returns_max_days: days === '' ? null : Number(days),
+            pos_idle_lock_minutes: minutes === '' ? 0 : Number(minutes),
+        };
+    };
+
     const saveSettings = async () => {
         if (!initialForm.value || loadError.value) {
+            return false;
+        }
+        const policyErrors = validatePolicies();
+        if (Object.keys(policyErrors).length > 0) {
+            errors.value = policyErrors;
             return false;
         }
         isSaving.value = true;
         errors.value = {};
         try {
-            await api.post('/settings', form.value);
+            const payload = settingsPayload();
+            await api.post('/settings', payload);
             initialForm.value = JSON.parse(JSON.stringify(form.value));
+            // Everyone signed in reads these two from /system/context: keep this session in step without a reload.
+            appConfigStore.system = {
+                ...appConfigStore.system,
+                returns_max_days: payload.returns_max_days,
+                pos_idle_lock_minutes: payload.pos_idle_lock_minutes,
+            };
             if (form.value.system_theme_color) {
                 appConfigStore.setThemeColor(form.value.system_theme_color);
             }
@@ -507,6 +556,7 @@ export function useSettings() {
         fetchSettings,
         isSaving,
         isTestingTelegram,
+        telegramNeedsReentry,
         colorPalettes,
         sections,
         currentSectionTitle,

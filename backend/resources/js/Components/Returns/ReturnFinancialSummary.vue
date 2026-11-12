@@ -43,6 +43,7 @@
         size="lg"
         :loading="isSubmitting"
         :disabled="isSubmitting || itemsCount === 0"
+        data-testid="return-submit"
         @click="$emit('submit-return')"
         class="w-full shadow-lg shadow-theme-primary font-black flex items-center justify-center gap-2"
       >

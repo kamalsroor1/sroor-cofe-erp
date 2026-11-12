@@ -84,7 +84,7 @@
         </span>
 
         <!-- Description / Subtitle -->
-        <span v-if="tile.subtitle" class="text-[10px] text-white/80 font-bold mt-0.5 text-center line-clamp-1">
+        <span v-if="tile.subtitle" class="text-[10px] text-white/90 font-bold mt-0.5 text-center line-clamp-1">
           {{ tile.subtitle }}
         </span>
       </router-link>
@@ -153,7 +153,7 @@ const tiles = computed(() => [
     to: '/pos',
     shortcut: 'F2',
     icon: Zap,
-    bgClass: 'bg-gradient-to-br from-emerald-600 to-teal-700 border-emerald-500/50 shadow-emerald-500/20',
+    bgClass: 'bg-gradient-to-br from-emerald-700 to-teal-700 border-emerald-500/50 shadow-emerald-500/20',
   },
   {
     id: 'invoices',
@@ -163,7 +163,7 @@ const tiles = computed(() => [
     to: '/invoices',
     shortcut: 'F4',
     icon: ShoppingBag,
-    bgClass: 'bg-gradient-to-br from-emerald-500 to-green-600 border-emerald-400/50 shadow-emerald-500/20',
+    bgClass: 'bg-gradient-to-br from-emerald-700 to-green-700 border-emerald-400/50 shadow-emerald-500/20',
   },
   {
     id: 'sale_returns',
@@ -172,7 +172,7 @@ const tiles = computed(() => [
     subtitle: t('dashboard.menu_hub.tiles.sale_returns.subtitle'),
     to: '/returns/create',
     icon: RotateCcw,
-    bgClass: 'bg-gradient-to-br from-teal-600 to-emerald-700 border-teal-500/50 shadow-teal-500/20',
+    bgClass: 'bg-gradient-to-br from-teal-700 to-emerald-700 border-teal-500/50 shadow-teal-500/20',
   },
   {
     id: 'customers',
@@ -181,7 +181,7 @@ const tiles = computed(() => [
     subtitle: t('dashboard.menu_hub.tiles.customers.subtitle'),
     to: '/customers',
     icon: Users,
-    bgClass: 'bg-gradient-to-br from-sky-600 to-blue-700 border-sky-500/50 shadow-sky-500/20',
+    bgClass: 'bg-gradient-to-br from-sky-700 to-blue-700 border-sky-500/50 shadow-sky-500/20',
   },
 
   // 2. Purchases
@@ -192,7 +192,7 @@ const tiles = computed(() => [
     subtitle: t('dashboard.menu_hub.tiles.purchases.subtitle'),
     to: '/purchases/create',
     icon: ShoppingCart,
-    bgClass: 'bg-gradient-to-br from-amber-600 to-orange-700 border-amber-500/50 shadow-amber-500/20',
+    bgClass: 'bg-gradient-to-br from-amber-700 to-orange-700 border-amber-500/50 shadow-amber-500/20',
   },
   {
     id: 'purchase_returns',
@@ -219,7 +219,7 @@ const tiles = computed(() => [
     subtitle: t('dashboard.menu_hub.tiles.smart_reorder.subtitle'),
     to: '/purchases/smart-reorder',
     icon: Radar,
-    bgClass: 'bg-gradient-to-br from-purple-600 to-indigo-700 border-purple-500/50 shadow-purple-500/20',
+    bgClass: 'bg-gradient-to-br from-purple-700 to-indigo-700 border-purple-500/50 shadow-purple-500/20',
   },
 
   // 3. Finance
@@ -230,7 +230,7 @@ const tiles = computed(() => [
     subtitle: t('dashboard.menu_hub.tiles.daily_journal.subtitle'),
     to: '/daily-journal',
     icon: CalendarDays,
-    bgClass: 'bg-gradient-to-br from-blue-600 to-indigo-700 border-blue-500/50 shadow-blue-500/20',
+    bgClass: 'bg-gradient-to-br from-blue-700 to-indigo-700 border-blue-500/50 shadow-blue-500/20',
   },
   {
     id: 'expenses',
@@ -239,7 +239,7 @@ const tiles = computed(() => [
     subtitle: t('dashboard.menu_hub.tiles.expenses.subtitle'),
     to: '/expenses',
     icon: Receipt,
-    bgClass: 'bg-gradient-to-br from-rose-500 to-red-600 border-rose-400/50 shadow-rose-500/20',
+    bgClass: 'bg-gradient-to-br from-rose-700 to-red-700 border-rose-400/50 shadow-rose-500/20',
   },
 
   // 4. Inventory
@@ -250,7 +250,7 @@ const tiles = computed(() => [
     subtitle: t('dashboard.menu_hub.tiles.items.subtitle'),
     to: '/items',
     icon: Package,
-    bgClass: 'bg-gradient-to-br from-cyan-600 to-teal-700 border-cyan-500/50 shadow-cyan-500/20',
+    bgClass: 'bg-gradient-to-br from-cyan-700 to-teal-700 border-cyan-500/50 shadow-cyan-500/20',
   },
   {
     id: 'categories',
@@ -277,7 +277,7 @@ const tiles = computed(() => [
     subtitle: t('dashboard.menu_hub.tiles.stock_transfers.subtitle'),
     to: '/stock-transfers',
     icon: Truck,
-    bgClass: 'bg-gradient-to-br from-teal-600 to-emerald-800 border-teal-500/50 shadow-teal-500/20',
+    bgClass: 'bg-gradient-to-br from-teal-700 to-emerald-800 border-teal-500/50 shadow-teal-500/20',
   },
   {
     id: 'coffee_blender',
@@ -297,7 +297,7 @@ const tiles = computed(() => [
     subtitle: t('dashboard.menu_hub.tiles.reports.subtitle'),
     to: '/reports',
     icon: BarChart3,
-    bgClass: 'bg-gradient-to-br from-indigo-600 to-blue-700 border-indigo-500/50 shadow-indigo-500/20',
+    bgClass: 'bg-gradient-to-br from-indigo-700 to-blue-700 border-indigo-500/50 shadow-indigo-500/20',
   },
 
   // 6. Setup
@@ -308,7 +308,7 @@ const tiles = computed(() => [
     subtitle: t('dashboard.menu_hub.tiles.stores.subtitle'),
     to: '/stores',
     icon: Building2,
-    bgClass: 'bg-gradient-to-br from-violet-600 to-purple-800 border-violet-500/50 shadow-violet-500/20',
+    bgClass: 'bg-gradient-to-br from-violet-700 to-purple-800 border-violet-500/50 shadow-violet-500/20',
   },
   {
     id: 'settings',

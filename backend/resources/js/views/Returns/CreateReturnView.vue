@@ -49,6 +49,12 @@
             @select="source.selectSource"
             @clear="source.clearSource"
           />
+          <ReturnWindowNotice
+            v-if="source.selected.value && returnWindow.status.value"
+            :status="returnWindow.status.value"
+            :max-days="returnWindow.maxDays.value"
+            :can-override="returnWindow.canOverride.value"
+          />
           <ReturnSourceLinesTable
             v-if="source.selected.value"
             :lines="source.lines.value"
@@ -93,6 +99,7 @@ import { ArrowRight } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import ReturnPartySection from '../../Components/Returns/ReturnPartySection.vue';
 import ReturnSourcePicker from '../../Components/Returns/ReturnSourcePicker.vue';
+import ReturnWindowNotice from '../../Components/Returns/ReturnWindowNotice.vue';
 import ReturnSourceLinesTable from '../../Components/Returns/ReturnSourceLinesTable.vue';
 import ReturnItemsTable from '../../Components/Returns/ReturnItemsTable.vue';
 import ReturnFinancialSummary from '../../Components/Returns/ReturnFinancialSummary.vue';
@@ -106,6 +113,7 @@ const {
   selectedItemToAdd,
   form,
   refund,
+  returnWindow,
   isSalesReturn,
   netTotal,
   itemsCount,

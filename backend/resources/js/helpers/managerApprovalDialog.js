@@ -18,6 +18,15 @@ export function isManagerApprovalError(error) {
 }
 
 /**
+ * SET-02: the approver's PIN is locked until tomorrow (or until the PIN is changed): 429 `pos.override_locked_today`.
+ * Unlike the short `pos.override_throttled` 429 there is nothing to retry with that PIN: show the server message
+ * and do not open the dialog again.
+ */
+export function isManagerPinLocked(error) {
+    return error?.response?.status === 429 && error.response.data?.error_code === 'pos.override_locked_today';
+}
+
+/**
  * Ask a manager for their user number and PIN. Resolves `{ user_id, pin }`, or null when cancelled.
  *
  * @param {Object} options

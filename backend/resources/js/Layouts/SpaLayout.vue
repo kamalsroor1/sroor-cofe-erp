@@ -629,7 +629,7 @@ const confirmLogout = async () => {
     showCancelButton: true,
     confirmButtonText: trans('nav.layout.logout_confirm_btn'),
     cancelButtonText: trans('common.cancel'),
-    confirmButtonColor: '#e11d48',
+    confirmButtonColor: 'var(--color-danger-solid)',
     cancelButtonColor: '#64748b',
   });
 
