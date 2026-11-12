@@ -68,6 +68,25 @@ return [
     // IDEN-3.3 (TenantLifecycleException) + ENTI-2.1 (entitlement exceptions).
     'errors' => [
         'read_only' => 'This account is read-only: you cannot add or change data. Renew your subscription to reactivate it.',
+        // SELL-06: 423 message by reason (details.reason) and next step (details.action).
+        'read_only_guidance' => [
+            'trial_ended' => [
+                'pay_invoice' => 'Your free trial has ended, so the account is view-only for now. Pay your subscription invoice from the Subscription & billing page to keep adding and selling, or contact support.',
+                'request_invoice' => 'Your free trial has ended, so the account is view-only for now. Request your subscription invoice from the Subscription & billing page and pay it, or contact support.',
+            ],
+            'payment_pending' => [
+                'pay_invoice' => 'Your subscription is waiting for payment, so the account is view-only for now. Pay your invoice from the Subscription & billing page to activate it, or contact support.',
+                'request_invoice' => 'Your subscription is waiting for payment, so the account is view-only for now. Request your invoice from the Subscription & billing page and pay it, or contact support.',
+            ],
+            'subscription_ended' => [
+                'pay_invoice' => 'Your subscription has ended, so the account is view-only for now. Pay your renewal invoice from the Subscription & billing page to reactivate it, or contact support.',
+                'request_invoice' => 'Your subscription has ended, so the account is view-only for now. Request a renewal invoice from the Subscription & billing page and pay it, or contact support.',
+            ],
+            // An operator made the account read-only while its trial / paid term still runs.
+            'operator' => [
+                'contact_support' => 'The account is view-only for now by a decision of the platform team. Contact support to find out why and to restore full access.',
+            ],
+        ],
         'access_blocked' => 'Access to this account is blocked (status: :status). Contact the platform team.',
         'access_blocked_generic' => 'Access to this account is currently unavailable. Contact the platform team.',
         'activation_requires_payment' => 'An account can only be activated after its payment is confirmed.',
@@ -119,6 +138,8 @@ return [
         'blocked_title' => 'Account access is blocked',
         'feature_unavailable_title' => 'Feature not in your plan',
         'limit_reached_title' => 'Plan limit reached',
+        'request_invoice' => 'Request invoice',
+        'support_contact' => 'Support:',
     ],
 
     // PRD-04: tenant subscription & billing page (/billing).

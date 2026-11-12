@@ -19,6 +19,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * | factory                  | HTTP | error_code                       |
  * |--------------------------|------|----------------------------------|
  * | duplicateInvoice()       | 409  | billing.invoice_duplicate        |
+ * | openInvoiceExists() SELL-06 | 409 | billing.invoice_duplicate (details.open_invoice) |
  * | paymentNotPending()      | 409  | billing.payment_not_pending      |
  * | invoiceNotVoidable()     | 409  | billing.invoice_not_voidable     |
  * | invoiceNotPayable()      | 409  | billing.invoice_not_payable      |
@@ -59,6 +60,30 @@ final class BillingException extends HttpException
             'invoice_id' => (int) $existing->getKey(),
             'invoice_number' => $existing->number,
         ]);
+    }
+
+    /**
+     * SELL-06: the shop already has an unpaid plan / renewal / upgrade invoice (e.g. the auto-issued
+     * trial-end invoice), so another one could be paid twice and extend the term twice. Same
+     * error_code as duplicateInvoice() (the SPA already shows the existing invoice from details),
+     * plus `open_invoice = true` and the existing invoice's type.
+     */
+    public static function openInvoiceExists(BillingInvoice $existing): self
+    {
+        return new self(Response::HTTP_CONFLICT, 'billing.invoice_duplicate', (string) __('billing.errors.open_invoice_exists', ['number' => $existing->number]), [
+            'invoice_id' => (int) $existing->getKey(),
+            'invoice_number' => $existing->number,
+            'invoice_type' => $existing->type->value,
+            'open_invoice' => true,
+        ]);
+    }
+
+    /**
+     * @return array<string, scalar|null>
+     */
+    public function details(): array
+    {
+        return $this->details;
     }
 
     public static function paymentNotPending(): self

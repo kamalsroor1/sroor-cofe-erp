@@ -32,6 +32,10 @@ enum PlatformSettingKey: string
     // Subscription VAT, a percentage with 3 decimals (0-100). Default 0.
     case BillingTaxRate = 'billing_tax_rate';
 
+    // SELL-06: trial length (whole days, 1-90) given to an approved signup whose plan has
+    // trial_days = 0. Blank = config('tenant_lifecycle.trial_days').
+    case SignupTrialDays = 'signup_trial_days';
+
     /**
      * Storage type of the value: string | bool ('1'/'0') | color (#rrggbb) | asset
      * (path on the central public disk, managed by BRND-2).

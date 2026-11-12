@@ -39,7 +39,8 @@ final class ApproveSignupRequestRequest extends FormRequest
 
         $this->merge([
             'subdomain' => $this->filled('subdomain') ? $this->input('subdomain') : $signup->preferred_subdomain,
-            'plan_code' => $this->filled('plan_code') ? $this->input('plan_code') : $signup->plan_code,
+            // SELL-06: normalised like the public form (older rows may hold mixed case).
+            'plan_code' => $this->normalizedPlanCode($this->filled('plan_code') ? $this->input('plan_code') : $signup->plan_code),
             'owner_email' => $this->filled('owner_email') ? $this->input('owner_email') : $signup->email,
         ]);
     }
@@ -57,6 +58,11 @@ final class ApproveSignupRequestRequest extends FormRequest
             // returned once; either way the owner must change it at first sign-in.
             'owner_password' => ['nullable', 'string', 'max:255', Password::min(10)->letters()->numbers()],
         ];
+    }
+
+    private function normalizedPlanCode(mixed $code): mixed
+    {
+        return is_string($code) ? StoreSignupRequestRequest::normalizePlanCode($code) : $code;
     }
 
     /**

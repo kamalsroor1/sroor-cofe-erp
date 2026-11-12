@@ -31,6 +31,7 @@ const TEXT_FIELDS = [
     'billing_account_name',
     'billing_payment_note',
     'billing_tax_rate',
+    'signup_trial_days',
 ];
 
 /** Never blanked server-side: sent trimmed, never as null. */
@@ -39,7 +40,7 @@ const REQUIRED_FIELDS = ['name', 'short_name'];
 function toForm(data = {}) {
     const form = {};
     TEXT_FIELDS.forEach((key) => {
-        form[key] = data[key] ?? '';
+        form[key] = data[key] === null || data[key] === undefined ? '' : String(data[key]);
     });
     form.powered_by_enabled = data.powered_by_enabled === true;
     return form;
@@ -64,7 +65,8 @@ function changedPayload(form, baseline) {
             return;
         }
         const value = String(form[key] ?? '').trim();
-        payload[key] = value === '' && !REQUIRED_FIELDS.includes(key) ? null : value;
+        if (key === 'signup_trial_days') payload[key] = value === '' ? null : Number(value);
+        else payload[key] = value === '' && !REQUIRED_FIELDS.includes(key) ? null : value;
     });
     return payload;
 }

@@ -35,6 +35,7 @@ final class PlatformSettingsDTO
         'billing_account_name',
         'billing_payment_note',
         'billing_tax_rate',
+        'signup_trial_days',
     ];
 
     /**
@@ -63,6 +64,11 @@ final class PlatformSettingsDTO
             }
 
             $value = $value === null ? null : trim((string) $value);
+
+            if ($key === PlatformSettingKey::SignupTrialDays->value && $value !== null && $value !== '') {
+                // Stored as a plain whole number ("07" -> "7").
+                $value = (string) (int) $value;
+            }
 
             if ($key === PlatformSettingKey::BillingTaxRate->value && $value !== null && $value !== '') {
                 // Stored as a clean 3-decimal string (bcmath, no float).

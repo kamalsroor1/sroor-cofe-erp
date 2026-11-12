@@ -22,6 +22,8 @@ use Carbon\CarbonImmutable;
  *  - `addonLines` (type addon): [{addon_id, quantity, unit_price}], `unit_price` null = the catalog
  *    price of the tenant's plan for the cycle.
  * `fromRequest` skips the one-per-period duplicate check: the request row is the idempotency key.
+ * `refuseWhenOpenPlanInvoice` (SELL-06: shop renewal requests, the trial-end command) refuses, under
+ * the tenant row lock, while ANY pending/draft plan, renewal or upgrade invoice exists for the tenant.
  */
 final readonly class IssueSubscriptionInvoiceDTO
 {
@@ -44,6 +46,7 @@ final readonly class IssueSubscriptionInvoiceDTO
         public ?array $differenceLine = null,
         public array $addonLines = [],
         public bool $fromRequest = false,
+        public bool $refuseWhenOpenPlanInvoice = false,
     ) {}
 
     /**

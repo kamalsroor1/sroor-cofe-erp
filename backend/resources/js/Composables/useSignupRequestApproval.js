@@ -1,8 +1,9 @@
-import { onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import api from '../Services/centralApi';
 import { useTrans } from './useTrans';
 import { notifySuccess, notifyWarning } from '../helpers/alert';
 import { useWhatsAppCredentials } from './useWhatsAppCredentials';
+import { resolveApprovalTerms } from '../helpers/signupApprovalPreview';
 
 const PASSWORD_LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz';
 const PASSWORD_DIGITS = '23456789';
@@ -56,6 +57,11 @@ export function useSignupRequestApproval(onChanged) {
     const isSubmitting = ref(false);
     const isPreparing = ref(false);
 
+    // What the shop will be created as, recomputed when the operator picks another plan.
+    const terms = computed(() =>
+        resolveApprovalTerms(request.value?.approval_preview, form.value.plan_code, plans.value)
+    );
+
     const loadPlans = async () => {
         if (plans.value.length) return;
         try {
@@ -63,7 +69,7 @@ export function useSignupRequestApproval(onChanged) {
             const list = res.data?.data?.plans || res.data?.plans || [];
             plans.value = list
                 .filter((plan) => plan.is_active !== false)
-                .map((p) => ({ value: p.slug, label: p.name }));
+                .map((p) => ({ value: p.slug, label: p.name, trialDays: p.trial_days }));
         } catch {
             plans.value = [];
         }
@@ -168,6 +174,7 @@ export function useSignupRequestApproval(onChanged) {
 
     return {
         credentials,
+        terms,
         canSendWhatsApp: whatsapp.isReady,
         sendWhatsApp,
         request,

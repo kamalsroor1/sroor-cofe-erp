@@ -51,6 +51,12 @@ final class StoreSignupRequestRequest extends FormRequest
             $merge['email'] = trim($this->input('email'));
         }
 
+        // SELL-06: plan slugs are lowercase; "PRO" / " pro " must not pass validation (case-insensitive
+        // on MySQL) and then fail at approval (exact match).
+        if (is_string($this->input('plan_code'))) {
+            $merge['plan_code'] = self::normalizePlanCode($this->input('plan_code'));
+        }
+
         if (is_string($this->input('notes'))) {
             $merge['notes'] = self::multiLine($this->input('notes'));
         }
@@ -87,6 +93,14 @@ final class StoreSignupRequestRequest extends FormRequest
             'terms_accepted.required' => (string) __('signup.validation.terms_required'),
             'terms_accepted.accepted' => (string) __('signup.validation.terms_required'),
         ];
+    }
+
+    /** SELL-06: a plan slug as stored (trimmed, lowercase); blank becomes null. */
+    public static function normalizePlanCode(string $code): ?string
+    {
+        $code = strtolower(trim($code));
+
+        return $code === '' ? null : $code;
     }
 
     /** Control chars (incl. newlines), line/paragraph separators and bidi overrides become spaces; whitespace collapses. */

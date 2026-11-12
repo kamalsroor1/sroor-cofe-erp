@@ -42,6 +42,7 @@ final class PlatformSettingsResource extends JsonResource
             'billing_account_name' => $branding->billingAccountName,
             'billing_payment_note' => $branding->billingPaymentNote,
             'billing_tax_rate' => $branding->billingTaxRate,
+            'signup_trial_days' => $branding->signupTrialDays,
             'assets' => [
                 PlatformAssetSlot::LogoLight->value => $this->asset($branding->logoLight),
                 PlatformAssetSlot::LogoDark->value => $this->asset($branding->logoDark),

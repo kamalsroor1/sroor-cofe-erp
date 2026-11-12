@@ -15,6 +15,7 @@ use App\Models\Plan;
 use App\Models\SignupRequest;
 use App\Models\Tenant;
 use App\Services\CentralAuditLogger;
+use App\Services\Signup\SignupTrialTerms;
 use App\Services\TenantProvisionerService;
 use App\Support\Auth\TemporaryPassword;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -36,6 +37,9 @@ use Throwable;
  * the audit row is written. A provisioning failure rolls everything back and the request
  * stays pending. The audit row never carries the owner password.
  *
+ * SELL-06: the tenant always starts as `trial` (subscription `trialing`) on the CHOSEN plan, for
+ * the plan's own trial_days or, when the plan has none, the platform default (SignupTrialTerms).
+ *
  * SELL-01: without `owner_password` the server generates a temporary one (returned once in the
  * result, never stored in plain). Either way provisioning flags the owner `must_change_password`,
  * so the operator's knowledge of it ends at the owner's first sign-in.
@@ -45,6 +49,7 @@ final class ApproveSignupRequestAction
     public function __construct(
         private readonly ProvisionTenantAction $provisionTenant,
         private readonly CentralAuditLogger $auditLogger,
+        private readonly SignupTrialTerms $trialTerms,
     ) {}
 
     public function execute(ApproveSignupRequestDTO $dto, CentralUser $operator): ApprovedSignupResult
@@ -85,11 +90,7 @@ final class ApproveSignupRequestAction
     /** Requested plan, else the catalog's trial plan (first active plan with trial days). */
     private function resolvePlan(?string $planCode): Plan
     {
-        $query = Plan::query()->where('is_active', true);
-
-        $plan = $planCode !== null
-            ? $query->where('slug', $planCode)->first()
-            : $query->where('trial_days', '>', 0)->orderBy('sort_order')->orderBy('id')->first();
+        $plan = $this->trialTerms->resolvePlan($planCode);
 
         if (! $plan instanceof Plan) {
             throw ValidationException::withMessages(['plan_code' => (string) __('signup.errors.no_trial_plan')]);
@@ -107,7 +108,9 @@ final class ApproveSignupRequestAction
             'phone' => $signup->phone,
             'plan_id' => $plan->id,
             'password' => $ownerPassword,
-            'trial_days' => $plan->trial_days,
+            // SELL-06: always a trial on the chosen plan; a plan without its own trial days
+            // gets the platform default, so the shop is never born read-only.
+            'trial_days' => $this->trialTerms->trialDaysFor($plan),
         ]);
 
         try {

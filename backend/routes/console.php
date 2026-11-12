@@ -123,6 +123,13 @@ Schedule::command('tenants:apply-lifecycle')
     ->dailyAt((string) config('tenant_lifecycle.sweep.at', '01:00'))
     ->withoutOverlapping(60);
 
+// SELL-06: issue the first subscription invoice of every trial ending within
+// billing.trial_invoice_lead_days (3) days. Idempotent (one invoice per tenant and period).
+Schedule::command('billing:issue-trial-invoices')
+    ->dailyAt('01:10')
+    ->withoutOverlapping(60)
+    ->onOneServer();
+
 // 9. SEC-03: drop expired tenant API tokens (12h fixed TTL) from every provisioned tenant DB.
 // `tenants:run` is the app's provisioned-tenants-only variant (RunForProvisionedTenants).
 Schedule::command('tenants:run sanctum:prune-expired --option="hours=24"')

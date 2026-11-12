@@ -66,6 +66,10 @@ final class IssueSubscriptionInvoiceAction
             $plan = $this->planFor($dto);
             $cycle = $plan !== null || $dto->type === BillingInvoiceType::Addon ? $dto->cycle : null;
 
+            if ($dto->refuseWhenOpenPlanInvoice) {
+                $this->assertNoOpenPlanInvoice($tenant);
+            }
+
             $periodStart = $this->periodStart($dto, $tenant, $subscription);
             if (! $dto->fromRequest && $dto->type !== BillingInvoiceType::Addon) {
                 $this->assertNotDuplicate($tenant, $dto->type, $periodStart, $this->futureEnd($tenant, $subscription) === null);
@@ -352,6 +356,24 @@ final class IssueSubscriptionInvoiceAction
             BillingCycle::Yearly => $start->addYearNoOverflow(),
             default => null,
         };
+    }
+
+    /**
+     * SELL-06: an unpaid plan / renewal / upgrade invoice already exists (checked after the tenant
+     * row lock, so two issuers cannot both pass). Paying two of them would extend the term twice.
+     */
+    private function assertNoOpenPlanInvoice(Tenant $tenant): void
+    {
+        $existing = BillingInvoice::query()
+            ->where('tenant_id', $tenant->getKey())
+            ->whereIn('type', [BillingInvoiceType::Plan->value, BillingInvoiceType::Renewal->value, BillingInvoiceType::Upgrade->value])
+            ->whereIn('status', [BillingInvoiceStatus::Draft->value, BillingInvoiceStatus::Pending->value])
+            ->orderBy('id')
+            ->first();
+
+        if ($existing instanceof BillingInvoice) {
+            throw BillingException::openInvoiceExists($existing);
+        }
     }
 
     private function assertNotDuplicate(Tenant $tenant, BillingInvoiceType $type, CarbonImmutable $periodStart, bool $noFutureEnd): void

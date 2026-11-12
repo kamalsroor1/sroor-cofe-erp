@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Exceptions;
 
+use App\Enums\ReadOnlyReason;
 use App\Enums\TenantArchiveState;
 use App\Enums\TenantLifecycleActor;
 use App\Enums\TenantStatus;
@@ -20,7 +21,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  *
  * | factory                       | HTTP | error_code                               |
  * |-------------------------------|------|------------------------------------------|
- * | readOnly()                    | 423  | subscription.read_only                   |
+ * | readOnly($reason, …)  SELL-06 | 423  | subscription.read_only (+ reason, action, action_path) |
  * | blocked($status)              | 403  | subscription.access_blocked              |
  * | blockedGeneric() (unauthenticated callers, no status revealed) | 403 | subscription.access_blocked |
  * | activationRequiresPayment()   | 403  | subscription.activation_requires_payment |
@@ -41,6 +42,16 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  */
 final class TenantLifecycleException extends HttpException
 {
+    /** SELL-06: SPA route of the tenant billing screen, the next step of a read-only shop. */
+    public const BILLING_PATH = '/billing';
+
+    public const READ_ONLY_ACTION_PAY = 'pay_invoice';
+
+    public const READ_ONLY_ACTION_REQUEST = 'request_invoice';
+
+    /** SELL-06: read-only by an operator decision (ReadOnlyReason::Operator): paying is not the fix. */
+    public const READ_ONLY_ACTION_SUPPORT = 'contact_support';
+
     /**
      * @param  array<string, mixed>  $details  machine-readable context (no secrets, no other tenants' data)
      */
@@ -53,11 +64,37 @@ final class TenantLifecycleException extends HttpException
         parent::__construct($status, $message);
     }
 
-    /** Read-only tenant tried to write (HTTP 423). */
-    public static function readOnly(): self
+    /**
+     * Read-only tenant tried to write (HTTP 423).
+     *
+     * SELL-06: with a $reason the message says why and what to do next (pay the pending invoice,
+     * or ask for one / contact support), and `details` adds machine-readable hints for the SPA:
+     * reason, next action (pay_invoice | request_invoice | contact_support), the billing screen path and the
+     * platform support contact. `details.status` is unchanged (additive).
+     *
+     * @param  array{email: string, phone: string}|null  $support
+     */
+    public static function readOnly(?ReadOnlyReason $reason = null, bool $hasPendingInvoice = false, ?array $support = null): self
     {
-        return new self(Response::HTTP_LOCKED, 'subscription.read_only', (string) __('subscription.errors.read_only'), [
+        if ($reason === null) {
+            return new self(Response::HTTP_LOCKED, 'subscription.read_only', (string) __('subscription.errors.read_only'), [
+                'status' => TenantStatus::ReadOnly->value,
+            ]);
+        }
+
+        $action = match (true) {
+            ! $reason->isPayable() => self::READ_ONLY_ACTION_SUPPORT,
+            $hasPendingInvoice => self::READ_ONLY_ACTION_PAY,
+            default => self::READ_ONLY_ACTION_REQUEST,
+        };
+
+        return new self(Response::HTTP_LOCKED, 'subscription.read_only', (string) __('subscription.errors.read_only_guidance.'.$reason->value.'.'.$action), [
             'status' => TenantStatus::ReadOnly->value,
+            'reason' => $reason->value,
+            'action' => $action,
+            'action_path' => self::BILLING_PATH,
+            'has_pending_invoice' => $hasPendingInvoice,
+            'support' => $support ?? ['email' => '', 'phone' => ''],
         ]);
     }
 

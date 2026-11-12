@@ -6,6 +6,8 @@ import BaseInput from '../../Form/BaseInput.vue';
 import BaseSelect from '../../Form/BaseSelect.vue';
 import BaseCheckbox from '../../Form/BaseCheckbox.vue';
 import TemporaryPasswordPanel from '../../Common/TemporaryPasswordPanel.vue';
+import SignupApprovalTerms from './SignupApprovalTerms.vue';
+import SignupMatchingTenants from './SignupMatchingTenants.vue';
 
 defineProps({
   show: { type: Boolean, default: false },
@@ -17,6 +19,8 @@ defineProps({
   // Owner sign-in details returned once by the approval: { login, password, phone } or null.
   credentials: { type: Object, default: null },
   canWhatsapp: { type: Boolean, default: false },
+  // What the shop will be created as (see helpers/signupApprovalPreview.js) or null.
+  terms: { type: Object, default: null },
 });
 
 defineEmits(['close', 'submit', 'regenerate', 'copy', 'whatsapp']);
@@ -67,6 +71,8 @@ const form = defineModel('form', { type: Object, required: true });
         :error="errors.plan_code"
         :searchable="false"
       />
+      <SignupMatchingTenants v-if="terms?.matchingTenants.length" :tenants="terms.matchingTenants" />
+      <SignupApprovalTerms v-if="terms" :terms="terms" />
       <BaseInput
         v-model="form.owner_email"
         type="email"

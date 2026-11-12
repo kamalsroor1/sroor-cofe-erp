@@ -37,6 +37,9 @@ final class PlatformBranding
     /** Last resort if config/branding.php itself holds an invalid color. */
     private const FALLBACK_COLOR = '#0F6E5E';
 
+    /** SELL-06: upper bound of the platform signup trial length (UpdatePlatformBrandingRequest). */
+    public const MAX_SIGNUP_TRIAL_DAYS = 90;
+
     public function get(): PlatformBrandingDTO
     {
         $stored = $this->storedValues();
@@ -60,6 +63,7 @@ final class PlatformBranding
             'billing_account_name' => $this->billingString(PlatformSettingKey::BillingAccountName, $stored),
             'billing_payment_note' => $this->billingString(PlatformSettingKey::BillingPaymentNote, $stored),
             'billing_tax_rate' => $this->taxRate($stored),
+            'signup_trial_days' => $this->signupTrialDays($stored),
         ]);
     }
 
@@ -213,6 +217,23 @@ final class PlatformBranding
         $rate = bcadd($value, '0', 3);
 
         return bccomp($rate, '100', 3) > 0 ? '0.000' : $rate;
+    }
+
+    /**
+     * SELL-06: trial days for a signup whose plan has none. A stored whole number 1-90, else
+     * config('tenant_lifecycle.trial_days') (at least 1).
+     *
+     * @param  array<string, string|null>  $stored
+     */
+    private function signupTrialDays(array $stored): int
+    {
+        $value = trim((string) ($stored[PlatformSettingKey::SignupTrialDays->value] ?? ''));
+
+        if (preg_match('/^\d{1,2}$/', $value) === 1 && (int) $value >= 1 && (int) $value <= self::MAX_SIGNUP_TRIAL_DAYS) {
+            return (int) $value;
+        }
+
+        return max(1, min(self::MAX_SIGNUP_TRIAL_DAYS, (int) config('tenant_lifecycle.trial_days', 14)));
     }
 
     /**

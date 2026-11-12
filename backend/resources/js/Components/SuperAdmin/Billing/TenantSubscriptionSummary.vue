@@ -13,7 +13,8 @@ const { formatDate } = useFormatters();
 
 const STATUS_VARIANTS = { active: 'success', trialing: 'info', past_due: 'warning', pending_payment: 'warning' };
 
-const endsAt = computed(() => props.subscription?.ends_at || props.subscription?.subscription_ends_at);
+const endsAt = computed(() => props.subscription?.ends_at || null);
+const access = computed(() => props.subscription?.tenant?.effective_status);
 const statusVariant = computed(() => STATUS_VARIANTS[props.subscription?.status?.value] || 'slate');
 </script>
 
@@ -51,7 +52,11 @@ const statusVariant = computed(() => STATUS_VARIANTS[props.subscription?.status?
       <dt class="text-slate-500 dark:text-slate-400 font-bold">{{ $t('billing.console.tenant.ends_at') }}</dt>
       <dd class="font-black text-slate-800 dark:text-slate-200">{{ endsAt ? formatDate(endsAt) : '-' }}</dd>
     </div>
-    <div v-if="daysLeft !== null">
+    <div v-if="access?.label" data-testid="tenant-effective-status">
+      <dt class="text-slate-500 dark:text-slate-400 font-bold">{{ $t('billing.console.tenant.shop_status') }}</dt>
+      <dd class="font-black text-slate-800 dark:text-slate-200">{{ access.label }}</dd>
+    </div>
+    <div v-if="daysLeft !== null" data-testid="tenant-days-left">
       <dt class="text-slate-500 dark:text-slate-400 font-bold">&nbsp;</dt>
       <dd
         class="font-black"

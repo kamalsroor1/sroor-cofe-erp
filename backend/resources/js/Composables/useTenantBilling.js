@@ -12,8 +12,6 @@ import { useTrans } from './useTrans';
  * Issuing lives in useIssueInvoice. Step-up on writes is handled by centralApi.
  */
 
-const DAY_MS = 86_400_000;
-
 export function useTenantBilling(tenantId) {
     const { t } = useTrans();
     const centralAuth = useCentralAuthStore();
@@ -27,11 +25,10 @@ export function useTenantBilling(tenantId) {
     const canView = computed(() => centralAuth.can(CENTRAL_PERMISSIONS.billingView));
     const canManage = computed(() => centralAuth.can(CENTRAL_PERMISSIONS.billingManage));
 
-    /** Whole days until the subscription ends (negative once ended); null without an end date. */
+    /** Whole days left, computed by the server (null for a read-only / never-paid shop). */
     const daysLeft = computed(() => {
-        const endsAt = subscription.value?.ends_at || subscription.value?.subscription_ends_at;
-        if (!endsAt) return null;
-        return Math.ceil((new Date(endsAt).getTime() - Date.now()) / DAY_MS);
+        const days = subscription.value?.days_left;
+        return Number.isInteger(days) ? days : null;
     });
 
     const fetchBilling = async () => {

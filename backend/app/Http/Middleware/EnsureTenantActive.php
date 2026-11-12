@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Enums\Billing\BillingInvoiceStatus;
+use App\Enums\ReadOnlyReason;
 use App\Enums\TenantAccessLevel;
 use App\Enums\TenantStatus;
 use App\Exceptions\TenantLifecycleException;
+use App\Models\BillingInvoice;
 use App\Models\Tenant;
+use App\Services\Branding\PlatformBranding;
 use App\Support\Tenancy\TenantLifecyclePolicy;
 use Carbon\CarbonImmutable;
 use Closure;
@@ -26,7 +30,8 @@ use Symfony\Component\HttpFoundation\Response;
  *  - full access (trial, active, past_due, and the grace days after a trial / paid period)
  *    passes;
  *  - read_only: GET / HEAD / OPTIONS pass, writes get 423 `subscription.read_only`
- *    (except WRITE_ALLOWLIST);
+ *    (except WRITE_ALLOWLIST); SELL-06: its message and details carry the reason and the
+ *    next step (details.action / details.action_path = /billing);
  *  - suspended / cancelled / archived: 403 `subscription.access_blocked` on everything
  *    except BLOCKED_ALLOWLIST (logout, /auth/me and the public shell endpoints the SPA
  *    needs to display the blocked state). Unauthenticated callers get the generic 403
@@ -65,7 +70,10 @@ final class EnsureTenantActive
     /** @var list<string> web routes (routes/tenant.php) a blocked tenant may still load: the SPA shell that displays the state */
     public const WEB_BLOCKED_ALLOWLIST = ['login', 'tenant.spa'];
 
-    public function __construct(private readonly TenantLifecyclePolicy $policy) {}
+    public function __construct(
+        private readonly TenantLifecyclePolicy $policy,
+        private readonly PlatformBranding $platform,
+    ) {}
 
     public function handle(Request $request, Closure $next): Response
     {
@@ -80,10 +88,35 @@ final class EnsureTenantActive
         return match ($decision->access()) {
             TenantAccessLevel::Full => $next($request),
             TenantAccessLevel::ReadOnly => $this->isWrite($request) && ! $request->routeIs(self::WRITE_ALLOWLIST)
-                ? TenantLifecycleException::readOnly()->render($request)
+                ? $this->readOnly($request, $tenant)->render($request)
                 : $next($request),
             TenantAccessLevel::Blocked => $this->blocked($request, $next, $decision->effectiveStatus),
         };
+    }
+
+    /**
+     * SELL-06: the 423 says why the shop is read-only and what to do next (pay the pending
+     * invoice on /billing, or request one / contact support). Like blocked(), the details are
+     * for authenticated callers only: this runs before ApiTokenAuth, so a caller with just an
+     * X-Tenant header gets the plain refusal (status only) and triggers no billing lookup.
+     */
+    private function readOnly(Request $request, Tenant $tenant): TenantLifecycleException
+    {
+        if (! $this->hasValidToken($request)) {
+            return TenantLifecycleException::readOnly();
+        }
+
+        $hasPendingInvoice = BillingInvoice::query()
+            ->where('tenant_id', (string) $tenant->getKey())
+            ->where('status', BillingInvoiceStatus::Pending->value)
+            ->exists();
+        $platform = $this->platform->get();
+
+        return TenantLifecycleException::readOnly(
+            ReadOnlyReason::forTenant($tenant, CarbonImmutable::now()),
+            $hasPendingInvoice,
+            ['email' => $platform->supportEmail, 'phone' => $platform->supportPhone],
+        );
     }
 
     private function blocked(Request $request, Closure $next, TenantStatus $status): Response

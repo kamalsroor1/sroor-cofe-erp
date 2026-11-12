@@ -14,8 +14,9 @@ namespace Database\Seeders\Catalog;
  *   and 2,990 / 5,990 / 9,990 yearly;
  * - every price EXCLUDES VAT (14% is added on the SaaS invoice, ENTI-3.2);
  * - NULL limit = unlimited (never a 999… sentinel);
- * - only the trial plan has trial days; paid plans have trial_days = 0, so a tenant that
- *   signs up on them waits in pending_payment until paid (CTO W1 Q4).
+ * - only the trial plan has trial days; paid plans have trial_days = 0, so a tenant an operator
+ *   creates on them waits in pending_payment until paid (CTO W1 Q4). An approved SIGNUP on a paid
+ *   plan gets the platform default trial instead (SELL-06, App\Services\Signup\SignupTrialTerms).
  *
  * Money is a DECIMAL(12,3) string. Names/descriptions are keys in lang/{ar,en}/plans.php.
  */

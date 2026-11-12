@@ -5,13 +5,19 @@ import { isNetworkError, reportRequestFailure, reportServerReachable } from '../
 import { storeAccessRetryConfig } from '../helpers/storeAccessRecovery';
 import { isCentralAppContext } from './centralApi';
 import { writeStarted, writeFinished } from '../helpers/pendingWrites';
+import { contactSupportHtml, describeReadOnly, supportFooter } from '../helpers/readOnlyNotice';
 import { PASSWORD_CHANGE_ROUTE, isPasswordChangeRequired, safeInternalRedirect } from '../helpers/passwordChange';
 
 // Tenant client only. The platform console uses Services/centralApi.js (IDEN-1.9); on the admin
 // host (central mode) this client never sends a tenant token, store or tenant header.
 const isCentralMode = isCentralAppContext();
 
-const goToBilling = () => {
+const goToBilling = (path = null) => {
+    if (path && path !== '/billing') {
+        if (window.spaRouter) window.spaRouter.push(path);
+        else window.location.assign(path);
+        return;
+    }
     if (window.spaRouter) window.spaRouter.push({ name: 'billing.index' });
     else window.location.assign('/billing');
 };
@@ -40,22 +46,31 @@ const goToPasswordChange = async () => {
     router.replace({ name: PASSWORD_CHANGE_ROUTE, query: redirect && redirect !== '/' ? { redirect } : undefined });
 };
 
-const showLifecycleAlert = async ({ titleKey, message, offerPayment }) => {
-    const canPay = offerPayment && (await canOfferPayment());
+const showLifecycleAlert = async ({ titleKey, message, offerPayment, data }) => {
+    // SELL-06: the 423 read-only answer names the next step (pay / request the invoice) and support.
+    const notice = describeReadOnly(data);
+    const canPay = offerPayment && notice.canNavigate && (await canOfferPayment());
     if (Swal.isVisible()) return;
     const isDark = document.documentElement.classList.contains('dark');
     const result = await Swal.fire({
         icon: 'warning',
         title: trans(titleKey),
-        text: message,
+        ...(notice.contactSupport
+            ? { html: contactSupportHtml(message, notice.supportParams, trans) }
+            : { text: message, footer: supportFooter(notice.supportParams, trans) || undefined }),
         confirmButtonText: trans('common.ok'),
         confirmButtonColor: 'var(--color-warning-solid)',
         showDenyButton: canPay,
-        denyButtonText: trans('subscription.billing.plan.pay_now'),
+        denyButtonText: trans(
+            notice.actionKey === 'request_invoice'
+                ? 'subscription.alerts.request_invoice'
+                : 'subscription.billing.plan.pay_now'
+        ),
         background: isDark ? '#0f172a' : '#ffffff',
         color: isDark ? '#f8fafc' : '#0f172a',
+        customClass: { denyButton: 'min-h-11', confirmButton: 'min-h-11' },
     });
-    if (result.isDenied) goToBilling();
+    if (result.isDenied) goToBilling(notice.actionPath);
 };
 
 // 1. Create centralized Axios instance
@@ -165,7 +180,7 @@ apiClient.interceptors.response.use(
             const titleKey =
                 lifecycleTitleKeys[code] ||
                 (status === 423 ? 'subscription.alerts.read_only_title' : 'subscription.alerts.blocked_title');
-            showLifecycleAlert({ titleKey, message, offerPayment: status === 423 });
+            showLifecycleAlert({ titleKey, message, offerPayment: status === 423, data });
         }
 
         const passwordChangeRequired = !isCentralMode && isPasswordChangeRequired(error);

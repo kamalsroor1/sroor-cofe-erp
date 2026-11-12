@@ -28,7 +28,7 @@ const {
   voidInvoice,
 } = useTenantBilling(props.tenantId);
 
-const issue = useIssueInvoice(props.tenantId, fetchBilling);
+const issue = useIssueInvoice(props.tenantId, fetchBilling, () => subscription.value?.plan?.id ?? null);
 </script>
 
 <template>

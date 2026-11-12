@@ -486,7 +486,16 @@ final class TenantLifecycleEnforcementTest extends TenantTestCase
         $response->assertStatus(423)
             ->assertJsonPath('success', false)
             ->assertJsonPath('error_code', 'subscription.read_only')
-            ->assertJsonPath('message', __('subscription.errors.read_only'));
+            ->assertJsonPath('details.status', 'read_only')
+            // SELL-06: the message names the reason and the next step; the SPA links to /billing.
+            ->assertJsonPath('details.action_path', '/billing');
+
+        $reason = (string) $response->json('details.reason');
+        $action = (string) $response->json('details.action');
+        $this->assertContains($reason, ['trial_ended', 'payment_pending', 'subscription_ended', 'operator']);
+        // An operator-set read-only (term still running) is a support matter, never "pay".
+        $this->assertContains($action, $reason === 'operator' ? ['contact_support'] : ['pay_invoice', 'request_invoice']);
+        $response->assertJsonPath('message', __('subscription.errors.read_only_guidance.'.$reason.'.'.$action));
     }
 
     /** @param TestResponse<Response> $response */

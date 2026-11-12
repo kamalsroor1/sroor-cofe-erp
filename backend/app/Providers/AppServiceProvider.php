@@ -24,6 +24,7 @@ use App\Observers\TenantObserver;
 use App\Services\Branding\PlatformBranding;
 use App\Services\Entitlements\EntitlementFeatures;
 use App\Services\Entitlements\TenantEntitlementService;
+use App\Services\Signup\SignupTrialTerms;
 use App\Services\SuperAdminAnalyticsService;
 use App\Services\TenantProvisionerService;
 use App\Support\PlatformSuperAdmin;
@@ -80,6 +81,9 @@ class AppServiceProvider extends ServiceProvider
         );
 
         $this->app->singleton(PlatformBranding::class);
+
+        // SELL-06: memoises the active plans for one request / job (signup list previews).
+        $this->app->scoped(SignupTrialTerms::class);
 
         $this->defaultTenantCommandsToProvisionedTenants();
     }

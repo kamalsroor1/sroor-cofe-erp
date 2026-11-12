@@ -26,7 +26,8 @@ const emptyForm = () => ({
     service_lines: [emptyLine()],
 });
 
-export function useIssueInvoice(tenantId, onIssued) {
+/** @param {() => number|null} [defaultPlanId] the tenant's current plan, pre-selected in the form */
+export function useIssueInvoice(tenantId, onIssued, defaultPlanId = () => null) {
     const { t } = useTrans();
 
     const isOpen = ref(false);
@@ -53,7 +54,7 @@ export function useIssueInvoice(tenantId, onIssued) {
     };
 
     const open = () => {
-        form.value = emptyForm();
+        form.value = { ...emptyForm(), plan_id: defaultPlanId() ?? null };
         errors.value = {};
         isOpen.value = true;
         loadPlans();

@@ -6,6 +6,7 @@ namespace App\Http\Requests\Central;
 
 use App\DTOs\Central\PlatformSettingsDTO;
 use App\Enums\CentralPermission;
+use App\Services\Branding\PlatformBranding;
 use App\Support\PlatformSuperAdmin;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -48,6 +49,8 @@ final class UpdatePlatformBrandingRequest extends FormRequest
             'billing_account_name' => ['sometimes', 'nullable', 'string', 'max:100', self::NO_MARKUP],
             'billing_payment_note' => ['sometimes', 'nullable', 'string', 'max:500', self::NO_MARKUP],
             'billing_tax_rate' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:100', 'regex:/^\d{1,3}(\.\d{1,3})?$/'],
+            // SELL-06: trial days of an approved signup whose plan has none (null = config default).
+            'signup_trial_days' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:'.PlatformBranding::MAX_SIGNUP_TRIAL_DAYS],
         ];
     }
 

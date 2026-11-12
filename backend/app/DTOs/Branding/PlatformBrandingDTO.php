@@ -32,6 +32,7 @@ final class PlatformBrandingDTO
         public readonly string $billingAccountName = '',
         public readonly string $billingPaymentNote = '',
         public readonly string $billingTaxRate = '0.000',
+        public readonly int $signupTrialDays = 14,
     ) {}
 
     /**
@@ -41,7 +42,8 @@ final class PlatformBrandingDTO
      *     primary_color: string, support_email: string, support_phone: string,
      *     website_url: string, powered_by_enabled: bool,
      *     billing_instapay_address?: string, billing_vodafone_cash_number?: string,
-     *     billing_account_name?: string, billing_payment_note?: string, billing_tax_rate?: string
+     *     billing_account_name?: string, billing_payment_note?: string, billing_tax_rate?: string,
+     *     signup_trial_days?: int
      * }  $data
      */
     public static function fromArray(array $data): self
@@ -65,6 +67,7 @@ final class PlatformBrandingDTO
             billingAccountName: $data['billing_account_name'] ?? '',
             billingPaymentNote: $data['billing_payment_note'] ?? '',
             billingTaxRate: $data['billing_tax_rate'] ?? '0.000',
+            signupTrialDays: $data['signup_trial_days'] ?? 14,
         );
     }
 
@@ -75,7 +78,8 @@ final class PlatformBrandingDTO
      *     primary_color: string, support_email: string, support_phone: string,
      *     website_url: string, powered_by_enabled: bool,
      *     billing_instapay_address?: string, billing_vodafone_cash_number?: string,
-     *     billing_account_name?: string, billing_payment_note?: string, billing_tax_rate?: string
+     *     billing_account_name?: string, billing_payment_note?: string, billing_tax_rate?: string,
+     *     signup_trial_days?: int
      * }
      */
     public function toArray(): array
@@ -99,6 +103,7 @@ final class PlatformBrandingDTO
             'billing_account_name' => $this->billingAccountName,
             'billing_payment_note' => $this->billingPaymentNote,
             'billing_tax_rate' => $this->billingTaxRate,
+            'signup_trial_days' => $this->signupTrialDays,
         ];
     }
 }

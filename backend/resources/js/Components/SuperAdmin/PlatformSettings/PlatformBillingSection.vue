@@ -1,5 +1,5 @@
 <script setup>
-import { Landmark, Smartphone, UserRound, Percent } from 'lucide-vue-next';
+import { Landmark, Smartphone, UserRound, Percent, Hourglass } from 'lucide-vue-next';
 import DashboardSectionCard from '../../Common/DashboardSectionCard.vue';
 import BaseInput from '../../Form/BaseInput.vue';
 import BaseTextarea from '../../Form/BaseTextarea.vue';
@@ -72,6 +72,22 @@ defineEmits(['update:field']);
         :readonly="readonly"
         maxlength="7"
         @update:model-value="$emit('update:field', 'billing_tax_rate', $event)"
+      />
+      <BaseInput
+        :model-value="form.signup_trial_days"
+        type="number"
+        dir="ltr"
+        inputmode="numeric"
+        min="1"
+        max="90"
+        :leading-icon="Hourglass"
+        :label="$t('billing.console.settings.signup_trial_days')"
+        :placeholder="$t('billing.console.settings.signup_trial_days_placeholder')"
+        :hint="$t('billing.console.settings.signup_trial_days_hint')"
+        :error="errors.signup_trial_days"
+        :readonly="readonly"
+        data-testid="platform-signup-trial-days"
+        @update:model-value="$emit('update:field', 'signup_trial_days', $event)"
       />
       <BaseTextarea
         :model-value="form.billing_payment_note"

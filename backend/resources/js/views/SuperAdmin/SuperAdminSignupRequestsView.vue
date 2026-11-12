@@ -49,6 +49,7 @@ const {
       :is-submitting="approval.isSubmitting"
       :is-preparing="approval.isPreparing"
       :credentials="approval.credentials"
+      :terms="approval.terms"
       :can-whatsapp="approval.canSendWhatsApp"
       @close="approval.close"
       @submit="approval.submit"

@@ -39,7 +39,8 @@ use LogicException;
  * outside one). Lock order after payment and invoice: tenant row, then the subscription row.
  *
  *  - subscription: plan + cycle from the invoice, status active, price = the billed plan line,
- *    period extended by one month / one year from max(now, current paid end);
+ *    period extended by one month / one year from max(now, current paid end, invoice period
+ *    start) - the last one is the trial end for the SELL-06 trial-end invoice;
  *  - tenant: plan_id and subscription_ends_at follow, and the lifecycle status moves to `active`
  *    ONLY through TransitionTenantStatusAction (actor Billing) when it is not already active.
  *    A `violation` suspension is never lifted by a payment: the period is extended and the
@@ -96,6 +97,13 @@ final class ActivateSubscriptionAction
         $currentEnd = $tenant->subscription_ends_at;
         $hasFutureEnd = $currentEnd !== null && $currentEnd->isAfter($now);
         $base = $hasFutureEnd ? CarbonImmutable::instance($currentEnd) : $now;
+        // SELL-06: an invoice billed for a period that has not started yet (the trial-end invoice,
+        // period_start = trial end) starts the paid term at that period, so paying early never
+        // eats the rest of the trial; the shop is `active` (full access) in between.
+        $periodStart = $invoice->period_start;
+        if ($periodStart !== null && $periodStart->isAfter($base)) {
+            $base = CarbonImmutable::instance($periodStart);
+        }
         $difference = $this->isDifference($invoice);
         $keepsTerm = $difference && $hasFutureEnd;
         $newEnd = $keepsTerm

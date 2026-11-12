@@ -18,7 +18,8 @@ use App\Models\Tenant;
  * price, issued_by null. Plan changes are not self-service: the shop contacts support.
  * Idempotent per period: when a non-void renewal invoice for this period already exists the
  * underlying IssueSubscriptionInvoiceAction answers BillingException 409 (billing.invoice_duplicate)
- * whose details name the existing invoice.
+ * whose details name the existing invoice. SELL-06: the same 409 code (details.open_invoice = true)
+ * when ANY unpaid plan / renewal / upgrade invoice exists, e.g. the auto-issued trial-end invoice.
  */
 final class RequestRenewalInvoiceAction
 {
@@ -41,6 +42,8 @@ final class RequestRenewalInvoiceAction
             notes: null,
             periodStart: null,
             issuedBy: null,
+            // SELL-06: never a second unpaid plan-type invoice next to e.g. the trial-end one.
+            refuseWhenOpenPlanInvoice: true,
         ));
     }
 }

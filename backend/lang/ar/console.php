@@ -221,6 +221,21 @@ return [
         'needs_attention' => 'المستأجر :tenant_id في حالة :status بدون تاريخ انتهاء: لن تتغير حالته تلقائيًا. حدّد تواريخه (يحتاج انتباهًا).',
         'summary' => 'تم فحص :checked مستأجر: نُقل :moved، حان موعد أرشفة :archive_due، يحتاج انتباهًا :attention (بدون موعد)، فشل :failed.',
     ],
+    // SELL-06: billing:issue-trial-invoices.
+    'trial_invoices' => [
+        'description' => 'إصدار أول فاتورة اشتراك لكل محل تجربته هتخلص خلال أيام التنبيه (مرة واحدة لكل محل وفترة)',
+        'issued' => 'المحل :tenant_id: اتصدرت الفاتورة :number (:total)، والتجربة بتخلص :trial_ends_at.',
+        'would_issue' => '[تجربة بدون تنفيذ] المحل :tenant_id: هتتصدر له فاتورة، والتجربة بتخلص :trial_ends_at.',
+        'skipped' => 'المحل :tenant_id اتساب: :reason.',
+        'failed' => 'المحل :tenant_id: تعذّر إصدار الفاتورة: :error',
+        'summary' => 'تم فحص :checked محل في التجربة: اتصدر :issued، اتساب :skipped، فشل :failed.',
+        'reasons' => [
+            'no_plan' => 'مالوش باقة',
+            'free_plan' => 'الباقة مجانية',
+            'already_issued' => 'فيه فاتورة للفترة دي بالفعل',
+            'open_invoice' => 'فيه فاتورة اشتراك لسه ما اتدفعتش',
+        ],
+    ],
     // OPS-9: tenants:archive / tenants:purge.
     'archive' => [
         'description' => 'أرشفة محل موقوف أو ملغي بعد نسخة احتياطية نهائية متأكدين منها (من غير مسح أي حاجة)',

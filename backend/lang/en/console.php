@@ -221,6 +221,21 @@ return [
         'needs_attention' => 'Tenant :tenant_id is in :status with no end date: it will never change status by itself. Set its dates (needs attention).',
         'summary' => 'Checked :checked tenant(s): :moved moved, :archive_due due for archiving, :attention need attention (no deadline), :failed failed.',
     ],
+    // SELL-06: billing:issue-trial-invoices.
+    'trial_invoices' => [
+        'description' => 'Issue the first subscription invoice of every trial that ends within the lead days (once per tenant and period)',
+        'issued' => 'Tenant :tenant_id: invoice :number issued (:total), trial ends :trial_ends_at.',
+        'would_issue' => '[dry run] Tenant :tenant_id: an invoice would be issued, trial ends :trial_ends_at.',
+        'skipped' => 'Tenant :tenant_id skipped: :reason.',
+        'failed' => 'Tenant :tenant_id: the invoice could not be issued: :error',
+        'summary' => 'Checked :checked trial tenant(s): :issued issued, :skipped skipped, :failed failed.',
+        'reasons' => [
+            'no_plan' => 'no plan',
+            'free_plan' => 'the plan is free',
+            'already_issued' => 'an invoice for this period already exists',
+            'open_invoice' => 'an unpaid subscription invoice already exists',
+        ],
+    ],
     // OPS-9: tenants:archive / tenants:purge.
     'archive' => [
         'description' => 'Archive one suspended or cancelled tenant after a verified final backup (nothing is dropped)',
