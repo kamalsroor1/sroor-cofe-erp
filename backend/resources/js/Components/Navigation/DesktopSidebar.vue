@@ -1,7 +1,7 @@
 <template>
   <aside
-    class="hidden md:flex h-full max-h-full bg-white dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800/80 flex-col shrink-0 font-tajawal select-none transition-all duration-300 shadow-xl z-30 overflow-hidden"
-    :class="isCollapsed ? 'w-20' : 'w-80'"
+    class="hidden lg:flex h-full max-h-full bg-white dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800/80 flex-col shrink-0 font-tajawal select-none transition-[width] duration-300 shadow-xl z-30 overflow-hidden"
+    :class="[isCollapsed ? 'w-[72px]' : 'w-64', overlay ? 'absolute inset-y-0 start-0' : '']"
   >
     <!-- 📌 1. HEADER: BRAND LOGO + COLLAPSE/EXPAND TOGGLE -->
     <div
@@ -33,6 +33,7 @@
         <!-- Toggle Button -->
         <button
           type="button"
+          data-testid="sidebar-toggle"
           @click="toggleCollapse"
           class="w-8 h-8 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
           :title="isCollapsed ? $t('nav.layout.expand_menu') : $t('nav.layout.collapse_menu')"
@@ -52,6 +53,7 @@
         <BrandMark v-else variant="app-icon" :size="40" class="rounded-2xl shadow-lg" />
         <button
           type="button"
+          data-testid="sidebar-toggle"
           @click="toggleCollapse"
           class="w-8 h-8 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
           :title="$t('nav.layout.expand_menu')"
@@ -125,7 +127,7 @@
                 <div class="text-xs font-black truncate group-hover:text-theme-primary transition">
                   {{ section.title }}
                 </div>
-                <div class="text-[10px] text-slate-400 font-bold truncate mt-0.5">
+                <div class="hidden xl:block text-[10px] text-slate-400 font-bold truncate mt-0.5">
                   {{ section.subtitle || $t('nav.dashboard_short') }}
                 </div>
               </div>
@@ -187,7 +189,7 @@
                     {{ section.title }}
                   </div>
                   <div
-                    class="text-[10px] font-bold truncate mt-0.5"
+                    class="hidden xl:block text-[10px] font-bold truncate mt-0.5"
                     :class="section.comingSoon ? 'text-amber-500 dark:text-amber-400' : 'text-slate-400'"
                   >
                     {{
@@ -406,6 +408,8 @@ import { ChevronRight, ChevronLeft, ChevronDown, Plus, Sparkles } from 'lucide-v
 
 const props = defineProps({
   isCollapsed: { type: Boolean, default: false },
+  // Mid-width screens: the sidebar floats above the content instead of pushing it.
+  overlay: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['toggle-collapse']);

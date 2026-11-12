@@ -1,4 +1,5 @@
 import { onBeforeUnmount, ref } from 'vue';
+import { COMPACT_QUERY, DESKTOP_QUERY, WIDE_QUERY } from '../helpers/breakpoints';
 
 /**
  * Reactive `matchMedia` wrapper. Falls back to `false` where matchMedia is unavailable (SSR, old webviews).
@@ -18,5 +19,9 @@ export function useMediaQuery(query) {
     return matches;
 }
 
-// Phones: below Tailwind's `md` (768px). Tablets keep the desktop/tablet layout.
-export const usePhoneViewport = () => useMediaQuery('(max-width: 767.98px)');
+// Phones and tablets: below DESKTOP_MIN, the same switch point as the app shell (see helpers/breakpoints.js).
+export const useCompactViewport = () => useMediaQuery(COMPACT_QUERY);
+
+// App shell: >= 1024px shows the sidebar rail, >= 1280px the open sidebar (see helpers/breakpoints.js).
+export const useDesktopViewport = () => useMediaQuery(DESKTOP_QUERY);
+export const useWideViewport = () => useMediaQuery(WIDE_QUERY);

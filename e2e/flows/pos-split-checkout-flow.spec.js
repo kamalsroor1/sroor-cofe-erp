@@ -54,6 +54,9 @@ async function openPosWithItem(page) {
     await page.goto('/pos', { waitUntil: 'networkidle' });
     await page.getByTestId('pos-checkout-submit').waitFor({ state: 'visible', timeout: 15000 });
     await page.getByText(ITEM.name, { exact: true }).first().click();
+    // A weighted item asks for its weight first (POS-06): take one kilo, which is the line the tests expect.
+    await page.getByTestId('pos-weight-preset-kilo').click();
+    await expect(page.getByTestId('pos-cart-qty').first()).toHaveValue('1.000');
 }
 
 test.describe('POS split checkout', () => {

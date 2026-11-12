@@ -44,8 +44,8 @@ test.describe('POS checkout payload (exact, server-authoritative)', () => {
                 { amount: '40', paid_by: 'treasury_cash' },
             ],
         });
-        // 137.625 - bcdiv(bcmul(137.625, 10, 4), 100, 3) = 137.625 - 13.762 = 123.863; + 15
-        expect(net).toBe('138.863');
+        // Decimal::percent rounds half-up at scale 3: 137.625 x 10% = 13.7625 -> 13.763; 137.625 - 13.763 + 15
+        expect(net).toBe('138.862');
     });
 
     test('fixed discount is clamped to the subtotal', () => {
@@ -133,6 +133,7 @@ test.describe('POS checkout payload (exact, server-authoritative)', () => {
         });
         expect(res).toEqual({
             valid: true,
+            reason: 'partial_invalid',
             paidAmount: '37.625',
             payments: [{ method: 'instapay', amount: '37.625' }],
         });

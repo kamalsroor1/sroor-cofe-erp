@@ -10,8 +10,9 @@
           class="w-11 h-11 md:w-10 md:h-10 pointer-coarse:w-11 pointer-coarse:h-11 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition border border-slate-200 dark:border-slate-700 cursor-pointer shrink-0"
           :title="$t('pos.back_to_invoices')"
           :aria-label="$t('pos.back_to_invoices')"
+          data-testid="pos-back-link"
         >
-          <ArrowRight class="w-4 h-4" />
+          <ArrowRight class="w-4 h-4 ltr:-scale-x-100" aria-hidden="true" />
         </router-link>
 
         <div class="hidden md:flex items-center gap-2">
@@ -73,7 +74,7 @@
       </div>
 
       <!-- Center: Giant Barcode / Product Search Box with Dropdown -->
-      <div class="flex-1 min-w-0 max-w-3xl relative">
+      <div class="flex-1 min-w-0 max-w-3xl relative" data-testid="pos-search-field">
         <div class="relative">
           <div class="absolute inset-y-0 start-0 ps-3.5 flex items-center pointer-events-none text-slate-400">
             <Search class="w-5 h-5" />
@@ -85,7 +86,7 @@
             :value="searchQuery"
             @input="$emit('update:searchQuery', $event.target.value)"
             type="text"
-            class="w-full h-11 md:h-12 ps-11 pe-12 sm:pe-24 bg-slate-50 dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 focus:border-theme-primary focus:ring-4 focus:ring-theme-primary/20 rounded-2xl text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all focus:outline-none"
+            class="w-full h-11 md:h-12 ps-11 pe-12 lg:pe-24 bg-slate-50 dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 focus:border-theme-primary focus:ring-4 focus:ring-theme-primary/20 rounded-2xl text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all focus:outline-none"
             :placeholder="$t('pos.search_placeholder_long')"
             @keydown.down.prevent="$emit('navigate-dropdown', 'down')"
             @keydown.up.prevent="$emit('navigate-dropdown', 'up')"
@@ -108,7 +109,7 @@
               <X class="w-4 h-4" aria-hidden="true" />
             </button>
             <kbd
-              class="hidden sm:inline-block px-2 py-1 text-[10px] font-mono font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg border border-slate-300 dark:border-slate-700"
+              class="hidden lg:inline-block px-2 py-1 text-[10px] font-mono font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg border border-slate-300 dark:border-slate-700"
               >F2</kbd
             >
           </div>
@@ -265,11 +266,11 @@
         <button
           type="button"
           disabled
-          class="hidden md:flex min-h-[44px] px-3 py-2 border rounded-xl text-xs font-bold transition items-center gap-1.5 opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-400 dark:text-slate-500 shadow-2xs select-none"
+          class="hidden 2xl:flex min-h-[44px] px-3 py-2 border rounded-xl text-xs font-bold transition items-center gap-1.5 opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-400 dark:text-slate-500 shadow-2xs select-none"
           :title="`${$t('pos.show_menu')} - ${$t('nav.coming_soon')}`"
         >
           <LayoutGrid class="w-4 h-4 shrink-0 opacity-70" />
-          <span class="hidden lg:inline">{{ $t('pos.show_menu') }}</span>
+          <span>{{ $t('pos.show_menu') }}</span>
           <span
             class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[10px] font-bold border border-amber-500/20"
           >
@@ -282,13 +283,13 @@
         <button
           type="button"
           data-testid="pos-recent-sales-btn"
-          class="hidden md:flex min-h-[44px] min-w-[44px] px-3 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/80 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+          class="hidden lg:flex min-h-[44px] min-w-[44px] px-3 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/80 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
           :title="`${$t('pos.recent_sales_title')} (F8)`"
           :aria-label="$t('pos.recent_sales_title')"
           @click="$emit('open-recent-sales')"
         >
           <History class="w-4 h-4 text-theme-primary shrink-0" />
-          <span class="hidden lg:inline">{{ $t('pos.recent_sales_title') }}</span>
+          <span class="hidden xl:inline">{{ $t('pos.recent_sales_title') }}</span>
         </button>
 
         <!-- Customer Selection Button -->
@@ -320,7 +321,7 @@
 
         <!-- Price Tier Toggle (Retail / Wholesale) -->
         <div
-          class="hidden md:flex p-0.5 bg-slate-200 dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold"
+          class="hidden lg:flex p-0.5 bg-slate-200 dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold"
         >
           <button
             type="button"
@@ -353,17 +354,17 @@
           type="button"
           @click="$emit('clear-cart')"
           :disabled="cartEmpty"
-          class="hidden md:flex min-h-[44px] min-w-[44px] p-2.5 bg-slate-100 hover:bg-rose-500/20 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-500/20 dark:hover:text-rose-400 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700 rounded-xl transition disabled:opacity-30 cursor-pointer items-center justify-center"
+          class="hidden lg:flex min-h-[44px] min-w-[44px] p-2.5 bg-slate-100 hover:bg-rose-500/20 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-500/20 dark:hover:text-rose-400 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700 rounded-xl transition disabled:opacity-30 cursor-pointer items-center justify-center"
           :title="$t('pos.clear_cart_full')"
           :aria-label="$t('pos.clear_cart_full')"
         >
           <RotateCcw class="w-4 h-4" />
         </button>
 
-        <!-- Phones: store, shift, recent sales, price tier and clear cart live in one sheet -->
+        <!-- Phones and tablets (< 1024px): store, shift, recent sales, price tier and clear cart live in one sheet -->
         <button
           type="button"
-          class="md:hidden relative w-11 h-11 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center cursor-pointer active:scale-95 transition"
+          class="lg:hidden relative w-11 h-11 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center cursor-pointer active:scale-95 transition"
           data-testid="pos-phone-menu-btn"
           :aria-label="$t('pos.phone_menu_btn')"
           aria-haspopup="dialog"

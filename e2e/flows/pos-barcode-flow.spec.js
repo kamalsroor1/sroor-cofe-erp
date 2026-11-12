@@ -39,7 +39,7 @@ async function setupPosRoutes(page) {
             .forEach((k) => localStorage.removeItem(k));
     });
 
-    await page.route('**/api/v1/items*', (route) =>
+    await page.route('**/api/v1/pos/items*', (route) =>
         route.fulfill({
             json: { success: true, data: [ITEM_A, ITEM_B], meta: { total: 2 } },
         })

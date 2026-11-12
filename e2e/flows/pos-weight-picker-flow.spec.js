@@ -24,7 +24,7 @@ async function setupPosRoutes(page) {
             .forEach((k) => localStorage.removeItem(k));
     });
 
-    await page.route('**/api/v1/items*', (route) =>
+    await page.route('**/api/v1/pos/items*', (route) =>
         route.fulfill({
             json: { success: true, data: [WEIGHTED_ITEM], meta: { total: 1 } },
         })

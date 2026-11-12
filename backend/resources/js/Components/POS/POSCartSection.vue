@@ -8,7 +8,8 @@ import { computed, ref, watch } from 'vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
 const props = defineProps({
-  phone: { type: Boolean, default: false },
+  // Below DESKTOP_MIN: cart bar + sheets over the catalog instead of the cart column.
+  compact: { type: Boolean, default: false },
   cart: { type: Array, required: true },
   totalQty: { type: Number, default: 0 },
   orders: { type: Array, default: () => [] },
@@ -51,7 +52,7 @@ const emit = defineEmits([
 
 const { formatMoney, currencyLabel } = useFormatters();
 
-// Phones: the ticket and the payment are two sheets over the catalog. null = both closed.
+// Phones and tablets: the ticket and the payment are two sheets over the catalog. null = both closed.
 const sheet = ref(null);
 const closePaymentSheet = () => {
   sheet.value = 'cart';
@@ -65,9 +66,9 @@ watch(
   }
 );
 watch(
-  () => props.phone,
-  (isPhone) => {
-    if (!isPhone) sheet.value = null;
+  () => props.compact,
+  (isCompact) => {
+    if (!isCompact) sheet.value = null;
   }
 );
 
@@ -92,7 +93,7 @@ const checkoutProps = computed(() => ({
 </script>
 
 <template>
-  <div v-if="phone" class="order-4 shrink-0">
+  <div v-if="compact" class="order-4 shrink-0">
     <POSPhoneCartBar
       v-if="cart.length > 0"
       :count="cart.length"
@@ -174,9 +175,10 @@ const checkoutProps = computed(() => ({
 
   <section
     v-else
-    class="flex-1 flex flex-col p-2 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 overflow-visible lg:overflow-hidden order-2 lg:order-1 min-w-0 transition-all duration-200 min-h-[380px] lg:min-h-0"
+    class="w-[clamp(360px,36vw,400px)] shrink-0 flex flex-col p-2 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 overflow-hidden order-1 min-h-0"
+    data-testid="pos-cart-column"
   >
-    <div class="flex-1 overflow-visible lg:overflow-hidden flex flex-col min-h-[160px] lg:min-h-[96px]">
+    <div class="flex-1 overflow-hidden flex flex-col min-h-[96px]">
       <POSCartTable
         :cart="cart"
         :total-qty="totalQty"

@@ -14,9 +14,12 @@
         <!-- Mobile Menu Toggle Button -->
         <button
           type="button"
+          data-testid="mobile-menu-button"
           @click="isSidebarOpen = true"
-          class="min-h-[40px] min-w-[40px] p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl transition md:hidden cursor-pointer active:scale-95 flex items-center justify-center"
+          class="min-h-[44px] min-w-[44px] p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl transition lg:hidden cursor-pointer active:scale-95 flex items-center justify-center"
           :title="$t('nav.layout.menu')"
+          :aria-label="$t('nav.layout.menu')"
+          :aria-expanded="isSidebarOpen"
         >
           <Menu class="w-5 h-5" />
         </button>
@@ -152,9 +155,9 @@
 
       <!-- Left Side (in RTL): Live Clock & Logout -->
       <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
-        <!-- Live Realtime Clock (Full on desktop/tablet, hidden on small phone to prevent clutter) -->
+        <!-- Live Realtime Clock (Desktop only: below 1024px the header keeps just the essentials) -->
         <div
-          class="hidden sm:flex text-xs font-bold text-slate-500 dark:text-slate-400 font-mono tracking-tight items-center gap-2"
+          class="hidden lg:flex text-xs font-bold text-slate-500 dark:text-slate-400 font-mono tracking-tight items-center gap-2"
         >
           <span>{{ currentTimeStr }}</span>
         </div>
@@ -182,13 +185,26 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="flex-1 flex overflow-hidden relative min-h-0">
       <!-- 💻 MODERN DESKTOP SIDEBAR -->
-      <DesktopSidebar :is-collapsed="isSidebarCollapsed" @toggle-collapse="toggleSidebarCollapse" />
+      <!-- 1024-1279px: a 72px rail holds the layout slot and the expanded sidebar floats above the content -->
+      <div class="hidden lg:block relative h-full shrink-0" :class="{ 'w-[72px] z-30': isSidebarOverlay }">
+        <div
+          v-if="isSidebarOverlay && isSidebarOverlayOpen"
+          class="fixed inset-0 bg-slate-950/40 z-[-1]"
+          aria-hidden="true"
+          @click="closeSidebarOverlay"
+        ></div>
+        <DesktopSidebar
+          :is-collapsed="isSidebarCollapsed"
+          :overlay="isSidebarOverlay"
+          @toggle-collapse="toggleSidebar"
+        />
+      </div>
 
       <!-- Main Content Stage -->
       <main
         class="flex-1 h-full min-h-0 bg-slate-50 dark:bg-slate-950"
         :class="
-          isPosView ? 'p-0 overflow-hidden pb-0' : 'overflow-y-auto p-3 sm:p-6 lg:p-8 pb-24 md:pb-8 custom-scrollbar'
+          isPosView ? 'p-0 overflow-hidden pb-0' : 'overflow-y-auto p-3 sm:p-6 lg:p-8 pb-24 lg:pb-8 custom-scrollbar'
         "
       >
         <slot />
@@ -204,14 +220,18 @@
         <div
           v-if="isSidebarOpen"
           @click="isSidebarOpen = false"
-          class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-[9998] md:hidden"
+          class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-[9998] lg:hidden"
         ></div>
       </Transition>
 
       <Transition name="sidebar-drawer">
         <aside
           v-if="isSidebarOpen"
-          class="fixed inset-y-0 start-0 w-[88vw] max-w-[360px] bg-white dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 flex flex-col shadow-2xl z-[9999] font-tajawal md:hidden"
+          role="dialog"
+          aria-modal="true"
+          :aria-label="$t('nav.layout.menu')"
+          data-testid="mobile-drawer"
+          class="fixed inset-y-0 start-0 w-[88vw] max-w-[360px] bg-white dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 flex flex-col shadow-2xl z-[9999] font-tajawal lg:hidden"
         >
           <!-- Drawer Header -->
           <div
@@ -235,8 +255,12 @@
               </div>
             </div>
             <button
+              ref="drawerCloseRef"
+              type="button"
+              data-testid="mobile-drawer-close"
+              :aria-label="$t('common.close')"
               @click="isSidebarOpen = false"
-              class="min-h-[38px] min-w-[38px] p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-center font-bold cursor-pointer"
+              class="min-h-[44px] min-w-[44px] p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-center font-bold cursor-pointer"
             >
               <X class="w-4 h-4" />
             </button>
@@ -467,7 +491,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useAppConfigStore } from '../stores/appConfig';
@@ -477,6 +501,7 @@ import { useAppUpdate } from '../Composables/useAppUpdate';
 import { useDesktopHardware } from '../Composables/useDesktopHardware';
 import { useFormatters } from '../Composables/useFormatters';
 import { useTabsStore } from '../stores/tabs';
+import { useSidebarState } from '../Composables/useSidebarState';
 import LanguageSwitcher from '../Components/Common/LanguageSwitcher.vue';
 import DesktopPrinterSettingsModal from '../Components/Common/DesktopPrinterSettingsModal.vue';
 import DesktopTabsBar from '../Components/Navigation/DesktopTabsBar.vue';
@@ -532,42 +557,56 @@ watch(
 
 const isSidebarOpen = ref(false);
 const activeMobileSection = ref(null);
-const isSidebarCollapsed = ref(localStorage.getItem('sidebar_collapsed') === 'true');
+const drawerCloseRef = ref(null);
+let drawerReturnFocusEl = null;
 
 const isPosView = computed(() => route.path === '/pos' || route.path.startsWith('/pos/'));
 
-// 📱 Smart Adaptive Sidebar: Auto-collapse on POS, restore user's original state on exit
+const {
+  isDesktopUp,
+  isCollapsed: isSidebarCollapsed,
+  isOverlay: isSidebarOverlay,
+  isOverlayOpen: isSidebarOverlayOpen,
+  toggle: toggleSidebar,
+  closeOverlay: closeSidebarOverlay,
+} = useSidebarState(isPosView);
+
 watch(
   () => route.path,
-  (newPath, oldPath) => {
+  () => {
     isSidebarOpen.value = false;
     activeMobileSection.value = null;
-
-    const isGoingToPos = newPath === '/pos' || newPath.startsWith('/pos');
-    const isComingFromPos = oldPath && (oldPath === '/pos' || oldPath.startsWith('/pos'));
-
-    if (isGoingToPos) {
-      isSidebarCollapsed.value = true;
-    } else if (isComingFromPos) {
-      const savedPref = localStorage.getItem('sidebar_collapsed') === 'true';
-      isSidebarCollapsed.value = savedPref;
-    } else {
-      isSidebarCollapsed.value = localStorage.getItem('sidebar_collapsed') === 'true';
-    }
   },
   { immediate: true }
 );
+
+// The drawer only exists below 1024px; it must not stay open after a rotate/resize into desktop width.
+watch(isDesktopUp, (isDesktopWidth) => {
+  if (isDesktopWidth) isSidebarOpen.value = false;
+});
+
+// Drawer a11y: focus moves into it on open and returns to whatever opened it (header button or bottom nav).
+watch(isSidebarOpen, async (isOpen) => {
+  if (isOpen) {
+    drawerReturnFocusEl = document.activeElement;
+    await nextTick();
+    drawerCloseRef.value?.focus();
+  } else if (drawerReturnFocusEl) {
+    const target = drawerReturnFocusEl;
+    drawerReturnFocusEl = null;
+    if (target.isConnected) target.focus();
+  }
+});
+
+const handleDrawerEscape = (event) => {
+  if (event.key === 'Escape' && isSidebarOpen.value) isSidebarOpen.value = false;
+};
 
 const isUserDropdownOpen = ref(false);
 const userDropdownRef = ref(null);
 
 const currentTimeStr = ref('');
 let clockInterval = null;
-
-const toggleSidebarCollapse = () => {
-  isSidebarCollapsed.value = !isSidebarCollapsed.value;
-  localStorage.setItem('sidebar_collapsed', isSidebarCollapsed.value ? 'true' : 'false');
-};
 
 const updateLiveClock = () => {
   const now = new Date();
@@ -611,11 +650,13 @@ onMounted(() => {
   updateLiveClock();
   clockInterval = setInterval(updateLiveClock, 1000);
   document.addEventListener('click', handleOutsideClick);
+  document.addEventListener('keydown', handleDrawerEscape);
 });
 
 onUnmounted(() => {
   if (clockInterval) clearInterval(clockInterval);
   document.removeEventListener('click', handleOutsideClick);
+  document.removeEventListener('keydown', handleDrawerEscape);
 });
 </script>
 

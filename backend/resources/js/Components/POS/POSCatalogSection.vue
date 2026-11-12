@@ -17,54 +17,49 @@ defineProps({
   hasMore: { type: Boolean, default: false },
   cardsPerRow: { type: String, default: '3' },
   showImages: { type: Boolean, default: false },
-  phone: { type: Boolean, default: false },
 });
 
 defineEmits(['add-item', 'select-category', 'load-more']);
 </script>
 
 <template>
-  <!-- Phones: category chips on top, the catalog fills the screen and scrolls on its own -->
-  <POSCategoryChips
-    v-if="phone"
-    class="order-1"
-    :categories="categories"
-    :active-category-id="activeCategoryId"
-    @select-category="$emit('select-category', $event)"
-  />
-
+  <!-- Below xl the categories are a chip row on top of the grid; from xl up they move to the side rail -->
   <main
-    class="w-full flex flex-col bg-slate-100/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 animate-in fade-in duration-150"
-    :class="
-      phone
-        ? 'order-2 flex-1 min-h-0 overflow-hidden'
-        : 'shrink-0 order-1 lg:order-2 lg:w-[42%] xl:w-[54%] 2xl:w-[58%] overflow-visible lg:overflow-hidden border-b lg:border-b-0 lg:border-e min-h-[300px] lg:min-h-0'
-    "
+    class="order-1 lg:order-2 flex-1 min-w-0 min-h-0 w-full flex flex-col overflow-hidden bg-slate-100/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 lg:border-e animate-in fade-in duration-150"
   >
-    <POSProductGrid
-      :items="items"
+    <POSCategoryChips
+      class="xl:hidden"
       :categories="categories"
       :active-category-id="activeCategoryId"
-      :active-price-tier="activePriceTier"
-      :search-query="searchQuery"
-      :visible-count="visibleCount"
-      :is-loading="isLoading"
-      :is-loading-more="isLoadingMore"
-      :has-more="hasMore"
-      :cards-per-row="cardsPerRow"
-      :show-images="showImages"
-      @add-item="$emit('add-item', $event)"
-      @load-more="$emit('load-more')"
+      @select-category="$emit('select-category', $event)"
     />
+
+    <div class="flex-1 min-h-0">
+      <POSProductGrid
+        :items="items"
+        :categories="categories"
+        :active-category-id="activeCategoryId"
+        :active-price-tier="activePriceTier"
+        :search-query="searchQuery"
+        :visible-count="visibleCount"
+        :is-loading="isLoading"
+        :is-loading-more="isLoadingMore"
+        :has-more="hasMore"
+        :cards-per-row="cardsPerRow"
+        :show-images="showImages"
+        @add-item="$emit('add-item', $event)"
+        @load-more="$emit('load-more')"
+      />
+    </div>
   </main>
 
-  <POSCategorySidebar
-    v-if="!phone"
-    class="order-3 animate-in fade-in duration-150 shrink-0"
-    :categories="categories"
-    :active-category-id="activeCategoryId"
-    :favorite-count="favoriteCount"
-    :total-items-count="totalItemsCount"
-    @select-category="$emit('select-category', $event)"
-  />
+  <div class="hidden xl:flex order-3 shrink-0 min-h-0 animate-in fade-in duration-150">
+    <POSCategorySidebar
+      :categories="categories"
+      :active-category-id="activeCategoryId"
+      :favorite-count="favoriteCount"
+      :total-items-count="totalItemsCount"
+      @select-category="$emit('select-category', $event)"
+    />
+  </div>
 </template>

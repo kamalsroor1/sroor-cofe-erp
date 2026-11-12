@@ -50,7 +50,7 @@ async function mockPosData(page, onInvoice) {
 
 test.describe('Mobile POS workflow', () => {
     test.beforeEach(async ({ page }) => {
-        test.skip(!isPhoneViewport(page), 'Mobile POS flow runs only on phone viewports (<768px)');
+        test.skip(!isPhoneViewport(page), 'Mobile POS flow runs only on compact viewports (< DESKTOP_MIN)');
     });
 
     test('adding item shows phone cart bar and bottom sheets', async ({ page }) => {

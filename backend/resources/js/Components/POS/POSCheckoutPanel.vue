@@ -78,7 +78,10 @@
             <span class="font-mono">{{ formatMoney(subtotal) }}</span>
           </div>
         </div>
-        <span class="text-3xl leading-none font-black font-mono text-emerald-600 dark:text-emerald-400 tracking-tight">
+        <span
+          class="text-3xl leading-none font-black font-mono text-emerald-600 dark:text-emerald-400 tracking-tight"
+          data-testid="pos-net-total"
+        >
           {{ formatMoney(netTotal) }}
           <span class="text-xs font-bold text-slate-400 font-tajawal">{{ currencyLabel }}</span>
         </span>
@@ -140,7 +143,10 @@
       <!-- GIANT NET TOTAL DUE -->
       <div class="pt-1.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
         <span class="text-xs font-black text-slate-900 dark:text-white">{{ $t('pos.giant_net_total') }}</span>
-        <span class="text-xl font-black font-mono text-emerald-600 dark:text-emerald-400 tracking-tight">
+        <span
+          class="text-xl font-black font-mono text-emerald-600 dark:text-emerald-400 tracking-tight"
+          data-testid="pos-net-total"
+        >
           {{ formatMoney(netTotal) }}
           <span class="text-xs font-bold text-slate-400 font-tajawal">{{ currencyLabel }}</span>
         </span>
@@ -203,7 +209,10 @@
           ]"
         >
           <component :is="m.icon" class="w-4 h-4 shrink-0" aria-hidden="true" />
-          <span class="truncate max-w-full">{{ m.label }}</span>
+          <!-- The one-row footer has ~55px per method: icon + short name there, the full name stays in title/aria-label -->
+          <span class="max-w-full" :class="compact ? 'truncate' : 'text-center leading-tight'">{{
+            compact ? m.short : m.label
+          }}</span>
         </button>
         <button
           type="button"
@@ -383,7 +392,7 @@
           class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"
         ></span>
         <CheckCircle2 v-else class="w-4 h-4 shrink-0 text-slate-950 stroke-[2.5]" />
-        <span class="truncate">{{ $t('pos.confirm_and_approve_f9') }}</span>
+        <span class="text-center leading-tight text-balance">{{ $t('pos.confirm_and_approve_f9') }}</span>
       </button>
 
       <button
@@ -395,7 +404,7 @@
         :class="compact ? 'col-span-2' : ''"
       >
         <Printer class="w-3.5 h-3.5 shrink-0" />
-        <span class="truncate">{{ $t('pos.save_and_print_btn') }}</span>
+        <span class="text-center leading-tight text-balance">{{ $t('pos.save_and_print_btn') }}</span>
       </button>
     </div>
   </aside>
@@ -433,11 +442,11 @@ const idleClass =
 
 // Method keys are the ones the checkout API accepts; e_wallet is what the server stores for smart wallets.
 const methods = computed(() => [
-  { key: 'cash', label: t('pos.method_cash'), icon: Banknote },
-  { key: 'instapay', label: t('pos.instapay'), icon: Zap },
-  { key: 'e_wallet', label: t('pos.smart_wallet'), icon: Smartphone },
-  { key: 'visa', label: t('pos.visa_card'), icon: CreditCard },
-  { key: 'bank_transfer', label: t('pos.bank_transfer'), icon: Building2 },
+  { key: 'cash', label: t('pos.method_cash'), short: t('pos.method_cash'), icon: Banknote },
+  { key: 'instapay', label: t('pos.instapay'), short: t('pos.method_instapay_short'), icon: Zap },
+  { key: 'e_wallet', label: t('pos.smart_wallet'), short: t('pos.method_wallet_short'), icon: Smartphone },
+  { key: 'visa', label: t('pos.visa_card'), short: t('pos.method_visa_short'), icon: CreditCard },
+  { key: 'bank_transfer', label: t('pos.bank_transfer'), short: t('pos.method_bank_short'), icon: Building2 },
 ]);
 
 const paymentTypes = computed(() => [
@@ -484,7 +493,7 @@ const props = defineProps({
 
 const discountOpen = ref(false);
 const hasDiscountValue = computed(() => isPositive(String(props.discountValue ?? '0')));
-const methodHeight = computed(() => (props.compact ? 'min-h-10 pointer-coarse:min-h-11' : 'min-h-11'));
+const methodHeight = computed(() => (props.compact ? 'min-h-10 pointer-coarse:min-h-11' : 'min-h-11 py-1'));
 const controlHeight = computed(() => (props.compact ? 'min-h-9 pointer-coarse:min-h-11' : 'min-h-11'));
 
 const isMethodActive = (key) => (props.paymentMethod === 'smart_wallet' ? 'e_wallet' : props.paymentMethod) === key;

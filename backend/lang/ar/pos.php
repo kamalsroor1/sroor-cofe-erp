@@ -290,6 +290,9 @@ return [
     'price_override_required' => 'البيع بأقل من الحد الأدنى للسعر يحتاج موافقة المدير.',
     'override_invalid' => 'موافقة المدير غير صحيحة.',
     'override_throttled' => 'محاولات موافقة خاطئة كثيرة. حاول مرة أخرى لاحقاً.',
+    // SEC-21
+    'override_locked_today' => 'تم إيقاف موافقات هذا المدير لباقي اليوم بسبب محاولات خاطئة كثيرة. وتعود للعمل غدًا أو بعد تغيير الرقم السري.',
+    'telegram_manager_pin_locked' => "🔒 <b>تم إيقاف موافقات مدير لباقي اليوم</b>\nالمتجر: :shop\nالمدير: :approver\nآخر محاولة من: :actor\nعدد المحاولات الخاطئة: :failures\nالوقت: :time\nلإعادة التفعيل قبل الغد: غيّر الرقم السري للمدير.",
     // POS-07
     'discount_cap_exceeded' => 'إجمالي الخصم أعلى من الحد المسموح به (:max% من البيع).',
     'discount_override_required' => 'الخصم الأعلى من الحد المسموح يحتاج موافقة المدير.',
@@ -320,6 +323,10 @@ return [
     'load_failed_category_items' => 'تعذر تحميل أصناف هذا التصنيف.',
     'method_cash' => 'كاش',
     'split_short' => 'تقسيم',
+    'method_instapay_short' => 'إنستاباي',
+    'method_wallet_short' => 'محفظة',
+    'method_visa_short' => 'فيزا',
+    'method_bank_short' => 'تحويل',
     'tender_label' => 'المبلغ المستلم',
     'tender_clear' => 'مسح المبلغ المستلم',
     'tender_short' => 'المبلغ المستلم أقل من المطلوب',

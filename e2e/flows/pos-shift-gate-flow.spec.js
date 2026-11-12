@@ -51,7 +51,7 @@ test.describe('POS-10: Shift gate, open shift, X-report & close shift', () => {
                 .forEach((k) => localStorage.removeItem(k));
         });
 
-        await page.route('**/api/v1/items*', (route) =>
+        await page.route('**/api/v1/pos/items*', (route) =>
             route.fulfill({
                 json: { success: true, data: [ITEM], meta: { total: 1 } },
             })

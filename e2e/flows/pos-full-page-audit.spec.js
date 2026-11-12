@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { DESKTOP_MIN } from '../../backend/resources/js/helpers/breakpoints.js';
 
 test.describe('POSView Comprehensive 4-Axes Audit & Multi-Viewport Verification', () => {
     let consoleErrors = [];
@@ -27,7 +28,7 @@ test.describe('POSView Comprehensive 4-Axes Audit & Multi-Viewport Verification'
         test(`should render POS correctly on ${vp.name}`, async ({ page }) => {
             await page.setViewportSize({ width: vp.width, height: vp.height });
             await page.goto('/pos', { waitUntil: 'networkidle' });
-            await page.waitForSelector('h1', { timeout: 15000 });
+            await page.waitForSelector('h1', { state: 'attached', timeout: 15000 });
 
             // Dismiss update modal if present
             const closeUpdateModalBtn = page.locator('button:has-text("لاحقاً"), button:has-text("تخطي"), button:has-text("إغلاق"), button:has-text("تم والإغلاق")').first();
@@ -51,17 +52,24 @@ test.describe('POSView Comprehensive 4-Axes Audit & Multi-Viewport Verification'
                 expect(custBox.height).toBeGreaterThanOrEqual(38);
             }
 
-            // 4. Cart Table / Empty Cart State
-            const hasCartItems = await page.getByTestId('pos-cart-row').first().isVisible().catch(() => false);
-            const hasEmptyCart = await page.locator('h3:has-text("الفاتورة فارغة"), p:has-text("الفاتورة فارغة")').isVisible().catch(() => false);
-            expect(hasCartItems || hasEmptyCart).toBeTruthy();
+            if (vp.width < DESKTOP_MIN) {
+                // 4/5. Phones and tablets: the catalog fills the screen and the cart bar only appears once an item
+                // is added (cart + checkout sheets are covered by pos-mobile-flow / pos-tablet-layout).
+                await expect(page.getByTestId('pos-product-grid')).toBeVisible();
+                await expect(page.getByTestId('pos-phone-cart-bar')).toHaveCount(0);
+            } else {
+                // 4. Cart Table / Empty Cart State
+                const hasCartItems = await page.getByTestId('pos-cart-row').first().isVisible().catch(() => false);
+                const hasEmptyCart = await page.locator('h3:has-text("الفاتورة فارغة"), p:has-text("الفاتورة فارغة")').isVisible().catch(() => false);
+                expect(hasCartItems || hasEmptyCart).toBeTruthy();
 
-            // 5. Checkout Execution Button & Touch Target (>= 44px)
-            const checkoutBtn = page.locator('button:has-text("حفظ واعتماد الفاتورة")').first();
-            await expect(checkoutBtn).toBeVisible();
-            const btnBox = await checkoutBtn.boundingBox();
-            if (btnBox) {
-                expect(btnBox.height).toBeGreaterThanOrEqual(44);
+                // 5. Checkout Execution Button & Touch Target (>= 44px)
+                const checkoutBtn = page.getByTestId('pos-checkout-submit');
+                await expect(checkoutBtn).toBeVisible();
+                const btnBox = await checkoutBtn.boundingBox();
+                if (btnBox) {
+                    expect(btnBox.height).toBeGreaterThanOrEqual(44);
+                }
             }
 
             // 6. Zero Console Errors
@@ -74,7 +82,7 @@ test.describe('POSView Comprehensive 4-Axes Audit & Multi-Viewport Verification'
 
     test('should open Customer Picker Modal and close properly', async ({ page }) => {
         await page.goto('/pos', { waitUntil: 'networkidle' });
-        await page.waitForSelector('h1', { timeout: 15000 });
+        await page.waitForSelector('h1', { state: 'attached', timeout: 15000 });
 
         // Dismiss update modal if present
         const closeUpdateModalBtn = page.locator('button:has-text("لاحقاً"), button:has-text("تخطي"), button:has-text("إغلاق"), button:has-text("تم والإغلاق")').first();
@@ -102,7 +110,7 @@ test.describe('POSView Comprehensive 4-Axes Audit & Multi-Viewport Verification'
 
     test('should interact with quick pinned items and update cart', async ({ page }) => {
         await page.goto('/pos', { waitUntil: 'networkidle' });
-        await page.waitForSelector('h1', { timeout: 15000 });
+        await page.waitForSelector('h1', { state: 'attached', timeout: 15000 });
 
         // Dismiss update modal if present
         const closeUpdateModalBtn = page.locator('button:has-text("لاحقاً"), button:has-text("تخطي"), button:has-text("إغلاق"), button:has-text("تم والإغلاق")').first();

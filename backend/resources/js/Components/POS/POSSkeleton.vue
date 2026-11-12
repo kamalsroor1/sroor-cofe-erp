@@ -28,12 +28,12 @@
         </div>
 
         <!-- Header Action Tools -->
-        <div class="flex items-center gap-2 shrink-0 md:hidden">
+        <div class="flex items-center gap-2 shrink-0 lg:hidden">
           <Skeleton width="w-11" height="h-11" rounded="rounded-xl" />
           <Skeleton width="w-11" height="h-11" rounded="rounded-xl" />
         </div>
-        <div class="hidden md:flex items-center gap-2 shrink-0">
-          <Skeleton width="w-24" height="h-11" rounded="rounded-xl" />
+        <div class="hidden lg:flex items-center gap-2 shrink-0">
+          <Skeleton width="w-11 xl:w-24" height="h-11" rounded="rounded-xl" />
           <Skeleton width="w-36" height="h-11" rounded="rounded-xl" />
           <Skeleton width="w-24" height="h-10" rounded="rounded-xl" />
           <Skeleton width="w-11" height="h-11" rounded="rounded-xl" />
@@ -45,7 +45,7 @@
     <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
       <!-- 🛒 Invoice Cart & Payment Checkout Panel (DOMINANT HERO - flex-1) -->
       <section
-        class="hidden md:flex flex-1 flex-col justify-between p-3.5 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 overflow-hidden order-2 lg:order-1 min-w-0"
+        class="hidden lg:flex w-[clamp(360px,36vw,400px)] shrink-0 flex-col justify-between p-3.5 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 overflow-hidden order-1 min-w-0"
       >
         <!-- Top Section: Cart Items Table -->
         <div class="flex-1 overflow-hidden flex flex-col min-h-[220px]">
@@ -128,17 +128,16 @@
         </div>
       </section>
 
-      <!-- Phone: category chips row -->
-      <div
-        class="md:hidden flex items-center gap-2 px-3 py-2 overflow-hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0"
-      >
-        <Skeleton v-for="n in 5" :key="n" width="w-20" height="h-11" rounded="rounded-full" class-name="shrink-0" />
-      </div>
-
       <!-- 🍕 Side: Visual Product Grid Skeleton (3 Columns) -->
       <main
-        class="w-full lg:w-[350px] xl:w-[400px] 2xl:w-[440px] flex flex-col overflow-hidden max-md:flex-1 max-md:min-h-0 shrink-0 bg-slate-100/60 dark:bg-slate-900/60 border-e border-slate-200 dark:border-slate-800 order-1 lg:order-2"
+        class="w-full flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden bg-slate-100/60 dark:bg-slate-900/60 lg:border-e border-slate-200 dark:border-slate-800 order-1 lg:order-2"
       >
+        <!-- Category chips row (below xl; the side rail takes over from xl) -->
+        <div
+          class="xl:hidden flex items-center gap-2 px-3 py-2 overflow-hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0"
+        >
+          <Skeleton v-for="n in 5" :key="n" width="w-20" height="h-11" rounded="rounded-full" class-name="shrink-0" />
+        </div>
         <div
           class="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900"
         >
@@ -150,7 +149,7 @@
           <Skeleton width="w-16" height="h-4" rounded="rounded-md" />
         </div>
 
-        <div class="p-3.5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-3.5 flex-1 overflow-hidden">
+        <div class="p-3.5 grid grid-cols-2 md:grid-cols-3 gap-3.5 flex-1 overflow-hidden">
           <div
             v-for="n in 9"
             :key="n"
@@ -171,7 +170,7 @@
 
       <!-- 📂 Right (in RTL): Compact Vertical Category Sidebar Skeleton -->
       <aside
-        class="hidden md:flex flex-col w-14 sm:w-36 md:w-40 shrink-0 bg-white dark:bg-slate-900/95 border-s border-slate-200 dark:border-slate-800 overflow-hidden order-3"
+        class="hidden xl:flex flex-col w-44 shrink-0 bg-white dark:bg-slate-900/95 border-s border-slate-200 dark:border-slate-800 overflow-hidden order-3"
       >
         <div class="p-2.5 border-b border-slate-200 dark:border-slate-800">
           <Skeleton width="w-16" height="h-3" rounded="rounded-md" class-name="hidden sm:block" />
@@ -181,9 +180,9 @@
         </div>
       </aside>
 
-      <!-- Phone: sticky cart bar -->
+      <!-- Phones and tablets: sticky cart bar -->
       <div
-        class="order-4 md:hidden flex items-stretch gap-2 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom,0.5rem))] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0"
+        class="order-4 lg:hidden flex items-stretch gap-2 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom,0.5rem))] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0"
       >
         <Skeleton width="flex-1" height="h-14" rounded="rounded-2xl" />
         <Skeleton width="w-24" height="h-14" rounded="rounded-2xl" />

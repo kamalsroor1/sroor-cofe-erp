@@ -67,7 +67,7 @@ async function setupPosRoutes(page, onReturnSubmit = null) {
             },
         })
     );
-    await page.route('**/api/v1/items*', (route) =>
+    await page.route('**/api/v1/pos/items*', (route) =>
         route.fulfill({
             json: { success: true, data: [ITEM], meta: { total: 1 } },
         })

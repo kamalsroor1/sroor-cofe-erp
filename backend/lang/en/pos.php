@@ -290,6 +290,9 @@ return [
     'price_override_required' => 'A manager approval is required to sell below the minimum price.',
     'override_invalid' => 'The manager approval is invalid.',
     'override_throttled' => 'Too many failed approval attempts. Try again later.',
+    // SEC-21
+    'override_locked_today' => 'This manager\'s approvals are locked for the rest of the day after too many wrong PINs. They work again tomorrow or after the PIN is changed.',
+    'telegram_manager_pin_locked' => "🔒 <b>Manager approvals locked for the rest of the day</b>\nShop: :shop\nManager: :approver\nLast attempt by: :actor\nWrong PIN attempts: :failures\nTime: :time\nTo unlock before tomorrow: change the manager's PIN.",
     // POS-07
     'discount_cap_exceeded' => 'The total discount is above the allowed :max% of the sale.',
     'discount_override_required' => 'A manager approval is required for a discount above the allowed limit.',
@@ -320,6 +323,10 @@ return [
     'load_failed_category_items' => 'Could not load the items of this category.',
     'method_cash' => 'Cash',
     'split_short' => 'Split',
+    'method_instapay_short' => 'InstaPay',
+    'method_wallet_short' => 'Wallet',
+    'method_visa_short' => 'Card',
+    'method_bank_short' => 'Transfer',
     'tender_label' => 'Cash received',
     'tender_clear' => 'Clear received amount',
     'tender_short' => 'The amount received is less than the amount due',

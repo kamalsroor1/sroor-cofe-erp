@@ -98,11 +98,12 @@ const props = defineProps({
 
 const emit = defineEmits(['add-item', 'load-more']);
 
-// Static class strings so Tailwind keeps them. 2 and 3 fall back by panel width; "auto" fills with a minimum card width.
+// Static class strings so Tailwind keeps them. 2 and 3 fall back by panel width (3 columns from 500px: tablets
+// and a 1024px desktop); "auto" fills with a minimum card width.
 // Phone-width panels (< 340px of content) show 2 tiles per row instead of 1, as in the phone mockups.
 const GRID_CLASSES = {
   2: 'grid-cols-2',
-  3: 'grid-cols-2 @[600px]:grid-cols-3',
+  3: 'grid-cols-2 @[500px]:grid-cols-3',
   auto: 'grid-cols-2 @[400px]:grid-cols-[repeat(auto-fill,minmax(190px,1fr))]',
 };
 const gridClass = computed(() => GRID_CLASSES[props.cardsPerRow] || GRID_CLASSES[3]);
