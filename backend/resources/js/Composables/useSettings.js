@@ -7,6 +7,7 @@ import { useAuthStore } from '../stores/auth';
 import { useUnits } from './useUnits';
 import { normalize } from '../helpers/decimal';
 import { toWesternDigits } from '../helpers/digits';
+import { SALE_DEFAULTS, saleSettingsFromApi, validateSaleSettings } from '../helpers/posSaleSettingsForm';
 import { Building2, Palette, Printer, Bot, Package } from 'lucide-vue-next';
 
 export function useSettings() {
@@ -144,6 +145,7 @@ export function useSettings() {
         receipt_footer_text: '',
         returns_max_days: '',
         pos_idle_lock_minutes: '0',
+        ...JSON.parse(JSON.stringify(SALE_DEFAULTS)),
     });
 
     const newUnitInput = ref('');
@@ -419,6 +421,7 @@ export function useSettings() {
                 receipt_footer_text: s.receipt_footer_text || '',
                 returns_max_days: s.returns_max_days == null ? '' : String(s.returns_max_days),
                 pos_idle_lock_minutes: String(s.pos_idle_lock_minutes ?? 0),
+                ...saleSettingsFromApi(s),
             };
             telegramNeedsReentry.value = s.telegram_bot_token_needs_reentry === true;
             logo_light_url.value = s.logo_light_url || null;
@@ -448,6 +451,9 @@ export function useSettings() {
         const minutes = policyDigits(form.value.pos_idle_lock_minutes);
         if (minutes !== '' && !(/^\d+$/.test(minutes) && Number(minutes) <= 240)) {
             found.pos_idle_lock_minutes = [t('settings.pos_idle_lock_minutes_invalid')];
+        }
+        for (const [field, keys] of Object.entries(validateSaleSettings(form.value))) {
+            found[field] = keys.map((k) => t(k));
         }
         return found;
     };

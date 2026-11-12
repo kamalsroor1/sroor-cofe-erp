@@ -191,6 +191,16 @@ export const SETTINGS_REGISTRY = [
         isAdvanced: false,
     },
 
+    {
+        id: 'pos_sale_settings',
+        key: 'pos.sale_settings',
+        labelKey: 'settings.sale_settings_title',
+        descKey: 'settings.sale_settings_sub',
+        tabId: 'pos',
+        keywordsKey: 'settings.search_keywords.pos_sale_settings',
+        isAdvanced: false,
+    },
+
     // 4. Branding Tab Settings
     {
         id: 'logo_light',

@@ -26,15 +26,18 @@ export function usePosReceipt({
             formatDateTime,
         });
 
-    const printLastInvoice = async () => {
+    // SET-01: `copies` comes from the sale settings; a click handler passing an event means one copy.
+    const printLastInvoice = async (copies = 1) => {
         if (!lastCreatedInvoice.value?.id) return;
+        const count = Number.isInteger(copies) && copies >= 1 && copies <= 3 ? copies : 1;
 
         if (isDesktop.value) {
             try {
                 const res = await api.get(`/invoices/${lastCreatedInvoice.value.id}`);
                 const inv = res.data?.data || lastCreatedInvoice.value;
 
-                await printThermalReceipt(buildThermalHtml(inv));
+                const html = buildThermalHtml(inv);
+                for (let i = 0; i < count; i++) await printThermalReceipt(html);
                 if (inv.payment_type === 'cash' || paymentType.value === 'cash') {
                     playDrawerSound();
                     await openCashDrawer();
@@ -46,7 +49,9 @@ export function usePosReceipt({
         }
 
         // Fallback for Web Browser
-        window.open(`/invoices/${lastCreatedInvoice.value.id}/print?autoprint=true`, '_blank', 'width=800,height=600');
+        for (let i = 0; i < count; i++) {
+            window.open(`/invoices/${lastCreatedInvoice.value.id}/print?autoprint=true`, '_blank', 'width=800,height=600');
+        }
     };
 
     // Reprint of any past invoice: never kicks the cash drawer (no money moves).

@@ -1,5 +1,6 @@
 import { ref, computed, onBeforeUnmount } from 'vue';
 import api from '../../Services/api';
+import { usePosSaleSettings } from './usePosSaleSettings';
 import { catalogParams, FAVORITES_LIMIT, mergePage } from '../../helpers/posCatalog';
 
 const PAGE_SIZE = 60;
@@ -14,6 +15,7 @@ const isCancel = (err) => err?.name === 'CanceledError' || err?.code === 'ERR_CA
  * POS-04/05: the grid is a server-paged GET /pos/items (filters, search, sort, per-category counts in meta.counts).
  */
 export function usePosCatalog({ authStore, customers }) {
+    const { applySaleSettings } = usePosSaleSettings();
     const items = ref([]);
     const categories = ref([]);
     // meta.counts of the last items page: counters honour every filter but the category.
@@ -144,11 +146,13 @@ export function usePosCatalog({ authStore, customers }) {
         // Never blocks the POS: without the cap the warning is simply not shown (the server still enforces it).
         discountPolicy: async () => {
             let cap = null;
+            let saleSettings = null;
             let display = { cardsPerRow: DEFAULT_CARDS_PER_ROW, showImages: false };
             try {
                 const res = await api.get('/pos/bootstrap', { params: { include_items: 0, include_customers: 0 } });
                 const posSettings = res.data?.data?.pos_settings;
                 cap = posSettings?.effective_max_discount_percent ?? null;
+                saleSettings = res.data?.data?.sale_settings ?? null;
                 display = {
                     cardsPerRow: posSettings?.catalog_cards_per_row || DEFAULT_CARDS_PER_ROW,
                     showImages: !!posSettings?.show_item_images,
@@ -158,6 +162,7 @@ export function usePosCatalog({ authStore, customers }) {
             }
             return () => {
                 maxDiscountPercent.value = cap;
+                applySaleSettings(saleSettings);
                 cardsPerRow.value = display.cardsPerRow;
                 showItemImages.value = display.showImages;
             };

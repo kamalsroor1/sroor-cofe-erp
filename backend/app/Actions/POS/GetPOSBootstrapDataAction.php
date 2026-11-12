@@ -11,6 +11,7 @@ use App\Models\Customer;
 use App\Models\Item;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\Settings\PosSaleSettings;
 use App\Support\ActiveStore;
 use App\Support\ItemCostFields;
 use App\Support\Money\Decimal;
@@ -22,6 +23,7 @@ class GetPOSBootstrapDataAction
     public function __construct(
         private readonly GetStorePosSettingsAction $getStorePosSettingsAction,
         private readonly GetPosQuickKeysAction $getPosQuickKeysAction,
+        private readonly PosSaleSettings $posSaleSettings,
     ) {}
 
     /**
@@ -181,6 +183,8 @@ class GetPOSBootstrapDataAction
             'pos_settings' => $activeStore
                 ? (new StorePosSettingResource($this->getStorePosSettingsAction->execute((int) $activeStore->id)))->resolve()
                 : null,
+            // SET-01: tenant-wide sale settings (enabled methods, cash buttons, discount presets, auto print).
+            'sale_settings' => $this->posSaleSettings->toArray(),
             // POSB-6: quick keys of the active store (access-checked in resolveActiveStore()).
             // Constant query count (no N+1).
             'quick_keys' => $activeStore

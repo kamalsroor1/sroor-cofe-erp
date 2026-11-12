@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Concerns;
 
+use App\Rules\PaymentMethodEnabled;
+
 /**
  * Shared checkout contract for sales invoices (/invoices) and POS checkout (/pos/checkout):
  * split payments[], invoice expenses (additional_expenses[] or the SPA alias expenses[]),
@@ -58,7 +60,7 @@ trait ValidatesCheckoutPayments
     {
         $rules = [
             'payments' => ['nullable', 'array', 'max:10'],
-            'payments.*.method' => ['required', 'string', 'in:'.self::CHECKOUT_PAYMENT_METHODS],
+            'payments.*.method' => ['required', 'string', 'in:'.self::CHECKOUT_PAYMENT_METHODS, new PaymentMethodEnabled],
             'payments.*.amount' => ['required', 'numeric', 'gt:0', 'decimal:0,3'],
         ];
 

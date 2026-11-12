@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Enums\PaymentMethod;
 use App\Enums\TenantLogoVariant;
 use App\Http\Requests\Settings\SendTestTelegramRequest;
 use App\Services\Branding\TenantBranding;
+use App\Services\Settings\PosSaleSettings;
 use App\Services\Settings\TenantSettings;
 use App\Support\Media\BrandAssetSpec;
 use App\Support\Media\ImageSanitizer;
@@ -87,6 +89,7 @@ class UpdateSettingsRequest extends FormRequest
             TenantSettings::KEY_BACKDATE_MAX_DAYS => ['sometimes', 'required', 'integer', 'min:0', 'max:'.TenantSettings::BACKDATE_MAX_DAYS_MAX],
             // SET-02: idle minutes before the SPA lock screen; 0 = off.
             TenantSettings::KEY_POS_IDLE_LOCK_MINUTES => ['sometimes', 'required', 'integer', 'min:0', 'max:'.TenantSettings::POS_IDLE_LOCK_MINUTES_MAX],
+            ...$this->posSaleRules(),
             TenantSettings::KEY_DEFAULT_LOCALE => ['sometimes', 'required', 'string', Rule::in(TenantSettings::SUPPORTED_LOCALES)],
             TenantSettings::KEY_NUMBER_DIGITS => ['sometimes', 'required', 'string', Rule::in(TenantSettings::SUPPORTED_NUMBER_DIGITS)],
         ];
@@ -109,6 +112,11 @@ class UpdateSettingsRequest extends FormRequest
             TenantSettings::KEY_POS_IDLE_LOCK_MINUTES => __('settings.pos_idle_lock_minutes'),
             TenantSettings::KEY_BACKDATE_MAX_DAYS => __('settings.backdate_max_days'),
             TenantSettings::KEY_INVENTORY_UNITS => __('settings.inventory_units'),
+            TenantSettings::KEY_POS_ENABLED_PAYMENT_METHODS => __('settings.pos_enabled_payment_methods'),
+            TenantSettings::KEY_POS_CASH_DENOMINATIONS => __('settings.pos_cash_denominations'),
+            TenantSettings::KEY_POS_DISCOUNT_PRESETS => __('settings.pos_discount_presets'),
+            TenantSettings::KEY_POS_AUTO_PRINT => __('settings.pos_auto_print'),
+            TenantSettings::KEY_POS_RECEIPT_COPIES => __('settings.pos_receipt_copies'),
             'telegram_bot_token' => __('settings.attr_telegram_bot_token'),
             'telegram_chat_id' => __('settings.attr_telegram_chat_id'),
             TenantSettings::KEY_COMMERCIAL_REGISTER => __('settings.commercial_register'),
@@ -256,6 +264,36 @@ class UpdateSettingsRequest extends FormRequest
                 }
             }
         };
+    }
+
+    /**
+     * SET-01: POS sale settings. Lists arrive as JSON arrays and are stored as CSV by
+     * UpdateSettingsAction (PosSaleSettings::serialize).
+     *
+     * @return array<string, mixed>
+     */
+    private function posSaleRules(): array
+    {
+        $cap = app(PosSaleSettings::class)->highestDiscountCap();
+
+        return [
+            TenantSettings::KEY_POS_ENABLED_PAYMENT_METHODS => ['sometimes', 'required', 'array', 'min:1', 'max:'.count(PaymentMethod::cases()), function (string $attribute, mixed $value, Closure $fail): void {
+                if (is_array($value) && ! in_array(PaymentMethod::Cash->value, $value, true)) {
+                    $fail(__('settings.pos_cash_method_required'));
+                }
+            }],
+            TenantSettings::KEY_POS_ENABLED_PAYMENT_METHODS.'.*' => ['required', 'string', 'distinct', Rule::enum(PaymentMethod::class)],
+            TenantSettings::KEY_POS_CASH_DENOMINATIONS => ['sometimes', 'required', 'array', 'min:1', 'max:'.TenantSettings::POS_CASH_DENOMINATIONS_MAX],
+            TenantSettings::KEY_POS_CASH_DENOMINATIONS.'.*' => ['required', 'numeric', 'gt:0', 'max:999999999', 'decimal:0,3', 'distinct'],
+            TenantSettings::KEY_POS_DISCOUNT_PRESETS => ['sometimes', 'required', 'array', 'min:1', 'max:'.TenantSettings::POS_DISCOUNT_PRESETS_MAX],
+            TenantSettings::KEY_POS_DISCOUNT_PRESETS.'.*' => ['required', 'numeric', 'min:0', 'max:100', 'decimal:0,3', 'distinct', function (string $attribute, mixed $value, Closure $fail) use ($cap): void {
+                if (is_numeric($value) && bccomp(bcadd((string) $value, '0', 3), $cap, 3) > 0) {
+                    $fail(__('settings.pos_discount_preset_over_cap', ['max' => rtrim(rtrim($cap, '0'), '.')]));
+                }
+            }],
+            TenantSettings::KEY_POS_AUTO_PRINT => ['sometimes', 'required', 'string', Rule::in(TenantSettings::POS_AUTO_PRINT_MODES)],
+            TenantSettings::KEY_POS_RECEIPT_COPIES => ['sometimes', 'required', 'integer', 'min:'.TenantSettings::POS_RECEIPT_COPIES_MIN, 'max:'.TenantSettings::POS_RECEIPT_COPIES_MAX],
+        ];
     }
 
     /**

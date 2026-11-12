@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
 import { newUuid } from '../../helpers/uuid';
 import { normalize, isPositive } from '../../helpers/decimal';
+import { usePosSaleSettings, receiptCopiesToPrint } from './usePosSaleSettings';
 import { needsManagerOverride, overrideReasons, requestManagerOverride } from './usePosOverride';
 
 /**
@@ -24,6 +25,7 @@ export function usePosSubmit({
     sounds,
     onShiftRequired = null,
 }) {
+    const { saleSettings } = usePosSaleSettings();
     const { cart, selectedCustomerId, paymentType, paymentMethod, discountType } = fields;
 
     const isSubmitting = ref(false);
@@ -83,8 +85,10 @@ export function usePosSubmit({
             lastChangeAmount.value = normalize(res.data?.data?.change_amount ?? '0');
             sounds.playSuccessChime();
 
-            if (printImmediately && lastCreatedInvoice.value?.id) {
-                printLastInvoice();
+            // SET-01: auto print (thermal) prints even when the cashier chose plain "save"; copies per the shop setting.
+            const copies = receiptCopiesToPrint(saleSettings.value, printImmediately);
+            if (copies > 0 && lastCreatedInvoice.value?.id) {
+                printLastInvoice(copies);
                 // The cashier still has to see the change to hand back.
                 if (isPositive(lastChangeAmount.value)) showSuccessModal.value = true;
             } else {

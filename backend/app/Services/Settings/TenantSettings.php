@@ -62,6 +62,44 @@ final class TenantSettings
     /** SET-02: minutes without interaction before the SPA shows its lock screen. 0 = off (default). */
     public const KEY_POS_IDLE_LOCK_MINUTES = 'pos_idle_lock_minutes';
 
+    /** SET-01: CSV of PaymentMethod values enabled for sales/receipts. Missing = unchanged legacy behaviour. */
+    public const KEY_POS_ENABLED_PAYMENT_METHODS = 'pos_enabled_payment_methods';
+
+    /** SET-01: CSV of quick cash-tender buttons (max POS_CASH_DENOMINATIONS_MAX, positive). */
+    public const KEY_POS_CASH_DENOMINATIONS = 'pos_cash_denominations';
+
+    /** SET-01: CSV of quick discount percents (max POS_DISCOUNT_PRESETS_MAX, 0..100, within the discount cap). */
+    public const KEY_POS_DISCOUNT_PRESETS = 'pos_discount_presets';
+
+    /** SET-01: 'none' | 'thermal' - print the receipt automatically after a sale. */
+    public const KEY_POS_AUTO_PRINT = 'pos_auto_print';
+
+    /** SET-01: copies printed per receipt (1..3). */
+    public const KEY_POS_RECEIPT_COPIES = 'pos_receipt_copies';
+
+    public const POS_CASH_DENOMINATIONS_MAX = 6;
+
+    public const POS_DISCOUNT_PRESETS_MAX = 4;
+
+    public const POS_RECEIPT_COPIES_MIN = 1;
+
+    public const POS_RECEIPT_COPIES_MAX = 3;
+
+    public const POS_AUTO_PRINT_MODES = ['none', 'thermal'];
+
+    public const DEFAULT_POS_AUTO_PRINT = 'none';
+
+    public const DEFAULT_POS_RECEIPT_COPIES = 1;
+
+    /** @var list<string> */
+    public const DEFAULT_POS_CASH_DENOMINATIONS = ['50', '100', '200', '500'];
+
+    /** @var list<string> */
+    public const DEFAULT_POS_DISCOUNT_PRESETS = ['0', '5', '10'];
+
+    /** Methods the POS checkout panel offered before SET-01 (what a never-configured shop keeps seeing). */
+    public const DEFAULT_POS_PAYMENT_METHODS = ['cash', 'instapay', 'e_wallet', 'visa', 'bank_transfer'];
+
     public const DEFAULT_CURRENCY = 'EGP';
 
     public const DEFAULT_TIMEZONE = 'Africa/Cairo';

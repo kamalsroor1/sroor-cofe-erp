@@ -196,6 +196,7 @@
 import { ref, computed, watch } from 'vue';
 import { X, Plus, Trash2, Banknote, Zap, Smartphone, CreditCard, Building2, CheckCircle2 } from 'lucide-vue-next';
 import { useTrans } from '../../Composables/useTrans';
+import { usePosSaleSettings } from '../../Composables/POS/usePosSaleSettings';
 import { useFormatters } from '../../Composables/useFormatters';
 import { normalize, dSub, dSum, dCmp, dMax0, isPositive } from '../../helpers/decimal';
 
@@ -215,13 +216,15 @@ const emit = defineEmits(['close', 'confirm']);
 const { t } = useTrans();
 const { formatMoney, currencyLabel } = useFormatters();
 
-const paymentMethods = computed(() => [
+const { enabledMethods } = usePosSaleSettings();
+const allPaymentMethods = computed(() => [
   { key: 'cash', label: t('pos.payment_cash'), icon: Banknote },
   { key: 'instapay', label: t('pos.instapay'), icon: Zap },
   { key: 'e_wallet', label: t('pos.smart_wallet'), icon: Smartphone },
   { key: 'visa', label: t('pos.visa_card'), icon: CreditCard },
   { key: 'bank_transfer', label: t('pos.bank_transfer'), icon: Building2 },
 ]);
+const paymentMethods = computed(() => allPaymentMethods.value.filter((m) => enabledMethods.value.includes(m.key)));
 
 const localPayments = ref([]);
 

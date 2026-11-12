@@ -9,6 +9,7 @@ use App\Models\Setting;
 use App\Models\TenantBrandProfile;
 use App\Services\ActivityLogService;
 use App\Services\Branding\TenantBranding;
+use App\Services\Settings\PosSaleSettings;
 use App\Services\Settings\SettingSecrets;
 use App\Services\Settings\TenantSettings;
 use App\Support\DashboardCache;
@@ -95,6 +96,11 @@ final class UpdateSettingsAction
                 if ($key === TenantBranding::KEY_RECEIPT_HEADER_LINES) {
                     // Stored normalized: trimmed lines, blanks dropped, one per "\n".
                     $value = implode("\n", TenantBranding::parseHeaderLines(is_string($value) ? $value : null));
+                }
+
+                if (is_array($value)) {
+                    // SET-01: list settings (payment methods, denominations, discount presets) are stored as CSV.
+                    $value = PosSaleSettings::serialize((string) $key, $value);
                 }
 
                 if (is_bool($value)) {

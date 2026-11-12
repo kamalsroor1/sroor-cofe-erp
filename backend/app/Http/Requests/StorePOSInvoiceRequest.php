@@ -6,6 +6,7 @@ namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\ResolvesWalkInCustomer;
 use App\Models\Item;
+use App\Rules\PaymentMethodEnabled;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use App\Support\TenantClock;
@@ -80,7 +81,7 @@ final class StorePOSInvoiceRequest extends FormRequest
             'store_id' => ['required', 'exists:stores,id'],
             'invoice_date' => ['required', 'date'],
             'payment_type' => ['required', 'string', 'in:cash,credit,partial'],
-            'payment_method' => ['required', 'string', 'in:'.self::CHECKOUT_PAYMENT_METHODS],
+            'payment_method' => ['required', 'string', 'in:'.self::CHECKOUT_PAYMENT_METHODS, new PaymentMethodEnabled],
             'discount_amount' => ['nullable', 'numeric', 'min:0'],
             'discount_type' => ['nullable', 'in:fixed,percentage'],
             'discount_value' => ['nullable', 'numeric', 'min:0', 'decimal:0,3'],

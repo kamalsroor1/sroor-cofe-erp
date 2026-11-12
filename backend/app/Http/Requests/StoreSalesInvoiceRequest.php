@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Models\Customer;
+use App\Rules\PaymentMethodEnabled;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreSalesInvoiceRequest extends FormRequest
@@ -55,7 +56,7 @@ class StoreSalesInvoiceRequest extends FormRequest
             // BE-08: never in the future (tenant calendar day).
             'invoice_date' => ['nullable', 'date', new \App\Rules\DocumentDate($this->user())],
             'payment_type' => ['required', 'in:cash,credit,partial'],
-            'payment_method' => ['nullable', 'string', 'in:'.self::CHECKOUT_PAYMENT_METHODS],
+            'payment_method' => ['nullable', 'string', 'in:'.self::CHECKOUT_PAYMENT_METHODS, new PaymentMethodEnabled],
             'paid_amount' => ['nullable', 'numeric', 'min:0', 'decimal:0,3'],
             'discount_type' => ['nullable', 'in:fixed,percentage'],
             'discount_value' => ['nullable', 'numeric', 'min:0'],

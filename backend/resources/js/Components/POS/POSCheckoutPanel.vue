@@ -405,7 +405,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import {
   Printer,
   CheckCircle2,
@@ -425,6 +425,7 @@ import { useFormatters } from '../../Composables/useFormatters';
 import { useMediaQuery } from '../../Composables/useMediaQuery';
 import { useTrans } from '../../Composables/useTrans';
 import POSDiscountBox from './POSDiscountBox.vue';
+import { usePosSaleSettings } from '../../Composables/POS/usePosSaleSettings';
 import { sanitizeAmountInput } from '../../helpers/posCheckout';
 import { normalize, dAdd, dSub, dCmp, dMax0, isZero, isPositive } from '../../helpers/decimal';
 
@@ -432,18 +433,20 @@ const { formatMoney, currencyLabel } = useFormatters();
 const isTouch = useMediaQuery('(pointer: coarse)');
 const { t } = useTrans();
 
-const denominations = [50, 100, 200, 500];
+const { enabledMethods, cashDenominations: denominations } = usePosSaleSettings();
 const idleClass =
   'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
 
 // Method keys are the ones the checkout API accepts; e_wallet is what the server stores for smart wallets.
-const methods = computed(() => [
+const allMethods = computed(() => [
   { key: 'cash', label: t('pos.method_cash'), short: t('pos.method_cash'), icon: Banknote },
   { key: 'instapay', label: t('pos.instapay'), short: t('pos.method_instapay_short'), icon: Zap },
   { key: 'e_wallet', label: t('pos.smart_wallet'), short: t('pos.method_wallet_short'), icon: Smartphone },
   { key: 'visa', label: t('pos.visa_card'), short: t('pos.method_visa_short'), icon: CreditCard },
   { key: 'bank_transfer', label: t('pos.bank_transfer'), short: t('pos.method_bank_short'), icon: Building2 },
 ]);
+// SET-01: only the methods the shop enabled in Settings > POS (the server refuses the others too).
+const methods = computed(() => allMethods.value.filter((m) => enabledMethods.value.includes(m.key)));
 
 const paymentTypes = computed(() => [
   {
@@ -530,4 +533,14 @@ const emit = defineEmits([
   'open-expenses',
   'open-multi-payment',
 ]);
+
+// A saved order may still hold a method the shop has since turned off: fall back to cash.
+watch(
+  [() => props.paymentMethod, enabledMethods],
+  () => {
+    const current = props.paymentMethod === 'smart_wallet' ? 'e_wallet' : props.paymentMethod;
+    if (current && !enabledMethods.value.includes(current)) emit('update:paymentMethod', 'cash');
+  },
+  { immediate: true }
+);
 </script>

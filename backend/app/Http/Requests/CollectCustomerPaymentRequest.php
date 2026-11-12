@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Rules\PaymentMethodEnabled;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CollectCustomerPaymentRequest extends FormRequest
@@ -17,7 +18,7 @@ class CollectCustomerPaymentRequest extends FormRequest
     {
         return [
             'amount' => ['required', 'numeric', 'min:0.01'],
-            'payment_method' => ['required', 'string', 'in:cash,instapay,wallet,bank,visa,e_wallet,bank_transfer'],
+            'payment_method' => ['required', 'string', 'in:cash,instapay,wallet,bank,visa,e_wallet,bank_transfer', new PaymentMethodEnabled],
             'payment_date' => ['required', 'date', new \App\Rules\DocumentDate($this->user())],
             'notes' => ['nullable', 'string', 'max:500'],
         ];

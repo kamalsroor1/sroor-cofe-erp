@@ -4,6 +4,7 @@ import { Save } from 'lucide-vue-next';
 import BaseButton from '../../Common/BaseButton.vue';
 import PosReturnWindowSection from './PosReturnWindowSection.vue';
 import PosIdleLockSection from './PosIdleLockSection.vue';
+import PosSaleSettingsSection from './PosSaleSettingsSection.vue';
 import PosShiftRuleSection from './PosShiftRuleSection.vue';
 
 const props = defineProps({
@@ -16,16 +17,30 @@ const props = defineProps({
 
 const emit = defineEmits(['save', 'update:field']);
 
-const policyFields = ['returns_max_days', 'pos_idle_lock_minutes'];
+const policyFields = [
+  'returns_max_days',
+  'pos_idle_lock_minutes',
+  'pos_enabled_payment_methods',
+  'pos_cash_denominations',
+  'pos_discount_presets',
+  'pos_auto_print',
+  'pos_receipt_copies',
+];
 
 const isSectionDirty = computed(() => {
   if (!props.initialForm) return false;
-  return policyFields.some((field) => props.form[field] !== props.initialForm[field]);
+  return policyFields.some((field) => JSON.stringify(props.form[field]) !== JSON.stringify(props.initialForm[field]));
 });
 </script>
 
 <template>
   <div class="space-y-6 font-tajawal">
+    <PosSaleSettingsSection
+      :form="form"
+      :errors="errors"
+      :can-manage="canManage"
+      @update:field="(field, val) => emit('update:field', field, val)"
+    />
     <PosReturnWindowSection
       :form="form"
       :errors="errors"

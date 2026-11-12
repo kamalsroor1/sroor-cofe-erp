@@ -5,6 +5,7 @@ import { useTrans } from '../../Composables/useTrans';
 import { sanitizeAmountInput } from '../../helpers/posCheckout';
 import { dRoundTo, isPositive } from '../../helpers/decimal';
 import { focusPosSearch } from '../../helpers/posFocus';
+import { usePosSaleSettings, presetsWithinCap } from '../../Composables/POS/usePosSaleSettings';
 import { DISCOUNT_FIXED, DISCOUNT_PERCENT } from '../../helpers/posDiscount';
 
 const props = defineProps({
@@ -23,7 +24,8 @@ const { currencyLabel } = useFormatters();
 const { t } = useTrans();
 
 // POS-07: percent or amount; the presets are the quick percents (0 clears the discount).
-const discountPresets = [0, 5, 10];
+const { saleSettings } = usePosSaleSettings();
+const discountPresets = computed(() => presetsWithinCap(saleSettings.value.discount_presets, props.maxDiscountPercent));
 const discountModes = computed(() => [
   { key: DISCOUNT_PERCENT, symbol: '%', label: t('pos.discount_mode_percent') },
   { key: DISCOUNT_FIXED, symbol: currencyLabel.value, label: t('pos.discount_mode_amount') },
