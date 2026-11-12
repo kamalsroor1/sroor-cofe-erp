@@ -50,6 +50,11 @@ final class SwapTenantDatabaseCommandTest extends TenantTestCase
 
     public function test_every_counter_moves_forward_and_missing_days_get_a_row(): void
     {
+        $this->inTenant($this->createTenant(), $this->assertCountersAdvance(...));
+    }
+
+    private function assertCountersAdvance(): void
+    {
         DB::table('document_sequences')->insert([
             ['scope' => 'INV-MAIN-20200101', 'last_value' => 7, 'created_at' => now(), 'updated_at' => now()],
             ['scope' => 'PAY-INV-20200101', 'last_value' => 3, 'created_at' => now(), 'updated_at' => now()],

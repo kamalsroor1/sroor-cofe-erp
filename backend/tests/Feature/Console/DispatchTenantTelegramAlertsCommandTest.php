@@ -9,9 +9,11 @@ use App\Jobs\CheckOverdueShiftsJob;
 use App\Jobs\SendDailySummaryReportJob;
 use App\Models\CashShift;
 use App\Models\Setting;
+use App\Models\Tenant;
 use App\Support\TenantClock;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Schema;
 use Tests\TenantTestCase;
 
 /** OPS-24: per-tenant daily summary and overdue-shift alert dispatch. */
@@ -46,9 +48,10 @@ final class DispatchTenantTelegramAlertsCommandTest extends TenantTestCase
 
     public function test_tenant_without_telegram_is_skipped_without_error(): void
     {
+        // Create the tenant first: provisioning dispatches its own JobPipeline, which Bus::fake would record.
+        $tenant = $this->createTenant();
         Bus::fake();
         config(['services.telegram.bot_token' => null, 'services.telegram.chat_id' => null]);
-        $tenant = $this->createTenant();
 
         $this->artisan('notify:dispatch-tenant-alerts', ['--tenants' => [$tenant->id]])->assertSuccessful();
 
@@ -92,17 +95,19 @@ final class DispatchTenantTelegramAlertsCommandTest extends TenantTestCase
 
     public function test_a_failing_tenant_does_not_stop_the_others(): void
     {
-        Bus::fake();
         $broken = $this->createTenant();
         $good = $this->createTenant();
-        $broken->update(['tenancy_db_name' => 'missing_db_'.uniqid()]);
+        Bus::fake();
+        // Break only the broken tenant's data (the settings table the command reads), leaving its
+        // database file in place so the harness can still clean it up.
+        $this->inTenant($broken, fn () => Schema::drop('settings'));
 
         $this->artisan('notify:dispatch-tenant-alerts', ['--tenants' => [$broken->id, $good->id]])->assertFailed();
 
         Bus::assertDispatchedTimes(SendDailySummaryReportJob::class, 1);
     }
 
-    private function openShift(\App\Models\Tenant $tenant, string $number): void
+    private function openShift(Tenant $tenant, string $number): void
     {
         $this->inTenant($tenant, fn () => CashShift::create([
             'user_id' => $this->tenantAdmin($tenant)->id,

@@ -204,7 +204,8 @@ final class RecordManualPaymentApiTest extends BillingTestCase
         $tenant = $this->tenantOn($this->plan());
         $invoice = $this->pendingInvoice($tenant);
 
-        $this->postJson($this->url($invoice->id), $this->body('10'), $this->tenantHeaders($tenant))
-            ->assertStatus(401);
+        $this->postJson($this->url($invoice->id), $this->body('10'), ['Accept' => 'application/json', 'Authorization' => 'Bearer '.$this->tenantToken($tenant)])
+            ->assertUnauthorized();
+        $this->assertSame(0, BillingPayment::query()->where('billing_invoice_id', $invoice->id)->count());
     }
 }

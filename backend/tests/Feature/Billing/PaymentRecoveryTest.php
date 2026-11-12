@@ -66,14 +66,14 @@ final class PaymentRecoveryTest extends BillingTestCase
         $headers = $this->tenantHeaders($tenant);
 
         $wrong = (int) $this->post('/api/v1/billing/invoices/'.$invoice->getKey().'/payments', [
-            'receipt' => $this->receipt(), 'method' => 'instapay', 'amount' => '10.000', 'payer_reference' => 'r1', 'paid_at' => now()->toDateString(),
+            'receipt' => $this->receipt(), 'method' => 'instapay', 'amount' => '10.000', 'payer_reference' => 'ref-1', 'paid_at' => now()->toDateString(),
         ], $this->multipart($headers))->assertCreated()->json('data.id');
 
         $this->postJson('/api/v1/billing/payments/'.$wrong.'/cancel', [], $headers)->assertOk();
         $this->assertSame('rejected', BillingPayment::query()->findOrFail($wrong)->status->value);
 
         $this->post('/api/v1/billing/invoices/'.$invoice->getKey().'/payments', [
-            'receipt' => $this->receipt(), 'method' => 'instapay', 'amount' => '100.000', 'payer_reference' => 'r2', 'paid_at' => now()->toDateString(),
+            'receipt' => $this->receipt(), 'method' => 'instapay', 'amount' => '100.000', 'payer_reference' => 'ref-2', 'paid_at' => now()->toDateString(),
         ], $this->multipart($headers))->assertCreated();
 
         // Already rejected: cannot be cancelled again.

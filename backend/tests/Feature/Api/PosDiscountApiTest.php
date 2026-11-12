@@ -167,8 +167,8 @@ final class PosDiscountApiTest extends TenantTestCase
         $this->setStoreSettings(['max_discount_percent' => null]);
 
         $this->checkout($this->cashier, [], ['discount_type' => 'percentage', 'discount_value' => '5'])->assertCreated();
-        $this->assertCapRejected($this->checkout($this->cashier, [], ['discount_type' => 'percentage', 'discount_value' => '5.001']));
-        $this->assertCapRejected($this->checkout($this->cashier, [], ['discount_type' => 'percentage', 'discount_value' => '10']));
+        $this->assertCapRejected($this->checkout($this->cashier, [], ['discount_type' => 'percentage', 'discount_value' => '5.001']), 1);
+        $this->assertCapRejected($this->checkout($this->cashier, [], ['discount_type' => 'percentage', 'discount_value' => '10']), 1);
     }
 
     public function test_cashier_over_the_cap_gets_422_with_error_code_and_override_hint(): void

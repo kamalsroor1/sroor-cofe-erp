@@ -28,6 +28,24 @@ final class GrandfatherBasicTenantsMigrationTest extends TenantTestCase
         $migration->up();
     }
 
+    /**
+     * The catalog as it was when this migration shipped (SEC-06): Basic had no transfers.manage and
+     * Pro no mixes.manage. PLAN-01 later moved both into the plans; pinned here so the test keeps
+     * describing the state the migration was written for.
+     *
+     * @return array<string, bool>
+     */
+    private function historicalFeatures(string $slug): array
+    {
+        $features = PlanCatalog::features($slug);
+
+        return match ($slug) {
+            'basic' => [...$features, 'transfers.manage' => false],
+            'pro' => [...$features, 'mixes.manage' => false],
+            default => $features,
+        };
+    }
+
     private function plan(string $slug): Plan
     {
         return Plan::query()->create([
@@ -35,7 +53,7 @@ final class GrandfatherBasicTenantsMigrationTest extends TenantTestCase
             'slug' => $slug,
             'price_monthly' => '449.000',
             'price_yearly' => '4490.000',
-            'features' => PlanCatalog::features($slug),
+            'features' => $this->historicalFeatures($slug),
             'max_users' => 3,
             'max_stores' => 1,
             'is_active' => true,

@@ -36,7 +36,9 @@ return new class extends Migration
 
     public function up(): void
     {
-        if (! Schema::hasTable('plans')) {
+        // An empty catalog (fresh install / test DB) is left to the idempotent seeder, which
+        // creates the bundle with its feature list and the right sort order.
+        if (! Schema::hasTable('plans') || ! DB::table('plans')->exists()) {
             return;
         }
 
@@ -120,6 +122,12 @@ return new class extends Migration
         }
 
         $now = now();
+        $bundleFeatures = json_encode(['reports.advanced', 'audit.logs', 'purchases.reorder']);
+
+        // The older catalog migration (2026_10_10_200610) may have inserted the bundle before the
+        // feature_keys column existed: it then has no feature list and would unlock nothing.
+        DB::table('addons')->where('key', self::BUNDLE_KEY)->whereNull('feature_keys')
+            ->update(['feature_keys' => $bundleFeatures, 'updated_at' => $now]);
 
         if (! DB::table('addons')->where('key', self::BUNDLE_KEY)->exists()) {
             DB::table('addons')->insert([
@@ -127,7 +135,7 @@ return new class extends Migration
                 'name_key' => 'plans.addons.control_bundle.name',
                 'type' => 'recurring',
                 'feature_key' => null,
-                'feature_keys' => json_encode(['reports.advanced', 'audit.logs', 'purchases.reorder']),
+                'feature_keys' => $bundleFeatures,
                 'bundled_limits' => null,
                 'unit_price' => '199.000',
                 'yearly_price' => '1990.000',

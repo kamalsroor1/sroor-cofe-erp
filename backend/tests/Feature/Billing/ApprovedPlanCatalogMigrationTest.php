@@ -9,6 +9,7 @@ use App\Enums\Billing\SubscriptionStatus;
 use App\Models\Addon;
 use App\Models\Plan;
 use App\Models\Subscription;
+use Database\Seeders\Catalog\AddonCatalog;
 use Database\Seeders\Catalog\FeatureCatalog;
 use Database\Seeders\Catalog\PlanCatalog;
 use Illuminate\Database\Connection;
@@ -58,7 +59,8 @@ final class ApprovedPlanCatalogMigrationTest extends TenantTestCase
         $this->assertSame('4490.000', $basic->price_yearly);
         $this->assertSame('299.000', $basic->founder_price_monthly);
         $this->assertSame('2990.000', $basic->founder_price_yearly);
-        $this->assertSame(3000, $basic->max_items);
+        // PLAN-01 (applied by this migration through the live catalog): paid plans have no item cap.
+        $this->assertNull($basic->max_items);
         $this->assertSame(1, $basic->max_warehouses);
         $this->assertSame(__('plans.plans.basic.name'), $basic->name);
         $this->assertSame('plans.plans.basic.name', $basic->name_key);
@@ -88,7 +90,12 @@ final class ApprovedPlanCatalogMigrationTest extends TenantTestCase
         $this->assertFalse((bool) $features['pos.offline']->is_public);
 
         // Add-ons created with their availability.
-        $this->assertSame(13, Addon::query()->count());
+        $this->assertSame(count(AddonCatalog::all()), Addon::query()->count());
+        $this->assertEqualsCanonicalizing(
+            ['reports.advanced', 'audit.logs', 'purchases.reorder'],
+            Addon::query()->where('key', 'bundle.control')->firstOrFail()->feature_keys,
+            'The bundle must carry its feature list.',
+        );
         $this->assertSame('2490.000', Addon::query()->where('key', 'addon.store')->value('yearly_price'));
         $this->assertGreaterThan(0, $this->db()->table('plan_addon')->count());
 
@@ -102,6 +109,24 @@ final class ApprovedPlanCatalogMigrationTest extends TenantTestCase
 
         // Existing subscriptions keep their frozen price (Q-E5).
         $this->assertSame('299.000', Subscription::query()->findOrFail($subscriptionId)->amount);
+    }
+
+    public function test_the_plan_structure_migration_repairs_a_bundle_inserted_without_its_feature_list(): void
+    {
+        $this->legacyInstallation();
+        $this->runMigration('up');
+
+        // What an older catalog run leaves behind when the feature_keys column did not exist yet.
+        $this->db()->table('addons')->where('key', 'bundle.control')->update(['feature_keys' => null]);
+
+        $migration = require database_path('migrations/2026_11_14_100100_apply_new_plan_structure.php');
+        $migration->up();
+
+        $this->assertEqualsCanonicalizing(
+            ['reports.advanced', 'audit.logs', 'purchases.reorder'],
+            Addon::query()->where('key', 'bundle.control')->firstOrFail()->feature_keys,
+        );
+        $this->assertSame(1, Addon::query()->where('key', 'bundle.control')->count());
     }
 
     public function test_up_is_idempotent(): void

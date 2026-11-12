@@ -715,16 +715,14 @@ final class BackupTenantsCommand extends Command
     public static function dumpCountProblems(array $dump, bool $complete, array $countsBefore, array $countsAfter, array $autoBefore, array $autoAfter): array
     {
         $problems = [];
-        if (array_sum($dump) === 0 && array_sum($countsBefore) + array_sum($countsAfter) > 0) {
-            $problems[] = '*: '.__('console.backups.dump_zero_rows');
-        }
         if (! $complete) {
             $problems[] = '*: '.__('console.backups.dump_incomplete');
         }
 
+        $tableProblems = [];
         foreach (array_keys(array_intersect_key($countsBefore, $countsAfter)) as $table) {
             if (! array_key_exists($table, $dump)) {
-                $problems[] = $table.': '.__('console.backups.dump_table_missing');
+                $tableProblems[] = $table.': '.__('console.backups.dump_table_missing');
 
                 continue;
             }
@@ -735,7 +733,7 @@ final class BackupTenantsCommand extends Command
             $low = max(0, $countsAfter[$table] - $inserted);
             $high = $countsBefore[$table] + $inserted;
             if ($dump[$table] < $low || $dump[$table] > $high) {
-                $problems[] = $table.': '.__('console.backups.dump_rows_out_of_range', [
+                $tableProblems[] = $table.': '.__('console.backups.dump_rows_out_of_range', [
                     'rows' => $dump[$table],
                     'low' => $low,
                     'high' => $high,
@@ -743,7 +741,14 @@ final class BackupTenantsCommand extends Command
             }
         }
 
-        return $problems;
+        // An all-zero dump of a database with rows is one cause: report it once, as `*`, only when the
+        // per-table range check did not already name the tables (e.g. tables without a counter).
+        if ($tableProblems === [] && array_sum($dump) === 0 && array_sum($countsBefore) + array_sum($countsAfter) > 0) {
+            $problems[] = '*: '.__('console.backups.dump_zero_rows');
+        }
+
+        return array_merge($problems, $tableProblems);
+
     }
 
     /**

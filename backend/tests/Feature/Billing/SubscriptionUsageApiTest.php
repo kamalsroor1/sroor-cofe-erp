@@ -21,7 +21,8 @@ final class SubscriptionUsageApiTest extends BillingTestCase
 {
     public function test_the_payload_has_the_contracted_shape(): void
     {
-        $plan = $this->plan(['name' => 'Growth']);
+        // PLAN-01: unlimited resources have no usage row, so the plan needs enforced limits to have any.
+        $plan = $this->plan(['name' => 'Growth', 'max_users' => 8, 'max_stores' => 3]);
         $tenant = $this->tenantOn($plan, ['subscription_ends_at' => now()->addDays(10)]);
 
         $this->getJson('/api/v1/billing/subscription', $this->tenantHeaders($tenant))
