@@ -6,7 +6,10 @@ namespace App\Actions\Billing;
 
 use App\Actions\Tenants\TransitionTenantStatusAction;
 use App\Enums\Billing\BillingCycle;
+use App\Enums\Billing\BillingInvoiceStatus;
 use App\Enums\Billing\BillingInvoiceType;
+use App\Enums\Billing\BillingPaymentStatus;
+use App\Enums\Billing\PlanChangeRequestStatus;
 use App\Enums\Billing\SubscriptionAddonStatus;
 use App\Enums\Billing\SubscriptionStatus;
 use App\Enums\CentralAuditEvent;
@@ -18,6 +21,7 @@ use App\Models\BillingInvoice;
 use App\Models\BillingPayment;
 use App\Models\CentralUser;
 use App\Models\Plan;
+use App\Models\PlanChangeRequest;
 use App\Models\Subscription;
 use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
@@ -105,6 +109,20 @@ final class ActivateSubscriptionAction
             $base = CarbonImmutable::instance($periodStart);
         }
         $difference = $this->isDifference($invoice);
+
+        // BILL-01: a difference prices the REST of a running term; once it ended the shop would get
+        // a full cycle for a fraction of the price.
+        if ($difference && ! $hasFutureEnd) {
+            throw BillingException::differenceNeedsActiveTerm();
+        }
+
+        // BILL-01: an old renewal invoice (issued before an upgrade) must never move the shop back.
+        if ($invoice->type === BillingInvoiceType::Renewal
+            && $tenant->plan_id !== null
+            && (int) $tenant->plan_id !== (int) $plan->getKey()) {
+            throw BillingException::renewalPlanMismatch();
+        }
+
         $keepsTerm = $difference && $hasFutureEnd;
         $newEnd = $keepsTerm
             ? $base
@@ -121,7 +139,10 @@ final class ActivateSubscriptionAction
 
         $subscription->fill([
             'plan_id' => $plan->getKey(),
-            'billing_cycle' => $cycle,
+            // A kept term keeps its cycle: the end date is still the old cycle's end.
+            'billing_cycle' => $keepsTerm && $subscription->billing_cycle instanceof BillingCycle && $subscription->billing_cycle->isSellable()
+                ? $subscription->billing_cycle
+                : $cycle,
             'status' => SubscriptionStatus::Active,
             // A difference invoice bills only the gap: the subscription price is the plan's catalog price.
             'amount' => $difference ? Decimal::normalize($cycle === BillingCycle::Yearly ? $plan->price_yearly : $plan->price_monthly) : $this->planAmount($invoice),
@@ -143,9 +164,19 @@ final class ActivateSubscriptionAction
         $tenant->subscription_ends_at = Carbon::instance($newEnd);
         $tenant->save();
 
-        if (! $keepsTerm) {
+        if ($invoice->type === BillingInvoiceType::Renewal) {
+            // BILL-02: add-ons renew only when the renewal invoice charged for them.
+            $this->extendPaidAddons($invoice, $subscription, $now);
+        } elseif (! $keepsTerm) {
+            // Plan / upgrade-after-expiry invoices still carry running add-ons (owner decision pending).
             $this->carryAddonsForward($subscription, $currentEnd, $now, $newEnd);
         }
+
+        if ($invoice->type !== BillingInvoiceType::Renewal) {
+            $this->voidStaleRenewals($invoice, $tenant, $plan, $operator);
+        }
+
+        $this->completePlanChangeRequest($invoice);
 
         $statusKept = $this->keepsStatus($tenant);
 
@@ -213,7 +244,8 @@ final class ActivateSubscriptionAction
 
         $now = CarbonImmutable::now();
         $end = $tenant->subscription_ends_at;
-        $endsAt = $end !== null && $end->isAfter($now)
+        // A monthly add-on rides the subscription term; a YEARLY one lasts its own year (BILL-02).
+        $endsAt = $cycle !== BillingCycle::Yearly && $end !== null && $end->isAfter($now)
             ? CarbonImmutable::instance($end)
             : ($cycle === BillingCycle::Yearly ? $now->addYearNoOverflow() : $now->addMonthNoOverflow());
 
@@ -255,7 +287,7 @@ final class ActivateSubscriptionAction
             $line->fill([
                 'status' => SubscriptionAddonStatus::Active,
                 'starts_at' => $line->starts_at ?? $now,
-                'ends_at' => $endsAt,
+                'ends_at' => $line->ends_at !== null && $line->ends_at->isAfter($endsAt) ? $line->ends_at : $endsAt,
             ]);
             $line->save();
 
@@ -319,6 +351,88 @@ final class ActivateSubscriptionAction
                 $line->save();
             }
         }
+    }
+
+    /**
+     * BILL-02: extend every add-on line the paid renewal invoice charged, by that line's own cycle,
+     * from the later of its current end and now. Lines not on the invoice are left to lapse.
+     */
+    private function extendPaidAddons(BillingInvoice $invoice, Subscription $subscription, CarbonImmutable $now): void
+    {
+        foreach ($invoice->lines as $row) {
+            if (($row['type'] ?? null) !== 'addon' || ! isset($row['addon_id'])) {
+                continue;
+            }
+
+            $line = SubscriptionAddon::query()
+                ->where('subscription_id', $subscription->getKey())
+                ->where('addon_id', (int) $row['addon_id'])
+                ->where('status', SubscriptionAddonStatus::Active->value)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $line instanceof SubscriptionAddon) {
+                continue;
+            }
+
+            $from = $line->ends_at !== null && $line->ends_at->isAfter($now) ? CarbonImmutable::instance($line->ends_at) : $now;
+            $addonCycle = BillingCycle::tryFrom((string) ($row['billing_cycle'] ?? '')) ?? BillingCycle::Monthly;
+            $line->ends_at = Carbon::instance($addonCycle === BillingCycle::Yearly ? $from->addYearNoOverflow() : $from->addMonthNoOverflow());
+            $line->save();
+        }
+    }
+
+    /**
+     * BILL-01: once the plan changed, a still-pending renewal invoice of ANOTHER plan is stale (paying
+     * it would be refused with 409): void it so a correct renewal can be issued. Invoices with a
+     * payment in flight are left alone (the payment review decides).
+     */
+    private function voidStaleRenewals(BillingInvoice $paid, Tenant $tenant, Plan $plan, ?CentralUser $operator): void
+    {
+        $stale = BillingInvoice::query()
+            ->where('tenant_id', $tenant->getKey())
+            ->where('type', BillingInvoiceType::Renewal->value)
+            ->where('status', BillingInvoiceStatus::Pending->value)
+            ->whereKeyNot($paid->getKey())
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($stale as $old) {
+            if ($this->planOf($old)?->getKey() === $plan->getKey()) {
+                continue;
+            }
+
+            $inFlight = BillingPayment::query()
+                ->where('billing_invoice_id', $old->getKey())
+                ->whereIn('status', [BillingPaymentStatus::Verified->value, BillingPaymentStatus::Pending->value])
+                ->exists();
+
+            if ($inFlight) {
+                continue;
+            }
+
+            $old->status = BillingInvoiceStatus::Void;
+            $old->voided_at = now();
+            $old->save();
+
+            $this->audit->record(
+                CentralAuditEvent::BillingInvoiceVoided,
+                ['invoice_id' => (int) $old->getKey(), 'number' => $old->number, 'type' => $old->type->value, 'reason' => 'plan_changed'],
+                $operator,
+                $old,
+                (string) $old->tenant_id,
+            );
+        }
+    }
+
+    /** BILL-01: a paid plan-change invoice completes the request that produced it. */
+    private function completePlanChangeRequest(BillingInvoice $invoice): void
+    {
+        PlanChangeRequest::query()
+            ->where('billing_invoice_id', $invoice->getKey())
+            ->where('status', PlanChangeRequestStatus::Invoiced->value)
+            ->update(['status' => PlanChangeRequestStatus::Completed->value]);
     }
 
     /** True for the single "difference" plan line a support-decided upgrade carries. */

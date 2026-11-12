@@ -37,7 +37,8 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * | addonNeedsSubscription() | 422  | billing.addon_needs_subscription |
  * | differenceRequired()     | 422  | billing.difference_required      |
  * | addonNeedsActiveSubscription() | 422 | billing.addon_needs_active_subscription |
- * | differenceNeedsActiveTerm() | 422 | billing.difference_needs_active_term |
+ * | differenceNeedsActiveTerm() | 409 | billing.difference_needs_active_term |
+ * | renewalPlanMismatch()    | 409  | billing.renewal_plan_mismatch    |
  */
 final class BillingException extends HttpException
 {
@@ -170,7 +171,12 @@ final class BillingException extends HttpException
 
     public static function differenceNeedsActiveTerm(): self
     {
-        return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'difference_needs_active_term');
+        return self::make(Response::HTTP_CONFLICT, 'difference_needs_active_term');
+    }
+
+    public static function renewalPlanMismatch(): self
+    {
+        return self::make(Response::HTTP_CONFLICT, 'renewal_plan_mismatch');
     }
 
     public static function differenceRequired(): self

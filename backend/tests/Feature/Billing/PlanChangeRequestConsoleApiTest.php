@@ -150,7 +150,6 @@ final class PlanChangeRequestConsoleApiTest extends PlanChangeTestCase
         $row = $this->requestRow($tenant, ['requested_plan_id' => $this->plan()->getKey()]);
         $url = self::QUEUE.'/'.$row->getKey().'/invoice';
 
-        $this->postJson($url, [], $this->admin)->assertStatus(422)->assertJsonValidationErrors(['amount']);
         $this->postJson($url, ['amount' => '0'], $this->admin)->assertStatus(422)->assertJsonValidationErrors(['amount']);
         $this->postJson($url, ['amount' => '-5'], $this->admin)->assertStatus(422)->assertJsonValidationErrors(['amount']);
         $this->postJson($url, ['amount' => '10.1234'], $this->admin)->assertStatus(422)->assertJsonValidationErrors(['amount']);
@@ -311,7 +310,7 @@ final class PlanChangeRequestConsoleApiTest extends PlanChangeTestCase
         $this->assertSame(50, $service->entitlements($tenant)->limit(LimitResource::Users));
         $this->getJson('/api/v1/billing/subscription', $this->tenantHeaders($tenant))
             ->assertOk()->assertJsonPath('data.plan.id', $big->getKey())->assertJsonPath('data.pending_plan_change', null);
-        $this->assertSame('invoiced', PlanChangeRequest::query()->findOrFail($requestId)->status->value);
+        $this->assertSame('completed', PlanChangeRequest::query()->findOrFail($requestId)->status->value);
 
         // Verifying again changes nothing.
         $this->verify($paymentId);
@@ -327,7 +326,7 @@ final class PlanChangeRequestConsoleApiTest extends PlanChangeTestCase
         $row = $this->requestRow($tenant, ['requested_plan_id' => $big->getKey()]);
 
         $this->postJson(self::QUEUE.'/'.$row->getKey().'/invoice', ['amount' => '120'], $this->admin)
-            ->assertStatus(422)
+            ->assertStatus(409)
             ->assertJsonPath('error_code', 'billing.difference_needs_active_term');
 
         $this->assertTrue($row->fresh()->isPending());
@@ -348,7 +347,7 @@ final class PlanChangeRequestConsoleApiTest extends PlanChangeTestCase
         $row = $this->requestRow($tenant, ['requested_plan_id' => $big->getKey()]);
 
         $this->postJson(self::QUEUE.'/'.$row->getKey().'/invoice', ['amount' => '120'], $this->admin)
-            ->assertStatus(422)
+            ->assertStatus(409)
             ->assertJsonPath('error_code', 'billing.difference_needs_active_term');
 
         $this->assertTrue($row->fresh()->isPending());
@@ -398,6 +397,10 @@ final class PlanChangeRequestConsoleApiTest extends PlanChangeTestCase
             periodStart: null,
             issuedBy: (int) $this->operator->getKey(),
         ), $this->operator);
+
+        // BILL-02: the add-on is charged on the renewal (plan 449 + add-on 100).
+        $this->assertSame(['plan', 'addon'], array_column($planInvoice->lines, 'type'));
+        $this->assertSame('549.000', $planInvoice->subtotal);
         $this->verify($this->pay($tenant, (int) $planInvoice->getKey(), $planInvoice->total));
 
         $newEnd = $tenant->fresh()->subscription_ends_at;

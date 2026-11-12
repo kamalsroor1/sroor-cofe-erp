@@ -9,6 +9,7 @@ use App\Enums\Billing\BillingCycle;
 use App\Enums\Billing\BillingInvoiceStatus;
 use App\Enums\Billing\BillingInvoiceType;
 use App\Enums\Billing\BillingPaymentStatus;
+use App\Enums\Billing\SubscriptionAddonStatus;
 use App\Enums\CentralAuditEvent;
 use App\Exceptions\Billing\BillingException;
 use App\Models\Addon;
@@ -18,6 +19,7 @@ use App\Models\CentralUser;
 use App\Models\Plan;
 use App\Models\PlanAddon;
 use App\Models\Subscription;
+use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
 use App\Services\Billing\BillingSequenceService;
 use App\Services\Billing\FounderPricingService;
@@ -70,13 +72,22 @@ final class IssueSubscriptionInvoiceAction
                 $this->assertNoOpenPlanInvoice($tenant);
             }
 
-            $periodStart = $this->periodStart($dto, $tenant, $subscription);
+            // BILL-02: a difference keeps the paid term, so it stays on the subscription's own cycle
+            // (monthly -> yearly would otherwise leave a yearly cycle on a monthly end date).
+            if ($dto->differenceLine !== null && $subscription instanceof Subscription && $subscription->billing_cycle->isSellable()) {
+                $cycle = $subscription->billing_cycle;
+            }
+
+            $termEnd = $this->futureEnd($tenant, $subscription);
+            $periodStart = $dto->differenceLine !== null
+                ? CarbonImmutable::now()->startOfSecond()
+                : $this->periodStart($dto, $tenant, $subscription);
             if (! $dto->fromRequest && $dto->type !== BillingInvoiceType::Addon) {
                 $this->assertNotDuplicate($tenant, $dto->type, $periodStart, $this->futureEnd($tenant, $subscription) === null);
             }
 
             // A difference bills only the gap on a paid term, so it needs a term still running.
-            if ($dto->differenceLine !== null && $this->futureEnd($tenant, $subscription) === null) {
+            if ($dto->differenceLine !== null && $termEnd === null) {
                 throw BillingException::differenceNeedsActiveTerm();
             }
 
@@ -85,6 +96,11 @@ final class IssueSubscriptionInvoiceAction
                 $lines[] = $dto->differenceLine !== null
                     ? $this->differenceLine($dto->differenceLine, $plan, $cycle)
                     : $this->planLine($dto, $plan, $cycle, $tenant, $subscription);
+            }
+            if ($dto->type === BillingInvoiceType::Renewal && $cycle instanceof BillingCycle && $subscription instanceof Subscription) {
+                foreach ($this->renewalAddonLines($subscription, $tenant, $periodStart, $this->periodEnd($periodStart, $cycle)) as $renewalLine) {
+                    $lines[] = $renewalLine;
+                }
             }
             if ($dto->addonLines !== [] && $cycle instanceof BillingCycle) {
                 if (! $subscription instanceof Subscription) {
@@ -132,7 +148,7 @@ final class IssueSubscriptionInvoiceAction
                 'status' => BillingInvoiceStatus::Pending,
                 'billing_cycle' => $cycle,
                 'period_start' => $periodStart,
-                'period_end' => $this->periodEnd($periodStart, $cycle),
+                'period_end' => $dto->differenceLine !== null ? $termEnd : $this->periodEnd($periodStart, $cycle),
                 'lines' => $lines,
                 'subtotal' => $subtotal,
                 'discount' => $dto->discount,
@@ -141,7 +157,7 @@ final class IssueSubscriptionInvoiceAction
                 'total' => $total,
                 'currency' => Subscription::DEFAULT_CURRENCY,
                 'issued_at' => $now,
-                'due_at' => $now->addDays(max(1, (int) config('billing.invoice_due_days', 7))),
+                'due_at' => $this->dueAt($now, $dto->differenceLine !== null ? $termEnd : null),
                 'issued_by' => $dto->issuedBy,
                 'notes' => $dto->notes,
             ]);
@@ -164,6 +180,73 @@ final class IssueSubscriptionInvoiceAction
 
             return $invoice;
         });
+    }
+
+    /** Normal due date, but a difference invoice must be payable only while the term it prices is still running. */
+    private function dueAt(CarbonImmutable $now, ?CarbonImmutable $termEnd): CarbonImmutable
+    {
+        $due = $now->addDays(max(1, (int) config('billing.invoice_due_days', 7)));
+
+        return $termEnd !== null && $termEnd->lessThan($due) ? $termEnd : $due;
+    }
+
+    /**
+     * BILL-02: add-ons are billed on renewal. An ACTIVE add-on line is charged when its own paid
+     * end falls inside the period being renewed (a yearly add-on on a monthly subscription is only
+     * due once a year), at its own cycle, priced from the tenant's plan catalog and falling back to
+     * the stored unit price. ActivateSubscriptionAction extends exactly the lines found here.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function renewalAddonLines(Subscription $subscription, Tenant $tenant, CarbonImmutable $periodStart, ?CarbonImmutable $periodEnd): array
+    {
+        if ($periodEnd === null) {
+            return [];
+        }
+
+        $rows = SubscriptionAddon::query()
+            ->where('subscription_id', $subscription->getKey())
+            ->where('status', SubscriptionAddonStatus::Active->value)
+            ->where(function ($q) use ($periodEnd): void {
+                $q->whereNull('ends_at')->orWhere('ends_at', '<=', $periodEnd);
+            })
+            ->orderBy('id')
+            ->get();
+
+        $lines = [];
+
+        foreach ($rows as $row) {
+            $addon = Addon::query()->find($row->addon_id);
+            if (! $addon instanceof Addon || ! $addon->is_active || $row->ends_at === null) {
+                continue;
+            }
+
+            $addonCycle = $row->billing_cycle->isSellable() ? $row->billing_cycle : BillingCycle::Monthly;
+            $quantity = max(1, (int) $row->quantity);
+            $planAddon = $tenant->plan_id === null ? null : PlanAddon::query()
+                ->where('plan_id', $tenant->plan_id)
+                ->where('addon_id', $addon->getKey())
+                ->where('is_available', true)
+                ->first();
+
+            $unit = $planAddon instanceof PlanAddon
+                ? Decimal::normalize($planAddon->unitPriceFor($addonCycle, $quantity))
+                : Decimal::normalize((string) $row->unit_price);
+
+            $lines[] = [
+                'type' => 'addon',
+                'renewal' => true,
+                'addon_id' => (int) $addon->getKey(),
+                'addon_key' => $addon->key,
+                'description' => (string) __('billing.invoice.addon_line', ['addon' => (string) __($addon->name_key), 'cycle' => $addonCycle->label()]),
+                'billing_cycle' => $addonCycle->value,
+                'quantity' => $quantity,
+                'unit_price' => $unit,
+                'amount' => bcmul($unit, (string) $quantity, 3),
+            ];
+        }
+
+        return $lines;
     }
 
     private function planFor(IssueSubscriptionInvoiceDTO $dto): ?Plan

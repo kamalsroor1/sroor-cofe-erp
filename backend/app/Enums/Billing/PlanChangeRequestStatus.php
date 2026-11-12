@@ -16,6 +16,7 @@ enum PlanChangeRequestStatus: string implements BillingEnum
 
     case Pending = 'pending';
     case Invoiced = 'invoiced';
+    case Completed = 'completed';
     case Rejected = 'rejected';
     case Cancelled = 'cancelled';
 

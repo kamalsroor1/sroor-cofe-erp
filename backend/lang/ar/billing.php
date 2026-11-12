@@ -67,6 +67,7 @@ return [
     'plan_change_request_status' => [
         'pending' => 'بانتظار الدعم',
         'invoiced' => 'تم إصدار فاتورة',
+        'completed' => 'مكتمل',
         'rejected' => 'مرفوض',
         'cancelled' => 'ملغي',
     ],
@@ -121,6 +122,7 @@ return [
         'difference_required' => 'أدخل مبلغ فرق الترقية (أكبر من صفر).',
         'addon_needs_active_subscription' => 'الإضافة تحتاج اشتراكًا ساريًا: جدّد الاشتراك أولًا.',
         'difference_needs_active_term' => 'الاشتراك منتهي: أصدر فاتورة باقة عادية بدل فرق الترقية.',
+        'renewal_plan_mismatch' => 'فاتورة التجديد دي لباقة المحل مش عليها دلوقتي. الغيها واطلب تجديد جديد.',
     ],
     'messages' => [
         'payment_cancelled' => 'تم إلغاء الدفعة قيد المراجعة، ويمكنك إرسال دفعة جديدة.',

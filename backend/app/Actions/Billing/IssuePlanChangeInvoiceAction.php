@@ -14,12 +14,17 @@ use App\Exceptions\Billing\BillingException;
 use App\Models\CentralUser;
 use App\Models\Plan;
 use App\Models\PlanChangeRequest;
+use App\Models\Subscription;
 use App\Models\Tenant;
+use App\Services\Billing\ProrationCalculator;
+use App\Support\Money\Decimal;
+use Carbon\CarbonImmutable;
+use App\Enums\Billing\BillingCycle;
 use App\Services\CentralAuditLogger;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Console: answer a pending request by issuing its invoice (owner decision: manual, no proration).
+ * Console (BILL-02: `amount` may be omitted -> pro-rata suggestion): answer a pending request by issuing its invoice (owner decision: manual, no proration).
  *
  *  - plan_change: ONE `upgrade` line with the DIFFERENCE the admin typed, plan = the requested
  *    plan, cycle = the request's. Paying it switches the plan and keeps the paid term.
@@ -35,6 +40,7 @@ final class IssuePlanChangeInvoiceAction
     public function __construct(
         private readonly IssueSubscriptionInvoiceAction $issue,
         private readonly CentralAuditLogger $audit,
+        private readonly ProrationCalculator $proration,
     ) {}
 
     public function execute(IssuePlanChangeInvoiceDTO $dto, CentralUser $operator): PlanChangeRequest
@@ -72,6 +78,32 @@ final class IssuePlanChangeInvoiceAction
 
             return $request;
         });
+    }
+
+    /**
+     * (new - old) x remaining / total at the subscription's own cycle, the term being the cycle that
+     * ends at tenants.subscription_ends_at. '0.000' when there is no running term or no price gap.
+     */
+    private function suggestedDifference(Tenant $tenant, ?Plan $current, Plan $target): string
+    {
+        $end = $tenant->subscription_ends_at;
+        $subscription = Subscription::query()->where('tenant_id', $tenant->getKey())->orderByDesc('id')->first();
+
+        if ($end === null || ! $end->isFuture() || ! $current instanceof Plan || ! $subscription instanceof Subscription || ! $subscription->billing_cycle->isSellable()) {
+            return '0.000';
+        }
+
+        $yearly = $subscription->billing_cycle === BillingCycle::Yearly;
+        $termEnd = CarbonImmutable::instance($end);
+        $termStart = $yearly ? $termEnd->subYearNoOverflow() : $termEnd->subMonthNoOverflow();
+        $now = CarbonImmutable::now();
+
+        return $this->proration->difference(
+            Decimal::normalize($yearly ? $current->price_yearly : $current->price_monthly),
+            Decimal::normalize($yearly ? $target->price_yearly : $target->price_monthly),
+            max(0, $termEnd->getTimestamp() - $now->getTimestamp()),
+            max(1, $termEnd->getTimestamp() - $termStart->getTimestamp()),
+        );
     }
 
     private function invoiceDto(IssuePlanChangeInvoiceDTO $dto, PlanChangeRequest $request, CentralUser $operator): IssueSubscriptionInvoiceDTO
@@ -115,11 +147,14 @@ final class IssuePlanChangeInvoiceAction
             throw BillingException::requestSamePlan();
         }
 
-        if ($dto->amount === null || bccomp($dto->amount, '0', 3) <= 0) {
+        $current = Plan::query()->find($tenant->plan_id ?? $request->current_plan_id);
+
+        // BILL-02: no amount typed -> the system proposes the pro-rata difference for the rest of the term.
+        $amount = $dto->amount ?? $this->suggestedDifference($tenant, $current, $target);
+
+        if (bccomp($amount, '0', 3) <= 0) {
             throw BillingException::differenceRequired();
         }
-
-        $current = Plan::query()->find($tenant->plan_id ?? $request->current_plan_id);
 
         return new IssueSubscriptionInvoiceDTO(
             tenantId: $tenantId,
@@ -137,7 +172,7 @@ final class IssuePlanChangeInvoiceAction
                     'from' => $current instanceof Plan ? $current->name : (string) __('billing.invoice.no_plan_name'),
                     'to' => $target->name,
                 ]),
-                'amount' => $dto->amount,
+                'amount' => $amount,
             ],
             fromRequest: true,
         );

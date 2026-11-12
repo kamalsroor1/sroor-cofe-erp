@@ -67,6 +67,7 @@ return [
     'plan_change_request_status' => [
         'pending' => 'Awaiting support',
         'invoiced' => 'Invoice issued',
+        'completed' => 'Completed',
         'rejected' => 'Rejected',
         'cancelled' => 'Cancelled',
     ],
@@ -121,6 +122,7 @@ return [
         'difference_required' => 'Enter the upgrade difference amount (greater than zero).',
         'addon_needs_active_subscription' => 'An add-on needs a running subscription: renew your subscription first.',
         'difference_needs_active_term' => 'The subscription has expired: issue a regular plan invoice instead of an upgrade difference.',
+        'renewal_plan_mismatch' => 'This renewal invoice is for a plan the shop is no longer on. Void it and request a new renewal.',
     ],
     'messages' => [
         'payment_cancelled' => 'The pending payment was cancelled; you can submit a new one.',
