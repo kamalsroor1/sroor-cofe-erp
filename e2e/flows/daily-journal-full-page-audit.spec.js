@@ -39,8 +39,10 @@ test.describe('DailyJournalView Comprehensive 4-Axes Audit & Multi-Viewport Veri
             await expect(header).toBeVisible({ timeout: 15000 });
             await expect(header).toContainText('يومية');
 
-            // Verify Quick Add Expense Button
+            // Verify Quick Add Expense Button (below 640px it lives in the header overflow menu)
+            if (vp.width < 640) await page.getByTestId('page-actions-more').click();
             await expect(page.locator('main button:has-text("تسجيل مصروف اليومية")').first()).toBeVisible();
+            if (vp.width < 640) await page.keyboard.press('Escape');
 
             // 2. Verify Financial Metrics Grid (Inflow, Outflow, Net, Expected in Drawer)
             await expect(page.locator('text=إجمالي المقبوضات').first()).toBeVisible();

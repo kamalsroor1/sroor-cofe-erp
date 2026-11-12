@@ -31,8 +31,8 @@ defineProps({
 </script>
 
 <template>
-  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 font-tajawal">
-    <div class="space-y-1">
+  <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 font-tajawal" data-testid="page-header">
+    <div class="space-y-1 min-w-0 flex-1 basis-72">
       <div class="flex items-center gap-2.5 flex-wrap">
         <!-- Back button -->
         <router-link
@@ -50,7 +50,7 @@ defineProps({
           <DynamicIcon :name="icon" class="w-5 h-5 text-theme-primary" />
         </div>
 
-        <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h1 class="text-xl sm:text-2xl font-black text-balance text-slate-900 dark:text-white tracking-tight">
           {{ title }}
         </h1>
 
@@ -81,7 +81,7 @@ defineProps({
     <!-- Action Buttons Slot -->
     <div
       v-if="$slots.actions || $slots.default"
-      class="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-start sm:justify-end"
+      class="flex items-center gap-2 flex-wrap max-w-full justify-start sm:justify-end"
     >
       <slot name="actions">
         <slot />

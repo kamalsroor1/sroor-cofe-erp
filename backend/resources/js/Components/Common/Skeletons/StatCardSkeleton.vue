@@ -1,9 +1,26 @@
 <script setup>
 import Skeleton from './Skeleton.vue';
+
+defineProps({
+  // Mirrors MetricCard `dense` (strip layout).
+  dense: { type: Boolean, default: false },
+});
 </script>
 
 <template>
   <div
+    v-if="dense"
+    class="metric-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 shadow-xs flex items-center gap-2.5 font-tajawal select-none"
+    data-metric-card="true"
+  >
+    <Skeleton width="w-8" height="h-8" rounded="rounded-lg" />
+    <div class="flex-1 space-y-1.5">
+      <Skeleton width="w-16" height="h-2.5" rounded="rounded-md" />
+      <Skeleton width="w-24" height="h-4" rounded="rounded-md" />
+    </div>
+  </div>
+  <div
+    v-else
     class="metric-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-xs space-y-2 sm:space-y-3 font-tajawal select-none"
     data-metric-card="true"
   >

@@ -440,4 +440,9 @@ return [
         'cardamom' => 'حبهان: :grams جم',
     ],
     'deleted_item' => 'صنف محذوف',
+    // Short table headers (the long label stays as the column tooltip).
+    'col_cost' => 'التكلفة',
+    'col_retail' => 'القطاعي',
+    'col_wholesale' => 'الجملة',
+    'col_stock' => 'الرصيد',
 ];

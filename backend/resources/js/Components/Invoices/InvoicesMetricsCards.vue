@@ -1,14 +1,15 @@
 <template>
   <div>
     <!-- 🔄 Skeleton Loading State -->
-    <div v-if="isLoading" class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-      <StatCardSkeleton v-for="n in 4" :key="n" />
-    </div>
+    <MetricStrip v-if="isLoading" :columns="4">
+      <StatCardSkeleton v-for="n in 4" :key="n" dense />
+    </MetricStrip>
 
     <!-- 📊 Metrics Cards Grid -->
-    <div v-else class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+    <MetricStrip v-else :columns="4">
       <!-- Total Sales -->
       <MetricCard
+        dense
         :title="$t('common.total_sales')"
         :value="formatMoney(summary.total_sales || 0)"
         :currency="currencyLabel"
@@ -21,6 +22,7 @@
 
       <!-- Total Paid -->
       <MetricCard
+        dense
         :title="$t('invoices.collected_cash_electronic')"
         :value="formatMoney(summary.total_paid || 0)"
         :currency="currencyLabel"
@@ -33,6 +35,7 @@
 
       <!-- Total Due -->
       <MetricCard
+        dense
         :title="$t('invoices.remaining_credit_due')"
         :value="formatMoney(summary.total_due || 0)"
         :currency="currencyLabel"
@@ -45,6 +48,7 @@
 
       <!-- Invoices Count -->
       <MetricCard
+        dense
         :title="$t('invoices.invoices_count_label')"
         :value="summary.total_count || 0"
         :currency="$t('invoices.invoice_unit')"
@@ -54,13 +58,14 @@
         icon-color="text-theme-primary"
         :subtitle="$t('invoices.sales_log_sub')"
       />
-    </div>
+    </MetricStrip>
   </div>
 </template>
 
 <script setup>
 import { TrendingUp, CheckCircle2, Clock, FileText } from 'lucide-vue-next';
 import MetricCard from '../Common/MetricCard.vue';
+import MetricStrip from '../Common/MetricStrip.vue';
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 

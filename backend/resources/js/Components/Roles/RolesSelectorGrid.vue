@@ -3,7 +3,7 @@
     <StatCardSkeleton v-for="i in 4" :key="i" />
   </div>
 
-  <div v-else class="grid grid-cols-2 sm:grid-cols-4 gap-3 font-tajawal">
+  <div v-else class="grid grid-cols-2 sm:grid-cols-4 gap-3 font-tajawal" data-testid="roles-selector">
     <button
       v-for="r in roles"
       :key="r.id"

@@ -4,45 +4,20 @@
     <PageHeader :title="$t('treasury.journal_title')" :subtitle="$t('treasury.journal_subtitle')" icon="book-open">
       <template #actions>
         <div class="flex items-center gap-2 flex-wrap">
-          <!-- Date Filter Picker -->
           <div class="w-44">
             <BaseDatePicker v-model="selectedDate" @change="fetchDailyJournal" :clearable="false" />
           </div>
 
-          <!-- Quick Add Expense in Journal Button -->
-          <button
-            type="button"
-            @click="showExpenseModal = true"
-            class="min-h-[44px] px-3.5 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+          <!-- Shift status pill: the banner below already says it on phones -->
+          <div
+            v-if="!hasError && !isLoading && !activeShift"
+            class="hidden sm:flex min-h-[44px] px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 items-center gap-1.5 select-none"
           >
-            <MinusCircle class="w-4 h-4" />
-            <span>{{ $t('treasury.record_journal_expense') }}</span>
-          </button>
+            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+            <span>{{ $t('treasury.shift_closed_now') }}</span>
+          </div>
 
-          <!-- Shift Status Controls (Hidden during initial load or error) -->
-          <template v-if="!hasError && !isLoading">
-            <!-- Shift Status Indicator (When Closed) -->
-            <div
-              v-if="!activeShift"
-              class="min-h-[44px] px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 select-none"
-            >
-              <span class="w-2 h-2 rounded-full bg-slate-400"></span>
-              <span>{{ $t('treasury.shift_closed_now') }}</span>
-            </div>
-
-            <!-- Shift Close Button (When Open) -->
-            <BaseButton
-              v-else
-              type="button"
-              variant="danger"
-              size="md"
-              @click="openCloseShiftModal"
-              class="font-black shadow-rose-500/20 shadow-lg flex items-center gap-2"
-            >
-              <Lock class="w-4 h-4" />
-              <span>{{ $t('treasury.close_shift') }}</span>
-            </BaseButton>
-          </template>
+          <PageActions :items="headerActions" />
         </div>
       </template>
     </PageHeader>
@@ -107,9 +82,10 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { MinusCircle, Lock } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
-import BaseButton from '../../Components/Common/BaseButton.vue';
+import PageActions from '../../Components/Common/PageActions.vue';
 import ErrorState from '../../Components/Common/ErrorState.vue';
 import BaseDatePicker from '../../Components/Form/BaseDatePicker.vue';
 import DailyJournalShiftBanner from '../../Components/DailyJournal/DailyJournalShiftBanner.vue';
@@ -119,6 +95,7 @@ import OpenShiftModal from '../../Components/DailyJournal/OpenShiftModal.vue';
 import CloseShiftModal from '../../Components/DailyJournal/CloseShiftModal.vue';
 import QuickExpenseModal from '../../Components/DailyJournal/QuickExpenseModal.vue';
 import { useDailyJournal } from '../../Composables/useDailyJournal';
+import { useTrans } from '../../Composables/useTrans';
 
 const {
   selectedDate,
@@ -147,4 +124,26 @@ const {
   submitExpense,
   printActiveZReport,
 } = useDailyJournal();
+
+const { t } = useTrans();
+const canCloseShift = computed(() => !hasError.value && !isLoading.value && Boolean(activeShift.value));
+const headerActions = computed(() => [
+  {
+    key: 'expense',
+    label: t('treasury.record_journal_expense'),
+    icon: MinusCircle,
+    primary: !canCloseShift.value,
+    iconClass: 'text-rose-500',
+    onClick: () => (showExpenseModal.value = true),
+  },
+  {
+    key: 'close-shift',
+    label: t('treasury.close_shift'),
+    icon: Lock,
+    variant: 'danger',
+    primary: canCloseShift.value,
+    show: canCloseShift.value,
+    onClick: openCloseShiftModal,
+  },
+]);
 </script>

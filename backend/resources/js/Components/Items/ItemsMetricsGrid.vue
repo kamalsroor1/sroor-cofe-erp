@@ -1,14 +1,15 @@
 <template>
   <div>
     <!-- 🔄 Skeleton Loading State -->
-    <div v-if="isLoading" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <StatCardSkeleton v-for="n in 3" :key="n" />
-    </div>
+    <MetricStrip v-if="isLoading" :columns="3">
+      <StatCardSkeleton v-for="n in 3" :key="n" dense />
+    </MetricStrip>
 
     <!-- 📊 Metrics Cards -->
-    <div v-else class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <MetricStrip v-else :columns="3">
       <!-- Total Stock Valuation -->
       <MetricCard
+        dense
         :title="$t('inventory.total_stock_value')"
         :value="formatMoney(metrics.total_stock_value || 0)"
         :currency="currencyLabel"
@@ -21,6 +22,7 @@
 
       <!-- Low Stock Count -->
       <MetricCard
+        dense
         :title="$t('inventory.low_stock_count')"
         :value="String(metrics.low_stock_count || 0)"
         :currency="$t('inventory.item_unit')"
@@ -34,6 +36,7 @@
 
       <!-- Total Items Count -->
       <MetricCard
+        dense
         :title="$t('inventory.total_items_count')"
         :value="String(metrics.total_items || 0)"
         :currency="$t('inventory.item_unit')"
@@ -43,13 +46,14 @@
         icon-color="text-theme-primary"
         :footer-left="$t('inventory.total_items_sub')"
       />
-    </div>
+    </MetricStrip>
   </div>
 </template>
 
 <script setup>
 import { TrendingUp, AlertTriangle, Package } from 'lucide-vue-next';
 import MetricCard from '../Common/MetricCard.vue';
+import MetricStrip from '../Common/MetricStrip.vue';
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 

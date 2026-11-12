@@ -13,9 +13,9 @@
       </template>
     </PageHeader>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Main Form (Col Span 2) -->
-      <div class="lg:col-span-2 space-y-5">
+    <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_22rem] gap-6">
+      <!-- Main Form -->
+      <div class="min-w-0 space-y-5">
         <!-- Return Type & Party Info -->
         <ReturnPartySection
           :form="form"
@@ -69,7 +69,7 @@
         />
       </div>
 
-      <!-- Sidebar Financial Summary (Col Span 1) -->
+      <!-- Financial summary: beside the form from 1280px, full width under it below -->
       <div class="space-y-4">
         <ReturnFinancialSummary
           :items-count="itemsCount"

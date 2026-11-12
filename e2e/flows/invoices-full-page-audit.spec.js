@@ -39,7 +39,8 @@ test.describe('InvoicesView Comprehensive 4-Axes Audit & Multi-Viewport Verifica
             // 1. Verify Page Title & Header Actions
             await expect(page.locator('h1')).toContainText('فواتير المبيعات');
             
-            // 2. Verify Filter Toggle Button & Touch Target (>= 40px)
+            // 2. Verify Filter Toggle Button & Touch Target (>= 40px); below 640px it lives in the header overflow menu
+            if (vp.width < 640) await page.getByTestId('page-actions-more').click();
             const filterBtn = page.locator('button:has-text("تصفية الفواتير"), button:has-text("فلاتر البحث")').first();
             await expect(filterBtn).toBeVisible();
             const filterBox = await filterBtn.boundingBox();
@@ -48,7 +49,7 @@ test.describe('InvoicesView Comprehensive 4-Axes Audit & Multi-Viewport Verifica
             }
 
             // 3. Verify Metrics Cards
-            const metricCards = page.locator('.grid .rounded-2xl, .grid .rounded-3xl');
+            const metricCards = page.locator('[data-testid="metric-strip"] [data-metric-card]');
             expect(await metricCards.count()).toBeGreaterThanOrEqual(4);
 
             // 4. Verify Search Input & Date Pills

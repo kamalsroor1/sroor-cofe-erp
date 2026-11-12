@@ -47,7 +47,7 @@ test.describe('ItemsView Comprehensive 4-Axes Audit & Multi-Viewport Verificatio
             await expect(searchInput).toBeVisible();
 
             // 3. Verify Table or Grid Items
-            const itemsContainer = page.locator('table, .grid').first();
+            const itemsContainer = page.getByTestId('items-table');
             await expect(itemsContainer).toBeVisible();
 
             // 4. Verify Touch Target Size (>= 40px)

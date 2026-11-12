@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-200 dark:border-slate-800 text-xs font-bold font-tajawal"
+    class="scroll-fade-x flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-200 dark:border-slate-800 text-xs font-bold font-tajawal"
   >
     <button
       v-for="t in tabs"

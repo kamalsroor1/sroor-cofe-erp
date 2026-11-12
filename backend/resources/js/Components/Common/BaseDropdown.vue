@@ -28,6 +28,7 @@
     >
       <div
         v-if="isOpen"
+        data-testid="dropdown-menu"
         class="absolute top-full mt-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-1.5 z-50 space-y-1 min-w-[200px]"
         :class="[
           align === 'start'
@@ -45,7 +46,7 @@
             :key="idx"
             type="button"
             @click="handleItemClick(item)"
-            class="min-h-[40px] w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition cursor-pointer text-start active:scale-[0.98]"
+            class="min-h-[44px] w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition cursor-pointer text-start active:scale-[0.98]"
             :class="[
               item.danger
                 ? 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40'

@@ -313,7 +313,7 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
               <th
                 v-for="col in columns"
                 :key="col.key"
-                class="pb-3 coarse:pb-2.5 px-3"
+                class="pb-3 coarse:pb-2.5 px-3 whitespace-nowrap"
                 :class="[
                   alignClass(col),
                   col.width ? col.width : '',
@@ -369,6 +369,7 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
                 v-for="(row, index) in rows"
                 :key="row[selectKey] ?? index"
                 class="transition"
+                data-testid="data-table-row"
                 :class="[
                   rowClickable
                     ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40'
@@ -457,6 +458,7 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
           v-for="(row, index) in rows"
           :key="row[selectKey] ?? index"
           class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs transition"
+          data-testid="data-table-card"
           :class="[
             rowClickable ? 'cursor-pointer active:scale-99' : '',
             selectable && isRowSelected(row) ? 'ring-2 ring-theme-primary bg-theme-light dark:bg-theme-light' : '',

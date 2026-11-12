@@ -1,6 +1,6 @@
 <template>
   <div
-    class="p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3"
+    class="p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 lg:flex-wrap"
   >
     <!-- Fast Search Input -->
     <div class="flex-1 min-w-[240px]">
@@ -34,7 +34,8 @@
 
     <!-- Stock Status Filter Pills -->
     <div
-      class="flex items-center gap-1 bg-slate-100 dark:bg-slate-950/80 p-1 rounded-xl border border-slate-200 dark:border-slate-800 overflow-x-auto scrollbar-none shrink-0"
+      data-testid="items-stock-filters"
+      class="flex items-center gap-1 bg-slate-100 dark:bg-slate-950/80 p-1 rounded-xl border border-slate-200 dark:border-slate-800 overflow-x-auto max-w-full min-w-0"
     >
       <button
         type="button"
@@ -42,7 +43,7 @@
           $emit('update:stockStatus', 'all');
           $emit('search');
         "
-        class="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
+        class="min-h-[36px] coarse:min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
         :class="
           stockStatus === 'all'
             ? 'bg-theme-primary text-slate-950 font-black shadow-xs'
@@ -58,7 +59,7 @@
           $emit('update:stockStatus', 'low');
           $emit('search');
         "
-        class="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
+        class="min-h-[36px] coarse:min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
         :class="
           stockStatus === 'low'
             ? 'bg-rose-500/20 text-rose-500 border border-rose-500/40 font-black shadow-xs'
@@ -75,7 +76,7 @@
           $emit('update:stockStatus', 'out');
           $emit('search');
         "
-        class="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
+        class="min-h-[36px] coarse:min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
         :class="
           stockStatus === 'out'
             ? 'bg-theme-light text-theme-primary border border-theme-border font-black shadow-xs'
@@ -92,7 +93,7 @@
           $emit('update:stockStatus', 'in_stock');
           $emit('search');
         "
-        class="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
+        class="min-h-[36px] coarse:min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
         :class="
           stockStatus === 'in_stock'
             ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/40 font-black shadow-xs'

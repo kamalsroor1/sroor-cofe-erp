@@ -4,13 +4,13 @@
   >
     <!-- Preset Periods & Store Selector -->
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <div class="flex flex-wrap items-center gap-1.5">
+      <div class="scroll-fade-x flex items-center gap-1.5 overflow-x-auto min-w-0 max-w-full flex-1">
         <button
           v-for="p in presets"
           :key="p.key"
           type="button"
           @click="$emit('set-period', p.key)"
-          class="min-h-[36px] px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer active:scale-95"
+          class="shrink-0 whitespace-nowrap min-h-[36px] coarse:min-h-[44px] px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer active:scale-95"
           :class="
             period === p.key
               ? 'bg-theme-primary text-white font-black shadow-sm'

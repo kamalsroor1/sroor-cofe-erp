@@ -51,13 +51,18 @@
         @select-tab="selectTab"
       />
 
-      <!-- Desktop Split Layout (Sidebar 4 cols + Main Content 8 cols) or Mobile Drill-Down -->
-      <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <aside class="hidden lg:block lg:col-span-4">
-          <SettingsTabsNav :selected-tab="selectedTab" :is-mobile="false" @select-tab="selectTab" />
+      <!-- Desktop: section list beside the form from 1280px, a tab row above it from 1024px; mobile drill-down below -->
+      <div v-else class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        <aside class="hidden lg:block xl:col-span-3 min-w-0">
+          <SettingsTabsNav
+            :selected-tab="selectedTab"
+            :is-mobile="false"
+            :layout="isWide ? 'list' : 'tabs'"
+            @select-tab="selectTab"
+          />
         </aside>
 
-        <main class="lg:col-span-8">
+        <main class="xl:col-span-9 min-w-0">
           <SettingsTabContent
             :selected-tab="selectedTab || 'general'"
             :form="form"
@@ -104,6 +109,7 @@ import BaseButton from '../../Components/Common/BaseButton.vue';
 import { useSettings } from '../../Composables/useSettings';
 import { useSettingsShell } from '../../Composables/useSettingsShell';
 import { useSettingsSearch } from '../../Composables/useSettingsSearch';
+import { useWideViewport } from '../../Composables/useMediaQuery';
 
 import SettingsShellHeader from '../../Components/Settings/Shell/SettingsShellHeader.vue';
 import SettingsTabsNav from '../../Components/Settings/Shell/SettingsTabsNav.vue';
@@ -144,6 +150,8 @@ const {
   saveSettings,
   appConfigStore,
 } = useSettings();
+
+const isWide = useWideViewport();
 
 const {
   selectedTab,

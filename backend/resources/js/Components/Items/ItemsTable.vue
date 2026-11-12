@@ -1,6 +1,7 @@
 <template>
   <div
     class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl font-tajawal"
+    data-testid="items-table"
   >
     <!-- 🔄 Skeleton Loading State (Facebook-Style Shimmer) -->
     <TableSkeleton v-if="isLoading" :columns-count="9" :rows-count="5" />
@@ -14,16 +15,30 @@
             <tr
               class="bg-slate-100/90 dark:bg-slate-950/80 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800"
             >
-              <th class="py-3 px-4 text-start font-bold">#</th>
-              <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.code') }}</th>
-              <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.item_name') }}</th>
-              <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.category') }}</th>
-              <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.cost_price') }}</th>
-              <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.retail_price') }}</th>
-              <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.wholesale_price') }}</th>
-              <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.current_stock') }}</th>
-              <th class="py-3 px-4 text-center font-bold">{{ $t('common.status') }}</th>
-              <th class="py-3 px-4 text-center font-bold">{{ $t('common.actions') }}</th>
+              <th class="hidden xl:table-cell py-3 px-4 text-start font-bold whitespace-nowrap">#</th>
+              <th class="py-3 px-4 text-start font-bold whitespace-nowrap">{{ $t('inventory.code') }}</th>
+              <th class="py-3 px-4 text-start font-bold whitespace-nowrap">{{ $t('inventory.item_name') }}</th>
+              <th class="py-3 px-4 text-start font-bold whitespace-nowrap">{{ $t('inventory.category') }}</th>
+              <th
+                class="hidden xl:table-cell py-3 px-4 text-end font-bold whitespace-nowrap"
+                :title="$t('inventory.cost_price')"
+              >
+                {{ $t('inventory.col_cost') }}
+              </th>
+              <th class="py-3 px-4 text-end font-bold whitespace-nowrap" :title="$t('inventory.retail_price')">
+                {{ $t('inventory.col_retail') }}
+              </th>
+              <th
+                class="hidden xl:table-cell py-3 px-4 text-end font-bold whitespace-nowrap"
+                :title="$t('inventory.wholesale_price')"
+              >
+                {{ $t('inventory.col_wholesale') }}
+              </th>
+              <th class="py-3 px-4 text-end font-bold whitespace-nowrap" :title="$t('inventory.current_stock')">
+                {{ $t('inventory.col_stock') }}
+              </th>
+              <th class="py-3 px-4 text-center font-bold whitespace-nowrap">{{ $t('common.status') }}</th>
+              <th class="py-3 px-4 text-center font-bold whitespace-nowrap">{{ $t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
@@ -33,10 +48,10 @@
               class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
               :class="item.is_low_stock ? 'bg-rose-500/5' : ''"
             >
-              <td class="py-3.5 px-4 font-mono text-slate-500">
+              <td class="hidden xl:table-cell py-3.5 px-4 font-mono text-slate-500">
                 {{ idx + 1 + (pagination.current_page - 1) * pagination.per_page }}
               </td>
-              <td class="py-3.5 px-4 font-mono font-bold text-theme-primary">
+              <td class="py-3.5 px-4 font-mono font-bold text-theme-primary whitespace-nowrap" data-testid="item-code">
                 {{ item.code || '—' }}
               </td>
               <td class="py-3.5 px-4">
@@ -48,22 +63,27 @@
               <td class="py-3.5 px-4 font-tajawal">
                 <span
                   v-if="item.category"
-                  class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold"
+                  class="inline-block max-w-[10rem] truncate align-middle px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold whitespace-nowrap"
+                  :title="item.category"
                 >
                   {{ item.category }}
                 </span>
                 <span v-else class="text-slate-400 font-mono">—</span>
               </td>
-              <td class="py-3.5 px-4 text-end font-mono text-slate-500 dark:text-slate-400">
+              <td
+                class="hidden xl:table-cell py-3.5 px-4 text-end font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap"
+              >
                 {{ formatMoney(item.cost_price) }}
               </td>
-              <td class="py-3.5 px-4 text-end font-mono font-bold text-emerald-500">
+              <td class="py-3.5 px-4 text-end font-mono font-bold text-emerald-500 whitespace-nowrap">
                 {{ formatMoney(item.selling_price) }}
               </td>
-              <td class="py-3.5 px-4 text-end font-mono text-purple-600 dark:text-purple-400">
+              <td
+                class="hidden xl:table-cell py-3.5 px-4 text-end font-mono text-purple-600 dark:text-purple-400 whitespace-nowrap"
+              >
                 {{ formatMoney(priceFor(item, 'wholesale')) }}
               </td>
-              <td class="py-3.5 px-4 text-end font-mono font-bold">
+              <td class="py-3.5 px-4 text-end font-mono font-bold whitespace-nowrap">
                 <span
                   :class="
                     item.current_stock <= 0
@@ -78,7 +98,8 @@
               </td>
               <td class="py-3.5 px-4 text-center font-tajawal">
                 <span
-                  class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border inline-block"
+                  data-testid="item-status"
+                  class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border inline-block whitespace-nowrap"
                   :class="
                     item.is_active
                       ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
@@ -124,7 +145,7 @@
           <!-- Top Row: Name + Category + Status -->
           <div class="flex items-start justify-between gap-2">
             <div class="space-y-1 min-w-0">
-              <div class="font-black text-sm text-slate-900 dark:text-white truncate">
+              <div class="font-black text-sm text-slate-900 dark:text-white line-clamp-2 break-words">
                 {{ item.name }}
               </div>
               <div class="flex items-center gap-2 text-xs">

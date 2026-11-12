@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-4 font-tajawal">
+  <div class="space-y-4 font-tajawal" data-testid="return-summary">
     <div
       class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm dark:shadow-lg space-y-4"
     >

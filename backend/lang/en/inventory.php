@@ -440,4 +440,9 @@ return [
         'cardamom' => 'Cardamom: :grams g',
     ],
     'deleted_item' => 'Deleted Item',
+    // Short table headers (the long label stays as the column tooltip).
+    'col_cost' => 'Cost',
+    'col_retail' => 'Retail',
+    'col_wholesale' => 'Wholesale',
+    'col_stock' => 'Stock',
 ];

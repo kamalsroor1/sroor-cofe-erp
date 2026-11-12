@@ -8,45 +8,7 @@
       help-slug="pos"
     >
       <template #actions>
-        <div class="flex items-center gap-2 flex-wrap">
-          <BaseButton
-            :active="isFilterSidebarOpen || activeFiltersCount > 0"
-            :icon="SlidersHorizontal"
-            :icon-class="isFilterSidebarOpen || activeFiltersCount > 0 ? 'text-theme-primary' : 'text-slate-500'"
-            :label="$t('invoices.filter_search')"
-            :badge="activeFiltersCount > 0 ? activeFiltersCount : null"
-            @click="isFilterSidebarOpen = !isFilterSidebarOpen"
-          />
-
-          <BaseDropdown
-            :label="$t('invoices.options_and_actions')"
-            :icon="FileSpreadsheet"
-            icon-class="text-emerald-500"
-            align="end"
-            :items="[
-              {
-                label: $t('invoices.export_excel_csv'),
-                icon: Download,
-                iconColor: 'text-emerald-500',
-                onClick: () => exportInvoices(),
-              },
-              {
-                label: $t('invoices.print_filtered_report'),
-                icon: Printer,
-                iconColor: 'text-cyan-500',
-                onClick: printReport,
-              },
-              {
-                label: $t('invoices.refresh_now'),
-                icon: RefreshCw,
-                iconColor: 'text-theme-primary',
-                onClick: refreshCurrentPage,
-              },
-            ]"
-          />
-
-          <BaseButton to="/pos" variant="gradient" :icon="Zap" :label="$t('invoices.pos_fast_badge')" />
-        </div>
+        <PageActions :items="headerActions" />
       </template>
     </PageHeader>
 
@@ -121,15 +83,15 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { SlidersHorizontal, FileSpreadsheet, Download, Printer, RefreshCw, Zap } from 'lucide-vue-next';
 import { useInvoices } from '../../Composables/useInvoices';
+import { useTrans } from '../../Composables/useTrans';
 import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import ErrorState from '../../Components/Common/ErrorState.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
-import BaseButton from '../../Components/Common/BaseButton.vue';
-import BaseDropdown from '../../Components/Common/BaseDropdown.vue';
+import PageActions from '../../Components/Common/PageActions.vue';
 import InvoicesMetricsCards from '../../Components/Invoices/InvoicesMetricsCards.vue';
 import InvoicesQuickSearch from '../../Components/Invoices/InvoicesQuickSearch.vue';
 import InvoicesBulkActionsBar from '../../Components/Invoices/InvoicesBulkActionsBar.vue';
@@ -182,6 +144,36 @@ const {
 } = useInvoices();
 
 const printReport = () => window.print();
+
+const { t } = useTrans();
+const headerActions = computed(() => [
+  {
+    key: 'filter',
+    label: t('invoices.filter_search'),
+    icon: SlidersHorizontal,
+    iconClass: isFilterSidebarOpen.value || activeFiltersCount.value > 0 ? 'text-theme-primary' : 'text-slate-500',
+    active: isFilterSidebarOpen.value || activeFiltersCount.value > 0,
+    badge: activeFiltersCount.value > 0 ? activeFiltersCount.value : null,
+    onClick: () => (isFilterSidebarOpen.value = !isFilterSidebarOpen.value),
+  },
+  {
+    key: 'options',
+    label: t('invoices.options_and_actions'),
+    icon: FileSpreadsheet,
+    iconClass: 'text-emerald-500',
+    children: [
+      { label: t('invoices.export_excel_csv'), icon: Download, iconClass: 'text-emerald-500', onClick: exportInvoices },
+      { label: t('invoices.print_filtered_report'), icon: Printer, iconClass: 'text-cyan-500', onClick: printReport },
+      {
+        label: t('invoices.refresh_now'),
+        icon: RefreshCw,
+        iconClass: 'text-theme-primary',
+        onClick: refreshCurrentPage,
+      },
+    ],
+  },
+  { key: 'pos', label: t('invoices.pos_fast_badge'), icon: Zap, primary: true, to: '/pos' },
+]);
 
 // Deep link from the dashboard: /invoices?view=ID opens that invoice's preview, then drops the param.
 const openLinkedInvoice = async () => {

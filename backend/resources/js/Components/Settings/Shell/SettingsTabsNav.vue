@@ -37,6 +37,36 @@
       </button>
     </div>
 
+    <!-- Narrow desktop (1024-1279px): one scrollable row of tabs instead of a side list -->
+    <div
+      v-else-if="layout === 'tabs'"
+      class="scroll-fade-x flex gap-2 overflow-x-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 shadow-xs"
+      role="tablist"
+    >
+      <button
+        v-for="tab in visibleTabs"
+        :key="tab.id"
+        type="button"
+        role="tab"
+        :aria-selected="selectedTab === tab.id"
+        :data-testid="'tab-' + tab.id"
+        @click="$emit('select-tab', tab.id)"
+        class="shrink-0 whitespace-nowrap min-h-[44px] px-3.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer select-none text-xs font-bold"
+        :class="
+          selectedTab === tab.id
+            ? 'bg-theme-light dark:bg-slate-800 text-slate-900 dark:text-white font-black ring-1 ring-theme-primary/30'
+            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+        "
+      >
+        <component
+          :is="tab.icon"
+          class="w-4 h-4 shrink-0"
+          :class="selectedTab === tab.id ? 'text-theme-primary' : tab.iconColor"
+        />
+        <span>{{ tab.label }}</span>
+      </button>
+    </div>
+
     <!-- 💻 Desktop Sidebar Menu (Vertical Tab List) -->
     <div
       v-else
@@ -106,6 +136,12 @@ defineProps({
   isMobile: {
     type: Boolean,
     default: false,
+  },
+  // 'list' = vertical side list, 'tabs' = horizontal row (desktop only; the mobile hub ignores it)
+  layout: {
+    type: String,
+    default: 'list',
+    validator: (value) => ['list', 'tabs'].includes(value),
   },
 });
 

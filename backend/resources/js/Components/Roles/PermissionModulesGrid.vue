@@ -5,13 +5,15 @@
       :key="modKey"
       class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm dark:shadow-lg space-y-3"
     >
-      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
+      <div
+        class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2.5"
+      >
         <div class="flex items-center gap-2">
           <DynamicIcon :name="mod.icon" fallback="Shield" class="w-5 h-5 text-theme-primary shrink-0" />
           <h3 class="text-xs font-bold text-slate-900 dark:text-white">{{ mod.title }}</h3>
         </div>
 
-        <div v-if="!isAdmin" class="flex items-center gap-1 text-[11px]">
+        <div v-if="!isAdmin" class="flex items-center gap-1 text-[11px] whitespace-nowrap">
           <button
             type="button"
             @click="$emit('toggle-module', mod.permissions, true)"

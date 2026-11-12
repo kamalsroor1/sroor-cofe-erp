@@ -666,6 +666,14 @@ textarea,
     display: none !important;
 }
 
+/* Horizontal scroller whose cut-off edges fade out, so a clipped tab/chip row reads as "scroll for more".
+   The inline padding keeps the first and last item fully visible at rest. Direction-agnostic (RTL/LTR). */
+.scroll-fade-x {
+    padding-inline: 1rem;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 1rem, #000 calc(100% - 1rem), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 1rem, #000 calc(100% - 1rem), transparent 100%);
+}
+
 /* ⚡ Tactile Native Tap Micro-Interactions */
 .btn-native-tap {
     transition:
