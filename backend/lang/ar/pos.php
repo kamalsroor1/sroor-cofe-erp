@@ -410,6 +410,7 @@ return [
     'shift_close_counted_cash' => 'النقدية الفعلية في الدرج (الجرد)',
     'shift_close_confirm' => 'تأكيد إغلاق الوردية',
     'shift_close_warning' => 'ستُغلق الوردية الحالية ولن يُسمح بالبيع في هذا الفرع قبل فتح وردية جديدة.',
+    'shift_report_unavailable' => 'أرقام هذه الوردية مش متاحة ليك، لأنها اتفتحت بواسطة مستخدم تاني.',
     'shift_report_number' => 'رقم الوردية',
     'shift_report_opened_at' => 'فُتحت في',
     'shift_report_opening_cash' => 'الرصيد الافتتاحي',

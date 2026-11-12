@@ -58,14 +58,14 @@ final class ClientStoreGuard
 
         if ($parsed === ActiveStore::ALL) {
             if (! ActiveStore::canViewAll($user)) {
-                self::deny();
+                self::deny($user);
             }
 
             return ActiveStore::ALL;
         }
 
         if (! is_int($parsed) || ! ActiveStore::canAccess($user, $parsed)) {
-            self::deny();
+            self::deny($user);
         }
 
         return $parsed;
@@ -127,7 +127,7 @@ final class ClientStoreGuard
 
         $store = ActiveStore::defaultFor($user);
 
-        return $store instanceof Store ? $store->id : self::deny();
+        return $store instanceof Store ? $store->id : self::deny($user);
     }
 
     private static function notAStore(): never
@@ -137,9 +137,16 @@ final class ClientStoreGuard
         ]);
     }
 
-    /** Throws the same translated 403 the X-Store-Id check returns. */
-    public static function deny(): never
+    /**
+     * Throws the same translated 403 the X-Store-Id check returns. ROLE-01: with the user, one
+     * assigned to no branch at all gets `no_store_assigned` (ActiveStore::accessDeniedResponse).
+     */
+    public static function deny(?User $user = null): never
     {
+        if ($user instanceof User) {
+            throw new HttpResponseException(ActiveStore::accessDeniedResponse($user));
+        }
+
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => __('common.store_access_denied'),

@@ -1,5 +1,5 @@
 <template>
-  <DashboardSectionCard :title="$t('dashboard.recent_invoices')" dot-color="bg-emerald-500">
+  <DashboardSectionCard :title="title || $t('dashboard.recent_invoices')" dot-color="bg-emerald-500">
     <template #action>
       <router-link
         to="/invoices"
@@ -71,7 +71,10 @@ import { useTrans } from '../../Composables/useTrans';
 const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
 
-defineProps({ invoices: { type: Array, default: () => [] } });
+defineProps({
+  invoices: { type: Array, default: () => [] },
+  title: { type: String, default: '' },
+});
 defineEmits(['preview']);
 
 const columns = computed(() => [

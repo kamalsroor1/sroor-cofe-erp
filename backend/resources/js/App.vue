@@ -26,6 +26,9 @@
       </router-view>
     </SuperAdminLayout>
 
+    <!-- 2b. ROLE-01: an account assigned to no branch sees only this notice (and a logout), no app shell -->
+    <NoStoreNotice v-else-if="authStore.hasNoStore" />
+
     <!-- 3. Persistent Tenant ERP / POS App Shell -->
     <SpaLayout v-else>
       <router-view v-slot="{ Component, route: currentRoute }">
@@ -73,6 +76,7 @@ import { useLocaleSync } from './Composables/useLocale';
 import { useDesktopHardware } from './Composables/useDesktopHardware';
 import { useIdleLock } from './Composables/useIdleLock';
 import FeatureGate from './Components/FeatureGate.vue';
+import NoStoreNotice from './Components/Auth/NoStoreNotice.vue';
 import SpaLayout from './Layouts/SpaLayout.vue';
 import SuperAdminLayout from './Layouts/SuperAdminLayout.vue';
 import AppUpdateModal from './Components/AppUpdateModal.vue';
@@ -131,7 +135,7 @@ onMounted(async () => {
     // 2. Fetch translations if guest or bootstrap context if authenticated
     if (authStore.isAuthenticated) {
       // The router guard already loads the context before first render; only fetch it here if it did not.
-      if (!appConfigStore.isLoaded) await appConfigStore.fetchBootstrapContext();
+      if (!appConfigStore.isLoaded && !authStore.hasNoStore) await appConfigStore.fetchBootstrapContext();
     } else if (window.spaTranslations && Object.keys(window.spaTranslations).length > 0) {
       // The server already inlined the dictionary; no extra request for guests.
       appConfigStore.translations = window.spaTranslations;

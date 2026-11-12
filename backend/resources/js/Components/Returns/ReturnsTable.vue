@@ -98,6 +98,7 @@
           </button>
 
           <button
+            v-if="canDelete"
             type="button"
             @click="$emit('delete-return', row)"
             data-testid="action-delete"
@@ -127,6 +128,7 @@ defineProps({
   returnsList: { type: Array, default: () => [] },
   pagination: { type: Object, default: () => ({ current_page: 1, last_page: 1, total: 0, per_page: 15 }) },
   loading: { type: Boolean, default: false },
+  canDelete: { type: Boolean, default: false },
 });
 
 defineEmits(['open-details', 'delete-return', 'page-change']);

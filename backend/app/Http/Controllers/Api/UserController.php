@@ -56,7 +56,7 @@ final class UserController extends Controller
         $role = (string) $request->input('role', 'all');
         $perPage = max(1, min(200, (int) $request->input('per_page', 15)));
 
-        $query = User::with(['roles', 'defaultStore']);
+        $query = User::with(['roles', 'defaultStore', 'stores']);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -93,6 +93,8 @@ final class UserController extends Controller
                 ...AccountLockout::payload($lockedUntil),
                 'default_store_id' => $u->default_store_id,
                 'default_store_name' => $u->defaultStore?->name ?? 'غير محدد',
+                // ROLE-01: the branches the user is assigned to (the user form edits them).
+                'store_ids' => $u->stores->pluck('id')->map(fn ($id): int => (int) $id)->values()->all(),
                 'roles' => $u->roles->pluck('name')->toArray(),
                 'primary_role' => $u->roles->first()?->name ?: 'cashier',
                 'has_pos_pin' => $u->pos_pin !== null,
@@ -133,7 +135,7 @@ final class UserController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $user = User::with(['roles', 'defaultStore'])->findOrFail($id);
+        $user = User::with(['roles', 'defaultStore', 'stores'])->findOrFail($id);
 
         return response()->json([
             'success' => true,
@@ -153,7 +155,7 @@ final class UserController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('auth.user_created_success') ?: 'تم إنشاء حساب المستخدم بنجاح',
-            'data' => (new UserResource($user->load(['roles', 'defaultStore'])))->resolve(),
+            'data' => (new UserResource($user->load(['roles', 'defaultStore', 'stores'])))->resolve(),
         ], 201);
     }
 
@@ -169,7 +171,7 @@ final class UserController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('auth.user_updated_success'),
-            'data' => (new UserResource($user->load(['roles', 'defaultStore'])))->resolve(),
+            'data' => (new UserResource($user->load(['roles', 'defaultStore', 'stores'])))->resolve(),
         ], 200);
     }
 

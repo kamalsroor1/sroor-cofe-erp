@@ -50,6 +50,7 @@
         :customers="customers"
         :pagination="pagination"
         :loading="isLoading"
+        :can-delete="canDeleteCustomer"
         @create="openCreateModal"
         @pay="openPaymentModal"
         @edit="openEditModal"
@@ -126,5 +127,6 @@ const {
   openPaymentModal,
   savePayment,
   deleteCustomer,
+  canDeleteCustomer,
 } = useCustomers();
 </script>

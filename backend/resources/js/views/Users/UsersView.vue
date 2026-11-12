@@ -81,6 +81,7 @@
       :form="form"
       :roles-list="rolesList"
       :stores-list="storesList"
+      :store-errors="storeErrors"
       :submitting="isSubmitting"
       @close="showModal = false"
       @submit="submitForm"
@@ -118,6 +119,7 @@ const {
   showModal,
   isEditing,
   form,
+  storeErrors,
   fetchUsers,
   updateSearch,
   updateRoleFilter,

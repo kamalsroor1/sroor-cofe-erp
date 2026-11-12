@@ -55,6 +55,11 @@ final class ShiftController extends Controller
             $query->where('store_id', $storeId);
         }
 
+        // ROLE-01: without reports.view only the shifts the caller opened (no other drawer's figures).
+        if ($user instanceof User && ! $user->can('reports.view')) {
+            $query->where('user_id', $user->id);
+        }
+
         $shifts = $query->latest('id')->paginate($perPage);
 
         return response()->json([
@@ -80,7 +85,7 @@ final class ShiftController extends Controller
         }
 
         $storeId = $activeStore->singleStoreId($request);
-        $result = $this->getActiveShiftAction->execute($storeId);
+        $result = $this->getActiveShiftAction->execute($storeId, viewer: $user instanceof User ? $user : null);
         // POS-10: whether this branch refuses sales without an open shift (the POS gate reads it).
         $requiresShift = $saleShiftGuard->isRequired($storeId);
 
@@ -98,7 +103,8 @@ final class ShiftController extends Controller
             'success' => true,
             'has_active' => true,
             'requires_shift' => $requiresShift,
-            'active_shift' => (new CashShiftResource($result['shift']))->resolve(),
+            // ROLE-01: another user's shift read without reports.view: cash figures null.
+            'active_shift' => (new CashShiftResource($result['shift']))->withoutCashFigures($result['cash_hidden'])->resolve(),
             'metrics' => $result['metrics'],
         ], 200);
     }

@@ -2,6 +2,7 @@ import { computed } from 'vue';
 import { Zap, ShoppingCart, PackagePlus, RotateCcw, HandCoins } from 'lucide-vue-next';
 import { useRoutePermission } from './useRoutePermission';
 import { useTrans } from './useTrans';
+import { filterAccessible } from '../helpers/accessFilter';
 
 // Each action opens a screen the user may already open: permission and plan checks come from the route table.
 const ACTIONS = [
@@ -18,7 +19,7 @@ export function useDashboardQuickActions() {
     const { t } = useTrans();
 
     const actions = computed(() =>
-        ACTIONS.filter((action) => canAccessPath(action.to)).map((action) => ({
+        filterAccessible(ACTIONS, canAccessPath).map((action) => ({
             key: action.key,
             to: action.to,
             icon: action.icon,

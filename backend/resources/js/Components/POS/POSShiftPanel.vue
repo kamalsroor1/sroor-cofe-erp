@@ -5,6 +5,8 @@ import AppModal from '../Common/AppModal.vue';
 import BaseButton from '../Common/BaseButton.vue';
 import POSShiftOpenForm from './POSShiftOpenForm.vue';
 import { useFormatters } from '../../Composables/useFormatters';
+import { hasMetric } from '../../helpers/dashboardMetrics';
+import { visibleRows } from '../../helpers/journalScope';
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -32,7 +34,8 @@ const { formatMoney, formatDateTime, currencyLabel } = useFormatters();
 
 const rows = computed(() => {
   const m = props.metrics || {};
-  return [
+  // A figure the server withholds (null for a cashier who did not open the shift) is dropped, never shown as 0.
+  return visibleRows([
     { key: 'opening', label: 'pos.shift_report_opening_cash', value: m.opening_cash_balance },
     { key: 'cash-sales', label: 'pos.shift_report_cash_sales', value: m.total_cash_sales },
     { key: 'receipts', label: 'pos.shift_report_receipts', value: m.total_customer_receipts },
@@ -40,7 +43,7 @@ const rows = computed(() => {
     { key: 'expenses', label: 'pos.shift_report_expenses', value: m.total_expenses },
     { key: 'suppliers', label: 'pos.shift_report_supplier_paid', value: m.total_supplier_paid },
     { key: 'refunds', label: 'pos.shift_report_refunds', value: m.total_refunds },
-  ];
+  ]);
 });
 </script>
 
@@ -92,6 +95,13 @@ const rows = computed(() => {
         <div v-if="isReportLoading && !metrics" class="space-y-2" aria-busy="true">
           <div v-for="n in 6" :key="n" class="h-8 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
         </div>
+        <p
+          v-else-if="metrics && rows.length === 0 && !hasMetric(metrics.expected_cash_balance)"
+          class="text-sm font-bold text-slate-500 dark:text-slate-400"
+          data-testid="pos-shift-report-hidden"
+        >
+          {{ $t('pos.shift_report_unavailable') }}
+        </p>
         <dl v-else-if="metrics" class="divide-y divide-slate-100 dark:divide-slate-800" data-testid="pos-shift-report">
           <div v-for="row in rows" :key="row.key" class="flex items-center justify-between py-2 text-sm">
             <dt class="font-bold text-slate-600 dark:text-slate-400">{{ $t(row.label) }}</dt>
@@ -99,7 +109,7 @@ const rows = computed(() => {
               {{ formatMoney(row.value) }}
             </dd>
           </div>
-          <div class="flex items-center justify-between py-3 text-base">
+          <div v-if="hasMetric(metrics.expected_cash_balance)" class="flex items-center justify-between py-3 text-base">
             <dt class="font-black text-slate-900 dark:text-white">{{ $t('pos.shift_report_expected') }}</dt>
             <dd class="font-mono font-black text-emerald-600 dark:text-emerald-400" dir="ltr">
               {{ formatMoney(metrics.expected_cash_balance) }} {{ currencyLabel }}

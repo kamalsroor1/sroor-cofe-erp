@@ -21,33 +21,36 @@ use Illuminate\Support\Collection;
  * the dashboards and the treasury summary all read their cash figures from here.
  *
  * $storeId null means every store; callers pass null only for a verified all-stores read.
+ * ROLE-01: $userId narrows every figure to the vouchers / expenses that user booked (the daily
+ * journal of a user without `reports.view`); null = everyone's (unchanged).
  */
 final class DailyCashFlowService
 {
     /**
      * @return array{cash_sales: string, customer_receipts: string, total_cash_in: string, supplier_paid: string, cash_expenses: string, cash_refunds: string, total_cash_out: string, net_cash: string}
      */
-    public function forDate(string $date, ?int $storeId): array
+    public function forDate(string $date, ?int $storeId, ?int $userId = null): array
     {
         // Cash taken at the sale (cash invoices and the paid part of partial invoices)
-        $cashSales = $this->sum($this->cashVouchers($date, $storeId)->collectedAtSale()->excludingCancelledInvoices(), 'payments.amount');
+        $cashSales = $this->sum($this->cashVouchers($date, $storeId, $userId)->collectedAtSale()->excludingCancelledInvoices(), 'payments.amount');
 
         // Cash collected from customers afterwards (receipts / debt collection)
-        $customerReceipts = $this->sum($this->cashVouchers($date, $storeId)->customerReceipts()->excludingCancelledInvoices(), 'payments.amount');
+        $customerReceipts = $this->sum($this->cashVouchers($date, $storeId, $userId)->customerReceipts()->excludingCancelledInvoices(), 'payments.amount');
 
         // Cash paid to suppliers from the drawer
-        $supplierPaid = $this->sum($this->cashVouchers($date, $storeId)->whereNotNull('payments.supplier_id'), 'payments.amount');
+        $supplierPaid = $this->sum($this->cashVouchers($date, $storeId, $userId)->whereNotNull('payments.supplier_id'), 'payments.amount');
 
         // Operating expenses paid in cash
         $expenses = Expense::query()
             ->where('payment_method', 'cash')
-            ->when($storeId !== null, fn (Builder $q) => $q->where('store_id', $storeId));
+            ->when($storeId !== null, fn (Builder $q) => $q->where('store_id', $storeId))
+            ->when($userId !== null, fn (Builder $q) => $q->where('user_id', $userId));
         ReportDateRange::apply($expenses, 'expense_date', $date, $date);
         $cashExpenses = $this->sum($expenses, 'amount');
 
         // BE-10: cash handed back to customers for sales returns (negative refund vouchers),
         // shown as a positive outflow.
-        $cashRefunds = bcsub('0.000', $this->sum($this->cashVouchers($date, $storeId)->refunds(), 'payments.amount'), 3);
+        $cashRefunds = bcsub('0.000', $this->sum($this->cashVouchers($date, $storeId, $userId)->refunds(), 'payments.amount'), 3);
 
         $totalCashIn = bcadd($cashSales, $customerReceipts, 3);
         $totalCashOut = bcadd(bcadd($supplierPaid, $cashExpenses, 3), $cashRefunds, 3);
@@ -67,11 +70,12 @@ final class DailyCashFlowService
     /**
      * @return Builder<Payment>
      */
-    private function cashVouchers(string $date, ?int $storeId): Builder
+    private function cashVouchers(string $date, ?int $storeId, ?int $userId): Builder
     {
         $query = Payment::query()
             ->where('payments.payment_method', 'cash')
-            ->when($storeId !== null, fn (Builder $q) => $q->forStore((int) $storeId));
+            ->when($storeId !== null, fn (Builder $q) => $q->forStore((int) $storeId))
+            ->when($userId !== null, fn (Builder $q) => $q->where('payments.user_id', $userId));
         // PERF-02: a half-open range on the column itself (whereDate() = DATE(col) hid the
         // payment_date index and read every voucher of the tenant).
         ReportDateRange::apply($query, 'payments.payment_date', $date, $date);

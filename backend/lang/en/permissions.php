@@ -51,6 +51,7 @@ return [
     'customers' => [
         'manage' => 'Manage the customer directory',
         'statement' => 'View and export a customer statement',
+        'delete' => 'Delete customers',
     ],
     'suppliers' => [
         'manage' => 'Manage suppliers and their accounts',
@@ -68,6 +69,7 @@ return [
         'manage' => 'Manage sales and purchase returns',
         'without_invoice' => 'Record a return without a source invoice or purchase',
         'override_window' => 'Accept a sales return after the return window has ended',
+        'delete' => 'Delete a return document and reverse its stock and treasury effect',
     ],
     'reports' => [
         'view' => 'View financial and profit reports and branch comparison',

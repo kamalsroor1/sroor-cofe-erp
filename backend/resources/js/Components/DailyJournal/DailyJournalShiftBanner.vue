@@ -21,8 +21,9 @@
             </span>
           </div>
           <p class="text-[11px] text-slate-400 mt-0.5">
-            {{ $t('treasury.cashier_label') }}:
-            <span class="font-bold text-slate-200">{{ activeShift.user_name || $t('treasury.cashier_label') }}</span> —
+            <template v-if="cashierName">
+              {{ $t('treasury.cashier_label') }}: <span class="font-bold text-slate-200">{{ cashierName }}</span> —
+            </template>
             {{ $t('treasury.opened_at_time') }}
             <span class="font-mono text-slate-300">{{ activeShift.opened_at }}</span>
           </p>
@@ -32,7 +33,7 @@
       <div
         class="flex items-center gap-4 self-stretch md:self-auto justify-between md:justify-end border-t md:border-t-0 border-slate-800 pt-2 md:pt-0"
       >
-        <div class="text-start md:text-end">
+        <div v-if="showOpening" class="text-start md:text-end" data-testid="journal-opening-balance">
           <span class="text-[10px] text-slate-400 block font-bold">{{ $t('treasury.opening_float_balance') }}</span>
           <span class="text-sm font-black text-emerald-400 font-mono"
             >{{ formatMoney(activeShift.opening_cash_balance) }} {{ currencyLabel }}</span
@@ -40,6 +41,7 @@
         </div>
 
         <button
+          v-if="canPrint"
           type="button"
           @click="$emit('print-z')"
           class="min-h-[38px] px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95"
@@ -75,13 +77,20 @@
 
 <script setup>
 import { ShieldCheck, AlertCircle, Printer, Play } from 'lucide-vue-next';
+import { computed } from 'vue';
 import { useFormatters } from '../../Composables/useFormatters';
+import { hasMetric } from '../../helpers/dashboardMetrics';
+import { shiftCashierName } from '../../helpers/journalScope';
 
 const { formatMoney, currencyLabel } = useFormatters();
 
-defineProps({
+const props = defineProps({
   activeShift: { type: Object, default: null },
+  canPrint: { type: Boolean, default: true },
 });
+
+const cashierName = computed(() => shiftCashierName(props.activeShift));
+const showOpening = computed(() => hasMetric(props.activeShift?.opening_cash_balance));
 
 defineEmits(['print-z', 'open-shift']);
 </script>

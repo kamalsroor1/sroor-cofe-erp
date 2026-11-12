@@ -207,7 +207,8 @@ final class CustomerController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('customers.manage')) {
+        // ROLE-01: deleting needs customers.delete (admin only by default), not customers.manage.
+        if ($user && ! $user->hasRole('admin') && ! $user->can('customers.delete')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 

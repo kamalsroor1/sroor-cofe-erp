@@ -108,7 +108,10 @@ final class GetSystemContextAction
                 'id' => $activeShift->id,
                 'shift_number' => $activeShift->shift_number ?? $activeShift->id,
                 'opened_at' => $activeShift->opened_at,
-                'opening_cash_balance' => Decimal::normalize((string) $activeShift->opening_cash_balance),
+                // ROLE-01: the shared drawer's float only for its opener or a reports.view reader (as in ApiMeAction).
+                'opening_cash_balance' => (int) $activeShift->user_id === (int) $user->id || $user->can('reports.view')
+                    ? Decimal::normalize((string) $activeShift->opening_cash_balance)
+                    : null,
             ] : null,
             'system' => [
                 // BRND-1: the platform brand is central (platform_settings), never a tenant setting.

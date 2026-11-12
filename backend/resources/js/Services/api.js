@@ -6,6 +6,7 @@ import { storeAccessRetryConfig } from '../helpers/storeAccessRecovery';
 import { isCentralAppContext } from './centralApi';
 import { writeStarted, writeFinished } from '../helpers/pendingWrites';
 import { contactSupportHtml, describeReadOnly, supportFooter } from '../helpers/readOnlyNotice';
+import { storeNoticeFromError } from '../helpers/storeNotice';
 import { PASSWORD_CHANGE_ROUTE, isPasswordChangeRequired, safeInternalRedirect } from '../helpers/passwordChange';
 
 // Tenant client only. The platform console uses Services/centralApi.js (IDEN-1.9); on the admin
@@ -44,6 +45,14 @@ const goToPasswordChange = async () => {
     if (current.name === PASSWORD_CHANGE_ROUTE) return;
     const redirect = safeInternalRedirect(current.fullPath);
     router.replace({ name: PASSWORD_CHANGE_ROUTE, query: redirect && redirect !== '/' ? { redirect } : undefined });
+};
+
+// ROLE-01: the account is assigned to no branch. Store the notice once; the app shell is replaced by a
+// blocking page (no toast per request, no redirect), so nothing else needs to happen here.
+const showNoStoreNotice = async (notice) => {
+    const { useAuthStore } = await import('../stores/auth');
+    const authStore = useAuthStore();
+    if (!authStore.hasNoStore) authStore.setStoreNotice(notice);
 };
 
 const showLifecycleAlert = async ({ titleKey, message, offerPayment, data }) => {
@@ -152,6 +161,7 @@ apiClient.interceptors.response.use(
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_user');
             localStorage.removeItem('auth_store');
+            localStorage.removeItem('auth_store_notice');
             localStorage.removeItem('current_store_id');
 
             // Prevent redirect loop if already on login page
@@ -189,8 +199,14 @@ apiClient.interceptors.response.use(
             goToPasswordChange();
         }
 
+        const noStoreNotice = !isCentralMode ? storeNoticeFromError(error) : null;
+        if (noStoreNotice) {
+            error.noStoreAssigned = true;
+            showNoStoreNotice(noStoreNotice);
+        }
+
         // 403 Forbidden: Insufficient Permissions
-        if (status === 403 && !isLifecycleError && !passwordChangeRequired) {
+        if (status === 403 && !isLifecycleError && !passwordChangeRequired && !noStoreNotice) {
             Swal.fire({
                 icon: 'warning',
                 title: trans('common.permission_alert'),

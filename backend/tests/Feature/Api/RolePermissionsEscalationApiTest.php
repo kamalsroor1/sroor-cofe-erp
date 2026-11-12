@@ -181,7 +181,9 @@ class RolePermissionsEscalationApiTest extends TenantTestCase
 
     private function userPayload(string $role, string $phone): array
     {
-        return ['name' => 'Delegate Made', 'phone' => $phone, 'password' => 'secret123', 'role' => $role, 'is_active' => true];
+        // ROLE-01: a non-admin user needs a branch (the main store, which the delegate can access).
+        return ['name' => 'Delegate Made', 'phone' => $phone, 'password' => 'secret123', 'role' => $role, 'is_active' => true,
+            'store_ids' => [(int) $this->tenantStore($this->tenant)->id]];
     }
 
     private function userExists(string $phone): bool
@@ -231,7 +233,7 @@ class RolePermissionsEscalationApiTest extends TenantTestCase
 
         $this->putJson("/api/v1/users/{$target->id}", [
             'name' => $target->name, 'phone' => $target->phone, 'email' => $target->email,
-            'role' => 'zz_unheld_role', 'is_active' => true,
+            'role' => 'zz_unheld_role', 'is_active' => true, 'default_store_id' => $target->default_store_id,
         ], $this->managerHeaders())
             ->assertStatus(403)
             ->assertJson(['success' => false, 'message' => __('roles.cannot_grant_unheld_permission')]);
@@ -248,7 +250,7 @@ class RolePermissionsEscalationApiTest extends TenantTestCase
         $target = $this->createTenantUser($this->tenant, 'zz_start_role');
         $payload = fn (string $role): array => [
             'name' => $target->name, 'phone' => $target->phone, 'email' => $target->email,
-            'role' => $role, 'is_active' => true,
+            'role' => $role, 'is_active' => true, 'default_store_id' => $target->default_store_id,
         ];
 
         $this->putJson("/api/v1/users/{$target->id}", $payload('zz_held_role'), $this->managerHeaders())->assertOk();

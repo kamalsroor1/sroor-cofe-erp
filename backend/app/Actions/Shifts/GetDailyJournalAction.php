@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Actions\Shifts;
 
+use App\Actions\Dashboard\GetOwnShiftDashboardAction;
 use App\Models\CashShift;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Store;
+use App\Models\User;
 use App\Services\DailyCashFlowService;
 use App\Services\Reports\ReportDateRange;
 use App\Support\Money\Decimal;
@@ -25,10 +27,21 @@ final class GetDailyJournalAction
      * Get Daily Journal ledger and cash metrics for a specific date and store.
      *
      * $date is a tenant-local business date (SETG-2); displayed times are on the tenant clock.
+     *
+     * ROLE-01: a $viewer WITHOUT `reports.view` (a cashier) gets `scope: own_shift`: the same keys,
+     * but every list and total holds only the documents the viewer booked (`user_id`) on that
+     * business date, and the drawer figures (`summary.opening_cash_balance`,
+     * `summary.expected_cash_in_drawer`, `active_shift.opening_cash_balance`) are null. The store's
+     * open shift is still described (id, number, status, opened_at, is_own) but the opener's name
+     * only when it is the viewer. No $viewer (internal callers) or `reports.view`: `scope: store`,
+     * unchanged figures.
+     *
+     * @return array<string, mixed>
      */
-    public function execute(string $date, ?int $storeId = null): array
+    public function execute(string $date, ?int $storeId = null, ?User $viewer = null): array
     {
         $storeId = $storeId ?: Store::getMainStore()?->id ?: Store::first()?->id;
+        $ownerId = $viewer instanceof User && ! $viewer->can('reports.view') ? (int) $viewer->id : null;
 
         // Current Active Shift
         $activeShift = CashShift::with(['user', 'store'])
@@ -42,6 +55,7 @@ final class GetDailyJournalAction
         $invoices = Invoice::with('customer')
             ->tap(fn ($q) => ReportDateRange::apply($q, 'invoice_date', $date, $date))
             ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
+            ->when($ownerId !== null, fn ($q) => $q->where('user_id', $ownerId))
             ->latest('id')
             ->get();
 
@@ -51,7 +65,8 @@ final class GetDailyJournalAction
 
         // BUG-01: drawer cash comes from the cash vouchers of the selected store only (shared
         // with the A4 print, dashboards and treasury summary through DailyCashFlowService).
-        $cashFlow = $this->dailyCashFlow->forDate($date, $storeId !== null ? (int) $storeId : null);
+        // ROLE-01: own scope = the viewer's own vouchers and expenses only.
+        $cashFlow = $this->dailyCashFlow->forDate($date, $storeId !== null ? (int) $storeId : null, $ownerId);
         $cashSales = $cashFlow['cash_sales'];
         $customerPayments = $cashFlow['customer_receipts'];
         $supplierPayments = $cashFlow['supplier_paid'];
@@ -61,6 +76,7 @@ final class GetDailyJournalAction
         $expenses = Expense::query()
             ->tap(fn ($q) => ReportDateRange::apply($q, 'expense_date', $date, $date))
             ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
+            ->when($ownerId !== null, fn ($q) => $q->where('user_id', $ownerId))
             ->latest('id')
             ->get();
 
@@ -70,20 +86,16 @@ final class GetDailyJournalAction
         $totalCashOut = $cashFlow['total_cash_out'];
         $netCashToday = $cashFlow['net_cash'];
 
-        $openingCashBalance = $activeShift ? (string) $activeShift->opening_cash_balance : '0.000';
+        // ROLE-01: the drawer (opening float, expected cash) is store-wide: null in own scope.
+        $openingCashBalance = $activeShift ? Decimal::normalize((string) $activeShift->opening_cash_balance) : '0.000';
         $expectedCashInDrawer = bcadd($openingCashBalance, (string) $netCashToday, 3);
+        $ownScope = $ownerId !== null;
 
         return [
+            'scope' => $ownScope ? GetOwnShiftDashboardAction::SCOPE_OWN_SHIFT : GetOwnShiftDashboardAction::SCOPE_STORE,
             'date' => $date,
             'store_id' => $storeId,
-            'active_shift' => $activeShift ? [
-                'id' => $activeShift->id,
-                'shift_number' => $activeShift->shift_number,
-                'status' => $activeShift->status,
-                'opened_at' => $this->tenantClock->toTenant($activeShift->opened_at)?->format('Y-m-d H:i'),
-                'opening_cash_balance' => Decimal::normalize((string) $activeShift->opening_cash_balance),
-                'user_name' => $activeShift->user?->name,
-            ] : null,
+            'active_shift' => $activeShift ? $this->activeShiftBlock($activeShift, $viewer, $ownScope) : null,
             'summary' => [
                 'total_sales' => Decimal::normalize((string) $totalSales),
                 'cash_sales' => Decimal::normalize((string) $cashSales),
@@ -97,8 +109,8 @@ final class GetDailyJournalAction
                 'cash_refunds' => Decimal::normalize((string) $cashFlow['cash_refunds']),
                 'total_cash_out' => Decimal::normalize((string) $totalCashOut),
                 'net_cash_today' => Decimal::normalize((string) $netCashToday),
-                'opening_cash_balance' => Decimal::normalize((string) $openingCashBalance),
-                'expected_cash_in_drawer' => Decimal::normalize((string) $expectedCashInDrawer),
+                'opening_cash_balance' => $ownScope ? null : $openingCashBalance,
+                'expected_cash_in_drawer' => $ownScope ? null : Decimal::normalize($expectedCashInDrawer),
             ],
             'invoices' => $invoices->map(fn ($inv) => [
                 'id' => $inv->id,
@@ -120,6 +132,27 @@ final class GetDailyJournalAction
                 'amount' => Decimal::normalize((string) $e->amount),
                 'payment_method' => $e->payment_method,
             ]),
+        ];
+    }
+
+    /**
+     * The store's open shift. Own scope: no opening float, and the opener's name only when the
+     * viewer opened it.
+     *
+     * @return array<string, mixed>
+     */
+    private function activeShiftBlock(CashShift $shift, ?User $viewer, bool $ownScope): array
+    {
+        $isOwn = $viewer instanceof User && $shift->user_id !== null && (int) $shift->user_id === (int) $viewer->id;
+
+        return [
+            'id' => $shift->id,
+            'shift_number' => $shift->shift_number,
+            'status' => $shift->status,
+            'opened_at' => $this->tenantClock->toTenant($shift->opened_at)?->format('Y-m-d H:i'),
+            'opening_cash_balance' => $ownScope ? null : Decimal::normalize((string) $shift->opening_cash_balance),
+            'user_name' => $ownScope && ! $isOwn ? null : $shift->user?->name,
+            'is_own' => $isOwn,
         ];
     }
 

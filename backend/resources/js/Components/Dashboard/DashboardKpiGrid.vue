@@ -36,7 +36,7 @@
     </MetricCard>
 
     <MetricCard
-      v-if="hasMetric(metrics.monthly_gross_profit)"
+      v-if="canSeeProfit && hasMetric(metrics.monthly_gross_profit)"
       data-testid="kpi-monthly-profit"
       :title="$t('dashboard.monthly_gross_profit')"
       :value="formatMoney(metrics.monthly_gross_profit)"
@@ -74,6 +74,7 @@ import { computed } from 'vue';
 import { TrendingUp, HandCoins, FileText, Banknote } from 'lucide-vue-next';
 import MetricCard from '../Common/MetricCard.vue';
 import DashboardSalesNotes from './DashboardSalesNotes.vue';
+import { useAuthStore } from '../../stores/auth';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useReturnsDisplay } from '../../Composables/useReturnsDisplay';
 import { useTrans } from '../../Composables/useTrans';
@@ -82,6 +83,10 @@ import { hasMetric } from '../../helpers/dashboardMetrics';
 const { formatMoney, formatNumber, currencyLabel } = useFormatters();
 const { hasAmount } = useReturnsDisplay();
 const { t } = useTrans();
+const authStore = useAuthStore();
+
+// Profit is a reports.view figure: the card is skipped without it even if a payload ever carries the number.
+const canSeeProfit = computed(() => authStore.hasPermission('reports.view'));
 
 // A card is drawn only for figures the API returned: absent means "not for this user", never zero.
 const props = defineProps({ metrics: { type: Object, default: () => ({}) } });

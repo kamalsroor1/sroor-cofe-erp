@@ -6,9 +6,7 @@ namespace App\Http\Middleware;
 
 use App\Models\User;
 use App\Support\ActiveStore;
-use App\Support\ClientStoreGuard;
 use Closure;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -87,10 +85,10 @@ final class ApiTokenAuth
 
                 if ($storeId === ActiveStore::ALL) {
                     if (! ActiveStore::canViewAll($user)) {
-                        return $this->storeForbidden();
+                        return ActiveStore::accessDeniedResponse($user);
                     }
                 } elseif (! is_int($storeId) || ! ActiveStore::canAccess($user, $storeId)) {
-                    return $this->storeForbidden();
+                    return ActiveStore::accessDeniedResponse($user);
                 } else {
                     session(['current_store_id' => $storeId]);
                 }
@@ -133,14 +131,5 @@ final class ApiTokenAuth
     private function isStoreRecoveryRoute(Request $request): bool
     {
         return $request->routeIs(self::STORE_RECOVERY_ROUTES);
-    }
-
-    private function storeForbidden(): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
-            'message' => __('common.store_access_denied'),
-            'error_code' => ClientStoreGuard::ERROR_CODE,
-        ], 403);
     }
 }

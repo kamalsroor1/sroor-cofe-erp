@@ -2,6 +2,7 @@ import { ref, reactive, onMounted } from 'vue';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
+import { normalizeDefaultStore, userStoreFieldErrors, userStoreIds, userStoresErrorKey } from '../helpers/userStores';
 
 export function useUsers() {
     const { t } = useTrans();
@@ -38,8 +39,16 @@ export function useUsers() {
         password: '',
         role: 'cashier',
         default_store_id: null,
+        store_ids: [],
         is_active: true,
     });
+
+    // Server / client messages shown under the branch fields of the form.
+    const storeErrors = reactive({ store_ids: '', default_store_id: '' });
+    const clearStoreErrors = () => {
+        storeErrors.store_ids = '';
+        storeErrors.default_store_id = '';
+    };
 
     let debounceTimer = null;
     const debouncedFetch = () => {
@@ -63,6 +72,12 @@ export function useUsers() {
 
     const updateFormField = (field, val) => {
         form[field] = val;
+        if (field === 'store_ids') {
+            form.default_store_id = normalizeDefaultStore(val, form.default_store_id);
+            storeErrors.store_ids = '';
+        }
+        if (field === 'default_store_id') storeErrors.default_store_id = '';
+        if (field === 'role') storeErrors.store_ids = '';
     };
 
     const fetchUsers = async () => {
@@ -92,13 +107,16 @@ export function useUsers() {
     const openCreateModal = () => {
         isEditing.value = false;
         editingId.value = null;
+        clearStoreErrors();
+        const firstStoreId = storesList.value[0]?.id ?? null;
         Object.assign(form, {
             name: '',
             phone: '',
             email: '',
             password: '',
             role: rolesList.value[0]?.id || 'cashier',
-            default_store_id: storesList.value[0]?.id || null,
+            default_store_id: firstStoreId,
+            store_ids: firstStoreId === null ? [] : [firstStoreId],
             is_active: true,
             has_pos_pin: false,
         });
@@ -108,13 +126,18 @@ export function useUsers() {
     const openEditModal = (u) => {
         isEditing.value = true;
         editingId.value = u.id;
+        clearStoreErrors();
+        const storeIds = userStoreIds(u);
         Object.assign(form, {
             name: u.name,
             phone: u.phone,
             email: u.email || '',
             password: '',
             role: u.primary_role || 'cashier',
-            default_store_id: u.default_store_id,
+            default_store_id: storeIds.length
+                ? normalizeDefaultStore(storeIds, u.default_store_id)
+                : u.default_store_id,
+            store_ids: storeIds,
             is_active: !!u.is_active,
             has_pos_pin: !!u.has_pos_pin,
         });
@@ -122,6 +145,12 @@ export function useUsers() {
     };
 
     const submitForm = async () => {
+        clearStoreErrors();
+        const missingStoreKey = userStoresErrorKey(form);
+        if (missingStoreKey) {
+            storeErrors.store_ids = t(missingStoreKey);
+            return;
+        }
         isSubmitting.value = true;
         try {
             if (isEditing.value) {
@@ -146,11 +175,16 @@ export function useUsers() {
             showModal.value = false;
             fetchUsers();
         } catch (e) {
-            Swal.fire({
-                icon: 'error',
-                title: t('common.error'),
-                text: e.response?.data?.message || t('users.user_save_failed'),
-            });
+            const fieldErrors = userStoreFieldErrors(e);
+            storeErrors.store_ids = fieldErrors.store_ids;
+            storeErrors.default_store_id = fieldErrors.default_store_id;
+            if (!fieldErrors.store_ids && !fieldErrors.default_store_id) {
+                Swal.fire({
+                    icon: 'error',
+                    title: t('common.error'),
+                    text: e.response?.data?.message || t('users.user_save_failed'),
+                });
+            }
         } finally {
             isSubmitting.value = false;
         }
@@ -316,6 +350,7 @@ export function useUsers() {
         showModal,
         isEditing,
         form,
+        storeErrors,
         updateSearch,
         updateRoleFilter,
         updateFormField,

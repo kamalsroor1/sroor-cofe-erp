@@ -33,30 +33,27 @@
         />
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <BaseSelect
-            :model-value="form.role"
-            @update:model-value="$emit('update:field', 'role', $event)"
-            :options="rolesList"
-            value-key="id"
-            label-key="name"
-            :label="$t('users.job_role_label')"
-            :searchable="false"
-            required
-          />
-        </div>
+      <BaseSelect
+        :model-value="form.role"
+        @update:model-value="$emit('update:field', 'role', $event)"
+        :options="rolesList"
+        value-key="id"
+        label-key="name"
+        :label="$t('users.job_role_label')"
+        :searchable="false"
+        required
+      />
 
-        <div>
-          <BaseSelect
-            :model-value="form.default_store_id"
-            @update:model-value="$emit('update:field', 'default_store_id', $event)"
-            :options="formattedStores"
-            :label="$t('users.default_store_label')"
-            :searchable="false"
-          />
-        </div>
-      </div>
+      <UserStoresField
+        :stores="storesList"
+        :store-ids="form.store_ids || []"
+        :default-store-id="form.default_store_id"
+        :required="isStoreRequired(form.role)"
+        :store-ids-error="storeErrors.store_ids"
+        :default-store-error="storeErrors.default_store_id"
+        @update:store-ids="$emit('update:field', 'store_ids', $event)"
+        @update:default-store-id="$emit('update:field', 'default_store_id', $event)"
+      />
 
       <BaseInput
         :model-value="form.password"
@@ -185,13 +182,15 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch } from 'vue';
 import { KeyRound } from 'lucide-vue-next';
 import AppModal from '../Common/AppModal.vue';
 import BaseInput from '../Form/BaseInput.vue';
 import BaseSelect from '../Form/BaseSelect.vue';
 import BaseCheckbox from '../Form/BaseCheckbox.vue';
 import BaseButton from '../Common/BaseButton.vue';
+import UserStoresField from './UserStoresField.vue';
+import { isStoreRequired } from '../../helpers/userStores';
 import { useTrans } from '../../Composables/useTrans';
 
 const { t } = useTrans();
@@ -202,6 +201,7 @@ const props = defineProps({
   form: { type: Object, default: () => ({}) },
   rolesList: { type: Array, default: () => [] },
   storesList: { type: Array, default: () => [] },
+  storeErrors: { type: Object, default: () => ({ store_ids: '', default_store_id: '' }) },
   submitting: { type: Boolean, default: false },
 });
 
@@ -252,9 +252,4 @@ const handleClearPin = () => {
   emit('clear-pos-pin');
   pinError.value = '';
 };
-
-const formattedStores = computed(() => [
-  { value: null, label: t('users.no_store_assigned') },
-  ...props.storesList.map((st) => ({ value: st.id, label: st.name })),
-]);
 </script>

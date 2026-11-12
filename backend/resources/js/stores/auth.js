@@ -3,6 +3,7 @@ import api from '../Services/api';
 import { trans } from '../helpers/trans';
 import { isCentralAppContext } from '../Services/centralApi';
 import { mustChangeFromPayload } from '../helpers/passwordChange';
+import { NO_STORE_ASSIGNED, storeNoticeFromPayload } from '../helpers/storeNotice';
 
 export const useAuthStore = defineStore('auth', {
     state: () => {
@@ -15,18 +16,22 @@ export const useAuthStore = defineStore('auth', {
                 stores: [],
                 roles: [],
                 permissions: [],
+                storeNotice: null,
                 isLoading: false,
             };
         }
 
         let savedUser;
         let savedStore;
+        let savedNotice;
         try {
             savedUser = JSON.parse(localStorage.getItem('auth_user') || 'null');
             savedStore = JSON.parse(localStorage.getItem('auth_store') || 'null');
+            savedNotice = JSON.parse(localStorage.getItem('auth_store_notice') || 'null');
         } catch {
             savedUser = null;
             savedStore = null;
+            savedNotice = null;
         }
 
         return {
@@ -36,6 +41,8 @@ export const useAuthStore = defineStore('auth', {
             stores: [],
             roles: savedUser?.roles || [],
             permissions: savedUser?.permissions || [],
+            // ROLE-01: {error_code: 'no_store_assigned', message} while the account has no branch.
+            storeNotice: savedNotice,
             isLoading: false,
         };
     },
@@ -44,6 +51,8 @@ export const useAuthStore = defineStore('auth', {
         // Tenant session only. Platform operators sign in separately (stores/centralAuth.js, IDEN-1.9).
         isAuthenticated: (state) => !!state.token && !!state.user,
         isAdmin: (state) => state.roles.includes('admin'),
+        // ROLE-01: the account is assigned to no branch; the app shell is replaced by a blocking notice.
+        hasNoStore: (state) => !!state.token && state.storeNotice?.error_code === NO_STORE_ASSIGNED,
         // SELL-01: the account must pick its own password before anything else works.
         mustChangePassword: (state) => !!state.token && state.user?.must_change_password === true,
         userName: (state) => state.user?.name || trans('common.default_user_name'),
@@ -104,6 +113,7 @@ export const useAuthStore = defineStore('auth', {
             this.permissions = payload.user?.permissions || [];
             this.currentStore = payload.store;
             this.stores = payload.stores || [];
+            this.setStoreNotice(storeNoticeFromPayload(payload));
 
             localStorage.setItem('auth_token', payload.token);
             localStorage.setItem('auth_user', JSON.stringify(payload.user));
@@ -138,6 +148,7 @@ export const useAuthStore = defineStore('auth', {
                     if (payload.stores) {
                         this.stores = payload.stores;
                     }
+                    this.setStoreNotice(storeNoticeFromPayload(payload));
                     localStorage.setItem('auth_user', JSON.stringify(this.user));
                 }
                 return payload;
@@ -148,6 +159,18 @@ export const useAuthStore = defineStore('auth', {
                 throw error;
             } finally {
                 this.isLoading = false;
+            }
+        },
+
+        /**
+         * ROLE-01: remember (or clear, with null) the no-branch notice from a login / me payload or a 403.
+         */
+        setStoreNotice(notice) {
+            this.storeNotice = notice || null;
+            if (this.storeNotice) {
+                localStorage.setItem('auth_store_notice', JSON.stringify(this.storeNotice));
+            } else {
+                localStorage.removeItem('auth_store_notice');
             }
         },
 
@@ -241,6 +264,8 @@ export const useAuthStore = defineStore('auth', {
             this.stores = [];
             this.roles = [];
             this.permissions = [];
+            this.storeNotice = null;
+            localStorage.removeItem('auth_store_notice');
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_user');
             localStorage.removeItem('auth_store');

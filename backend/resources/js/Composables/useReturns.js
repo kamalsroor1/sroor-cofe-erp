@@ -2,9 +2,14 @@ import { ref, computed, onMounted } from 'vue';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
+import { useAuthStore } from '../stores/auth';
 
 export function useReturns() {
     const { t } = useTrans();
+    const authStore = useAuthStore();
+
+    // ROLE-01: deleting a return is its own permission (the server enforces it too).
+    const canDeleteReturn = computed(() => authStore.hasPermission('returns.delete'));
 
     const returnsList = ref([]);
     const summary = ref({
@@ -116,6 +121,7 @@ export function useReturns() {
     };
 
     const deleteReturnDoc = async (ret) => {
+        if (!canDeleteReturn.value) return;
         const result = await Swal.fire({
             title: t('returns.confirm_archive', { number: ret.return_number }),
             text: t('returns.archive_confirm_text'),
@@ -172,5 +178,6 @@ export function useReturns() {
         updateDateTo,
         openDetailsModal,
         deleteReturnDoc,
+        canDeleteReturn,
     };
 }

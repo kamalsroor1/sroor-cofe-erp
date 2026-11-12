@@ -58,6 +58,7 @@ return [
     'no_active_shift_desc' => 'لا توجد وردية نشطة',
     'shift_closed_now' => 'الوردية مقفلة حالياً',
     'cashier_label' => 'الكاشير',
+    'own_documents_notice' => 'المعروض هنا هو معاملاتك أنت فقط.',
     'opened_at_label' => 'تم الفتح',
     'open_shift_modal_title' => '🟢 فتح وردية خزينة جديدة',
     'opening_cash_field' => 'عهدة فتح الدرج (الرصيد الافتتاحي) *',

@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 import { businessToday } from './useBusinessDate';
 import { normalize } from '../helpers/decimal';
+import { isOwnShiftJournal, canPrintJournal } from '../helpers/journalScope';
 
 export function useDailyJournal() {
     const { t } = useTrans();
@@ -16,6 +17,8 @@ export function useDailyJournal() {
     const isSubmitting = ref(false);
 
     const activeShift = ref(null);
+    const isOwnShiftScope = ref(false);
+    const canPrint = ref(false);
     const summary = ref({
         total_sales: 0,
         cash_sales: 0,
@@ -68,6 +71,8 @@ export function useDailyJournal() {
             const data = response.data?.data;
             if (data) {
                 activeShift.value = data.active_shift;
+                isOwnShiftScope.value = isOwnShiftJournal(data);
+                canPrint.value = canPrintJournal(data);
                 summary.value = data.summary || {};
                 invoices.value = data.invoices || [];
                 expenses.value = data.expenses || [];
@@ -118,7 +123,9 @@ export function useDailyJournal() {
     };
 
     const openCloseShiftModal = () => {
-        closeShiftForm.actual_cash_balance = normalize(summary.value?.expected_cash_in_drawer ?? '0');
+        const expected = summary.value?.expected_cash_in_drawer;
+        // Expected cash is withheld from a cashier: leave the counted-cash field empty instead of pre-filling 0.
+        closeShiftForm.actual_cash_balance = expected === null || expected === undefined ? '' : normalize(expected);
         closeShiftForm.notes = '';
         showCloseShiftModal.value = true;
     };
@@ -205,6 +212,8 @@ export function useDailyJournal() {
         errorMessage,
         isSubmitting,
         activeShift,
+        isOwnShiftScope,
+        canPrint,
         summary,
         invoices,
         expenses,

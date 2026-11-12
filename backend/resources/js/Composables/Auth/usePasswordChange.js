@@ -9,6 +9,7 @@ import {
     passwordChangeFieldErrors,
     safeInternalRedirect,
 } from '../../helpers/passwordChange';
+import { landingPathFor } from '../../helpers/landingPath';
 
 const emptyFields = () => ({ current_password: '', password: '', password_confirmation: '' });
 
@@ -29,7 +30,9 @@ export function usePasswordChange() {
     const isSubmitting = ref(false);
     const isVerifying = ref(true);
 
-    const destination = computed(() => safeInternalRedirect(route.query.redirect) || '/');
+    const destination = computed(
+        () => safeInternalRedirect(route.query.redirect) || landingPathFor(authStore, appConfigStore)
+    );
 
     const clearErrors = () => {
         Object.assign(errors, emptyFields());

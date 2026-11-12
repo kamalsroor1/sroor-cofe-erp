@@ -14,9 +14,30 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class CashShiftResource extends JsonResource
 {
+    /**
+     * The drawer / cash figures of the shift. ROLE-01: nulled (keys kept) by withoutCashFigures().
+     */
+    public const CASH_FIELDS = [
+        'opening_cash_balance', 'total_cash_sales', 'total_credit_sales', 'total_payments_collected',
+        'total_expenses', 'total_refunds', 'expected_cash_balance', 'actual_cash_balance', 'cash_difference',
+    ];
+
+    private bool $hideCash = false;
+
+    /**
+     * ROLE-01: a reader without `reports.view` looking at a shift they did not open sees no cash
+     * figure of the shared drawer (every CASH_FIELDS key is null). Off by default.
+     */
+    public function withoutCashFigures(bool $hide = true): static
+    {
+        $this->hideCash = $hide;
+
+        return $this;
+    }
+
     public function toArray(Request $request): array
     {
-        return [
+        $data = [
             'id' => $this->id,
             'shift_number' => $this->shift_number,
             'status' => $this->status,
@@ -38,5 +59,13 @@ class CashShiftResource extends JsonResource
             'notes' => $this->notes,
             'created_at' => $this->created_at?->toDateTimeString(),
         ];
+
+        if ($this->hideCash) {
+            foreach (self::CASH_FIELDS as $field) {
+                $data[$field] = null;
+            }
+        }
+
+        return $data;
     }
 }

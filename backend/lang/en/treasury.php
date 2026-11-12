@@ -52,6 +52,7 @@ return [
     'no_active_shift_desc' => 'No active shift',
     'shift_closed_now' => 'Shift is currently closed',
     'cashier_label' => 'Cashier',
+    'own_documents_notice' => 'These are your own transactions only.',
     'opened_at_label' => 'Opened At',
     'open_shift_modal_title' => '🟢 Open New Treasury Shift',
     'opening_cash_field' => 'Opening Cash (Drawer Float) *',

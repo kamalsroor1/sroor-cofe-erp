@@ -248,7 +248,8 @@ final class ReturnsDeleteReversalApiTest extends TenantTestCase
             'items' => [['item_id' => $this->itemId, 'quantity' => '3.000', 'unit_price' => '20.000']],
         ], $headersB)->assertCreated()->json('data.id');
 
-        $userA = $this->createTenantUser($this->tenant, 'cashier', ['returns.manage']);
+        // ROLE-01: deleting needs returns.delete too; with it, another branch's return is still a 404.
+        $userA = $this->createTenantUser($this->tenant, 'cashier', ['returns.manage', 'returns.delete']);
         $this->deleteJson('/api/v1/returns/'.$id, [], $this->tenantHeaders($this->tenant, $userA))->assertNotFound();
         $this->assertSame('103.000', $this->stock());
 

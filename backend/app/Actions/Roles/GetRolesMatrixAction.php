@@ -70,6 +70,7 @@ final class GetRolesMatrixAction
                 'permissions' => [
                     'customers.manage',
                     'customers.statement',
+                    'customers.delete',
                 ],
             ],
             'suppliers' => [
@@ -92,6 +93,7 @@ final class GetRolesMatrixAction
                 'icon' => 'rotate-ccw',
                 'permissions' => [
                     'returns.manage',
+                    'returns.delete',
                 ],
             ],
             'reports' => [

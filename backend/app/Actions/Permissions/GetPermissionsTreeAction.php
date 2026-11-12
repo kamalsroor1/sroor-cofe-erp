@@ -61,6 +61,7 @@ final class GetPermissionsTreeAction
                 'permissions' => [
                     'customers.manage',
                     'customers.statement',
+                    'customers.delete',
                 ],
             ],
             'suppliers' => [
@@ -83,6 +84,7 @@ final class GetPermissionsTreeAction
                 'icon' => 'rotate-ccw',
                 'permissions' => [
                     'returns.manage',
+                    'returns.delete',
                 ],
             ],
             'reports' => [

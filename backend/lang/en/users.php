@@ -90,6 +90,7 @@ return [
     'activity_pos_pin_cleared' => 'Manager approval PIN of account [:name] removed by :actor',
     'cannot_change_credentials_of_more_privileged_user' => 'You cannot change the role, password, phone, email or approval PIN of a user who holds permissions or works in stores you do not have access to.',
     'cannot_assign_inaccessible_store' => 'You cannot assign a user to a store you do not have access to.',
+    'store_required' => 'Select at least one branch for the user; every non-admin user must be assigned to a branch.',
     'login_not_locked' => 'The account was not locked; nothing to unlock',
     'unlock_login' => 'Unlock login',
     'login_locked_badge' => 'Locked',
@@ -113,4 +114,9 @@ return [
         'done_title' => 'Temporary password for :name',
         'failed' => 'The password could not be reset.',
     ],
+    'branches_label' => 'Assigned branches',
+    'branches_hint_required' => 'Select every branch this user works in. At least one is required.',
+    'branches_hint_optional' => 'Optional for administrators, who can access every branch.',
+    'branches_empty' => 'There are no branches available to assign.',
+    'default_branch_among_selected' => 'Default branch (one of the selected)',
 ];

@@ -8,6 +8,7 @@ use App\Models\Store;
 use App\Models\User;
 use Illuminate\Container\Attributes\Scoped;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -27,6 +28,9 @@ use Illuminate\Validation\ValidationException;
 final class ActiveStore
 {
     public const ALL = 'all';
+
+    /** ROLE-01: error_code of the store 403 of a user assigned to no branch at all. */
+    public const NO_STORE_ASSIGNED_CODE = 'no_store_assigned';
 
     /** error_code of the 403 a single-store operation returns for `X-Store-Id: all` (STOR-2). */
     public const CONCRETE_REQUIRED_CODE = 'concrete_store_required';
@@ -170,6 +174,51 @@ final class ActiveStore
         }
 
         return array_values(array_unique($ids));
+    }
+
+    /**
+     * ROLE-01: a user who may not see every store and has neither a default store nor an
+     * assigned one. Every store-scoped request of theirs is refused; the SPA needs to say why.
+     */
+    public static function hasNoStoreAssigned(User $user): bool
+    {
+        return $user->default_store_id === null
+            && ! self::canViewAll($user)
+            && ! $user->stores()->exists();
+    }
+
+    /**
+     * ROLE-01: `{error_code, message}` of a user assigned to no branch (login / `me` payloads),
+     * else null.
+     *
+     * @return array{error_code: string, message: string}|null
+     */
+    public static function noStoreAssignedNotice(User $user): ?array
+    {
+        if (! self::hasNoStoreAssigned($user)) {
+            return null;
+        }
+
+        return [
+            'error_code' => self::NO_STORE_ASSIGNED_CODE,
+            'message' => (string) __('store_scope.no_store_assigned'),
+        ];
+    }
+
+    /**
+     * The store-access 403 of ApiTokenAuth / ResolveActiveStore. A user assigned to no branch
+     * gets `no_store_assigned` with a message telling them to ask the manager (ROLE-01) instead
+     * of the generic `store_access_denied`.
+     */
+    public static function accessDeniedResponse(User $user): JsonResponse
+    {
+        $notice = self::noStoreAssignedNotice($user);
+
+        return response()->json([
+            'success' => false,
+            'message' => $notice['message'] ?? __('common.store_access_denied'),
+            'error_code' => $notice['error_code'] ?? ClientStoreGuard::ERROR_CODE,
+        ], 403);
     }
 
     public static function canViewAll(User $user): bool

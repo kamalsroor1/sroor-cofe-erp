@@ -23,12 +23,25 @@ final class ExpensePolicy
             || $user->can('daily_journal.view');
     }
 
+    /**
+     * ROLE-01: a reader without expenses.manage / reports.view (daily_journal.view only, e.g. a
+     * cashier) sees only the expenses they recorded; another user's expense is "not found".
+     */
     public function view(User $user, Expense $expense): bool
     {
         return ($user->hasRole('admin')
             || $user->can('expenses.manage')
             || $user->can('daily_journal.view'))
-            && self::storeVisibleTo($user, $expense);
+            && self::storeVisibleTo($user, $expense)
+            && (self::seesEveryonesExpenses($user) || (int) $expense->user_id === (int) $user->id);
+    }
+
+    /** ROLE-01: may read every user's expenses (else only the ones they recorded). */
+    public static function seesEveryonesExpenses(User $user): bool
+    {
+        return $user->hasRole('admin')
+            || $user->can('expenses.manage')
+            || $user->can('reports.view');
     }
 
     public function create(User $user): bool

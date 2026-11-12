@@ -49,6 +49,7 @@
         :returns-list="returnsList"
         :pagination="pagination"
         :loading="isLoading"
+        :can-delete="canDeleteReturn"
         @open-details="openDetailsModal"
         @delete-return="deleteReturnDoc"
         @page-change="fetchReturns"
@@ -96,5 +97,6 @@ const {
   updateDateTo,
   openDetailsModal,
   deleteReturnDoc,
+  canDeleteReturn,
 } = useReturns();
 </script>

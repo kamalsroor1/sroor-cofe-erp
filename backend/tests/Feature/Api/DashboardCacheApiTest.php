@@ -108,7 +108,11 @@ final class DashboardCacheApiTest extends TenantTestCase
             ->assertJsonPath('data.metrics.monthly_margin', null)
             ->assertJsonPath('data.metrics.customers_debt', null)
             ->assertJsonPath('data.metrics.suppliers_debt', null)
-            ->assertJsonPath('data.metrics.today_sales', '100.000');
+            // ROLE-01 (owner 2026-11-12): without reports.view only the caller's own shift; this
+            // cashier has none, so no store-wide sales either (was '100.000' before ROLE-01).
+            ->assertJsonPath('data.scope', 'own_shift')
+            ->assertJsonPath('data.metrics.today_sales', '0.000')
+            ->assertJsonPath('data.metrics.monthly_sales', null);
     }
 
     public function test_the_cashier_cache_does_not_hide_figures_from_a_manager(): void
@@ -140,24 +144,21 @@ final class DashboardCacheApiTest extends TenantTestCase
         });
     }
 
-    public function test_the_cached_entry_of_a_user_without_reports_view_holds_no_financial_figures(): void
+    public function test_the_dashboard_of_a_user_without_reports_view_is_never_cached(): void
     {
         $this->sale($this->tenant, $this->storeA, $this->customerId, '100.000', '60.000');
         $cashier = $this->createTenantUser($this->tenant, null, ['pos.access']);
 
-        $response = $this->getJson('/api/v1/dashboard', $this->tenantHeaders($this->tenant, $cashier, $this->storeA))->assertOk();
+        $response = $this->getJson('/api/v1/dashboard', $this->tenantHeaders($this->tenant, $cashier, $this->storeA))->assertOk()
+            ->assertJsonPath('data.scope', 'own_shift');
         $locale = (string) $response->headers->get('Content-Language');
 
+        // ROLE-01: the own-shift payload is built per user and never stored, so it can neither
+        // seed the shared entries nor be served from them (was cached under f0 before ROLE-01).
         $this->inTenant($this->tenant, function () use ($locale): void {
             $today = app(TenantClock::class)->today();
-            $stored = Cache::get(DashboardCache::key($this->storeA, false, false, $today, $locale));
 
-            $this->assertIsArray($stored, 'the cashier view was cached under its own key');
-            $this->assertSame('100.000', $stored['metrics']['today_sales']);
-            $this->assertNull($stored['metrics']['monthly_gross_profit']);
-            $this->assertNull($stored['metrics']['monthly_margin']);
-            $this->assertNull($stored['metrics']['customers_debt']);
-            $this->assertNull($stored['metrics']['suppliers_debt']);
+            $this->assertNull(Cache::get(DashboardCache::key($this->storeA, false, false, $today, $locale)), 'the cashier view is not cached');
             $this->assertNull(Cache::get(DashboardCache::key($this->storeA, true, false, $today, $locale)), 'no financial copy was built for the cashier');
         });
     }

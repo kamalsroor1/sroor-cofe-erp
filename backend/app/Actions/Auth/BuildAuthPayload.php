@@ -9,6 +9,7 @@ use App\Models\Setting;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\Branding\TenantBranding;
+use App\Support\ActiveStore;
 
 /**
  * Shared login response payload (token + user + store context + system branding)
@@ -17,7 +18,7 @@ use App\Services\Branding\TenantBranding;
 final class BuildAuthPayload
 {
     /**
-     * @return array{token: string, must_change_password: bool, user: array<string, mixed>, store: array<string, mixed>|null, stores: mixed, system: array<string, mixed>}
+     * @return array{token: string, must_change_password: bool, user: array<string, mixed>, store: array<string, mixed>|null, stores: mixed, store_notice: array{error_code: string, message: string}|null, system: array<string, mixed>}
      */
     public function execute(User $user, string $plainTextToken): array
     {
@@ -26,8 +27,12 @@ final class BuildAuthPayload
         $tenant = function_exists('tenant') ? tenant() : null;
 
         // Store context is only applicable in tenant context.
+        $storeNotice = null;
         if ($tenant) {
-            $currentStore = $user->getCurrentStore();
+            // ROLE-01: a user assigned to no branch gets no store and a store_notice instead
+            // (getCurrentStore() would fall back to the main store, which they cannot use).
+            $storeNotice = ActiveStore::noStoreAssignedNotice($user);
+            $currentStore = $storeNotice === null ? $user->getCurrentStore() : null;
             $userStores = $user->hasRole('admin')
                 ? Store::where('is_active', true)->orderBy('is_main', 'desc')->get(['id', 'name', 'code', 'type', 'is_main'])
                 : $user->stores()->where('is_active', true)->get(['stores.id', 'name', 'code', 'type', 'is_main']);
@@ -48,6 +53,8 @@ final class BuildAuthPayload
                 'is_main' => (bool) $currentStore->is_main,
             ] : null,
             'stores' => $userStores,
+            // ROLE-01: {error_code: 'no_store_assigned', message} when the user has no branch, else null.
+            'store_notice' => $storeNotice,
             'system' => [
                 'company_name' => Setting::get('company_name') ?: ($tenantName ?: __('auth.default_company_name')),
                 'company_subtitle' => Setting::get('company_subtitle') ?: '',

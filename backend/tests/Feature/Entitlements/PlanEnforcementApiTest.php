@@ -136,9 +136,9 @@ final class PlanEnforcementApiTest extends TenantTestCase
         $tenant = $this->tenantOn($this->plan(['max_users' => 2]));
         $headers = $this->tenantHeaders($tenant);
 
-        $this->postJson('/api/v1/users', $this->userPayload('01000000611'), $headers)->assertStatus(201);
+        $this->postJson('/api/v1/users', $this->userPayload('01000000611', $tenant), $headers)->assertStatus(201);
 
-        $this->postJson('/api/v1/users', $this->userPayload('01000000612'), $headers)
+        $this->postJson('/api/v1/users', $this->userPayload('01000000612', $tenant), $headers)
             ->assertStatus(403)
             ->assertJsonPath('success', false)
             ->assertJsonPath('error_code', 'subscription.limit_reached')
@@ -152,7 +152,7 @@ final class PlanEnforcementApiTest extends TenantTestCase
     {
         $tenant = $this->tenantOn($this->plan(['max_users' => null]));
 
-        $this->postJson('/api/v1/users', $this->userPayload('01000000621'), $this->tenantHeaders($tenant))->assertStatus(201);
+        $this->postJson('/api/v1/users', $this->userPayload('01000000621', $tenant), $this->tenantHeaders($tenant))->assertStatus(201);
     }
 
     public function test_stores_are_blocked_at_the_limit_and_allowed_below_it(): void
@@ -201,9 +201,9 @@ final class PlanEnforcementApiTest extends TenantTestCase
         // 2 users / 2 stores against a limit of 1: nothing is deleted or locked.
         $this->getJson('/api/v1/users', $headers)->assertOk();
         $this->getJson('/api/v1/stores', $headers)->assertOk();
-        $this->putJson('/api/v1/users/'.$extra->id, ['name' => 'Renamed', 'phone' => $extra->phone, 'role' => 'cashier'], $headers)->assertOk();
+        $this->putJson('/api/v1/users/'.$extra->id, ['name' => 'Renamed', 'phone' => $extra->phone, 'role' => 'cashier', 'default_store_id' => (int) $this->tenantStore($tenant)->id], $headers)->assertOk();
 
-        $this->postJson('/api/v1/users', $this->userPayload('01000000631'), $headers)->assertStatus(403)->assertJsonPath('error_code', 'subscription.limit_reached');
+        $this->postJson('/api/v1/users', $this->userPayload('01000000631', $tenant), $headers)->assertStatus(403)->assertJsonPath('error_code', 'subscription.limit_reached');
         $this->postJson('/api/v1/stores', ['name' => 'Third', 'type' => 'retail_shop'], $headers)->assertStatus(403)->assertJsonPath('error_code', 'subscription.limit_reached');
 
         $this->assertSame(2, $this->inTenant($tenant, fn (): int => User::query()->count()));
@@ -219,9 +219,9 @@ final class PlanEnforcementApiTest extends TenantTestCase
         $headers = $this->tenantHeaders($tenant);
 
         // free: 3 users, admin is #1.
-        $this->postJson('/api/v1/users', $this->userPayload('01000000641'), $headers)->assertStatus(201);
-        $this->postJson('/api/v1/users', $this->userPayload('01000000642'), $headers)->assertStatus(201);
-        $this->postJson('/api/v1/users', $this->userPayload('01000000643'), $headers)
+        $this->postJson('/api/v1/users', $this->userPayload('01000000641', $tenant), $headers)->assertStatus(201);
+        $this->postJson('/api/v1/users', $this->userPayload('01000000642', $tenant), $headers)->assertStatus(201);
+        $this->postJson('/api/v1/users', $this->userPayload('01000000643', $tenant), $headers)
             ->assertStatus(403)
             ->assertJsonPath('details.max', 3);
         // free: 1 store, the main store already uses it.
@@ -357,13 +357,15 @@ final class PlanEnforcementApiTest extends TenantTestCase
     /**
      * @return array<string, mixed>
      */
-    private function userPayload(string $phone): array
+    private function userPayload(string $phone, Tenant $tenant): array
     {
         return [
             'name' => 'Cashier '.$phone,
             'phone' => $phone,
             'password' => 'secret123',
             'role' => 'cashier',
+            // ROLE-01: a non-admin user needs a branch.
+            'store_ids' => [(int) $this->tenantStore($tenant)->id],
         ];
     }
 

@@ -27,7 +27,8 @@ final class DailyJournalController extends Controller
 
         // STOR-2: one branch's journal: the active store (a store_id is access-checked, 403;
         // `all` without a concrete store_id is 422).
-        $journal = $this->getDailyJournalAction->execute($date, $activeStore->singleStoreId($request));
+        // ROLE-01: without reports.view the journal holds only the caller's own documents (scope own_shift).
+        $journal = $this->getDailyJournalAction->execute($date, $activeStore->singleStoreId($request), $request->user());
 
         return response()->json([
             'success' => true,

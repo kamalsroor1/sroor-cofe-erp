@@ -5,4 +5,7 @@ return [
     'concrete_store_required' => 'Select a single branch for this operation; "all branches" is not allowed here.',
     'store_not_resolved' => 'No branch is selected for this request.',
     'store_inactive' => 'This branch is deactivated: sales, purchases, returns, expenses, shifts and transfers cannot be recorded on it.',
+    // ROLE-01: a user assigned to no branch at all.
+    'no_store_assigned' => 'Your account is not assigned to any branch. Ask the manager to assign you to one.',
+    'notice_title' => 'No branch assigned',
 ];

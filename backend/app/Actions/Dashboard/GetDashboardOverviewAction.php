@@ -9,17 +9,16 @@ use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
-use App\Models\Item;
 use App\Models\Store;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Services\DailyCashFlowService;
+use App\Services\Dashboard\LowStockRadar;
 use App\Services\DashboardAnalyticsService;
 use App\Services\ProfitService;
 use App\Services\Reports\InvoiceAggregates;
 use App\Services\Reports\ReportDateRange;
 use App\Services\Reports\SalesReturnAggregates;
-use App\Services\Settings\TenantSettings;
 use App\Services\ShiftService;
 use App\Support\CostVisibility;
 use App\Support\DashboardCache;
@@ -33,7 +32,8 @@ final class GetDashboardOverviewAction
         private readonly DashboardAnalyticsService $analyticsService,
         private readonly ProfitService $profitService,
         private readonly TenantClock $tenantClock,
-        private readonly TenantSettings $tenantSettings,
+        private readonly LowStockRadar $lowStockRadar,
+        private readonly GetOwnShiftDashboardAction $ownShiftDashboard,
         private readonly ShiftService $shiftService,
         private readonly DailyCashFlowService $dailyCashFlow,
         private readonly SalesReturnAggregates $salesReturns,
@@ -47,8 +47,15 @@ final class GetDashboardOverviewAction
      * closed branch the user explicitly selected). $allStores (a verified `X-Store-Id: all`)
      * aggregates every store. Without either, the legacy fallback picks the user's store.
      */
-    public function execute(?User $user = null, ?int $storeId = null, bool $allStores = false): array
+    public function execute(User $user, ?int $storeId = null, bool $allStores = false): array
     {
+        // ROLE-01 (owner 2026-11-12): without reports.view the dashboard shows only the caller's
+        // own open shift (no store totals, no profit, no drawer balance). That payload is built
+        // per user and never cached, so it can neither read nor seed the store cache below.
+        if (! $user->can('reports.view')) {
+            return $this->ownShiftDashboard->execute($user, $allStores ? null : $storeId);
+        }
+
         // SETG-2 (+ ext): "today" is the tenant's current business day (timezone + cutoff).
         $today = $this->tenantClock->today();
 
@@ -63,7 +70,7 @@ final class GetDashboardOverviewAction
         }
         if ($allStores && ! $activeStore) {
             $storeId = null;
-        } elseif (! $activeStore && $user) {
+        } elseif (! $activeStore) {
             $activeStore = $user->getCurrentStore();
             if ($activeStore) {
                 $storeId = $activeStore->id;
@@ -79,8 +86,9 @@ final class GetDashboardOverviewAction
         $storeFilter = $storeId ? (int) $storeId : null;
 
         // SEC-1 (M6): profit, margin and receivable/payable totals are financial report data:
-        // reports.view only (there is no dashboard.* permission). Without it they are null.
-        $showFinancials = $user instanceof User && $user->can('reports.view');
+        // reports.view only (there is no dashboard.* permission). ROLE-01: a user without it
+        // never reaches this point, so every entry of the store cache is a reports.view one.
+        $showFinancials = $user->can('reports.view');
 
         // PERF-01: the aggregate blocks are cached for a few seconds per tenant, store scope,
         // permission set, business day and locale (see DashboardCache). The live blocks below
@@ -132,6 +140,8 @@ final class GetDashboardOverviewAction
             ]);
 
         return [
+            // ROLE-01: 'store' = store-wide figures (reports.view); 'own_shift' = GetOwnShiftDashboardAction.
+            'scope' => GetOwnShiftDashboardAction::SCOPE_STORE,
             'active_store' => $activeStore ? [
                 'id' => $activeStore->id,
                 'name' => $activeStore->name,
@@ -200,24 +210,8 @@ final class GetDashboardOverviewAction
         $totalSuppliersDebt = $showFinancials ? Decimal::normalize((string) (Supplier::where('is_active', true)->sum('current_balance') ?: 0)) : null;
 
         // 8. Low Stock Items Radar (SETG-10: own minimum, else the tenant default threshold)
-        $lowStockThreshold = $this->tenantSettings->lowStockDefaultThreshold();
-        $lowStockItems = $this->tenantSettings->whereLowStock(Item::where('is_active', true))
-            ->orderBy('current_stock', 'asc')
-            ->take(8)
-            ->get(['id', 'name', 'code', 'category', 'current_stock', 'min_stock_level', 'unit'])
-            ->map(fn ($it) => [
-                'id' => $it->id,
-                'name' => $it->name,
-                'code' => $it->code,
-                'category' => $it->category,
-                'current_stock' => Decimal::normalize((string) $it->current_stock),
-                'min_stock' => Decimal::normalize((string) (bccomp((string) ($it->min_stock_level ?? '0'), '0', 3) > 0 ? $it->min_stock_level : $lowStockThreshold)),
-                'unit' => $it->unit ?? __('inventory.unit_weight_short'),
-            ])
-            ->values()
-            ->all();
-
-        $lowStockCount = $this->tenantSettings->whereLowStock(Item::where('is_active', true))->count();
+        $lowStockItems = $this->lowStockRadar->items();
+        $lowStockCount = $this->lowStockRadar->count();
 
         // 9. Monthly Profits & Margin
         $startOfMonth = $this->tenantClock->businessNow()->startOfMonth()->toDateString();

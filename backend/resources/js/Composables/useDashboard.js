@@ -1,6 +1,7 @@
 import { ref, computed, onMounted } from 'vue';
 import api from '../Services/api';
 import { useLoadError } from './useLoadError';
+import { isOwnShiftScope } from '../helpers/dashboardScope';
 
 export function useDashboard() {
     const { error, errorMessage, clearError, setError } = useLoadError();
@@ -8,6 +9,7 @@ export function useDashboard() {
     const dashboardData = ref(null);
     const isLoading = ref(true);
 
+    const isOwnShift = computed(() => isOwnShiftScope(dashboardData.value));
     const metrics = computed(() => dashboardData.value?.metrics || {});
     const analytics = computed(() => dashboardData.value?.analytics || {});
     const dailyTrend = computed(() => analytics.value?.daily_trend || []);
@@ -40,6 +42,7 @@ export function useDashboard() {
 
     return {
         dashboardData,
+        isOwnShift,
         isLoading,
         error,
         errorMessage,

@@ -15,6 +15,7 @@ use App\Http\Requests\UpdateExpenseRequest;
 use App\Http\Resources\ExpenseResource;
 use App\Models\Expense;
 use App\Models\User;
+use App\Policies\ExpensePolicy;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -59,6 +60,12 @@ final class ExpenseController extends Controller
             $query->where('store_id', $storeId);
         }
 
+        // ROLE-01: without expenses.manage / reports.view only the expenses the caller recorded.
+        $recordedBy = $user instanceof User && ! ExpensePolicy::seesEveryonesExpenses($user) ? (int) $user->id : null;
+        if ($recordedBy !== null) {
+            $query->where('user_id', $recordedBy);
+        }
+
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('expense_number', 'like', "%{$search}%")
@@ -93,7 +100,8 @@ final class ExpenseController extends Controller
         $summary = $this->getExpensesSummaryAction->execute(
             $storeId,
             $fromDate ? (string) $fromDate : null,
-            $toDate ? (string) $toDate : null
+            $toDate ? (string) $toDate : null,
+            $recordedBy,
         );
 
         $costCentersList = [
@@ -228,7 +236,7 @@ final class ExpenseController extends Controller
      */
     private function findExpenseOr404(User $user, int $id, string $ability): void
     {
-        $expense = Expense::query()->select(['id', 'store_id'])->find($id);
+        $expense = Expense::query()->select(['id', 'store_id', 'user_id'])->find($id);
 
         if (! $expense instanceof Expense || ! Gate::forUser($user)->allows($ability, $expense)) {
             throw (new ModelNotFoundException)->setModel(Expense::class, [$id]);

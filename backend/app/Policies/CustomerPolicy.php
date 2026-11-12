@@ -38,9 +38,10 @@ final class CustomerPolicy
         return $user->hasRole('admin') || $user->can('customers.manage');
     }
 
+    /** ROLE-01: deleting a customer needs `customers.delete` (admin only by default), not `customers.manage`. */
     public function delete(User $user, Customer $customer): bool
     {
-        return $user->hasRole('admin') || $user->can('customers.manage');
+        return $user->hasRole('admin') || $user->can('customers.delete');
     }
 
     public function collectPayment(User $user, Customer $customer): bool

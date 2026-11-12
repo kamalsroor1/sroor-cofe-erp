@@ -7,7 +7,6 @@ namespace App\Http\Middleware;
 use App\Models\Store;
 use App\Models\User;
 use App\Support\ActiveStore;
-use App\Support\ClientStoreGuard;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -61,7 +60,7 @@ final class ResolveActiveStore
         if (! $hasHeader) {
             $default = ActiveStore::defaultFor($user);
             if (! $default instanceof Store) {
-                return $this->forbidden();
+                return ActiveStore::accessDeniedResponse($user);
             }
 
             if ($mode === self::CONCRETE && ! $default->is_active) {
@@ -77,7 +76,7 @@ final class ResolveActiveStore
 
         if ($parsed === ActiveStore::ALL) {
             if (! ActiveStore::canViewAll($user)) {
-                return $this->forbidden();
+                return ActiveStore::accessDeniedResponse($user);
             }
 
             if ($mode === self::CONCRETE) {
@@ -95,12 +94,12 @@ final class ResolveActiveStore
         }
 
         if (! is_int($parsed) || ! ActiveStore::canAccess($user, $parsed)) {
-            return $this->forbidden();
+            return ActiveStore::accessDeniedResponse($user);
         }
 
         $store = Store::query()->find($parsed);
         if (! $store instanceof Store) {
-            return $this->forbidden();
+            return ActiveStore::accessDeniedResponse($user);
         }
 
         if ($mode === self::CONCRETE && ! $store->is_active) {
@@ -125,15 +124,6 @@ final class ResolveActiveStore
             'success' => false,
             'message' => __('store_scope.store_inactive'),
             'error_code' => self::STORE_INACTIVE_CODE,
-        ], 403);
-    }
-
-    private function forbidden(): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
-            'message' => __('common.store_access_denied'),
-            'error_code' => ClientStoreGuard::ERROR_CODE,
         ], 403);
     }
 }

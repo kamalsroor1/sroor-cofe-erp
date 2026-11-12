@@ -2,9 +2,10 @@
   <AppModal :show="show" :title="`${$t('treasury.close_shift')} - ${shiftNumber || ''}`" @close="$emit('close')">
     <form @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
       <div
+        v-if="hasOpening || hasExpected"
         class="p-3.5 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2"
       >
-        <div class="flex items-center justify-between text-xs">
+        <div v-if="hasOpening" class="flex items-center justify-between text-xs">
           <span class="text-slate-500 dark:text-slate-400 font-bold">{{
             $t('treasury.shift_opening_balance_label')
           }}</span>
@@ -12,7 +13,7 @@
             >{{ formatMoney(openingCashBalance) }} {{ currencyLabel }}</span
           >
         </div>
-        <div class="flex items-center justify-between text-xs">
+        <div v-if="hasExpected" class="flex items-center justify-between text-xs">
           <span class="text-slate-500 dark:text-slate-400 font-bold">{{
             $t('treasury.shift_expected_balance_label')
           }}</span>
@@ -79,6 +80,7 @@ import BaseButton from '../Common/BaseButton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
 import { drawerDifference } from '../../helpers/shiftCash';
+import { hasMetric } from '../../helpers/dashboardMetrics';
 
 const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
@@ -86,13 +88,16 @@ const { t } = useTrans();
 const props = defineProps({
   show: { type: Boolean, default: false },
   shiftNumber: { type: [String, Number], default: '' },
-  openingCashBalance: { type: [String, Number], default: '0.000' },
-  expectedCashInDrawer: { type: [String, Number], default: '0.000' },
+  openingCashBalance: { type: [String, Number], default: null },
+  expectedCashInDrawer: { type: [String, Number], default: null },
   form: { type: Object, default: () => ({}) },
   submitting: { type: Boolean, default: false },
 });
 
 defineEmits(['close', 'submit', 'update:field']);
+
+const hasOpening = computed(() => hasMetric(props.openingCashBalance));
+const hasExpected = computed(() => hasMetric(props.expectedCashInDrawer));
 
 const diff = computed(() => drawerDifference(props.form.actual_cash_balance, props.expectedCashInDrawer));
 

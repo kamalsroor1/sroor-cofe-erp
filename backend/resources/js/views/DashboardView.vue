@@ -13,35 +13,49 @@
 
     <template v-else>
       <InlineErrorBar v-if="error" :message="errorMessage" @retry="retry" />
-      <DashboardKpiGrid :metrics="metrics" />
-      <DashboardQuickActions :actions="quickActions" />
 
-      <DashboardSetupChecklist
-        v-if="isChecklistVisible"
-        :steps="checklistSteps"
-        :progress="setupProgress"
-        @dismiss="dismissChecklist"
+      <DashboardOwnShift
+        v-if="isOwnShift"
+        :metrics="metrics"
+        :active-shift="activeShift"
+        :recent-invoices="recentInvoices"
+        :low-stock-items="lowStockItems"
+        :quick-actions="quickActions"
+        :can-sell="canSell"
+        @preview="previewInvoice"
       />
 
-      <DashboardFirstSale v-if="isNewShop" :can-sell="canSell" />
       <template v-else>
-        <DashboardAnalyticsRow
-          :daily-trend="dailyTrend"
-          :period="periodAnalytics"
-          :payment-distribution="paymentDistribution"
-          :active-shift="activeShift"
+        <DashboardKpiGrid :metrics="metrics" />
+        <DashboardQuickActions :actions="quickActions" />
+
+        <DashboardSetupChecklist
+          v-if="isChecklistVisible"
+          :steps="checklistSteps"
+          :progress="setupProgress"
+          @dismiss="dismissChecklist"
         />
 
-        <DashboardPeakHours :hourly-sales="hourlySales" :peak-hour="peakHour" />
+        <DashboardFirstSale v-if="isNewShop" :can-sell="canSell" />
+        <template v-else>
+          <DashboardAnalyticsRow
+            :daily-trend="dailyTrend"
+            :period="periodAnalytics"
+            :payment-distribution="paymentDistribution"
+            :active-shift="activeShift"
+          />
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div class="lg:col-span-8">
-            <DashboardRecentInvoices :invoices="recentInvoices" @preview="previewInvoice" />
+          <DashboardPeakHours :hourly-sales="hourlySales" :peak-hour="peakHour" />
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-8">
+              <DashboardRecentInvoices :invoices="recentInvoices" @preview="previewInvoice" />
+            </div>
+            <div class="lg:col-span-4">
+              <DashboardLowStock :items="lowStockItems" />
+            </div>
           </div>
-          <div class="lg:col-span-4">
-            <DashboardLowStock :items="lowStockItems" />
-          </div>
-        </div>
+        </template>
       </template>
     </template>
   </div>
@@ -59,6 +73,7 @@ import { isEmptyShop } from '../helpers/dashboardMetrics';
 import ErrorState from '../Components/Common/ErrorState.vue';
 import InlineErrorBar from '../Components/Common/InlineErrorBar.vue';
 import DashboardWelcomeBanner from '../Components/Dashboard/DashboardWelcomeBanner.vue';
+import DashboardOwnShift from '../Components/Dashboard/DashboardOwnShift.vue';
 import DashboardKpiGrid from '../Components/Dashboard/DashboardKpiGrid.vue';
 import DashboardQuickActions from '../Components/Dashboard/DashboardQuickActions.vue';
 import DashboardSetupChecklist from '../Components/Dashboard/DashboardSetupChecklist.vue';
@@ -74,6 +89,7 @@ const appConfigStore = useAppConfigStore();
 
 const {
   dashboardData,
+  isOwnShift,
   isLoading,
   error,
   errorMessage,

@@ -12,6 +12,8 @@ use App\Models\Store;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Support\Trash\TrashScope;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
 final class ForceDeleteTrashRecordAction
@@ -34,6 +36,12 @@ final class ForceDeleteTrashRecordAction
             'returns' => TrashScope::findForWrite(ReturnDocument::onlyTrashed(), $actor, $id),
             default => throw ValidationException::withMessages(['type' => __('common.trash_invalid_type')]),
         };
+
+        // ROLE-01: purging a customer or a return is a deletion too; it needs the same permission as
+        // DELETE /customers/{id} and /returns/{id} (customers.delete / returns.delete), not trash.access alone.
+        if (($model instanceof Customer || $model instanceof ReturnDocument) && ! Gate::forUser($actor)->allows('delete', $model)) {
+            throw new AuthorizationException(__('auth.unauthorized'));
+        }
 
         return (bool) $model->forceDelete();
     }

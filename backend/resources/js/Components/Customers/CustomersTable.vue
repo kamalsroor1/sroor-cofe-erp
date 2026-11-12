@@ -10,6 +10,7 @@ defineProps({
   customers: { type: Array, default: () => [] },
   pagination: { type: Object, default: () => ({ current_page: 1, last_page: 1, per_page: 15, total: 0 }) },
   loading: { type: Boolean, default: false },
+  canDelete: { type: Boolean, default: false },
 });
 
 defineEmits(['create', 'pay', 'edit', 'delete', 'page-change']);
@@ -160,6 +161,7 @@ const columns = computed(() => [
         </button>
 
         <button
+          v-if="canDelete"
           type="button"
           @click="$emit('delete', row)"
           class="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0 p-2 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition cursor-pointer active:scale-95"

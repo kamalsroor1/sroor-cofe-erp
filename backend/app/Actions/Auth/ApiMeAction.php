@@ -56,7 +56,11 @@ final class ApiMeAction
             $activeStore = Store::where('id', $storeHeader)->where('is_active', true)->first();
         }
 
-        if (! $activeStore) {
+        // ROLE-01: a user assigned to no branch gets no store (getCurrentStore() would fall back to
+        // the main store, which every store-scoped request then refuses) and a store_notice instead.
+        $storeNotice = ActiveStore::noStoreAssignedNotice($user);
+
+        if (! $activeStore && $storeNotice === null) {
             $activeStore = $user->getCurrentStore();
         }
 
@@ -85,11 +89,16 @@ final class ApiMeAction
                 'is_main' => (bool) $activeStore->is_main,
             ] : null,
             'stores' => $userStores,
+            // ROLE-01: {error_code: 'no_store_assigned', message} when the user has no branch, else null.
+            'store_notice' => $storeNotice,
             'active_shift' => $activeShift ? [
                 'id' => $activeShift->id,
                 'shift_number' => $activeShift->shift_number ?? $activeShift->id,
                 'opened_at' => $activeShift->opened_at,
-                'opening_cash_balance' => Decimal::normalize((string) $activeShift->opening_cash_balance),
+                // ROLE-01: the shared drawer's float only for its opener or a reports.view reader.
+                'opening_cash_balance' => (int) $activeShift->user_id === (int) $user->id || $user->can('reports.view')
+                    ? Decimal::normalize((string) $activeShift->opening_cash_balance)
+                    : null,
             ] : null,
             'system' => $system,
             'subscription' => $subscription,

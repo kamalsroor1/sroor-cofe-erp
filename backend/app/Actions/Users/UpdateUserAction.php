@@ -37,15 +37,20 @@ final class UpdateUserAction
         return DB::transaction(function () use ($dto, $actor) {
             $user = User::query()->whereKey($dto->id)->lockForUpdate()->firstOrFail();
 
+            // ROLE-01: a new branch list replaces store_user in this transaction (null keeps it);
+            // without an explicit default store the first listed branch becomes the default.
+            $defaultStoreId = $dto->default_store_id ?? ($dto->store_ids[0] ?? null);
+            $storeIds = $dto->store_ids === null ? null : self::withDefault($dto->store_ids, $defaultStoreId);
+
             if ($actor instanceof User && ! $actor->hasRole('admin')) {
-                $this->guardNonAdminActor($actor, $user, $dto);
+                $this->guardNonAdminActor($actor, $user, $dto, $defaultStoreId, $storeIds);
             }
 
             $data = [
                 'name' => $dto->name,
                 'phone' => $dto->phone,
                 'email' => $dto->email,
-                'default_store_id' => $dto->default_store_id,
+                'default_store_id' => $defaultStoreId,
                 'is_active' => $dto->is_active,
             ];
 
@@ -63,6 +68,10 @@ final class UpdateUserAction
 
             $user->update($data);
             $user->syncRoles([$dto->role]);
+
+            if ($storeIds !== null) {
+                $user->stores()->sync($storeIds);
+            }
 
             // SEC-03: password reset, deactivation or a different role set ends all sessions.
             $rolesAfter = $user->getRoleNames()->sort()->values()->all();
@@ -84,7 +93,10 @@ final class UpdateUserAction
         });
     }
 
-    private function guardNonAdminActor(User $actor, User $target, UpdateUserDTO $dto): void
+    /**
+     * @param  list<int>|null  $storeIds  the new store_user list (null: unchanged)
+     */
+    private function guardNonAdminActor(User $actor, User $target, UpdateUserDTO $dto, ?int $defaultStoreId, ?array $storeIds): void
     {
         $targetIsAdmin = $target->hasRole('admin');
 
@@ -114,10 +126,20 @@ final class UpdateUserAction
         }
 
         // SEC-20 review: moving a user (self included) to a store widens that user's store access,
-        // so the new default store must be one the actor can access.
+        // so the new default store must be one the actor can access. ROLE-01: and so must the
+        // previous one: a delegate may not move a user off a branch the delegate cannot access.
         $currentStoreId = $target->default_store_id !== null ? (int) $target->default_store_id : null;
-        if ($dto->default_store_id !== $currentStoreId) {
-            $this->roleGrantGuard->assertCanAssignStore($actor, $dto->default_store_id);
+        if ($defaultStoreId !== $currentStoreId) {
+            $this->roleGrantGuard->assertCanAssignStore($actor, $defaultStoreId);
+            $this->roleGrantGuard->assertCanAssignStore($actor, $currentStoreId);
+        }
+
+        // ROLE-01: every branch added to or removed from the user must be one the actor can access.
+        if ($storeIds !== null) {
+            $current = $target->stores()->pluck('stores.id')->map(fn ($id): int => (int) $id)->all();
+            foreach (array_merge(array_diff($storeIds, $current), array_diff($current, $storeIds)) as $storeId) {
+                $this->roleGrantGuard->assertCanAssignStore($actor, (int) $storeId);
+            }
         }
 
         // SEC-20: a new password, phone or email of another user is an account takeover in all but
@@ -140,6 +162,19 @@ final class UpdateUserAction
         return (string) $target->name !== $dto->name
             || (string) $target->phone !== $dto->phone
             || (string) $target->email !== (string) $dto->email
-            || ($target->default_store_id !== null ? (int) $target->default_store_id : null) !== $dto->default_store_id;
+            || ($target->default_store_id !== null ? (int) $target->default_store_id : null) !== ($dto->default_store_id ?? ($dto->store_ids[0] ?? null));
+    }
+
+    /**
+     * @param  list<int>  $storeIds
+     * @return list<int>
+     */
+    private static function withDefault(array $storeIds, ?int $defaultStoreId): array
+    {
+        if ($defaultStoreId !== null) {
+            $storeIds[] = $defaultStoreId;
+        }
+
+        return array_values(array_unique($storeIds));
     }
 }

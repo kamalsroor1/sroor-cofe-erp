@@ -12,6 +12,7 @@ use App\Http\Requests\StoreReturnRequest;
 use App\Http\Resources\ReturnResource;
 use App\Models\ReturnDocument;
 use App\Models\User;
+use App\Policies\ReturnPolicy;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use App\Support\Money\Decimal;
@@ -146,7 +147,8 @@ final class ReturnController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('returns.manage')) {
+        // ROLE-01: a missing permission is 403 (returns.manage + returns.delete); a store denial stays 404 below.
+        if ($user instanceof User && ! ReturnPolicy::canDeleteAny($user)) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 

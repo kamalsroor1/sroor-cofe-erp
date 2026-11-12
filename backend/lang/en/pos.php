@@ -410,6 +410,7 @@ return [
     'shift_close_counted_cash' => 'Actual cash in drawer (count)',
     'shift_close_confirm' => 'Confirm close shift',
     'shift_close_warning' => 'The current shift will be closed and this branch cannot sell until a new shift is opened.',
+    'shift_report_unavailable' => 'The figures of this shift are not available to you because another user opened it.',
     'shift_report_number' => 'Shift number',
     'shift_report_opened_at' => 'Opened at',
     'shift_report_opening_cash' => 'Opening cash',

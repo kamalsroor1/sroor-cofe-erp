@@ -26,6 +26,7 @@
     <DailyJournalShiftBanner
       v-if="!hasError && !isLoading"
       :active-shift="activeShift"
+      :can-print="canPrint"
       @print-z="printActiveZReport"
       @open-shift="showOpenShiftModal = true"
     />
@@ -39,6 +40,15 @@
     </div>
 
     <template v-else>
+      <p
+        v-if="isOwnShiftScope && !isLoading"
+        class="px-4 py-3 rounded-2xl bg-theme-light border border-theme-border text-xs font-bold text-theme-primary"
+        data-testid="journal-own-notice"
+        role="note"
+      >
+        {{ $t('treasury.own_documents_notice') }}
+      </p>
+
       <!-- Financial Metrics Grid -->
       <DailyJournalMetricsGrid :summary="summary" :loading="isLoading" />
 
@@ -96,6 +106,7 @@ import CloseShiftModal from '../../Components/DailyJournal/CloseShiftModal.vue';
 import QuickExpenseModal from '../../Components/DailyJournal/QuickExpenseModal.vue';
 import { useDailyJournal } from '../../Composables/useDailyJournal';
 import { useTrans } from '../../Composables/useTrans';
+import { useRoutePermission } from '../../Composables/useRoutePermission';
 
 const {
   selectedDate,
@@ -105,6 +116,8 @@ const {
   errorMessage,
   isSubmitting,
   activeShift,
+  isOwnShiftScope,
+  canPrint,
   summary,
   invoices,
   expenses,
@@ -126,6 +139,9 @@ const {
 } = useDailyJournal();
 
 const { t } = useTrans();
+const { canAccessPath } = useRoutePermission();
+// Creating an expense needs expenses.manage (and the plan feature): same rule as opening the Expenses screen.
+const canRecordExpense = computed(() => canAccessPath('/expenses'));
 const canCloseShift = computed(() => !hasError.value && !isLoading.value && Boolean(activeShift.value));
 const headerActions = computed(() => [
   {
@@ -133,6 +149,7 @@ const headerActions = computed(() => [
     label: t('treasury.record_journal_expense'),
     icon: MinusCircle,
     primary: !canCloseShift.value,
+    show: canRecordExpense.value,
     iconClass: 'text-rose-500',
     onClick: () => (showExpenseModal.value = true),
   },

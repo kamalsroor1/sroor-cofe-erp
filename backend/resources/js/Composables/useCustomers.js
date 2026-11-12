@@ -1,11 +1,16 @@
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
+import { useAuthStore } from '../stores/auth';
 import { businessToday } from './useBusinessDate';
 
 export function useCustomers() {
     const { t } = useTrans();
+    const authStore = useAuthStore();
+
+    // ROLE-01: deleting a customer is its own permission (the server enforces it too).
+    const canDeleteCustomer = computed(() => authStore.hasPermission('customers.delete'));
 
     const customers = ref([]);
     const metrics = ref({
@@ -200,6 +205,7 @@ export function useCustomers() {
     };
 
     const deleteCustomer = async (customer) => {
+        if (!canDeleteCustomer.value) return;
         const result = await Swal.fire({
             title: t('contacts.delete_customer_confirm_title', { name: customer.name }),
             text: t('contacts.delete_customer_confirm_text'),
@@ -225,7 +231,7 @@ export function useCustomers() {
                 Swal.fire({
                     icon: 'error',
                     title: t('common.error'),
-                    text: err.userMessage || t('contacts.cannot_delete_has_balance'),
+                    text: err.response?.data?.message || err.userMessage || t('contacts.cannot_delete_has_balance'),
                 });
             }
         }
@@ -263,5 +269,6 @@ export function useCustomers() {
         openPaymentModal,
         savePayment,
         deleteCustomer,
+        canDeleteCustomer,
     };
 }

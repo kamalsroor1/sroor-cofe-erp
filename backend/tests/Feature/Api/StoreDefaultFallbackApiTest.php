@@ -92,8 +92,9 @@ final class StoreDefaultFallbackApiTest extends TenantTestCase
             $this->getJson($uri, $this->headersWithoutStore($user))
                 ->assertStatus(403)
                 ->assertJsonPath('success', false)
-                ->assertJsonPath('error_code', 'store_access_denied')
-                ->assertJsonPath('message', __('common.store_access_denied'));
+                // ROLE-01: no branch at all is `no_store_assigned` (was the generic store_access_denied).
+                ->assertJsonPath('error_code', 'no_store_assigned')
+                ->assertJsonPath('message', __('store_scope.no_store_assigned'));
         }
     }
 

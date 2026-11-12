@@ -221,10 +221,11 @@ final class StoreIsolationApiTest extends TenantTestCase
         }
 
         // No header and no usable store: only ResolveActiveStore can refuse this (ApiTokenAuth
-        // checks an explicit header only), so a 403 here proves the middleware runs.
+        // checks an explicit header only), so a 403 here proves the middleware runs. ROLE-01: a
+        // user assigned to no branch at all gets the specific `no_store_assigned` code.
         $this->json($method, $uri, [], $this->headersFor($tenant, $storeless, null))
             ->assertStatus(403)
-            ->assertJsonPath('error_code', 'store_access_denied');
+            ->assertJsonPath('error_code', 'no_store_assigned');
 
         // `all` on a single-branch write is refused even for the admin; elsewhere it is allowed.
         $all = $this->json($method, $uri, [], $this->headersFor($tenant, null, 'all'));

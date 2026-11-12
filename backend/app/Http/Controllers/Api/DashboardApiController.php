@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\Dashboard\GetDashboardOverviewAction;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Support\ActiveStore;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,7 +23,7 @@ final class DashboardApiController extends Controller
     public function index(Request $request, ActiveStore $activeStore): JsonResponse
     {
         $user = $request->user();
-        if (! $user) {
+        if (! $user instanceof User) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 401);
         }
 

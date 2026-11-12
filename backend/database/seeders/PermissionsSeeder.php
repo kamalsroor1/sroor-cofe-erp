@@ -66,6 +66,8 @@ class PermissionsSeeder extends Seeder
         // Contacts
         'customers.manage',
         'customers.statement',
+        // ROLE-01: delete a customer (admin only by default).
+        'customers.delete',
         'suppliers.manage',
         'suppliers.statement',
 
@@ -80,6 +82,8 @@ class PermissionsSeeder extends Seeder
         'returns.without_invoice',
         // SET-02: accept a sales return past the tenant's return window (admin only by default).
         'returns.override_window',
+        // ROLE-01: delete a return document, reversing its stock and money (admin only by default).
+        'returns.delete',
 
         // Admin & Reports
         'reports.view',

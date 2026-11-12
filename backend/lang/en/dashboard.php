@@ -260,4 +260,15 @@ return [
         'description' => 'Once you record your first sale, today\'s numbers and the chart will show up here.',
         'action' => 'Start your first sale',
     ],
+    'own_shift' => [
+        'branch_shift_notice' => 'This is the branch\'s open shift. The sales shown are your own inside it.',
+        'title' => 'Your shift\'s sales',
+        'subtitle' => 'Only the sales and invoices of your own open shift are shown here.',
+        'shift_label' => 'Shift #:number',
+        'opened_at' => 'Opened at :time',
+        'recent_invoices' => 'Invoices of your shift',
+        'no_shift_title' => 'You have no open shift',
+        'no_shift_description' => 'Open a shift to start selling. Your shift sales will appear here.',
+        'no_shift_action' => 'Go to the cashier',
+    ],
 ];

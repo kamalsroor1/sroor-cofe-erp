@@ -36,11 +36,21 @@ final class ReturnPolicy
             || $user->can('returns.manage');
     }
 
+    /**
+     * ROLE-01: deleting a return reverses its stock and money, so it needs `returns.delete`
+     * (admin only by default) on top of `returns.manage`; booking a return stays on `returns.manage`.
+     */
     public function delete(User $user, ReturnDocument $returnDocument): bool
     {
-        return ($user->hasRole('admin')
-            || $user->can('returns.manage'))
+        return self::canDeleteAny($user)
             && self::canChangeStoreOf($user, $returnDocument);
+    }
+
+    /** The permission half of delete() (no store check): lets controllers answer 403 before the 404 store check. */
+    public static function canDeleteAny(User $user): bool
+    {
+        return $user->hasRole('admin')
+            || ($user->can('returns.manage') && $user->can('returns.delete'));
     }
 
     /** Store access alone (no ability): lets controllers tell a store denial (404) from a missing permission (403). */

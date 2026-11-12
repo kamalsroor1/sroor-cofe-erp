@@ -109,10 +109,12 @@ final class ResolveActiveStoreTest extends TenantTestCase
         $tenant = $this->createTenant();
         $cashier = $this->createTenantUser($tenant, 'cashier', [], ['default_store_id' => null]);
 
+        // ROLE-01: a user assigned to no branch at all learns why (was the generic store 403).
         $this->getJson(self::PROBE, $this->headers($tenant, $cashier, null))
             ->assertStatus(403)
             ->assertJsonPath('success', false)
-            ->assertJsonPath('message', $this->deniedMessage());
+            ->assertJsonPath('error_code', 'no_store_assigned')
+            ->assertJsonPath('message', __('store_scope.no_store_assigned'));
     }
 
     public function test_header_for_an_assigned_store_is_accepted(): void

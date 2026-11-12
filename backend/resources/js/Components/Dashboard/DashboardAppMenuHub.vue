@@ -125,6 +125,7 @@ import {
 import { useAudioFeedback } from '../../Composables/useAudioFeedback';
 import { useRoutePermission } from '../../Composables/useRoutePermission';
 import { useTrans } from '../../Composables/useTrans';
+import { filterAccessible } from '../../helpers/accessFilter';
 
 const { playScanBeep } = useAudioFeedback();
 const { canAccessPath } = useRoutePermission();
@@ -200,6 +201,8 @@ const tiles = computed(() => [
     title: t('dashboard.menu_hub.tiles.purchase_returns.title'),
     subtitle: t('dashboard.menu_hub.tiles.purchase_returns.subtitle'),
     to: '/returns',
+    // A purchase return needs the purchasing screens too, not just the returns register.
+    also: ['/purchases'],
     icon: RefreshCw,
     bgClass: 'bg-gradient-to-br from-orange-700 to-rose-700 border-orange-600/50 shadow-orange-500/20',
   },
@@ -321,7 +324,7 @@ const tiles = computed(() => [
   },
 ]);
 
-const visibleTiles = computed(() => tiles.value.filter((tile) => canAccessPath(tile.to)));
+const visibleTiles = computed(() => filterAccessible(tiles.value, canAccessPath));
 
 const categoryTabs = computed(() =>
   allTabs.value.filter((tab) => tab.id === 'all' || visibleTiles.value.some((tile) => tile.category === tab.id))

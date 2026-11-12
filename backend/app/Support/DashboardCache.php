@@ -33,6 +33,10 @@ use InvalidArgumentException;
  * sale): TTL_SECONDS = 60. A sale shows up within a minute; the live blocks show it at once.
  * remember() lets ONE request compute a cold key while the concurrent ones wait for its result
  * (a cache lock), instead of every request recomputing the same aggregates at the same time.
+ *
+ * ROLE-01: only the store-wide dashboard (users with reports.view) is cached here. The own-shift
+ * dashboard of a user without reports.view (GetOwnShiftDashboardAction) is never cached, so it
+ * can neither read nor write an entry of this namespace.
  */
 final class DashboardCache
 {

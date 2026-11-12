@@ -468,12 +468,17 @@ watch(
   }
 );
 
+// ROLE-01: a section that holds a single link (the cashier's "Finance" holds only Returns) starts open,
+// otherwise that lone link hides behind a collapsed card and reads as missing.
 const isSectionExpanded = (key) => {
-  return expandedSections.value[key] ?? false;
+  const stored = expandedSections.value[key];
+  if (stored !== undefined) return stored;
+  const section = (navigationSections.value || []).find((entry) => entry.key === key);
+  return !section?.isDirect && (section?.items?.length || 0) === 1;
 };
 
 const toggleSection = (key) => {
-  expandedSections.value[key] = !expandedSections.value[key];
+  expandedSections.value[key] = !isSectionExpanded(key);
 };
 
 const isSectionHasActiveChild = (section) => {

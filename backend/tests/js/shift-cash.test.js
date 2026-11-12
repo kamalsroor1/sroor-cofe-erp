@@ -22,7 +22,7 @@ test('surplus and shortage are exact, never string concatenation or float noise'
     assert.deepEqual(drawerDifference('0.3', '0.1'), { amount: '0.200', sign: 1 });
 });
 
-test('a missing expected value counts as zero', () => {
-    assert.deepEqual(drawerDifference('15.000', undefined), { amount: '15.000', sign: 1 });
-    assert.deepEqual(drawerDifference('15.000', null), { amount: '15.000', sign: 1 });
+test('a withheld expected value (null, ROLE-01) gives no difference preview instead of a fake surplus', () => {
+    assert.equal(drawerDifference('15.000', undefined), null);
+    assert.equal(drawerDifference('15.000', null), null);
 });

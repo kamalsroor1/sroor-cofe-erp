@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory, START_LOCATION } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useAppConfigStore } from '../stores/appConfig';
 import { useCentralAuthStore } from '../stores/centralAuth';
@@ -9,6 +9,8 @@ import { notifyError } from '../helpers/alert';
 import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
 import { isPublicLandingHost } from '../helpers/platformHosts';
 import { PASSWORD_CHANGE_ROUTE, safeInternalRedirect } from '../helpers/passwordChange';
+import { DASHBOARD_PATH, landingPathFor } from '../helpers/landingPath';
+import { isNoStoreAssigned } from '../helpers/storeNotice';
 
 /**
  * Two disjoint route tables (IDEN-1.9). The server decides the mode:
@@ -143,7 +145,8 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.stores_stocks',
             requiresAuth: true,
-            permission: 'items.view',
+            // ROLE-01: stock balances across branches are for stock/purchasing roles, not the till (items.view alone).
+            permissionAny: ['stores.manage', 'transfers.view', 'purchases.view', 'inventory.adjust'],
         },
     },
     {
@@ -214,7 +217,8 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.categories_index',
             requiresAuth: true,
-            permission: 'items.view',
+            // ROLE-01: managing categories is catalogue editing; the till only reads them through the API.
+            permissionAny: ['items.create', 'items.edit', 'items.delete'],
         },
     },
     {
@@ -635,10 +639,13 @@ async function tenantGuard(to, from, next) {
             await appConfigStore.fetchBootstrapContext();
             window.spaTranslations = appConfigStore.translations;
         } catch (e) {
-            console.warn('Session expired or bootstrap context failed, clearing auth:', e);
-            authStore.clearSession();
-            appConfigStore.isLoaded = false;
-            return next({ name: 'login', query: to.fullPath !== '/' ? { redirect: to.fullPath } : undefined });
+            // ROLE-01: a branch-less account is not an expired session; App.vue shows the notice instead.
+            if (!isNoStoreAssigned(e)) {
+                console.warn('Session expired or bootstrap context failed, clearing auth:', e);
+                authStore.clearSession();
+                appConfigStore.isLoaded = false;
+                return next({ name: 'login', query: to.fullPath !== '/' ? { redirect: to.fullPath } : undefined });
+            }
         }
     }
 
@@ -675,6 +682,13 @@ async function tenantGuard(to, from, next) {
         return next({ name: 'login', query: { redirect: to.fullPath } });
     }
 
+    // 5b. ROLE-01: opening "/" cold lands a till-only user (pos.access, no reports.view) on the POS. In-app
+    // links to the dashboard are untouched, and the redirect carries no toast.
+    if (to.path === DASHBOARD_PATH && from === START_LOCATION && authStore.isAuthenticated) {
+        const landing = landingPathFor(authStore, appConfigStore);
+        if (landing !== DASHBOARD_PATH) return next({ path: landing, replace: true });
+    }
+
     // 6. Permission / Role Check (plan gating via meta.feature is rendered by App.vue as a FeatureGate upsell)
     if (to.meta.permission && !authStore.hasPermission(to.meta.permission)) {
         notifyError(trans('common.no_access'));
@@ -682,6 +696,7 @@ async function tenantGuard(to, from, next) {
     }
 
     if (to.meta.permissionAny && !to.meta.permissionAny.some((permission) => authStore.hasPermission(permission))) {
+        notifyError(trans('common.no_access'));
         return next({ name: 'dashboard' });
     }
 

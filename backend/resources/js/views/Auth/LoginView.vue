@@ -224,6 +224,7 @@ import { useQuickLogin } from '../../Composables/Auth/useQuickLogin';
 import { AlertTriangle, Phone, Lock, LogIn, Sun, Moon, Fingerprint, RefreshCw } from 'lucide-vue-next';
 
 import { trans } from '../../helpers/trans';
+import { landingPathFor } from '../../helpers/landingPath';
 import { isCentralHost } from '../../helpers/platformHosts';
 
 const router = useRouter();
@@ -398,6 +399,6 @@ const completeLogin = async () => {
 
   // Redirect to the intended route or the tenant dashboard (the platform console signs in on
   // the admin host, never through this tenant login).
-  router.push(route.query.redirect || '/');
+  router.push(route.query.redirect || landingPathFor(authStore, appConfigStore));
 };
 </script>
