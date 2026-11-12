@@ -41,19 +41,34 @@ trait RunsConcurrencyWorkers
      */
     private function runWorkers(string $scenario, Tenant $tenant, array $payloads): array
     {
-        $script = base_path('tests/Support/concurrency-worker.php');
-        $database = $this->tenantDatabaseName($tenant);
+        $jobs = [];
+        foreach ($payloads as $payload) {
+            // A payload may pick its own scenario (checkout and update racing together).
+            $workerScenario = (string) ($payload['__scenario'] ?? $scenario);
+            unset($payload['__scenario']);
+            $jobs[] = ['tenant' => $tenant, 'scenario' => $workerScenario, 'payload' => $payload];
+        }
+
+        return $this->runWorkerJobs(base_path('tests/Support/concurrency-worker.php'), $jobs);
+    }
+
+    /**
+     * PERF-04: one process per job, each on ITS OWN tenant, all released together. Used with
+     * tests/Support/batch-worker.php to run several tenants' business days at the same time.
+     *
+     * @param  list<array{tenant: Tenant, scenario: string, payload: array<string, mixed>}>  $jobs
+     * @return list<array<string, mixed>>
+     */
+    private function runWorkerJobs(string $script, array $jobs): array
+    {
         $workers = [];
 
         try {
-            foreach ($payloads as $payload) {
-                // A payload may pick its own scenario (checkout and update racing together).
-                $workerScenario = (string) ($payload['__scenario'] ?? $scenario);
-                unset($payload['__scenario']);
+            foreach ($jobs as $job) {
                 $stderr = (string) tempnam(sys_get_temp_dir(), 'qa-worker-');
                 $pipes = [];
                 $process = proc_open(
-                    [PHP_BINARY, $script, $workerScenario, $database, base64_encode((string) json_encode($payload))],
+                    [PHP_BINARY, $script, $job['scenario'], $this->tenantDatabaseName($job['tenant']), base64_encode((string) json_encode($job['payload']))],
                     [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['file', $stderr, 'w']],
                     $pipes,
                     base_path(),

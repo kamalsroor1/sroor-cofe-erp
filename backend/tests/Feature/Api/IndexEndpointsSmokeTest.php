@@ -24,8 +24,10 @@ use Tests\TenantTestCase;
  * Adding a list endpoint: add its URI to TENANT_ROUTES or CENTRAL_ROUTES. A route in neither
  * list nor in NOT_COVERED fails test_every_list_route_is_listed_or_explicitly_excluded().
  *
- * Limit: the tenant is almost empty, so a column list inside an eager load
- * (`with('user:id,name')`) only runs for the tables seeded in setUp().
+ * PERF-04: the second tenant test runs the same list on a tenant filled by `tenant:seed-perf`
+ * (invoices, lines, vouchers, returns, purchases, expenses, movements over 3 branches), with
+ * a 12-month `from`/`to` range on the report endpoints and `X-Store-Id: all`, so the eager
+ * loads, grouped report SQL and date filters run over real rows on MySQL too.
  */
 #[Group('mysql')]
 final class IndexEndpointsSmokeTest extends TenantTestCase
@@ -155,6 +157,35 @@ final class IndexEndpointsSmokeTest extends TenantTestCase
         }
 
         $this->assertSame([], $failures, "Tenant list endpoints that did not answer 200:\n".implode("\n", $failures));
+    }
+
+    public function test_every_tenant_list_endpoint_answers_on_a_seeded_tenant_with_a_year_range(): void
+    {
+        $tenant = $this->createTenant();
+        $this->artisan('tenant:seed-perf', [
+            'tenant' => $tenant->getTenantKey(), '--invoices' => 120, '--items' => 20, '--stores' => 3,
+            '--days' => 365, '--customers' => 8, '--suppliers' => 3,
+        ])->assertExitCode(0);
+
+        $to = now()->toDateString();
+        $year = ['from' => now()->subDays(364)->toDateString(), 'to' => $to, 'date_from' => now()->subDays(364)->toDateString(), 'date_to' => $to];
+        $failures = [];
+
+        foreach ([$this->tenantHeaders($tenant), array_merge($this->tenantHeaders($tenant), ['X-Store-Id' => 'all'])] as $headers) {
+            foreach (self::TENANT_ROUTES as $uri => $query) {
+                $params = str_starts_with($uri, 'reports/') || in_array($uri, ['daily-journal', 'invoices', 'expenses', 'purchases', 'returns', 'payments'], true)
+                    ? $query + $year
+                    : $query;
+                $response = $this->getJson($this->urlFor($uri, $params), $headers);
+                // `all` is refused (403) by endpoints that need one concrete branch; never a 5xx.
+                if ($headers['X-Store-Id'] === 'all' && $response->getStatusCode() < 500) {
+                    continue;
+                }
+                $failures = [...$failures, ...$this->failureOf($uri.' [store '.$headers['X-Store-Id'].']', $response)];
+            }
+        }
+
+        $this->assertSame([], $failures, "List endpoints that did not answer 200 on a seeded tenant:\n".implode("\n", $failures));
     }
 
     public function test_every_central_list_endpoint_answers_a_super_admin_without_a_server_error(): void
