@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Support\Database\OnlineMigration;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -24,11 +25,8 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasTable('payments') && ! Schema::hasColumn('payments', 'return_id')) {
-            Schema::table('payments', function (Blueprint $table): void {
-                $table->foreignId('return_id')->nullable()->constrained('returns')->nullOnDelete();
-            });
-        }
+        // MIG-01: online column + FK (no table copy; the column is all NULL). Re-runnable.
+        OnlineMigration::addNullableForeignKey('payments', 'return_id', 'returns', 'set null');
     }
 
     public function down(): void

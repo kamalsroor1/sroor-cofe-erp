@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Support\Database\OnlineMigration;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -21,22 +22,21 @@ return new class extends Migration
             return;
         }
 
-        if (Schema::hasColumn('payments', 'invoice_id') && Schema::hasTable('invoices')) {
-            DB::table('payments')
-                ->whereNull('store_id')
-                ->whereNotNull('invoice_id')
-                ->whereExists(fn ($q) => $q->select(DB::raw('1'))->from('invoices')
-                    ->whereColumn('invoices.id', 'payments.invoice_id')->whereNotNull('invoices.store_id'))
-                ->update(['store_id' => DB::raw('(select invoices.store_id from invoices where invoices.id = payments.invoice_id)')]);
-        }
+        // MIG-01: id-range chunks, each its own short transaction (was one UPDATE over the whole table).
+        foreach ([['invoice_id', 'invoices'], ['purchase_id', 'purchases']] as [$column, $parent]) {
+            if (! Schema::hasColumn('payments', $column) || ! Schema::hasTable($parent)) {
+                continue;
+            }
 
-        if (Schema::hasColumn('payments', 'purchase_id') && Schema::hasTable('purchases')) {
-            DB::table('payments')
-                ->whereNull('store_id')
-                ->whereNotNull('purchase_id')
-                ->whereExists(fn ($q) => $q->select(DB::raw('1'))->from('purchases')
-                    ->whereColumn('purchases.id', 'payments.purchase_id')->whereNotNull('purchases.store_id'))
-                ->update(['store_id' => DB::raw('(select purchases.store_id from purchases where purchases.id = payments.purchase_id)')]);
+            OnlineMigration::forEachIdRange('payments', function (int $from, int $to) use ($column, $parent): void {
+                DB::table('payments')
+                    ->whereBetween('id', [$from, $to])
+                    ->whereNull('store_id')
+                    ->whereNotNull($column)
+                    ->whereExists(fn ($q) => $q->select(DB::raw('1'))->from($parent)
+                        ->whereColumn("{$parent}.id", "payments.{$column}")->whereNotNull("{$parent}.store_id"))
+                    ->update(['store_id' => DB::raw("(select {$parent}.store_id from {$parent} where {$parent}.id = payments.{$column})")]);
+            });
         }
     }
 

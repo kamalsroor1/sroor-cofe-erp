@@ -178,3 +178,13 @@ offline بالكامل: stubs لـ `php` و`mysql` و`sudo` و`curl` في أول
    بعدها: checklist البروفة في §5 (release تاني ← الـ backup قبل الـ migrate بيشتغل على القرص المحلي، rollback يدوي...).
 
 **7.7 الخروج من البروفة (قبل أول عميل):** [`secrets.md`](secrets.md) §2.1 — ضيف أسرار SMTP وTelegram وDrive ← امسح `RELEASE_REHEARSAL` ← tag جديد (`v0.1.0` مثلًا) لازم يعدّي الوضع الصارم.
+
+## 8. Migrations تقيلة على محل كبير (MIG-01 / MIG-02)
+
+- أي migration بتلمس `invoices` / `invoice_items` / `stock_movements` / `payments` / `store_stocks` لازم تستخدم `App\Support\Database\OnlineMigration`:
+  - إضافة عمود + FK: `OnlineMigration::addNullableForeignKey()` (عمود `ADD COLUMN` فوري، ثم FK بـ `foreign_key_checks=0` + `ALGORITHM=INPLACE, LOCK=NONE`). ممنوع `foreignId()->constrained()` على الجداول دي (بيعمل نسخ كامل للجدول ويوقّف الإدخال).
+  - backfill: `OnlineMigration::forEachIdRange()` (دفعات 2000 id، كل دفعة transaction قصيرة). ممنوع UPDATE واحد على الجدول كله.
+  - أي backfill بيلمس أرصدة المخزون: دفعات + `lockForUpdate` على الأصناف ثم `store_stocks` + كتابة نسبية (`quantity = quantity + ?`) + سطر `stock_movements` لكل فرق.
+- `withShortLockTimeout()` بتضبط `lock_wait_timeout=5` للجلسة وبتعيد المحاولة (1205/1213) وبترجّع القيمة القديمة.
+- النشر على محل كبير (أكتر من ~100 ألف فاتورة) في وقت هادي؛ بعد النشر شغّل `stock:report-drift` على كل المحلات وراجع أي فرق نُقل للفرع الرئيسي.
+- مثال لعدم الاعتماد على الذاكرة: فحص CI/lint يمنع `constrained()` على الجداول الكبيرة لسه متعملش (متابعة).

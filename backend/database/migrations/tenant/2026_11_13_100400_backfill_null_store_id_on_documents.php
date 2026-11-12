@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Support\Database\OnlineMigration;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -36,7 +37,10 @@ return new class extends Migration
                 continue;
             }
 
-            DB::table($table)->whereNull('store_id')->update(['store_id' => $storeId]);
+            // MIG-01: id-range chunks in short transactions instead of one UPDATE over the table.
+            OnlineMigration::forEachIdRange($table, function (int $from, int $to) use ($table, $storeId): void {
+                DB::table($table)->whereBetween('id', [$from, $to])->whereNull('store_id')->update(['store_id' => $storeId]);
+            });
         }
     }
 
