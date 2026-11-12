@@ -246,7 +246,10 @@ jobs:
     # Tag refs only (also for workflow_dispatch), in addition to the environment's tag rule.
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    # OPS-25: 30 minutes could not fit ~50 large shops. The tenant migrations run detached on the
+    # server (a timeout here never kills artisan mid-ALTER; a re-run attaches), and the wait
+    # inside deploy.sh is capped at 7200s (--tenant-migrate-max-wait), well below this limit.
+    timeout-minutes: 180
     environment: production
     steps:
       # Same commit as the artifact: provides render-env.sh, check-env.sh and
@@ -402,11 +405,16 @@ jobs:
       - name: Deploy (scripts/ops/deploy.sh on the server)
         env:
           ARTIFACT_SHA256: ${{ needs.build.outputs.sha256 }}
+          TENANT_TIMEOUT: ${{ vars.TENANT_MIGRATE_TIMEOUT_SECONDS || '900' }}
           ALLOW_NO_HEALTH_CHECKS: ${{ github.event_name == 'workflow_dispatch' && inputs.allow_no_health_checks && 'allow-no-health-checks' || 'strict' }}
         run: |
           set -euo pipefail
+          [[ "$TENANT_TIMEOUT" =~ ^[0-9]+$ ]] || { echo "::error::TENANT_MIGRATE_TIMEOUT_SECONDS must be a number"; exit 1; }
+          deploy_started=$SECONDS
+          # The elapsed time is recorded even when the deploy fails (reference time per shop count).
+          trap 'echo "deploy duration: $((SECONDS - deploy_started))s"; echo "deploy duration: $((SECONDS - deploy_started))s" >> "$GITHUB_STEP_SUMMARY"' EXIT
           [[ "$RELEASE_MODE" == "strict" || "$RELEASE_MODE" == "rehearsal" ]] || { echo "::error::RELEASE_MODE is not set"; exit 1; }
-          ssh -F "$SSH_CONFIG" sroor-vps bash -s -- "$APP_ROOT" "$INCOMING" "$GITHUB_SHA" "$ARTIFACT_SHA256" "$ALLOW_NO_HEALTH_CHECKS" "$RELEASE_MODE" <<'REMOTE'
+          ssh -F "$SSH_CONFIG" sroor-vps bash -s -- "$APP_ROOT" "$INCOMING" "$GITHUB_SHA" "$ARTIFACT_SHA256" "$ALLOW_NO_HEALTH_CHECKS" "$RELEASE_MODE" "$TENANT_TIMEOUT" <<'REMOTE'
           set -euo pipefail
           app_root="$1"
           incoming="$2"
@@ -414,10 +422,12 @@ jobs:
           sum="$4"
           health_mode="$5"
           release_mode="$6"
+          tenant_timeout="$7"
           # The upload (incl. both env files) never outlives this run.
           trap 'rm -rf "$incoming"' EXIT
           args=(--app-root "$app_root" --sha "$sha" --artifact "$incoming/release.tar.gz" --artifact-sha256 "$sum"
-            --deploy-env "$incoming/deploy.env" --env-file "$incoming/production.env" --php-version 8.5 --queue-mode horizon)
+            --deploy-env "$incoming/deploy.env" --env-file "$incoming/production.env" --php-version 8.5 --queue-mode horizon
+            --tenant-timeout "$tenant_timeout" --tenant-migrate-max-wait 7200)
           if [[ "$health_mode" == "allow-no-health-checks" ]]; then
             args+=(--allow-no-health-checks)
           fi

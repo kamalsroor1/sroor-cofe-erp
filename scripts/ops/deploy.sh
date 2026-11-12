@@ -21,7 +21,9 @@ set -euo pipefail
 #   -> per-table central grants (append-only audit)
 #   -> db:seed CentralPermissionsSeeder (operator roles/permissions, idempotent)
 #   -> db:seed PlansAndFeaturesSeeder (SaaS catalog: adds what is missing, never overwrites)
-#   -> tenants:migrate --force
+#   -> tenants:migrate-all (OPS-25: detached, one child process per tenant with a timeout,
+#      never stops at the first failing tenant, JSON status file, final report; any
+#      failed/timed-out tenant stops the release BEFORE the switch, see deploy-runbook.md)
 #   -> app-releases:relocate (copy + verify release binaries to the private disk;
 #      the public copy stays for the old release, idempotent)
 #   -> config/route/view/event cache -> smoke health:check from the new release
@@ -77,12 +79,14 @@ HEALTH_URL=""
 ALLOW_NO_HEALTH_CHECKS=0
 SKIP_PRE_MIGRATION_BACKUP=0
 ROLLBACK_ONLY=0
+TENANT_TIMEOUT=900
+TENANT_MAX_WAIT=7200
 RELEASE_MODE="strict"
 REHEARSAL_NOTES=()
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --app-root | --sha | --artifact | --artifact-sha256 | --deploy-env | --env-file | --php-version | --queue-mode | --keep | --health-url)
+        --app-root | --sha | --artifact | --artifact-sha256 | --deploy-env | --env-file | --php-version | --queue-mode | --keep | --health-url | --tenant-timeout | --tenant-migrate-max-wait)
             [[ $# -ge 2 ]] || usage
             case "$1" in
                 --app-root) APP_ROOT="$2" ;;
@@ -95,6 +99,8 @@ while [[ $# -gt 0 ]]; do
                 --queue-mode) QUEUE_MODE_ARG="$2" ;;
                 --keep) KEEP="$2" ;;
                 --health-url) HEALTH_URL="$2" ;;
+                --tenant-timeout) TENANT_TIMEOUT="$2" ;;
+                --tenant-migrate-max-wait) TENANT_MAX_WAIT="$2" ;;
             esac
             shift 2
             ;;
@@ -125,6 +131,8 @@ APP_ROOT="${APP_ROOT%/}"
 [[ "$PHP_VERSION_ARG" =~ ^[0-9]+\.[0-9]+$ ]] || die "--php-version must look like 8.5"
 [[ "$QUEUE_MODE_ARG" == "horizon" || "$QUEUE_MODE_ARG" == "worker" ]] || die "--queue-mode must be horizon or worker"
 [[ "$KEEP" =~ ^[0-9]+$ && "$KEEP" -ge 2 ]] || die "--keep must be a number >= 2"
+[[ "$TENANT_TIMEOUT" =~ ^[0-9]+$ && "$TENANT_TIMEOUT" -ge 10 ]] || die "--tenant-timeout must be seconds >= 10"
+[[ "$TENANT_MAX_WAIT" =~ ^[0-9]+$ && "$TENANT_MAX_WAIT" -ge 60 ]] || die "--tenant-migrate-max-wait must be seconds >= 60"
 if [[ "$ROLLBACK_ONLY" -eq 0 ]]; then
     [[ "$SHA" =~ ^[0-9a-f]{7,40}$ ]] || die "--sha must be a lowercase hex git sha"
     [[ -n "$ARTIFACT" ]] || die "--artifact is required"
@@ -527,8 +535,59 @@ info "php artisan db:seed --class=PlansAndFeaturesSeeder --force (missing catalo
 artisan "$BACKEND" db:seed --class=PlansAndFeaturesSeeder --force
 
 STAGE="migrate-tenants"
-info "php artisan tenants:migrate --force (any failing tenant stops the release)"
-artisan "$BACKEND" tenants:migrate --force
+# OPS-25: the tenant migrations run DETACHED (setsid + nohup) so a dropped SSH session or the
+# workflow timeout can never kill artisan in the middle of an ALTER. Progress is a JSON file,
+# the exit code of the run lands in a separate file. A re-run of the deploy ATTACHES to a run
+# that is still going instead of starting a second one. Old code keeps serving on the migrated
+# schema (expand/contract), so a failed tenant stops the release BEFORE the switch.
+TM_STATUS="$SHARED/tenant-migrate-status.json"
+TM_RC="$SHARED/tenant-migrate.rc"
+TM_PID="$SHARED/tenant-migrate.pid"
+TM_LOG="$SHARED/tenant-migrate.log"
+tm_pid_alive() {
+    [[ -s "$TM_PID" ]] && kill -0 "$(cat "$TM_PID")" 2>/dev/null
+}
+if tm_pid_alive; then
+    info "tenant migration run $(cat "$TM_PID") is still going (previous deploy): attaching to it"
+else
+    info "php artisan tenants:migrate-all (detached; per-tenant timeout ${TENANT_TIMEOUT}s; status: $TM_STATUS)"
+    rm -f "$TM_RC" "$TM_STATUS"
+    (
+        cd "$BACKEND"
+        # shellcheck disable=SC2016
+        setsid nohup bash -c '"$1" artisan tenants:migrate-all --force --no-interaction --timeout="$2" --status-file="$3" >"$4" 2>&1; echo $? >"$5"' \
+            _ "$PHP_BIN" "$TENANT_TIMEOUT" "$TM_STATUS" "$TM_LOG" "$TM_RC" </dev/null >/dev/null 2>&1 &
+        echo $! >"$TM_PID"
+    )
+fi
+tm_started=$SECONDS
+tm_last=""
+while [[ ! -s "$TM_RC" ]]; do
+    if ! tm_pid_alive && [[ ! -s "$TM_RC" ]]; then
+        sleep 2
+        [[ -s "$TM_RC" ]] && break
+        die "tenant migration process ended without an exit code (killed?). Re-run the deploy: migrations are idempotent. Log: $TM_LOG"
+    fi
+    if ((SECONDS - tm_started > TENANT_MAX_WAIT)); then
+        # Keep the release directory: the detached run still executes from it.
+        RELEASE_CREATED=0
+        warn "tenant migrations still running after ${TENANT_MAX_WAIT}s: NOT killed. Re-run the deploy later (it attaches). Status: $TM_STATUS"
+        die "tenant migrations exceeded --tenant-migrate-max-wait"
+    fi
+    if [[ -s "$TM_STATUS" ]]; then
+        tm_now="$(tr -d '\n ' <"$TM_STATUS" | grep -o '"done":[0-9]*,"counts"' || true)"
+        if [[ "$tm_now" != "$tm_last" ]]; then
+            tm_last="$tm_now"
+            info "tenant migrations progress: ${tm_now%,\"counts\"} (elapsed $((SECONDS - tm_started))s)"
+        fi
+    fi
+    sleep 5
+done
+TM_EXIT="$(cat "$TM_RC")"
+info "tenant migrations finished in $((SECONDS - tm_started))s (exit $TM_EXIT). Report:"
+sed 's/^/        /' "$TM_LOG" >&2 || true
+rm -f "$TM_PID"
+[[ "$TM_EXIT" == "0" ]] || die "tenants:migrate-all reported failed/timed-out tenants (see the report above). The other tenants ARE migrated; the new release was NOT activated. Fix the tenant(s) and re-run the deploy"
 
 # APP-3 (CTO Q9) / R1: release binaries are COPIED from the web-served public disk to the
 # private release disk (same relative path, SHA-256 verified, no DB change). The public
