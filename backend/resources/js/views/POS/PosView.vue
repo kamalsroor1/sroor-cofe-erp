@@ -19,6 +19,8 @@ import POSQuickReturnModal from '../../Components/POS/POSQuickReturnModal.vue';
 import POSWeightPickerModal from '../../Components/POS/POSWeightPickerModal.vue';
 import POSShiftGate from '../../Components/POS/POSShiftGate.vue';
 import POSShiftPanel from '../../Components/POS/POSShiftPanel.vue';
+import ShiftClosedResultModal from '../../Components/DailyJournal/ShiftClosedResultModal.vue';
+import ShiftZReportPrint from '../../Components/DailyJournal/ShiftZReportPrint.vue';
 import { usePosTerminal } from '../../Composables/POS/usePosTerminal';
 import { useCompactViewport } from '../../Composables/useMediaQuery';
 
@@ -188,6 +190,7 @@ const {
             :error-message="shift.errorMessage.value"
             @update:opening-cash="shift.setOpeningCash"
             @submit="shift.submitOpen"
+            @back="shift.leaveGate"
           />
         </div>
       </template>
@@ -276,12 +279,14 @@ const {
       :show="shift.showPanel.value"
       :shift="catalog.activeShift.value"
       :metrics="catalog.shiftMetrics.value"
+      :expected-cash="shift.expectedCash.value"
       :opening-cash="shift.openingCash.value"
       :counted-cash="shift.countedCash.value"
       :can-manage="shift.canManageShift.value"
       :is-submitting="shift.isSubmitting.value"
       :is-report-loading="shift.isReportLoading.value"
       :report-failed="shift.reportFailed.value"
+      :report-error="shift.reportError.value"
       :error-message="shift.errorMessage.value"
       @close="shift.closePanel"
       @refresh="shift.refreshReport"
@@ -290,6 +295,18 @@ const {
       @submit-open="shift.submitOpen"
       @submit-close="shift.submitClose"
     />
+
+    <ShiftClosedResultModal
+      :show="shift.zPrint.showClosedResult"
+      :report="shift.zPrint.closedReport"
+      :loading="shift.zPrint.closedLoading"
+      :failed="shift.zPrint.closedFailed"
+      :error-message="shift.zPrint.closedErrorMessage"
+      @close="shift.zPrint.dismissClosedResult"
+      @print="shift.printClosedReport"
+      @retry="shift.retryClosedReport"
+    />
+    <ShiftZReportPrint :report="shift.zPrint.zReport" />
 
     <POSShortcutsModal :show="showShortcutsHelp" @close="showShortcutsHelp = false" />
   </div>

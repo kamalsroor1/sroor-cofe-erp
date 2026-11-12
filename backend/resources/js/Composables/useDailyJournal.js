@@ -1,13 +1,13 @@
-import { ref, reactive, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 import { businessToday } from './useBusinessDate';
 import { normalize } from '../helpers/decimal';
+import { isValidCountedCash } from '../helpers/shiftCash';
+import { useShiftCloseFigures } from './useShiftCloseFigures';
+import { useZReportPrint } from './useZReportPrint';
 import { isOwnShiftJournal, canPrintJournal } from '../helpers/journalScope';
-import { confirmDialog } from '../helpers/alert';
-
-const Z_PRINT_FALLBACK_MS = 60000;
 
 export function useDailyJournal() {
     const { t } = useTrans();
@@ -22,7 +22,8 @@ export function useDailyJournal() {
     const activeShift = ref(null);
     const isOwnShiftScope = ref(false);
     const canPrint = ref(false);
-    const zReport = ref(null);
+    const closeFigures = useShiftCloseFigures();
+    const zPrint = useZReportPrint();
     const summary = ref({
         total_sales: 0,
         cash_sales: 0,
@@ -61,6 +62,8 @@ export function useDailyJournal() {
         payment_method: 'cash',
         notes: '',
     });
+
+    let lastClosedShiftId = null;
 
     const fetchDailyJournal = async () => {
         isLoading.value = true;
@@ -127,27 +130,27 @@ export function useDailyJournal() {
     };
 
     const openCloseShiftModal = () => {
-        const expected = summary.value?.expected_cash_in_drawer;
-        // Expected cash is withheld from a cashier: leave the counted-cash field empty instead of pre-filling 0.
-        closeShiftForm.actual_cash_balance = expected === null || expected === undefined ? '' : normalize(expected);
+        // The counted field starts empty on purpose (blind count): the cashier types what is in the drawer.
+        closeShiftForm.actual_cash_balance = '';
         closeShiftForm.notes = '';
         showCloseShiftModal.value = true;
+        // The expected cash is the server's figure for THIS shift, never the day's journal total.
+        closeFigures.load();
     };
 
     const submitCloseShift = async () => {
-        if (!activeShift.value) return;
-        const shiftIdBeforeClose = activeShift.value.id;
+        if (!activeShift.value || closeFigures.isLoading.value || closeFigures.failed.value) return;
+        if (!isValidCountedCash(closeShiftForm.actual_cash_balance)) return;
+        const shiftIdBeforeClose = closeFigures.shiftId.value ?? activeShift.value.id;
         isSubmitting.value = true;
         let closedShiftId;
-        let closeMessage;
         try {
             const response = await api.post('/shifts/close', {
                 shift_id: shiftIdBeforeClose,
-                actual_cash_balance: closeShiftForm.actual_cash_balance,
+                actual_cash_balance: normalize(closeShiftForm.actual_cash_balance),
                 notes: closeShiftForm.notes,
             });
             closedShiftId = response.data?.data?.id ?? shiftIdBeforeClose;
-            closeMessage = response.data?.message || t('treasury.shift_closed_success');
             showCloseShiftModal.value = false;
         } catch (error) {
             Swal.fire({
@@ -160,16 +163,14 @@ export function useDailyJournal() {
             isSubmitting.value = false;
         }
 
+        // The close succeeded: show the final Z report; a failed report fetch is handled inside the dialog.
+        lastClosedShiftId = closedShiftId;
+        zPrint.presentClosedShift(closedShiftId);
         await fetchDailyJournal();
-        const wantsPrint = await confirmDialog({
-            title: t('common.success'),
-            text: closeMessage,
-            icon: 'success',
-            confirmButtonText: t('treasury.print_z_report'),
-            cancelButtonText: t('common.close'),
-        });
-        if (wantsPrint) await printShiftZReport(closedShiftId);
     };
+
+    const retryClosedReport = () => zPrint.presentClosedShift(lastClosedShiftId);
+    const printClosedReport = () => zPrint.printReport(zPrint.closedReport.value);
 
     const submitExpense = async () => {
         isSubmitting.value = true;
@@ -201,61 +202,7 @@ export function useDailyJournal() {
         }
     };
 
-    let endPrintMode = null;
-
-    const finishPrintMode = () => {
-        if (!endPrintMode) return;
-        const end = endPrintMode;
-        endPrintMode = null;
-        end();
-    };
-
-    const startPrintMode = () => {
-        finishPrintMode();
-        document.body.classList.remove('print-a4-mode', 'print-thermal-mode');
-        document.body.classList.add('print-z-report-mode');
-
-        const mql = typeof window.matchMedia === 'function' ? window.matchMedia('print') : null;
-        const onMediaChange = (event) => {
-            if (!event.matches) finishPrintMode();
-        };
-        const fallbackTimer = setTimeout(finishPrintMode, Z_PRINT_FALLBACK_MS);
-
-        window.addEventListener('afterprint', finishPrintMode, { once: true });
-        mql?.addEventListener?.('change', onMediaChange);
-
-        endPrintMode = () => {
-            clearTimeout(fallbackTimer);
-            window.removeEventListener('afterprint', finishPrintMode);
-            mql?.removeEventListener?.('change', onMediaChange);
-            document.body.classList.remove('print-z-report-mode');
-            zReport.value = null;
-        };
-    };
-
-    const printShiftZReport = async (shiftId) => {
-        if (!shiftId) return;
-        try {
-            const response = await api.get(`/shifts/${shiftId}/z-report`);
-            const report = response.data?.report;
-            if (!report) return;
-            zReport.value = report;
-            await nextTick();
-            startPrintMode();
-            setTimeout(() => window.print(), 150);
-        } catch (error) {
-            finishPrintMode();
-            Swal.fire({
-                icon: 'error',
-                title: t('common.error'),
-                text: error.userMessage || t('common.error'),
-            });
-        }
-    };
-
-    const printActiveZReport = () => printShiftZReport(activeShift.value?.id);
-
-    onBeforeUnmount(finishPrintMode);
+    const printActiveZReport = () => zPrint.printShiftZReport(activeShift.value?.id);
 
     onMounted(() => {
         fetchDailyJournal();
@@ -271,7 +218,11 @@ export function useDailyJournal() {
         activeShift,
         isOwnShiftScope,
         canPrint,
-        zReport,
+        zReport: zPrint.zReport,
+        closeFigures: reactive(closeFigures),
+        closedResult: reactive(zPrint),
+        retryClosedReport,
+        printClosedReport,
         summary,
         invoices,
         expenses,

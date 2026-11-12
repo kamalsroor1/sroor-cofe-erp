@@ -70,13 +70,28 @@
     <CloseShiftModal
       :show="showCloseShiftModal"
       :shift-number="activeShift?.shift_number"
-      :opening-cash-balance="activeShift?.opening_cash_balance"
-      :expected-cash-in-drawer="summary?.expected_cash_in_drawer"
+      :opening-cash-balance="closeFigures.openingCash ?? activeShift?.opening_cash_balance"
+      :expected-cash-in-drawer="closeFigures.expectedCash"
+      :loading="closeFigures.isLoading"
+      :failed="closeFigures.failed"
+      :error-message="closeFigures.errorMessage"
       :form="closeShiftForm"
       :submitting="isSubmitting"
       @close="showCloseShiftModal = false"
+      @retry="openCloseShiftModal"
       @submit="submitCloseShift"
       @update:field="updateCloseShiftField"
+    />
+
+    <ShiftClosedResultModal
+      :show="closedResult.showClosedResult"
+      :report="closedResult.closedReport"
+      :loading="closedResult.closedLoading"
+      :failed="closedResult.closedFailed"
+      :error-message="closedResult.closedErrorMessage"
+      @close="closedResult.dismissClosedResult"
+      @print="printClosedReport"
+      @retry="retryClosedReport"
     />
 
     <ShiftZReportPrint :report="zReport" />
@@ -105,6 +120,7 @@ import DailyJournalMetricsGrid from '../../Components/DailyJournal/DailyJournalM
 import DailyJournalTabs from '../../Components/DailyJournal/DailyJournalTabs.vue';
 import OpenShiftModal from '../../Components/DailyJournal/OpenShiftModal.vue';
 import ShiftZReportPrint from '../../Components/DailyJournal/ShiftZReportPrint.vue';
+import ShiftClosedResultModal from '../../Components/DailyJournal/ShiftClosedResultModal.vue';
 import CloseShiftModal from '../../Components/DailyJournal/CloseShiftModal.vue';
 import QuickExpenseModal from '../../Components/DailyJournal/QuickExpenseModal.vue';
 import { useDailyJournal } from '../../Composables/useDailyJournal';
@@ -122,6 +138,10 @@ const {
   isOwnShiftScope,
   canPrint,
   zReport,
+  closeFigures,
+  closedResult,
+  retryClosedReport,
+  printClosedReport,
   summary,
   invoices,
   expenses,
@@ -146,7 +166,9 @@ const { t } = useTrans();
 const { canAccessPath } = useRoutePermission();
 // Creating an expense needs expenses.manage (and the plan feature): same rule as opening the Expenses screen.
 const canRecordExpense = computed(() => canAccessPath('/expenses'));
-const canCloseShift = computed(() => !hasError.value && !isLoading.value && Boolean(activeShift.value));
+// Stays mounted while the journal reloads (date change, retry): a button that unmounts and remounts under the
+// finger swallows the first tap, so only the missing shift or a failed load hides it.
+const canCloseShift = computed(() => !hasError.value && Boolean(activeShift.value));
 const headerActions = computed(() => [
   {
     key: 'expense',

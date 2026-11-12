@@ -16,3 +16,15 @@ export function drawerDifference(actual, expected) {
     const amount = dSub(actual, expected);
     return { amount, sign: dCmp(amount, '0') };
 }
+
+/**
+ * True when the counted-cash field holds a usable amount: typed, numeric and not negative, at most 3 decimals (money is DECIMAL(12,3)).
+ * The counted field starts empty (blind count), so an empty value is never valid.
+ *
+ * @param {string|number|null|undefined} value
+ * @returns {boolean}
+ */
+export function isValidCountedCash(value) {
+    if (value === null || value === undefined) return false;
+    return /^(\d+(\.\d{0,3})?|\.\d{1,3})$/.test(String(value).trim());
+}

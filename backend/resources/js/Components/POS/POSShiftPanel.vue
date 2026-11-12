@@ -6,18 +6,21 @@ import BaseButton from '../Common/BaseButton.vue';
 import POSShiftOpenForm from './POSShiftOpenForm.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { hasMetric } from '../../helpers/dashboardMetrics';
+import { isValidCountedCash } from '../../helpers/shiftCash';
 import { visibleRows } from '../../helpers/journalScope';
 
 const props = defineProps({
   show: { type: Boolean, default: false },
   shift: { type: Object, default: null },
   metrics: { type: Object, default: null },
+  expectedCash: { type: [String, Number], default: null },
   openingCash: { type: String, default: '0' },
   countedCash: { type: String, default: '' },
   canManage: { type: Boolean, default: false },
   isSubmitting: { type: Boolean, default: false },
   isReportLoading: { type: Boolean, default: false },
   reportFailed: { type: Boolean, default: false },
+  reportError: { type: String, default: '' },
   errorMessage: { type: String, default: '' },
 });
 
@@ -89,14 +92,14 @@ const rows = computed(() => {
         </div>
 
         <p v-if="reportFailed" class="text-sm font-bold text-rose-600 dark:text-rose-400" role="alert">
-          {{ $t('pos.shift_report_failed') }}
+          {{ reportError || $t('pos.shift_report_failed') }}
         </p>
 
         <div v-if="isReportLoading && !metrics" class="space-y-2" aria-busy="true">
           <div v-for="n in 6" :key="n" class="h-8 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
         </div>
         <p
-          v-else-if="metrics && rows.length === 0 && !hasMetric(metrics.expected_cash_balance)"
+          v-else-if="metrics && rows.length === 0 && !hasMetric(expectedCash)"
           class="text-sm font-bold text-slate-500 dark:text-slate-400"
           data-testid="pos-shift-report-hidden"
         >
@@ -109,10 +112,13 @@ const rows = computed(() => {
               {{ formatMoney(row.value) }}
             </dd>
           </div>
-          <div v-if="hasMetric(metrics.expected_cash_balance)" class="flex items-center justify-between py-3 text-base">
+          <div
+            v-if="!isReportLoading && hasMetric(expectedCash)"
+            class="flex items-center justify-between py-3 text-base"
+          >
             <dt class="font-black text-slate-900 dark:text-white">{{ $t('pos.shift_report_expected') }}</dt>
             <dd class="font-mono font-black text-emerald-600 dark:text-emerald-400" dir="ltr">
-              {{ formatMoney(metrics.expected_cash_balance) }} {{ currencyLabel }}
+              {{ formatMoney(expectedCash) }} {{ currencyLabel }}
             </dd>
           </div>
         </dl>
@@ -134,6 +140,9 @@ const rows = computed(() => {
               @input="emit('update:countedCash', $event.target.value)"
             />
           </div>
+          <p v-if="!isValidCountedCash(countedCash)" class="text-xs font-bold text-slate-500 dark:text-slate-400">
+            {{ $t('treasury.counted_cash_required') }}
+          </p>
           <p class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('pos.shift_close_warning') }}</p>
           <p v-if="errorMessage" class="text-sm font-bold text-rose-600 dark:text-rose-400" role="alert">
             {{ errorMessage }}
@@ -144,7 +153,7 @@ const rows = computed(() => {
             size="lg"
             class="w-full min-h-[48px]"
             :loading="isSubmitting"
-            :disabled="countedCash === ''"
+            :disabled="isReportLoading || reportFailed || !isValidCountedCash(countedCash)"
             data-testid="pos-shift-close"
             @click="emit('submit-close')"
           >

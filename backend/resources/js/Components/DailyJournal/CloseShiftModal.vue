@@ -1,8 +1,20 @@
 <template>
   <AppModal :show="show" :title="`${$t('treasury.close_shift')} - ${shiftNumber || ''}`" @close="$emit('close')">
-    <form @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
+    <form @submit.prevent="onSubmit" class="space-y-4 font-tajawal">
+      <div v-if="loading" class="space-y-2" aria-busy="true" data-testid="close-shift-loading">
+        <div class="h-5 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
+        <div class="h-5 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
+      </div>
+
+      <div v-else-if="failed" class="space-y-3" role="alert" data-testid="close-shift-error">
+        <p class="text-sm font-bold text-rose-600 dark:text-rose-400">{{ errorMessage }}</p>
+        <BaseButton type="button" variant="secondary" size="md" class="min-h-[44px]" @click="$emit('retry')">
+          {{ $t('common.retry') }}
+        </BaseButton>
+      </div>
+
       <div
-        v-if="hasOpening || hasExpected"
+        v-else-if="hasOpening || hasExpected"
         class="p-3.5 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2"
       >
         <div v-if="hasOpening" class="flex items-center justify-between text-xs">
@@ -28,6 +40,8 @@
         @update:model-value="$emit('update:field', 'actual_cash_balance', $event)"
         :label="$t('treasury.actual_counted_cash_prompt')"
         :required="true"
+        :disabled="loading || failed"
+        :hint="canSubmit ? '' : $t('treasury.counted_cash_required')"
         :decimals="3"
         :suffix="currencyLabel"
         class="text-emerald-500 dark:text-emerald-400 text-lg font-bold"
@@ -62,6 +76,8 @@
           variant="primary"
           size="md"
           :loading="submitting"
+          :disabled="!canSubmit"
+          data-testid="close-shift-confirm"
           class="font-black shadow-theme-primary shadow-lg"
         >
           {{ $t('treasury.confirm_close_shift_btn') }}
@@ -79,7 +95,7 @@ import BaseNumberInput from '../Form/BaseNumberInput.vue';
 import BaseButton from '../Common/BaseButton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
-import { drawerDifference } from '../../helpers/shiftCash';
+import { drawerDifference, isValidCountedCash } from '../../helpers/shiftCash';
 import { hasMetric } from '../../helpers/dashboardMetrics';
 
 const { formatMoney, currencyLabel } = useFormatters();
@@ -92,14 +108,28 @@ const props = defineProps({
   expectedCashInDrawer: { type: [String, Number], default: null },
   form: { type: Object, default: () => ({}) },
   submitting: { type: Boolean, default: false },
+  loading: { type: Boolean, default: false },
+  failed: { type: Boolean, default: false },
+  errorMessage: { type: String, default: '' },
 });
 
-defineEmits(['close', 'submit', 'update:field']);
+const emit = defineEmits(['close', 'submit', 'update:field', 'retry']);
 
 const hasOpening = computed(() => hasMetric(props.openingCashBalance));
 const hasExpected = computed(() => hasMetric(props.expectedCashInDrawer));
 
-const diff = computed(() => drawerDifference(props.form.actual_cash_balance, props.expectedCashInDrawer));
+const canSubmit = computed(() => !props.loading && !props.failed && isValidCountedCash(props.form.actual_cash_balance));
+
+// Preview only once an amount was typed and the server gave the expected cash of this shift.
+const diff = computed(() =>
+  props.loading || props.failed || !isValidCountedCash(props.form.actual_cash_balance)
+    ? null
+    : drawerDifference(props.form.actual_cash_balance, props.expectedCashInDrawer)
+);
+
+const onSubmit = () => {
+  if (canSubmit.value) emit('submit');
+};
 
 const diffClass = computed(() => {
   if (diff.value?.sign === 0) return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400';

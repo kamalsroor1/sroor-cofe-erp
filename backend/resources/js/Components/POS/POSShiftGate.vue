@@ -9,7 +9,7 @@ defineProps({
   errorMessage: { type: String, default: '' },
 });
 
-const emit = defineEmits(['update:openingCash', 'submit']);
+const emit = defineEmits(['update:openingCash', 'submit', 'back']);
 </script>
 
 <template>
@@ -40,6 +40,15 @@ const emit = defineEmits(['update:openingCash', 'submit']);
         @update:opening-cash="emit('update:openingCash', $event)"
         @submit="emit('submit')"
       />
+
+      <button
+        type="button"
+        class="w-full min-h-[44px] px-4 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-bold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+        data-testid="pos-shift-gate-back"
+        @click="emit('back')"
+      >
+        {{ $t('common.back') }}
+      </button>
     </div>
   </div>
 </template>
