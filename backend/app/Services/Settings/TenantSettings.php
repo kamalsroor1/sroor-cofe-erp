@@ -275,6 +275,23 @@ final class TenantSettings
     }
 
     /**
+     * OPS-24: hours a shift may stay open before the "open too long" alert (setting
+     * `overdue_shift_alert_hours`, 1..720, default 24). Invalid stored values = default.
+     */
+    public function overdueShiftAlertHours(): int
+    {
+        $value = trim((string) Setting::get('overdue_shift_alert_hours', ''));
+
+        if (preg_match('/^\d{1,3}$/', $value) !== 1) {
+            return 24;
+        }
+
+        $hours = (int) $value;
+
+        return $hours >= 1 && $hours <= 720 ? $hours : 24;
+    }
+
+    /**
      * SET-02: idle minutes before the SPA lock screen; 0 = off. Invalid stored values = off.
      */
     public function posIdleLockMinutes(): int

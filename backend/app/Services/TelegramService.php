@@ -300,14 +300,16 @@ class TelegramService
     /**
      * Send alert for cash shifts open for more than 24 hours.
      */
-    public function sendOverdueShiftNotification(bool $previewSample = false): array
+    public function sendOverdueShiftNotification(bool $previewSample = false, ?int $hours = null, ?array $onlyShiftIds = null): array
     {
         // Instant compared with a stored timestamp: storage timezone, not the tenant clock.
-        $threshold = now()->subHours(24);
+        // OPS-24: the limit is the shop's setting; $onlyShiftIds narrows to shifts not alerted yet.
+        $threshold = now()->subHours($hours ?? 24);
 
         $overdueShifts = CashShift::with(['user', 'store'])
             ->where('status', 'open')
             ->where('opened_at', '<=', $threshold)
+            ->when($onlyShiftIds !== null, fn ($q) => $q->whereIn('id', $onlyShiftIds))
             ->get();
 
         if ($overdueShifts->isEmpty()) {

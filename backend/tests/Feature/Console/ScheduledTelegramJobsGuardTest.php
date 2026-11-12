@@ -31,9 +31,7 @@ final class ScheduledTelegramJobsGuardTest extends TestCase
     public static function telegramCommands(): array
     {
         return [
-            'daily summary' => ['notify:daily-summary'],
             'low stock' => ['notify:low-stock'],
-            'overdue shifts' => ['notify:overdue-shifts'],
         ];
     }
 
@@ -42,6 +40,8 @@ final class ScheduledTelegramJobsGuardTest extends TestCase
     {
         return [
             'pulse clear' => ['pulse:clear'],
+            // OPS-24: per-tenant daily summary + overdue-shift alert, never gated by the central flag.
+            'tenant telegram alerts' => ['notify:dispatch-tenant-alerts'],
             'tenant backups' => ['backup:tenants'],
             'file backups' => ['backup:run --only-files'],
             'health check' => ['health:check'],
@@ -87,6 +87,12 @@ final class ScheduledTelegramJobsGuardTest extends TestCase
         config(['services.telegram.scheduled_jobs_enabled' => false]);
 
         $this->assertTrue($this->singleEvent($command)->filtersPass($this->app));
+    }
+
+    public function test_central_summary_and_overdue_commands_are_no_longer_scheduled(): void
+    {
+        $this->assertSame([], $this->eventsFor('notify:daily-summary'));
+        $this->assertSame([], $this->eventsFor('notify:overdue-shifts'));
     }
 
     public function test_telegram_database_backup_is_removed(): void

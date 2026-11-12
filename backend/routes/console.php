@@ -30,25 +30,25 @@ Schedule::command('queue:restart')
 Schedule::command('pulse:clear --force')
     ->weekly();
 
-// Telegram jobs (#4-#6) run in central context. They are DISABLED by default
-// (services.telegram.scheduled_jobs_enabled / TELEGRAM_SCHEDULED_JOBS_ENABLED)
-// until they are tenant-aware (OPS-10). The check runs at schedule time, so the
-// entries stay registered and config:cache is respected.
+// Telegram jobs. OPS-24: the daily summary (#4) and the overdue-shift alert (#6) now run PER
+// TENANT through one central command: it enters each provisioned tenant and queues a job only
+// when due (summary: after the shop's business day ended; overdue: once per shift). Before, they
+// ran in the central context where invoices / cash_shifts do not exist and nothing was ever sent.
+// A failing tenant is isolated; any failure is logged and reported by onFailure.
+// Low stock (#5) is still central and gated until it is tenant-aware (OPS-10).
 $telegramScheduledJobsEnabled = static fn (): bool => (bool) config('services.telegram.scheduled_jobs_enabled', false);
 
-// 4. Send daily EOD business summary report to Telegram at 11:59 PM (disabled by default)
-Schedule::command('notify:daily-summary')
-    ->dailyAt('23:59')
-    ->when($telegramScheduledJobsEnabled);
+// 4 + 6. Per-tenant daily summary and overdue-shift alert, checked every 15 minutes.
+Schedule::command('notify:dispatch-tenant-alerts')
+    ->everyFifteenMinutes()
+    ->withoutOverlapping(10)
+    ->onFailure(static function (): void {
+        \Illuminate\Support\Facades\Log::critical('notify:dispatch-tenant-alerts failed: at least one shop got no Telegram alert.');
+    });
 
 // 5. Send daily low stock notification to Telegram at 09:00 AM (disabled by default)
 Schedule::command('notify:low-stock')
     ->dailyAt('09:00')
-    ->when($telegramScheduledJobsEnabled);
-
-// 6. Check and alert for overdue open shifts to Telegram every 2 hours (disabled by default)
-Schedule::command('notify:overdue-shifts')
-    ->everyTwoHours()
     ->when($telegramScheduledJobsEnabled);
 
 // 7. OPS-5: encrypted backup of the central DB + every tenant DB to the backup disks

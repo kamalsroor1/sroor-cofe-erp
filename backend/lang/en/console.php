@@ -424,5 +424,10 @@ return [
         'dry_run' => 'Dry run: checked :checked closed shift(s) in :total tenant(s); :changed would change. Nothing was written.',
         'done' => 'Checked :checked closed shift(s) in :total tenant(s); :changed updated.',
         'mismatches' => ':count shift(s) whose lines do not add up to the stored expected balance (data edited after the close; expected left unchanged): :shifts',
+
+    'telegram_alerts' => [
+        'description' => 'Queue the daily Telegram summary and the overdue-shift alert for every provisioned shop (when due).',
+        'tenant_failed' => 'Telegram alerts failed for tenant :tenant_id (see the log).',
+        'summary' => 'Telegram alerts: :checked shop(s) checked, :dispatched job(s) queued, :failed failed.',
     ],
 ];
