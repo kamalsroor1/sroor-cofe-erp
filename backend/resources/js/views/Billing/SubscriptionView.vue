@@ -11,10 +11,12 @@ import BillingSkeleton from '@/Components/Billing/BillingSkeleton.vue';
 import SubscriptionAddonsList from '@/Components/Billing/SubscriptionAddonsList.vue';
 import SubscriptionPlanCard from '@/Components/Billing/SubscriptionPlanCard.vue';
 import SubscriptionUsageList from '@/Components/Billing/SubscriptionUsageList.vue';
+import { useFormatters } from '@/Composables/useFormatters';
 import { useSubscription } from '@/Composables/useSubscription';
 
-const { subscription, invoices, isLoading, error, load, renew, refreshInvoices, submitPayment } = useSubscription();
+const { subscription, invoices, isLoading, error, load, renew, refreshInvoices, submitPayment, cancelPayment } = useSubscription();
 
+const { formatMoney } = useFormatters();
 const renewing = ref(false);
 const requestOpen = ref(false);
 const detailsId = ref(null);
@@ -44,6 +46,10 @@ const onPay = (invoice) => {
   payId.value = invoice.id;
 };
 
+const onCancelPayment = async (payment) => {
+  if (await cancelPayment(payment.id)) detailsId.value = null;
+};
+
 onMounted(load);
 </script>
 
@@ -58,6 +64,17 @@ onMounted(load);
     <BillingSkeleton v-if="isLoading" />
     <ErrorState v-else-if="error" :message="error" :retry-label="$t('subscription.billing.page.retry')" @retry="load" />
     <template v-else-if="subscription">
+      <div
+        v-if="subscription.partial_payment"
+        class="rounded-2xl border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 p-3 text-xs font-bold text-amber-800 dark:text-amber-300"
+      >
+        {{
+          $t('subscription.billing.partial_banner', {
+            paid: formatMoney(subscription.partial_payment.paid),
+            remaining: formatMoney(subscription.partial_payment.remaining),
+          })
+        }}
+      </div>
       <SubscriptionPlanCard :data="subscription" :busy="renewing" @renew="onRenew" @change-plan="requestOpen = true" />
       <PlanChangeSection
         v-model:open="requestOpen"
@@ -77,6 +94,7 @@ onMounted(load);
       :invoice="detailsInvoice"
       @close="detailsId = null"
       @pay="onPay"
+      @cancel-payment="onCancelPayment"
     />
     <BillingPaymentModal
       :show="!!payInvoice"

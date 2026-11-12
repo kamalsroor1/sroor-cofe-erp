@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Billing\CancelOwnBillingPaymentAction;
 use App\Actions\Billing\GetTenantSubscriptionAction;
 use App\Actions\Billing\ListOwnBillingInvoicesAction;
 use App\Actions\Billing\RequestRenewalInvoiceAction;
@@ -37,6 +38,7 @@ final class BillingController extends Controller
         private readonly ShowOwnBillingInvoiceAction $showAction,
         private readonly SubmitManualPaymentAction $submitAction,
         private readonly RequestRenewalInvoiceAction $renewalAction,
+        private readonly CancelOwnBillingPaymentAction $cancelPaymentAction,
     ) {}
 
     public function subscription(): JsonResponse
@@ -76,6 +78,15 @@ final class BillingController extends Controller
             ->additional(['success' => true, 'message' => __('billing.messages.payment_submitted')])
             ->response()
             ->setStatusCode(201);
+    }
+
+    public function cancelPayment(int $id): JsonResponse
+    {
+        $payment = $this->cancelPaymentAction->execute((string) $this->tenant()->getKey(), $id);
+
+        return (new BillingPaymentResource($payment))
+            ->additional(['success' => true, 'message' => __('billing.messages.payment_cancelled')])
+            ->response();
     }
 
     public function renewalInvoice(RequestRenewalInvoiceRequest $request): JsonResponse

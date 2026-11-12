@@ -636,6 +636,13 @@ async function tenantGuard(to, from, next) {
     const appConfigStore = useAppConfigStore();
 
     // 1. If user is marked authenticated, ensure profile and system context load cleanly
+    // SELL-07: a shop suspended for non-payment only reaches /billing (every other API answers 403).
+    if (authStore.isAuthenticated && authStore.subscriptionBlocked) {
+        document.title = trans('nav.page_titles.billing_index');
+        if (to.name === 'billing.index') return next();
+        return next({ name: 'billing.index', replace: true });
+    }
+
     if (authStore.isAuthenticated && !appConfigStore.isLoaded) {
         try {
             await appConfigStore.fetchBootstrapContext();

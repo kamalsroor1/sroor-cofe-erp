@@ -296,6 +296,8 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
                 ->whereNumber('id')
                 ->middleware('throttle:billing-receipt-upload')
                 ->name('api.billing.invoices.payments.store');
+            Route::post('/payments/{id}/cancel', [BillingController::class, 'cancelPayment'])->whereNumber('id')
+                ->name('api.billing.payments.cancel');
             Route::post('/renewal-invoice', [BillingController::class, 'renewalInvoice'])->middleware('throttle:billing-renewal-invoice')
                 ->name('api.billing.renewal_invoice');
             // Plan change / add-on requests go through support (owner decision); both POSTs stay open to a read-only shop.

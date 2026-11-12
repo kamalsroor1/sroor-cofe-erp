@@ -8,6 +8,7 @@ use App\Contracts\TenantFeatureManagerInterface;
 use App\Enums\Billing\AddonType;
 use App\Enums\Billing\BillingCycle;
 use App\Enums\Billing\BillingInvoiceStatus;
+use App\Enums\Billing\BillingPaymentStatus;
 use App\Enums\Billing\PlanChangeRequestKind;
 use App\Enums\LimitResource;
 use App\Exceptions\Billing\AddonPricingException;
@@ -62,10 +63,17 @@ final class GetTenantSubscriptionAction
 
         $end = $decision->effectiveStatus->value === 'trial' ? $tenant->trial_ends_at : $tenant->subscription_ends_at;
 
+        // SELL-07: one status for the screen. The subscription row says "trialing" while the shop
+        // is read-only; show the shop's derived status instead of contradicting it.
+        $subscriptionStatus = $subscription === null ? null : ['value' => $subscription->status->value, 'label' => $subscription->status->label()];
+        if ($subscriptionStatus !== null && $decision->effectiveStatus->value !== 'trial' && $subscription?->status->value === 'trialing') {
+            $subscriptionStatus = ['value' => $decision->effectiveStatus->value, 'label' => $decision->effectiveStatus->label()];
+        }
+
         return [
             'plan' => $plan === null ? null : ['id' => (int) $plan->getKey(), 'name' => $plan->name, 'code' => $plan->slug],
             'subscription' => [
-                'status' => $subscription === null ? null : ['value' => $subscription->status->value, 'label' => $subscription->status->label()],
+                'status' => $subscriptionStatus,
                 'billing_cycle' => $subscription === null ? null : ['value' => $subscription->billing_cycle->value, 'label' => $subscription->billing_cycle->label()],
                 'starts_at' => $subscription?->starts_at?->toIso8601String(),
                 'ends_at' => $end?->toIso8601String(),
@@ -88,6 +96,7 @@ final class GetTenantSubscriptionAction
                 ->where('tenant_id', $tenant->getKey())
                 ->where('status', BillingInvoiceStatus::Pending->value)
                 ->count(),
+            'partial_payment' => $this->partialPayment($tenant),
             'payment_instructions' => [
                 'instapay_address' => $branding->billingInstapayAddress,
                 'vodafone_cash_number' => $branding->billingVodafoneCashNumber,
@@ -100,6 +109,40 @@ final class GetTenantSubscriptionAction
                 'email' => $branding->supportEmail,
             ],
         ];
+    }
+
+    /**
+     * SELL-07: an open invoice that already has verified payments but is not fully paid, so the
+     * screen can say "X recorded, Y left to activate the account".
+     *
+     * @return array{invoice_id: int, invoice_number: string, paid: string, remaining: string}|null
+     */
+    private function partialPayment(Tenant $tenant): ?array
+    {
+        $invoices = BillingInvoice::query()
+            ->where('tenant_id', $tenant->getKey())
+            ->where('status', BillingInvoiceStatus::Pending->value)
+            ->with(['payments' => fn ($q) => $q->where('status', BillingPaymentStatus::Verified->value)])
+            ->orderBy('id')
+            ->get();
+
+        foreach ($invoices as $invoice) {
+            $paid = '0.000';
+            foreach ($invoice->payments as $payment) {
+                $paid = bcadd($paid, (string) $payment->amount, 3);
+            }
+
+            if (bccomp($paid, '0', 3) > 0) {
+                return [
+                    'invoice_id' => (int) $invoice->getKey(),
+                    'invoice_number' => (string) $invoice->number,
+                    'paid' => $paid,
+                    'remaining' => bcsub((string) $invoice->total, $paid, 3),
+                ];
+            }
+        }
+
+        return null;
     }
 
     private function daysLeft(?CarbonInterface $end, CarbonImmutable $now): ?int

@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace App\Actions\Auth;
 
 use App\DTOs\Auth\ApiLoginDTO;
+use App\Http\Middleware\EnsureTenantActive;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\ActivityLogService;
+use App\Support\Tenancy\TenantLifecyclePolicy;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -62,6 +66,15 @@ final class ApiLoginAction
             ]);
         }
 
+        // 3b. SELL-07: a shop suspended for non-payment lets only billing managers in, and only to pay
+        //     (EnsureTenantActive confines the token to /billing/*).
+        $paymentRecovery = $this->isPaymentRecovery();
+        if ($paymentRecovery && ! $user->can('billing.manage')) {
+            throw ValidationException::withMessages([
+                'login' => __('subscription.errors.payment_recovery_billing_only'),
+            ]);
+        }
+
         // 4. Create Sanctum token
         $tokenName = $dto->deviceName.'-'.now()->format('YmdHis');
         $token = $user->createToken(
@@ -87,6 +100,25 @@ final class ApiLoginAction
         );
 
         // 7. Shared response payload (same shape as QuickLoginAction)
-        return $this->buildAuthPayload->execute($user, $token);
+        $payload = $this->buildAuthPayload->execute($user, $token);
+
+        if ($paymentRecovery) {
+            $payload['subscription_blocked'] = true;
+            $payload['user']['permissions'] = ['billing.manage'];
+        }
+
+        return $payload;
+    }
+
+    private function isPaymentRecovery(): bool
+    {
+        $tenant = tenant();
+        if (! $tenant instanceof Tenant) {
+            return false;
+        }
+
+        $decision = app(TenantLifecyclePolicy::class)->evaluate($tenant->lifecycleSnapshot(), CarbonImmutable::now());
+
+        return EnsureTenantActive::isPaymentRecovery($decision->effectiveStatus, $tenant);
     }
 }

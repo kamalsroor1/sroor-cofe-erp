@@ -33,6 +33,15 @@ const methodOptions = computed(() =>
   PAYABLE_METHODS.map((m) => ({ value: m, label: t(`billing.billing_payment_method.${m}`) }))
 );
 const remaining = computed(() => props.invoice?.remaining ?? '0');
+// SELL-07: warn before sending an amount below what is left to pay.
+const isPartial = computed(() => {
+  const amount = String(form.amount ?? '').trim();
+  return (
+    isValidDecimal(amount) &&
+    compareDecimalStrings(amount, '0') > 0 &&
+    compareDecimalStrings(amount, remaining.value) < 0
+  );
+});
 
 watch(
   () => props.show,
@@ -117,6 +126,9 @@ const submit = async () => {
           :error="errors.amount"
           required
         />
+        <p v-if="isPartial" class="sm:col-span-2 text-xs font-bold text-amber-600 dark:text-amber-400">
+          {{ $t('subscription.billing.pay.partial_warning', { remaining: formatMoney(remaining) }) }}
+        </p>
         <BaseSelect
           v-model="form.method"
           :label="$t('subscription.billing.pay.method')"

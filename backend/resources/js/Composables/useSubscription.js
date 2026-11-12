@@ -96,5 +96,18 @@ export function useSubscription() {
         }
     };
 
-    return { subscription, invoices, isLoading, error, load, renew, refreshInvoices, submitPayment };
+    /** SELL-07: withdraw the shop's own pending payment so a corrected one can be sent. */
+    const cancelPayment = async (paymentId) => {
+        try {
+            const res = await api.post(`/billing/payments/${paymentId}/cancel`);
+            notifySuccess(res.data.message);
+            await refreshInvoices();
+            return true;
+        } catch (e) {
+            notifyError(e.userMessage);
+            return false;
+        }
+    };
+
+    return { subscription, invoices, isLoading, error, load, renew, refreshInvoices, submitPayment, cancelPayment };
 }

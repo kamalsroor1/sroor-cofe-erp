@@ -13,6 +13,7 @@ use App\Models\BillingInvoice;
 use App\Models\Tenant;
 use App\Services\Branding\PlatformBranding;
 use App\Support\Tenancy\TenantLifecyclePolicy;
+use App\Support\Tenancy\TenantSuspensionReason;
 use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Http\Request;
@@ -63,10 +64,15 @@ final class EnsureTenantActive
         'api.billing.renewal_invoice',
         'api.billing.plan_change_requests.store',
         'api.billing.plan_change_requests.cancel',
+        // SELL-07: the shop may withdraw its own still-pending payment (wrong amount) and resubmit
+        'api.billing.payments.cancel',
     ];
 
     /** @var list<string> routes a blocked tenant may still call so the SPA can show the state */
     public const BLOCKED_ALLOWLIST = ['api.auth.logout', 'api.auth.me', ...ResolveApiTenancy::CENTRAL_SAFE_ROUTES];
+
+    /** @var list<string> routes a shop suspended for non-payment may call (sign in + the billing screen) */
+    public const PAYMENT_RECOVERY_ROUTES = ['api.auth.login', 'api.auth.change_password', 'api.billing.*'];
 
     /** @var list<string> web routes (routes/tenant.php) a blocked tenant may still load: the SPA shell that displays the state */
     public const WEB_BLOCKED_ALLOWLIST = ['login', 'tenant.spa'];
@@ -91,7 +97,7 @@ final class EnsureTenantActive
             TenantAccessLevel::ReadOnly => $this->isWrite($request) && ! $request->routeIs(self::WRITE_ALLOWLIST)
                 ? $this->readOnly($request, $tenant)->render($request)
                 : $next($request),
-            TenantAccessLevel::Blocked => $this->blocked($request, $next, $decision->effectiveStatus),
+            TenantAccessLevel::Blocked => $this->blocked($request, $next, $decision->effectiveStatus, $tenant),
         };
     }
 
@@ -120,7 +126,7 @@ final class EnsureTenantActive
         );
     }
 
-    private function blocked(Request $request, Closure $next, TenantStatus $status): Response
+    private function blocked(Request $request, Closure $next, TenantStatus $status, Tenant $tenant): Response
     {
         if (! $request->is('api/*')) {
             // Tenant web pages (print / export): only the SPA shell stays reachable.
@@ -135,12 +141,23 @@ final class EnsureTenantActive
             return $next($request);
         }
 
+        // SELL-07: a shop suspended for NON-PAYMENT (never a violation) may sign in and use the
+        // billing screen only, so it can pay and come back without the operator.
+        if ($this->isPaymentRecovery($status, $tenant) && $request->routeIs(self::PAYMENT_RECOVERY_ROUTES)) {
+            return $next($request);
+        }
+
         // The specific status is revealed to authenticated callers only.
         $exception = $this->hasValidToken($request)
             ? TenantLifecycleException::blocked($status)
             : TenantLifecycleException::blockedGeneric();
 
         return $exception->render($request);
+    }
+
+    public static function isPaymentRecovery(TenantStatus $status, Tenant $tenant): bool
+    {
+        return $status === TenantStatus::Suspended && $tenant->suspension_reason === TenantSuspensionReason::NonPayment;
     }
 
     /** A live tenant-DB Sanctum token (tenancy is already initialised here). */

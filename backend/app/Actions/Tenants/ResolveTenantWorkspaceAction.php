@@ -74,7 +74,12 @@ class ResolveTenantWorkspaceAction
         }
 
         // Check if suspended
-        if ($tenant->status === 'suspended' || (method_exists($tenant, 'isSuspended') && $tenant->isSuspended())) {
+        // SELL-07: a shop suspended for NON-PAYMENT is still resolvable so it can sign in and pay
+        // (EnsureTenantActive confines it to /billing/*); a violation stays refused.
+        $paymentRecovery = $tenant->suspension_reason === \App\Support\Tenancy\TenantSuspensionReason::NonPayment
+            && ($tenant->status === 'suspended' || $tenant->isSuspended());
+
+        if (! $paymentRecovery && ($tenant->status === 'suspended' || (method_exists($tenant, 'isSuspended') && $tenant->isSuspended()))) {
             return [
                 'success' => false,
                 'status' => 403,
@@ -119,6 +124,7 @@ class ResolveTenantWorkspaceAction
                 'domain' => $primaryDomain,
                 'server_url' => $serverUrl,
                 'status' => $tenant->status ?? 'active',
+                'payment_required' => $paymentRecovery,
                 'logo_url' => $logoUrl,
                 'logo_dark_url' => $branding?->logoDarkUrl,
                 'company_subtitle' => $subtitle,

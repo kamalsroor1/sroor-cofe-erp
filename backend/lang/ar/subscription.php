@@ -67,6 +67,7 @@ return [
 
     // IDEN-3.3 (TenantLifecycleException) + ENTI-2.1 (entitlement exceptions).
     'errors' => [
+        'payment_recovery_billing_only' => 'الحساب موقوف لعدم السداد. الدخول متاح لمسؤول الاشتراك فقط لتسديد المستحقات.',
         'read_only' => 'الحساب للعرض فقط حاليًا، ومش هتقدر تضيف أو تعدّل بيانات. جدّد الاشتراك لإعادة التفعيل.',
         // SELL-06: رسالة 423 حسب السبب (details.reason) والخطوة الجاية (details.action).
         'read_only_guidance' => [
@@ -144,6 +145,7 @@ return [
 
     // PRD-04: tenant subscription & billing page (/billing).
     'billing' => [
+        'partial_banner' => 'تم تسجيل :paid وتبقّى :remaining لتفعيل الحساب.',
         'page' => [
             'title' => 'الاشتراك والفواتير',
             'subtitle' => 'باقتك واستهلاكك وفواتيرك ومدفوعاتك',
@@ -253,6 +255,7 @@ return [
             'empty_description' => 'ستظهر هنا فواتير اشتراكك.',
         ],
         'pay' => [
+            'partial_warning' => 'تنبيه: المبلغ أقل من المتبقي (:remaining). سيبقى الحساب غير مفعّل حتى سداد الباقي.',
             'title' => 'دفع الفاتورة :number',
             'instructions_title' => 'بيانات الدفع',
             'instructions_hint' => 'حوّل المبلغ ثم ارفع إيصال التحويل بالأسفل.',
@@ -286,6 +289,7 @@ return [
             ],
         ],
         'details' => [
+            'cancel_payment' => 'إلغاء الدفعة',
             'title' => 'الفاتورة :number',
             'period' => 'الفترة',
             'issued_at' => 'تاريخ الإصدار',

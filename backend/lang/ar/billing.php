@@ -123,6 +123,8 @@ return [
         'difference_needs_active_term' => 'الاشتراك منتهي: أصدر فاتورة باقة عادية بدل فرق الترقية.',
     ],
     'messages' => [
+        'payment_cancelled' => 'تم إلغاء الدفعة قيد المراجعة، ويمكنك إرسال دفعة جديدة.',
+        'payment_cancelled_by_shop' => 'ألغاها المحل',
         'invoice_issued' => 'تم إصدار الفاتورة.',
         'invoice_voided' => 'تم إلغاء الفاتورة.',
         'payment_submitted' => 'تم استلام الإيصال وهو قيد المراجعة.',

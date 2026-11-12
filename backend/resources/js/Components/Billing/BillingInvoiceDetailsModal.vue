@@ -11,7 +11,7 @@ defineProps({
   invoice: { type: Object, default: null },
 });
 
-const emit = defineEmits(['close', 'pay']);
+const emit = defineEmits(['close', 'pay', 'cancel-payment']);
 
 const { formatMoney, formatDate, formatDateTime } = useFormatters();
 </script>
@@ -109,6 +109,14 @@ const { formatMoney, formatDate, formatDateTime } = useFormatters();
             <p v-if="payment.submitted_at" class="font-medium text-slate-500 dark:text-slate-400">
               {{ $t('subscription.billing.details.submitted_at') }}: {{ formatDateTime(payment.submitted_at) }}
             </p>
+            <BaseButton
+              v-if="payment.status.value === 'pending'"
+              variant="secondary"
+              class="min-h-11"
+              @click="emit('cancel-payment', payment)"
+            >
+              {{ $t('subscription.billing.details.cancel_payment') }}
+            </BaseButton>
             <p v-if="payment.rejection_reason" class="font-bold text-rose-600 dark:text-rose-400">
               {{ $t('subscription.billing.details.rejection_reason') }}: {{ payment.rejection_reason }}
             </p>

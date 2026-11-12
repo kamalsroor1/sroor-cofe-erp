@@ -43,6 +43,8 @@ export const useAuthStore = defineStore('auth', {
             permissions: savedUser?.permissions || [],
             // ROLE-01: {error_code: 'no_store_assigned', message} while the account has no branch.
             storeNotice: savedNotice,
+            // SELL-07: shop suspended for non-payment; the session may only reach /billing.
+            subscriptionBlocked: localStorage.getItem('auth_payment_required') === '1',
             isLoading: false,
         };
     },
@@ -114,6 +116,9 @@ export const useAuthStore = defineStore('auth', {
             this.currentStore = payload.store;
             this.stores = payload.stores || [];
             this.setStoreNotice(storeNoticeFromPayload(payload));
+            this.subscriptionBlocked = payload.subscription_blocked === true;
+            if (this.subscriptionBlocked) localStorage.setItem('auth_payment_required', '1');
+            else localStorage.removeItem('auth_payment_required');
 
             localStorage.setItem('auth_token', payload.token);
             localStorage.setItem('auth_user', JSON.stringify(payload.user));
@@ -266,6 +271,8 @@ export const useAuthStore = defineStore('auth', {
             this.permissions = [];
             this.storeNotice = null;
             localStorage.removeItem('auth_store_notice');
+            this.subscriptionBlocked = false;
+            localStorage.removeItem('auth_payment_required');
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_user');
             localStorage.removeItem('auth_store');

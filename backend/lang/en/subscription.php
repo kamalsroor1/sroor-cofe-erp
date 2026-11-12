@@ -67,6 +67,7 @@ return [
 
     // IDEN-3.3 (TenantLifecycleException) + ENTI-2.1 (entitlement exceptions).
     'errors' => [
+        'payment_recovery_billing_only' => 'This account is suspended for non-payment. Only a billing manager can sign in to pay.',
         'read_only' => 'This account is read-only: you cannot add or change data. Renew your subscription to reactivate it.',
         // SELL-06: 423 message by reason (details.reason) and next step (details.action).
         'read_only_guidance' => [
@@ -144,6 +145,7 @@ return [
 
     // PRD-04: tenant subscription & billing page (/billing).
     'billing' => [
+        'partial_banner' => 'Recorded :paid; :remaining left to activate the account.',
         'page' => [
             'title' => 'Subscription & billing',
             'subtitle' => 'Your plan, usage, invoices and payments',
@@ -253,6 +255,7 @@ return [
             'empty_description' => 'Your subscription invoices will appear here.',
         ],
         'pay' => [
+            'partial_warning' => 'Note: this is less than the remaining amount (:remaining). The account stays inactive until the rest is paid.',
             'title' => 'Pay invoice :number',
             'instructions_title' => 'Payment details',
             'instructions_hint' => 'Transfer the amount, then upload the receipt below.',
@@ -286,6 +289,7 @@ return [
             ],
         ],
         'details' => [
+            'cancel_payment' => 'Cancel payment',
             'title' => 'Invoice :number',
             'period' => 'Period',
             'issued_at' => 'Issued',

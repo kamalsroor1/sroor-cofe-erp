@@ -123,6 +123,8 @@ return [
         'difference_needs_active_term' => 'The subscription has expired: issue a regular plan invoice instead of an upgrade difference.',
     ],
     'messages' => [
+        'payment_cancelled' => 'The pending payment was cancelled; you can submit a new one.',
+        'payment_cancelled_by_shop' => 'Cancelled by the shop',
         'invoice_issued' => 'The invoice was issued.',
         'invoice_voided' => 'The invoice was voided.',
         'payment_submitted' => 'Your receipt was received and is under review.',
