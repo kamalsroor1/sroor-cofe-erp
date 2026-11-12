@@ -1,5 +1,5 @@
 <script setup>
-import { Coffee } from 'lucide-vue-next';
+import { Scale } from 'lucide-vue-next';
 import MarketingEyebrow from '../MarketingEyebrow.vue';
 import MarketingMotif from '../MarketingMotif.vue';
 import BlendMockup from '../Mockups/BlendMockup.vue';
@@ -12,7 +12,7 @@ import BlendMockup from '../Mockups/BlendMockup.vue';
     >
       <MarketingMotif class="absolute -end-[200px] -top-20 size-[520px] lg:-end-[120px]" />
       <div class="relative flex w-full flex-col gap-5 lg:max-w-[560px]">
-        <MarketingEyebrow :icon="Coffee" on-dark>{{ $t('landing.home.coffee.eyebrow') }}</MarketingEyebrow>
+        <MarketingEyebrow :icon="Scale" on-dark>{{ $t('landing.home.coffee.eyebrow') }}</MarketingEyebrow>
         <h2 id="coffee-title" class="text-[28px] leading-[1.3] font-extrabold text-mk-hero-ink lg:text-[40px]">
           {{ $t('landing.home.coffee.title') }}
         </h2>

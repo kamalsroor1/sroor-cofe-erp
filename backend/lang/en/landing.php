@@ -40,7 +40,7 @@ return [
         'egp' => 'EGP',
     ],
     'page_titles' => [
-        'home' => 'Sales and inventory management system',
+        'home' => 'Point of sale, inventory and accounts for every shop',
         'pricing' => 'Pricing and plans',
         'signup' => 'Request a trial account',
         'terms' => 'Terms of Service',
@@ -105,8 +105,8 @@ return [
             ],
             'retail' => [
                 'kicker' => 'For retail shops',
-                'title' => 'A fast checkout and accurate stock for your shop',
-                'subtitle' => 'Barcode and touch checkout, shifts, receipt printing, and stock updated with every sale.',
+                'title' => 'A fast checkout and accurate stock for any retail shop',
+                'subtitle' => 'Supermarkets and groceries, clothing, mobile and electronics, cosmetics, household goods: barcode and touch checkout, shifts, receipt printing, and stock updated with every sale.',
             ],
             'wholesale' => [
                 'kicker' => 'For wholesalers',
@@ -129,24 +129,26 @@ return [
         'qty_unit' => ':qty × :price',
         'percent' => ':value%',
         'products' => [
+            'rice' => 'Rice 1 kg',
+            'oil' => 'Corn oil 1 L',
+            'detergent' => 'Washing powder',
+            'juice' => 'Orange juice 1 L',
+            'charger' => 'Fast phone charger',
+            'earbuds' => 'Bluetooth earbuds',
+            'tshirt' => 'Cotton T-shirt',
+            'cumin' => 'Ground cumin',
+            'shampoo' => 'Shampoo 400 ml',
+            // Coffee items stay for the blend card (coffee is one of the supported business types).
             'brazilian' => 'Brazilian coffee',
             'yemeni' => 'Yemeni coffee',
             'colombian' => 'Colombian coffee',
-            'espresso_blend' => 'Espresso blend',
-            'cappuccino' => 'Cappuccino',
-            'latte' => 'Latte',
-            'green_tea' => 'Green tea',
-            'croissant' => 'Croissant',
-            'cardamom' => 'Ground cardamom',
-            'water' => 'Mineral water',
-            'paper_cups' => '8oz paper cups',
         ],
         'pos' => [
             'search' => 'Search by name or barcode',
             'all' => 'All',
-            'coffee' => 'Coffee',
-            'drinks' => 'Drinks',
-            'sweets' => 'Sweets',
+            'grocery' => 'Grocery',
+            'electronics' => 'Electronics',
+            'clothing' => 'Clothing',
             'order' => 'Order :number',
             'cash' => 'Cash',
             'instapay' => 'InstaPay',
@@ -247,9 +249,9 @@ return [
     ],
     'home' => [
         'hero' => [
-            'eyebrow' => 'For shops, wholesalers and coffee roasteries',
+            'eyebrow' => 'For retail shops, wholesale and distribution',
             'title' => 'Your shop\'s checkout, stock and accounts… in one system',
-            'subtitle' => 'Sell faster by touch or barcode, follow the stock of every branch, warehouse and van, and know your profit every day.',
+            'subtitle' => 'For supermarkets and groceries, clothing, mobile, cosmetics, household and spice shops, and for wholesale and distribution: sell faster by touch or barcode, follow the stock of every branch, warehouse and van, and know your profit every day.',
             'see_plans' => 'See the plans',
         ],
         'showcase' => [
@@ -289,9 +291,9 @@ return [
             ],
         ],
         'coffee' => [
-            'eyebrow' => 'For roasteries and coffee shops',
-            'title' => 'Own a roastery? Make the customer\'s blend and sell it on the same screen',
-            'body' => 'Pick the coffee items, the share of each, the roast level and the grind, and the system costs the blend and puts it on an invoice.',
+            'eyebrow' => 'Selling by weight and mixes',
+            'title' => 'Sell by weight? Make the customer\'s mix and sell it on the same screen',
+            'body' => 'For spice, nut and coffee shops: pick the items and the weight of each, and the system costs the mix and puts it on an invoice. If you sell coffee, you also set the roast level and the grind.',
         ],
         'more' => [
             'title' => 'And there is more inside',
@@ -344,7 +346,7 @@ return [
                 ],
                 'retail' => [
                     'title' => 'Retail shops',
-                    'body' => 'A barcode and touch point of sale, shifts and receipt printing.',
+                    'body' => 'Supermarkets, clothing, mobile, cosmetics and household shops: a barcode and touch point of sale, shifts and receipt printing.',
                 ],
                 'wholesale' => [
                     'title' => 'Wholesalers',
@@ -444,12 +446,12 @@ return [
                     ],
                 ],
                 'blender' => [
-                    'title' => 'Coffee blends',
-                    'body' => 'Build the customer\'s blend and sell it on the same screen.',
+                    'title' => 'Mixes and blends',
+                    'body' => 'Build the customer\'s mix from several items and sell it on the same screen.',
                     'items' => [
-                        'blend' => 'Blends of several coffee beans in the percentages you set',
-                        'roast_grind' => 'Choose the roast level and grind type',
-                        'cost' => 'Calculate the blend cost and sell it on an invoice',
+                        'blend' => 'A mix of several items, with the weight you set for each',
+                        'roast_grind' => 'For coffee: choose the roast level and grind type',
+                        'cost' => 'Calculate the mix cost and sell it on an invoice',
                     ],
                 ],
             ],
