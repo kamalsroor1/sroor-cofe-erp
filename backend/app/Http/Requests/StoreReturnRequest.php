@@ -38,8 +38,8 @@ class StoreReturnRequest extends FormRequest
             'return_type' => ['required', 'string', 'in:sales_return,purchase_return'],
             'customer_id' => ['nullable', 'required_if:return_type,sales_return', 'exists:customers,id'],
             'supplier_id' => ['nullable', 'required_if:return_type,purchase_return', 'exists:suppliers,id'],
-            'invoice_id' => ['nullable', 'integer', 'prohibited_unless:return_type,sales_return'],
-            'purchase_id' => ['nullable', 'integer', 'prohibited_unless:return_type,purchase_return'],
+            'invoice_id' => ['nullable', 'integer', 'min:1', 'prohibited_unless:return_type,sales_return'],
+            'purchase_id' => ['nullable', 'integer', 'min:1', 'prohibited_unless:return_type,purchase_return'],
             'return_date' => ['required', 'date'],
             // BE-10: how a sales return is paid back (cash from the drawer, or the customer's
             // balance); ignored for a purchase return. The refunded amount is always the return's total, computed server-side.

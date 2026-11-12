@@ -13,9 +13,10 @@ use App\Support\Http\CorsOrigins;
 |  CORS_ALLOWED_ORIGIN_PATTERNS  comma-separated host wildcards, e.g. "https://*.example.com"
 |                                ("*" = exactly one DNS label; see App\Support\Http\CorsOrigins)
 |
-| When BOTH are empty: production allows no cross-origin caller at all (the SPA, the Android and
-| the desktop shells all load the API from the same origin, so they never need CORS); every other
-| environment keeps "*" so local/dev origins (Vite dev server, emulators) keep working.
+| When BOTH are empty: only APP_ENV exactly "local" or "testing" allows "*" (Vite dev server,
+| emulators). Every other environment (production, staging, a mis-typed value…) allows no
+| cross-origin caller at all: the SPA, the Android and the desktop shells all load the API from the
+| same origin, so they never need CORS.
 |
 | Authentication is a Bearer token, never a cookie: credentials stay off.
 |
@@ -33,7 +34,7 @@ return [
 
     'allowed_origins' => CorsOrigins::origins(
         $origins,
-        $nothingConfigured && env('APP_ENV', 'production') !== 'production' ? ['*'] : [],
+        $nothingConfigured && in_array(env('APP_ENV'), ['local', 'testing'], true) ? ['*'] : [],
     ),
 
     'allowed_origins_patterns' => CorsOrigins::patterns($patterns),

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Profile\SetOwnPosPinAction;
 use App\Actions\Profile\UpdateProfileAction;
 use App\Actions\Profile\UpdateProfileLocaleAction;
-use App\Actions\Users\SetUserPosPinAction;
 use App\DTOs\Users\SetUserPosPinDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateProfileLocaleRequest;
@@ -23,7 +23,7 @@ final class ProfileController extends Controller
 {
     public function __construct(
         private readonly UpdateProfileAction $updateProfileAction,
-        private readonly SetUserPosPinAction $setUserPosPinAction,
+        private readonly SetOwnPosPinAction $setOwnPosPinAction,
         private readonly UpdateProfileLocaleAction $updateProfileLocaleAction,
     ) {}
 
@@ -85,7 +85,11 @@ final class ProfileController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 401);
         }
 
-        $user = $this->setUserPosPinAction->execute(SetUserPosPinDTO::fromArray((int) $user->id, $request->validated()), $user);
+        $user = $this->setOwnPosPinAction->execute(
+            $user,
+            SetUserPosPinDTO::fromArray((int) $user->id, $request->validated()),
+            (string) $request->validated('current_password'),
+        );
 
         return response()->json([
             'success' => true,

@@ -43,6 +43,16 @@ return [
         'per_user_per_minute' => (int) env('RATE_LIMIT_TENANT_PASSWORD_CHANGE_PER_USER', 10),
     ],
 
+    // SET-02 / SEC-21 review: POST /api/v1/auth/unlock-screen. Its own named limiter (was the
+    // anonymous throttle:10,1, shared with every throttle:N,1 route and, on a shared cache store,
+    // with the same user id in other tenants). Wrong secrets also spend the password lockout or
+    // the manager-PIN buckets, which answer before these caps are reached.
+    'tenant_unlock_screen' => [
+        'per_ip_per_minute' => (int) env('RATE_LIMIT_TENANT_UNLOCK_SCREEN_PER_IP', 30),
+        // One user in one tenant, whatever the IP.
+        'per_user_per_minute' => (int) env('RATE_LIMIT_TENANT_UNLOCK_SCREEN_PER_USER', 10),
+    ],
+
     // Central (platform operator) login, used by IDEN-1.3.
     'central_login' => [
         'per_ip_per_minute' => (int) env('RATE_LIMIT_CENTRAL_LOGIN_PER_IP', 10),

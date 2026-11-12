@@ -14,9 +14,11 @@ use App\Models\Setting;
 use App\Models\StoreStock;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\ActivityLogService;
 use App\Services\InvoiceService;
 use App\Services\Settings\TenantSettings;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Testing\TestResponse;
@@ -147,6 +149,41 @@ final class ReturnWindowApiTest extends TenantTestCase
             $this->assertSame((int) $supervisor->id, $log->properties['approved_by']);
             $this->assertSame(19, $log->properties['age_days']);
             $this->assertFalse($log->properties['via_manager_pin']);
+        });
+    }
+
+    /**
+     * Security review of SEC-21 (9): the override record was written AFTER the return's
+     * transaction. If the log failed, the return existed (stock and balance moved), the client got
+     * a 500 and no `return_window_overridden` record existed. Now the record is part of the
+     * return's unit of work: a failing log rolls the return back.
+     */
+    public function test_a_failing_override_log_rolls_the_return_back(): void
+    {
+        $this->setWindow('3');
+        [$invoiceId, $lineId] = $this->invoiceDated('2026-11-01');
+        $this->at('2026-11-20 12:00');
+        $supervisor = $this->createTenantUser($this->tenant, null, ['returns.manage', 'returns.override_window']);
+        $stockBefore = $this->inTenant($this->tenant, fn (): string => (string) StoreStock::query()->where('store_id', $this->storeId)->where('item_id', $this->itemId)->value('quantity'));
+
+        $this->app->instance(ActivityLogService::class, new class extends ActivityLogService
+        {
+            public function log(string $module, string $action, string $description, ?Model $subject = null, ?array $properties = null, ?int $userId = null, ?int $storeId = null): ActivityLog
+            {
+                if ($action === 'return_window_overridden') {
+                    throw new \RuntimeException('activity log is down');
+                }
+
+                return parent::log($module, $action, $description, $subject, $properties, $userId, $storeId);
+            }
+        });
+
+        $response = $this->postReturn($invoiceId, $lineId, $supervisor);
+        $this->assertGreaterThanOrEqual(500, $response->status());
+
+        $this->inTenant($this->tenant, function () use ($stockBefore): void {
+            $this->assertSame(0, ReturnDocument::query()->count());
+            $this->assertSame($stockBefore, (string) StoreStock::query()->where('store_id', $this->storeId)->where('item_id', $this->itemId)->value('quantity'));
         });
     }
 

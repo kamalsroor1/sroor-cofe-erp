@@ -321,6 +321,7 @@ return [
     'shift_rule_branch_unavailable' => 'The setting of this branch could not be read',
     'shift_rule_switch_label' => 'Selling requires an open shift in branch :name',
     'shift_rule_save_failed' => 'Could not save the shift setting. Try again.',
+    'telegram_token_needs_reentry' => 'The saved Telegram bot token can no longer be read (the encryption key changed). Enter the token again and save so notifications work again.',
     'save_section' => 'Save Changes',
     'remove_logo' => 'Remove logo',
     'tab_branding_sub' => 'Logos, system theme colors, and receipt header & footer',

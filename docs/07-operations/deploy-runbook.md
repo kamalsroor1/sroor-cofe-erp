@@ -62,6 +62,7 @@
 - كلمة مرور الـ migrator **عمرها ما بتدخل `shared/` ولا الـ release** (`deploy-test.sh` بيتأكد).
 - MySQL بياخد الباسوردات من option files (600) في مجلد مؤقت خاص بيتمسح على الخروج — مش من argv ولا من `MYSQL_PWD`.
 - الاستثناء الوحيد: `php artisan migrate` بياخد باسورد الـ migrator كمتغير بيئة للعملية دي (مقروء لنفس المستخدم وroot بس في `/proc/<pid>/environ`).
+- **تغيير `APP_KEY` (SEC-21):** token بوت Telegram بتاع كل محل (`settings.telegram_bot_token`) وباسورد DB المستأجر بيتخزنوا مشفّرين بـ `APP_KEY`. لو غيّرت المفتاح، حط القديم في `APP_PREVIOUS_KEYS` (مفصولة بفاصلة) في `shared/.env` قبل الـ deploy، عشان Laravel يفك بيه القيم القديمة. من غيره: الـ token القديم مابيتقريش، المحل ماتوصلوش تنبيهات (مفيش رجوع لبوت المنصة)، وشاشة الإعدادات بتقول `telegram_bot_token_needs_reentry: true` لحد ما الأدمن يدخل الـ token تاني.
 
 ---
 

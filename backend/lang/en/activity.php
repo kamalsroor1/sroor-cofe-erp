@@ -70,6 +70,7 @@ return [
         'login' => 'Login',
     ],
     'action_labels' => [
+        'manager_pin_failed' => 'Wrong manager approval PIN',
         'invoice_created' => 'Issued sales invoice',
         'invoice_cancelled' => 'Cancelled sales invoice',
         'purchase_created' => 'Recorded purchase invoice',

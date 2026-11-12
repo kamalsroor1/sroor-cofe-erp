@@ -70,6 +70,7 @@ return [
         'login' => 'تسجيل دخول',
     ],
     'action_labels' => [
+        'manager_pin_failed' => 'رقم سري خاطئ لموافقة مدير',
         'invoice_created' => 'إصدار فاتورة مبيعات',
         'invoice_cancelled' => 'إلغاء فاتورة مبيعات',
         'purchase_created' => 'توريد فاتورة مشتريات',

@@ -11,6 +11,7 @@ use App\Models\StoreStock;
 use App\Models\Supplier;
 use App\Models\Tenant;
 use App\Models\User;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TenantTestCase;
 
 class ReturnsApiTest extends TenantTestCase
@@ -108,6 +109,43 @@ class ReturnsApiTest extends TenantTestCase
 
         // Stock increased from 100 to 105
         $this->assertEquals(105.000, $this->itemStock());
+    }
+
+    /**
+     * Security review of SEC-21 (6): `invoice_id: 0` passed validation (`filled()` is true for 0),
+     * the return-window check found no invoice and the service took the invoice-less path on
+     * truthiness; only the foreign key stopped it (500). Now 0 / negative ids are a 422 and nothing
+     * is written.
+     *
+     * @return array<string, array{0: string, 1: string, 2: int}>
+     */
+    public static function zeroSourceIds(): array
+    {
+        return [
+            'sales invoice 0' => ['sales_return', 'invoice_id', 0],
+            'sales invoice -1' => ['sales_return', 'invoice_id', -1],
+            'purchase 0' => ['purchase_return', 'purchase_id', 0],
+        ];
+    }
+
+    #[DataProvider('zeroSourceIds')]
+    public function test_a_zero_or_negative_source_document_id_is_a_422(string $type, string $field, int $id): void
+    {
+        $party = $type === 'sales_return' ? ['customer_id' => $this->customerId] : ['supplier_id' => $this->supplierId];
+
+        $this->postJson('/api/v1/returns', [
+            'return_type' => $type,
+            ...$party,
+            $field => $id,
+            'return_date' => now()->toDateString(),
+            'refund_amount' => '0.000',
+            'items' => [['item_id' => $this->itemId, 'quantity' => 1.000, 'unit_price' => 10.000]],
+        ], $this->adminHeaders)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors([$field]);
+
+        $this->inTenant($this->tenant, fn () => $this->assertDatabaseCount('returns', 0));
+        $this->assertEquals(100.000, $this->itemStock());
     }
 
     public function test_can_create_purchase_return_and_deduct_inventory(): void

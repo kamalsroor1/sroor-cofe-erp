@@ -98,8 +98,9 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         // (EnsurePasswordChanged, chained from ApiTokenAuth). Throttled like login.
         Route::post('/auth/change-password', [AuthController::class, 'changePassword'])->middleware('throttle:tenant-password-change')->name('api.auth.change_password');
 
-        // SET-02: dismiss the idle lock screen with the user's own password or POS PIN (throttled verifiers).
-        Route::post('/auth/unlock-screen', [ScreenLockController::class, 'unlock'])->middleware('throttle:10,1')->name('api.auth.unlock_screen');
+        // SET-02: dismiss the idle lock screen with the user's own password or POS PIN (throttled verifiers;
+        // SEC-21 review: own named limiter, per tenant + user).
+        Route::post('/auth/unlock-screen', [ScreenLockController::class, 'unlock'])->middleware('throttle:tenant-unlock-screen')->name('api.auth.unlock_screen');
 
         // System Context (Bootstrap payload for the SPA)
         Route::get('/system/context', [SystemContextApiController::class, 'context'])->name('api.system.context');

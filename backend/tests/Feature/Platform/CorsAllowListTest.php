@@ -91,19 +91,52 @@ final class CorsAllowListTest extends TenantTestCase
 
         $config = require config_path('cors.php');
         $this->assertFalse($config['supports_credentials']);
-        $this->assertNotContains('*', (array) $this->productionConfig()['allowed_origins']);
-        $this->assertSame([], $this->productionConfig()['allowed_origins_patterns']);
     }
 
     /**
-     * config/cors.php evaluated as in production with no CORS_* variable set.
+     * Security review of SEC-21 (8): "*" was the default for every APP_ENV other than exactly
+     * "production" (staging, "Production", "prod"…). Now only local and testing get it.
+     *
+     * @return array<string, array{0: string, 1: list<string>}>
+     */
+    public static function environments(): array
+    {
+        return [
+            'local' => ['local', ['*']],
+            'testing' => ['testing', ['*']],
+            'production' => ['production', []],
+            'staging' => ['staging', []],
+            'mis-cased production' => ['Production', []],
+            'prod' => ['prod', []],
+            'empty' => ['', []],
+        ];
+    }
+
+    /** @param  list<string>  $expected */
+    #[DataProvider('environments')]
+    public function test_the_wildcard_default_is_for_local_and_testing_only(string $env, array $expected): void
+    {
+        $config = $this->configFor($env);
+        $this->assertSame($expected, $config['allowed_origins'], $env);
+        $this->assertSame([], $config['allowed_origins_patterns']);
+    }
+
+    public function test_configured_origins_win_in_every_environment(): void
+    {
+        $config = $this->configFor('local', 'https://ibraa.app', 'https://*.ibraa.app');
+        $this->assertSame(['https://ibraa.app'], $config['allowed_origins']);
+        $this->assertCount(1, $config['allowed_origins_patterns']);
+    }
+
+    /**
+     * config/cors.php evaluated with the given APP_ENV and CORS_* variables.
      *
      * @return array<string, mixed>
      */
-    private function productionConfig(): array
+    private function configFor(string $appEnv, string $origins = '', string $patterns = ''): array
     {
         $saved = [];
-        foreach (['APP_ENV' => 'production', 'CORS_ALLOWED_ORIGINS' => '', 'CORS_ALLOWED_ORIGIN_PATTERNS' => ''] as $key => $value) {
+        foreach (['APP_ENV' => $appEnv, 'CORS_ALLOWED_ORIGINS' => $origins, 'CORS_ALLOWED_ORIGIN_PATTERNS' => $patterns] as $key => $value) {
             $saved[$key] = $_ENV[$key] ?? null;
             $_ENV[$key] = $value;
             $_SERVER[$key] = $value;

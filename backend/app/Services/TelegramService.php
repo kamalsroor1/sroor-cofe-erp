@@ -35,8 +35,15 @@ class TelegramService
      */
     public function getBotToken(): ?string
     {
-        // SEC-21: the shop's token is stored encrypted (SettingSecrets).
-        return SettingSecrets::decrypt(Setting::get('telegram_bot_token'))
+        // SEC-21: the shop's token is stored encrypted (SettingSecrets). A shop token that exists
+        // but cannot be decrypted (APP_KEY rotated without APP_PREVIOUS_KEYS) means "no token":
+        // never fall back to the PLATFORM bot, which would post this shop's alerts through it.
+        $stored = Setting::get('telegram_bot_token');
+        if (SettingSecrets::isUnreadable($stored)) {
+            return null;
+        }
+
+        return SettingSecrets::decrypt($stored)
             ?: config('services.telegram.bot_token');
     }
 

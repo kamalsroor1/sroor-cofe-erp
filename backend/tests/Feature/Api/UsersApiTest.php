@@ -466,6 +466,39 @@ class UsersApiTest extends TenantTestCase
         $this->assertTrue(Hash::check('567890', (string) $this->inTenant($this->tenant, fn () => User::query()->findOrFail($target->id)->pos_pin)));
     }
 
+    /**
+     * Security review of SEC-21 (5): PUT /profile/pos-pin checked current_password with a bare
+     * Hash::check in the FormRequest, limited only by throttle:10,1, outside the account lockout:
+     * 10 password guesses a minute, forever, from any left-open session. Now it shares the
+     * CurrentPasswordVerifier budget: 5 wrong answers lock, the 6th (right) one is refused, the
+     * PIN is unchanged, and the same lock covers the other password checks.
+     */
+    public function test_profile_pos_pin_password_check_shares_the_account_lockout(): void
+    {
+        $user = $this->createTenantUser($this->tenant, 'cashier');
+        $headers = $this->tenantHeaders($this->tenant, $user);
+
+        foreach (range(1, 5) as $i) {
+            $this->putJson('/api/v1/profile/pos-pin', ['pin' => '135791', 'current_password' => 'wrong-'.$i], $headers)
+                ->assertStatus(422)
+                ->assertJsonPath('errors.current_password.0', __('auth.current_password_incorrect'));
+        }
+
+        $this->putJson('/api/v1/profile/pos-pin', ['pin' => '135791', 'current_password' => 'password'], $headers)
+            ->assertStatus(422)
+            ->assertJsonPath('errors.current_password.0', __('auth.account_locked', ['minutes' => 15]));
+        $this->assertNull($this->inTenant($this->tenant, fn () => User::query()->findOrFail($user->id)->pos_pin));
+
+        // One budget: the password change is locked as well.
+        $this->postJson('/api/v1/auth/change-password', [
+            'current_password' => 'password', 'password' => 'brandNew#2026', 'password_confirmation' => 'brandNew#2026',
+        ], $headers)->assertStatus(422)->assertJsonValidationErrors('current_password');
+
+        // After the lock window the right password works again.
+        $this->travel(16)->minutes();
+        $this->putJson('/api/v1/profile/pos-pin', ['pin' => '135791', 'current_password' => 'password'], $this->tenantHeaders($this->tenant, $user))->assertOk();
+    }
+
     public function test_profile_pos_pin_endpoint_validates_the_pin_and_the_current_password(): void
     {
         $headers = $this->unauthorizedHeaders;

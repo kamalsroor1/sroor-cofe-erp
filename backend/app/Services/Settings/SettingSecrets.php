@@ -35,8 +35,16 @@ final class SettingSecrets
         return 'clear_'.$key;
     }
 
+    /** SEC-21 review: `<key>_needs_reentry`, true when a stored secret cannot be decrypted. */
+    public static function reentryFlag(string $key): string
+    {
+        return $key.'_needs_reentry';
+    }
+
     /**
-     * Replace every secret with '' and add its `has_<key>` flag.
+     * Replace every secret with '' and add its `has_<key>` flag, true only for a secret that can
+     * actually be used. A stored value this APP_KEY cannot decrypt (key rotated without
+     * APP_PREVIOUS_KEYS) reports `has_<key> = false` and `<key>_needs_reentry = true`.
      *
      * @param  array<string, mixed>  $settings
      * @return array<string, mixed>
@@ -45,12 +53,31 @@ final class SettingSecrets
     {
         foreach (self::KEYS as $key) {
             $value = $settings[$key] ?? null;
+            $stored = is_string($value) && trim($value) !== '';
+            $unreadable = $stored && self::isUnreadable($value);
 
             $settings[$key] = '';
-            $settings[self::hasFlag($key)] = is_string($value) && trim($value) !== '';
+            $settings[self::hasFlag($key)] = $stored && ! $unreadable;
+            $settings[self::reentryFlag($key)] = $unreadable;
         }
 
         return $settings;
+    }
+
+    /** A stored, encrypted secret that the current APP_KEY (and APP_PREVIOUS_KEYS) cannot decrypt. */
+    public static function isUnreadable(?string $stored): bool
+    {
+        if ($stored === null || trim($stored) === '' || ! self::looksEncrypted($stored)) {
+            return false;
+        }
+
+        try {
+            Crypt::decryptString($stored);
+
+            return false;
+        } catch (DecryptException) {
+            return true;
+        }
     }
 
     /**

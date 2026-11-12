@@ -292,7 +292,8 @@ return [
     'override_throttled' => 'Too many failed approval attempts. Try again later.',
     // SEC-21
     'override_locked_today' => 'This manager\'s approvals are locked for the rest of the day after too many wrong PINs. They work again tomorrow or after the PIN is changed.',
-    'telegram_manager_pin_locked' => "🔒 <b>Manager approvals locked for the rest of the day</b>\nShop: :shop\nManager: :approver\nLast attempt by: :actor\nWrong PIN attempts: :failures\nTime: :time\nTo unlock before tomorrow: change the manager's PIN.",
+    'activity_manager_pin_failed' => 'Wrong manager approval PIN for [:approver] entered by :actor',
+    'telegram_manager_pin_locked' => "🔒 <b>Manager approvals locked for the rest of the day</b>\nShop: :shop\nManager: :approver\nAttempts by: :actors\nWrong PIN attempts: :failures\nTime: :time\nTo unlock before tomorrow: change the manager's PIN.",
     // POS-07
     'discount_cap_exceeded' => 'The total discount is above the allowed :max% of the sale.',
     'discount_override_required' => 'A manager approval is required for a discount above the allowed limit.',

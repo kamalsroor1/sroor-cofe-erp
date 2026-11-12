@@ -351,15 +351,45 @@ final class SettingsSecretsApiTest extends TenantTestCase
         Http::assertSent(fn (HttpRequest $request): bool => str_contains($request->url(), '/bot'.self::TOKEN.'/sendMessage'));
     }
 
-    public function test_a_token_that_cannot_be_decrypted_is_treated_as_missing(): void
+    /**
+     * Security review of SEC-21 (10): after an APP_KEY change without APP_PREVIOUS_KEYS the shop's
+     * token could not be decrypted; TelegramService then silently used the PLATFORM bot (this
+     * shop's alerts went out through the platform's bot) while GET /settings still said
+     * has_telegram_bot_token = true. Now: no token at all, has_ = false, needs_reentry = true.
+     */
+    public function test_a_token_that_cannot_be_decrypted_is_treated_as_missing_without_the_platform_fallback(): void
     {
         $tenant = $this->createTenant();
         $foreign = (new Encrypter(random_bytes(32), 'AES-256-CBC'))->encryptString(self::TOKEN);
+        config(['services.telegram.bot_token' => self::OTHER_TOKEN]); // the platform bot
         $this->inTenant($tenant, function () use ($foreign): void {
             Setting::set('telegram_bot_token', $foreign);
-            config(['services.telegram.bot_token' => null]);
             $this->assertNull(app(TelegramService::class)->getBotToken());
         });
+
+        $this->getJson('/api/v1/settings', $this->tenantHeaders($tenant))
+            ->assertOk()
+            ->assertJsonPath('settings.telegram_bot_token', '')
+            ->assertJsonPath('settings.has_telegram_bot_token', false)
+            ->assertJsonPath('settings.telegram_bot_token_needs_reentry', true);
+
+        // Re-entering the token fixes it.
+        $this->postJson('/api/v1/settings', $this->payload(['telegram_bot_token' => self::TOKEN]), $this->tenantHeaders($tenant))
+            ->assertOk()
+            ->assertJsonPath('settings.has_telegram_bot_token', true)
+            ->assertJsonPath('settings.telegram_bot_token_needs_reentry', false);
+        $this->inTenant($tenant, fn () => $this->assertSame(self::TOKEN, app(TelegramService::class)->getBotToken()));
+    }
+
+    public function test_without_a_shop_token_the_platform_bot_is_still_the_fallback(): void
+    {
+        $tenant = $this->createTenant();
+        config(['services.telegram.bot_token' => self::OTHER_TOKEN]);
+        $this->inTenant($tenant, fn () => $this->assertSame(self::OTHER_TOKEN, app(TelegramService::class)->getBotToken()));
+        $this->getJson('/api/v1/settings', $this->tenantHeaders($tenant))
+            ->assertOk()
+            ->assertJsonPath('settings.has_telegram_bot_token', false)
+            ->assertJsonPath('settings.telegram_bot_token_needs_reentry', false);
     }
 
     public function test_the_migration_encrypts_a_legacy_plain_token_and_down_restores_it(): void

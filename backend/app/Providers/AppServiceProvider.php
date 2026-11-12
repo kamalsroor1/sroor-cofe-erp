@@ -38,6 +38,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\PersonalAccessToken;
 use Stancl\Tenancy\Commands\Migrate as StanclMigrate;
 use Stancl\Tenancy\Commands\Rollback as StanclRollback;
 use Stancl\Tenancy\Commands\Run as StanclRun;
@@ -160,6 +161,26 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
+     * SEC-21 review: the user a request's API token belongs to, for limiters on routes behind
+     * ApiTokenAuth (which runs after route throttles, so $request->user() is still empty there).
+     * Unknown / missing token: the client network, so guessing tokens cannot mint fresh buckets.
+     */
+    private function tokenOwnerKey(Request $request): string
+    {
+        $user = $request->user();
+        if ($user !== null) {
+            return 'u:'.RateLimitKey::identifier($user->getAuthIdentifier());
+        }
+
+        $token = $request->bearerToken() ?: $request->header('X-API-TOKEN');
+        $owner = is_string($token) && $token !== '' ? PersonalAccessToken::findToken($token)?->tokenable_id : null;
+
+        return $owner !== null
+            ? 'u:'.RateLimitKey::identifier($owner)
+            : 'ip:'.RateLimitKey::clientNetwork((string) $request->ip());
+    }
+
+    /**
      * Abilities a CentralUser may be evaluated on: the granular CentralPermission values and
      * the monitoring dashboards' gates. Every other ability is a tenant ability.
      */
@@ -233,6 +254,16 @@ class AppServiceProvider extends ServiceProvider
                 ->by('tenant-password-change-ip|'.$request->ip()),
             Limit::perMinute($this->limit('rate_limits.tenant_password_change.per_user_per_minute', 10))
                 ->by('tenant-password-change-user|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->user()?->getAuthIdentifier()).'|'.$request->ip()),
+        ]);
+
+        // SET-02 / SEC-21 review: the idle screen unlock, per tenant + user (the old anonymous
+        // throttle:10,1 bucket was shared with every other throttle:N,1 route). Route throttles run
+        // BEFORE ApiTokenAuth (middleware priority), so the user comes from the bearer token here.
+        RateLimiter::for('tenant-unlock-screen', fn (Request $request): array => [
+            Limit::perMinute($this->limit('rate_limits.tenant_unlock_screen.per_ip_per_minute', 30))
+                ->by('tenant-unlock-screen-ip|'.$request->ip()),
+            Limit::perMinute($this->limit('rate_limits.tenant_unlock_screen.per_user_per_minute', 10))
+                ->by('tenant-unlock-screen-user|'.RateLimitKey::scope().'|'.$this->tokenOwnerKey($request)),
         ]);
 
         // Central (platform operator) login, consumed by IDEN-1.3. Security audit (W2 lane 3I):

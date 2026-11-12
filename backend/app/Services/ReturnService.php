@@ -15,6 +15,7 @@ use App\Models\Supplier;
 use App\Support\Database\TransactionRetry;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
+use Closure;
 use Illuminate\Support\Facades\Auth;
 
 class ReturnService
@@ -48,21 +49,27 @@ class ReturnService
     }
 
     /**
-     * Dispatch and create return document based on return_type
+     * Dispatch and create return document based on return_type.
+     *
+     * @param  (Closure(ReturnDocument): void)|null  $inTransaction  sales returns only: runs inside the
+     *                                                               return's transaction (re-run with it on a retry)
      */
-    public function createReturn(array $data): ReturnDocument
+    public function createReturn(array $data, ?Closure $inTransaction = null): ReturnDocument
     {
         if (($data['return_type'] ?? '') === 'purchase_return') {
             return $this->createPurchaseReturn($data);
         }
 
-        return $this->createSalesReturn($data);
+        return $this->createSalesReturn($data, $inTransaction);
     }
 
     /**
      * Process sales return from customer (with stock return to inventory)
+     *
+     * @param  (Closure(ReturnDocument): void)|null  $inTransaction  extra writes that belong to the same
+     *                                                               unit of work (SEC-21 review: the window override log)
      */
-    public function createSalesReturn(array $data): ReturnDocument
+    public function createSalesReturn(array $data, ?Closure $inTransaction = null): ReturnDocument
     {
         // BUG-04: the day's counter rows exist before the transaction takes its first read.
         if (empty($data['return_number'])) {
@@ -72,14 +79,14 @@ class ReturnService
 
         // BUG-07: restarted as a whole on a lock conflict (1213/1205/1020); only plain input is
         // captured, every row is read again inside and a failed attempt's numbers roll back.
-        return TransactionRetry::run(function () use ($data) {
+        return TransactionRetry::run(function () use ($data, $inTransaction) {
             $invoiceId = $data['invoice_id'] ?? null;
 
             $totalAmount = '0.000';
-            $storeId = $data['store_id'] ?? ($invoiceId ? Invoice::query()->whereKey($invoiceId)->value('store_id') : null) ?? Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
+            $storeId = $data['store_id'] ?? ($invoiceId !== null ? Invoice::query()->whereKey($invoiceId)->value('store_id') : null) ?? Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
 
             // Lock order: document -> party -> lines -> items (same as cancelInvoice).
-            $invoice = $invoiceId ? $this->returnSourceService->lockDocument(ReturnSourceService::SALES, (int) $invoiceId, (int) $storeId) : null;
+            $invoice = $invoiceId !== null ? $this->returnSourceService->lockDocument(ReturnSourceService::SALES, (int) $invoiceId, (int) $storeId) : null;
             $customer = Customer::where('id', $data['customer_id'])->lockForUpdate()->firstOrFail();
 
             // BE-01: against an invoice, the lines, quantities and prices come from the invoice.
@@ -170,6 +177,10 @@ class ReturnService
                 newValues: $returnDoc->toArray(),
                 actorId: $this->actorId($data),
             );
+
+            if ($inTransaction !== null) {
+                $inTransaction($returnDoc);
+            }
 
             return $returnDoc;
         });

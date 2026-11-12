@@ -8,6 +8,7 @@ use App\Actions\Invoices\CancelSalesInvoiceAction;
 use App\DTOs\Invoices\CancelInvoiceDTO;
 use App\Exceptions\ManagerPinLockedException;
 use App\Jobs\SendManagerPinLockedAlertJob;
+use App\Models\ActivityLog;
 use App\Models\CashShift;
 use App\Models\Customer;
 use App\Models\Invoice;
@@ -21,8 +22,11 @@ use App\Services\InvoiceService;
 use App\Services\Settings\SettingSecrets;
 use App\Services\ShiftService;
 use Carbon\CarbonImmutable;
+use Closure;
 use Illuminate\Cache\RateLimiter as CacheRateLimiter;
+use Illuminate\Contracts\Hashing\Hasher;
 use Illuminate\Http\Client\Request as HttpRequest;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Hash;
@@ -295,6 +299,214 @@ final class ManagerPinLockoutApiTest extends TenantTestCase
         $this->inTenant($this->tenant, function (): void {
             $this->assertTrue(RateLimiter::tooManyAttempts(ManagerPinVerifier::dailyKey($this->adminId), ManagerPinVerifier::MAX_DAILY_FAILURES_PER_APPROVER));
         });
+    }
+
+    /**
+     * Security review of SEC-21 (3): the limiter was check-then-increment, so N concurrent
+     * requests with N different PINs all passed tooManyAttempts() before any hit() landed and a
+     * burst tested more than 5 PINs. Simulated deterministically: every bcrypt check re-enters
+     * verify() with the next guess before finishing (the next request arrives while this one is
+     * still hashing). Before the fix all 8 guesses were hashed; now only 5 are.
+     */
+    public function test_a_concurrent_burst_cannot_test_more_pins_than_the_cap(): void
+    {
+        Queue::fake();
+        $actorIds = $this->actorIds(8);
+
+        $hashed = $this->inTenant($this->tenant, function () use ($actorIds): int {
+            $verifier = new ManagerPinVerifier;
+            $hasher = $this->reentrantHasher(function (int $depth) use ($verifier, $actorIds): void {
+                if ($depth < count($actorIds)) {
+                    $this->attempt($verifier, $actorIds[$depth], sprintf('%06d', $depth));
+                }
+            });
+
+            $this->attempt($verifier, $actorIds[0], '000000');
+
+            return $hasher->checks;
+        });
+
+        $this->assertSame(ManagerPinVerifier::MAX_ATTEMPTS_PER_APPROVER, $hashed);
+    }
+
+    public function test_a_burst_at_the_daily_limit_tests_only_the_remaining_slots_and_alerts_once(): void
+    {
+        Queue::fake();
+        $actorIds = $this->actorIds(5);
+
+        $hashed = $this->inTenant($this->tenant, function () use ($actorIds): int {
+            // 18 failures earlier today.
+            foreach (range(1, ManagerPinVerifier::MAX_DAILY_FAILURES_PER_APPROVER - 2) as $_) {
+                RateLimiter::increment(ManagerPinVerifier::dailyKey($this->adminId), 3600);
+            }
+
+            $verifier = new ManagerPinVerifier;
+            $hasher = $this->reentrantHasher(function (int $depth) use ($verifier, $actorIds): void {
+                if ($depth < count($actorIds)) {
+                    $this->attempt($verifier, $actorIds[$depth], sprintf('%06d', $depth));
+                }
+            });
+            $this->attempt($verifier, $actorIds[0], '000000');
+
+            $this->assertGreaterThanOrEqual(ManagerPinVerifier::MAX_DAILY_FAILURES_PER_APPROVER, RateLimiter::attempts(ManagerPinVerifier::dailyKey($this->adminId)));
+
+            return $hasher->checks;
+        });
+
+        $this->assertSame(2, $hashed, 'Only the 19th and 20th slots may test a PIN.');
+        Queue::assertPushed(SendManagerPinLockedAlertJob::class, 1);
+        $this->cancel($this->cashSale(), $this->adminId, self::ADMIN_PIN, $this->cashierHeaders())->assertStatus(429);
+    }
+
+    /**
+     * Security review of SEC-21 (4): bcrypt ran only for an existing, active, authorised approver
+     * with a PIN, so the response time told which user ids are PIN-holding managers. Every
+     * refusal now costs exactly one bcrypt check and returns the same body.
+     */
+    public function test_every_refusal_costs_exactly_one_bcrypt_check_and_returns_the_same_body(): void
+    {
+        $invoiceId = $this->cashSale();
+        $noPin = $this->createTenantUser($this->tenant, 'admin');
+        $notAllowed = $this->createTenantUser($this->tenant, 'cashier');
+        $this->inTenant($this->tenant, fn () => User::query()->findOrFail($notAllowed->id)->forceFill(['pos_pin' => Hash::make('111111')])->save());
+
+        $bodies = [];
+        foreach ([
+            'wrong pin' => [$this->adminId, '999999'],
+            'unknown user' => [99999999, '999999'],
+            'no pin set' => [(int) $noPin->id, '999999'],
+            'not allowed' => [(int) $notAllowed->id, '111111'],
+        ] as $case => [$approverId, $pin]) {
+            $hasher = $this->reentrantHasher(static function (): void {});
+            $response = $this->cancel($invoiceId, $approverId, $pin, $this->cashierHeaders())->assertStatus(422);
+            $this->assertSame(1, $hasher->checks, $case);
+            $bodies[$case] = $response->json();
+        }
+
+        $this->assertCount(1, array_unique(array_map('serialize', $bodies)), 'Every refusal must look the same.');
+    }
+
+    /** LEAVE item of the review: each wrong PIN is attributable (actor id, never the PIN). */
+    public function test_each_wrong_pin_is_activity_logged_with_the_actor_and_the_alert_names_every_actor(): void
+    {
+        Queue::fake();
+        $invoiceId = $this->cashSale();
+        $first = $this->createTenantUser($this->tenant, permissions: ['invoices.cancel'], attributes: ['name' => 'كاشير أول']);
+        $second = $this->createTenantUser($this->tenant, permissions: ['invoices.cancel'], attributes: ['name' => 'كاشير تاني']);
+
+        $this->cancel($invoiceId, $this->adminId, '111111', $this->tenantHeaders($this->tenant, $first))->assertStatus(422);
+        $this->cancel($invoiceId, $this->adminId, '222222', $this->tenantHeaders($this->tenant, $second))->assertStatus(422);
+
+        $this->inTenant($this->tenant, function () use ($first, $second): void {
+            $rows = ActivityLog::query()->where('action', ManagerPinVerifier::FAILED_ACTION)->orderBy('id')->get();
+            $this->assertSame([(int) $first->id, (int) $second->id], $rows->pluck('user_id')->map(fn ($id): int => (int) $id)->all());
+            $this->assertSame([$this->adminId, $this->adminId], $rows->pluck('subject_id')->map(fn ($id): int => (int) $id)->all());
+            foreach ($rows as $row) {
+                $this->assertStringNotContainsString('111111', json_encode($row->toArray(), JSON_UNESCAPED_UNICODE) ?: '');
+                $this->assertStringNotContainsString('222222', json_encode($row->toArray(), JSON_UNESCAPED_UNICODE) ?: '');
+            }
+        });
+
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true], 200)]);
+        $this->inTenant($this->tenant, function () use ($second): void {
+            Setting::set('telegram_bot_token', SettingSecrets::encrypt('222:fixtureShopBot'));
+            Setting::set('telegram_chat_id', '-100123');
+            app()->call([new SendManagerPinLockedAlertJob($this->adminId, (int) $second->id, 20), 'handle']);
+        });
+        Http::assertSent(fn (HttpRequest $request): bool => str_contains((string) $request['text'], 'كاشير أول')
+            && str_contains((string) $request['text'], 'كاشير تاني'));
+    }
+
+    /**
+     * Review item 11: the lock follows the shop's BUSINESS day. With a 03:00 cutoff, 20 failures
+     * at 22:00 stay locked after midnight (00:30 is still the same business day) and lift at 03:30.
+     */
+    public function test_the_lock_follows_the_business_day_cutoff(): void
+    {
+        Queue::fake();
+        $this->inTenant($this->tenant, fn () => Setting::set('business_day_cutoff', '03:00'));
+        $this->travelTo(CarbonImmutable::parse('2026-11-12 20:00:00', 'UTC')); // 22:00 Cairo
+        $invoiceId = $this->cashSale();
+
+        $this->failTwentyTimes($invoiceId, $this->adminId, $this->cashierHeaders());
+
+        $this->travelTo(CarbonImmutable::parse('2026-11-12 22:30:00', 'UTC')); // 00:30 Cairo, next calendar day
+        $this->cancel($invoiceId, $this->adminId, self::ADMIN_PIN, $this->cashierHeaders())->assertStatus(429);
+
+        $this->travelTo(CarbonImmutable::parse('2026-11-13 01:30:00', 'UTC')); // 03:30 Cairo, next business day
+        $this->cancel($invoiceId, $this->adminId, self::ADMIN_PIN, $this->cashierHeaders())->assertOk();
+    }
+
+    /** @return list<int> */
+    private function actorIds(int $count): array
+    {
+        $ids = [];
+        for ($i = 0; $i < $count; $i++) {
+            $ids[] = (int) $this->createTenantUser($this->tenant, permissions: ['invoices.cancel'])->id;
+        }
+
+        return $ids;
+    }
+
+    /** One verify() call as user $actorId; any refusal is swallowed (a parallel request). Runs in the tenant. */
+    private function attempt(ManagerPinVerifier $verifier, int $actorId, string $pin): void
+    {
+        try {
+            $verifier->verify($this->adminId, $pin, User::query()->findOrFail($actorId), $this->storeId, static fn (User $u): bool => $u->hasRole('admin'));
+        } catch (ValidationException|ThrottleRequestsException) {
+        }
+    }
+
+    /**
+     * Swaps the hasher for one that counts check() calls and, before answering, runs $onCheck
+     * with the current nesting depth (a request arriving while this one is hashing).
+     *
+     * @param  Closure(int): void  $onCheck
+     */
+    private function reentrantHasher(Closure $onCheck): object
+    {
+        $real = Hash::getFacadeRoot();
+        $hasher = new class($real, $onCheck) implements Hasher
+        {
+            public int $checks = 0;
+
+            private int $depth = 0;
+
+            public function __construct(private readonly Hasher $real, private readonly Closure $onCheck) {}
+
+            public function info($hashedValue): array
+            {
+                return $this->real->info($hashedValue);
+            }
+
+            public function make($value, array $options = []): string
+            {
+                return $this->real->make($value, $options);
+            }
+
+            public function check($value, $hashedValue, array $options = []): bool
+            {
+                $this->checks++;
+                $this->depth++;
+                ($this->onCheck)($this->depth);
+
+                return $this->real->check($value, $hashedValue, $options);
+            }
+
+            public function needsRehash($hashedValue, array $options = []): bool
+            {
+                return $this->real->needsRehash($hashedValue, $options);
+            }
+
+            /** @param  array<int, mixed>  $arguments */
+            public function __call(string $method, array $arguments): mixed
+            {
+                return $this->real->{$method}(...$arguments);
+            }
+        };
+        Hash::swap($hasher);
+
+        return $hasher;
     }
 
     /**

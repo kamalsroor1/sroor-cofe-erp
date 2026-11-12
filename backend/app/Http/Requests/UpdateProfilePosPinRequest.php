@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use Closure;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Hash;
 
 /**
  * BE-08: the signed-in user sets (or clears with null) their own manager approval PIN. The account
- * password is required, so a left-open session cannot mint an approval PIN.
+ * password is required, so a left-open session cannot mint an approval PIN; it is checked (with the
+ * shared lockout) by SetOwnPosPinAction.
  */
 final class UpdateProfilePosPinRequest extends FormRequest
 {
@@ -20,19 +19,15 @@ final class UpdateProfilePosPinRequest extends FormRequest
     }
 
     /**
-     * @return array<string, list<mixed>>
+     * @return array<string, list<string>>
      */
     public function rules(): array
     {
         return [
             // SEC-21: a NEW PIN is exactly 6 digits. Existing shorter PINs keep verifying until changed.
             'pin' => ['present', 'nullable', 'string', 'regex:/^\d{6}$/'],
-            'current_password' => ['required', 'string', function (string $attribute, mixed $value, Closure $fail): void {
-                $hash = $this->user()?->password;
-                if (! is_string($value) || ! is_string($hash) || ! Hash::check($value, $hash)) {
-                    $fail(__('auth.current_password_incorrect'));
-                }
-            }],
+            // Verified (with the account lockout) by SetOwnPosPinAction, never here.
+            'current_password' => ['required', 'string', 'max:255'],
         ];
     }
 
