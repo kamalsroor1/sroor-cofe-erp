@@ -296,6 +296,7 @@ return [
     'activity_allow_negative_stock_enabled' => 'تفعيل إعداد السماح بالرصيد السالب',
     'activity_allow_negative_stock_disabled' => 'إيقاف إعداد السماح بالرصيد السالب',
     'returns_max_days' => 'مدة السماح بالمرتجع (بالأيام)',
+    'backdate_max_days' => 'أقصى عدد أيام لتأخير تاريخ المستند',
     'returns_max_days_desc' => 'أقصى عدد أيام بعد تاريخ الفاتورة يُقبل فيه مرتجع عليها. سيبها فاضية لو مفيش حد.',
     'pos_idle_lock_minutes' => 'قفل الشاشة بعد الخمول (بالدقائق)',
     'pos_idle_lock_minutes_desc' => 'بعد المدة دي من غير أي استخدام تظهر شاشة قفل تطلب باسورد أو PIN المستخدم. صفر = مقفول.',

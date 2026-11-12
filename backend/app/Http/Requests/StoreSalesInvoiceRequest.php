@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Models\Customer;
-use App\Support\TenantClock;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreSalesInvoiceRequest extends FormRequest
@@ -54,7 +53,7 @@ class StoreSalesInvoiceRequest extends FormRequest
             'customer_id' => ['required', 'integer', 'exists:customers,id'],
             'store_id' => ['nullable', 'integer', 'exists:stores,id'],
             // BE-08: never in the future (tenant calendar day).
-            'invoice_date' => ['nullable', 'date', 'before_or_equal:'.app(TenantClock::class)->now()->toDateString()],
+            'invoice_date' => ['nullable', 'date', new \App\Rules\DocumentDate($this->user())],
             'payment_type' => ['required', 'in:cash,credit,partial'],
             'payment_method' => ['nullable', 'string', 'in:'.self::CHECKOUT_PAYMENT_METHODS],
             'paid_amount' => ['nullable', 'numeric', 'min:0', 'decimal:0,3'],

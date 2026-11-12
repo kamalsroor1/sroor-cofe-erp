@@ -24,6 +24,8 @@
       <div>
         <BaseDatePicker
           :model-value="purchaseDate"
+          :min-date="minDate"
+          :max-date="maxDate"
           @update:model-value="$emit('update:purchaseDate', $event)"
           :label="$t('purchases.purchase_date')"
           required
@@ -49,6 +51,9 @@ import { Factory } from 'lucide-vue-next';
 import BaseSelect from '../Form/BaseSelect.vue';
 import BaseInput from '../Form/BaseInput.vue';
 import BaseDatePicker from '../Form/BaseDatePicker.vue';
+import { useDocumentDateLimits } from '../../Composables/useDocumentDateLimits';
+
+const { minDate, maxDate } = useDocumentDateLimits();
 
 defineProps({
   supplierId: { type: [String, Number], default: '' },

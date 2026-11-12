@@ -84,6 +84,8 @@ class PermissionsSeeder extends Seeder
         'returns.override_window',
         // ROLE-01: delete a return document, reversing its stock and money (admin only by default).
         'returns.delete',
+        // DATE-02: date a document before the current business day (admin only by default).
+        'documents.backdate',
 
         // Admin & Reports
         'reports.view',

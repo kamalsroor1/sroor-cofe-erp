@@ -83,6 +83,8 @@ class UpdateSettingsRequest extends FormRequest
             TenantSettings::KEY_ALLOW_NEGATIVE_STOCK => ['sometimes', 'boolean'],
             // SET-02: sales-return window in whole days; null/empty = no limit (stored '').
             TenantSettings::KEY_RETURNS_MAX_DAYS => ['sometimes', 'nullable', 'integer', 'min:'.TenantSettings::RETURNS_MAX_DAYS_MIN, 'max:'.TenantSettings::RETURNS_MAX_DAYS_MAX],
+            // DATE-02: how many days back a document may be dated (needs documents.backdate).
+            TenantSettings::KEY_BACKDATE_MAX_DAYS => ['sometimes', 'required', 'integer', 'min:0', 'max:'.TenantSettings::BACKDATE_MAX_DAYS_MAX],
             // SET-02: idle minutes before the SPA lock screen; 0 = off.
             TenantSettings::KEY_POS_IDLE_LOCK_MINUTES => ['sometimes', 'required', 'integer', 'min:0', 'max:'.TenantSettings::POS_IDLE_LOCK_MINUTES_MAX],
             TenantSettings::KEY_DEFAULT_LOCALE => ['sometimes', 'required', 'string', Rule::in(TenantSettings::SUPPORTED_LOCALES)],
@@ -105,6 +107,7 @@ class UpdateSettingsRequest extends FormRequest
             TenantSettings::KEY_ALLOW_NEGATIVE_STOCK => __('settings.allow_negative_stock'),
             TenantSettings::KEY_RETURNS_MAX_DAYS => __('settings.returns_max_days'),
             TenantSettings::KEY_POS_IDLE_LOCK_MINUTES => __('settings.pos_idle_lock_minutes'),
+            TenantSettings::KEY_BACKDATE_MAX_DAYS => __('settings.backdate_max_days'),
             TenantSettings::KEY_INVENTORY_UNITS => __('settings.inventory_units'),
             'telegram_bot_token' => __('settings.attr_telegram_bot_token'),
             'telegram_chat_id' => __('settings.attr_telegram_chat_id'),

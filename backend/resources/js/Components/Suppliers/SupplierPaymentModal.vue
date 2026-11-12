@@ -37,6 +37,8 @@
 
         <BaseDatePicker
           :model-value="paymentForm.payment_date"
+          :min-date="minDate"
+          :max-date="maxDate"
           @update:model-value="$emit('update:field', 'payment_date', $event)"
           :label="$t('contacts.payment_date')"
           required
@@ -80,9 +82,11 @@ import BaseDatePicker from '../Form/BaseDatePicker.vue';
 import BaseTextarea from '../Form/BaseTextarea.vue';
 import BaseButton from '../Common/BaseButton.vue';
 import { computed } from 'vue';
+import { useDocumentDateLimits } from '../../Composables/useDocumentDateLimits';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
 
+const { minDate, maxDate } = useDocumentDateLimits();
 const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
 

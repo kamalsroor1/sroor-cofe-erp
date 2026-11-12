@@ -18,7 +18,7 @@ class CollectCustomerPaymentRequest extends FormRequest
         return [
             'amount' => ['required', 'numeric', 'min:0.01'],
             'payment_method' => ['required', 'string', 'in:cash,instapay,wallet,bank,visa,e_wallet,bank_transfer'],
-            'payment_date' => ['required', 'date'],
+            'payment_date' => ['required', 'date', new \App\Rules\DocumentDate($this->user())],
             'notes' => ['nullable', 'string', 'max:500'],
         ];
     }

@@ -69,6 +69,8 @@
       <div>
         <BaseDatePicker
           :model-value="form.return_date"
+          :min-date="minDate"
+          :max-date="maxDate"
           @update:model-value="$emit('update:field', 'return_date', $event)"
           :label="$t('returns.return_date')"
           required
@@ -82,6 +84,9 @@
 import { RefreshCw } from 'lucide-vue-next';
 import BaseSelect from '../Form/BaseSelect.vue';
 import BaseDatePicker from '../Form/BaseDatePicker.vue';
+import { useDocumentDateLimits } from '../../Composables/useDocumentDateLimits';
+
+const { minDate, maxDate } = useDocumentDateLimits();
 
 defineProps({
   form: { type: Object, required: true },

@@ -296,6 +296,7 @@ return [
     'activity_allow_negative_stock_enabled' => 'Enabled allow negative stock setting',
     'activity_allow_negative_stock_disabled' => 'Disabled allow negative stock setting',
     'returns_max_days' => 'Return window (days)',
+    'backdate_max_days' => 'Back-dating limit (days)',
     'returns_max_days_desc' => 'How many days after the invoice date a return against it is accepted. Leave empty for no limit.',
     'pos_idle_lock_minutes' => 'Lock screen after inactivity (minutes)',
     'pos_idle_lock_minutes_desc' => 'After this many minutes without use, a lock screen asks for the user\'s password or PIN. 0 = off.',

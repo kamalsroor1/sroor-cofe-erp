@@ -81,6 +81,13 @@ final class TenantSettings
 
     public const RETURNS_MAX_DAYS_MAX = 3650;
 
+    /** DATE-02: how many business days back a document may be dated by a user with documents.backdate. */
+    public const KEY_BACKDATE_MAX_DAYS = 'backdate_max_days';
+
+    public const DEFAULT_BACKDATE_MAX_DAYS = 7;
+
+    public const BACKDATE_MAX_DAYS_MAX = 3650;
+
     public const DEFAULT_POS_IDLE_LOCK_MINUTES = 0;
 
     /** SET-02: bounds of pos_idle_lock_minutes (0 = off). */
@@ -251,6 +258,20 @@ final class TenantSettings
         $days = (int) $value;
 
         return $days >= self::RETURNS_MAX_DAYS_MIN && $days <= self::RETURNS_MAX_DAYS_MAX ? $days : null;
+    }
+
+    /**
+     * DATE-02: the back-dating window in days (0 = today only). Missing or invalid = default.
+     */
+    public function backdateMaxDays(): int
+    {
+        $value = trim((string) Setting::get(self::KEY_BACKDATE_MAX_DAYS, ''));
+
+        if (preg_match('/^\d{1,4}$/', $value) !== 1 || (int) $value > self::BACKDATE_MAX_DAYS_MAX) {
+            return self::DEFAULT_BACKDATE_MAX_DAYS;
+        }
+
+        return (int) $value;
     }
 
     /**

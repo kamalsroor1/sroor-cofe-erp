@@ -71,6 +71,9 @@ return [
         'override_window' => 'Accept a sales return after the return window has ended',
         'delete' => 'Delete a return document and reverse its stock and treasury effect',
     ],
+    'documents' => [
+        'backdate' => 'Date a document before today\'s business day',
+    ],
     'reports' => [
         'view' => 'View financial and profit reports and branch comparison',
     ],

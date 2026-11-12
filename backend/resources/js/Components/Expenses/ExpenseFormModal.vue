@@ -64,6 +64,8 @@
         <div>
           <BaseDatePicker
             :model-value="form.expense_date"
+            :min-date="minDate"
+            :max-date="maxDate"
             @update:model-value="$emit('update:field', 'expense_date', $event)"
             :label="$t('common.date')"
             required
@@ -121,8 +123,10 @@ import BaseDatePicker from '../Form/BaseDatePicker.vue';
 import BaseTextarea from '../Form/BaseTextarea.vue';
 import BaseButton from '../Common/BaseButton.vue';
 import { computed } from 'vue';
+import { useDocumentDateLimits } from '../../Composables/useDocumentDateLimits';
 import { useTrans } from '../../Composables/useTrans';
 
+const { minDate, maxDate } = useDocumentDateLimits();
 const { t } = useTrans();
 
 defineProps({

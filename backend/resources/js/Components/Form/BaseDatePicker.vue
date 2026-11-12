@@ -84,6 +84,8 @@ const props = defineProps({
   hint: { type: String, default: '' },
   wrapperClass: { type: String, default: '' },
   inputClass: { type: String, default: '' },
+  minDate: { type: String, default: null },
+  maxDate: { type: String, default: null },
 });
 
 const emit = defineEmits(['update:modelValue', 'change', 'clear']);
@@ -104,6 +106,8 @@ const initFlatpickr = () => {
     enableTime: props.enableTime,
     dateFormat: props.enableTime ? 'Y-m-d H:i' : 'Y-m-d',
     defaultDate: props.modelValue || undefined,
+    minDate: props.minDate || undefined,
+    maxDate: props.maxDate || undefined,
     disableMobile: true,
     onChange: (selectedDates, dateStr) => {
       emit('update:modelValue', dateStr);
@@ -118,6 +122,12 @@ onMounted(() => {
 
 watch(isRtl, () => {
   initFlatpickr();
+});
+
+watch([() => props.minDate, () => props.maxDate], () => {
+  if (!fpInstance) return;
+  fpInstance.set('minDate', props.minDate || undefined);
+  fpInstance.set('maxDate', props.maxDate || undefined);
 });
 
 watch(
