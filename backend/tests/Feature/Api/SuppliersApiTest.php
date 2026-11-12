@@ -286,6 +286,37 @@ class SuppliersApiTest extends TenantTestCase
             ]);
     }
 
+    public function test_supplier_statement_for_a_period_carries_the_balance_forward(): void
+    {
+        $supplierId = $this->inTenant($this->tenant, function (): int {
+            $supplier = Supplier::create([
+                'name' => 'مورد مرحّل',
+                'company_name' => 'شركة المرحّل',
+                'phone' => '01000007099',
+                'current_balance' => '7000.000',
+                'is_active' => true,
+            ]);
+
+            $this->createCreditPurchase($supplier->id, 'PUR-OLD', '4000.000');
+            Purchase::where('purchase_number', 'PUR-OLD')->update(['purchase_date' => '2026-01-10']);
+            $this->createCreditPurchase($supplier->id, 'PUR-NEW', '3000.000');
+            Purchase::where('purchase_number', 'PUR-NEW')->update(['purchase_date' => '2026-02-10']);
+
+            return $supplier->id;
+        });
+
+        $response = $this->getJson('/api/v1/suppliers/'.$supplierId.'/statement?from_date=2026-02-01&to_date=2026-02-28', $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonPath('data.summary.opening_balance', '4000.000')
+            ->assertJsonPath('data.ledger.0.ref_number', 'PUR-NEW')
+            ->assertJsonPath('data.ledger.0.balance_after', '7000.000');
+        $this->assertCount(1, $response->json('data.ledger'));
+
+        $this->getJson('/api/v1/suppliers/'.$supplierId.'/statement', $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonPath('data.summary.opening_balance', '0.000');
+    }
+
     public function test_can_toggle_supplier_active_status(): void
     {
         $supplierId = $this->inTenant($this->tenant, fn (): int => Supplier::create([

@@ -1,13 +1,15 @@
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../Services/api';
 import { useLoadError } from './useLoadError';
+import { useTrans } from './useTrans';
 import { businessToday, startOfMonth, endOfMonth, startOfYear, endOfYear } from './useBusinessDate';
 
 export function useSupplierStatement() {
     const route = useRoute();
     const supplierId = route.params.id;
     const { error, errorMessage, clearError, setError } = useLoadError();
+    const { t } = useTrans();
 
     const supplier = ref(null);
     const ledger = ref([]);
@@ -19,6 +21,25 @@ export function useSupplierStatement() {
 
     const dateFrom = ref('');
     const dateTo = ref('');
+    // Dates of the period the loaded ledger belongs to (not the inputs, which may be mid-edit).
+    const loadedFrom = ref('');
+
+    // BUG-08: a period that does not start at the beginning opens with a carried-forward row.
+    const rows = computed(() => {
+        if (!loadedFrom.value) return ledger.value;
+        return [
+            {
+                date: loadedFrom.value,
+                type: t('contacts.statement_opening_row'),
+                ref_number: '',
+                debit: null,
+                credit: null,
+                balance_after: summary.value.opening_balance ?? '0.000',
+                notes: '',
+            },
+            ...ledger.value,
+        ];
+    });
     const activePreset = ref('all');
     const isLoading = ref(false);
 
@@ -57,6 +78,7 @@ export function useSupplierStatement() {
                 supplier.value = data.supplier;
                 ledger.value = data.ledger || [];
                 summary.value = data.summary || {};
+                loadedFrom.value = dateFrom.value || '';
             } else {
                 setError(null);
             }
@@ -76,6 +98,7 @@ export function useSupplierStatement() {
     return {
         supplier,
         ledger,
+        rows,
         summary,
         dateFrom,
         dateTo,

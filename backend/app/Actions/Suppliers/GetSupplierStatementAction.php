@@ -47,6 +47,7 @@ final class GetSupplierStatementAction
                 'total_paid' => Decimal::normalize((string) $totalDebit),
                 'current_balance' => Decimal::normalize((string) $supplier->current_balance),
                 'transactions_count' => count($ledgerData['ledger']),
+                'opening_balance' => $ledgerData['opening_balance'],
             ],
             'ledger' => array_map(fn ($row) => [
                 'date' => $row['date'],

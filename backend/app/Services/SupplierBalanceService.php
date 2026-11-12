@@ -139,9 +139,12 @@ class SupplierBalanceService
         }
 
         // Sort chronologically and compute running balance
-        $sorted = $entries->sortBy('timestamp')->values();
+        // BUG-08: by document date first, then by entry time.
+        $sorted = $entries->sortBy([['date', 'asc'], ['timestamp', 'asc']])->values();
 
-        $runningBalance = '0.000';
+        // BUG-08: balance carried forward from everything dated before the period.
+        $openingBalance = $fromDate ? $this->balanceBefore($supplier, $fromDate) : '0.000';
+        $runningBalance = $openingBalance;
         $totalDebit = '0.000';
         $totalCredit = '0.000';
 
@@ -161,11 +164,41 @@ class SupplierBalanceService
 
         return [
             'ledger' => $ledger,
+            'opening_balance' => Decimal::normalize($openingBalance),
             'summary' => [
                 'total_purchases' => Decimal::normalize((string) $totalCredit),
                 'total_payments' => Decimal::normalize((string) $totalDebit),
                 'current_balance' => Decimal::normalize((string) $supplier->current_balance),
             ],
         ];
+    }
+
+    /**
+     * Net payable (credit - debit) of every supplier movement dated strictly before $date.
+     */
+    private function balanceBefore(Supplier $supplier, string $date): string
+    {
+        $day = \Carbon\CarbonImmutable::parse($date)->toDateString();
+
+        $openings = (string) (OpeningBalance::query()
+            ->where('party_type', OpeningBalance::PARTY_SUPPLIER)
+            ->where('party_id', $supplier->id)
+            ->where('balance_date', '<', $day)
+            ->sum('amount') ?: '0.000');
+        $purchases = (string) (Purchase::where('supplier_id', $supplier->id)
+            ->where('status', 'confirmed')
+            ->where('purchase_date', '<', $day)
+            ->sum('net_total') ?: '0.000');
+        $payments = (string) (Payment::where('supplier_id', $supplier->id)
+            ->where('payment_date', '<', $day)
+            ->sum('amount') ?: '0.000');
+        $returns = (string) (ReturnDocument::where('supplier_id', $supplier->id)
+            ->where('return_type', 'purchase_return')
+            ->where('return_date', '<', $day)
+            ->sum('total_amount') ?: '0.000');
+
+        $balance = bcadd($openings, $purchases, 3);
+
+        return bcsub(bcsub($balance, $payments, 3), $returns, 3);
     }
 }

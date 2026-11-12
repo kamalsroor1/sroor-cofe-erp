@@ -57,7 +57,7 @@ class CustomerBalanceService
      *
      * PERF-01: the four sources (opening balances, confirmed invoices, receipts / refunds,
      * sales returns) are one UNION ALL in SQL, ordered and paged there; nothing is loaded and
-     * sorted in PHP. Order (unchanged): opening-balance entries first, then created_at, then the
+     * sorted in PHP. Order (unchanged): opening-balance entries first, then the document date, then created_at, then the
      * source (invoice, payment, return), then the id.
      *
      * Balances are exact on every page:
@@ -222,6 +222,8 @@ class CustomerBalanceService
     {
         return $query
             ->orderBy('ledger.sort_group')
+            // BUG-08: document date first, so a back-dated document sits where its date puts it.
+            ->orderBy('ledger.entry_date')
             ->orderBy('ledger.sort_at')
             ->orderBy('ledger.source_rank')
             ->orderBy('ledger.entry_id');

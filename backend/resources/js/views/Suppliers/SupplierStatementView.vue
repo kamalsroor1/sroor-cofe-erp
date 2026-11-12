@@ -25,7 +25,7 @@
       />
 
       <!-- Ledger Table & Mobile Cards -->
-      <SupplierStatementTable :ledger="ledger" :loading="isLoading" />
+      <SupplierStatementTable :ledger="rows" :loading="isLoading" />
     </template>
   </div>
 </template>
@@ -41,7 +41,7 @@ import { useSupplierStatement } from '../../Composables/useSupplierStatement';
 
 const {
   supplier,
-  ledger,
+  rows,
   summary,
   dateFrom,
   dateTo,
