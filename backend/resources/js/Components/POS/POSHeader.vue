@@ -15,28 +15,23 @@
           <ArrowRight class="w-4 h-4 ltr:-scale-x-100" aria-hidden="true" />
         </router-link>
 
-        <div class="hidden md:flex items-center gap-2">
+        <div class="hidden md:flex items-center gap-2 min-w-0">
           <div
-            class="w-10 h-10 rounded-xl bg-theme-primary text-slate-950 flex items-center justify-center font-black text-lg shadow-xs"
+            class="hidden xl:flex w-10 h-10 rounded-xl bg-theme-primary text-slate-950 items-center justify-center font-black text-lg shadow-xs"
           >
             <Zap class="w-5 h-5" />
           </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <h1 class="text-sm font-black text-slate-900 dark:text-white leading-none">
-                {{ $t('pos.pos_fast_title') }}
-              </h1>
-              <span class="px-1.5 py-0.2 text-[10px] font-mono font-bold rounded bg-theme-light text-theme-primary"
-                >v{{ appVersion }}</span
-              >
-            </div>
-            <div class="flex items-center gap-2 mt-1">
+          <div class="min-w-0">
+            <h1 class="hidden xl:block text-sm font-black text-slate-900 dark:text-white leading-none">
+              {{ $t('pos.pos_fast_title') }}
+            </h1>
+            <div class="flex items-center gap-2 xl:mt-1">
               <!-- Store Switcher directly inside POS Header -->
               <div v-if="stores?.length > 1" class="relative inline-flex items-center">
                 <select
                   :value="activeStore?.id"
                   @change="$emit('switch-store', $event.target.value)"
-                  class="h-6 pointer-coarse:h-11 pointer-coarse:-my-2.5 pe-5 ps-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg text-[11px] font-bold text-slate-800 dark:text-cyan-400 focus:outline-none focus:ring-1 focus:ring-theme-primary cursor-pointer font-tajawal appearance-none transition"
+                  class="h-6 pointer-coarse:h-11 pointer-coarse:-my-2.5 pe-5 ps-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-800 dark:text-cyan-400 focus:outline-none focus:ring-1 focus:ring-theme-primary cursor-pointer font-tajawal appearance-none transition"
                 >
                   <option
                     v-for="s in stores"
@@ -49,7 +44,7 @@
                 </select>
                 <ChevronDown class="w-3 h-3 text-slate-400 absolute end-1 pointer-events-none" />
               </div>
-              <span v-else class="text-[11px] text-slate-500 dark:text-slate-400 font-bold">{{
+              <span v-else class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{
                 activeStore?.name || $t('common.main_branch')
               }}</span>
               <span class="text-slate-300 dark:text-slate-700">•</span>
@@ -64,7 +59,9 @@
               >
                 <template v-if="activeShift">
                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  {{ $t('pos.shift_number_badge', { number: activeShift.shift_number || activeShift.id }) }}
+                  <span class="truncate max-w-[104px] xl:max-w-none">{{
+                    $t('pos.shift_number_badge', { number: activeShift.shift_number || activeShift.id })
+                  }}</span>
                 </template>
                 <template v-else>{{ $t('pos.no_shift_open') }}</template>
               </button>
@@ -74,7 +71,7 @@
       </div>
 
       <!-- Center: Giant Barcode / Product Search Box with Dropdown -->
-      <div class="flex-1 min-w-0 max-w-3xl relative" data-testid="pos-search-field">
+      <div class="flex-1 min-w-0 md:min-w-[280px] max-w-3xl relative" data-testid="pos-search-field">
         <div class="relative">
           <div class="absolute inset-y-0 start-0 ps-3.5 flex items-center pointer-events-none text-slate-400">
             <Search class="w-5 h-5" />
@@ -109,7 +106,7 @@
               <X class="w-4 h-4" aria-hidden="true" />
             </button>
             <kbd
-              class="hidden lg:inline-block px-2 py-1 text-[10px] font-mono font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg border border-slate-300 dark:border-slate-700"
+              class="hidden lg:inline-block pointer-coarse:hidden px-2 py-1 text-xs font-mono font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg border border-slate-300 dark:border-slate-700"
               >F2</kbd
             >
           </div>
@@ -121,11 +118,11 @@
           class="absolute top-full start-0 end-0 mt-2 bg-white dark:bg-slate-900 border-2 border-theme-primary/50 rounded-2xl shadow-2xl overflow-hidden z-50 max-h-[60dvh] md:max-h-96 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-150"
         >
           <div
-            class="p-2 bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] font-bold text-slate-500"
+            class="p-2 bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-slate-500"
           >
             <span
-              >{{ $t('pos.search_results_count', { count: searchResults.length }) }} •
-              {{ $t('pos.search_nav_hint') }}</span
+              >{{ $t('pos.search_results_count', { count: searchResults.length }) }}
+              <span class="pointer-coarse:hidden">• {{ $t('pos.search_nav_hint') }}</span></span
             >
             <span class="text-theme-primary"
               >{{ $t('pos.prices_label') }}:
@@ -169,7 +166,7 @@
                     </div>
                     <div v-if="item.category" class="mt-0.5">
                       <span
-                        class="text-[10px] font-normal px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-tajawal inline-block"
+                        class="text-xs font-normal px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-tajawal inline-block"
                       >
                         {{ item.category }}
                       </span>
@@ -180,14 +177,8 @@
                 <!-- Price Breakdown Top-End -->
                 <div class="text-end shrink-0 ps-2">
                   <div class="text-sm sm:text-base font-black font-mono text-emerald-600 dark:text-emerald-400">
-                    {{ formatMoney(getItemPrice(item)) }}
-                    <span class="text-[10px] font-normal text-slate-400 font-tajawal">{{ currencyLabel }}</span>
-                  </div>
-                  <div
-                    v-if="Number(item.min_selling_price) > 0"
-                    class="text-[10px] font-mono text-purple-600 dark:text-purple-400 font-bold mt-0.5"
-                  >
-                    {{ $t('pos.min_selling_price') }}: {{ formatMoney(item.min_selling_price) }}
+                    {{ formatMoney(priceFor(item, activePriceTier)) }}
+                    <span class="text-xs font-normal text-slate-400 font-tajawal">{{ currencyLabel }}</span>
                   </div>
                 </div>
               </div>
@@ -196,13 +187,13 @@
               <div
                 class="flex items-center justify-between text-xs pt-1 border-t border-slate-100/60 dark:border-slate-800/40"
               >
-                <div class="flex items-center gap-2 font-mono text-[11px] text-slate-500">
+                <div class="flex items-center gap-2 font-mono text-xs text-slate-500">
                   <span class="font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{{
                     item.code || '—'
                   }}</span>
                   <span>•</span>
                   <span
-                    class="font-bold px-1.5 py-0.5 rounded text-[11px]"
+                    class="font-bold px-1.5 py-0.5 rounded text-xs"
                     :class="
                       item.current_stock > 0
                         ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
@@ -221,7 +212,7 @@
                 </div>
 
                 <span
-                  class="hidden sm:inline-flex text-[11px] font-bold px-2 py-0.5 rounded-md bg-theme-primary text-slate-950 group-hover:scale-105 transition-transform shadow-2xs items-center gap-1"
+                  class="hidden sm:inline-flex text-xs font-bold px-2 py-0.5 rounded-md bg-theme-primary text-slate-950 group-hover:scale-105 transition-transform shadow-2xs items-center gap-1"
                 >
                   <span>{{ $t('pos.add_item_btn') }}</span>
                 </span>
@@ -262,23 +253,6 @@
 
       <!-- Left: Customer, Catalog Toggle, Tier & Action Buttons -->
       <div class="flex items-center gap-2 shrink-0">
-        <!-- Catalog Grid / Fullscreen Toggle (Disabled / Coming Soon) -->
-        <button
-          type="button"
-          disabled
-          class="hidden 2xl:flex min-h-[44px] px-3 py-2 border rounded-xl text-xs font-bold transition items-center gap-1.5 opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-400 dark:text-slate-500 shadow-2xs select-none"
-          :title="`${$t('pos.show_menu')} - ${$t('nav.coming_soon')}`"
-        >
-          <LayoutGrid class="w-4 h-4 shrink-0 opacity-70" />
-          <span>{{ $t('pos.show_menu') }}</span>
-          <span
-            class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[10px] font-bold border border-amber-500/20"
-          >
-            <Rocket class="w-3 h-3 shrink-0" aria-hidden="true" />
-            {{ $t('nav.coming_soon') }}
-          </span>
-        </button>
-
         <!-- Recent sales (F8) -->
         <button
           type="button"
@@ -309,11 +283,11 @@
           <div class="hidden sm:block text-start leading-tight min-w-0">
             <div
               data-testid="pos-selected-customer-name"
-              class="text-slate-900 dark:text-white truncate max-w-[130px] font-black"
+              class="text-slate-900 dark:text-white truncate max-w-[72px] xl:max-w-[130px] font-black"
             >
               {{ selectedCustomer?.name || $t('pos.general_cash_customer') }}
             </div>
-            <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+            <div class="text-xs text-slate-500 dark:text-slate-400 font-mono truncate max-w-[72px] xl:max-w-[130px]">
               {{ selectedCustomer?.phone || $t('pos.general_cash_customer') }}
             </div>
           </div>
@@ -325,6 +299,7 @@
         >
           <button
             type="button"
+            data-testid="pos-tier-retail"
             @click="$emit('update:activePriceTier', 'retail')"
             class="min-h-[36px] pointer-coarse:min-h-11 px-2.5 py-1 rounded-lg transition cursor-pointer"
             :class="
@@ -337,6 +312,7 @@
           </button>
           <button
             type="button"
+            data-testid="pos-tier-wholesale"
             @click="$emit('update:activePriceTier', 'wholesale')"
             class="min-h-[36px] pointer-coarse:min-h-11 px-2.5 py-1 rounded-lg transition cursor-pointer"
             :class="
@@ -399,32 +375,19 @@
 
 <script setup>
 import { ref } from 'vue';
-import {
-  ArrowRight,
-  Search,
-  Users,
-  RotateCcw,
-  Zap,
-  LayoutGrid,
-  ChevronDown,
-  History,
-  X,
-  EllipsisVertical,
-  Rocket,
-} from 'lucide-vue-next';
+import { ArrowRight, Search, Users, RotateCcw, Zap, ChevronDown, History, X, EllipsisVertical } from 'lucide-vue-next';
 import POSPhoneMenuSheet from './POSPhoneMenuSheet.vue';
 import { useFormatters } from '../../Composables/useFormatters';
+import { priceFor } from '../../helpers/posCartLines';
 
 const { formatMoney, currencyLabel } = useFormatters();
 const searchInputRef = ref(null);
 const showPhoneMenu = ref(false);
 
-const props = defineProps({
-  appVersion: { type: String, default: '1.0.10' },
+defineProps({
   activeStore: { type: Object, default: null },
   stores: { type: Array, default: () => [] },
   activeShift: { type: Object, default: null },
-  showCatalog: { type: Boolean, default: true },
   searchQuery: { type: String, default: '' },
   isSearchFocused: { type: Boolean, default: false },
   searchResults: { type: Array, default: () => [] },
@@ -440,7 +403,6 @@ defineEmits([
   'update:isSearchFocused',
   'update:highlightedIndex',
   'update:activePriceTier',
-  'toggle-catalog',
   'add-item',
   'navigate-dropdown',
   'select-highlighted',
@@ -451,13 +413,6 @@ defineEmits([
   'open-recent-sales',
   'open-shift-menu',
 ]);
-
-const getItemPrice = (item) => {
-  if (!item) return 0;
-  const retail = parseFloat(item.selling_price ?? item.price_retail ?? item.price ?? 0);
-  const wholesale = parseFloat(item.min_selling_price ?? item.price_wholesale ?? retail);
-  return props.activePriceTier === 'wholesale' ? (wholesale > 0 ? wholesale : retail) : retail > 0 ? retail : wholesale;
-};
 
 const focusSearch = () => searchInputRef.value?.focus();
 

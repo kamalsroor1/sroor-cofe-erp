@@ -38,7 +38,6 @@ const isCompact = useCompactViewport();
 const {
   authStore,
   headerRef,
-  appVersion,
   lastCreatedInvoice,
   isOnline,
   orders,
@@ -82,16 +81,13 @@ const {
         v-model:is-search-focused="search.isSearchFocused.value"
         v-model:highlighted-index="search.highlightedIndex.value"
         v-model:active-price-tier="fields.activePriceTier.value"
-        :app-version="appVersion"
         :active-store="catalog.activeStore.value"
         :stores="authStore.stores"
         :active-shift="catalog.activeShift.value"
-        :show-catalog="catalog.showCatalog.value"
         :search-results="search.dropdownResults.value"
         :selected-customer="customer.selectedCustomer.value"
         :cart-empty="cartEmpty"
         :is-searching="search.isSearchingRemote.value"
-        @toggle-catalog="catalog.toggleCatalog"
         @add-item="search.addItemFromDropdown"
         @navigate-dropdown="search.navigateDropdown"
         @select-highlighted="search.selectHighlightedOrFirstItem"

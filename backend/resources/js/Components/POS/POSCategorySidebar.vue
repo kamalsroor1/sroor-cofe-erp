@@ -1,10 +1,10 @@
 <template>
   <aside
-    class="h-full flex flex-col bg-white dark:bg-slate-900/95 border-s border-slate-200 dark:border-slate-800 overflow-hidden w-14 sm:w-44 md:w-48 shrink-0"
+    class="h-full flex flex-col bg-white dark:bg-slate-900/95 border-s border-slate-200 dark:border-slate-800 overflow-hidden w-14 sm:w-44 md:w-56 shrink-0"
   >
     <!-- Header -->
     <div class="p-2.5 border-b border-slate-200 dark:border-slate-800">
-      <h3 class="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden sm:block">
+      <h3 class="text-xs font-black text-slate-600 dark:text-slate-400 uppercase tracking-wider hidden sm:block">
         {{ $t('pos.categories') }}
       </h3>
       <div class="flex justify-center sm:hidden">
@@ -31,7 +31,7 @@
         </span>
         <span
           v-if="favoriteCount > 0"
-          class="badge bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 px-1.5 py-0.2 rounded text-[10px] font-mono hidden sm:inline-block"
+          class="badge bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 px-1.5 py-0.2 rounded text-xs font-mono hidden sm:inline-block"
           >{{ favoriteCount }}</span
         >
       </button>
@@ -111,12 +111,12 @@
         "
         :title="cat.name"
       >
-        <span class="flex items-center gap-1.5 truncate">
+        <span class="flex items-center gap-1.5 min-w-0 text-start">
           <DynamicIcon :name="cat.icon" class="w-4 h-4 shrink-0" />
-          <span class="truncate hidden sm:inline text-xs font-bold">{{ cat.name }}</span>
+          <span class="line-clamp-2 break-words text-[13px] leading-tight font-bold" dir="auto">{{ cat.name }}</span>
         </span>
         <span
-          class="badge bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-1.5 py-0.2 rounded text-[10px] font-mono hidden sm:inline-block"
+          class="badge bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-1.5 py-0.2 rounded text-xs font-mono hidden sm:inline-block"
           >{{ cat.items_count ?? 0 }}</span
         >
       </button>

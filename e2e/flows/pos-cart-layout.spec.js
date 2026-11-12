@@ -87,19 +87,27 @@ async function fullyVisibleRows(page) {
     return { visible: boxes.filter((box) => contains(list, box)).length, tallest: Math.max(...boxes.map((b) => b.height)) };
 }
 
+// On a touch screen (pointer: coarse) every control in a row is 44px tall, so a row is taller than the mouse
+// one (36px controls) and fewer rows fit. The thresholds follow the pointer, not just the viewport width.
+const isCoarse = (page) => page.evaluate(() => window.matchMedia('(pointer: coarse)').matches);
+
 const SIZES = [
-    { name: '1366x768', size: { width: 1366, height: 768 }, minRows: 5 },
-    { name: '1024x768', size: { width: 1024, height: 768 }, minRows: 4 },
-    { name: '1920x1080', size: { width: 1920, height: 1080 }, minRows: 5 },
+    { name: '1366x768', size: { width: 1366, height: 768 }, minRows: 5, minRowsTouch: 3 },
+    { name: '1024x768', size: { width: 1024, height: 768 }, minRows: 4, minRowsTouch: 3 },
+    { name: '1920x1080', size: { width: 1920, height: 1080 }, minRows: 5, minRowsTouch: 5 },
 ];
 
+const MAX_ROW_HEIGHT = 64;
+const MAX_ROW_HEIGHT_TOUCH = 72;
+
 test.describe('UI-01: POS cart column layout', () => {
-    for (const { name, size, minRows } of SIZES) {
+    for (const { name, size, minRows, minRowsTouch } of SIZES) {
         test(`${name}: rows visible, no sideways scroll, footer controls clear of each other`, async ({ page }) => {
             await openPosWithItems(page, size, 5);
 
+            const coarse = await isCoarse(page);
             const { visible } = await fullyVisibleRows(page);
-            expect(visible).toBeGreaterThanOrEqual(minRows);
+            expect(visible).toBeGreaterThanOrEqual(coarse ? minRowsTouch : minRows);
 
             const metrics = await page
                 .getByTestId('pos-cart-list')
@@ -131,11 +139,12 @@ test.describe('UI-01: POS cart column layout', () => {
         });
     }
 
-    test('1920x1080: eight lines are fully visible and each row stays within 64px', async ({ page }) => {
+    test('1920x1080: eight lines are fully visible and each row stays within 64px (72px on touch)', async ({ page }) => {
         await openPosWithItems(page, { width: 1920, height: 1080 }, 9);
+        const coarse = await isCoarse(page);
         const { visible, tallest } = await fullyVisibleRows(page);
-        expect(visible).toBeGreaterThanOrEqual(8);
-        expect(tallest).toBeLessThanOrEqual(64);
+        expect(visible).toBeGreaterThanOrEqual(coarse ? 7 : 8);
+        expect(tallest).toBeLessThanOrEqual(coarse ? MAX_ROW_HEIGHT_TOUCH : MAX_ROW_HEIGHT);
     });
 
     test('collapsed discount line keeps showing the applied value and F7 opens the field', async ({ page }) => {

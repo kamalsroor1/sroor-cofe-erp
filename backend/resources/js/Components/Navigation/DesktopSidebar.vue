@@ -69,9 +69,12 @@
         class="relative"
         @mouseenter="handleItemHover($event, $t('nav.layout.quick_pos_hint'))"
         @mouseleave="handleItemLeave"
+        @focusin="handleItemHover($event, $t('nav.layout.quick_pos_hint'))"
+        @focusout="handleItemLeave"
       >
         <router-link
           to="/pos"
+          :aria-label="$t('nav.layout.quick_pos')"
           class="flex items-center justify-center gap-2.5 w-full py-3 rounded-2xl font-black text-xs text-slate-950 transition-all active:scale-95 cursor-pointer shadow-lg hover:brightness-105"
           :class="isCollapsed ? 'px-0' : 'px-4'"
           :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
@@ -104,6 +107,8 @@
           class="relative"
           @mouseenter="handleItemHover($event, section.title)"
           @mouseleave="handleItemLeave"
+          @focusin="handleItemHover($event, section.title)"
+          @focusout="handleItemLeave"
         >
           <!-- Expanded Mode: Direct Card -->
           <router-link
@@ -141,6 +146,7 @@
           <router-link
             v-else
             :to="section.directPath || '/'"
+            :aria-label="section.title"
             class="w-12 h-12 mx-auto rounded-2xl flex items-center justify-center transition-all shadow-2xs"
             :class="
               isRouteActive(section.directPath)
@@ -279,10 +285,19 @@
               )
             "
             @mouseleave="handleItemLeave"
+            @focusin="
+              handleItemHover(
+                $event,
+                section.comingSoon ? `${section.title} — ${$t('nav.coming_soon')}` : section.title
+              )
+            "
+            @focusout="handleItemLeave"
           >
             <button
               type="button"
-              @click="!section.comingSoon && toggleSection(section.key)"
+              :aria-label="section.title"
+              :aria-disabled="section.comingSoon || undefined"
+              @click="openRailSection(section)"
               class="w-12 h-12 mx-auto rounded-2xl flex items-center justify-center transition-all shadow-2xs"
               :class="[
                 section.comingSoon
@@ -361,6 +376,7 @@
               : 'bg-rose-500/10 border-rose-500/30 text-rose-500'
           "
           :title="appConfigStore.hasOpenShift ? $t('nav.active_shift') : $t('nav.closed_shift')"
+          :aria-label="appConfigStore.hasOpenShift ? $t('nav.active_shift') : $t('nav.closed_shift')"
         >
           <span
             class="w-2.5 h-2.5 rounded-full"
@@ -371,10 +387,11 @@
         <button
           type="button"
           @click="checkForUpdates(true)"
-          class="text-[9px] font-mono font-bold text-theme-primary opacity-80 hover:opacity-100 transition cursor-pointer"
+          class="w-10 h-10 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-theme-primary transition cursor-pointer active:scale-95 shadow-2xs"
           :title="$t('nav.layout.version_click_to_check', { version: currentVersionName })"
+          :aria-label="$t('nav.layout.version_click_to_check', { version: currentVersionName })"
         >
-          v{{ currentVersionName }}
+          <Sparkles class="w-4 h-4" aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -464,6 +481,14 @@ const isSectionHasActiveChild = (section) => {
 };
 
 const toggleCollapse = () => {
+  emit('toggle-collapse');
+};
+
+// A rail icon has no sub-menu to show, so a tap (no hover on touch) opens the sidebar on that section.
+const openRailSection = (section) => {
+  if (section.comingSoon) return;
+  expandedSections.value[section.key] = true;
+  handleItemLeave();
   emit('toggle-collapse');
 };
 

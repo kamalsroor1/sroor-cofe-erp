@@ -163,7 +163,7 @@ onBeforeUnmount(close);
           compact
             ? 'w-18 h-9 pointer-coarse:h-11 px-1.5 text-xs'
             : fluid
-              ? 'w-full min-w-0 h-9 pointer-coarse:h-11 ps-2 pe-8 text-sm'
+              ? 'w-full min-w-0 h-9 pointer-coarse:h-11 ps-2 pe-8 pointer-coarse:pe-2 text-sm'
               : 'w-24 h-9 pointer-coarse:h-11 ps-2 pe-8 text-sm'
         "
         @focus="onFocus"
@@ -180,7 +180,8 @@ onBeforeUnmount(close);
         type="button"
         tabindex="-1"
         :aria-label="$t('pos.price_list_open')"
-        class="absolute inset-y-0 end-0 w-8 pointer-coarse:w-11 flex items-center justify-center text-slate-400 hover:text-theme-primary cursor-pointer"
+        class="absolute inset-y-0 end-0 w-8 flex items-center justify-center text-slate-400 hover:text-theme-primary cursor-pointer"
+        :class="fluid ? 'pointer-coarse:hidden' : 'pointer-coarse:w-11'"
         @mousedown.prevent
         @click="toggle"
       >
@@ -207,7 +208,7 @@ onBeforeUnmount(close);
       :aria-label="$t('pos.min_price_protected')"
       :title="$t('pos.min_price_protected')"
     />
-    <span v-if="!fluid" class="text-[10px] font-bold text-slate-400 font-tajawal">{{ currencyLabel }}</span>
+    <span v-if="!fluid" class="text-xs font-bold text-slate-400 font-tajawal">{{ currencyLabel }}</span>
 
     <Teleport to="body">
       <div
@@ -218,7 +219,7 @@ onBeforeUnmount(close);
         class="fixed z-[70] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-1 font-tajawal"
         :style="popupStyle"
       >
-        <p class="px-2 py-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+        <p class="px-2 py-1 text-xs font-bold text-slate-500 dark:text-slate-400">
           {{ $t('pos.price_list_hint') }}
         </p>
         <button
@@ -244,12 +245,12 @@ onBeforeUnmount(close);
         </button>
         <p
           v-if="line.has_min_price"
-          class="px-2.5 py-2 flex items-center gap-1.5 text-[11px] font-bold text-amber-600 dark:text-amber-400"
+          class="px-2.5 py-2 flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400"
         >
           <Lock class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
           <span>{{ $t('pos.price_min_locked') }}</span>
         </p>
-        <p class="px-2 pb-1 text-[10px] text-slate-400">{{ $t('pos.price_custom_hint') }}</p>
+        <p class="px-2 pb-1 text-xs text-slate-400">{{ $t('pos.price_custom_hint') }}</p>
       </div>
     </Teleport>
   </div>

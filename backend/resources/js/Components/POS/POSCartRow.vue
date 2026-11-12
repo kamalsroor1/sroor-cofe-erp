@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { Percent, Trash2 } from 'lucide-vue-next';
+import { EllipsisVertical, Percent, Trash2 } from 'lucide-vue-next';
 import POSLineDiscount from './POSLineDiscount.vue';
 import POSLinePriceField from './POSLinePriceField.vue';
 import { useFormatters } from '../../Composables/useFormatters';
@@ -13,6 +13,9 @@ import { focusLineField } from '../../helpers/posFocus';
 const props = defineProps({
   line: { type: Object, required: true },
   index: { type: Number, required: true },
+  // Phone / tablet sheet: the line keeps one row for quantity + price, and the discount / delete actions sit behind a
+  // "..." button instead of squeezing the price field. The desktop column keeps them inline.
+  compact: { type: Boolean, default: false },
 });
 
 const emit = defineEmits([
@@ -33,6 +36,7 @@ const { onNumberInput, onFieldBlur, onFieldFocus, revertField } = useCartQtyFiel
 
 const hasDiscount = computed(() => isPositive(lineDiscountAmount(props.line)));
 const showDiscount = ref(false);
+const showMore = ref(false);
 
 const stepClass =
   'w-9 h-9 pointer-coarse:w-11 pointer-coarse:h-11 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black text-base transition active:scale-95 cursor-pointer';
@@ -50,13 +54,13 @@ const stepClass =
       </span>
       <span
         v-if="line.is_weighted"
-        class="shrink-0 text-[11px] font-bold text-slate-500 dark:text-slate-400"
+        class="shrink-0 text-xs font-bold text-slate-500 dark:text-slate-400"
         data-testid="pos-cart-unit"
         >{{ unitLabel(line.unit) }}</span
       >
       <span
         v-if="hasDiscount"
-        class="shrink-0 text-[11px] font-mono text-slate-400 line-through"
+        class="shrink-0 text-xs font-mono text-slate-400 line-through"
         data-testid="pos-line-gross"
         >{{ formatMoney(lineGross(line)) }}</span
       >
@@ -104,6 +108,58 @@ const stepClass =
         <POSLinePriceField fluid :line="line" :index="index" @update-price="emit('update-price', $event)" />
       </div>
 
+      <template v-if="!compact">
+        <button
+          type="button"
+          tabindex="-1"
+          data-testid="pos-line-discount-toggle"
+          data-line-discount-toggle
+          :data-line-id="line.id"
+          :aria-expanded="showDiscount"
+          :aria-label="$t('pos.line_discount_label')"
+          :title="$t('pos.line_discount_label')"
+          class="w-9 h-9 pointer-coarse:w-11 pointer-coarse:h-11 shrink-0 rounded-lg border flex items-center justify-center transition active:scale-95 cursor-pointer"
+          :class="
+            hasDiscount
+              ? 'bg-theme-primary text-slate-950 border-theme-primary'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+          "
+          @click="showDiscount = !showDiscount"
+        >
+          <Percent class="w-4 h-4" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          tabindex="-1"
+          class="w-9 h-9 pointer-coarse:w-11 pointer-coarse:h-11 shrink-0 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 flex items-center justify-center transition cursor-pointer"
+          :title="$t('pos.delete_item')"
+          :aria-label="$t('pos.delete_item')"
+          @click="emit('remove-item', index)"
+        >
+          <Trash2 class="w-4 h-4" aria-hidden="true" />
+        </button>
+      </template>
+      <button
+        v-else
+        type="button"
+        tabindex="-1"
+        data-testid="pos-line-more"
+        :aria-expanded="showMore"
+        :aria-label="$t('pos.line_more_actions')"
+        :title="$t('pos.line_more_actions')"
+        class="relative w-11 h-11 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center transition active:scale-95 cursor-pointer"
+        @click="showMore = !showMore"
+      >
+        <EllipsisVertical class="w-5 h-5" aria-hidden="true" />
+        <span
+          v-if="hasDiscount"
+          class="absolute top-1.5 end-1.5 w-2 h-2 rounded-full bg-theme-primary"
+          aria-hidden="true"
+        ></span>
+      </button>
+    </div>
+
+    <div v-if="compact && showMore" class="flex items-center gap-2 pt-1" data-testid="pos-line-more-actions">
       <button
         type="button"
         tabindex="-1"
@@ -111,32 +167,31 @@ const stepClass =
         data-line-discount-toggle
         :data-line-id="line.id"
         :aria-expanded="showDiscount"
-        :aria-label="$t('pos.line_discount_label')"
-        :title="$t('pos.line_discount_label')"
-        class="w-9 h-9 pointer-coarse:w-11 pointer-coarse:h-11 shrink-0 rounded-lg border flex items-center justify-center transition active:scale-95 cursor-pointer"
+        class="flex-1 min-h-11 px-3 rounded-lg border flex items-center justify-center gap-2 text-sm font-bold transition active:scale-95 cursor-pointer"
         :class="
           hasDiscount
             ? 'bg-theme-primary text-slate-950 border-theme-primary'
-            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
         "
         @click="showDiscount = !showDiscount"
       >
-        <Percent class="w-4 h-4" aria-hidden="true" />
+        <Percent class="w-4 h-4 shrink-0" aria-hidden="true" />
+        <span class="truncate">{{ $t('pos.line_discount_label') }}</span>
       </button>
       <button
         type="button"
         tabindex="-1"
-        class="w-9 h-9 pointer-coarse:w-11 pointer-coarse:h-11 shrink-0 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 flex items-center justify-center transition cursor-pointer"
-        :title="$t('pos.delete_item')"
-        :aria-label="$t('pos.delete_item')"
+        data-testid="pos-line-remove"
+        class="flex-1 min-h-11 px-3 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300 flex items-center justify-center gap-2 text-sm font-bold transition active:scale-95 cursor-pointer"
         @click="emit('remove-item', index)"
       >
-        <Trash2 class="w-4 h-4" aria-hidden="true" />
+        <Trash2 class="w-4 h-4 shrink-0" aria-hidden="true" />
+        <span class="truncate">{{ $t('pos.delete_item') }}</span>
       </button>
     </div>
 
     <div v-if="showDiscount" class="flex items-center justify-between gap-2 pt-1">
-      <span class="text-[11px] font-bold text-slate-500">{{ $t('pos.line_discount_label') }}</span>
+      <span class="text-xs font-bold text-slate-500">{{ $t('pos.line_discount_label') }}</span>
       <POSLineDiscount :line="line" :index="index" @update-discount="emit('update-discount', $event)" />
     </div>
   </div>

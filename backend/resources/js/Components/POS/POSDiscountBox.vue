@@ -119,7 +119,7 @@ const onDiscountInput = (event) => {
       v-if="capExceeded"
       role="status"
       data-testid="pos-discount-cap-warning"
-      class="px-2 py-1.5 rounded-lg text-[11px] font-bold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60"
+      class="px-2 py-1.5 rounded-lg text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60"
     >
       {{ $t('pos.discount_cap_warning', { percent: discountPercentText, max: maxDiscountText }) }}
       {{ canOverrideDiscount ? $t('pos.discount_cap_can_override') : $t('pos.discount_cap_needs_approval') }}

@@ -124,6 +124,15 @@ export function priceFor(item, tier) {
     return tier === 'wholesale' ? wholesale || retail : retail;
 }
 
+/**
+ * The one price an item card shows for the selected tier. A wholesale tier on an item without its own wholesale
+ * price shows the retail price, and says so: `tier` is the tier the value really belongs to.
+ */
+export function displayPrice(item, tier) {
+    const wholesale = tier === 'wholesale' && (positive(item?.wholesale_price) || positive(item?.price_wholesale)) > 0;
+    return { tier: wholesale ? 'wholesale' : 'retail', value: priceFor(item, wholesale ? 'wholesale' : 'retail') };
+}
+
 /** Re-price cart lines for a tier; lines the cashier priced by hand and lines without a tier price are kept. */
 export function repriceLines(cart, tier) {
     cart.forEach((line) => {

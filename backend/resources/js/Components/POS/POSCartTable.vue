@@ -18,6 +18,7 @@
             :key="item.id"
             :line="item"
             :index="idx"
+            :compact="compact"
             @increase-qty="$emit('increase-qty', $event)"
             @decrease-qty="$emit('decrease-qty', $event)"
             @update-qty="$emit('update-qty', $event)"
@@ -51,6 +52,8 @@ import POSCartRow from './POSCartRow.vue';
 defineProps({
   cart: { type: Array, default: () => [] },
   totalQty: { type: Number, default: 0 },
+  // Phone / tablet sheet: rows keep their item actions behind a "..." button (see POSCartRow).
+  compact: { type: Boolean, default: false },
 });
 
 defineEmits(['increase-qty', 'decrease-qty', 'update-qty', 'update-price', 'update-discount', 'remove-item']);

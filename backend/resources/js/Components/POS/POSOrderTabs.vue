@@ -20,11 +20,11 @@
       </div>
 
       <!-- Items Count & Subtotal Badges (If cart has items) -->
-      <div v-if="order.cart && order.cart.length > 0" class="flex items-center gap-1 text-[10px]">
+      <div v-if="order.cart && order.cart.length > 0" class="flex items-center gap-1 text-xs">
         <span class="px-1.5 py-0.2 rounded-md bg-theme-primary/10 text-theme-primary font-mono font-bold">
           {{ order.cart.length }}
         </span>
-        <span class="text-slate-400 font-mono text-[10px]">
+        <span class="text-slate-400 font-mono text-xs">
           {{ formatMoney(getOrderSubtotal(order)) }}
         </span>
       </div>

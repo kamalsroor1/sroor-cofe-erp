@@ -459,4 +459,10 @@ return [
     'phone_categories_label' => 'الأقسام',
     'change_customer' => 'تغيير العميل',
     'order_title' => 'طلب #:number',
+
+    // Item cards, touch checkout and the phone cart row (UI-02 / UI-03)
+    'stock_out_short' => 'نفد',
+    'stock_low_short' => 'قليل',
+    'confirm_and_approve' => 'حفظ واعتماد الفاتورة',
+    'line_more_actions' => 'خيارات الصنف',
 ];

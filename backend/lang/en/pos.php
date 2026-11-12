@@ -459,4 +459,10 @@ return [
     'phone_categories_label' => 'Categories',
     'change_customer' => 'Change customer',
     'order_title' => 'Order #:number',
+
+    // Item cards, touch checkout and the phone cart row (UI-02 / UI-03)
+    'stock_out_short' => 'Out',
+    'stock_low_short' => 'Low',
+    'confirm_and_approve' => 'Save & confirm invoice',
+    'line_more_actions' => 'Item options',
 ];

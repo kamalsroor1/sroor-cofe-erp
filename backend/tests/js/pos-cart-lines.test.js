@@ -2,7 +2,13 @@
 // Run from backend/: node --test "tests/js/*.test.js"
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { priceFor, repriceLines, increaseLineQty, decreaseLineQty } from '../../resources/js/helpers/posCartLines.js';
+import {
+    priceFor,
+    displayPrice,
+    repriceLines,
+    increaseLineQty,
+    decreaseLineQty,
+} from '../../resources/js/helpers/posCartLines.js';
 
 test('tier prices are read from decimal strings', () => {
     const item = { selling_price: '62.500', price_retail: '62.500', price_wholesale: '55.250' };
@@ -50,4 +56,23 @@ test('quantity steppers never concatenate string quantities', () => {
     decreaseLineQty(cart, 1);
     assert.equal(cart[0].quantity, '1.500');
     assert.equal(cart[1].quantity, 2);
+});
+
+test('an item card shows one price: the tier price, and the tier it really belongs to', () => {
+    const item = {
+        selling_price: '62.500',
+        price_retail: '62.500',
+        price_wholesale: '55.250',
+        min_selling_price: '50.000',
+    };
+    assert.deepEqual(displayPrice(item, 'retail'), { tier: 'retail', value: 62.5 });
+    assert.deepEqual(displayPrice(item, 'wholesale'), { tier: 'wholesale', value: 55.25 });
+    // The floor is never a price, whichever tier is selected.
+    assert.equal(displayPrice({ price_retail: '30.000', min_selling_price: '25.000' }, 'wholesale').value, 30);
+    // No wholesale price: the card shows retail and labels it as retail.
+    assert.deepEqual(displayPrice({ price_retail: '30.000', wholesale_price: '0.000' }, 'wholesale'), {
+        tier: 'retail',
+        value: 30,
+    });
+    assert.deepEqual(displayPrice(null, 'wholesale'), { tier: 'retail', value: 0 });
 });

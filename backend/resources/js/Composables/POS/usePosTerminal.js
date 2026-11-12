@@ -1,5 +1,4 @@
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
-import versionData from '../../version.json';
 import { useAppConfigStore } from '../../stores/appConfig';
 import { useAuthStore } from '../../stores/auth';
 import { useDesktopHardware } from '../useDesktopHardware';
@@ -34,7 +33,6 @@ export function usePosTerminal() {
     // OFFL-1: no offline queue yet (end of Phase 2) — every server write is blocked while offline.
     const { isOnline } = useConnectivity();
 
-    const appVersion = ref(versionData?.version || '1.0.10');
     const headerRef = ref(null);
     const focusSearch = () => headerRef.value?.focusSearch();
     const lastCreatedInvoice = ref(null);
@@ -182,7 +180,6 @@ export function usePosTerminal() {
     return {
         authStore,
         headerRef,
-        appVersion,
         lastCreatedInvoice,
         isOnline,
         orders,

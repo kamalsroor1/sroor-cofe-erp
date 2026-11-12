@@ -19,14 +19,12 @@
         <div
           v-for="n in 9"
           :key="n"
-          class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-2.5 space-y-2 min-h-[112px]"
+          class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-2.5 space-y-2 min-h-[104px]"
         >
-          <Skeleton width="w-2/3" height="h-3" rounded="rounded-md" />
           <Skeleton width="w-full" height="h-4" rounded="rounded-md" />
-          <div class="grid grid-cols-2 gap-1.5 pt-2">
-            <Skeleton height="h-9" rounded="rounded-lg" />
-            <Skeleton height="h-9" rounded="rounded-lg" />
-          </div>
+          <Skeleton width="w-2/3" height="h-4" rounded="rounded-md" />
+          <Skeleton width="w-1/3" height="h-4" rounded="rounded-md" />
+          <Skeleton width="w-1/2" height="h-6" rounded="rounded-md" />
         </div>
       </div>
 
@@ -46,7 +44,7 @@
         <div ref="sentinelRef" class="h-px" aria-hidden="true"></div>
 
         <div v-if="isLoadingMore" class="grid gap-3 mt-3" :class="gridClass" aria-busy="true">
-          <Skeleton v-for="n in 3" :key="n" height="h-28" rounded="rounded-xl" />
+          <Skeleton v-for="n in 3" :key="n" height="h-26" rounded="rounded-xl" />
         </div>
         <div v-else-if="hasMore" class="flex justify-center mt-3">
           <button

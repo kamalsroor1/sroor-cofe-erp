@@ -112,6 +112,7 @@ const checkoutProps = computed(() => ({
     >
       <div class="p-3 h-full">
         <POSCartTable
+          compact
           :cart="cart"
           :total-qty="totalQty"
           @increase-qty="emit('increase-qty', $event)"
@@ -160,11 +161,12 @@ const checkoutProps = computed(() => ({
       @close="closePaymentSheet"
     >
       <POSCheckoutPanel
+        compact
         v-model:payment-type="paymentType"
         v-model:payment-method="paymentMethod"
         v-model:cash-received="cashReceived"
         v-bind="checkoutProps"
-        class="border-s-0! shadow-none!"
+        class="min-h-full p-3"
         @apply-discount="emit('apply-discount', $event)"
         @submit="emit('submit', $event)"
         @open-expenses="emit('open-expenses')"

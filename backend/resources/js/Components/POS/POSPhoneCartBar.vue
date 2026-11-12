@@ -29,7 +29,7 @@ const { formatMoney, currencyLabel } = useFormatters();
         <span class="relative shrink-0">
           <ShoppingCart class="w-6 h-6 text-theme-primary" aria-hidden="true" />
           <span
-            class="absolute -top-2 -end-2 min-w-5 h-5 px-1 rounded-full bg-theme-primary text-slate-950 text-[11px] font-black font-mono flex items-center justify-center"
+            class="absolute -top-2 -end-2 min-w-5 h-5 px-1 rounded-full bg-theme-primary text-slate-950 text-xs font-black font-mono flex items-center justify-center"
             data-testid="pos-phone-cart-count"
             >{{ count }}</span
           >
