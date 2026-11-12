@@ -15,7 +15,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <!-- Left: Blender Studio Workspace (Col span 8) -->
       <div class="lg:col-span-8 space-y-5">
-        <CoffeeBlenderSpecsCard
+        <MixSpecsCard
           v-model:blend-name="blendName"
           v-model:target-weight-grams="targetWeightGrams"
           v-model:roast-type="roastType"
@@ -26,7 +26,7 @@
           @set-target-weight="setTargetWeight"
         />
 
-        <CoffeeBlenderFormulationCard
+        <MixFormulationCard
           v-model:selected-item-to-add="selectedItemToAdd"
           v-model:cardamom-grams="cardamomGrams"
           v-model:notes="notes"
@@ -42,7 +42,7 @@
 
       <!-- Right: Financial Breakdown & Direct Cashier (Col span 4) -->
       <div class="lg:col-span-4 space-y-5">
-        <CoffeeBlenderCostSummary
+        <MixCostSummary
           v-model:selected-customer-id="selectedCustomerId"
           :target-weight-grams="targetWeightGrams"
           :total-calculated-cost="totalCalculatedCost"
@@ -61,10 +61,10 @@
 <script setup>
 import { ArrowRight } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
-import CoffeeBlenderSpecsCard from '../../Components/CoffeeBlender/CoffeeBlenderSpecsCard.vue';
-import CoffeeBlenderFormulationCard from '../../Components/CoffeeBlender/CoffeeBlenderFormulationCard.vue';
-import CoffeeBlenderCostSummary from '../../Components/CoffeeBlender/CoffeeBlenderCostSummary.vue';
-import { useCoffeeBlender } from '../../Composables/useCoffeeBlender';
+import MixSpecsCard from '../../Components/Mixes/MixSpecsCard.vue';
+import MixFormulationCard from '../../Components/Mixes/MixFormulationCard.vue';
+import MixCostSummary from '../../Components/Mixes/MixCostSummary.vue';
+import { useMixes } from '../../Composables/useMixes';
 
 const {
   blendName,
@@ -92,5 +92,5 @@ const {
   removeComponentRow,
   updateComponentPercentage,
   submitBlendInvoice,
-} = useCoffeeBlender();
+} = useMixes();
 </script>

@@ -113,8 +113,8 @@ export function useNavigation() {
                     icon: Sparkles,
                 },
                 {
-                    key: 'coffee-blender',
-                    path: '/coffee-blender',
+                    key: 'mixes',
+                    path: '/mixes',
                     icon: Layers,
                 },
             ],

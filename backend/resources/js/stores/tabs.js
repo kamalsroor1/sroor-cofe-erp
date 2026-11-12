@@ -45,7 +45,7 @@ export const useTabsStore = defineStore('tabs', () => {
         if (path.startsWith('/stock-transfers')) return 'ArrowLeftRight';
         if (path.startsWith('/reports')) return 'BarChart3';
         if (path.startsWith('/settings')) return 'Sliders';
-        if (path.startsWith('/coffee-blender')) return 'Coffee';
+        if (path.startsWith('/mixes') || path.startsWith('/coffee-blender')) return 'Layers';
         return 'FileText';
     };
 

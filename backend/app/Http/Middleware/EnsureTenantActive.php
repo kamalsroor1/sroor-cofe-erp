@@ -55,6 +55,7 @@ final class EnsureTenantActive
         // SELL-01: a user forced to change their password must be able to, even read-only
         'api.auth.change_password',
         // pure calculation, writes nothing
+        'api.mixes.calculate',
         'api.coffee_blender.calculate',
         // Owner policy: unpaid -> read_only may still pay; suspended/archived are fully blocked (BLOCKED_ALLOWLIST).
         // PRD-04: a read-only shop must still be able to pay (receipt upload) and ask for a renewal invoice

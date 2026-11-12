@@ -9,7 +9,7 @@ use App\Http\Controllers\Api\BillingController;
 use App\Http\Controllers\Api\BrandingController;
 use App\Http\Controllers\Api\CategoryApiController;
 use App\Http\Controllers\Api\CentralTenantResolverController;
-use App\Http\Controllers\Api\CoffeeBlenderController;
+use App\Http\Controllers\Api\MixController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DailyJournalController;
 use App\Http\Controllers\Api\DashboardApiController;
@@ -257,9 +257,13 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::post('/transfers', [StockTransferController::class, 'store'])->name('api.transfers.store')->middleware('store.active:concrete')->middleware('feature:transfers.manage');
         Route::post('/transfers/{id}/cancel', [StockTransferController::class, 'cancel'])->name('api.transfers.cancel')->middleware('store.active')->middleware('feature:transfers.manage');
 
-        // Coffee Blender Engine & Custom Roasting Studio
-        Route::post('/coffee-blender/calculate', [CoffeeBlenderController::class, 'calculate'])->name('api.coffee_blender.calculate')->middleware('feature:mixes.manage');
-        Route::post('/coffee-blender/invoice', [CoffeeBlenderController::class, 'createInvoice'])->name('api.coffee_blender.invoice')->middleware('store.active:concrete')->middleware('feature:mixes.manage');
+        // Recipes / product assembly (MIX-01). `/mixes/*` is canonical; `/coffee-blender/*` is a
+        // deprecated alias kept for old Android/desktop builds (same controller, same behaviour).
+        Route::post('/mixes/calculate', [MixController::class, 'calculate'])->name('api.mixes.calculate')->middleware('feature:mixes.manage');
+        Route::post('/mixes/invoice', [MixController::class, 'createInvoice'])->name('api.mixes.invoice')->middleware('store.active:concrete')->middleware('feature:mixes.manage');
+        // @deprecated alias of /mixes/* - remove once old app builds are retired
+        Route::post('/coffee-blender/calculate', [MixController::class, 'calculate'])->name('api.coffee_blender.calculate')->middleware('feature:mixes.manage');
+        Route::post('/coffee-blender/invoice', [MixController::class, 'createInvoice'])->name('api.coffee_blender.invoice')->middleware('store.active:concrete')->middleware('feature:mixes.manage');
 
         // Administrative areas: never reachable with a testing-only quick-login token.
         Route::middleware(DenyQuickLoginToken::class)->group(function () {

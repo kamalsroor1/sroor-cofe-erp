@@ -444,12 +444,12 @@ return [
                     ],
                 ],
                 'blender' => [
-                    'title' => 'Coffee blends',
-                    'body' => 'Build the customer\'s blend and sell it on the same screen.',
+                    'title' => 'Recipes',
+                    'body' => 'Assemble a product from materials by ratio and sell it on the same screen.',
                     'items' => [
-                        'blend' => 'Blends of several coffee beans in the percentages you set',
-                        'roast_grind' => 'Choose the roast level and grind type',
-                        'cost' => 'Calculate the blend cost and sell it on an invoice',
+                        'blend' => 'Recipes of several materials in the percentages you set',
+                        'roast_grind' => 'Optional preparation options to suit your business',
+                        'cost' => 'Calculate the recipe cost and sell it on an invoice',
                     ],
                 ],
             ],

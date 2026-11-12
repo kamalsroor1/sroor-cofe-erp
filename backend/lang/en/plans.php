@@ -68,8 +68,8 @@ return [
             'description' => 'Transfer goods between branches, warehouses and delivery vans.',
         ],
         'mixes_manage' => [
-            'name' => 'Mix builder',
-            'description' => 'Build a mix from several items by ratio or weight, cost it with its waste and sell it directly.',
+            'name' => 'Recipes',
+            'description' => 'Assemble a product from materials by ratio and deduct them from stock, cost it with its waste and sell it directly.',
         ],
         'purchases_manage' => [
             'name' => 'Purchases and suppliers',
@@ -163,8 +163,8 @@ return [
             'description' => 'Raise the maximum number of items.',
         ],
         'mixes' => [
-            'name' => 'Mix builder',
-            'description' => 'Build a mix from several items by ratio or weight, cost it with its waste and sell it directly.',
+            'name' => 'Recipes',
+            'description' => 'Assemble a product from materials by ratio and deduct them from stock, cost it with its waste and sell it directly.',
         ],
         'reports_advanced' => [
             'name' => 'Profit reports',

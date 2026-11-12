@@ -8,7 +8,7 @@ import { currentCurrencyLabel, useFormatters } from './useFormatters';
 import { priceFor } from '../helpers/posCartLines';
 import { effectiveAverageCost } from '../helpers/itemCost';
 
-export function useCoffeeBlender() {
+export function useMixes() {
     const router = useRouter();
     const { t } = useTrans();
     const { formatMoney, formatQty } = useFormatters();
@@ -171,7 +171,7 @@ export function useCoffeeBlender() {
                 })),
             };
 
-            const response = await api.post('/coffee-blender/invoice', payload);
+            const response = await api.post('/mixes/invoice', payload);
             Swal.fire({
                 icon: 'success',
                 title: t('common.success'),

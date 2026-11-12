@@ -15,7 +15,7 @@ use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use Illuminate\Http\JsonResponse;
 
-final class CoffeeBlenderController extends Controller
+final class MixController extends Controller
 {
     public function __construct(
         private readonly CalculateBlendCostAction $calculateBlendCostAction,
@@ -23,7 +23,7 @@ final class CoffeeBlenderController extends Controller
     ) {}
 
     /**
-     * Real-time calculation of coffee blend formulation costs and profit margins
+     * Real-time cost and margin calculation for a recipe (product assembly)
      */
     public function calculate(CalculateBlendCostRequest $request): JsonResponse
     {
@@ -36,7 +36,7 @@ final class CoffeeBlenderController extends Controller
     }
 
     /**
-     * Create and confirm Sales Invoice for custom blend
+     * Create and confirm the sales invoice for an assembled recipe
      */
     public function createInvoice(CreateBlenderInvoiceRequest $request, ActiveStore $activeStore): JsonResponse
     {

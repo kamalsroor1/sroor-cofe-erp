@@ -142,6 +142,29 @@ class CoffeeBlenderApiTest extends TenantTestCase
         });
     }
 
+    public function test_mixes_path_rejects_unauthenticated_and_unauthorized_requests(): void
+    {
+        $this->postJson('/api/v1/mixes/calculate', [], $this->tenantGuestHeaders($this->tenant))->assertStatus(401);
+
+        $this->withHeaders($this->unauthorizedHeaders)
+            ->postJson('/api/v1/mixes/calculate', [
+                'components' => [['item_id' => $this->itemCol->id, 'percentage' => 100]],
+            ])
+            ->assertStatus(403);
+    }
+
+    public function test_mixes_and_legacy_coffee_blender_paths_return_the_same_invoice_result(): void
+    {
+        $new = $this->withHeaders($this->adminHeaders)
+            ->postJson('/api/v1/mixes/invoice', $this->blendPayload($this->customer->id));
+        $old = $this->withHeaders($this->adminHeaders)
+            ->postJson('/api/v1/coffee-blender/invoice', $this->blendPayload($this->customer->id));
+
+        $new->assertStatus(201)->assertJson(['success' => true]);
+        $old->assertStatus(201)->assertJson(['success' => true]);
+        $this->assertSame($new->json('data.total'), $old->json('data.total'));
+    }
+
     public function test_unauthenticated_request_is_rejected(): void
     {
         $response = $this->postJson('/api/v1/coffee-blender/calculate', [], $this->tenantGuestHeaders($this->tenant));

@@ -365,16 +365,18 @@ const tenantRoutes = [
         },
     },
     {
-        path: '/coffee-blender',
-        name: 'coffee_blender.index',
-        component: () => import('../views/CoffeeBlender/CoffeeBlenderView.vue'),
+        path: '/mixes',
+        name: 'mixes.index',
+        component: () => import('../views/Mixes/MixesView.vue'),
         meta: {
-            titleKey: 'nav.page_titles.coffee_blender_index',
+            titleKey: 'nav.page_titles.mixes_index',
             requiresAuth: true,
             feature: 'mixes.manage',
             permission: 'items.create',
         },
     },
+    // MIX-01: old URL kept as a redirect (bookmarks, old tabs)
+    { path: '/coffee-blender', redirect: '/mixes' },
     {
         path: '/reports',
         name: 'reports.index',

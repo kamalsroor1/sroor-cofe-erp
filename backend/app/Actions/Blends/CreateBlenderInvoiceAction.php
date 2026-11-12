@@ -21,7 +21,7 @@ final class CreateBlenderInvoiceAction
     ) {}
 
     /**
-     * Issue and confirm sales invoice for custom coffee blend
+     * Issue and confirm sales invoice for an assembled recipe
      */
     public function execute(CreateBlenderInvoiceDTO $dto): Invoice
     {

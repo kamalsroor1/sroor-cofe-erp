@@ -48,7 +48,7 @@ return [
     'app_badge_sub' => 'Integrated Cloud ERP for Sales, Inventory & Branches',
     'welcome_user' => 'Welcome, :name 👋',
     'active_branch_label' => 'Active Branch:',
-    'coffee_blend_btn' => 'Product Assembly',
+    'mixes_btn' => 'Recipes',
     'loading_dashboard' => 'Loading real-time dashboard analytics...',
     'daily_invoices_sub' => 'Daily sales',
     'no_sales_previous_days' => 'No sales recorded in previous days yet.',
@@ -217,9 +217,9 @@ return [
                 'title' => 'Stock transfers',
                 'subtitle' => 'Goods transfer order',
             ],
-            'coffee_blender' => [
-                'title' => 'Blends & assembly',
-                'subtitle' => 'Coffee lab and production',
+            'mixes' => [
+                'title' => 'Recipes',
+                'subtitle' => 'Assemble a product from materials by ratio and deduct them from stock',
             ],
             'reports' => [
                 'title' => 'All reports',

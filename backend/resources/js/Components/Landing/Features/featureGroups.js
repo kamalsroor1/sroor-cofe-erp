@@ -1,4 +1,4 @@
-import { Boxes, ChartColumn, Coffee, PackagePlus, ScanBarcode, ShieldCheck, Users, Wallet } from 'lucide-vue-next';
+import { Boxes, ChartColumn, Layers, PackagePlus, ScanBarcode, ShieldCheck, Users, Wallet } from 'lucide-vue-next';
 
 /**
  * The 8 feature groups of /features, in chip order (build_pages.py GROUPS). Copy lives in
@@ -33,7 +33,7 @@ export const FEATURE_GROUPS = Object.freeze([
         layout: 'card',
         items: ['roles', 'stores_access', 'activity', 'trash', 'telegram'],
     },
-    { key: 'blender', icon: Coffee, layout: 'band', items: ['blend', 'roast_grind', 'cost'] },
+    { key: 'blender', icon: Layers, layout: 'band', items: ['blend', 'roast_grind', 'cost'] },
 ]);
 
 /** DOM id of a group's section (chip targets and the scroll-spy). */
