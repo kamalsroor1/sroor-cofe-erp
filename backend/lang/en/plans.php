@@ -162,6 +162,10 @@ return [
             'name' => 'Extra items',
             'description' => 'Raise the maximum number of items.',
         ],
+        'control_bundle' => [
+            'name' => 'Control bundle',
+            'description' => 'Profit reports, activity log and reorder suggestions in one add-on.',
+        ],
         'mixes' => [
             'name' => 'Recipes',
             'description' => 'Assemble a product from materials by ratio and deduct them from stock, cost it with its waste and sell it directly.',

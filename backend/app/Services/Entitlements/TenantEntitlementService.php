@@ -99,8 +99,8 @@ final class TenantEntitlementService implements TenantFeatureManagerInterface
             $addon = $line->addon;
             $quantity = max(0, (int) $line->quantity);
 
-            if ($addon->feature_key !== null && $addon->feature_key !== '') {
-                $features[$this->canonicalFeature($addon->feature_key)] = true;
+            foreach ($addon->allFeatureKeys() as $addonFeature) {
+                $features[$this->canonicalFeature($addonFeature)] = true;
             }
 
             foreach (($addon->bundled_limits ?? []) as $resource => $perUnit) {

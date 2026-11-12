@@ -159,7 +159,7 @@ final class GetTenantSubscriptionAction
     }
 
     /**
-     * @return list<array{resource: string, label: string, used: int, limit: int|null, percent: int|null}>
+     * @return list<array{resource: string, label: string, used: int, limit: int|null, percent: int|null, over_limit: bool}>
      */
     private function usage(Tenant $tenant): array
     {
@@ -167,15 +167,28 @@ final class GetTenantSubscriptionAction
         $rows = [];
 
         foreach (LimitResource::cases() as $resource) {
-            $used = $this->used($resource);
+            // PLAN-01 / BILL-03: the monthly-invoice and storage limits are not enforced (and are
+            // not sold), so they are never shown.
+            if (in_array($resource, [LimitResource::InvoicesMonth, LimitResource::StorageMb], true)) {
+                continue;
+            }
+
             $limit = $enforced ? $this->features->limit($tenant, $resource) : null;
+
+            // An unlimited resource (NULL, e.g. items) has no usage row at all.
+            if ($limit === null) {
+                continue;
+            }
+
+            $used = $this->used($resource);
 
             $rows[] = [
                 'resource' => $resource->value,
                 'label' => (string) __('billing.limit_resources.'.$resource->value),
                 'used' => $used,
                 'limit' => $limit,
-                'percent' => $limit === null ? null : ($limit === 0 ? ($used > 0 ? 100 : 0) : intdiv($used * 100, $limit)),
+                'percent' => $limit === 0 ? ($used > 0 ? 100 : 0) : intdiv($used * 100 + $limit - 1, $limit),
+                'over_limit' => $used > $limit,
             ];
         }
 

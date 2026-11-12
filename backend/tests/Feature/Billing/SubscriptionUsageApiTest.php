@@ -42,7 +42,8 @@ final class SubscriptionUsageApiTest extends BillingTestCase
                 'payment_instructions' => ['instapay_address', 'vodafone_cash_number', 'account_name', 'payment_note', 'tax_rate'],
                 'support' => ['phone', 'email'],
             ]])
-            ->assertJsonCount(count(LimitResource::cases()), 'data.usage');
+            ->assertJsonMissing(['resource' => LimitResource::InvoicesMonth->value])
+            ->assertJsonMissing(['resource' => LimitResource::StorageMb->value]);
 
         $days = $this->getJson('/api/v1/billing/subscription', $this->tenantHeaders($tenant))->json('data.subscription.days_left');
         $this->assertContains($days, [10, 11]);
@@ -64,10 +65,10 @@ final class SubscriptionUsageApiTest extends BillingTestCase
         $this->assertSame(1, $usage['stores']['limit']);
         $this->assertSame(100, $usage['stores']['percent']);
 
-        // Unlimited resource: limit and percent are null.
-        $this->assertNull($usage['items']['limit']);
-        $this->assertNull($usage['items']['percent']);
-        $this->assertSame(0, $usage['items']['used']);
+        // PLAN-01: an unlimited resource has no usage row; the unenforced limits are never shown.
+        $this->assertArrayNotHasKey('items', $usage->all());
+        $this->assertArrayNotHasKey('invoices_month', $usage->all());
+        $this->assertArrayNotHasKey('storage_mb', $usage->all());
     }
 
     public function test_active_addons_extend_the_limit_and_are_listed(): void

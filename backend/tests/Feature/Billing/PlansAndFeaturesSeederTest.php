@@ -10,6 +10,7 @@ use App\Models\Addon;
 use App\Models\Plan;
 use App\Models\PlanAddon;
 use App\Services\Billing\FounderPricingService;
+use Database\Seeders\Catalog\AddonCatalog;
 use Database\Seeders\Catalog\FeatureCatalog;
 use Database\Seeders\Catalog\PlanCatalog;
 use Database\Seeders\PlansAndFeaturesSeeder;
@@ -39,9 +40,9 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
 
     /** slug => [stores, warehouses, vans, users, items, invoices/month, storage MB, trial days] */
     private const LIMITS = [
-        'free' => [1, 0, 0, 3, 200, 300, 500, 14],
-        'basic' => [1, 1, 0, 3, 3000, 6000, 2048, 0],
-        'pro' => [3, 2, 1, 8, 20000, 30000, 10240, 0],
+        'free' => [1, 1, 0, 3, 200, 300, 500, 14],
+        'basic' => [1, 1, 0, 3, null, null, 2048, 0],
+        'pro' => [3, 2, 1, 8, null, null, 10240, 0],
         'enterprise' => [10, 5, 5, 25, null, null, 51200, 0],
     ];
 
@@ -55,8 +56,8 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
     /** Non-core features switched on per plan (§5); everything else is off. */
     private const EXTRAS = [
         'free' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs'],
-        'basic' => [],
-        'pro' => ['transfers.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs'],
+        'basic' => ['transfers.manage'],
+        'pro' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs'],
         'enterprise' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs', 'api.access'],
     ];
 
@@ -69,6 +70,7 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
         'addon.storage_10gb' => ['recurring', '49.000', '490.000', [], true],
         'addon.items_5k' => ['recurring', '99.000', '990.000', [], true],
         'mixes.manage' => ['recurring', '199.000', '1990.000', [], true],
+        'bundle.control' => ['recurring', '199.000', '1990.000', [], true],
         'reports.advanced' => ['recurring', '149.000', '1490.000', [], true],
         'audit.logs' => ['recurring', '99.000', '990.000', [], true],
         'api.access' => ['recurring', '299.000', '2990.000', [], false],
@@ -144,7 +146,7 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
         $this->assertCount(17, $core);
 
         $hidden = $features->reject(fn (object $feature): bool => (bool) $feature->is_public)->keys()->sort()->values()->all();
-        $this->assertSame(['api.access', 'custom.domain', 'pos.offline', 'quotations.manage', 'reports.advanced', 'whatsapp.share'], $hidden);
+        $this->assertSame(['api.access', 'custom.domain', 'pos.offline', 'quotations.manage', 'whatsapp.share'], $hidden);
 
         foreach ($features as $key => $feature) {
             $this->assertSame(FeatureCatalog::nameKey($key), $feature->name_key);
@@ -190,7 +192,7 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
             $this->assertSame($unit, $addon->unit_price, "{$key} price");
             $this->assertSame($yearly, $addon->yearly_price, "{$key} yearly price");
             $this->assertSame($public, $addon->is_public, "{$key} visibility");
-            $this->assertTrue($addon->is_active);
+            $this->assertSame(! in_array($key, AddonCatalog::RETIRED_KEYS, true), $addon->is_active, "{$key} is_active");
             $this->assertNotSame($addon->name_key, __($addon->name_key), "{$key}: translation is missing.");
 
             // assertEquals: same tiers in the same order, inner JSON keys in any order (MySQL JSON).
@@ -211,6 +213,10 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
         }
 
         $this->assertSame('mixes.manage', Addon::query()->where('key', 'mixes.manage')->value('feature_key'));
+        $this->assertEqualsCanonicalizing(
+            ['reports.advanced', 'audit.logs', 'purchases.reorder'],
+            Addon::query()->where('key', 'bundle.control')->firstOrFail()->feature_keys,
+        );
         $this->assertEquals(['stores' => 1, 'users' => 1], Addon::query()->where('key', 'addon.store')->firstOrFail()->bundled_limits);
         $this->assertSame(AddonType::Recurring, Addon::query()->where('key', 'addon.premium_support')->firstOrFail()->type, 'premium_support is a monthly recurring add-on (CTO W1 Q4).');
         $this->assertSame(AddonType::Service, Addon::query()->where('key', 'service.onboarding')->firstOrFail()->type);
@@ -250,12 +256,12 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
 
         $this->assertSame([], $available('free'), 'The trial buys nothing.');
         $this->assertSame([
-            'addon.items_5k', 'addon.premium_support', 'addon.storage_10gb', 'addon.store', 'addon.user',
-            'addon.van', 'addon.warehouse', 'audit.logs', 'mixes.manage', 'reports.advanced', 'service.onboarding',
+            'addon.premium_support', 'addon.storage_10gb', 'addon.store', 'addon.user',
+            'addon.van', 'addon.warehouse', 'bundle.control', 'mixes.manage', 'service.onboarding',
         ], $available('basic'));
         $this->assertSame([
             'addon.premium_support', 'addon.storage_10gb', 'addon.store', 'addon.user', 'addon.van',
-            'addon.warehouse', 'api.access', 'mixes.manage', 'service.onboarding',
+            'addon.warehouse', 'api.access', 'service.onboarding',
         ], $available('pro'));
         $this->assertSame([
             'addon.storage_10gb', 'addon.store', 'addon.user', 'addon.van', 'addon.warehouse', 'service.onboarding',

@@ -14,8 +14,7 @@ namespace Database\Seeders\Catalog;
  * - `blender.access` is renamed to the neutral `mixes.manage` (LEGACY_RENAMES);
  * - hidden keys (is_public = false): `pos.offline` (no route until the end of Phase 2),
  *   `custom.domain` (Q-E9, hidden until Phase 3), `quotations.manage` (PRD-10: no route, model
- *   or screen exists) and, by owner decision, `api.access`, `whatsapp.share` and
- *   `reports.advanced` (SEC-06: nothing gates it yet): none of them is listed or sold until it
+ *   or screen exists) and, by owner decision, `api.access` and `whatsapp.share`: none of them is listed or sold until it
  *   is built/released. Hidden keys stay in the registry and in stored
  *   plans.features (and the grants of existing tenants) so existing data remains valid.
  *
@@ -53,7 +52,7 @@ final class FeatureCatalog
         'treasury.view' => ['finance', true, true],
         'returns.manage' => ['finance', true, true],
         'reports.basic' => ['reports', true, true],
-        'reports.advanced' => ['reports', false, false],
+        'reports.advanced' => ['reports', false, true],
         'reports.export' => ['reports', true, true],
         'audit.logs' => ['system', false, true],
         'printing.thermal' => ['system', true, true],

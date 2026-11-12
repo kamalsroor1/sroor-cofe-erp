@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $name_key
  * @property AddonType $type
  * @property string|null $feature_key
+ * @property list<string>|null $feature_keys extra features a bundle switches on (besides feature_key)
  * @property array<string, int>|null $bundled_limits
  * @property string $unit_price monthly unit price (recurring) or one-time price (service)
  * @property string|null $yearly_price NULL = not sold yearly
@@ -46,6 +47,7 @@ class Addon extends Model
         'name_key',
         'type',
         'feature_key',
+        'feature_keys',
         'bundled_limits',
         'unit_price',
         'yearly_price',
@@ -67,6 +69,7 @@ class Addon extends Model
     {
         return [
             'type' => AddonType::class,
+            'feature_keys' => 'array',
             'bundled_limits' => 'array',
             'unit_price' => 'decimal:3',
             'yearly_price' => 'decimal:3',
@@ -76,6 +79,28 @@ class Addon extends Model
             'is_public' => 'boolean',
             'sort_order' => 'integer',
         ];
+    }
+
+    /**
+     * Every feature this add-on switches on: feature_key plus the bundle's feature_keys.
+     *
+     * @return list<string>
+     */
+    public function allFeatureKeys(): array
+    {
+        $keys = [];
+
+        if ($this->feature_key !== null && $this->feature_key !== '') {
+            $keys[] = $this->feature_key;
+        }
+
+        foreach (($this->feature_keys ?? []) as $key) {
+            if (is_string($key) && $key !== '') {
+                $keys[] = $key;
+            }
+        }
+
+        return array_values(array_unique($keys));
     }
 
     /**

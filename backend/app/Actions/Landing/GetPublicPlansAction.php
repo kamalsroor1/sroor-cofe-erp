@@ -58,7 +58,7 @@ final class GetPublicPlansAction
             ->get();
 
         $addons = Addon::query()->active()->visible()->with('planAddons.plan')->get()
-            ->reject(fn (Addon $addon): bool => $addon->feature_key !== null && in_array($addon->feature_key, $hiddenKeys, true));
+            ->reject(fn (Addon $addon): bool => array_intersect($addon->allFeatureKeys(), $hiddenKeys) !== []);
 
         $publicCodes = $plans->pluck('slug')->all();
 

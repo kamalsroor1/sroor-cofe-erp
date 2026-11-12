@@ -315,6 +315,7 @@ final class CatalogWriter
             'name_key' => $addon['name_key'],
             'type' => $addon['type']->value,
             'feature_key' => $addon['feature_key'],
+            'feature_keys' => $addon['feature_keys'] === null ? null : $this->json($addon['feature_keys']),
             'bundled_limits' => $addon['bundled_limits'] === null ? null : $this->json($addon['bundled_limits']),
             'unit_price' => $addon['unit_price'],
             'yearly_price' => $addon['yearly_price'],

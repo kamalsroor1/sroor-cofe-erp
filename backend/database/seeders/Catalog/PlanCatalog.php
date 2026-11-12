@@ -33,8 +33,10 @@ final class PlanCatalog
     private const EXTRA_FEATURES = [
         // The trial shows the Growth plan in full (without the API/domain), §5.
         'free' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs'],
-        'basic' => [],
-        'pro' => ['transfers.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs'],
+        // PLAN-01: Starter has transfers; reorder / profit reports / activity log come with the
+        // control bundle and mixes as an add-on. Growth includes mixes.
+        'basic' => ['transfers.manage'],
+        'pro' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs'],
         // custom.domain stays off until Phase 3 (Q-E9: automatic TLS per domain); pos.offline is
         // off everywhere until its routes exist (end of Phase 2).
         'enterprise' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs', 'api.access'],
@@ -50,7 +52,7 @@ final class PlanCatalog
             'founder_price_monthly' => null,
             'founder_price_yearly' => null,
             'max_stores' => 1,
-            'max_warehouses' => 0,
+            'max_warehouses' => 1,
             'max_vans' => 0,
             'max_users' => 3,
             'max_items' => 200,
@@ -71,8 +73,8 @@ final class PlanCatalog
             'max_warehouses' => 1,
             'max_vans' => 0,
             'max_users' => 3,
-            'max_items' => 3000,
-            'max_invoices_per_month' => 6000,
+            'max_items' => null,
+            'max_invoices_per_month' => null,
             'max_storage_mb' => 2048,
             'trial_days' => 0,
             'is_active' => true,
@@ -89,8 +91,8 @@ final class PlanCatalog
             'max_warehouses' => 2,
             'max_vans' => 1,
             'max_users' => 8,
-            'max_items' => 20000,
-            'max_invoices_per_month' => 30000,
+            'max_items' => null,
+            'max_invoices_per_month' => null,
             'max_storage_mb' => 10240,
             'trial_days' => 0,
             'is_active' => true,

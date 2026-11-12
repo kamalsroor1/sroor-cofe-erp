@@ -23,6 +23,10 @@ use App\Enums\Billing\AddonType;
  * - `api.access` is hidden (is_public = false) by owner decision: it must not be sold. The row,
  *   its price and plan availability stay so existing subscriptions keep working.
  *
+ * `feature_keys` = the features a multi-feature add-on (a bundle) switches on, besides the
+ * single `feature_key`; the bundle.control bundle (PLAN-01) turns on reports.advanced, audit.logs
+ * and purchases.reorder.
+ *
  * `bundled_limits` = limits one unit raises, read by the entitlement engine (ENTI-2.2):
  * stores / warehouses / vans / users / items / storage_mb.
  */
@@ -31,7 +35,15 @@ final class AddonCatalog
     private const ALL_PAID = ['basic', 'pro', 'enterprise'];
 
     /**
-     * @var list<array{key: string, lang: string, type: AddonType, feature_key: string|null, bundled_limits: array<string, int>|null, unit_price: string, yearly_price: string|null, price_tiers: list<array{min_qty: int, unit_price: string, yearly_price: string}>|null, is_public: bool, plans: list<string>, unavailable_on: list<string>}>
+     * PLAN-01: add-ons that are no longer sold. The rows stay (is_active = false, unavailable on
+     * every plan) so a shop that already subscribes keeps what it paid for; they just leave the
+     * catalog. addon.items_5k: the item limit is gone; reports.advanced / audit.logs: replaced by
+     * the bundle.control bundle.
+     */
+    public const RETIRED_KEYS = ['addon.items_5k', 'reports.advanced', 'audit.logs'];
+
+    /**
+     * @var list<array{key: string, lang: string, type: AddonType, feature_key: string|null, feature_keys?: list<string>, bundled_limits: array<string, int>|null, unit_price: string, yearly_price: string|null, price_tiers: list<array{min_qty: int, unit_price: string, yearly_price: string}>|null, is_public: bool, plans: list<string>, unavailable_on: list<string>}>
      */
     private const ADDONS = [
         [
@@ -79,25 +91,32 @@ final class AddonCatalog
             'key' => 'addon.items_5k', 'lang' => 'items_5k', 'type' => AddonType::Recurring, 'feature_key' => null,
             'bundled_limits' => ['items' => 5000],
             'unit_price' => '99.000', 'yearly_price' => '990.000', 'price_tiers' => null,
-            'is_public' => true, 'plans' => ['basic'], 'unavailable_on' => [],
+            'is_public' => true, 'plans' => [], 'unavailable_on' => ['basic'],
         ],
         [
             'key' => 'mixes.manage', 'lang' => 'mixes', 'type' => AddonType::Recurring, 'feature_key' => 'mixes.manage',
             'bundled_limits' => null,
             'unit_price' => '199.000', 'yearly_price' => '1990.000', 'price_tiers' => null,
-            'is_public' => true, 'plans' => ['basic', 'pro'], 'unavailable_on' => [],
+            'is_public' => true, 'plans' => ['basic'], 'unavailable_on' => ['pro'],
+        ],
+        [
+            'key' => 'bundle.control', 'lang' => 'control_bundle', 'type' => AddonType::Recurring, 'feature_key' => null,
+            'feature_keys' => ['reports.advanced', 'audit.logs', 'purchases.reorder'],
+            'bundled_limits' => null,
+            'unit_price' => '199.000', 'yearly_price' => '1990.000', 'price_tiers' => null,
+            'is_public' => true, 'plans' => ['basic'], 'unavailable_on' => [],
         ],
         [
             'key' => 'reports.advanced', 'lang' => 'reports_advanced', 'type' => AddonType::Recurring, 'feature_key' => 'reports.advanced',
             'bundled_limits' => null,
             'unit_price' => '149.000', 'yearly_price' => '1490.000', 'price_tiers' => null,
-            'is_public' => true, 'plans' => ['basic'], 'unavailable_on' => [],
+            'is_public' => true, 'plans' => [], 'unavailable_on' => ['basic'],
         ],
         [
             'key' => 'audit.logs', 'lang' => 'audit_logs', 'type' => AddonType::Recurring, 'feature_key' => 'audit.logs',
             'bundled_limits' => null,
             'unit_price' => '99.000', 'yearly_price' => '990.000', 'price_tiers' => null,
-            'is_public' => true, 'plans' => ['basic'], 'unavailable_on' => [],
+            'is_public' => true, 'plans' => [], 'unavailable_on' => ['basic'],
         ],
         [
             'key' => 'api.access', 'lang' => 'api_access', 'type' => AddonType::Recurring, 'feature_key' => 'api.access',
@@ -126,7 +145,7 @@ final class AddonCatalog
     ];
 
     /**
-     * @return list<array{key: string, name_key: string, description_key: string, type: AddonType, feature_key: string|null, bundled_limits: array<string, int>|null, unit_price: string, yearly_price: string|null, price_tiers: list<array{min_qty: int, unit_price: string, yearly_price: string}>|null, is_active: bool, is_public: bool, sort_order: int}>
+     * @return list<array{key: string, name_key: string, description_key: string, type: AddonType, feature_key: string|null, feature_keys: list<string>|null, bundled_limits: array<string, int>|null, unit_price: string, yearly_price: string|null, price_tiers: list<array{min_qty: int, unit_price: string, yearly_price: string}>|null, is_active: bool, is_public: bool, sort_order: int}>
      */
     public static function all(): array
     {
@@ -140,11 +159,12 @@ final class AddonCatalog
                 'description_key' => 'plans.addons.'.$addon['lang'].'.description',
                 'type' => $addon['type'],
                 'feature_key' => $addon['feature_key'],
+                'feature_keys' => $addon['feature_keys'] ?? null,
                 'bundled_limits' => $addon['bundled_limits'],
                 'unit_price' => $addon['unit_price'],
                 'yearly_price' => $addon['yearly_price'],
                 'price_tiers' => $addon['price_tiers'],
-                'is_active' => true,
+                'is_active' => ! in_array($addon['key'], self::RETIRED_KEYS, true),
                 'is_public' => $addon['is_public'],
                 'sort_order' => ++$order,
             ];
