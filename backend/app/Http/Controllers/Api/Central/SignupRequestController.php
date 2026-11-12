@@ -22,6 +22,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  *
  *   GET  /api/v1/super-admin/signup-requests               super_admin.tenants.view
  *   POST /api/v1/super-admin/signup-requests/{id}/approve  super_admin.tenants.manage + recent 2FA
+ *        (SELL-01: owner_password optional; omitted => `owner_credentials.temporary_password` once)
  *   POST /api/v1/super-admin/signup-requests/{id}/reject   super_admin.tenants.manage
  */
 final class SignupRequestController extends Controller
@@ -39,10 +40,10 @@ final class SignupRequestController extends Controller
 
     public function approve(ApproveSignupRequestRequest $request, int $id): JsonResponse
     {
-        /** @var array{subdomain: string, plan_code?: string|null, owner_email: string, owner_password: string} $data */
+        /** @var array{subdomain: string, plan_code?: string|null, owner_email: string, owner_password?: string|null} $data */
         $data = $request->validated();
 
-        $signup = $this->approveSignupRequest->execute(
+        $result = $this->approveSignupRequest->execute(
             ApproveSignupRequestDTO::fromArray($id, $data),
             $this->operator($request),
         );
@@ -50,8 +51,15 @@ final class SignupRequestController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('signup.approved'),
-            'data' => (new SignupRequestResource($signup))->resolve(),
-        ]);
+            'data' => (new SignupRequestResource($result->signup))->resolve(),
+            // SELL-01: present only when the server generated the owner's temporary password
+            // (owner_password omitted); shown once, the owner must change it at first sign-in.
+            'owner_credentials' => $result->temporaryPassword === null ? null : [
+                'login' => $result->ownerEmail,
+                'temporary_password' => $result->temporaryPassword,
+                'must_change_password' => true,
+            ],
+        ], 200, ['Cache-Control' => 'no-store']);
     }
 
     public function reject(RejectSignupRequestRequest $request, int $id): JsonResponse

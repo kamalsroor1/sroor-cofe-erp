@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
+use App\Models\Expense;
 use App\Models\Item;
 use App\Models\ReturnDocument;
+use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
 use Tests\TenantTestCase;
@@ -152,6 +154,167 @@ class TrashApiTest extends TenantTestCase
         $purge->assertJsonPath('success', false);
 
         $this->inTenant($other, fn () => $this->assertSoftDeleted('items', ['id' => $foreignId]));
+    }
+
+    /**
+     * SEC-21 (3): the recycle bin ignored the branch. Exploit before the fix: a user holding
+     * `trash.access` who works only in branch A sent POST /api/v1/trash/expenses/{id}/restore
+     * (and DELETE /api/v1/trash/expenses/{id}/force) for an expense of branch B and got 200: the
+     * expense of another branch was restored / purged for good, and GET /api/v1/trash listed it.
+     */
+    public function test_a_branch_user_cannot_see_restore_or_purge_another_branchs_records(): void
+    {
+        [$storeB, $expenseA, $expenseB, $returnB] = $this->inTenant($this->tenant, function (): array {
+            $storeB = (int) Store::query()->create(['name' => 'فرع ب', 'code' => 'TR-B', 'type' => 'retail', 'is_main' => false, 'is_active' => true])->id;
+
+            return [
+                $storeB,
+                $this->makeTrashedExpense($this->storeId, 'مصروف فرع أ'),
+                $this->makeTrashedExpense($storeB, 'مصروف فرع ب'),
+                $this->makeTrashedReturn($storeB, 'RET-TRASH-B'),
+            ];
+        });
+
+        $branchUser = $this->createTenantUser($this->tenant, permissions: ['trash.access'], attributes: ['default_store_id' => $this->storeId]);
+        $headers = $this->tenantHeaders($this->tenant, $branchUser);
+
+        $list = $this->getJson('/api/v1/trash?tab=expenses', $headers)->assertOk()
+            ->assertJsonPath('counts.expenses', 1)
+            ->assertJsonPath('counts.returns', 0)
+            ->assertJsonCount(1, 'data');
+        $this->assertSame($expenseA, $list->json('data.0.id'));
+        $this->getJson('/api/v1/trash?tab=returns', $headers)->assertOk()->assertJsonCount(0, 'data');
+
+        // Another branch's records: the same 404 as an id that does not exist.
+        $missing = $this->postJson('/api/v1/trash/expenses/99999999/restore', [], $headers)->assertStatus(404);
+        $this->postJson("/api/v1/trash/expenses/{$expenseB}/restore", [], $headers)
+            ->assertStatus(404)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('message', $missing->json('message'));
+        $this->deleteJson("/api/v1/trash/expenses/{$expenseB}/force", [], $headers)->assertStatus(404);
+        $this->deleteJson("/api/v1/trash/returns/{$returnB}/force", [], $headers)->assertStatus(404);
+        $this->assertStringNotContainsString('App\\Models', (string) $this->deleteJson("/api/v1/trash/returns/{$returnB}/force", [], $headers)->getContent());
+
+        $this->inTenant($this->tenant, function () use ($expenseB, $returnB): void {
+            $this->assertSoftDeleted('expenses', ['id' => $expenseB]);
+            $this->assertSoftDeleted('returns', ['id' => $returnB]);
+        });
+
+        // Own branch: restore works.
+        $this->postJson("/api/v1/trash/expenses/{$expenseA}/restore", [], $headers)->assertOk();
+        $this->inTenant($this->tenant, fn () => $this->assertNotSoftDeleted('expenses', ['id' => $expenseA]));
+
+        // Once assigned to branch B the same user may restore its expense.
+        $this->inTenant($this->tenant, fn () => User::query()->findOrFail($branchUser->id)->stores()->attach($storeB));
+        $this->postJson("/api/v1/trash/expenses/{$expenseB}/restore", [], $this->tenantHeaders($this->tenant, $branchUser))->assertOk();
+    }
+
+    /**
+     * Security review of SEC-21: `stores.view_all` is READ access to every branch. Exploit before
+     * the fix: a user with trash.access + stores.view_all, assigned only to branch A, could
+     * restore or purge branch B's expense (the write used the read scope). The list still shows
+     * it; restore and purge answer the same 404 as a missing id.
+     */
+    public function test_read_only_view_all_lists_but_cannot_restore_or_purge_another_branch(): void
+    {
+        [$expenseB, $returnB, $orphan] = $this->inTenant($this->tenant, function (): array {
+            $storeB = (int) Store::query()->create(['name' => 'فرع ب', 'code' => 'TR-VA', 'type' => 'retail', 'is_main' => false, 'is_active' => true])->id;
+            $orphan = Expense::create(['expense_number' => 'EXP-TR-NOSTORE', 'title' => 'بدون فرع', 'amount' => '10.000', 'expense_date' => now()->toDateString(), 'category' => 'general']);
+            $orphan->delete();
+
+            return [$this->makeTrashedExpense($storeB, 'مصروف فرع ب'), $this->makeTrashedReturn($storeB, 'RET-TRASH-VA'), (int) $orphan->id];
+        });
+
+        $viewer = $this->createTenantUser($this->tenant, permissions: ['trash.access', 'stores.view_all'], attributes: ['default_store_id' => $this->storeId]);
+        $headers = $this->tenantHeaders($this->tenant, $viewer);
+
+        $list = $this->getJson('/api/v1/trash?tab=expenses', $headers)->assertOk();
+        $this->assertContains($expenseB, array_column($list->json('data'), 'id'));
+
+        $missing = $this->postJson('/api/v1/trash/expenses/99999999/restore', [], $headers)->assertStatus(404)->json('message');
+        foreach ([
+            ['POST', "/api/v1/trash/expenses/{$expenseB}/restore"],
+            ['DELETE', "/api/v1/trash/expenses/{$expenseB}/force"],
+            ['DELETE', "/api/v1/trash/returns/{$returnB}/force"],
+            ['POST', "/api/v1/trash/expenses/{$orphan}/restore"],
+            ['DELETE', "/api/v1/trash/expenses/{$orphan}/force"],
+        ] as [$method, $url]) {
+            $this->json($method, $url, [], $headers)->assertStatus(404)->assertJsonPath('message', $missing);
+        }
+
+        $this->inTenant($this->tenant, function () use ($expenseB, $returnB, $orphan): void {
+            $this->assertSoftDeleted('expenses', ['id' => $expenseB]);
+            $this->assertSoftDeleted('expenses', ['id' => $orphan]);
+            $this->assertSoftDeleted('returns', ['id' => $returnB]);
+        });
+
+        // The admin (stores.manage) may still purge them.
+        $this->deleteJson("/api/v1/trash/expenses/{$orphan}/force", [], $this->adminHeaders)->assertOk();
+    }
+
+    public function test_the_admin_still_sees_and_restores_every_branchs_records(): void
+    {
+        $expenseB = $this->inTenant($this->tenant, function (): int {
+            $storeB = (int) Store::query()->create(['name' => 'فرع ب', 'code' => 'TR-B2', 'type' => 'retail', 'is_main' => false, 'is_active' => true])->id;
+
+            return $this->makeTrashedExpense($storeB, 'مصروف فرع ب');
+        });
+
+        $this->getJson('/api/v1/trash?tab=expenses', $this->adminHeaders)->assertOk()->assertJsonPath('counts.expenses', 1);
+        $this->postJson("/api/v1/trash/expenses/{$expenseB}/restore", [], $this->adminHeaders)->assertOk();
+    }
+
+    public function test_only_store_managers_can_restore_or_purge_a_deleted_branch(): void
+    {
+        $storeId = $this->inTenant($this->tenant, function (): int {
+            $store = Store::query()->create(['name' => 'فرع محذوف', 'code' => 'TR-DEL', 'type' => 'retail', 'is_main' => false, 'is_active' => true]);
+            $store->delete();
+
+            return (int) $store->id;
+        });
+
+        $branchUser = $this->createTenantUser($this->tenant, permissions: ['trash.access']);
+        $this->inTenant($this->tenant, fn () => User::query()->findOrFail($branchUser->id)->stores()->attach($storeId));
+        $headers = $this->tenantHeaders($this->tenant, $branchUser);
+
+        $this->getJson('/api/v1/trash?tab=stores', $headers)->assertOk()->assertJsonPath('counts.stores', 0)->assertJsonCount(0, 'data');
+        $this->postJson("/api/v1/trash/stores/{$storeId}/restore", [], $headers)->assertStatus(404);
+        $this->deleteJson("/api/v1/trash/stores/{$storeId}/force", [], $headers)->assertStatus(404);
+        $this->inTenant($this->tenant, fn () => $this->assertSoftDeleted('stores', ['id' => $storeId]));
+
+        $this->postJson("/api/v1/trash/stores/{$storeId}/restore", [], $this->adminHeaders)->assertOk();
+    }
+
+    /** Runs inside the tenant. */
+    private function makeTrashedExpense(int $storeId, string $title): int
+    {
+        $expense = Expense::create([
+            'expense_number' => 'EXP-TR-'.$storeId.'-'.substr(md5($title), 0, 6),
+            'title' => $title,
+            'amount' => '75.000',
+            'expense_date' => now()->toDateString(),
+            'store_id' => $storeId,
+            'category' => 'general',
+        ]);
+        $expense->delete();
+
+        return (int) $expense->id;
+    }
+
+    /** Runs inside the tenant. */
+    private function makeTrashedReturn(int $storeId, string $number): int
+    {
+        $return = ReturnDocument::create([
+            'return_number' => $number,
+            'return_type' => 'sales_return',
+            'user_id' => $this->adminUser->id,
+            'store_id' => $storeId,
+            'total_amount' => '50.000',
+            'return_date' => now()->toDateString(),
+        ]);
+        $return->delete();
+
+        return (int) $return->id;
     }
 
     /** Runs inside the tenant. */

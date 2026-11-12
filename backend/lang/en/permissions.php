@@ -67,6 +67,7 @@ return [
     'returns' => [
         'manage' => 'Manage sales and purchase returns',
         'without_invoice' => 'Record a return without a source invoice or purchase',
+        'override_window' => 'Accept a sales return after the return window has ended',
     ],
     'reports' => [
         'view' => 'View financial and profit reports and branch comparison',

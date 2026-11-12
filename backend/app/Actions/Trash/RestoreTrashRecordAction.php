@@ -10,8 +10,10 @@ use App\Models\Expense;
 use App\Models\Item;
 use App\Models\Store;
 use App\Models\Supplier;
+use App\Models\User;
 use App\Services\Entitlements\PlanEnforcer;
 use App\Support\StoreLimitBucket;
+use App\Support\Trash\TrashScope;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -20,16 +22,20 @@ final class RestoreTrashRecordAction
     public function __construct(private readonly PlanEnforcer $planEnforcer) {}
 
     /**
-     * Restore soft-deleted record by type and id
+     * Restore soft-deleted record by type and id.
+     *
+     * SEC-21: looked up through TrashScope::findForWrite, so a record of a branch the actor cannot
+     * access (read-only stores.view_all is not enough), or a deleted branch without stores.manage,
+     * is "not found" (404), never restored.
      */
-    public function execute(string $type, int $id): bool
+    public function execute(string $type, int $id, User $actor): bool
     {
         $model = match ($type) {
-            'items' => Item::onlyTrashed()->findOrFail($id),
-            'customers' => Customer::onlyTrashed()->findOrFail($id),
-            'suppliers' => Supplier::onlyTrashed()->findOrFail($id),
-            'stores' => Store::onlyTrashed()->findOrFail($id),
-            'expenses' => Expense::onlyTrashed()->findOrFail($id),
+            'items' => TrashScope::findForWrite(Item::onlyTrashed(), $actor, $id),
+            'customers' => TrashScope::findForWrite(Customer::onlyTrashed(), $actor, $id),
+            'suppliers' => TrashScope::findForWrite(Supplier::onlyTrashed(), $actor, $id),
+            'stores' => TrashScope::findForWrite(Store::onlyTrashed(), $actor, $id),
+            'expenses' => TrashScope::findForWrite(Expense::onlyTrashed(), $actor, $id),
             // BE-02: deleting a return reverses its stock and balance; restoring would have to
             // re-apply them against stock that has since moved, so it is not offered.
             'returns' => throw ValidationException::withMessages(['type' => __('returns.restore_not_allowed')]),

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Settings;
 
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Log;
+
 /**
  * SETG-7: write-only tenant settings (secrets).
  *
@@ -77,9 +81,56 @@ final class SettingSecrets
                 continue;
             }
 
-            $data[$key] = trim($value);
+            // SEC-21: stored encrypted (APP_KEY), never as plain text in the tenant DB / backups.
+            $data[$key] = self::encrypt(trim($value));
         }
 
         return $data;
+    }
+
+    /**
+     * SEC-21: the value to store for a secret. Blank stays blank (= "no secret"), so `has_<key>`
+     * and the clear flag keep working.
+     */
+    public static function encrypt(string $plain): string
+    {
+        return $plain === '' ? '' : Crypt::encryptString($plain);
+    }
+
+    /**
+     * SEC-21: the plain secret from a stored value. A value written before encryption (legacy
+     * plain text, until the tenant migration re-encrypts it) is returned as is; a value that
+     * cannot be decrypted with this APP_KEY is treated as "no secret" (null), never echoed.
+     */
+    public static function decrypt(?string $stored): ?string
+    {
+        if ($stored === null || trim($stored) === '') {
+            return null;
+        }
+
+        if (! self::looksEncrypted($stored)) {
+            return $stored;
+        }
+
+        try {
+            return Crypt::decryptString($stored);
+        } catch (DecryptException) {
+            Log::warning('A stored setting secret could not be decrypted with the current APP_KEY.');
+
+            return null;
+        }
+    }
+
+    /** A Laravel encrypter payload (base64 JSON with iv/value/mac), as opposed to a raw token. */
+    public static function looksEncrypted(string $stored): bool
+    {
+        $json = base64_decode($stored, true);
+        if ($json === false) {
+            return false;
+        }
+
+        $payload = json_decode($json, true);
+
+        return is_array($payload) && isset($payload['iv'], $payload['value'], $payload['mac']);
     }
 }

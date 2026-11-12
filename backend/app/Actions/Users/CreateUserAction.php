@@ -24,6 +24,7 @@ final class CreateUserAction
      *
      * SEC-04: a non-admin actor may only assign a role whose permissions they all hold (403),
      * and (SEC-20 review) only a default store they can access (403).
+     * SELL-01: a user created by an actor is flagged `must_change_password`.
      */
     public function execute(CreateUserDTO $dto, ?User $actor = null): User
     {
@@ -38,7 +39,7 @@ final class CreateUserAction
             // SEC-06 / BE-12: plan users limit (active and inactive seats), counted under the tenant lock.
             $this->planEnforcer->assertWithinLimit(LimitResource::Users, fn (): int => User::query()->count());
 
-            $user = User::create([
+            $user = new User([
                 'name' => $dto->name,
                 'phone' => $dto->phone,
                 'email' => $dto->email,
@@ -46,6 +47,9 @@ final class CreateUserAction
                 'default_store_id' => $dto->default_store_id,
                 'is_active' => $dto->is_active,
             ]);
+            // SELL-01: the creator chose this password, so the new user replaces it at first sign-in.
+            $user->forceFill(['must_change_password' => $actor instanceof User]);
+            $user->save();
 
             $user->syncRoles([$dto->role]);
 

@@ -61,6 +61,16 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
             // SEC-20: manager approval PINs (user/profile PIN endpoints, POS price and cancel overrides).
             'pin',
             'override.pin',
+            // SELL-01: the operator-typed owner password on signup approval.
+            'owner_password',
+        ]);
+
+        // SELL-01: the RequestWatcher also stores JSON response bodies. Temporary passwords are
+        // returned once (user reset, console owner reset, signup approval) and must never land
+        // in the Telescope store. Dot paths into the response JSON.
+        Telescope::hideResponseParameters([
+            'data.temporary_password',
+            'owner_credentials.temporary_password',
         ]);
 
         Telescope::hideRequestHeaders([

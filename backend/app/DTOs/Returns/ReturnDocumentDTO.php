@@ -19,6 +19,9 @@ final class ReturnDocumentDTO
         public readonly string $return_date = '',
         public readonly ?string $refund_method = null,
         public readonly ?string $reason = null,
+        // SET-02: optional manager approval {user_id, pin} for a sales return past the return
+        // window. Read by CreateReturnAction only; never part of toArray() (not a document field).
+        public readonly ?array $override = null,
     ) {}
 
     public static function fromArray(array $data, ?int $storeId = null): self
@@ -35,6 +38,9 @@ final class ReturnDocumentDTO
             // BE-10: the client's refund_amount is ignored; the amount is the return's total.
             refund_method: isset($data['refund_method']) && $data['refund_method'] !== '' ? (string) $data['refund_method'] : null,
             reason: isset($data['reason']) && $data['reason'] !== '' ? (string) $data['reason'] : null,
+            override: isset($data['override']) && is_array($data['override'])
+                ? ['user_id' => $data['override']['user_id'] ?? null, 'pin' => $data['override']['pin'] ?? null]
+                : null,
         );
     }
 

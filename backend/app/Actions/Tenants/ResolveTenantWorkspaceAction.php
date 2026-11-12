@@ -10,6 +10,9 @@ use App\Support\PlatformHosts;
 
 class ResolveTenantWorkspaceAction
 {
+    /** A workspace label that is safe inside a LIKE pattern: no "%", "_" or "\". */
+    private const PLAIN_LABEL = '/^[a-z0-9-]+$/';
+
     public function __construct(
         private readonly TenantBranding $tenantBranding,
     ) {}
@@ -29,13 +32,19 @@ class ResolveTenantWorkspaceAction
             ];
         }
 
+        // SEC-21: this route is public. The code is matched exactly against id / slug / domain;
+        // the "<code>.<anything>" domain prefix match only runs for a plain label of a-z, 0-9
+        // and "-", so no LIKE wildcard ("%", "_") from the client ever reaches the query and
+        // "ab%" can no longer list the workspaces whose domain starts with "ab".
+        $prefixMatch = preg_match(self::PLAIN_LABEL, $code) === 1;
+
         // Query Tenant on the central database
         $tenant = Tenant::with('domains')
             ->where('id', $code)
             ->orWhere('slug', $code)
-            ->orWhereHas('domains', function ($q) use ($code) {
+            ->orWhereHas('domains', function ($q) use ($code, $prefixMatch) {
                 $q->where('domain', $code)
-                    ->orWhere('domain', 'like', "{$code}.%");
+                    ->when($prefixMatch, fn ($q) => $q->orWhere('domain', 'like', $code.'.%'));
             })
             ->first();
 

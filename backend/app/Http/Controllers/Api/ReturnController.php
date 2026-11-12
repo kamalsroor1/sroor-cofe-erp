@@ -130,7 +130,8 @@ final class ReturnController extends Controller
         ClientStoreGuard::verified($request);
 
         $dto = ReturnDocumentDTO::fromArray($request->validated(), (int) $activeStore->requireStore()->id);
-        $returnDoc = $this->createReturnAction->execute($dto);
+        $user = $request->user();
+        $returnDoc = $this->createReturnAction->execute($dto, $user instanceof User ? $user : null);
 
         return response()->json([
             'success' => true,

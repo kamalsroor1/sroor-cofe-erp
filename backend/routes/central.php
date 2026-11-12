@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Central\PlatformUnitsController;
 use App\Http\Controllers\Api\Central\SignupRequestController;
 use App\Http\Controllers\Api\Central\TenantArchiveController;
 use App\Http\Controllers\Api\Central\TenantBillingInvoiceController;
+use App\Http\Controllers\Api\Central\TenantOwnerPasswordController;
 use App\Http\Controllers\Api\Central\TenantProvisioningController;
 use App\Http\Controllers\Api\Central\TenantRateLimitController;
 use App\Http\Controllers\Api\SuperAdminApiController;
@@ -62,7 +63,8 @@ use Illuminate\Support\Facades\Route;
 |                                   platform-settings update + asset upload/delete (BRND-2),
 |                                   tenant retry-provisioning (OPS-2), platform units
 |                                   update (W2 batch 4 review), tenant archive (DELETE)
-|                                   and unarchive (OPS-9), signup-request approve (PRD-05).
+|                                   and unarchive (OPS-9), signup-request approve (PRD-05),
+|                                   tenant reset-owner-password (SELL-01).
 |                                   The `can:` check runs first: a read-only operator
 |                                   still gets a plain 403, never a step-up prompt.
 |
@@ -153,6 +155,10 @@ Route::prefix('v1/super-admin')
         // OPS-2: re-queue a failed provisioning (409 unless the tenant is `failed`).
         Route::post('/tenants/{id}/retry-provisioning', [TenantProvisioningController::class, 'retry'])
             ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class, 'throttle:6,1'])->name('tenants.retry_provisioning');
+        // SELL-01: reset the shop owner's forgotten password (temporary password shown once, the
+        // owner must change it at the next sign-in, all owner sessions revoked). Step-up + audited.
+        Route::post('/tenants/{id}/reset-owner-password', [TenantOwnerPasswordController::class, 'reset'])
+            ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class, 'throttle:6,1'])->name('tenants.reset_owner_password');
 
         // IDEN-4.6 ext: temporary per-tenant rate-limit raise (expiring, audited).
         Route::get('/tenants/{id}/rate-limits', [TenantRateLimitController::class, 'show'])

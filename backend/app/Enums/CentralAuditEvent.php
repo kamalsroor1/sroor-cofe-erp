@@ -106,6 +106,8 @@ enum CentralAuditEvent: string
     // PRD-05: assisted signup review
     case SignupRequestApproved = 'signup_request_approved';
     case SignupRequestRejected = 'signup_request_rejected';
+    // SELL-01: console reset of a shop owner's forgotten password (temporary password, never logged)
+    case TenantOwnerPasswordReset = 'tenant_owner_password_reset';
 
     public function translationKey(): string
     {

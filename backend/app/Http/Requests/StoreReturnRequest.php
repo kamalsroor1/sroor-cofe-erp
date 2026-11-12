@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ValidatesPriceOverride;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreReturnRequest extends FormRequest
 {
+    // SET-02: the same optional manager approval {user_id, pin} as a below-minimum sale; here it
+    // approves a sales return past the return window (checked by ReturnWindowGuard, never here).
+    use ValidatesPriceOverride;
+
     public function authorize(): bool
     {
         $user = $this->user();
@@ -54,6 +59,7 @@ class StoreReturnRequest extends FormRequest
             'items.*.'.($isSales ? 'purchase_item_id' : 'invoice_item_id') => ['prohibited'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
             'items.*.unit_price' => [Rule::requiredIf(! $hasSource), 'nullable', 'numeric', 'min:0'],
+            ...$this->priceOverrideRules(),
         ];
     }
 

@@ -36,6 +36,13 @@ return [
         'account_lockout_minutes' => (int) env('RATE_LIMIT_TENANT_LOGIN_LOCKOUT_MINUTES', 15),
     ],
 
+    // SELL-01: POST /api/v1/auth/change-password (signed-in tenant users).
+    'tenant_password_change' => [
+        'per_ip_per_minute' => (int) env('RATE_LIMIT_TENANT_PASSWORD_CHANGE_PER_IP', 30),
+        // One user, in one tenant, from one IP.
+        'per_user_per_minute' => (int) env('RATE_LIMIT_TENANT_PASSWORD_CHANGE_PER_USER', 10),
+    ],
+
     // Central (platform operator) login, used by IDEN-1.3.
     'central_login' => [
         'per_ip_per_minute' => (int) env('RATE_LIMIT_CENTRAL_LOGIN_PER_IP', 10),

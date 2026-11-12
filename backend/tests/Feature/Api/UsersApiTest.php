@@ -407,7 +407,7 @@ class UsersApiTest extends TenantTestCase
         $this->assertArrayNotHasKey('pos_pin', $row);
 
         // Set PIN via admin endpoint
-        $this->putJson("/api/v1/users/{$cashier->id}/pos-pin", ['pin' => '5432'], $this->adminHeaders)
+        $this->putJson("/api/v1/users/{$cashier->id}/pos-pin", ['pin' => '543210'], $this->adminHeaders)
             ->assertOk()
             ->assertJson(['success' => true, 'has_pos_pin' => true]);
 
@@ -439,17 +439,18 @@ class UsersApiTest extends TenantTestCase
     {
         $guest = $this->tenantGuestHeaders($this->tenant);
 
-        $this->putJson("/api/v1/users/{$this->unauthorizedUser->id}/pos-pin", ['pin' => '1234'], $guest)->assertStatus(401);
-        $this->putJson('/api/v1/profile/pos-pin', ['pin' => '1234', 'current_password' => 'password'], $guest)->assertStatus(401);
+        $this->putJson("/api/v1/users/{$this->unauthorizedUser->id}/pos-pin", ['pin' => '123456'], $guest)->assertStatus(401);
+        $this->putJson('/api/v1/profile/pos-pin', ['pin' => '123456', 'current_password' => 'password'], $guest)->assertStatus(401);
     }
 
     public function test_user_pos_pin_endpoint_is_forbidden_without_user_management_rights_and_validates_the_pin(): void
     {
         $target = $this->createTenantUser($this->tenant, 'cashier', attributes: ['name' => 'كاشير PIN']);
 
-        $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '1234'], $this->unauthorizedHeaders)->assertStatus(403);
+        $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '123456'], $this->unauthorizedHeaders)->assertStatus(403);
 
-        foreach (['12', '1234567', '12ab', 1234] as $bad) {
+        // SEC-21: a new PIN is exactly 6 digits, so 4- and 5-digit PINs are refused too.
+        foreach (['12', '1234', '12345', '1234567', '12ab56', 123456] as $bad) {
             $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => $bad], $this->adminHeaders)
                 ->assertStatus(422)
                 ->assertJsonValidationErrors('pin');
@@ -458,11 +459,11 @@ class UsersApiTest extends TenantTestCase
 
         $this->assertNull($this->inTenant($this->tenant, fn () => User::query()->findOrFail($target->id)->pos_pin));
 
-        $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '5678'], $this->adminHeaders)
+        $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '567890'], $this->adminHeaders)
             ->assertOk()
             ->assertJson(['success' => true, 'has_pos_pin' => true])
             ->assertJsonMissingPath('pos_pin');
-        $this->assertTrue(Hash::check('5678', (string) $this->inTenant($this->tenant, fn () => User::query()->findOrFail($target->id)->pos_pin)));
+        $this->assertTrue(Hash::check('567890', (string) $this->inTenant($this->tenant, fn () => User::query()->findOrFail($target->id)->pos_pin)));
     }
 
     public function test_profile_pos_pin_endpoint_validates_the_pin_and_the_current_password(): void
@@ -471,16 +472,16 @@ class UsersApiTest extends TenantTestCase
 
         $this->putJson('/api/v1/profile/pos-pin', ['pin' => '12', 'current_password' => 'password'], $headers)
             ->assertStatus(422)->assertJsonValidationErrors('pin');
-        $this->putJson('/api/v1/profile/pos-pin', ['pin' => '1234'], $headers)
+        $this->putJson('/api/v1/profile/pos-pin', ['pin' => '123456'], $headers)
             ->assertStatus(422)->assertJsonValidationErrors('current_password');
-        $this->putJson('/api/v1/profile/pos-pin', ['pin' => '1234', 'current_password' => 'not-the-password'], $headers)
+        $this->putJson('/api/v1/profile/pos-pin', ['pin' => '123456', 'current_password' => 'not-the-password'], $headers)
             ->assertStatus(422)->assertJsonValidationErrors('current_password');
         $this->assertNull($this->inTenant($this->tenant, fn () => User::query()->findOrFail($this->unauthorizedUser->id)->pos_pin));
 
-        $this->putJson('/api/v1/profile/pos-pin', ['pin' => '1234', 'current_password' => 'password'], $headers)
+        $this->putJson('/api/v1/profile/pos-pin', ['pin' => '123456', 'current_password' => 'password'], $headers)
             ->assertOk()
             ->assertJson(['success' => true, 'has_pos_pin' => true]);
-        $this->assertTrue(Hash::check('1234', (string) $this->inTenant($this->tenant, fn () => User::query()->findOrFail($this->unauthorizedUser->id)->pos_pin)));
+        $this->assertTrue(Hash::check('123456', (string) $this->inTenant($this->tenant, fn () => User::query()->findOrFail($this->unauthorizedUser->id)->pos_pin)));
     }
 
     // ------------------------------------------------------------------ SEC-20
@@ -549,7 +550,7 @@ class UsersApiTest extends TenantTestCase
                 ->assertJsonPath('message', $message);
         }
 
-        $this->putJson("/api/v1/users/{$victim->id}/pos-pin", ['pin' => '4826'], $headers)
+        $this->putJson("/api/v1/users/{$victim->id}/pos-pin", ['pin' => '482613'], $headers)
             ->assertStatus(403)
             ->assertJsonPath('message', $message);
 
@@ -576,7 +577,7 @@ class UsersApiTest extends TenantTestCase
         $this->putJson("/api/v1/users/{$target->id}", $this->updatePayload($target, 'sec20_pos_helper', ['password' => 'hijacked12']), $headers)
             ->assertStatus(403)
             ->assertJsonPath('message', $message);
-        $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '4826'], $headers)
+        $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '482613'], $headers)
             ->assertStatus(403)
             ->assertJsonPath('message', $message);
     }
@@ -585,13 +586,13 @@ class UsersApiTest extends TenantTestCase
     {
         $delegate = $this->makeDelegate();
         $victim = $this->makeBillingClerk();
-        $this->putJson("/api/v1/users/{$victim->id}/pos-pin", ['pin' => '7391'], $this->adminHeaders)->assertOk();
+        $this->putJson("/api/v1/users/{$victim->id}/pos-pin", ['pin' => '739104'], $this->adminHeaders)->assertOk();
 
         $this->putJson("/api/v1/users/{$victim->id}/pos-pin", ['pin' => null], $this->tenantHeaders($this->tenant, $delegate))
             ->assertStatus(403)
             ->assertJsonPath('message', __('users.cannot_change_credentials_of_more_privileged_user'));
 
-        $this->assertTrue(Hash::check('7391', (string) $this->credentialSnapshot($victim->id)['pos_pin']));
+        $this->assertTrue(Hash::check('739104', (string) $this->credentialSnapshot($victim->id)['pos_pin']));
     }
 
     private function makeSecondStore(): int
@@ -622,7 +623,7 @@ class UsersApiTest extends TenantTestCase
             $this->putJson("/api/v1/users/{$target->id}", $this->updatePayload($target, 'sec20_pos_helper', ['password' => 'hijacked12']), $headers)
                 ->assertStatus(403)
                 ->assertJsonPath('message', $message);
-            $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '4826'], $headers)
+            $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '482613'], $headers)
                 ->assertStatus(403)
                 ->assertJsonPath('message', $message);
             $this->assertSame($before, $this->credentialSnapshot($target->id));
@@ -632,7 +633,7 @@ class UsersApiTest extends TenantTestCase
         $this->attachStore($delegate, $storeB);
         $this->putJson("/api/v1/users/{$byDefault->id}", $this->updatePayload($byDefault, 'sec20_pos_helper', ['password' => 'resetpass1']), $headers)
             ->assertOk();
-        $this->putJson("/api/v1/users/{$byAssignment->id}/pos-pin", ['pin' => '4826'], $headers)->assertOk();
+        $this->putJson("/api/v1/users/{$byAssignment->id}/pos-pin", ['pin' => '482613'], $headers)->assertOk();
     }
 
     public function test_viewing_all_stores_is_not_enough_to_take_over_a_user_of_another_store(): void
@@ -647,7 +648,7 @@ class UsersApiTest extends TenantTestCase
         $this->putJson("/api/v1/users/{$target->id}", $this->updatePayload($target, 'sec20_pos_helper', ['password' => 'resetpass1']), $headers)
             ->assertStatus(403)
             ->assertJsonPath('message', $message);
-        $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '4826'], $headers)
+        $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '482613'], $headers)
             ->assertStatus(403)
             ->assertJsonPath('message', $message);
     }
@@ -726,7 +727,7 @@ class UsersApiTest extends TenantTestCase
             'password' => 'resetpass1',
         ]), $headers)->assertOk();
 
-        $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '4826'], $headers)
+        $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '482613'], $headers)
             ->assertOk()
             ->assertJson(['success' => true, 'has_pos_pin' => true]);
 
@@ -735,7 +736,7 @@ class UsersApiTest extends TenantTestCase
             $this->assertSame('01000007556', $fresh->phone);
             $this->assertSame('pos-helper@example.test', $fresh->email);
             $this->assertTrue(Hash::check('resetpass1', (string) $fresh->password));
-            $this->assertTrue(Hash::check('4826', (string) $fresh->pos_pin));
+            $this->assertTrue(Hash::check('482613', (string) $fresh->pos_pin));
         });
     }
 
@@ -748,13 +749,13 @@ class UsersApiTest extends TenantTestCase
             'email' => 'clerk-by-admin@example.test',
             'password' => 'resetpass1',
         ]), $this->adminHeaders)->assertOk();
-        $this->putJson("/api/v1/users/{$victim->id}/pos-pin", ['pin' => '7391'], $this->adminHeaders)->assertOk();
+        $this->putJson("/api/v1/users/{$victim->id}/pos-pin", ['pin' => '739104'], $this->adminHeaders)->assertOk();
 
         $this->inTenant($this->tenant, function () use ($victim): void {
             $fresh = User::query()->findOrFail($victim->id);
             $this->assertSame('01000007557', $fresh->phone);
             $this->assertTrue(Hash::check('resetpass1', (string) $fresh->password));
-            $this->assertTrue(Hash::check('7391', (string) $fresh->pos_pin));
+            $this->assertTrue(Hash::check('739104', (string) $fresh->pos_pin));
         });
     }
 
@@ -770,13 +771,13 @@ class UsersApiTest extends TenantTestCase
         ]), $headers)->assertOk();
 
         $selfHeaders = $this->tenantHeaders($this->tenant, $delegate);
-        $this->putJson("/api/v1/users/{$delegate->id}/pos-pin", ['pin' => '2468'], $selfHeaders)->assertOk();
+        $this->putJson("/api/v1/users/{$delegate->id}/pos-pin", ['pin' => '246802'], $selfHeaders)->assertOk();
 
         $this->inTenant($this->tenant, function () use ($delegate): void {
             $fresh = User::query()->findOrFail($delegate->id);
             $this->assertSame('01000007558', $fresh->phone);
             $this->assertTrue(Hash::check('resetpass1', (string) $fresh->password));
-            $this->assertTrue(Hash::check('2468', (string) $fresh->pos_pin));
+            $this->assertTrue(Hash::check('246802', (string) $fresh->pos_pin));
             // Own changes are not "another user's credentials": no audit row for them.
             $this->assertFalse(ActivityLog::query()->where('subject_id', $delegate->id)->whereIn('action', ['password_reset', 'pos_pin_set'])->exists());
         });
@@ -837,7 +838,7 @@ class UsersApiTest extends TenantTestCase
         $foreign = $this->createTenantUser($other, 'cashier', attributes: ['phone' => '01000007559']);
         $foreignHash = $this->inTenant($other, fn (): string => (string) User::query()->findOrFail($foreign->id)->password);
 
-        $this->putJson("/api/v1/users/{$foreign->id}/pos-pin", ['pin' => '1357'], $this->adminHeaders)
+        $this->putJson("/api/v1/users/{$foreign->id}/pos-pin", ['pin' => '135790'], $this->adminHeaders)
             ->assertNotFound()
             ->assertJsonPath('success', false);
         $this->putJson("/api/v1/users/{$foreign->id}", [

@@ -25,7 +25,8 @@ final class UpdateProfilePosPinRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pin' => ['present', 'nullable', 'string', 'regex:/^\d{4,6}$/'],
+            // SEC-21: a NEW PIN is exactly 6 digits. Existing shorter PINs keep verifying until changed.
+            'pin' => ['present', 'nullable', 'string', 'regex:/^\d{6}$/'],
             'current_password' => ['required', 'string', function (string $attribute, mixed $value, Closure $fail): void {
                 $hash = $this->user()?->password;
                 if (! is_string($value) || ! is_string($hash) || ! Hash::check($value, $hash)) {

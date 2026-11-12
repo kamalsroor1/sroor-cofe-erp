@@ -78,6 +78,8 @@ class PermissionsSeeder extends Seeder
         'returns.manage',
         // BE-01: book a return with no source invoice/purchase (admin only by default).
         'returns.without_invoice',
+        // SET-02: accept a sales return past the tenant's return window (admin only by default).
+        'returns.override_window',
 
         // Admin & Reports
         'reports.view',

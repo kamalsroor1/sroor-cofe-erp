@@ -367,6 +367,80 @@ class StoresApiTest extends TenantTestCase
         $this->assertNotEmpty($this->getJson('/api/v1/stores', $this->adminHeaders)->assertOk()->json('all_users'));
     }
 
+    /**
+     * SEC-21 (5): exploit before the fix: POST /api/v1/stores/{id}/assign-users with an empty body
+     * returned 200 and `assigned_user_ids: []`, silently removing every user from the branch
+     * (user_ids was nullable and the action synced []).
+     */
+    public function test_assign_users_with_an_empty_body_is_rejected_and_keeps_the_assignments(): void
+    {
+        $staff = $this->createTenantUser($this->tenant, attributes: ['name' => 'كاشير مُعيّن']);
+        $this->postJson('/api/v1/stores/'.$this->mainStoreId.'/assign-users', ['user_ids' => [$staff->id]], $this->adminHeaders)->assertOk();
+
+        foreach ([[], ['user_ids' => null], ['user_ids' => 'all'], ['user_ids' => [$staff->id, $staff->id]], ['user_ids' => ['abc']]] as $payload) {
+            $this->postJson('/api/v1/stores/'.$this->mainStoreId.'/assign-users', $payload, $this->adminHeaders)
+                ->assertStatus(422)
+                ->assertJsonValidationErrors(array_key_exists('user_ids', $payload) && is_array($payload['user_ids']) ? ['user_ids.0'] : ['user_ids']);
+        }
+
+        $this->inTenant($this->tenant, fn () => $this->assertDatabaseHas('store_user', ['store_id' => $this->mainStoreId, 'user_id' => $staff->id]));
+
+        // Clearing the branch on purpose is an explicit empty list.
+        $this->postJson('/api/v1/stores/'.$this->mainStoreId.'/assign-users', ['user_ids' => []], $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonPath('data.assigned_user_ids', []);
+        $this->inTenant($this->tenant, fn () => $this->assertDatabaseMissing('store_user', ['store_id' => $this->mainStoreId, 'user_id' => $staff->id]));
+    }
+
+    public function test_assign_users_requires_authentication_and_store_management(): void
+    {
+        $this->postJson('/api/v1/stores/'.$this->mainStoreId.'/assign-users', ['user_ids' => []], $this->tenantGuestHeaders($this->tenant))->assertStatus(401);
+        $this->postJson('/api/v1/stores/'.$this->mainStoreId.'/assign-users', ['user_ids' => []], $this->unauthorizedHeaders)->assertStatus(403);
+    }
+
+    public function test_assign_users_cannot_reach_a_store_or_user_of_another_tenant(): void
+    {
+        $other = $this->createTenant();
+        $foreignStore = (int) $this->tenantStore($other)->id;
+        $foreignUser = $this->createTenantUser($other);
+
+        // A foreign user id does not exist in this tenant's DB.
+        $this->postJson('/api/v1/stores/'.$this->mainStoreId.'/assign-users', ['user_ids' => [$foreignUser->id]], $this->adminHeaders)
+            ->assertStatus(422)->assertJsonValidationErrors(['user_ids.0']);
+        // A foreign store id is not found here.
+        $this->postJson('/api/v1/stores/'.$foreignStore.'/assign-users', ['user_ids' => []], $this->adminHeaders)->assertStatus(404);
+    }
+
+    /**
+     * SEC-21 (small item): exploit before the fix: GET /api/v1/stores as a user without any
+     * branch assignment returned 200 with the main store's `deletion_blockers` (invoice/purchase
+     * counters), its document counters and the assigned users with their e-mails.
+     */
+    public function test_store_list_hides_management_fields_from_users_who_do_not_manage_stores(): void
+    {
+        $staff = $this->createTenantUser($this->tenant, attributes: ['name' => 'موظف معيّن']);
+        $this->postJson('/api/v1/stores/'.$this->mainStoreId.'/assign-users', ['user_ids' => [$staff->id]], $this->adminHeaders)->assertOk();
+
+        $unassigned = $this->createTenantUser($this->tenant, 'cashier', attributes: ['default_store_id' => null]);
+
+        foreach ([$this->tenantHeaders($this->tenant, $unassigned), $this->unauthorizedHeaders] as $headers) {
+            $response = $this->getJson('/api/v1/stores', $headers)->assertOk();
+            foreach (array_merge($response->json('stores'), [$response->json('active_store')]) as $store) {
+                $this->assertIsArray($store);
+                foreach (['deletion_blockers', 'can_be_deleted', 'assigned_users', 'assigned_user_ids', 'invoices_count', 'purchases_count', 'stocks_count'] as $field) {
+                    $this->assertArrayNotHasKey($field, $store);
+                }
+            }
+            $this->assertStringNotContainsString((string) $staff->email, (string) $response->getContent());
+        }
+
+        // A store manager still gets them.
+        $admin = $this->getJson('/api/v1/stores', $this->adminHeaders)->assertOk()->json('stores.0');
+        $this->assertArrayHasKey('deletion_blockers', $admin);
+        $this->assertArrayHasKey('assigned_users', $admin);
+        $this->assertArrayHasKey('invoices_count', $admin);
+    }
+
     private function createBranch(string $name, string $code, string $type): int
     {
         return $this->inTenant($this->tenant, fn (): int => Store::create([

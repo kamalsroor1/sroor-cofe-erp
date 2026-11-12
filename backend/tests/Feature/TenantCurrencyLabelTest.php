@@ -108,7 +108,9 @@ final class TenantCurrencyLabelTest extends TenantTestCase
     {
         $tenant = $this->createTenant();
 
-        $this->inTenant($tenant, function (): void {
+        $admin = $this->tenantAdmin($tenant);
+
+        $this->inTenant($tenant, function () use ($admin): void {
             Setting::set('currency', 'SAR');
             App::setLocale('ar');
 
@@ -135,12 +137,12 @@ final class TenantCurrencyLabelTest extends TenantTestCase
 
             $action = app(GetTrashRecordsAction::class);
 
-            $expenseRecords = $action->execute('expenses');
+            $expenseRecords = $action->execute($admin, 'expenses');
             $this->assertNotEmpty($expenseRecords['records']);
             $this->assertStringContainsString('ر.س', $expenseRecords['records'][0]['subtitle']);
             $this->assertStringNotContainsString('ج.م', $expenseRecords['records'][0]['subtitle']);
 
-            $returnRecords = $action->execute('returns');
+            $returnRecords = $action->execute($admin, 'returns');
             $this->assertNotEmpty($returnRecords['records']);
             $this->assertStringContainsString('ر.س', $returnRecords['records'][0]['subtitle']);
             $this->assertStringNotContainsString('ج.م', $returnRecords['records'][0]['subtitle']);

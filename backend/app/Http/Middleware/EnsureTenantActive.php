@@ -47,6 +47,8 @@ final class EnsureTenantActive
         'api.shifts.close',
         // password change must stay possible
         'api.profile.update',
+        // SELL-01: a user forced to change their password must be able to, even read-only
+        'api.auth.change_password',
         // pure calculation, writes nothing
         'api.coffee_blender.calculate',
         // Owner policy: unpaid -> read_only may still pay; suspended/archived are fully blocked (BLOCKED_ALLOWLIST).

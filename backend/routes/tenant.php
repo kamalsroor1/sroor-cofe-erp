@@ -8,6 +8,7 @@ use App\Http\Controllers\DailyJournalPrintController;
 use App\Http\Controllers\InvoicePrintController;
 use App\Http\Controllers\ItemMovementsPrintController;
 use App\Http\Controllers\POSController;
+use App\Http\Middleware\EnsurePasswordChanged;
 use App\Http\Middleware\EnsureTenantActive;
 use App\Models\Store;
 use App\Support\ReportStoreFilter;
@@ -55,7 +56,8 @@ Route::middleware([
     // the authenticated, permission-checked API before calling window.print().
 
     // 2. Protected SPA shell pages and Blade print pages (read-only)
-    Route::middleware('auth')->group(function () {
+    // SELL-01: a session user flagged must_change_password only gets the SPA shell (EnsurePasswordChanged).
+    Route::middleware(['auth', EnsurePasswordChanged::class])->group(function () {
         // Dashboard (Vue 3 SPA). Named `dashboard`: bootstrap/app.php redirects users here.
         Route::get('/', fn () => view('app'))->name('dashboard')->middleware('spa.headers');
 
@@ -153,8 +155,8 @@ Route::middleware([
             ));
         })->name('reports.print')->middleware(['can:reports.view', 'store.access']);
 
-        // Activity log CSV export (same URI as routes/web.php; this tenant-initialised definition
-        // replaces that one on tenant hosts).
+        // Activity log CSV export (SEC-21: the only web definition; the SPA catch-all in
+        // routes/web.php excludes this path).
         Route::get('/activity-logs/export-csv', [ActivityLogController::class, 'exportCsv'])->name('tenant.activity-logs.export.csv')->middleware('can:logs.view');
     });
 });

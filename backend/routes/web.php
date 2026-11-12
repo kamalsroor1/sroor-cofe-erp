@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Auth\TelescopeAccessController;
 use App\Http\Middleware\EnsureCentralContext;
 use App\Services\Branding\PlatformBranding;
@@ -67,7 +66,10 @@ Route::post('/logout', function (Request $request) {
 // NOTE: the unauthenticated customer/supplier/item CSV export routes were removed
 // (P0 report row 7). Nothing in the SPA/desktop/mobile called them; re-expose
 // exports only through /api/v1 behind auth:sanctum + permission + store scope.
-Route::get('/activity-logs/export-csv', [ActivityLogController::class, 'exportCsv'])->name('activity-logs.export.csv')->middleware(['auth', 'can:logs.view']);
+// SEC-21: the central-domain copy of /activity-logs/export-csv is gone (it ran without tenancy
+// and only kept the tenant route's position ahead of the SPA catch-all). The export lives in
+// routes/tenant.php (tenant host, tenancy initialised) and /api/v1/activity-logs/export-csv; the
+// catch-all below excludes its path so the tenant route still wins.
 
 // 📱 PWA Manifest & Service Worker
 // public/manifest.json is a static file (kept for the Capacitor web-asset copy) that the web server
@@ -122,9 +124,9 @@ Route::get('/sw.js', function () {
 });
 
 // 🌐 Pure Vue 3 SPA Catch-All Entry Point
-// Never serve the SPA shell for unknown /api/* paths (must 404), nor for the tenant print pages
+// Never serve the SPA shell for unknown /api/* paths (must 404), nor for the tenant print/export pages
 // registered in routes/tenant.php (loaded after this file, so the catch-all would shadow them).
 Route::get('/{any?}', $spaShell)
-    ->where('any', '(?!api(?:/|$)|reports/print$|items/[^/]+/movements/print$).*')
+    ->where('any', '(?!api(?:/|$)|reports/print$|items/[^/]+/movements/print$|activity-logs/export-csv$).*')
     ->name('app')
     ->middleware('spa.headers');

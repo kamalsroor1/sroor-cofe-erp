@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Items;
 
+use App\Http\Resources\ItemMovementResource;
 use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\StoreStock;
@@ -16,11 +17,12 @@ final class GetItemMovementsAction
      * Query movements ledger and calculate aggregates for an item
      *
      * SEC-1 (M6): $includeCost = false (no items.view_cost) returns cost_price as null and
-     * hides each movement's unit_cost.
+     * hides each movement's unit_cost. SEC-21: rows are shaped by ItemMovementResource.
      */
     public function execute(Item $item, ?string $fromDate = null, ?string $toDate = null, ?int $storeId = null, ?string $type = null, int $perPage = 20, bool $includeCost = true): array
     {
-        $query = StockMovement::with(['user', 'store'])
+        // SEC-21: only the id and name of the user / store (never e-mail, phone, login data).
+        $query = StockMovement::with(['user:id,name', 'store:id,name'])
             ->where('item_id', $item->id);
 
         if ($fromDate) {
@@ -59,9 +61,6 @@ final class GetItemMovementsAction
             : Decimal::normalize((string) $item->current_stock);
 
         $movements = $query->latest('id')->paginate($perPage);
-        if (! $includeCost) {
-            $movements->getCollection()->each(fn (StockMovement $movement) => $movement->makeHidden('unit_cost'));
-        }
 
         return [
             'item' => [
@@ -87,7 +86,9 @@ final class GetItemMovementsAction
                 'current_scope_stock' => $currentScopeStock,
                 'movements_count' => $allMovements->count(),
             ],
-            'data' => $movements->items(),
+            'data' => $movements->getCollection()
+                ->map(fn (StockMovement $movement): array => (new ItemMovementResource($movement, $includeCost))->resolve())
+                ->all(),
             'meta' => [
                 'current_page' => $movements->currentPage(),
                 'last_page' => $movements->lastPage(),

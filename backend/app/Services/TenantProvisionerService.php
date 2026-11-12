@@ -114,6 +114,8 @@ class TenantProvisionerService implements TenantProvisionerInterface
                     'phone' => $user->exists ? $user->phone : ($phone ?? $slug.'_admin'),
                     // Already a hash: the `hashed` cast keeps a verified hash as is.
                     'password' => $passwordHash,
+                    // SELL-01: the platform chose this password; the owner replaces it at first sign-in.
+                    'must_change_password' => true,
                     'is_active' => true,
                     'default_store_id' => $mainStore->id,
                     'theme_preference' => $user->exists ? $user->theme_preference : 'dark',

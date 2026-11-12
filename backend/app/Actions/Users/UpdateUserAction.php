@@ -56,6 +56,11 @@ final class UpdateUserAction
             $wasActive = (bool) $user->is_active;
             $rolesBefore = $user->getRoleNames()->sort()->values()->all();
 
+            // SELL-01: a password chosen by someone else must be replaced at the next sign-in.
+            if ($dto->password !== null && (int) $actor?->id !== (int) $user->id) {
+                $user->forceFill(['must_change_password' => true]);
+            }
+
             $user->update($data);
             $user->syncRoles([$dto->role]);
 

@@ -22,6 +22,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $email
  * @property Carbon|null $email_verified_at
  * @property string $password
+ * @property bool $must_change_password SELL-01: set when someone else chose the password (never fillable)
  * @property bool $is_active
  * @property string|null $remember_token
  * @property Carbon|null $created_at
@@ -66,6 +67,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'must_change_password' => 'boolean',
             'is_active' => 'boolean',
             'show_print_subtitle' => 'boolean',
         ];

@@ -461,6 +461,8 @@ final class PosPriceAuthorityApiTest extends TenantTestCase
 
         $this->withHeaders($headers)->putJson('/api/v1/users/'.$this->cashier->id.'/pos-pin', ['pin' => '12'])->assertStatus(422);
         $this->withHeaders($headers)->putJson('/api/v1/users/'.$this->cashier->id.'/pos-pin', ['pin' => '1234567'])->assertStatus(422);
+        // SEC-21: a new 4-digit PIN is refused (existing 4-digit PINs still verify).
+        $this->withHeaders($headers)->putJson('/api/v1/users/'.$this->cashier->id.'/pos-pin', ['pin' => '1234'])->assertStatus(422);
         $this->withHeaders($headers)->putJson('/api/v1/users/'.$this->cashier->id.'/pos-pin', ['pin' => '123456'])
             ->assertOk()->assertJson(['has_pos_pin' => true]);
 
@@ -480,7 +482,7 @@ final class PosPriceAuthorityApiTest extends TenantTestCase
             'X-Tenant' => (string) $this->tenant->getTenantKey(),
             'Authorization' => 'Bearer '.$this->cashier->createToken('t')->plainTextToken,
             'Accept' => 'application/json',
-        ])->putJson('/api/v1/users/'.$this->manager->id.'/pos-pin', ['pin' => '1234'])->assertStatus(403);
+        ])->putJson('/api/v1/users/'.$this->manager->id.'/pos-pin', ['pin' => '123456'])->assertStatus(403);
 
         $this->assertTrue(Hash::check('4321', (string) User::query()->findOrFail($this->manager->id)->pos_pin));
     }
@@ -495,10 +497,10 @@ final class PosPriceAuthorityApiTest extends TenantTestCase
             'Accept' => 'application/json',
         ];
 
-        $this->withHeaders($headers)->putJson('/api/v1/profile/pos-pin', ['pin' => '2468', 'current_password' => 'wrong'])->assertStatus(422);
-        $this->withHeaders($headers)->putJson('/api/v1/profile/pos-pin', ['pin' => '2468', 'current_password' => 'password'])->assertOk();
+        $this->withHeaders($headers)->putJson('/api/v1/profile/pos-pin', ['pin' => '246802', 'current_password' => 'wrong'])->assertStatus(422);
+        $this->withHeaders($headers)->putJson('/api/v1/profile/pos-pin', ['pin' => '246802', 'current_password' => 'password'])->assertOk();
 
-        $this->assertTrue(Hash::check('2468', (string) User::query()->findOrFail($this->manager->id)->pos_pin));
+        $this->assertTrue(Hash::check('246802', (string) User::query()->findOrFail($this->manager->id)->pos_pin));
     }
 
     public function test_pos_pin_hash_is_never_serialized(): void
@@ -580,10 +582,10 @@ final class PosPriceAuthorityApiTest extends TenantTestCase
             'Accept' => 'application/json',
         ];
 
-        $this->withHeaders($headers)->putJson('/api/v1/users/'.$this->cashier->id.'/pos-pin', ['pin' => '1357'])->assertOk();
-        $this->assertTrue(Hash::check('1357', (string) User::query()->findOrFail($this->cashier->id)->pos_pin));
+        $this->withHeaders($headers)->putJson('/api/v1/users/'.$this->cashier->id.'/pos-pin', ['pin' => '135790'])->assertOk();
+        $this->assertTrue(Hash::check('135790', (string) User::query()->findOrFail($this->cashier->id)->pos_pin));
 
-        $this->withHeaders($headers)->putJson('/api/v1/users/'.$this->admin->id.'/pos-pin', ['pin' => '1357'])->assertStatus(403);
+        $this->withHeaders($headers)->putJson('/api/v1/users/'.$this->admin->id.'/pos-pin', ['pin' => '135790'])->assertStatus(403);
         $this->assertNull(User::query()->findOrFail($this->admin->id)->pos_pin);
     }
 

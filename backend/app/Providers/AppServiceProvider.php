@@ -225,6 +225,16 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        // SELL-01: POST /auth/change-password, budgeted like login: one ceiling per client IP plus a
+        // cap per tenant + user. Wrong current passwords also spend the SEC-05 account lockout
+        // (CurrentPasswordVerifier), which answers 422 before these caps are reached.
+        RateLimiter::for('tenant-password-change', fn (Request $request): array => [
+            Limit::perMinute($this->limit('rate_limits.tenant_password_change.per_ip_per_minute', 30))
+                ->by('tenant-password-change-ip|'.$request->ip()),
+            Limit::perMinute($this->limit('rate_limits.tenant_password_change.per_user_per_minute', 10))
+                ->by('tenant-password-change-user|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->user()?->getAuthIdentifier()).'|'.$request->ip()),
+        ]);
+
         // Central (platform operator) login, consumed by IDEN-1.3. Security audit (W2 lane 3I):
         // the tight hourly cap is per email AND IP, so one attacker can no longer lock an
         // operator out from everywhere; a looser hourly cap per email that ignores the IP still

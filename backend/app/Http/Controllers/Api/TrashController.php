@@ -8,6 +8,7 @@ use App\Actions\Trash\ForceDeleteTrashRecordAction;
 use App\Actions\Trash\GetTrashRecordsAction;
 use App\Actions\Trash\RestoreTrashRecordAction;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Support\SafeJsonError;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,8 +27,9 @@ final class TrashController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        /** @var User $user */
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('trash.access')) {
+        if (! $user->hasRole('admin') && ! $user->can('trash.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -35,7 +37,7 @@ final class TrashController extends Controller
         $search = trim((string) $request->input('search', ''));
         $perPage = max(1, min(200, (int) $request->input('per_page', 15)));
 
-        $result = $this->getTrashRecordsAction->execute($tab, $search, $perPage);
+        $result = $this->getTrashRecordsAction->execute($user, $tab, $search, $perPage);
 
         return response()->json([
             'success' => true,
@@ -51,13 +53,14 @@ final class TrashController extends Controller
      */
     public function restore(Request $request, string $type, int $id): JsonResponse
     {
+        /** @var User $user */
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('trash.access')) {
+        if (! $user->hasRole('admin') && ! $user->can('trash.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
         try {
-            $this->restoreTrashRecordAction->execute($type, $id);
+            $this->restoreTrashRecordAction->execute($type, $id, $user);
 
             return response()->json([
                 'success' => true,
@@ -74,13 +77,14 @@ final class TrashController extends Controller
      */
     public function forceDelete(Request $request, string $type, int $id): JsonResponse
     {
+        /** @var User $user */
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('trash.access')) {
+        if (! $user->hasRole('admin') && ! $user->can('trash.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
         try {
-            $this->forceDeleteTrashRecordAction->execute($type, $id);
+            $this->forceDeleteTrashRecordAction->execute($type, $id, $user);
 
             return response()->json([
                 'success' => true,

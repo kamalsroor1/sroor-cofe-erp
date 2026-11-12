@@ -60,9 +60,13 @@ final class GetSystemContextAction
             ? Store::where('is_active', true)->orderBy('is_main', 'desc')->get(['id', 'name', 'code', 'type', 'is_main'])
             : $user->stores()->where('is_active', true)->get(['stores.id', 'name', 'code', 'type', 'is_main']);
 
+        // SELL-01 review: a session that must change its password gets only what the SPA needs to
+        // boot the change-password screen: no shift, no alerts/telemetry, no setup progress.
+        $mustChangePassword = $user->must_change_password === true;
+
         // 2. Active Cash Shift
         $activeShift = null;
-        if ($activeStore) {
+        if ($activeStore && ! $mustChangePassword) {
             $activeShift = CashShift::where('store_id', $activeStore->id)
                 ->where('status', 'open')
                 ->latest('id')
@@ -70,50 +74,7 @@ final class GetSystemContextAction
         }
 
         // 3. System Alerts & Telemetry
-        $alerts = [];
-        // SETG-10: items without their own minimum use the tenant default threshold.
-        $lowStockCount = $this->tenantSettings->whereLowStock(Item::where('is_active', true))->count();
-
-        if ($lowStockCount > 0) {
-            $alerts[] = [
-                'type' => 'danger',
-                'icon' => 'alert-triangle',
-                'title' => __('dashboard.system_alerts.low_stock_title', ['count' => $lowStockCount]),
-                'description' => __('dashboard.system_alerts.low_stock_desc'),
-                'link' => '/purchases/smart-reorder',
-                'link_label' => __('dashboard.system_alerts.low_stock_link'),
-            ];
-        }
-
-        $debtCount = Customer::where('is_active', true)->where('current_balance', '>', 0)->count();
-        if ($debtCount > 0) {
-            $alerts[] = [
-                'type' => 'warning',
-                'icon' => 'users',
-                'title' => __('dashboard.system_alerts.debts_title', ['count' => $debtCount]),
-                'description' => __('dashboard.system_alerts.debts_desc'),
-                'link' => '/customers',
-                'link_label' => __('dashboard.system_alerts.debts_link'),
-            ];
-        }
-
-        if ($user->can('daily_journal.view') || $user->hasRole('admin')) {
-            try {
-                $balances = $this->treasuryService->getBalances($activeStore?->id);
-                $cashExpected = Decimal::normalize((string) ($balances['cash']['balance'] ?? 0));
-                if (Decimal::cmp($cashExpected, '10000') >= 0) {
-                    $alerts[] = [
-                        'type' => 'info',
-                        'icon' => 'wallet',
-                        'title' => __('dashboard.system_alerts.high_cash_title'),
-                        'description' => __('dashboard.system_alerts.high_cash_desc', ['amount' => number_format((float) $cashExpected, 0), 'currency' => $this->tenantSettings->currencyLabel()]),
-                        'link' => '/daily-journal',
-                        'link_label' => __('dashboard.system_alerts.high_cash_link'),
-                    ];
-                }
-            } catch (\Throwable) {
-            }
-        }
+        $alerts = $mustChangePassword ? [] : $this->alerts($user, $activeStore);
 
         // 4. System Settings & Branding
         $headerLocale = $request->header('X-Locale');
@@ -170,6 +131,9 @@ final class GetSystemContextAction
                 'business_date' => $this->tenantClock->businessDate(),
                 'inventory_units' => $this->tenantSettings->inventoryUnits(),
                 'low_stock_default_threshold' => $this->tenantSettings->lowStockDefaultThreshold(),
+                // SET-02: shop policies the SPA applies (idle lock screen; return window hint).
+                'returns_max_days' => $this->tenantSettings->returnsMaxDays(),
+                'pos_idle_lock_minutes' => $this->tenantSettings->posIdleLockMinutes(),
             ],
             'branding' => [
                 'platform' => $platformBlock,
@@ -182,10 +146,65 @@ final class GetSystemContextAction
             ],
             'entitlements' => $this->entitlements($tenant),
             'notifications' => $alerts,
-            'setup_progress' => $this->setupProgressAction->execute($user),
+            'setup_progress' => $mustChangePassword ? null : $this->setupProgressAction->execute($user),
             'locale' => $locale,
             'translations_hash' => $translationsHash,
         ] + ($clientHash === $translationsHash ? [] : ['translations' => $translations]);
+    }
+
+    /**
+     * Dashboard alerts: low stock, customers in debt, high cash in the drawer.
+     *
+     * @return list<array<string, string>>
+     */
+    private function alerts(User $user, ?Store $activeStore): array
+    {
+        $alerts = [];
+        // SETG-10: items without their own minimum use the tenant default threshold.
+        $lowStockCount = $this->tenantSettings->whereLowStock(Item::where('is_active', true))->count();
+
+        if ($lowStockCount > 0) {
+            $alerts[] = [
+                'type' => 'danger',
+                'icon' => 'alert-triangle',
+                'title' => __('dashboard.system_alerts.low_stock_title', ['count' => $lowStockCount]),
+                'description' => __('dashboard.system_alerts.low_stock_desc'),
+                'link' => '/purchases/smart-reorder',
+                'link_label' => __('dashboard.system_alerts.low_stock_link'),
+            ];
+        }
+
+        $debtCount = Customer::where('is_active', true)->where('current_balance', '>', 0)->count();
+        if ($debtCount > 0) {
+            $alerts[] = [
+                'type' => 'warning',
+                'icon' => 'users',
+                'title' => __('dashboard.system_alerts.debts_title', ['count' => $debtCount]),
+                'description' => __('dashboard.system_alerts.debts_desc'),
+                'link' => '/customers',
+                'link_label' => __('dashboard.system_alerts.debts_link'),
+            ];
+        }
+
+        if ($user->can('daily_journal.view') || $user->hasRole('admin')) {
+            try {
+                $balances = $this->treasuryService->getBalances($activeStore?->id);
+                $cashExpected = Decimal::normalize((string) ($balances['cash']['balance'] ?? 0));
+                if (Decimal::cmp($cashExpected, '10000') >= 0) {
+                    $alerts[] = [
+                        'type' => 'info',
+                        'icon' => 'wallet',
+                        'title' => __('dashboard.system_alerts.high_cash_title'),
+                        'description' => __('dashboard.system_alerts.high_cash_desc', ['amount' => number_format((float) $cashExpected, 0), 'currency' => $this->tenantSettings->currencyLabel()]),
+                        'link' => '/daily-journal',
+                        'link_label' => __('dashboard.system_alerts.high_cash_link'),
+                    ];
+                }
+            } catch (\Throwable) {
+            }
+        }
+
+        return $alerts;
     }
 
     /**

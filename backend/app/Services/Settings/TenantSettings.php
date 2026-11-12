@@ -53,6 +53,15 @@ final class TenantSettings
 
     public const KEY_TAX_REGISTRATION_NO = 'tax_registration_no';
 
+    /**
+     * SET-02: how many business days after the invoice's business date a sales return against it
+     * is still accepted. Stored '' (or missing) = no limit (default, keeps current shops unchanged).
+     */
+    public const KEY_RETURNS_MAX_DAYS = 'returns_max_days';
+
+    /** SET-02: minutes without interaction before the SPA shows its lock screen. 0 = off (default). */
+    public const KEY_POS_IDLE_LOCK_MINUTES = 'pos_idle_lock_minutes';
+
     public const DEFAULT_CURRENCY = 'EGP';
 
     public const DEFAULT_TIMEZONE = 'Africa/Cairo';
@@ -66,6 +75,16 @@ final class TenantSettings
     public const DEFAULT_LOW_STOCK_THRESHOLD = '5.000';
 
     public const DEFAULT_ALLOW_NEGATIVE_STOCK = false;
+
+    /** SET-02: bounds of returns_max_days (whole days; empty = no limit). */
+    public const RETURNS_MAX_DAYS_MIN = 1;
+
+    public const RETURNS_MAX_DAYS_MAX = 3650;
+
+    public const DEFAULT_POS_IDLE_LOCK_MINUTES = 0;
+
+    /** SET-02: bounds of pos_idle_lock_minutes (0 = off). */
+    public const POS_IDLE_LOCK_MINUTES_MAX = 240;
 
     /** Used when the tenant never saved a unit list (same list the settings screen always showed). */
     public const DEFAULT_INVENTORY_UNITS = 'قطعة,علبة,كرتونة,كجم,جرام,شيكارة,طرد,دستة,لتر';
@@ -218,7 +237,40 @@ final class TenantSettings
     }
 
     /**
-     * @return array{currency: string, currency_decimals: int, timezone: string, default_locale: string, number_digits: string, business_day_cutoff: string, low_stock_default_threshold: string, allow_negative_stock: bool}
+     * SET-02: the sales-return window in days, or null = no limit. A stored value outside
+     * RETURNS_MAX_DAYS_MIN..MAX (manual edit, '0') falls back to the default: no limit.
+     */
+    public function returnsMaxDays(): ?int
+    {
+        $value = trim((string) Setting::get(self::KEY_RETURNS_MAX_DAYS, ''));
+
+        if (preg_match('/^\d{1,5}$/', $value) !== 1) {
+            return null;
+        }
+
+        $days = (int) $value;
+
+        return $days >= self::RETURNS_MAX_DAYS_MIN && $days <= self::RETURNS_MAX_DAYS_MAX ? $days : null;
+    }
+
+    /**
+     * SET-02: idle minutes before the SPA lock screen; 0 = off. Invalid stored values = off.
+     */
+    public function posIdleLockMinutes(): int
+    {
+        $value = trim((string) Setting::get(self::KEY_POS_IDLE_LOCK_MINUTES, ''));
+
+        if (preg_match('/^\d{1,3}$/', $value) !== 1) {
+            return self::DEFAULT_POS_IDLE_LOCK_MINUTES;
+        }
+
+        $minutes = (int) $value;
+
+        return $minutes <= self::POS_IDLE_LOCK_MINUTES_MAX ? $minutes : self::DEFAULT_POS_IDLE_LOCK_MINUTES;
+    }
+
+    /**
+     * @return array{currency: string, currency_decimals: int, timezone: string, default_locale: string, number_digits: string, business_day_cutoff: string, low_stock_default_threshold: string, allow_negative_stock: bool, returns_max_days: int|null, pos_idle_lock_minutes: int}
      */
     public function toArray(): array
     {
@@ -231,6 +283,8 @@ final class TenantSettings
             self::KEY_BUSINESS_DAY_CUTOFF => $this->businessDayCutoff(),
             self::KEY_LOW_STOCK_DEFAULT_THRESHOLD => $this->lowStockDefaultThreshold(),
             self::KEY_ALLOW_NEGATIVE_STOCK => $this->allowNegativeStock(),
+            self::KEY_RETURNS_MAX_DAYS => $this->returnsMaxDays(),
+            self::KEY_POS_IDLE_LOCK_MINUTES => $this->posIdleLockMinutes(),
         ];
     }
 

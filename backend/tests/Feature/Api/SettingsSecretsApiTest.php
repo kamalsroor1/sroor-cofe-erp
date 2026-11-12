@@ -6,8 +6,12 @@ namespace Tests\Feature\Api;
 
 use App\Models\Setting;
 use App\Models\Tenant;
+use App\Services\Settings\SettingSecrets;
+use App\Services\TelegramService;
+use Illuminate\Encryption\Encrypter;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request as HttpRequest;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -282,10 +286,101 @@ final class SettingsSecretsApiTest extends TenantTestCase
         $this->assertStringNotContainsString('cURL', $body);
     }
 
+    /** The secret held in the tenant DB (decrypted; null = never set, '' = cleared). */
     private function assertStoredToken(Tenant $tenant, ?string $expected): void
     {
         $this->inTenant($tenant, function () use ($expected): void {
-            $this->assertSame($expected, Setting::get('telegram_bot_token'));
+            $raw = Setting::get('telegram_bot_token');
+            if ($expected === null || $expected === '') {
+                $this->assertSame($expected, $raw);
+
+                return;
+            }
+
+            $this->assertSame($expected, SettingSecrets::decrypt($raw));
+        });
+    }
+
+    /** SEC-21: the raw DB value is an encrypter payload, never the token itself. */
+    private function assertStoredEncrypted(Tenant $tenant, string $token): void
+    {
+        $this->inTenant($tenant, function () use ($token): void {
+            $raw = (string) Setting::query()->where('key', 'telegram_bot_token')->value('value');
+            $this->assertNotSame('', $raw);
+            $this->assertStringNotContainsString($token, $raw);
+            $this->assertStringNotContainsString(self::FAKE_SECRET_PART, $raw);
+            $this->assertStringNotContainsString(self::OTHER_FAKE_SECRET_PART, $raw);
+            $this->assertTrue(SettingSecrets::looksEncrypted($raw));
+            $this->assertSame($token, Crypt::decryptString($raw));
+        });
+    }
+
+    // ---------------------------------------------------------------------
+    // SEC-21: the bot token is encrypted at rest
+    // ---------------------------------------------------------------------
+
+    /**
+     * Exploit before the fix: POST /api/v1/settings (or /settings/telegram/test) stored the bot
+     * token as plain text in the tenant `settings` table (and in every tenant backup); anyone with
+     * read access to the DB or a dump got a working bot token.
+     */
+    public function test_the_settings_form_stores_the_token_encrypted(): void
+    {
+        $tenant = $this->createTenant();
+
+        $this->postJson('/api/v1/settings', $this->payload(['telegram_bot_token' => self::TOKEN]), $this->tenantHeaders($tenant))
+            ->assertOk()
+            ->assertJsonPath('settings.telegram_bot_token', '')
+            ->assertJsonPath('settings.has_telegram_bot_token', true);
+
+        $this->assertStoredEncrypted($tenant, self::TOKEN);
+        $this->assertStringNotContainsString(self::FAKE_SECRET_PART, (string) $this->getJson('/api/v1/settings', $this->tenantHeaders($tenant))->getContent());
+    }
+
+    public function test_the_telegram_test_stores_the_token_encrypted_and_sends_with_the_plain_token(): void
+    {
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true], 200)]);
+        $tenant = $this->createTenant();
+
+        $this->postJson('/api/v1/settings/telegram/test', ['bot_token' => self::TOKEN, 'chat_id' => '12345'], $this->tenantHeaders($tenant))
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertStoredEncrypted($tenant, self::TOKEN);
+        $this->inTenant($tenant, fn () => $this->assertSame(self::TOKEN, app(TelegramService::class)->getBotToken()));
+        Http::assertSent(fn (HttpRequest $request): bool => str_contains($request->url(), '/bot'.self::TOKEN.'/sendMessage'));
+    }
+
+    public function test_a_token_that_cannot_be_decrypted_is_treated_as_missing(): void
+    {
+        $tenant = $this->createTenant();
+        $foreign = (new Encrypter(random_bytes(32), 'AES-256-CBC'))->encryptString(self::TOKEN);
+        $this->inTenant($tenant, function () use ($foreign): void {
+            Setting::set('telegram_bot_token', $foreign);
+            config(['services.telegram.bot_token' => null]);
+            $this->assertNull(app(TelegramService::class)->getBotToken());
+        });
+    }
+
+    public function test_the_migration_encrypts_a_legacy_plain_token_and_down_restores_it(): void
+    {
+        $tenant = $this->createTenant();
+        $migration = require database_path('migrations/tenant/2026_11_15_100000_encrypt_telegram_bot_token_setting.php');
+
+        $this->inTenant($tenant, function () use ($migration): void {
+            // A token saved before SEC-21 (plain text) still works before the migration runs.
+            Setting::set('telegram_bot_token', self::TOKEN);
+            $this->assertSame(self::TOKEN, app(TelegramService::class)->getBotToken());
+
+            $migration->up();
+            $migration->up(); // idempotent: never double-encrypted
+        });
+        $this->assertStoredEncrypted($tenant, self::TOKEN);
+        $this->inTenant($tenant, function () use ($migration): void {
+            $this->assertSame(self::TOKEN, app(TelegramService::class)->getBotToken());
+
+            $migration->down();
+            $this->assertSame(self::TOKEN, Setting::query()->where('key', 'telegram_bot_token')->value('value'));
         });
     }
 

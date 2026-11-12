@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ReturnController;
 use App\Http\Controllers\Api\ReturnSourceController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\ScreenLockController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\StockTransferController;
@@ -93,6 +94,12 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         // Auth Profile & Logout
         Route::get('/auth/me', [AuthController::class, 'me'])->name('api.auth.me');
         Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
+        // SELL-01: own password change; the only write open to a user flagged must_change_password
+        // (EnsurePasswordChanged, chained from ApiTokenAuth). Throttled like login.
+        Route::post('/auth/change-password', [AuthController::class, 'changePassword'])->middleware('throttle:tenant-password-change')->name('api.auth.change_password');
+
+        // SET-02: dismiss the idle lock screen with the user's own password or POS PIN (throttled verifiers).
+        Route::post('/auth/unlock-screen', [ScreenLockController::class, 'unlock'])->middleware('throttle:10,1')->name('api.auth.unlock_screen');
 
         // System Context (Bootstrap payload for the SPA)
         Route::get('/system/context', [SystemContextApiController::class, 'context'])->name('api.system.context');
@@ -266,6 +273,8 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
             Route::post('/users/{id}/unlock-login', [UserController::class, 'unlockLogin'])->whereNumber('id')->name('api.users.unlock_login')->middleware('throttle:20,1');
             // BE-08: manager approval PIN for below-minimum-price sales.
             Route::put('/users/{id}/pos-pin', [UserController::class, 'updatePosPin'])->whereNumber('id')->name('api.users.pos_pin')->middleware('throttle:20,1');
+            // SELL-01: temporary password shown once; the user must change it at the next sign-in.
+            Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword'])->whereNumber('id')->name('api.users.reset_password')->middleware('throttle:20,1');
 
             // Roles & Permissions Matrix
             Route::get('/roles', [RoleController::class, 'index'])->name('api.roles.index');

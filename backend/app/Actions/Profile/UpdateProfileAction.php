@@ -5,63 +5,72 @@ declare(strict_types=1);
 namespace App\Actions\Profile;
 
 use App\Models\User;
-use App\Support\RateLimitKey;
+use App\Support\Auth\CurrentPasswordVerifier;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Validation\ValidationException;
 
 final class UpdateProfileAction
 {
+    public function __construct(
+        private readonly CurrentPasswordVerifier $currentPasswordVerifier,
+    ) {}
+
     /**
-     * Update user profile, theme preference and optional password
+     * Update user profile, theme preference and optional password.
+     *
+     * One transaction on the locked user row (SELL-01 review: the current password is compared
+     * against fresh data, not the row loaded by the token guard). A wrong current password writes
+     * nothing and is counted AFTER the transaction (SEC-05 lockout shared with
+     * POST /auth/change-password), so the count can never be rolled back with it.
      */
     public function execute(User $user, array $validated): User
     {
-        $passwordChanged = false;
+        $changesPassword = ! empty($validated['new_password']);
+        if ($changesPassword) {
+            $this->currentPasswordVerifier->assertNotLocked($user);
+        }
+        $currentTokenId = data_get($user->currentAccessToken(), 'id'); // null when no token is bound (Sanctum docblock says non-null)
 
-        if (! empty($validated['new_password'])) {
-            // SEC-05: a session token must not become a password-guessing oracle; same budget
-            // as the login lockout (5 wrong current passwords per user per 15 minutes).
-            $limiterKey = 'profile-current-password|'.RateLimitKey::scope().'|'.$user->getKey();
-            $maxAttempts = max(1, (int) config('rate_limits.tenant_login.account_lockout_attempts', 5));
-            if (RateLimiter::tooManyAttempts($limiterKey, $maxAttempts)) {
-                throw ValidationException::withMessages([
-                    'current_password' => __('auth.account_locked', [
-                        'minutes' => (int) ceil(RateLimiter::availableIn($limiterKey) / 60),
-                    ]),
-                ]);
+        $updated = DB::transaction(function () use ($user, $validated, $changesPassword, $currentTokenId): ?User {
+            $locked = User::query()->whereKey($user->getKey())->lockForUpdate()->firstOrFail();
+
+            if ($changesPassword) {
+                if (! $this->currentPasswordVerifier->matches($locked, (string) $validated['current_password'])) {
+                    return null;
+                }
+                $locked->password = Hash::make((string) $validated['new_password']);
+                // SELL-01: a password the user chose themselves ends any forced change.
+                $locked->forceFill(['must_change_password' => false]);
             }
 
-            if (! Hash::check((string) $validated['current_password'], $user->password)) {
-                RateLimiter::hit($limiterKey, max(1, (int) config('rate_limits.tenant_login.account_lockout_minutes', 15)) * 60);
-
-                throw ValidationException::withMessages([
-                    'current_password' => __('auth.current_password_incorrect'),
-                ]);
+            $locked->name = (string) $validated['name'];
+            $locked->phone = (string) $validated['phone'];
+            $locked->email = isset($validated['email']) && $validated['email'] !== '' ? (string) $validated['email'] : null;
+            $locked->theme_preference = (string) ($validated['theme_preference'] ?? 'dark');
+            // SETG-3: only touch the saved language when the client sent the key (null clears it).
+            if (array_key_exists('locale', $validated)) {
+                $locked->locale = is_string($validated['locale']) ? $validated['locale'] : null;
             }
-            RateLimiter::clear($limiterKey);
-            $user->password = Hash::make((string) $validated['new_password']);
-            $passwordChanged = true;
+            $locked->save();
+
+            // SEC-03: a new password ends every other session; the token making this request stays.
+            if ($changesPassword) {
+                $locked->tokens()
+                    ->when($currentTokenId !== null, fn ($query) => $query->whereKeyNot($currentTokenId))
+                    ->delete();
+            }
+
+            return $locked;
+        });
+
+        if ($updated === null) {
+            $this->currentPasswordVerifier->failed($user);
         }
 
-        $user->name = (string) $validated['name'];
-        $user->phone = (string) $validated['phone'];
-        $user->email = isset($validated['email']) && $validated['email'] !== '' ? (string) $validated['email'] : null;
-        $user->theme_preference = (string) ($validated['theme_preference'] ?? 'dark');
-        // SETG-3: only touch the saved language when the client sent the key (null clears it).
-        if (array_key_exists('locale', $validated)) {
-            $user->locale = is_string($validated['locale']) ? $validated['locale'] : null;
-        }
-        $user->save();
-
-        // SEC-03: a new password ends every other session; the token making this request stays.
-        if ($passwordChanged) {
-            $currentId = data_get($user->currentAccessToken(), 'id'); // null when no token is bound (Sanctum docblock says non-null)
-            $user->tokens()
-                ->when($currentId !== null, fn ($query) => $query->whereKeyNot($currentId))
-                ->delete();
+        if ($changesPassword) {
+            $this->currentPasswordVerifier->passed($user);
         }
 
-        return $user;
+        return $updated;
     }
 }

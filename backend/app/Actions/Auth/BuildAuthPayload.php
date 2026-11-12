@@ -17,7 +17,7 @@ use App\Services\Branding\TenantBranding;
 final class BuildAuthPayload
 {
     /**
-     * @return array{token: string, user: array<string, mixed>, store: array<string, mixed>|null, stores: mixed, system: array<string, mixed>}
+     * @return array{token: string, must_change_password: bool, user: array<string, mixed>, store: array<string, mixed>|null, stores: mixed, system: array<string, mixed>}
      */
     public function execute(User $user, string $plainTextToken): array
     {
@@ -37,6 +37,8 @@ final class BuildAuthPayload
 
         return [
             'token' => $plainTextToken,
+            // SELL-01: the SPA must route straight to the change-password screen when true.
+            'must_change_password' => $user->must_change_password === true,
             'user' => (new UserResource($user))->resolve(),
             'store' => $currentStore ? [
                 'id' => $currentStore->id,

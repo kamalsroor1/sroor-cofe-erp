@@ -38,6 +38,7 @@ final class ApiMeAction
 
         // SEC-01: a blocked tenant's session only learns who it is and why it is blocked.
         if ($subscription !== null && $subscription['access'] === TenantAccessLevel::Blocked->value) {
+            // The flag stays inside `user` here: the blocked payload keeps exactly these three keys.
             return [
                 'user' => (new UserResource($user))->resolve(),
                 'system' => $system,
@@ -64,7 +65,8 @@ final class ApiMeAction
             : $user->stores()->where('is_active', true)->get(['stores.id', 'name', 'code', 'type', 'is_main']);
 
         $activeShift = null;
-        if ($activeStore) {
+        // SELL-01 review: a session that must change its password sees no business data.
+        if ($activeStore && $user->must_change_password !== true) {
             $activeShift = CashShift::where('store_id', $activeStore->id)
                 ->where('status', 'open')
                 ->latest('id')
@@ -72,6 +74,8 @@ final class ApiMeAction
         }
 
         return [
+            // SELL-01: also in user.must_change_password; the SPA routes to the change screen when true.
+            'must_change_password' => $user->must_change_password === true,
             'user' => (new UserResource($user))->resolve(),
             'store' => $activeStore ? [
                 'id' => $activeStore->id,

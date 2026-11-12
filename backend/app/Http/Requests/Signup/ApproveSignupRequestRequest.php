@@ -17,7 +17,8 @@ use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 /**
  * PRD-05: POST /api/v1/super-admin/signup-requests/{id}/approve.
  *
- * `subdomain` and `owner_email` default to what the applicant asked for / typed. A request
+ * `subdomain` and `owner_email` default to what the applicant asked for / typed; `owner_password`
+ * is optional (SELL-01: generated on the server when omitted). A request
  * that is no longer pending is a 409 BEFORE field validation, so a second approve says
  * "already handled" instead of "subdomain taken" (the first approve took it).
  */
@@ -52,7 +53,9 @@ final class ApproveSignupRequestRequest extends FormRequest
             'subdomain' => ['required', 'string', new AvailableSubdomain],
             'plan_code' => ['nullable', 'string', 'max:50', $this->activePlanExists()],
             'owner_email' => ['required', 'email:rfc', 'max:255', 'unique:tenants,email'],
-            'owner_password' => ['required', 'string', 'max:255', Password::min(10)->letters()->numbers()],
+            // SELL-01: optional. Omitted => a temporary password is generated on the server and
+            // returned once; either way the owner must change it at first sign-in.
+            'owner_password' => ['nullable', 'string', 'max:255', Password::min(10)->letters()->numbers()],
         ];
     }
 

@@ -124,4 +124,9 @@ return [
     'cash_refundable_hint' => 'Only :amount can still be refunded in cash on this invoice. Choose the customer balance for the rest.',
     'select_customer_warning' => 'Please select the customer',
     'select_supplier_warning' => 'Please select the supplier',
+    'window_expired' => 'The return window for this invoice has ended (:days days). The return needs a manager approval or the override permission.',
+    'activity_window_overridden' => 'Return :number recorded after the return window (invoice age :age days, window :days days)',
+    'window_last_day' => 'Last day to return against this invoice: :date',
+    'window_expired_notice' => 'This invoice is past the return window (:days days). A manager approval will be required when you save.',
+    'window_expired_notice_override' => 'This invoice is past the return window (:days days). Your permission lets you record the return, and it will be logged as late.',
 ];

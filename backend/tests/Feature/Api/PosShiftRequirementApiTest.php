@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
+use App\Models\ActivityLog;
 use App\Models\CashShift;
 use App\Models\Customer;
 use App\Models\Invoice;
@@ -311,5 +312,62 @@ final class PosShiftRequirementApiTest extends TenantTestCase
             $store = Store::query()->firstOrFail();
             $this->assertTrue((bool) StorePosSetting::forStore((int) $store->id)->require_shift_for_sales);
         });
+    }
+    // ------------------------------------------------------------ SET-02: no switching off mid-shift
+
+    public function test_switching_the_rule_off_is_refused_while_this_branch_has_an_open_shift(): void
+    {
+        $this->openShift($this->store);
+
+        $this->as($this->admin)->putJson($this->shiftRuleUrl($this->store), ['require_shift_for_sales' => false])
+            ->assertStatus(422)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'settings.shift_rule_open_shift')
+            ->assertJsonPath('message', __('settings.shift_rule_open_shift'));
+        $this->as($this->admin)->putJson($this->url($this->store), ['require_shift_for_sales' => false, 'max_discount_percent' => '20'])
+            ->assertStatus(422)->assertJsonPath('error_code', 'settings.shift_rule_open_shift');
+
+        $this->assertTrue((bool) StorePosSetting::forStore((int) $this->store->id)->require_shift_for_sales);
+        $this->assertSame(0, StorePosSetting::query()->count(), 'a refused update must not save any other key');
+        $this->assertSame(0, ActivityLog::query()->where('properties->setting', 'require_shift_for_sales')->count());
+    }
+
+    public function test_switching_the_rule_off_without_an_open_shift_is_allowed_logged_and_lets_sales_through(): void
+    {
+        $this->openShift($this->store, 'closed');
+
+        $this->as($this->admin)->putJson($this->shiftRuleUrl($this->store), ['require_shift_for_sales' => false])
+            ->assertOk()->assertJsonPath('data.require_shift_for_sales', false);
+
+        $log = ActivityLog::query()->where('module', 'settings')->latest('id')->firstOrFail();
+        $this->assertSame('require_shift_for_sales', $log->properties['setting']);
+        $this->assertTrue($log->properties['old']);
+        $this->assertFalse($log->properties['new']);
+        $this->assertSame((int) $this->store->id, (int) $log->properties['store_id']);
+
+        $this->sell($this->cashier)->assertCreated();
+    }
+
+    public function test_an_open_shift_in_another_branch_does_not_block_and_switching_on_is_never_blocked(): void
+    {
+        $this->openShift($this->otherStore);
+
+        $this->as($this->admin)->putJson($this->shiftRuleUrl($this->store), ['require_shift_for_sales' => false])->assertOk();
+
+        $this->openShift($this->store);
+        $this->as($this->admin)->putJson($this->shiftRuleUrl($this->store), ['require_shift_for_sales' => true])
+            ->assertOk()->assertJsonPath('data.require_shift_for_sales', true);
+        // Re-sending ON while a shift is open changes nothing and is not refused.
+        $this->as($this->admin)->putJson($this->shiftRuleUrl($this->store), ['require_shift_for_sales' => true])->assertOk();
+        $this->assertSame(2, ActivityLog::query()->where('properties->setting', 'require_shift_for_sales')->count());
+    }
+
+    public function test_a_branch_that_does_not_require_a_shift_can_be_saved_off_again_during_a_shift(): void
+    {
+        $this->setRequired($this->store, false);
+        $this->openShift($this->store);
+
+        $this->as($this->admin)->putJson($this->shiftRuleUrl($this->store), ['require_shift_for_sales' => false])->assertOk();
+        $this->as($this->admin)->putJson($this->url($this->store), ['max_discount_percent' => '15'])->assertOk();
     }
 }

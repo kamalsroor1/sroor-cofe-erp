@@ -7,15 +7,20 @@ namespace App\Http\Controllers\Api;
 use App\Actions\Auth\ApiLoginAction;
 use App\Actions\Auth\ApiLogoutAction;
 use App\Actions\Auth\ApiMeAction;
+use App\Actions\Auth\ChangePasswordAction;
 use App\Actions\Auth\DispatchAccountLockAlertAction;
 use App\Actions\Auth\ListQuickLoginUsersAction;
 use App\Actions\Auth\QuickLoginAction;
 use App\DTOs\Auth\ApiLoginDTO;
+use App\DTOs\Auth\ChangePasswordDTO;
 use App\DTOs\Auth\QuickLoginDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ApiLoginRequest;
+use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Http\Requests\Auth\QuickLoginRequest;
 use App\Http\Resources\QuickLoginUserResource;
+use App\Http\Resources\UserResource;
+use App\Models\User;
 use App\Services\ActivityLogService;
 use App\Support\QuickLoginGate;
 use Illuminate\Http\JsonResponse;
@@ -32,6 +37,7 @@ final class AuthController extends Controller
         private readonly DispatchAccountLockAlertAction $lockAlertAction,
         private readonly QuickLoginAction $quickLoginAction,
         private readonly ListQuickLoginUsersAction $listQuickLoginUsersAction,
+        private readonly ChangePasswordAction $changePasswordAction,
     ) {}
 
     /**
@@ -105,6 +111,29 @@ final class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('auth.logout_success'),
+        ], 200);
+    }
+
+    /**
+     * SELL-01: replace the signed-in user's own password; clears `must_change_password` and ends
+     * every other session (the current token stays valid).
+     */
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($user instanceof User, 401, __('auth.unauthorized'));
+
+        /** @var array{current_password: string, password: string} $data */
+        $data = $request->validated();
+        $user = $this->changePasswordAction->execute(ChangePasswordDTO::fromArray($data), $user);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('auth.password_changed_success'),
+            'data' => [
+                'must_change_password' => false,
+                'user' => (new UserResource($user))->resolve(),
+            ],
         ], 200);
     }
 

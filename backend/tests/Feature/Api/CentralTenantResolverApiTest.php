@@ -6,6 +6,7 @@ namespace Tests\Feature\Api;
 
 use App\Models\Tenant;
 use Illuminate\Support\Facades\Event;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Stancl\Tenancy\Events\CreatingDatabase;
 use Stancl\Tenancy\Events\DatabaseCreated;
 use Stancl\Tenancy\Events\DatabaseMigrated;
@@ -204,6 +205,56 @@ class CentralTenantResolverApiTest extends TenantTestCase
     public function test_unversioned_resolver_alias_is_throttled_after_thirty_requests_per_minute(): void
     {
         $this->assertResolverThrottled('/api/central/tenants/resolve');
+    }
+
+    /**
+     * SEC-21 (1): the public resolver must not enumerate workspaces through LIKE wildcards.
+     * Exploit before the fix: GET /api/v1/central/tenants/resolve?code=ab% returned 200 with the
+     * first workspace whose domain starts with "ab" (name, domain, status, logo); code=% and
+     * code=_ returned the first workspace of the platform.
+     *
+     * @return array<string, array{0: string}>
+     */
+    public static function wildcardCodes(): array
+    {
+        return [
+            'percent' => ['%'],
+            'underscore' => ['_'],
+            'prefix percent' => ['ab%'],
+            'prefix underscore' => ['ab____'],
+            'escaped percent' => ['%25'],
+            'url host with wildcard' => ['https://ab%.example.test/login'],
+        ];
+    }
+
+    #[DataProvider('wildcardCodes')]
+    public function test_like_wildcards_in_the_code_never_resolve_a_workspace(string $code): void
+    {
+        $tenant = Tenant::create(['id' => 'abshop', 'name' => 'Hidden Workspace', 'slug' => 'abshop', 'email' => 'ab@shop.test', 'status' => 'active']);
+        $tenant->domains()->create(['domain' => 'abshop.baraa-solutions.com']);
+
+        $response = $this->getJson('/api/v1/central/tenants/resolve?code='.rawurlencode($code));
+
+        $response->assertStatus(404)->assertJsonPath('success', false);
+        $this->assertStringNotContainsString('Hidden Workspace', (string) $response->getContent());
+        $this->assertStringNotContainsString('abshop', (string) $response->getContent());
+    }
+
+    public function test_a_plain_code_still_resolves_by_its_domain_label_after_the_wildcard_fix(): void
+    {
+        // A workspace whose id/slug differ from its domain label is still found by that label.
+        $tenant = Tenant::create(['id' => 'tenant-7', 'name' => 'Label Shop', 'slug' => 'tenant-7', 'email' => 'label@shop.test', 'status' => 'active']);
+        $tenant->domains()->create(['domain' => 'label-shop.baraa-solutions.com']);
+
+        $this->getJson('/api/v1/central/tenants/resolve?code=label-shop')
+            ->assertOk()
+            ->assertJsonPath('data.tenant_id', 'tenant-7');
+
+        // A legacy slug with "_" (alpha_dash) still resolves by exact id/slug.
+        Tenant::create(['id' => 'old_shop', 'name' => 'Old Shop', 'slug' => 'old_shop', 'email' => 'old@shop.test', 'status' => 'active']);
+        $this->getJson('/api/v1/central/tenants/resolve?code=old_shop')
+            ->assertOk()
+            ->assertJsonPath('data.tenant_id', 'old_shop');
     }
 
     private function assertResolverThrottled(string $path): void

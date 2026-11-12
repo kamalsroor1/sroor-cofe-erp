@@ -7,6 +7,7 @@ namespace App\Actions\Users;
 use App\DTOs\Users\SetUserPosPinDTO;
 use App\Models\User;
 use App\Services\ActivityLogService;
+use App\Services\Approvals\ManagerPinVerifier;
 use App\Support\Roles\RoleGrantGuard;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -35,7 +36,7 @@ final class SetUserPosPinAction
      */
     public function execute(SetUserPosPinDTO $dto, User $actor): User
     {
-        return DB::transaction(function () use ($dto, $actor): User {
+        $target = DB::transaction(function () use ($dto, $actor): User {
             $target = User::query()->whereKey($dto->userId)->lockForUpdate()->firstOrFail();
             $isSelf = (int) $target->id === (int) $actor->id;
 
@@ -61,5 +62,11 @@ final class SetUserPosPinAction
 
             return $target;
         });
+
+        // SEC-21: a changed (or removed) PIN lifts today's wrong-PIN lockout of this approver.
+        // After the commit: limiter writes never ride on a transaction (see ManagerPinVerifier).
+        ManagerPinVerifier::resetDailyLockout((int) $target->id);
+
+        return $target;
     }
 }

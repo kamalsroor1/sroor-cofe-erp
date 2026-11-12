@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\Setting;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Services\Settings\SettingSecrets;
 use App\Services\Settings\TenantSettings;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\Http;
@@ -34,7 +35,8 @@ class TelegramService
      */
     public function getBotToken(): ?string
     {
-        return Setting::get('telegram_bot_token')
+        // SEC-21: the shop's token is stored encrypted (SettingSecrets).
+        return SettingSecrets::decrypt(Setting::get('telegram_bot_token'))
             ?: config('services.telegram.bot_token');
     }
 

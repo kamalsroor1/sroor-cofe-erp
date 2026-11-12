@@ -97,7 +97,9 @@ final class ApiTokenAuth
             }
         }
 
-        return $next($request);
+        // SELL-01: chained here (not mounted per route) so no route behind this middleware can
+        // skip the forced password change.
+        return app(EnsurePasswordChanged::class)->handle($request, $next);
     }
 
     /**

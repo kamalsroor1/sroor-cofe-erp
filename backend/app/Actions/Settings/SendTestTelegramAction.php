@@ -6,6 +6,7 @@ namespace App\Actions\Settings;
 
 use App\DTOs\Settings\TelegramTestDTO;
 use App\Models\Setting;
+use App\Services\Settings\SettingSecrets;
 use App\Services\TelegramService;
 use Illuminate\Support\Facades\DB;
 
@@ -27,7 +28,8 @@ final class SendTestTelegramAction
     {
         DB::transaction(function () use ($dto): void {
             if ($dto->botToken !== null) {
-                Setting::set('telegram_bot_token', $dto->botToken);
+                // SEC-21: encrypted at rest, like the settings form (SettingSecrets).
+                Setting::set('telegram_bot_token', SettingSecrets::encrypt($dto->botToken));
             }
 
             if ($dto->chatId !== null) {

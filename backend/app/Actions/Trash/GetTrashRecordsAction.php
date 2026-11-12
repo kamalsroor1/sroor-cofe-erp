@@ -10,7 +10,9 @@ use App\Models\Item;
 use App\Models\ReturnDocument;
 use App\Models\Store;
 use App\Models\Supplier;
+use App\Models\User;
 use App\Services\Settings\TenantSettings;
+use App\Support\Trash\TrashScope;
 
 final class GetTrashRecordsAction
 {
@@ -19,18 +21,21 @@ final class GetTrashRecordsAction
     ) {}
 
     /**
-     * Get trashed records and counts for all modules
+     * Get trashed records and counts for all modules.
+     *
+     * SEC-21: every list and count goes through TrashScope (branch documents of readable stores
+     * only, deleted branches for store managers only).
      */
-    public function execute(string $tab = 'items', string $search = '', int $perPage = 15): array
+    public function execute(User $actor, string $tab = 'items', string $search = '', int $perPage = 15): array
     {
         $currency = $this->tenantSettings->currencyLabel();
 
-        $itemsCount = Item::onlyTrashed()->count();
-        $customersCount = Customer::onlyTrashed()->count();
-        $suppliersCount = Supplier::onlyTrashed()->count();
-        $storesCount = Store::onlyTrashed()->count();
-        $expensesCount = Expense::onlyTrashed()->count();
-        $returnsCount = ReturnDocument::onlyTrashed()->count();
+        $itemsCount = TrashScope::scope(Item::onlyTrashed(), $actor)->count();
+        $customersCount = TrashScope::scope(Customer::onlyTrashed(), $actor)->count();
+        $suppliersCount = TrashScope::scope(Supplier::onlyTrashed(), $actor)->count();
+        $storesCount = TrashScope::scope(Store::onlyTrashed(), $actor)->count();
+        $expensesCount = TrashScope::scope(Expense::onlyTrashed(), $actor)->count();
+        $returnsCount = TrashScope::scope(ReturnDocument::onlyTrashed(), $actor)->count();
 
         $records = [];
         $pagination = [
@@ -41,7 +46,7 @@ final class GetTrashRecordsAction
         ];
 
         if ($tab === 'items') {
-            $q = Item::onlyTrashed();
+            $q = TrashScope::scope(Item::onlyTrashed(), $actor);
             if ($search !== '') {
                 $q->where(fn ($sub) => $sub->where('name', 'like', "%{$search}%")->orWhere('code', 'like', "%{$search}%"));
             }
@@ -60,7 +65,7 @@ final class GetTrashRecordsAction
                 'total' => $paged->total(),
             ];
         } elseif ($tab === 'customers') {
-            $q = Customer::onlyTrashed();
+            $q = TrashScope::scope(Customer::onlyTrashed(), $actor);
             if ($search !== '') {
                 $q->where(fn ($sub) => $sub->where('name', 'like', "%{$search}%")->orWhere('phone', 'like', "%{$search}%"));
             }
@@ -78,7 +83,7 @@ final class GetTrashRecordsAction
                 'total' => $paged->total(),
             ];
         } elseif ($tab === 'suppliers') {
-            $q = Supplier::onlyTrashed();
+            $q = TrashScope::scope(Supplier::onlyTrashed(), $actor);
             if ($search !== '') {
                 $q->where(fn ($sub) => $sub->where('name', 'like', "%{$search}%")->orWhere('company_name', 'like', "%{$search}%"));
             }
@@ -96,7 +101,7 @@ final class GetTrashRecordsAction
                 'total' => $paged->total(),
             ];
         } elseif ($tab === 'stores') {
-            $q = Store::onlyTrashed();
+            $q = TrashScope::scope(Store::onlyTrashed(), $actor);
             if ($search !== '') {
                 $q->where('name', 'like', "%{$search}%");
             }
@@ -115,7 +120,7 @@ final class GetTrashRecordsAction
                 'total' => $paged->total(),
             ];
         } elseif ($tab === 'expenses') {
-            $q = Expense::onlyTrashed();
+            $q = TrashScope::scope(Expense::onlyTrashed(), $actor);
             if ($search !== '') {
                 $q->where('title', 'like', "%{$search}%");
             }
@@ -134,7 +139,7 @@ final class GetTrashRecordsAction
                 'total' => $paged->total(),
             ];
         } elseif ($tab === 'returns') {
-            $q = ReturnDocument::onlyTrashed();
+            $q = TrashScope::scope(ReturnDocument::onlyTrashed(), $actor);
             if ($search !== '') {
                 $q->where('return_number', 'like', "%{$search}%");
             }

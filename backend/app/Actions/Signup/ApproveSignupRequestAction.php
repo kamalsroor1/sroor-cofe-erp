@@ -6,6 +6,7 @@ namespace App\Actions\Signup;
 
 use App\Actions\Tenants\ProvisionTenantAction;
 use App\DTOs\CreateTenantDTO;
+use App\DTOs\Signup\ApprovedSignupResult;
 use App\DTOs\Signup\ApproveSignupRequestDTO;
 use App\Enums\CentralAuditEvent;
 use App\Enums\SignupRequestStatus;
@@ -15,10 +16,12 @@ use App\Models\SignupRequest;
 use App\Models\Tenant;
 use App\Services\CentralAuditLogger;
 use App\Services\TenantProvisionerService;
+use App\Support\Auth\TemporaryPassword;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use SensitiveParameter;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Throwable;
 
@@ -32,6 +35,10 @@ use Throwable;
  * after commit); then the request is marked approved with tenant_id, reviewer and time, and
  * the audit row is written. A provisioning failure rolls everything back and the request
  * stays pending. The audit row never carries the owner password.
+ *
+ * SELL-01: without `owner_password` the server generates a temporary one (returned once in the
+ * result, never stored in plain). Either way provisioning flags the owner `must_change_password`,
+ * so the operator's knowledge of it ends at the owner's first sign-in.
  */
 final class ApproveSignupRequestAction
 {
@@ -40,9 +47,12 @@ final class ApproveSignupRequestAction
         private readonly CentralAuditLogger $auditLogger,
     ) {}
 
-    public function execute(ApproveSignupRequestDTO $dto, CentralUser $operator): SignupRequest
+    public function execute(ApproveSignupRequestDTO $dto, CentralUser $operator): ApprovedSignupResult
     {
-        return DB::connection(TenantProvisionerService::centralConnection())->transaction(function () use ($dto, $operator): SignupRequest {
+        $temporaryPassword = $dto->ownerPassword === null ? TemporaryPassword::generate() : null;
+        $ownerPassword = $dto->ownerPassword ?? (string) $temporaryPassword;
+
+        $signup = DB::connection(TenantProvisionerService::centralConnection())->transaction(function () use ($dto, $operator, $ownerPassword): SignupRequest {
             $signup = SignupRequest::query()->whereKey($dto->signupRequestId)->lockForUpdate()->firstOrFail();
 
             if ($signup->status !== SignupRequestStatus::Pending) {
@@ -50,7 +60,7 @@ final class ApproveSignupRequestAction
             }
 
             $plan = $this->resolvePlan($dto->planCode);
-            $tenant = $this->provision($signup, $dto, $plan);
+            $tenant = $this->provision($signup, $dto, $plan, $ownerPassword);
 
             $signup->forceFill([
                 'status' => SignupRequestStatus::Approved->value,
@@ -68,6 +78,8 @@ final class ApproveSignupRequestAction
 
             return $signup;
         });
+
+        return new ApprovedSignupResult($signup, $dto->ownerEmail, $temporaryPassword);
     }
 
     /** Requested plan, else the catalog's trial plan (first active plan with trial days). */
@@ -86,7 +98,7 @@ final class ApproveSignupRequestAction
         return $plan;
     }
 
-    private function provision(SignupRequest $signup, ApproveSignupRequestDTO $dto, Plan $plan): Tenant
+    private function provision(SignupRequest $signup, ApproveSignupRequestDTO $dto, Plan $plan, #[SensitiveParameter] string $ownerPassword): Tenant
     {
         $tenantDto = CreateTenantDTO::fromArray([
             'name' => $signup->business_name,
@@ -94,7 +106,7 @@ final class ApproveSignupRequestAction
             'email' => $dto->ownerEmail,
             'phone' => $signup->phone,
             'plan_id' => $plan->id,
-            'password' => $dto->ownerPassword,
+            'password' => $ownerPassword,
             'trial_days' => $plan->trial_days,
         ]);
 

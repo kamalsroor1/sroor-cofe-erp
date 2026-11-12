@@ -26,6 +26,8 @@ class UserResource extends JsonResource
             'show_print_subtitle' => (bool) $this->show_print_subtitle,
             'default_store_id' => $this->default_store_id,
             'is_active' => (bool) $this->is_active,
+            // SELL-01: true until the user picks their own password (EnsurePasswordChanged).
+            'must_change_password' => $this->resource instanceof User && $this->resource->must_change_password === true,
             // BE-08: whether a manager approval PIN is set (the hash itself is never exposed).
             'has_pos_pin' => $this->resource instanceof User && $this->resource->pos_pin !== null,
             ...AccountLockout::payload($this->loginLockedUntil()),

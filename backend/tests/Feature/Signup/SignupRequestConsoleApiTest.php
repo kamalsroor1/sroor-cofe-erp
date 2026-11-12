@@ -16,6 +16,7 @@ use App\Models\Plan;
 use App\Models\SignupRequest;
 use App\Models\Subscription;
 use App\Models\Tenant;
+use App\Models\User;
 use Database\Seeders\PlansAndFeaturesSeeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -234,12 +235,78 @@ final class SignupRequestConsoleApiTest extends TenantTestCase
         $this->assertDatabaseHas('tenants', ['id' => $slug, 'plan_id' => $basic->id, 'email' => $slug.'@owner.test']);
     }
 
+    public function test_approve_without_a_password_generates_one_and_the_new_owner_must_change_it(): void
+    {
+        $slug = $this->slug();
+        $this->provisioned[] = $slug;
+        $email = $slug.'@owner.test';
+        $request = $this->pending(['preferred_subdomain' => $slug, 'email' => $email]);
+
+        $response = $this->postJson(self::LIST."/{$request->id}/approve", [], $this->headers)
+            ->assertOk()
+            ->assertJsonPath('data.status', 'approved')
+            ->assertJsonPath('owner_credentials.login', $email)
+            ->assertJsonPath('owner_credentials.must_change_password', true);
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+        $temporary = (string) $response->json('owner_credentials.temporary_password');
+        $this->assertGreaterThanOrEqual(8, strlen($temporary));
+
+        $log = CentralAuditLog::query()->where('event', CentralAuditEvent::SignupRequestApproved->value)->sole();
+        $this->assertStringNotContainsString($temporary, (string) json_encode($log->toArray()));
+        $tenant = Tenant::query()->findOrFail($slug);
+        $this->assertStringNotContainsString($temporary, (string) DB::table('tenants')->where('id', $slug)->value('data'));
+
+        // The provisioned owner is flagged in ITS tenant database.
+        $this->assertTrue($this->inTenant($tenant, fn (): bool => User::query()->where('email', $email)->sole()->must_change_password));
+
+        // Sign in: the flag is in the payload and every other endpoint answers 403 with the code.
+        $tenantHeaders = ['Accept' => 'application/json', 'X-Tenant' => $slug];
+        $login = $this->postJson('/api/v1/auth/login', ['login' => $email, 'password' => $temporary, 'device_name' => 'spa'], $tenantHeaders)
+            ->assertOk()
+            ->assertJsonPath('data.must_change_password', true);
+        $otherToken = (string) $this->postJson('/api/v1/auth/login', ['login' => $email, 'password' => $temporary, 'device_name' => 'tablet'], $tenantHeaders)
+            ->assertOk()->json('data.token');
+        $headers = $tenantHeaders + ['Authorization' => 'Bearer '.$login->json('data.token')];
+
+        $this->getJson('/api/v1/items', $headers)->assertStatus(403)->assertJsonPath('error_code', 'auth.password_change_required');
+        $this->postJson('/api/v1/customers', ['name' => 'عميل'], $headers)->assertStatus(403)->assertJsonPath('error_code', 'auth.password_change_required');
+        $this->getJson('/api/v1/auth/me', $headers)->assertOk()->assertJsonPath('data.must_change_password', true);
+
+        $this->postJson('/api/v1/auth/change-password', [
+            'current_password' => $temporary,
+            'password' => 'fixtureOwnerOwn123',
+            'password_confirmation' => 'fixtureOwnerOwn123',
+        ], $headers)->assertOk()->assertJsonPath('data.must_change_password', false);
+
+        $this->getJson('/api/v1/items', $headers)->assertOk();
+        $this->getJson('/api/v1/auth/me', $tenantHeaders + ['Authorization' => 'Bearer '.$otherToken])->assertStatus(401);
+        $this->postJson('/api/v1/auth/login', ['login' => $email, 'password' => $temporary, 'device_name' => 'spa'], $tenantHeaders)->assertStatus(422);
+    }
+
+    public function test_approve_with_a_typed_password_returns_no_credentials_but_still_forces_a_change(): void
+    {
+        $slug = $this->slug();
+        $this->provisioned[] = $slug;
+        $email = $slug.'@owner.test';
+        $request = $this->pending(['preferred_subdomain' => $slug, 'email' => $email]);
+
+        $this->postJson(self::LIST."/{$request->id}/approve", ['owner_password' => 'secret1234'], $this->headers)
+            ->assertOk()
+            ->assertJsonPath('owner_credentials', null);
+
+        $tenant = Tenant::query()->findOrFail($slug);
+        $this->assertTrue($this->inTenant($tenant, fn (): bool => User::query()->where('email', $email)->sole()->must_change_password));
+    }
+
     public function test_approve_validates_input_and_keeps_the_request_pending(): void
     {
         $request = $this->pending(['preferred_subdomain' => null, 'email' => null]);
         $url = self::LIST."/{$request->id}/approve";
 
-        $this->postJson($url, [], $this->headers)->assertStatus(422)->assertJsonValidationErrors(['subdomain', 'owner_email', 'owner_password']);
+        // SELL-01: owner_password is optional (generated on the server when omitted).
+        $this->postJson($url, [], $this->headers)->assertStatus(422)
+            ->assertJsonValidationErrors(['subdomain', 'owner_email'])
+            ->assertJsonMissingValidationErrors(['owner_password']);
         $this->postJson($url, ['subdomain' => 'www', 'owner_email' => 'a@b.test', 'owner_password' => 'secret1234'], $this->headers)->assertStatus(422)->assertJsonValidationErrors(['subdomain']);
         $this->postJson($url, ['subdomain' => $this->slug(), 'owner_email' => 'a@b.test', 'owner_password' => 'short1'], $this->headers)->assertStatus(422)->assertJsonValidationErrors(['owner_password']);
         $this->postJson($url, ['subdomain' => $this->slug(), 'owner_email' => 'a@b.test', 'owner_password' => 'abc123456'], $this->headers)->assertStatus(422)->assertJsonValidationErrors(['owner_password']);

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\Users\CreateUserAction;
 use App\Actions\Users\DeleteUserAction;
+use App\Actions\Users\ResetUserPasswordAction;
 use App\Actions\Users\SetUserPosPinAction;
 use App\Actions\Users\ToggleUserActiveAction;
 use App\Actions\Users\UnlockUserLoginAction;
@@ -14,6 +15,7 @@ use App\DTOs\Users\CreateUserDTO;
 use App\DTOs\Users\SetUserPosPinDTO;
 use App\DTOs\Users\UpdateUserDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ResetUserPasswordRequest;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UnlockUserLoginRequest;
 use App\Http\Requests\UpdateUserPosPinRequest;
@@ -37,6 +39,7 @@ final class UserController extends Controller
         private readonly ToggleUserActiveAction $toggleUserActiveAction,
         private readonly SetUserPosPinAction $setUserPosPinAction,
         private readonly UnlockUserLoginAction $unlockUserLoginAction,
+        private readonly ResetUserPasswordAction $resetUserPasswordAction,
     ) {}
 
     /**
@@ -257,5 +260,32 @@ final class UserController extends Controller
             'success' => true,
             'message' => $wasLocked ? __('users.unlock_login_success') : __('users.login_not_locked'),
         ], 200);
+    }
+
+    /**
+     * SELL-01: reset a user's forgotten password to a server-generated temporary one, shown
+     * ONCE in this response; the user must change it at the next sign-in.
+     */
+    public function resetPassword(ResetUserPasswordRequest $request, int $id): JsonResponse
+    {
+        $actor = $request->user();
+        abort_unless($actor instanceof User, 401);
+
+        try {
+            $result = $this->resetUserPasswordAction->execute($id, $actor);
+        } catch (Throwable $e) {
+            // SEC-1 (L4): 422/403/404 pass through; anything else is logged, never echoed.
+            return SafeJsonError::respond($e);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => __('users.password_reset_success'),
+            'data' => [
+                'user_id' => (int) $result->user->id,
+                'must_change_password' => true,
+                'temporary_password' => $result->temporaryPassword,
+            ],
+        ], 200, ['Cache-Control' => 'no-store']);
     }
 }

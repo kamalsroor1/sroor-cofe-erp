@@ -119,6 +119,41 @@ final class ItemCostAndStoreScopeApiTest extends TenantTestCase
         $this->getJson("/api/v1/items/{$this->itemId}/movements?store_id=all", $headers)->assertStatus(403);
     }
 
+    /**
+     * SEC-21 (6): exploit before the fix: GET /api/v1/items/{id}/movements (also as a cashier)
+     * returned each movement's raw `user` model: e-mail, phone, last_login_at, theme_preference,
+     * plus the raw `store` row. Now only {id, name} of each.
+     */
+    public function test_movements_expose_only_the_id_and_name_of_the_user_and_the_store(): void
+    {
+        $author = $this->createTenantUser($this->tenant, 'admin', attributes: [
+            'name' => 'أمين المخزن',
+            'email' => 'stock-author@example.test',
+            'phone' => '01000007999',
+            'last_login_at' => now(),
+            'theme_preference' => 'dark',
+        ]);
+        $this->inTenant($this->tenant, fn () => StockMovement::query()->where('document_number', 'SEC1-MOV-A')->update(['user_id' => $author->id]));
+
+        $cashier = $this->createTenantUser($this->tenant, 'cashier');
+        foreach ([$this->tenantHeaders($this->tenant, $cashier), $this->tenantHeaders($this->tenant, null, $this->storeAId)] as $headers) {
+            $response = $this->getJson("/api/v1/items/{$this->itemId}/movements", $headers)->assertOk();
+            $row = collect($response->json('data.data'))->firstWhere('document_number', 'SEC1-MOV-A');
+
+            $this->assertIsArray($row);
+            $this->assertSame(['id' => $author->id, 'name' => 'أمين المخزن'], $row['user']);
+            $this->assertSame(['id', 'name'], array_keys($row['store']));
+            $this->assertSame('5.000', $row['quantity']);
+            foreach (['stock-author@example.test', '01000007999', 'last_login_at', 'theme_preference', 'email', 'phone', 'source_type'] as $secret) {
+                $this->assertStringNotContainsString($secret, (string) $response->getContent());
+            }
+        }
+
+        // The cost column is still there for users who may see costs.
+        $admin = $this->getJson("/api/v1/items/{$this->itemId}/movements", $this->tenantHeaders($this->tenant, null, $this->storeAId))->assertOk();
+        $this->assertSame('300.000', $admin->json('data.data.0.unit_cost'));
+    }
+
     public function test_admin_sees_every_branch_and_the_cost(): void
     {
         $headers = $this->tenantHeaders($this->tenant, null, $this->storeAId);
