@@ -27,6 +27,13 @@
           -{{ formatMoney(treasuryData.total_outflows || 0) }}
           <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
+        <span
+          v-if="Number(treasuryData.total_refunds || 0) > 0"
+          class="text-[11px] text-slate-500 dark:text-slate-400 block"
+          data-testid="treasury-total-refunds"
+        >
+          {{ $t('treasury.cash_refunds_line') }}: {{ formatMoney(treasuryData.total_refunds) }} {{ currencyLabel }}
+        </span>
       </div>
 
       <!-- Net Cash Flow -->

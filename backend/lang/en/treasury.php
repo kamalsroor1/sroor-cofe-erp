@@ -80,6 +80,7 @@ return [
     'opened_at_time' => 'Opened at:',
     'opening_float_balance' => 'Drawer Opening Float',
     'print_z_report' => 'Print Z-Report',
+    'print_x_report' => 'Print shift report (provisional X)',
     'z_report_title' => 'Shift Closing Report (Z)',
     'closed_at_label' => 'Closed At',
     'total_cash_collected' => 'Total Cash Collected',

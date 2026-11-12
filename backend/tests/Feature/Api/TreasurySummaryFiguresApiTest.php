@@ -95,8 +95,10 @@ final class TreasurySummaryFiguresApiTest extends TenantTestCase
             ->assertJsonPath('today.cash_refunds', '5.000')
             ->assertJsonPath('today.total_outflow', '42.500')
             ->assertJsonPath('today.net_cash', '104.750')
-            ->assertJsonPath('balances.accounts.cash.inflows', '142.250')
-            ->assertJsonPath('balances.accounts.cash.outflows', '68.625')
+            // BUG-03: the 5.000 cash refund is an outflow, never netted out of the receipts.
+            ->assertJsonPath('balances.accounts.cash.inflows', '147.250')
+            ->assertJsonPath('balances.accounts.cash.refunds', '5.000')
+            ->assertJsonPath('balances.accounts.cash.outflows', '73.625')
             ->assertJsonPath('balances.accounts.cash.balance', '73.625')
             ->assertJsonPath('balances.accounts.instapay.inflows', '80.000')
             ->assertJsonPath('balances.accounts.instapay.outflows', '0.000')
@@ -131,7 +133,7 @@ final class TreasurySummaryFiguresApiTest extends TenantTestCase
 
         $this->assertSame($small, $large);
         $this->assertLessThanOrEqual(self::QUERY_BUDGET, $large);
-        $this->summary()->assertJsonPath('balances.accounts.cash.inflows', '342.250');
+        $this->summary()->assertJsonPath('balances.accounts.cash.inflows', '347.250');
     }
 
     private function summary(): TestResponse

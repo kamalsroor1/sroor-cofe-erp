@@ -87,6 +87,7 @@ export function useInvoiceShow() {
     };
 
     const triggerPrint = (mode = null) => {
+        document.body.classList.remove('print-z-report-mode');
         const targetMode = mode || activeMode.value;
         if (targetMode === 'thermal') {
             activeMode.value = 'thermal';

@@ -13,6 +13,7 @@ test('lines appear in the documented order', () => {
     const keys = [
         'opening_cash_balance',
         'total_cash_sales',
+        'total_customer_receipts',
         'total_payments_collected',
         'total_expenses',
         'total_supplier_paid',
@@ -32,4 +33,24 @@ test('lines appear in the documented order', () => {
 test('closed_at row is conditional and the sheet is print-only', () => {
     assert.match(src, /r\.closed_at \? formatDateTime/);
     assert.match(src, /hidden print:block/);
+});
+
+test('provisional (X) report swaps the title, shows the note and hides the null closing rows', () => {
+    assert.match(src, /r\.is_provisional|report\?\.is_provisional/);
+    assert.match(src, /treasury\.x_report_title/);
+    assert.match(src, /treasury\.z_report_title/);
+    assert.match(src, /treasury\.x_report_provisional_note/);
+    assert.match(src, /isProvisional\.value && \['actual', 'difference'\]\.includes\(line\.key\)/);
+    assert.match(src, /isProvisional\.value && r\.generated_at \? formatDateTime\(r\.generated_at\)/);
+    assert.match(src, /v-if="isProvisional"/);
+});
+
+test('null/undefined money lines are omitted, never printed as 0', () => {
+    assert.match(src, /line\.value !== null && line\.value !== undefined/);
+    assert.doesNotMatch(src, /\?\? 0/);
+    assert.match(src, /report\.total_credit_sales !== null/);
+});
+
+test('customer receipts row reuses an existing key', () => {
+    assert.match(src, /treasury\.customer_collections/);
 });

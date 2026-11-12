@@ -12,6 +12,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Services\DailyCashFlowService;
 use App\Services\Reports\ReportDateRange;
+use App\Services\ShiftService;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Illuminate\Support\Collection;
@@ -21,6 +22,7 @@ final class GetDailyJournalAction
     public function __construct(
         private readonly TenantClock $tenantClock,
         private readonly DailyCashFlowService $dailyCashFlow,
+        private readonly ShiftService $shiftService,
     ) {}
 
     /**
@@ -88,8 +90,15 @@ final class GetDailyJournalAction
 
         // ROLE-01: the drawer (opening float, expected cash) is store-wide: null in own scope.
         $openingCashBalance = $activeShift ? Decimal::normalize((string) $activeShift->opening_cash_balance) : '0.000';
-        $expectedCashInDrawer = bcadd($openingCashBalance, (string) $netCashToday, 3);
         $ownScope = $ownerId !== null;
+
+        // BUG-03: the drawer holds what the OPEN shift expects (opening + every cash movement since
+        // it opened, possibly days ago) - the very figure of GET /shifts/current and of the shift's
+        // provisional Z report, whatever date is selected. net_cash_today stays the selected day's
+        // movement only. No open shift = nothing is expected in a drawer: null, never a guess.
+        $expectedCashInDrawer = ! $ownScope && $activeShift instanceof CashShift
+            ? $this->shiftService->calculateShiftTotals($activeShift)['expected_cash_balance']
+            : null;
 
         return [
             'scope' => $ownScope ? GetOwnShiftDashboardAction::SCOPE_OWN_SHIFT : GetOwnShiftDashboardAction::SCOPE_STORE,
@@ -110,7 +119,7 @@ final class GetDailyJournalAction
                 'total_cash_out' => Decimal::normalize((string) $totalCashOut),
                 'net_cash_today' => Decimal::normalize((string) $netCashToday),
                 'opening_cash_balance' => $ownScope ? null : $openingCashBalance,
-                'expected_cash_in_drawer' => $ownScope ? null : Decimal::normalize($expectedCashInDrawer),
+                'expected_cash_in_drawer' => $expectedCashInDrawer !== null ? Decimal::normalize($expectedCashInDrawer) : null,
             ],
             'invoices' => $invoices->map(fn ($inv) => [
                 'id' => $inv->id,

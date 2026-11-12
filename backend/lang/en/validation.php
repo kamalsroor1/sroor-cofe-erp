@@ -277,6 +277,7 @@ return [
         // Cash Shifts & Drawer
         'opening_cash_balance' => 'opening drawer cash',
         'actual_cash_balance' => 'counted drawer cash',
+        'shift_id' => 'shift',
         'target_weight_grams' => 'target weight (grams)',
         'blend_name' => 'blend name',
         'cardamom_grams' => 'cardamom (grams)',

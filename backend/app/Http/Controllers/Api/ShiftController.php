@@ -140,8 +140,8 @@ final class ShiftController extends Controller
         ClientStoreGuard::verified($request);
         $storeId = (int) $activeStore->requireStore()->id;
 
-        $shiftId = (int) ($request->input('shift_id') ?: $request->route('id'));
-        if ($shiftId) {
+        $shiftId = (int) ($request->validated('shift_id') ?? 0);
+        if ($shiftId > 0) {
             $this->findShiftOr404($request, $shiftId, 'close', $storeId);
         } else {
             $shiftId = (int) CashShift::where('status', 'open')->where('store_id', $storeId)->value('id');
@@ -194,7 +194,8 @@ final class ShiftController extends Controller
     private function findShiftOr404(Request $request, int $id, string $ability, ?int $storeId = null): void
     {
         $user = $request->user();
-        $shift = CashShift::query()->select(['id', 'store_id'])->find($id);
+        // user_id: the z-report ability lets a cashier read their own shift (BUG-03).
+        $shift = CashShift::query()->select(['id', 'store_id', 'user_id'])->find($id);
 
         $visible = $shift instanceof CashShift
             && $user instanceof User

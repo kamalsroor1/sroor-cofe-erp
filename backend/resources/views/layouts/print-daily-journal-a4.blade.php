@@ -265,7 +265,12 @@
 
             <div class="summary-card" style="background: #e0f2fe; border: 2px solid #0284c7;">
                 <div class="summary-label" style="color: #0369a1;">{{ __('treasury.calculated_cash_in_drawer') }}</div>
+                @if($expectedCashInDrawer !== null)
                 <div class="summary-val" style="color: #0369a1; font-size: 16px;">{{ number_format((float)$expectedCashInDrawer, 2) }} {{ $currencyLabel }}</div>
+                <div class="summary-label">{{ __('treasury.expected_drawer_open_shift_sub') }}</div>
+                @else
+                <div class="summary-val" style="color: #0369a1;">{{ __('treasury.no_active_shift_desc') }}</div>
+                @endif
             </div>
         </div>
 

@@ -47,7 +47,7 @@
           class="min-h-[38px] px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95"
         >
           <Printer class="w-3.5 h-3.5 text-emerald-400" />
-          <span>{{ $t('treasury.print_z_report') }}</span>
+          <span>{{ $t('treasury.print_x_report') }}</span>
         </button>
       </div>
     </div>

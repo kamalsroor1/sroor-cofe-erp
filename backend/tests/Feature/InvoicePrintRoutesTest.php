@@ -506,7 +506,7 @@ class InvoicePrintRoutesTest extends TenantTestCase
         }
 
         $this->mountProbe('daily.journal.print', '/__qa/daily-journal/print');
-        $user = $this->userWithPermissions(['daily_journal.view'], $this->storeA);
+        $user = $this->userWithPermissions(['daily_journal.view', 'reports.view'], $this->storeA);
 
         $this->actingAs($user)->get('/__qa/daily-journal/print?date='.$today)
             ->assertOk()
@@ -515,7 +515,8 @@ class InvoicePrintRoutesTest extends TenantTestCase
             ->assertViewHas('customerPayments', '12.500')
             ->assertViewHas('totalCashCollected', '1012.500')
             ->assertViewHas('netCashToday', '1012.500')
-            ->assertViewHas('expectedCashInDrawer', '1012.500')
+            // BUG-03: the drawer figure is the open shift's expected cash; no shift is open here.
+            ->assertViewHas('expectedCashInDrawer', null)
             ->assertDontSee($foreign->invoice_number);
 
         // Admin without store_id prints every branch, still counting each sale once.
@@ -531,7 +532,7 @@ class InvoicePrintRoutesTest extends TenantTestCase
     {
         $foreign = $this->invoiceInStoreB();
         $this->mountProbe('daily.journal.print', '/__qa/daily-journal/print');
-        $user = $this->userWithPermissions(['daily_journal.view'], $this->storeA);
+        $user = $this->userWithPermissions(['daily_journal.view', 'reports.view'], $this->storeA);
 
         $response = $this->actingAs($user)->get('/__qa/daily-journal/print?date='.now()->toDateString());
 

@@ -267,6 +267,7 @@ return [
         // Cash Shifts & Drawer
         'opening_cash_balance' => 'الرصيد الافتتاحي للدرج (الفكة)',
         'actual_cash_balance' => 'الرصيد الفعلي المعدود بالدرج',
+        'shift_id' => 'الوردية',
         'target_weight_grams' => 'الوزن الإجمالي المطلوب بالجرام',
         'blend_name' => 'اسم التوليفة',
         'cardamom_grams' => 'جرامات الحبهان',

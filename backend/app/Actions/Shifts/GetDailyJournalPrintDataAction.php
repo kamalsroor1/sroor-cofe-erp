@@ -9,6 +9,7 @@ use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Store;
 use App\Services\DailyCashFlowService;
+use App\Services\ShiftService;
 use App\Support\Money\Decimal;
 use Illuminate\Support\Collection;
 
@@ -26,6 +27,7 @@ final class GetDailyJournalPrintDataAction
 {
     public function __construct(
         private readonly DailyCashFlowService $dailyCashFlow,
+        private readonly ShiftService $shiftService,
     ) {}
 
     /**
@@ -84,9 +86,36 @@ final class GetDailyJournalPrintDataAction
             'totalCashRefunds' => $cashFlow['cash_refunds'],
             'netCashToday' => $cashFlow['net_cash'],
             'openingCashBalance' => $openingCashBalance,
-            'expectedCashInDrawer' => bcadd($openingCashBalance, $cashFlow['net_cash'], 3),
+            // BUG-03: what the open shift(s) expect in the drawer, as on screen; null = no open shift.
+            'expectedCashInDrawer' => $this->openShiftsExpectedCash($storeId),
             'shiftsOnDate' => $shiftsOnDate,
         ];
+    }
+
+    /**
+     * Expected drawer cash of the open shift of the store (ShiftService::calculateShiftTotals(),
+     * the figure of GET /shifts/current), or - for every store - the sum over the latest open
+     * shift of each store. Null when no shift is open.
+     */
+    private function openShiftsExpectedCash(?int $storeId): ?string
+    {
+        $shifts = CashShift::query()
+            ->where('status', 'open')
+            ->when($storeId !== null, fn ($q) => $q->where('store_id', $storeId))
+            ->orderBy('id')
+            ->get()
+            ->keyBy(fn (CashShift $shift): string => (string) $shift->store_id); // later (higher id) wins
+
+        if ($shifts->isEmpty()) {
+            return null;
+        }
+
+        $total = '0.000';
+        foreach ($shifts as $shift) {
+            $total = bcadd($total, $this->shiftService->calculateShiftTotals($shift)['expected_cash_balance'], 3);
+        }
+
+        return $total;
     }
 
     /**

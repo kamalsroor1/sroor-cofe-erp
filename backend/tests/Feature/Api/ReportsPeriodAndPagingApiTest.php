@@ -199,7 +199,10 @@ final class ReportsPeriodAndPagingApiTest extends TenantTestCase
         $oldest = end($full['ledger_entries']);
         $this->assertSame(bcsub(bcadd($full['accounts']['cash']['opening_balance'], $oldest['debit'], 3), $oldest['credit'], 3), $oldest['running_balance']);
         $this->assertSame($full['accounts']['cash']['closing_balance'], $full['ledger_entries'][0]['running_balance']);
-        $this->assertSame('436.875', $full['total_inflows']); // 100 - 20.5 + 45.25 + 300 + 12.125 (the refund voucher is negative)
+        // BUG-03: the negative refund voucher (20.5) is an outflow, never netted out of the receipts.
+        $this->assertSame('457.375', $full['total_inflows']); // 100 + 45.25 + 300 + 12.125
+        $this->assertSame('53.833', $full['total_outflows']); // 20.5 refund + 33.333 expense
+        $this->assertSame('20.500', $full['total_refunds']);
         $this->assertSame(bcsub($full['total_liquidity'], $full['total_opening'], 3), $full['total_net_change']);
     }
 

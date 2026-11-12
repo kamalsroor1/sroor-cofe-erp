@@ -56,8 +56,9 @@ class TreasuryService
             $m = $all[$methodKey];
 
             // Net Balance calculation: (Inflows + Inbound Transfers) - (Outflows + Outbound Transfers + Fees)
+            // BUG-03: customer refunds are an outflow, not netted out of the receipts.
             $totalIn = bcadd($m['customer_inflows'], $m['transfers_in'], 3);
-            $totalOutflows = bcadd($m['supplier_outflows'], bcadd($m['general_expenses'], $m['expense_payments'], 3), 3);
+            $totalOutflows = $this->paymentOutflows($m);
             $totalOut = bcadd($totalOutflows, bcadd($m['transfers_out'], $m['fees'], 3), 3);
             $netBalance = bcsub($totalIn, $totalOut, 3);
 
@@ -77,6 +78,8 @@ class TreasuryService
                 'badge_class' => $methodEnum->badgeClass(),
                 'inflows' => $totalIn,
                 'outflows' => $totalOut,
+                // Customer refunds of this method, already inside outflows (BUG-03).
+                'refunds' => $m['customer_refunds'],
                 'balance' => $netBalance,
             ];
 
@@ -224,6 +227,7 @@ class TreasuryService
         $totalOpeningBalance = '0.000';
         $totalPeriodInflows = '0.000';
         $totalPeriodOutflows = '0.000';
+        $totalPeriodRefunds = '0.000';
         $totalPeriodTransfersIn = '0.000';
         $totalPeriodTransfersOut = '0.000';
         $totalPeriodFees = '0.000';
@@ -241,7 +245,7 @@ class TreasuryService
             $prior = $priorByMethod[$key];
 
             $priorTotalIn = bcadd($prior['customer_inflows'], $prior['transfers_in'], 3);
-            $priorTotalOut = bcadd($prior['supplier_outflows'], bcadd($prior['general_expenses'], bcadd($prior['expense_payments'], bcadd($prior['transfers_out'], $prior['fees'], 3), 3), 3), 3);
+            $priorTotalOut = bcadd($this->paymentOutflows($prior), bcadd($prior['transfers_out'], $prior['fees'], 3), 3);
             $openingBal = bcsub($priorTotalIn, $priorTotalOut, 3);
 
             // Add Opening cash shift balance if physical cash drawer
@@ -256,7 +260,9 @@ class TreasuryService
             $periodInTransfers = $period['transfers_in'];
             $periodOutTransfers = $period['transfers_out'];
             $periodFees = $period['fees'];
-            $periodOutflows = bcadd($period['supplier_outflows'], bcadd($period['general_expenses'], $period['expense_payments'], 3), 3);
+            // BUG-03: outflows include the customer refunds (also reported on their own as `refunds`).
+            $periodRefunds = $period['customer_refunds'];
+            $periodOutflows = $this->paymentOutflows($period);
 
             if (! in_array($key, $activeKeys, true)
                 && $this->isZero($openingBal) && $this->isZero($periodInflows) && $this->isZero($periodOutflows)
@@ -278,6 +284,7 @@ class TreasuryService
                 'opening_balance' => $openingBal,
                 'inflows' => $periodInflows,
                 'outflows' => $periodOutflows,
+                'refunds' => $periodRefunds,
                 'transfers_in' => $periodInTransfers,
                 'transfers_out' => $periodOutTransfers,
                 'fees' => $periodFees,
@@ -288,6 +295,7 @@ class TreasuryService
             $totalOpeningBalance = bcadd($totalOpeningBalance, $openingBal, 3);
             $totalPeriodInflows = bcadd($totalPeriodInflows, $periodInflows, 3);
             $totalPeriodOutflows = bcadd($totalPeriodOutflows, $periodOutflows, 3);
+            $totalPeriodRefunds = bcadd($totalPeriodRefunds, $periodRefunds, 3);
             $totalPeriodTransfersIn = bcadd($totalPeriodTransfersIn, $periodInTransfers, 3);
             $totalPeriodTransfersOut = bcadd($totalPeriodTransfersOut, $periodOutTransfers, 3);
             $totalPeriodFees = bcadd($totalPeriodFees, $periodFees, 3);
@@ -325,6 +333,7 @@ class TreasuryService
             'total_opening' => $totalOpeningBalance,
             'total_inflows' => $totalPeriodInflows,
             'total_outflows' => $totalPeriodOutflows,
+            'total_refunds' => $totalPeriodRefunds,
             'total_transfers_in' => $totalPeriodTransfersIn,
             'total_transfers_out' => $totalPeriodTransfersOut,
             'total_fees' => $totalPeriodFees,
@@ -628,7 +637,7 @@ class TreasuryService
             return $base->groupBy('window_key', 'method_key')->get()->all();
         };
 
-        $buckets = ['customer_inflows', 'supplier_outflows', 'general_expenses', 'expense_payments', 'transfers_in', 'transfers_out', 'fees'];
+        $buckets = ['customer_inflows', 'customer_refunds', 'supplier_outflows', 'general_expenses', 'expense_payments', 'transfers_in', 'transfers_out', 'fees'];
         $out = ['before' => [], 'from' => []];
         foreach (['before', 'from'] as $window) {
             foreach (PaymentMethod::cases() as $methodEnum) {
@@ -662,11 +671,15 @@ class TreasuryService
                 'payments.payment_date',
                 'payments.payment_method',
                 [
-                    'customer_sum' => 'CASE WHEN payments.customer_id IS NOT NULL THEN payments.amount ELSE 0 END',
+                    // BUG-03: a customer voucher is a receipt (inflow) or, when negative (BE-10 refund
+                    // voucher of a return / an invoice cancel), money paid back (outflow, positive) -
+                    // the same split as the ledger's debit/credit columns. Never netted.
+                    'customer_sum' => 'CASE WHEN payments.customer_id IS NOT NULL AND payments.amount > 0 THEN payments.amount ELSE 0 END',
+                    'customer_refund_sum' => 'CASE WHEN payments.customer_id IS NOT NULL AND payments.amount < 0 THEN 0 - payments.amount ELSE 0 END',
                     'supplier_sum' => 'CASE WHEN payments.supplier_id IS NOT NULL THEN payments.amount ELSE 0 END',
                     'expense_payment_sum' => "CASE WHEN payments.supplier_id IS NULL AND payments.payment_number LIKE 'PAY-EXP-%' THEN payments.amount ELSE 0 END",
                 ],
-            ), ['customer_sum' => 'customer_inflows', 'supplier_sum' => 'supplier_outflows', 'expense_payment_sum' => 'expense_payments']);
+            ), ['customer_sum' => 'customer_inflows', 'customer_refund_sum' => 'customer_refunds', 'supplier_sum' => 'supplier_outflows', 'expense_payment_sum' => 'expense_payments']);
         }
 
         $add($read(
@@ -701,6 +714,21 @@ class TreasuryService
         }
 
         return $total;
+    }
+
+    /**
+     * Payment outflows of one method and window: supplier payments, expenses, treasury-paid
+     * expense vouchers and (BUG-03) cash/other refunds handed back to customers.
+     *
+     * @param  array<string, string>  $m  a movementWindows() bucket set
+     */
+    private function paymentOutflows(array $m): string
+    {
+        return bcadd(
+            bcadd($m['supplier_outflows'], $m['customer_refunds'], 3),
+            bcadd($m['general_expenses'], $m['expense_payments'], 3),
+            3,
+        );
     }
 
     private function isZero(string $value): bool

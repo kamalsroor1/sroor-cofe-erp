@@ -1,10 +1,13 @@
-import { ref, reactive, nextTick, onMounted } from 'vue';
+import { ref, reactive, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 import { businessToday } from './useBusinessDate';
 import { normalize } from '../helpers/decimal';
 import { isOwnShiftJournal, canPrintJournal } from '../helpers/journalScope';
+import { confirmDialog } from '../helpers/alert';
+
+const Z_PRINT_FALLBACK_MS = 60000;
 
 export function useDailyJournal() {
     const { t } = useTrans();
@@ -32,7 +35,7 @@ export function useDailyJournal() {
         total_cash_out: 0,
         net_cash_today: 0,
         opening_cash_balance: 0,
-        expected_cash_in_drawer: 0,
+        expected_cash_in_drawer: null,
     });
     const invoices = ref([]);
     const expenses = ref([]);
@@ -133,29 +136,39 @@ export function useDailyJournal() {
 
     const submitCloseShift = async () => {
         if (!activeShift.value) return;
+        const shiftIdBeforeClose = activeShift.value.id;
         isSubmitting.value = true;
+        let closedShiftId;
+        let closeMessage;
         try {
             const response = await api.post('/shifts/close', {
-                shift_id: activeShift.value.id,
+                shift_id: shiftIdBeforeClose,
                 actual_cash_balance: closeShiftForm.actual_cash_balance,
                 notes: closeShiftForm.notes,
             });
-            Swal.fire({
-                icon: 'success',
-                title: t('common.success'),
-                text: response.data?.message || t('treasury.shift_closed_success'),
-            });
+            closedShiftId = response.data?.data?.id ?? shiftIdBeforeClose;
+            closeMessage = response.data?.message || t('treasury.shift_closed_success');
             showCloseShiftModal.value = false;
-            await fetchDailyJournal();
         } catch (error) {
             Swal.fire({
                 icon: 'error',
                 title: t('common.error'),
                 text: error.userMessage || t('common.error'),
             });
+            return;
         } finally {
             isSubmitting.value = false;
         }
+
+        await fetchDailyJournal();
+        const wantsPrint = await confirmDialog({
+            title: t('common.success'),
+            text: closeMessage,
+            icon: 'success',
+            confirmButtonText: t('treasury.print_z_report'),
+            cancelButtonText: t('common.close'),
+        });
+        if (wantsPrint) await printShiftZReport(closedShiftId);
     };
 
     const submitExpense = async () => {
@@ -188,26 +201,61 @@ export function useDailyJournal() {
         }
     };
 
-    const printActiveZReport = async () => {
-        if (!activeShift.value) return;
+    let endPrintMode = null;
+
+    const finishPrintMode = () => {
+        if (!endPrintMode) return;
+        const end = endPrintMode;
+        endPrintMode = null;
+        end();
+    };
+
+    const startPrintMode = () => {
+        finishPrintMode();
+        document.body.classList.remove('print-a4-mode', 'print-thermal-mode');
+        document.body.classList.add('print-z-report-mode');
+
+        const mql = typeof window.matchMedia === 'function' ? window.matchMedia('print') : null;
+        const onMediaChange = (event) => {
+            if (!event.matches) finishPrintMode();
+        };
+        const fallbackTimer = setTimeout(finishPrintMode, Z_PRINT_FALLBACK_MS);
+
+        window.addEventListener('afterprint', finishPrintMode, { once: true });
+        mql?.addEventListener?.('change', onMediaChange);
+
+        endPrintMode = () => {
+            clearTimeout(fallbackTimer);
+            window.removeEventListener('afterprint', finishPrintMode);
+            mql?.removeEventListener?.('change', onMediaChange);
+            document.body.classList.remove('print-z-report-mode');
+            zReport.value = null;
+        };
+    };
+
+    const printShiftZReport = async (shiftId) => {
+        if (!shiftId) return;
         try {
-            const response = await api.get(`/shifts/${activeShift.value.id}/z-report`);
+            const response = await api.get(`/shifts/${shiftId}/z-report`);
             const report = response.data?.report;
             if (!report) return;
             zReport.value = report;
             await nextTick();
-            document.body.classList.add('print-z-report-mode');
-            const cleanup = () => {
-                document.body.classList.remove('print-z-report-mode');
-                zReport.value = null;
-                window.removeEventListener('afterprint', cleanup);
-            };
-            window.addEventListener('afterprint', cleanup);
+            startPrintMode();
             setTimeout(() => window.print(), 150);
         } catch (error) {
-            console.error('Failed to get Z-report:', error);
+            finishPrintMode();
+            Swal.fire({
+                icon: 'error',
+                title: t('common.error'),
+                text: error.userMessage || t('common.error'),
+            });
         }
     };
+
+    const printActiveZReport = () => printShiftZReport(activeShift.value?.id);
+
+    onBeforeUnmount(finishPrintMode);
 
     onMounted(() => {
         fetchDailyJournal();

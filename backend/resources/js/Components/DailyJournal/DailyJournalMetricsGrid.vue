@@ -44,7 +44,7 @@
       class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1"
     >
       <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">{{
-        $t('treasury.net_cash_flow')
+        $t('treasury.net_cash_today_label')
       }}</span>
       <div class="text-xl font-black font-mono" :class="netCashClass">
         {{ netCashDisplay }}
@@ -64,7 +64,9 @@
         {{ formatMoney(summary.expected_cash_in_drawer) }}
         <span class="text-xs text-theme-primary/80 font-normal font-tajawal">{{ currencyLabel }}</span>
       </div>
-      <span class="text-[10px] text-slate-500 dark:text-slate-400 block">{{ $t('treasury.expected_drawer_sub') }}</span>
+      <span class="text-[10px] text-slate-500 dark:text-slate-400 block">{{
+        $t('treasury.expected_drawer_open_shift_sub')
+      }}</span>
     </div>
   </div>
 </template>

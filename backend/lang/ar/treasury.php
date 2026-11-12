@@ -86,6 +86,7 @@ return [
     'opened_at_time' => 'فُتحت في:',
     'opening_float_balance' => 'الرصيد الافتتاحي للدرج',
     'print_z_report' => 'طباعة تقرير Z',
+    'print_x_report' => 'طباعة تقرير الوردية (مؤقت X)',
     'z_report_title' => 'تقرير إقفال الوردية (Z)',
     'closed_at_label' => 'تم الإقفال',
     'total_cash_collected' => 'إجمالي المقبوض نقدًا',
