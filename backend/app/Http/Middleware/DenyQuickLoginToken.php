@@ -17,12 +17,20 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class DenyQuickLoginToken
 {
-    public function handle(Request $request, Closure $next): Response
+    /**
+     * True when $user is authenticated by a quick-login token. Also used outside this middleware
+     * (SELL-02 subscription banner / bell reminder) so nothing points such a session to /billing.
+     */
+    public static function isQuickLoginSession(mixed $user): bool
     {
-        $user = $request->user();
         $token = $user instanceof User ? $user->currentAccessToken() : null;
 
-        if ($token instanceof PersonalAccessToken && $token->can('quick-login') && ! $token->can('*')) {
+        return $token instanceof PersonalAccessToken && $token->can('quick-login') && ! $token->can('*');
+    }
+
+    public function handle(Request $request, Closure $next): Response
+    {
+        if (self::isQuickLoginSession($request->user())) {
             return response()->json([
                 'success' => false,
                 'message' => __('auth.quick_login_token_forbidden'),

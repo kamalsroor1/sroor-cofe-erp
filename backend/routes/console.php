@@ -130,6 +130,15 @@ Schedule::command('billing:issue-trial-invoices')
     ->withoutOverlapping(60)
     ->onOneServer();
 
+// SELL-02: trial / subscription expiry reminders (7 / 3 / 1 days before, the end day, and the
+// day after = grace started): in-app notification per shop + one Telegram summary for the
+// operator. After the 01:00 lifecycle sweep, in the morning so the owner reads it the same day.
+// Idempotent (central tenant_lifecycle_reminders, UNIQUE tenant + kind + period end).
+Schedule::command('tenants:send-lifecycle-reminders')
+    ->dailyAt((string) config('tenant_lifecycle.reminders_at', '09:00'))
+    ->withoutOverlapping(60)
+    ->onOneServer();
+
 // 9. SEC-03: drop expired tenant API tokens (12h fixed TTL) from every provisioned tenant DB.
 // `tenants:run` is the app's provisioned-tenants-only variant (RunForProvisionedTenants).
 Schedule::command('tenants:run sanctum:prune-expired --option="hours=24"')

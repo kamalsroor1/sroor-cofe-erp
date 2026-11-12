@@ -251,6 +251,7 @@ mysql -N -B -r -e "SHOW GRANTS FOR \`sroor_audit_pruner\`@\`localhost\`"   # USA
 - قبل أول deploy يكون البرنامج في `BACKOFF/FATAL` لأن `current` غير موجود — طبيعي.
 - **الـ scheduler:** cron كل دقيقة كمستخدم `sroor`. أي job تخص المستأجرين يجب أن تدور عليهم داخل tenancy (`tenancy()->runForMultiple`)، ولا تلمس بيانات مستأجر من السياق المركزي.
 - **[OPS-5/OPS-7] الـ backups والـ health:** `backup:tenants` الساعة 01:30، `backup:run --only-files` 02:30، `backup:clean` 03:00، `health:check` كل 5 دقايق، والـ heartbeats (`health:schedule-check-heartbeat` و`health:queue-check-heartbeat`) كل دقيقة. بعد **أول** deploy على الخادم شغّل `php artisan backup:tenants` مرة يدوي (الـ health check `Backup Freshness` بيبقى أحمر لحد أول نسخة). الـ runbook: [`backup-restore.md`](backup-restore.md).
+- **[SELL-02] تنبيهات انتهاء التجربة/الاشتراك:** `tenants:send-lifecycle-reminders` يوميًا 09:00 (`tenant_lifecycle.reminders_at`، `withoutOverlapping` + `onOneServer`): إشعار داخل البرنامج لأدمن كل محل (جدول `notifications` في DB المحل) قبل الانتهاء بـ 7 و3 ويوم، ويوم الانتهاء، وأول يوم سماح، ورسالة تيليجرام واحدة للإدارة على نفس bot/chat تنبيه طلبات التسجيل. مرة واحدة لكل محل وتنبيه وفترة (جدول `tenant_lifecycle_reminders` المركزي)؛ `--dry-run` بيعرض بس. تيليجرام فشل = تحذير ويتعاد في تشغيل تاني نفس اليوم.
 - Redis بـ `noeviction`: إن امتلأت الذاكرة تفشل الكتابة بدل حذف jobs بصمت. راقب `INFO memory` وارفع `REDIS_MAXMEMORY` عند الحاجة.
 
 ### 6.1 queue الـ provisioning (OPS-2)

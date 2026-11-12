@@ -319,4 +319,43 @@ return [
             'invoice_to' => 'Billed to',
         ],
     ],
+
+    // SELL-02: in-app subscription reminders (header bell), written by tenants:send-lifecycle-reminders.
+    'reminders' => [
+        'trial' => [
+            'days_left' => 'Your free trial ends in :days days',
+            'tomorrow' => 'Your free trial ends tomorrow',
+            'today' => 'Your free trial ends today',
+            'grace' => 'Your free trial has ended: pay now before the account becomes view-only',
+            'description' => 'Subscribe from the Subscription & billing page to keep selling without interruption.',
+        ],
+        'subscription' => [
+            'days_left' => 'Your subscription ends in :days days',
+            'tomorrow' => 'Your subscription ends tomorrow',
+            'today' => 'Your subscription ends today',
+            'grace' => 'Your subscription has ended: renew now before the account becomes view-only',
+            'description' => 'Renew from the Subscription & billing page to keep selling without interruption.',
+        ],
+        'action' => 'Open Subscription & billing',
+    ],
+
+    // SELL-02: permanent banner from /system/context `subscription_banner` (state + kind).
+    'banner' => [
+        'trial' => [
+            'days_left' => 'Free trial: :days days left',
+            'tomorrow' => 'Free trial: ends tomorrow',
+            'today' => 'Free trial: ends today',
+        ],
+        'expiring' => [
+            'days_left' => 'Your subscription ends in :days days',
+            'tomorrow' => 'Your subscription ends tomorrow',
+            'today' => 'Your subscription ends today',
+        ],
+        'grace' => [
+            'trial' => 'Your free trial has ended. Grace days left before the account becomes view-only: :days',
+            'subscription' => 'Your subscription has ended. Grace days left before the account becomes view-only: :days',
+        ],
+        'read_only' => 'Your account is view-only. Pay from the Subscription & billing page to restore full access.',
+        'action' => 'Subscription & billing',
+    ],
 ];

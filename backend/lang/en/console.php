@@ -236,6 +236,40 @@ return [
             'open_invoice' => 'an unpaid subscription invoice already exists',
         ],
     ],
+    // SELL-02: tenants:send-lifecycle-reminders.
+    'lifecycle_reminders' => [
+        'description' => 'Send trial / subscription expiry reminders (7, 3 and 1 days before, on the end day and on the first grace day): an in-app notification per shop and one Telegram summary for the operator',
+        'locked' => 'Another reminders run is in progress; nothing was done.',
+        'row' => 'Tenant :tenant_id: :kind (:stage) ends :date: :status',
+        'summary' => 'Reminders due today: :due, :sent sent, :already already sent, :failed failed.',
+        'kinds' => [
+            'trial' => 'Trial',
+            'subscription' => 'Subscription',
+        ],
+        'statuses' => [
+            'sent' => 'sent',
+            'already_sent' => 'already sent',
+            'failed' => 'failed (retried by the next run)',
+            'would_send' => '[dry run] would be sent',
+        ],
+        'operator' => [
+            'sent' => 'Operator Telegram summary sent.',
+            'failed' => 'Operator Telegram summary failed; the next run today retries it.',
+            'not_configured' => 'Operator Telegram is not configured; no summary sent.',
+            'nothing' => 'No new reminders for the operator.',
+            'dry_run' => '[dry run] Nothing was sent or recorded.',
+            'locked' => 'Another run is in progress.',
+        ],
+        'stages' => [
+            'days_left' => ':days day(s) left',
+            'today' => 'ends today',
+            'grace' => 'ended, grace period until :date',
+        ],
+        'telegram' => [
+            'header' => 'Subscription expiry reminders (:date), part :part of :parts: :count shop(s)',
+            'line' => '- :name (:tenant_id) | Plan: :plan | :kind: :when | Ends: :date | Owner phone: :phone',
+        ],
+    ],
     // OPS-9: tenants:archive / tenants:purge.
     'archive' => [
         'description' => 'Archive one suspended or cancelled tenant after a verified final backup (nothing is dropped)',

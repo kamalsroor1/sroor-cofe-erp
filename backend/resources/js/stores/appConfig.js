@@ -26,6 +26,7 @@ export const useAppConfigStore = defineStore('appConfig', {
         },
         tenant: null,
         entitlements: null,
+        subscriptionBanner: null,
         activeShift: null,
         setupProgress: null,
         setupProgressBooted: false,
@@ -88,6 +89,7 @@ export const useAppConfigStore = defineStore('appConfig', {
                     if (data.branding) this.branding = data.branding;
                     if (data.tenant) this.tenant = data.tenant;
                     if (data.entitlements) this.entitlements = data.entitlements;
+                    this.subscriptionBanner = data.subscription_banner ?? null;
                     this.activeShift = data.active_shift ?? null;
                     this.setupProgress = data.setup_progress ?? null;
                     this.setupProgressBooted = false;

@@ -36,6 +36,8 @@ final class GetSystemContextAction
         private readonly PlanEnforcer $planEnforcer,
         private readonly TenantFeatureManagerInterface $featureManager,
         private readonly GetSetupProgressAction $setupProgressAction,
+        private readonly GetSubscriptionBannerAction $subscriptionBannerAction,
+        private readonly ListSubscriptionReminderAlertsAction $subscriptionReminderAlertsAction,
     ) {}
 
     /**
@@ -74,7 +76,12 @@ final class GetSystemContextAction
         }
 
         // 3. System Alerts & Telemetry
-        $alerts = $mustChangePassword ? [] : $this->alerts($user, $activeStore);
+        // SELL-02: the user's unread subscription reminder (tenant `notifications`) leads the bell.
+        $currentTenant = $tenant instanceof Tenant ? $tenant : null;
+        $alerts = $mustChangePassword ? [] : [
+            ...$this->subscriptionReminderAlertsAction->execute($user, $currentTenant),
+            ...$this->alerts($user, $activeStore),
+        ];
 
         // 4. System Settings & Branding
         $headerLocale = $request->header('X-Locale');
@@ -149,6 +156,9 @@ final class GetSystemContextAction
             ],
             'entitlements' => $this->entitlements($tenant),
             'notifications' => $alerts,
+            // SELL-02: permanent trial / expiry banner; null for users without billing.manage and
+            // for a healthy subscription (see GetSubscriptionBannerAction for the states).
+            'subscription_banner' => $mustChangePassword ? null : $this->subscriptionBannerAction->execute($user, $currentTenant),
             'setup_progress' => $mustChangePassword ? null : $this->setupProgressAction->execute($user),
             'locale' => $locale,
             'translations_hash' => $translationsHash,

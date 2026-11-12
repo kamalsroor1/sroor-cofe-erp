@@ -180,6 +180,9 @@
     <!-- Connectivity banner: always mounted, visible only while offline / server unreachable -->
     <OfflineBanner />
 
+    <!-- SELL-02: permanent subscription strip (not on the POS selling screen) -->
+    <SubscriptionBanner v-if="!isPosView" />
+
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- 🖥️ MAIN BODY: DYNAMIC SIDEBAR + STAGE                        -->
     <!-- ═══════════════════════════════════════════════════════════ -->
@@ -509,6 +512,7 @@ import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
 import DesktopSidebar from '../Components/Navigation/DesktopSidebar.vue';
 import BrandMark from '../Components/Brand/BrandMark.vue';
 import OfflineBanner from '../Components/Layout/OfflineBanner.vue';
+import SubscriptionBanner from '../Components/Layout/SubscriptionBanner.vue';
 import NotificationsBell from '../Components/Layout/NotificationsBell.vue';
 import StoreShiftSwitcher from '../Components/Layout/StoreShiftSwitcher.vue';
 import Swal from 'sweetalert2';

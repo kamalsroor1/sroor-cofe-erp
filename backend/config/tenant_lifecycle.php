@@ -49,6 +49,10 @@ return [
     // Days before a deadline on which reminders are sent (IDEN-3.7).
     'reminder_days' => [7, 3, 1],
 
+    // SELL-02: daily run time of tenants:send-lifecycle-reminders (platform timezone). Also: the
+    // paid-subscription banner in the SPA shows from the largest reminder day (7) on.
+    'reminders_at' => '09:00',
+
     'sweep' => [
         // Most moves a never-swept tenant can be caught up by in one run
         // (active → past_due → read_only → suspended → archived). IDEN-3.6.

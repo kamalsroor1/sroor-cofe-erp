@@ -193,6 +193,8 @@ return [
             'threshold' => env('PULSE_SLOW_OUTGOING_REQUESTS_THRESHOLD', 1000),
             'ignore' => [
                 // '#^http://127\.0\.0\.1:13714#', // Inertia SSR...
+                // SELL-02: Telegram bot URLs carry the bot token in the path; never store them.
+                '#^https://api\.telegram\.org/#',
             ],
             'groups' => [
                 // '#^https://api\.github\.com/repos/.*$#' => 'api.github.com/repos/*',
