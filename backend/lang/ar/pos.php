@@ -161,6 +161,8 @@ return [
     'one_touch_add' => 'إضافة بلمسة واحدة',
     'subtotal_items' => 'المجموع الفرعي (:count صنف):',
     'discount_label' => 'الخصم:',
+    'discount_short' => 'الخصم',
+    'extra_charges_short' => 'مصاريف إضافية',
     'extra_expenses_shipping' => 'مصاريف إضافية / شحن:',
     'giant_net_total' => 'الصافي النهائي:',
     'invoice_and_payment_type' => 'نوع الفاتورة والسداد:',

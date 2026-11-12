@@ -38,9 +38,9 @@ async function setupPosRoutes(page, { asCashier = false, onInvoice = null } = {}
         { restrictPermissions: asCashier }
     );
 
-    await page.route('**/api/v1/items*', (route) =>
+    await page.route('**/api/v1/pos/items*', (route) =>
         route.fulfill({
-            json: { success: true, data: [ITEM], meta: { total: 1 } },
+            json: { success: true, data: [ITEM], meta: { current_page: 1, last_page: 1, total: 1 } },
         })
     );
     await page.route('**/api/v1/categories*', (route) =>
@@ -111,7 +111,8 @@ test.describe('POS-07: Discount cap & manager PIN override', () => {
         await page.getByTestId('pos-checkout-submit').waitFor({ state: 'visible' });
         await page.getByText(ITEM.name, { exact: true }).first().click();
 
-        // Apply 10% preset (equal to cap)
+        // Apply 10% preset (equal to cap); the discount line is collapsed until it is opened
+        await page.getByTestId('pos-discount-toggle').click();
         await page.getByTestId('pos-discount-preset-10').click();
         await expect(page.getByTestId('pos-discount-cap-warning')).toHaveCount(0);
 
@@ -159,6 +160,7 @@ test.describe('POS-07: Discount cap & manager PIN override', () => {
         await page.getByText(ITEM.name, { exact: true }).first().click();
 
         // Enter 20% discount (> 10% cap)
+        await page.getByTestId('pos-discount-toggle').click();
         await page.getByTestId('pos-discount-input').fill('20');
         await expect(page.getByTestId('pos-discount-cap-warning')).toBeVisible();
 

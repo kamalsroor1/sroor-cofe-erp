@@ -139,10 +139,18 @@ export function usePosTerminal() {
         focusSearch,
         focusCustomer: () => (customer.showCustomerPickerModal.value = true),
         openRecentSales: recentSales.open,
+        // The compact footer keeps the discount collapsed: F7 opens it first, then focuses the field.
         focusDiscount: () => {
             const input = document.querySelector('[data-pos-discount-input]');
-            input?.focus();
-            return !!input;
+            if (input) {
+                input.focus();
+                return true;
+            }
+            const toggle = document.querySelector('[data-pos-discount-toggle]');
+            if (!toggle) return false;
+            toggle.click();
+            nextTick(() => document.querySelector('[data-pos-discount-input]')?.focus());
+            return true;
         },
         createOrder: cartOps.handleCreateOrder,
         toggleCatalog: catalog.toggleCatalog,

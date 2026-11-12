@@ -52,7 +52,7 @@ test.describe('POSView Comprehensive 4-Axes Audit & Multi-Viewport Verification'
             }
 
             // 4. Cart Table / Empty Cart State
-            const hasCartItems = await page.locator('table tbody tr').isVisible().catch(() => false);
+            const hasCartItems = await page.getByTestId('pos-cart-row').first().isVisible().catch(() => false);
             const hasEmptyCart = await page.locator('h3:has-text("الفاتورة فارغة"), p:has-text("الفاتورة فارغة")').isVisible().catch(() => false);
             expect(hasCartItems || hasEmptyCart).toBeTruthy();
 
@@ -118,7 +118,7 @@ test.describe('POSView Comprehensive 4-Axes Audit & Multi-Viewport Verification'
             await page.waitForTimeout(300);
 
             // Item should be added to cart table
-            const cartItemRow = page.locator('table tbody tr').first();
+            const cartItemRow = page.getByTestId('pos-cart-row').first();
             await expect(cartItemRow).toBeVisible();
         }
     });

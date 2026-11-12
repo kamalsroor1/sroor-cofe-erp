@@ -12,7 +12,9 @@ defineEmits(['close']);
 const { t } = useTrans();
 
 // F7 is listed only once the POS actually renders a discount input.
-const hasDiscountInput = computed(() => props.show && !!document.querySelector('[data-pos-discount-input]'));
+const hasDiscountInput = computed(
+  () => props.show && !!document.querySelector('[data-pos-discount-input], [data-pos-discount-toggle]')
+);
 
 const groups = computed(() => [
   {

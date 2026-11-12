@@ -11,6 +11,8 @@ const props = defineProps({
   line: { type: Object, required: true },
   index: { type: Number, required: true },
   compact: { type: Boolean, default: false },
+  // Cart row: the field shrinks with its column instead of keeping a fixed width, and drops the currency suffix.
+  fluid: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['update-price']);
@@ -139,8 +141,8 @@ onBeforeUnmount(close);
 </script>
 
 <template>
-  <div class="flex items-center gap-1">
-    <div class="relative">
+  <div class="flex items-center gap-1" :class="fluid ? 'w-full min-w-0' : ''">
+    <div class="relative" :class="fluid ? 'flex-1 min-w-0 max-w-32' : ''">
       <input
         ref="inputRef"
         type="text"
@@ -158,7 +160,11 @@ onBeforeUnmount(close);
         :aria-activedescendant="highlighted >= 0 ? `${listId}-${highlighted}` : undefined"
         class="aria-invalid:border-rose-500 aria-invalid:bg-rose-50 dark:aria-invalid:bg-rose-500/10 text-start font-mono font-black bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none"
         :class="
-          compact ? 'w-18 h-9 pointer-coarse:h-11 px-1.5 text-xs' : 'w-24 h-9 pointer-coarse:h-11 ps-2 pe-8 text-sm'
+          compact
+            ? 'w-18 h-9 pointer-coarse:h-11 px-1.5 text-xs'
+            : fluid
+              ? 'w-full min-w-0 h-9 pointer-coarse:h-11 ps-2 pe-8 text-sm'
+              : 'w-24 h-9 pointer-coarse:h-11 ps-2 pe-8 text-sm'
         "
         @focus="onFocus"
         @blur="onBlur"
@@ -201,7 +207,7 @@ onBeforeUnmount(close);
       :aria-label="$t('pos.min_price_protected')"
       :title="$t('pos.min_price_protected')"
     />
-    <span class="text-[10px] font-bold text-slate-400 font-tajawal">{{ currencyLabel }}</span>
+    <span v-if="!fluid" class="text-[10px] font-bold text-slate-400 font-tajawal">{{ currencyLabel }}</span>
 
     <Teleport to="body">
       <div

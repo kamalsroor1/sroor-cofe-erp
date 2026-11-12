@@ -1,9 +1,92 @@
 <template>
   <aside
-    class="flex flex-col justify-between p-2.5 bg-white dark:bg-slate-900 border-s border-slate-200 dark:border-slate-800 shadow-md space-y-2 font-tajawal select-none"
+    class="flex flex-col font-tajawal select-none"
+    :class="
+      compact
+        ? 'space-y-1'
+        : 'justify-between p-2.5 bg-white dark:bg-slate-900 border-s border-slate-200 dark:border-slate-800 shadow-md space-y-2'
+    "
   >
-    <!-- 1. Financial Breakdown Card -->
+    <!-- 1. Financial breakdown: the compact footer folds discount + extra charges into one line -->
+    <div v-if="compact" class="space-y-1">
+      <div data-testid="pos-discount-box" class="space-y-1">
+        <div class="flex items-stretch gap-1.5">
+          <button
+            type="button"
+            data-pos-discount-toggle
+            data-testid="pos-discount-toggle"
+            :aria-expanded="discountOpen"
+            class="flex-1 min-w-0 min-h-9 pointer-coarse:min-h-11 px-2 flex items-center gap-1.5 rounded-xl border text-xs font-bold transition active:scale-[0.98] cursor-pointer"
+            :class="
+              hasDiscountValue
+                ? 'bg-rose-500/10 border-rose-500/40 text-rose-700 dark:text-rose-300'
+                : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+            "
+            @click="discountOpen = !discountOpen"
+          >
+            <Percent class="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span class="truncate">{{ $t('pos.discount_short') }}</span>
+            <span
+              v-if="hasDiscountValue && discountType === 'percentage'"
+              class="px-1.5 rounded-md bg-rose-500/15 font-mono text-[11px] font-black"
+              >{{ discountValue }}%</span
+            >
+            <span class="ms-auto font-mono font-black text-sm text-rose-500" data-testid="pos-discount-total"
+              >-{{ formatMoney(discountAmount) }}</span
+            >
+            <ChevronDown
+              class="w-4 h-4 shrink-0 transition-transform"
+              :class="discountOpen ? 'rotate-180' : ''"
+              aria-hidden="true"
+            />
+          </button>
+          <button
+            type="button"
+            data-testid="pos-expenses-open"
+            :aria-label="$t('pos.extra_expenses_shipping')"
+            class="shrink-0 min-h-9 pointer-coarse:min-h-11 px-2 flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold text-theme-primary transition active:scale-[0.98] cursor-pointer"
+            @click="$emit('open-expenses')"
+          >
+            <Truck class="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span>{{ $t('pos.extra_charges_short') }}</span>
+            <span
+              v-if="expensesCount > 0"
+              class="px-1.5 rounded-full bg-theme-primary/15 text-[10px] font-black text-theme-primary"
+              >{{ expensesCount }}</span
+            >
+            <span v-if="customerExpensesTotal > 0" class="font-mono font-black text-emerald-500"
+              >+{{ formatMoney(customerExpensesTotal) }}</span
+            >
+          </button>
+        </div>
+        <POSDiscountBox
+          :show-controls="discountOpen"
+          :discount-value="discountValue"
+          :discount-type="discountType"
+          :discount-summary="discountSummary"
+          :max-discount-percent="maxDiscountPercent"
+          :can-override-discount="canOverrideDiscount"
+          @apply-discount="$emit('apply-discount', $event)"
+        />
+      </div>
+
+      <div class="flex items-end justify-between gap-3 px-1">
+        <div class="min-w-0">
+          <div class="text-xs font-black text-slate-900 dark:text-white">{{ $t('pos.giant_net_total') }}</div>
+          <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate">
+            {{ $t('pos.subtotal_items', { count: cartCount }) }}
+            <span class="font-mono">{{ formatMoney(subtotal) }}</span>
+          </div>
+        </div>
+        <span class="text-3xl leading-none font-black font-mono text-emerald-600 dark:text-emerald-400 tracking-tight">
+          {{ formatMoney(netTotal) }}
+          <span class="text-xs font-bold text-slate-400 font-tajawal">{{ currencyLabel }}</span>
+        </span>
+      </div>
+    </div>
+
     <div
+      v-else
       class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1.5"
     >
       <div class="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
@@ -21,75 +104,14 @@
             >-{{ formatMoney(discountAmount) }}</span
           >
         </div>
-
-        <div class="flex items-center gap-1.5">
-          <div
-            role="group"
-            :aria-label="$t('pos.discount_mode_label')"
-            class="flex shrink-0 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700"
-          >
-            <button
-              v-for="mode in discountModes"
-              :key="mode.key"
-              type="button"
-              :data-testid="`pos-discount-mode-${mode.key}`"
-              :aria-pressed="discountType === mode.key"
-              :aria-label="mode.label"
-              :title="mode.label"
-              class="min-h-11 min-w-11 px-2 text-xs font-black transition active:scale-95 cursor-pointer"
-              :class="
-                discountType === mode.key
-                  ? 'bg-theme-primary text-slate-950'
-                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400'
-              "
-              @click="setDiscountMode(mode.key)"
-            >
-              {{ mode.symbol }}
-            </button>
-          </div>
-          <input
-            type="text"
-            inputmode="decimal"
-            data-pos-discount-input
-            data-testid="pos-discount-input"
-            :value="discountInputValue"
-            :placeholder="$t('pos.discount_placeholder')"
-            :aria-label="$t('pos.discount_input_label')"
-            class="flex-1 min-w-0 min-h-11 px-2 text-center font-mono font-black text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-            @focus="$event.target.select()"
-            @input="onDiscountInput"
-            @keydown.enter.prevent="focusPosSearch()"
-            @keydown.esc.prevent="focusPosSearch()"
-          />
-        </div>
-
-        <div class="grid grid-cols-3 gap-1.5">
-          <button
-            v-for="preset in discountPresets"
-            :key="preset"
-            type="button"
-            :data-testid="`pos-discount-preset-${preset}`"
-            class="min-h-11 rounded-xl text-xs font-mono font-bold border transition active:scale-95 cursor-pointer"
-            :class="
-              isPresetActive(preset)
-                ? 'bg-theme-primary text-slate-950 font-black border-theme-primary'
-                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800'
-            "
-            @click="$emit('apply-discount', { value: preset, type: 'percentage' })"
-          >
-            {{ preset }}%
-          </button>
-        </div>
-
-        <p
-          v-if="capExceeded"
-          role="status"
-          data-testid="pos-discount-cap-warning"
-          class="px-2 py-1.5 rounded-lg text-[11px] font-bold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60"
-        >
-          {{ $t('pos.discount_cap_warning', { percent: discountPercentText, max: maxDiscountText }) }}
-          {{ canOverrideDiscount ? $t('pos.discount_cap_can_override') : $t('pos.discount_cap_needs_approval') }}
-        </p>
+        <POSDiscountBox
+          :discount-value="discountValue"
+          :discount-type="discountType"
+          :discount-summary="discountSummary"
+          :max-discount-percent="maxDiscountPercent"
+          :can-override-discount="canOverrideDiscount"
+          @apply-discount="$emit('apply-discount', $event)"
+        />
       </div>
 
       <!-- Customer Extra Expenses (Shipping / Services) -->
@@ -135,39 +157,53 @@
         :disabled="type.key !== 'cash' && walkIn"
         :title="type.key !== 'cash' && walkIn ? $t('pos.walk_in_pay_full_hint') : undefined"
         @click="$emit('update:paymentType', type.key)"
-        class="min-h-11 px-2 rounded-xl border text-center transition active:scale-95 cursor-pointer text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
-        :class="paymentType === type.key ? type.activeClass : idleClass"
+        class="px-2 rounded-xl border text-center transition active:scale-95 cursor-pointer text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+        :class="[controlHeight, paymentType === type.key ? type.activeClass : idleClass]"
       >
         {{ type.label }}
       </button>
     </div>
 
-    <p v-if="walkIn" class="text-[11px] text-slate-500 dark:text-slate-400" data-testid="pos-walk-in-hint">
+    <p
+      v-if="walkIn"
+      class="text-[11px] leading-[14px] text-slate-500 dark:text-slate-400"
+      data-testid="pos-walk-in-hint"
+    >
       {{ $t('pos.walk_in_pay_full_hint') }}
     </p>
 
     <!-- 3. Payment methods, tender and change -->
     <div
       v-if="paymentType !== 'credit'"
-      class="space-y-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+      class="rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+      :class="compact ? 'p-1 space-y-1' : 'p-2 space-y-2'"
     >
-      <div class="grid grid-cols-3 gap-1.5" role="group" :aria-label="$t('pos.payment_method_label')">
+      <div
+        class="grid gap-1.5"
+        :class="compact ? 'grid-cols-6' : 'grid-cols-3'"
+        role="group"
+        :aria-label="$t('pos.payment_method_label')"
+      >
         <button
           v-for="m in methods"
           :key="m.key"
           type="button"
           :data-testid="`pos-method-${m.key}`"
           :aria-pressed="isMethodActive(m.key)"
+          :aria-label="m.label"
+          :title="m.label"
           @click="$emit('update:paymentMethod', m.key)"
-          class="min-h-11 px-1 rounded-lg text-[11px] font-bold border transition text-center cursor-pointer flex items-center justify-center gap-1"
-          :class="
+          class="rounded-lg font-bold border transition text-center cursor-pointer flex items-center justify-center"
+          :class="[
+            methodHeight,
+            compact ? 'flex-col gap-0.5 px-0.5 py-0.5 text-[10px] leading-tight' : 'gap-1 px-1 text-[11px]',
             isMethodActive(m.key)
               ? 'bg-theme-primary text-slate-950 font-black border-theme-primary'
-              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'
-          "
+              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800',
+          ]"
         >
           <component :is="m.icon" class="w-4 h-4 shrink-0" aria-hidden="true" />
-          <span class="truncate">{{ m.label }}</span>
+          <span class="truncate max-w-full">{{ m.label }}</span>
         </button>
         <button
           type="button"
@@ -175,40 +211,60 @@
           :aria-label="$t('pos.multi_payment_title')"
           :title="$t('pos.multi_payment_title')"
           @click="$emit('open-multi-payment')"
-          class="min-h-11 px-1 rounded-lg text-[11px] font-bold border transition text-center cursor-pointer flex items-center justify-center gap-1 bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20"
+          class="rounded-lg font-bold border transition text-center cursor-pointer flex items-center justify-center bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20"
+          :class="[
+            methodHeight,
+            compact ? 'flex-col gap-0.5 px-0.5 py-0.5 text-[10px] leading-tight' : 'gap-1 px-1 text-[11px]',
+          ]"
         >
           <Split class="w-4 h-4 shrink-0" aria-hidden="true" />
-          <span class="truncate">{{ $t('pos.split_short') }}</span>
+          <span class="truncate max-w-full">{{ $t('pos.split_short') }}</span>
         </button>
       </div>
 
       <!-- Tender: typed for cash and for the partial deposit; non-cash full payments are the exact net -->
-      <div v-if="showTender" class="space-y-1.5">
-        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400" for="pos-cash-received">
-          {{ paymentType === 'partial' ? $t('pos.paid_now_label') : $t('pos.tender_label') }}
-        </label>
-        <input
-          id="pos-cash-received"
-          type="text"
-          inputmode="decimal"
-          autocomplete="off"
-          dir="ltr"
-          data-testid="pos-cash-received"
-          :value="cashReceived"
-          @input="onTenderInput"
-          @focus="$event.target.select()"
-          :placeholder="$t('pos.cash_received_placeholder')"
-          class="w-full h-12 px-3 text-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xl font-mono font-black text-slate-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-theme-primary"
-        />
+      <div v-if="hasTenderArea" :class="compact ? 'grid grid-cols-2 gap-1' : 'space-y-2'">
+        <div v-if="showTender" class="relative" :class="compact && !showChangeBox ? 'col-span-2' : ''">
+          <label
+            class="font-bold text-slate-600 dark:text-slate-400"
+            :class="
+              compact
+                ? 'absolute top-1 start-3 z-10 text-[9px] leading-none pointer-events-none'
+                : 'block mb-1.5 text-[11px]'
+            "
+            for="pos-cash-received"
+          >
+            {{ paymentType === 'partial' ? $t('pos.paid_now_label') : $t('pos.tender_label') }}
+          </label>
+          <input
+            id="pos-cash-received"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            dir="ltr"
+            data-testid="pos-cash-received"
+            :value="cashReceived"
+            @input="onTenderInput"
+            @focus="$event.target.select()"
+            :placeholder="$t('pos.cash_received_placeholder')"
+            class="w-full px-3 text-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg font-mono font-black text-slate-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-theme-primary"
+            :class="compact ? 'h-10 pointer-coarse:h-11 pt-3 text-lg' : 'h-12 text-xl'"
+          />
+        </div>
 
-        <div v-if="isCashMethod" class="grid grid-cols-5 gap-1.5">
+        <div
+          v-if="showTender && isCashMethod"
+          class="grid grid-cols-5 gap-1.5"
+          :class="compact ? 'order-last col-span-2' : ''"
+        >
           <button
             v-for="d in denominations"
             :key="d"
             type="button"
             :data-testid="`pos-tender-${d}`"
             @click="addDenomination(d)"
-            class="min-h-11 rounded-lg border text-sm font-mono font-black transition active:scale-95 cursor-pointer bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700"
+            class="rounded-lg border text-sm font-mono font-black transition active:scale-95 cursor-pointer bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700"
+            :class="controlHeight"
           >
             {{ d }}
           </button>
@@ -217,7 +273,8 @@
             type="button"
             data-testid="pos-tender-exact"
             @click="setExact"
-            class="min-h-11 rounded-lg border text-[11px] font-black transition active:scale-95 cursor-pointer bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
+            class="rounded-lg border text-[11px] font-black transition active:scale-95 cursor-pointer bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
+            :class="controlHeight"
           >
             {{ $t('pos.exact_amount') }}
           </button>
@@ -227,69 +284,87 @@
             data-testid="pos-tender-clear"
             :aria-label="$t('pos.tender_clear')"
             @click="$emit('update:cashReceived', '0')"
-            class="min-h-11 rounded-lg border transition active:scale-95 cursor-pointer bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 flex items-center justify-center"
+            class="rounded-lg border transition active:scale-95 cursor-pointer bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 flex items-center justify-center"
+            :class="controlHeight"
           >
             <X class="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
-      </div>
 
-      <!-- Partial: what is paid now vs what stays on the customer account -->
-      <dl
-        v-if="paymentType === 'partial'"
-        data-testid="pos-partial-summary"
-        class="grid grid-cols-2 gap-1.5 text-center"
-      >
-        <div class="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
-          <dt class="text-[11px] font-bold text-slate-600 dark:text-slate-400">{{ $t('pos.paid_now_label') }}</dt>
-          <dd class="text-lg font-black font-mono text-emerald-600 dark:text-emerald-400" data-testid="pos-paid-now">
-            {{ formatMoney(paidNow) }}
-          </dd>
-        </div>
-        <div class="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
-          <dt class="text-[11px] font-bold text-slate-600 dark:text-slate-400">
-            {{ $t('pos.remaining_on_account') }}
-          </dt>
-          <dd class="text-lg font-black font-mono text-amber-600 dark:text-amber-400" data-testid="pos-remaining">
-            {{ formatMoney(remainingOnAccount) }}
-          </dd>
-        </div>
-      </dl>
-
-      <!-- Cash: change to hand back, or what is still due when the tender is short -->
-      <div
-        v-else-if="paymentType === 'cash' && isCashMethod"
-        data-testid="pos-change-box"
-        role="status"
-        class="flex items-center justify-between gap-2 p-2.5 rounded-lg border"
-        :class="
-          changeDue < 0
-            ? 'bg-rose-500/10 border-rose-500/40'
-            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
-        "
-      >
-        <span class="text-xs font-black text-slate-700 dark:text-slate-300">
-          {{ changeDue < 0 ? $t('pos.tender_short_due') : $t('pos.change_due') }}
-        </span>
-        <span
-          class="text-2xl font-black font-mono"
-          data-testid="pos-change-amount"
-          :class="
-            changeDue < 0 ? 'text-rose-600 dark:text-rose-400' : changeDue > 0 ? 'text-emerald-500' : 'text-slate-400'
-          "
+        <!-- Partial: what is paid now vs what stays on the customer account -->
+        <dl
+          v-if="paymentType === 'partial'"
+          data-testid="pos-partial-summary"
+          class="grid grid-cols-2 gap-1.5 text-center"
+          :class="compact ? 'col-span-2' : ''"
         >
-          {{ formatMoney(Math.abs(changeDue)) }}
-        </span>
+          <div class="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+            <dt class="text-[11px] font-bold text-slate-600 dark:text-slate-400">{{ $t('pos.paid_now_label') }}</dt>
+            <dd class="text-lg font-black font-mono text-emerald-600 dark:text-emerald-400" data-testid="pos-paid-now">
+              {{ formatMoney(paidNow) }}
+            </dd>
+          </div>
+          <div class="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
+            <dt class="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+              {{ $t('pos.remaining_on_account') }}
+            </dt>
+            <dd class="text-lg font-black font-mono text-amber-600 dark:text-amber-400" data-testid="pos-remaining">
+              {{ formatMoney(remainingOnAccount) }}
+            </dd>
+          </div>
+        </dl>
+
+        <!-- Cash: change to hand back, or what is still due when the tender is short -->
+        <div
+          v-else-if="showChangeBox"
+          data-testid="pos-change-box"
+          role="status"
+          class="flex gap-2 rounded-lg border"
+          :class="[
+            compact ? 'h-10 pointer-coarse:h-11 flex-col justify-center px-2' : 'items-center justify-between p-2.5',
+            changeDue < 0
+              ? 'bg-rose-500/10 border-rose-500/40'
+              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800',
+          ]"
+        >
+          <span
+            class="font-black text-slate-700 dark:text-slate-300"
+            :class="compact ? 'text-[10px] leading-none' : 'text-xs'"
+          >
+            {{ changeDue < 0 ? $t('pos.tender_short_due') : $t('pos.change_due') }}
+          </span>
+          <span
+            class="font-black font-mono"
+            data-testid="pos-change-amount"
+            :class="[
+              compact ? 'text-lg leading-none' : 'text-2xl',
+              changeDue < 0
+                ? 'text-rose-600 dark:text-rose-400'
+                : changeDue > 0
+                  ? 'text-emerald-500'
+                  : 'text-slate-400',
+            ]"
+          >
+            {{ formatMoney(Math.abs(changeDue)) }}
+          </span>
+        </div>
       </div>
     </div>
 
-    <!-- 4. Execution Buttons (Always Pinned & Accessible) -->
-    <div class="space-y-1.5 pt-1 sticky bottom-0 z-10 bg-white dark:bg-slate-900 pb-[env(safe-area-inset-bottom,0px)]">
+    <!-- 4. Execution buttons: pinned to the bottom of the full panel, a plain last row in the compact footer -->
+    <div
+      :class="
+        compact
+          ? 'grid grid-cols-5 gap-1.5 pb-[env(safe-area-inset-bottom,0px)]'
+          : 'space-y-1.5 pt-1 sticky bottom-0 z-10 bg-white dark:bg-slate-900 pb-[env(safe-area-inset-bottom,0px)]'
+      "
+    >
       <p
         v-if="offline"
         data-testid="pos-checkout-offline-hint"
         role="status"
         class="flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-black text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60"
+        :class="compact ? 'col-span-5' : ''"
       >
         <WifiOff class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
         <span>{{ $t('connectivity.checkout_blocked') }}</span>
@@ -301,13 +376,14 @@
         @click="$emit('submit', false)"
         :disabled="cartEmpty || isSubmitting || offline"
         class="w-full min-h-12 bg-theme-primary hover:opacity-95 text-slate-950 rounded-xl font-black text-sm transition-all duration-150 active:scale-[0.98] shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30"
+        :class="compact ? 'col-span-3 min-h-11!' : ''"
       >
         <span
           v-if="isSubmitting"
           class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"
         ></span>
-        <CheckCircle2 v-else class="w-4 h-4 text-slate-950 stroke-[2.5]" />
-        <span>{{ $t('pos.confirm_and_approve_f9') }}</span>
+        <CheckCircle2 v-else class="w-4 h-4 shrink-0 text-slate-950 stroke-[2.5]" />
+        <span class="truncate">{{ $t('pos.confirm_and_approve_f9') }}</span>
       </button>
 
       <button
@@ -316,16 +392,17 @@
         @click="$emit('submit', true)"
         :disabled="cartEmpty || isSubmitting || offline"
         class="w-full min-h-11 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-bold text-xs transition border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30"
+        :class="compact ? 'col-span-2' : ''"
       >
-        <Printer class="w-3.5 h-3.5" />
-        <span>{{ $t('pos.save_and_print_btn') }}</span>
+        <Printer class="w-3.5 h-3.5 shrink-0" />
+        <span class="truncate">{{ $t('pos.save_and_print_btn') }}</span>
       </button>
     </div>
   </aside>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import {
   Printer,
   CheckCircle2,
@@ -338,13 +415,14 @@ import {
   Smartphone,
   CreditCard,
   Building2,
+  Percent,
+  ChevronDown,
 } from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
+import POSDiscountBox from './POSDiscountBox.vue';
 import { sanitizeAmountInput } from '../../helpers/posCheckout';
-import { normalize, dAdd, dSub, dCmp, dMax0, dRoundTo, isZero, isPositive } from '../../helpers/decimal';
-import { focusPosSearch } from '../../helpers/posFocus';
-import { DISCOUNT_FIXED, DISCOUNT_PERCENT } from '../../helpers/posDiscount';
+import { normalize, dAdd, dSub, dCmp, dMax0, isZero, isPositive } from '../../helpers/decimal';
 
 const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
@@ -400,42 +478,22 @@ const props = defineProps({
   discountSummary: { type: Object, default: null },
   maxDiscountPercent: { type: String, default: null },
   canOverrideDiscount: { type: Boolean, default: false },
+  // Desktop cart footer: discount + extra charges on one collapsible line, denser payment controls.
+  compact: { type: Boolean, default: false },
 });
 
-// POS-07: percent or amount; the presets are the quick percents (0 clears the discount).
-const discountPresets = [0, 5, 10];
-const discountModes = computed(() => [
-  { key: DISCOUNT_PERCENT, symbol: '%', label: t('pos.discount_mode_percent') },
-  { key: DISCOUNT_FIXED, symbol: currencyLabel.value, label: t('pos.discount_mode_amount') },
-]);
-const discountInputValue = computed(() =>
-  isPositive(String(props.discountValue ?? '0')) ? String(props.discountValue) : ''
-);
-const isPresetActive = (preset) =>
-  props.discountType === DISCOUNT_PERCENT && Number(props.discountValue || 0) === preset;
-
-const capExceeded = computed(() => !!props.discountSummary?.exceedsCap);
-const discountPercentText = computed(() => String(Number(dRoundTo(props.discountSummary?.percentOfGross ?? '0', 2))));
-const maxDiscountText = computed(() => String(Number(props.maxDiscountPercent ?? 0)));
-
-const setDiscountMode = (type) => {
-  const keep = String(props.discountValue ?? '0');
-  const value = type === DISCOUNT_PERCENT && Number(keep) > 100 ? '100' : keep;
-  emit('apply-discount', { value, type });
-};
-
-const onDiscountInput = (event) => {
-  let clean = sanitizeAmountInput(event.target.value);
-  if (props.discountType === DISCOUNT_PERCENT && Number(clean) > 100) clean = '100';
-  if (clean !== event.target.value) event.target.value = clean;
-  emit('apply-discount', { value: clean, type: props.discountType });
-};
+const discountOpen = ref(false);
+const hasDiscountValue = computed(() => isPositive(String(props.discountValue ?? '0')));
+const methodHeight = computed(() => (props.compact ? 'min-h-10 pointer-coarse:min-h-11' : 'min-h-11'));
+const controlHeight = computed(() => (props.compact ? 'min-h-9 pointer-coarse:min-h-11' : 'min-h-11'));
 
 const isMethodActive = (key) => (props.paymentMethod === 'smart_wallet' ? 'e_wallet' : props.paymentMethod) === key;
 const isCashMethod = computed(() => props.paymentMethod === 'cash');
 const showTender = computed(
   () => props.paymentType === 'partial' || (props.paymentType === 'cash' && isCashMethod.value)
 );
+const showChangeBox = computed(() => props.paymentType === 'cash' && isCashMethod.value);
+const hasTenderArea = computed(() => showTender.value || showChangeBox.value || props.paymentType === 'partial');
 
 const paidNow = computed(() => dMax0(props.cashReceived));
 const remainingOnAccount = computed(() => dMax0(dSub(String(props.netTotal), paidNow.value)));

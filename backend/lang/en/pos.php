@@ -161,6 +161,8 @@ return [
     'one_touch_add' => 'One-touch add',
     'subtotal_items' => 'Subtotal (:count items):',
     'discount_label' => 'Discount:',
+    'discount_short' => 'Discount',
+    'extra_charges_short' => 'Extra charges',
     'extra_expenses_shipping' => 'Extra Expenses / Shipping:',
     'giant_net_total' => 'Net Total:',
     'invoice_and_payment_type' => 'Invoice & Payment Type:',

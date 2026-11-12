@@ -174,9 +174,9 @@ const checkoutProps = computed(() => ({
 
   <section
     v-else
-    class="flex-1 flex flex-col justify-between p-3.5 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 overflow-visible lg:overflow-hidden order-2 lg:order-1 min-w-0 transition-all duration-200 min-h-[380px] lg:min-h-0"
+    class="flex-1 flex flex-col p-2 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 overflow-visible lg:overflow-hidden order-2 lg:order-1 min-w-0 transition-all duration-200 min-h-[380px] lg:min-h-0"
   >
-    <div class="flex-1 overflow-visible lg:overflow-hidden flex flex-col min-h-[160px] lg:min-h-[220px]">
+    <div class="flex-1 overflow-visible lg:overflow-hidden flex flex-col min-h-[160px] lg:min-h-[96px]">
       <POSCartTable
         :cart="cart"
         :total-qty="totalQty"
@@ -189,6 +189,7 @@ const checkoutProps = computed(() => ({
       >
         <template #header>
           <POSOrderTabs
+            class="pb-1!"
             :orders="orders"
             :active-order-id="activeOrderId"
             @switch-order="$emit('switch-order', $event)"
@@ -199,8 +200,10 @@ const checkoutProps = computed(() => ({
       </POSCartTable>
     </div>
 
-    <div class="shrink-0 pt-2 border-t border-slate-200 dark:border-slate-800">
+    <!-- Fixed footer: total, payment and the save buttons always sit below the cart, never over it -->
+    <div class="shrink-0 pt-1 border-t border-slate-200 dark:border-slate-800" data-testid="pos-cart-footer">
       <POSCheckoutPanel
+        compact
         v-model:payment-type="paymentType"
         v-model:payment-method="paymentMethod"
         v-model:cash-received="cashReceived"

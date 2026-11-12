@@ -38,7 +38,7 @@ defineEmits(['add-item', 'select-category', 'load-more']);
     :class="
       phone
         ? 'order-2 flex-1 min-h-0 overflow-hidden'
-        : 'shrink-0 order-1 lg:order-2 lg:w-[48%] xl:w-[54%] 2xl:w-[58%] overflow-visible lg:overflow-hidden border-b lg:border-b-0 lg:border-e min-h-[300px] lg:min-h-0'
+        : 'shrink-0 order-1 lg:order-2 lg:w-[42%] xl:w-[54%] 2xl:w-[58%] overflow-visible lg:overflow-hidden border-b lg:border-b-0 lg:border-e min-h-[300px] lg:min-h-0'
     "
   >
     <POSProductGrid
