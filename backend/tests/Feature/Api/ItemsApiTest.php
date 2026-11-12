@@ -85,6 +85,29 @@ class ItemsApiTest extends TenantTestCase
         $response->assertStatus(403);
     }
 
+    public function test_auto_item_code_never_repeats_after_an_item_is_deleted(): void
+    {
+        $auth = ['Authorization' => 'Bearer '.$this->adminToken, 'X-Store-Id' => (string) $this->store->id];
+        $payload = ['name' => 'صنف تلقائي', 'unit' => 'كجم', 'cost_price' => '10.000', 'selling_price' => '15.000'];
+
+        $ids = [];
+        $codes = [];
+        for ($i = 0; $i < 3; $i++) {
+            $response = $this->withHeaders($auth)->postJson('/api/v1/items', $payload)->assertStatus(201);
+            $ids[] = (int) $response->json('data.id');
+            $codes[] = (string) $response->json('data.code');
+        }
+
+        $this->withHeaders($auth)->deleteJson('/api/v1/items/'.$ids[1])->assertSuccessful();
+
+        $fourth = $this->withHeaders($auth)->postJson('/api/v1/items', $payload)->assertStatus(201);
+        $newCode = (string) $fourth->json('data.code');
+
+        $this->assertNotContains($newCode, $codes);
+        $this->assertMatchesRegularExpression('/^ITM-\d{4}$/', $newCode);
+        $this->assertSame(4, count(array_unique([...$codes, $newCode])));
+    }
+
     public function test_authenticated_user_can_list_items_with_metrics(): void
     {
         $item = Item::create([

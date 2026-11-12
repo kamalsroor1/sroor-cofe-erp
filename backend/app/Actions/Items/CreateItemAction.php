@@ -7,16 +7,18 @@ namespace App\Actions\Items;
 use App\DTOs\Items\ItemDTO;
 use App\Enums\LimitResource;
 use App\Models\Item;
+use App\Services\DocumentNumberService;
 use App\Services\Entitlements\PlanEnforcer;
 use App\Services\StoreStockInitializer;
+use App\Support\Database\TransactionRetry;
 use App\Support\WeightUnits;
-use Illuminate\Support\Facades\DB;
 
 final class CreateItemAction
 {
     public function __construct(
         private readonly StoreStockInitializer $stockInitializer,
         private readonly PlanEnforcer $planEnforcer,
+        private readonly DocumentNumberService $documentNumbers,
     ) {}
 
     /**
@@ -24,14 +26,19 @@ final class CreateItemAction
      */
     public function execute(ItemDTO $dto): Item
     {
-        return DB::transaction(function () use ($dto) {
+        // BUG-09: the auto-code counter row exists before the transaction takes its first read.
+        if (! $dto->code) {
+            $this->documentNumbers->prepareFor('ITM', Item::class, 'code');
+        }
+
+        return TransactionRetry::run(function () use ($dto) {
             // SEC-06 / BE-12: plan items limit, counted under the tenant lock.
             $this->planEnforcer->assertWithinLimit(LimitResource::Items, fn (): int => Item::query()->count());
 
             $code = $dto->code;
             if (! $code) {
-                $count = Item::count() + 1;
-                $code = 'ITM-'.str_pad((string) $count, 4, '0', STR_PAD_LEFT);
+                // BUG-09: a persistent counter that also sees soft-deleted items (the unique index does).
+                $code = $this->documentNumbers->nextFor('ITM', 4, Item::class, 'code');
             }
 
             $item = Item::create([
