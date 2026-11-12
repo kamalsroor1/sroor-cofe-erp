@@ -5,11 +5,21 @@ declare(strict_types=1);
 namespace Tests\Feature\Api;
 
 use App\Models\ActivityLog;
+use App\Models\Plan;
 use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
+use Database\Seeders\Catalog\FeatureCatalog;
+use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TenantTestCase;
 
+/**
+ * Runs on sqlite (`php` job) and on MySQL 8 (`mysql` job): sqlite reads an unknown
+ * double-quoted identifier as a string literal, so only MySQL catches a select / order by
+ * on a column that does not exist (BUG-05).
+ */
+#[Group('mysql')]
 class ActivityLogApiTest extends TenantTestCase
 {
     protected Tenant $tenant;
@@ -384,6 +394,211 @@ class ActivityLogApiTest extends TenantTestCase
         $this->getJson('/api/v1/activity-logs?user_id='.$otherAdminId.'&store_id='.$otherStoreId, $this->adminHeaders)
             ->assertOk()
             ->assertJsonCount(0, 'data');
+    }
+
+    public function test_non_admin_user_holding_logs_view_can_fetch_logs(): void
+    {
+        $auditor = $this->createTenantUser($this->tenant, permissions: ['logs.view']);
+        $this->log([
+            'user_id' => $this->adminUser->id,
+            'store_id' => $this->mainStoreId,
+            'module' => 'sales',
+            'action' => 'invoice_created',
+            'description' => 'فاتورة للمراجعة',
+        ]);
+
+        $this->getJson('/api/v1/activity-logs', $this->tenantHeaders($this->tenant, $auditor))
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.description', 'فاتورة للمراجعة');
+    }
+
+    public function test_plan_without_the_audit_log_feature_is_forbidden_and_plan_with_it_is_allowed(): void
+    {
+        $without = $this->createTenant(['plan_id' => $this->plan(['audit.logs' => false])->id]);
+        $with = $this->createTenant(['plan_id' => $this->plan(['audit.logs' => true])->id]);
+
+        foreach (['/api/v1/activity-logs', '/api/v1/activity-logs/export-csv'] as $uri) {
+            $this->getJson($uri, $this->tenantHeaders($without))
+                ->assertStatus(403)
+                ->assertJsonPath('error_code', 'subscription.feature_unavailable')
+                ->assertJsonPath('details.feature', 'audit.logs');
+        }
+
+        $this->getJson('/api/v1/activity-logs', $this->tenantHeaders($with))
+            ->assertOk()
+            ->assertJsonPath('success', true);
+    }
+
+    public function test_every_field_of_a_log_row_is_returned_with_its_stored_value(): void
+    {
+        $this->log([
+            'user_id' => $this->regularUser->id,
+            'store_id' => $this->branchStoreId,
+            'module' => 'sales',
+            'action' => 'invoice_created',
+            'description' => 'بيع 0.250 كجم بن',
+            'properties' => ['quantity' => '0.250', 'total' => '62.500'],
+            'ip_address' => '10.1.2.3',
+            'user_agent' => 'Sroor POS/1.0',
+        ]);
+
+        $response = $this->getJson('/api/v1/activity-logs', $this->adminHeaders)->assertOk();
+
+        $response->assertJsonPath('data.0.module', 'sales')
+            ->assertJsonPath('data.0.action', 'invoice_created')
+            ->assertJsonPath('data.0.description', 'بيع 0.250 كجم بن')
+            ->assertJsonPath('data.0.user_name', 'أحمد كاشير')
+            ->assertJsonPath('data.0.user_phone', $this->regularUser->phone)
+            ->assertJsonPath('data.0.store_name', 'فرع المعادي')
+            ->assertJsonPath('data.0.ip_address', '10.1.2.3')
+            ->assertJsonPath('data.0.user_agent', 'Sroor POS/1.0')
+            // Key by key: a MySQL JSON column does not keep the object's key order.
+            ->assertJsonPath('data.0.properties.quantity', '0.250')
+            ->assertJsonPath('data.0.properties.total', '62.500')
+            ->assertJsonPath('data.0.payload.quantity', '0.250')
+            ->assertJsonPath('data.0.payload.total', '62.500');
+
+        $this->assertCount(2, $response->json('data.0.properties'));
+        $this->assertSame($response->json('data.0.properties'), $response->json('data.0.payload'));
+
+        $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', (string) $response->json('data.0.created_at'));
+        $this->assertSame(
+            ['id', 'module', 'module_label', 'module_color', 'module_icon', 'action', 'description', 'properties', 'user_name',
+                'user_phone', 'store_name', 'ip_address', 'user_agent', 'payload', 'created_at', 'time_ago'],
+            array_keys($response->json('data.0')),
+        );
+    }
+
+    public function test_logs_are_paginated_newest_first(): void
+    {
+        foreach (range(1, 5) as $i) {
+            $this->log([
+                'user_id' => $this->adminUser->id,
+                'store_id' => $this->mainStoreId,
+                'module' => 'sales',
+                'action' => 'invoice_created',
+                'description' => 'سجل رقم '.$i,
+            ]);
+        }
+
+        $this->getJson('/api/v1/activity-logs?per_page=2', $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.description', 'سجل رقم 5')
+            ->assertJsonPath('data.1.description', 'سجل رقم 4')
+            ->assertJsonPath('total_count', 5)
+            ->assertJsonPath('pagination.current_page', 1)
+            ->assertJsonPath('pagination.last_page', 3)
+            ->assertJsonPath('pagination.per_page', 2)
+            ->assertJsonPath('pagination.total', 5);
+
+        $this->getJson('/api/v1/activity-logs?per_page=2&page=3', $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.description', 'سجل رقم 1')
+            ->assertJsonPath('pagination.current_page', 3);
+
+        $this->getJson('/api/v1/activity-logs?per_page=201', $this->adminHeaders)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['per_page']);
+    }
+
+    public function test_each_filter_alone_narrows_the_list(): void
+    {
+        $this->log([
+            'user_id' => $this->adminUser->id,
+            'store_id' => $this->mainStoreId,
+            'module' => 'sales',
+            'action' => 'invoice_created',
+            'description' => 'فاتورة الفرع الرئيسي',
+        ]);
+        $this->log([
+            'user_id' => $this->regularUser->id,
+            'store_id' => $this->branchStoreId,
+            'module' => 'expenses',
+            'action' => 'expense_paid',
+            'description' => 'مصروف فرع المعادي',
+        ]);
+
+        $cases = [
+            'module=expenses' => 'مصروف فرع المعادي',
+            'module=sales' => 'فاتورة الفرع الرئيسي',
+            'user_id='.$this->regularUser->id => 'مصروف فرع المعادي',
+            'user_id='.$this->adminUser->id => 'فاتورة الفرع الرئيسي',
+            // Search also matches the related user's name and the related store's name.
+            'search='.urlencode('كاشير') => 'مصروف فرع المعادي',
+            'search='.urlencode('الرئيسي') => 'فاتورة الفرع الرئيسي',
+        ];
+
+        foreach ($cases as $query => $expected) {
+            $this->getJson('/api/v1/activity-logs?'.$query, $this->adminHeaders)
+                ->assertOk()
+                ->assertJsonCount(1, 'data')
+                ->assertJsonPath('data.0.description', $expected)
+                ->assertJsonPath('total_count', 1);
+        }
+
+        $this->getJson('/api/v1/activity-logs?module=all&user_id=all&store_id=all', $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function test_store_filter_never_returns_logs_of_another_store(): void
+    {
+        $this->log([
+            'user_id' => $this->adminUser->id,
+            'store_id' => $this->mainStoreId,
+            'module' => 'sales',
+            'action' => 'invoice_created',
+            'description' => 'سجل الفرع الرئيسي',
+        ]);
+        $this->log([
+            'user_id' => $this->adminUser->id,
+            'store_id' => $this->branchStoreId,
+            'module' => 'sales',
+            'action' => 'invoice_created',
+            'description' => 'سجل فرع المعادي',
+        ]);
+
+        $this->getJson('/api/v1/activity-logs?store_id='.$this->branchStoreId, $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.description', 'سجل فرع المعادي')
+            ->assertJsonPath('data.0.store_name', 'فرع المعادي')
+            ->assertJsonPath('total_count', 1)
+            ->assertJsonMissing(['description' => 'سجل الفرع الرئيسي']);
+
+        $this->getJson('/api/v1/activity-logs?store_id='.$this->mainStoreId, $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.description', 'سجل الفرع الرئيسي')
+            ->assertJsonMissing(['description' => 'سجل فرع المعادي']);
+    }
+
+    /**
+     * A plan with every catalog feature on, except the overrides.
+     *
+     * @param  array<string, bool>  $features
+     */
+    private function plan(array $features): Plan
+    {
+        $slug = 'logs-'.Str::lower(Str::random(10));
+
+        return Plan::query()->create([
+            'name' => $slug,
+            'slug' => $slug,
+            'price_monthly' => '449.000',
+            'price_yearly' => '4490.000',
+            'features' => array_merge(array_fill_keys(FeatureCatalog::keys(), true), $features),
+            'max_users' => null,
+            'max_stores' => null,
+            'max_warehouses' => null,
+            'max_vans' => null,
+            'max_items' => null,
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
     }
 
     /**

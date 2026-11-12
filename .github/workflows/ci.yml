@@ -14,8 +14,10 @@
 # fake secrets, so a config that silently matches nothing cannot go green.
 #
 # The `mysql` job (QA-1) runs the `mysql` PHPUnit group (tenant harness smoke
-# test, concurrency / row-lock tests, DECIMAL round trips) on a throwaway MySQL 8.4
-# container, because sqlite cannot prove row locks (phase-1-plan R7). Tests that are
+# test, concurrency / row-lock tests, DECIMAL round trips, and the list-endpoint smoke
+# test IndexEndpointsSmokeTest) on a throwaway MySQL 8.4 container, because sqlite cannot
+# prove row locks (phase-1-plan R7) and reads an unknown double-quoted column as a string
+# literal, so a query on a missing column only fails on MySQL (BUG-05). Tests that are
 # MySQL-ONLY also carry the `mysql-only` group, which phpunit.xml excludes from the
 # sqlite run in the `php` job (so they are not collected there instead of skipped).
 #

@@ -37,7 +37,6 @@ final class GetActivityLogsAction
             'ip_address',
             'user_agent',
             'properties',
-            'payload',
             'created_at',
         ])->with([
             'user:id,name,phone',
