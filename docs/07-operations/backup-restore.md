@@ -14,7 +14,7 @@
 | بيعمل backup لـ | الـ DB المركزية (`central`) + **كل مستأجر حالته مش `archived`**. مستأجر `archived` بياخد backup بس لو اتطلب صراحةً بـ `--tenant=<id>` (الـ backup النهائي بتاع OPS-9) |
 | الـ dump | MySQL: `mysqldump --single-transaction --skip-lock-tables --quick --no-tablespaces --hex-blob` عن طريق spatie/db-dumper، بحساب `sroor_backup` اللي صلاحياته قراءة بس (`DB_BACKUP_USERNAME`/`DB_BACKUP_PASSWORD`، الخيارات في `config/database.php` → `dump`). sqlite (dev/tests): `VACUUM INTO` |
 | السياق | الـ dump بتاع كل مستأجر بيتعمل جوه `$tenant->run()` والـ tenancy بتتقفل في `finally`. الرفع والسجل من السياق المركزي بس |
-| الأرشيف | zip واحد لكل DB: `database.sql` (أو `.sqlite`) + `manifest.json` (عدد صفوف كل جدول **مقروء من ملف الـ dump نفسه**، ومتراجع على الـ DB الحية قبل الأرشفة — §1.1). **كل entry مشفّر AES-256** بـ `BACKUP_ARCHIVE_PASSWORD`، وبيتفتح تاني محليًا ويتقري لآخره (CRC) قبل الرفع |
+| الأرشيف | zip واحد لكل DB: `database.sql` (أو `.sqlite`) + `manifest.json` (`dump_sha256` + `table_digests` بصمة لكل جدول (BKP-01)، وعدد صفوف كل جدول **مقروء من ملف الـ dump نفسه**، ومتراجع على الـ DB الحية قبل الأرشفة — §1.1). **كل entry مشفّر AES-256** بـ `BACKUP_ARCHIVE_PASSWORD`، وبيتفتح تاني محليًا ويتقري لآخره مع مقارنة sha256 الـ dump بالـ manifest (BKP-01) قبل الرفع |
 | المكان | `<disk>:<BACKUP_PATH_PREFIX>/<subject>/<subject>-YYYY-mm-dd-HH-ii-ss.zip` (مثال: `sroor-backups/shop1/shop1-2026-10-11-01-30-02.zip`) |
 | الـ disk | `google` على الـ VPS (`BACKUP_DISKS=google`)، `local` في dev/staging |
 | السجل | جدول مركزي `tenant_backups` (`tenant_id` NULL = المركزي، `disk`، `path`، `sha256`، `size_bytes`، `created_at`، `verified_at`). `verified_at` بيتحط بس بعد ما النسخة المرفوعة تتنزّل تاني والـ sha256 يطابق |
@@ -98,42 +98,71 @@ exit 0 = كل DB اترفعت واتأكدنا منها. exit 1 = فيه فشل 
 
 ---
 
-## 5. الاستعادة — `backup:restore-tenant`
+## 5. الاستعادة — `backup:restore-tenant` و`backup:swap-tenant`
 
-**الأمر عمره ما بيكتب على DB موجودة.** بيعمل DB جديدة اسمها لازم يبدأ بـ `BACKUP_RESTORE_DB_PREFIX` (`tenant_zz_restore_`، داخل نمط `tenant\_%` بتاع الـ provisioner)، ويرفض لو الاسم موجود.
+**`backup:restore-tenant` عمره ما بيكتب على DB موجودة.** بيعمل DB جديدة اسمها لازم يبدأ بـ `BACKUP_RESTORE_DB_PREFIX` (`tenant_zz_restore_`، داخل نمط `tenant\_%` بتاع الـ provisioner)، ويرفض لو الاسم موجود. **الافتراضي: بعد التحقق الناجح يمسح النسخة المستعادة.** عشان تفضل (للاستعادة الحقيقية) لازم `--keep-restored`. (`--drop-after-verify` موجود للتوافق بس ومبيغيّرش حاجة لأن المسح هو الافتراضي.)
 
 ```bash
-# أحدث نسخة متحقق منها للمستأجر، في DB جديدة، وتفضل موجودة:
+# DRILL: استعادة + تحقق + مسح تلقائي (الافتراضي، من غير أي flag):
 php artisan backup:restore-tenant shop1 --db-user=sroor_provisioner
+# استعادة حقيقية: نفس الأمر لكن النسخة تفضل:
+php artisan backup:restore-tenant shop1 --keep-restored --database=tenant_zz_restore_shop1_fix --db-user=sroor_provisioner
 # نسخة معيّنة من السجل:
-php artisan backup:restore-tenant shop1 --backup=123 --db-user=sroor_provisioner
-# أرشيف مش في السجل (مثلًا اتنزّل على جهاز الـ drill):
-php artisan backup:restore-tenant central --disk=google --path=sroor-backups/central/central-2026-10-11-01-30-00.zip
-# الـ drill: استعادة + تحقق + حذف النسخة المستعادة:
-php artisan backup:restore-tenant shop1 --drop-after-verify --db-user=sroor_provisioner
+php artisan backup:restore-tenant shop1 --backup=123 --keep-restored --db-user=sroor_provisioner
+# أرشيف مش في السجل (اتنزّل على جهاز تاني / السجل ضاع):
+php artisan backup:restore-tenant central --disk=google --path=sroor-backups/central/central-2026-10-11-01-30-00.zip --allow-unverified --keep-restored --db-user=sroor_provisioner
 ```
 
-الخطوات: تنزيل في مجلد مؤقت خاص ← مقارنة الـ sha256 بالسجل (اختلاف = رفض) ← فك التشفير ← التأكد إن الـ manifest بتاع نفس الـ subject ← `CREATE DATABASE` + `mysql < dump` (كلمة المرور في option file بصلاحية 600 بيتمسح، مش في argv) ← **عدد صفوف كل جدول = الـ manifest** ← `--drop-after-verify` يحذف النسخة. لو العدد مختلف: exit 1، جدول بالفروق، والـ DB **بتفضل** للفحص. لو الاستيراد فشل: الـ DB الجديدة بتتمسح.
+الخطوات: تنزيل في مجلد مؤقت خاص ← مقارنة الـ sha256 بالسجل (اختلاف = رفض) ← فك التشفير وقراية الـ dump لآخره مع حساب sha256 ومقارنته بـ `dump_sha256` في الـ manifest (BKP-01: بت واحد متغيّر = رفض «الأرشيف تالف») ← التأكد إن الـ manifest بتاع نفس الـ subject ← فحص بصمة كل جدول (`table_digests`) على الملف المفكوك **قبل** الاستيراد ← `CREATE DATABASE` + `mysql < dump` ← **عدد صفوف كل جدول = الـ manifest** (ونسخة مجموع صفوفها 0 بتترفض). `--allow-unverified` بيتخطى فحص السجل بس، **مش** فحص بصمات الـ manifest الداخلي. أرشيفات قبل BKP-01 مفيهاش بصمات: تحذير ويتحقق بالعدد بس. لو العدد مختلف: exit 1، جدول بالفروق، والـ DB **بتفضل** للفحص. لو الاستيراد فشل: الـ DB الجديدة بتتمسح.
 
-- `--db-user`: الحساب اللي يقدر يعمل `CREATE DATABASE` على `tenant\_%` (على الـ VPS = `sroor_provisioner`). الباسورد بيتسأل مخفي (الـ config متخزن على الـ VPS، فمتغيرات البيئة وقت التشغيل مش بتتقري). من غيره: `DB_RESTORE_*` ثم حساب الـ DB المركزي.
-- عدد الصفوف في الـ manifest **مقروء من ملف الـ dump نفسه** (§1.1)، فهو بالظبط اللي الاستعادة المفروض ترجّعه حتى لو المستأجر كان شغال وقت الـ backup. لو الـ drill طلع «N جدول مش مطابقين» والـ manifest كله أصفار: ده أرشيف اتعمل قبل OPS-23 بـ `mariadb-dump` (الاستعادة نفسها غالبًا سليمة — قارن بـ `--keep-restored`)؛ خد backup جديد وكرّر الـ drill.
+- `--db-user`: الحساب اللي يقدر يعمل `CREATE DATABASE` على `tenant\_%` (على الـ VPS = `sroor_provisioner`). الباسورد بيتسأل مخفي. من غيره: `DB_RESTORE_*` ثم حساب الـ DB المركزي (مش في الإنتاج).
+- عدد الصفوف في الـ manifest **مقروء من ملف الـ dump نفسه** (§1.1). لو الـ drill طلع «N جدول مش مطابقين» والـ manifest كله أصفار: ده أرشيف اتعمل قبل OPS-23 بـ `mariadb-dump`؛ خد backup جديد وكرّر.
 
-**استعادة حقيقية لمستأجر (حادثة):** الأمر بيجهّز نسخة مستعادة ومتحقق منها بس. تحويل المستأجر عليها خطوة يدوية للـ CTO: المحل read-only/صيانة ← تعديل `tenancy_db_name` بتاع المستأجر عن طريق `UpdateTenantDatabaseConfigAction` (OPS-9: step-up + audit) ← تجربة ← الـ DB القديمة تفضل لحد ما يتأكد. ممنوع `DROP` للـ DB القديمة من غير backup نهائي متحقق منه.
+### 5.1 استعادة حقيقية لمحل (حادثة) — أمر واحد
 
----
+**الأرقام المقاسة (تمرين 2026-11-12، محل 47 ألف فاتورة / 123MB):** نسخ 9.5–23 ث، استعادة ~45 ث، والبيانات رجعت مطابقة 100% (46 جدول، 378,295 صف، `CHECKSUM TABLE`). **RTO الفعلي كان 20–40 دقيقة** بسبب الخطوات اليدوية؛ الهدف بعد `backup:swap-tenant`: **أقل من 10 دقايق**. **RPO ≈ 24 ساعة مبيعات** (نسخة ليلية 01:30 + نسخة مع كل deploy، مفيش binlog). قرار الـ CTO المطلوب: هل 24 ساعة كفاية؟ (الخيارات: نسخة كل 6 ساعات للمحلات الكبيرة، أو binlog/PITR على الـ VPS) — لحد ما يتقرر، **المحل بيتبلّغ بالفترة المفقودة** (آخر خطوة تحت).
+
+1. **وقّف البيع:** لو الكونسول شغال، علّق المحل (suspend) من لوحة المشغّل. مفيش وضع صيانة لكل محل في التطبيق؛ لو الكونسول واقف الخطوة 4 بتسجّل خروج الكل في ثواني.
+2. **جهّز نسخة مستعادة ومتحققة** (`--keep-restored`، الأمر في §5 فوق). سجّل اسم الـ DB الناتج (`tenant_zz_restore_<id>_<timestamp>`) وتاريخ النسخة (ده بداية الفترة المفقودة).
+3. **القاعدة القديمة تفضل زي ما هي** (ممنوع `DROP` قبل ما المحل يتأكد وبعد backup نهائي متحقق منه).
+4. **حوّل المحل (CLI، من غير الكونسول، من غير SQL يدوي):**
+
+```bash
+php artisan backup:swap-tenant shop1 --database=tenant_zz_restore_shop1_20261112010101
+# لتجاوز السؤال في سكربت: --force   |   هامش الترقيم: --number-margin=1000 (الافتراضي)
+```
+
+الأمر بيعمل بالترتيب: فحوص (المحل جاهز ومش ممسوح، القاعدة موجودة ومش هي الحالية) وملخص وتأكيد (الافتراضي «لا») ← **GRANT** لمستخدم MySQL بتاع المحل على القاعدة الجديدة (لما `TENANT_DB_PER_TENANT_USER=true`) ← تغيير `tenancy_db_name` (بنفس الـ audit بتاع الكونسول) ← **`tenants:migrate`** للمحل (نسخة أقدم من الكود بتتهجّر؛ لو فشل بيرجّع المحل للقاعدة القديمة ويخرج 1) ← **مسح كل توكنات الدخول** (توكن اتعمل قبل النسخة أو مستخدم اتعطل بعدها مايرجعش شغال) ← **دفع عدّادات ترقيم المستندات** بـ `--number-margin` (أي فاتورة اتطبعت بعد النسخة مش هيتصرف رقمها تاني؛ وكمان بيعمل صف عدّاد لكل يوم من آخر يوم في النسخة لحد النهارده) ← مسح كاش المحل ← تقرير. الهامش لازم يكون أكبر من عدد المستندات اللي اتصدرت في اليوم الواحد بين النسخة والحادثة (الافتراضي 1000).
+5. **جرّب:** سجّل دخول بمستخدم المحل (لازم يطلب دخول جديد)، افتح وردية/فاتورة، وتأكد إن رقمها أكبر من آخر رقم اتطبع قبل الحادثة.
+6. **ملفات المحل (لوجو، مرفقات):** `storage/tenant<id>` مش في نسخة الـ DB — استعدها من نسخة `backup:run --only-files` (02:30) لو اتأثرت.
+7. **ابلغ المحل:** المبيعات من وقت النسخة (`created_at` بتاعها في `tenant_backups`) لحد الحادثة اتفقدت وتتسجل يدويًا من الورق/الإيصالات المطبوعة.
+8. فك التعليق (لو علّقته)، وسجّل الحادثة (مين، إمتى، النسخة، المدة).
+
+**لو الـ swap فشل في النص:** الأمر بيطبع السبب (الـ log فيه التفاصيل). افحص `tenancy_db_name` الحالي للمحل قبل ما تعيد؛ القاعدة القديمة سليمة دايمًا.
+
+### 5.2 ضياع القاعدة المركزية (central)
+
+السجل (`tenant_backups`) في القاعدة المركزية، فلو ضاعت مفيش سجل ولا checksum تتحقق بيه. الترتيب:
+
+1. اعمل DB مركزية جديدة فاضية، ولا تشغّل أي محل قبل ما المركزي يرجع (التوكنات والاشتراكات والنطاقات كلها فيه).
+2. نزّل أحدث أرشيف `central-*.zip` من Drive (`sroor-backups/central/`) واستعده: `php artisan backup:restore-tenant central --disk=google --path=<المسار> --allow-unverified --keep-restored --db-user=sroor_provisioner` — **`--allow-unverified` لازم هنا** لأن السجل ضاع، لكن فحص البصمات الداخلي (BKP-01) شغال وبيرفض الأرشيف التالف. لو تالف جرّب أرشيف أقدم.
+3. وجّه `DB_DATABASE` المركزي في `.env` على القاعدة المستعادة، `php artisan migrate --force` (المركزي)، `config:cache`.
+4. بعد كده المحلات: `tenants:migrate`، وكل محل سليم يكمّل؛ محل قاعدته ضاعت يتعامل بـ §5.1.
+5. السجل `tenant_backups` هيرجع بصفوفه لحد وقت النسخة المركزية؛ أول `backup:tenants` بعدها بيكمّل.
 
 ## 6. Restore drill شهري — **أول drill لم يُنفَّذ**
 
 أول يوم عمل في كل شهر، على الـ VPS (أو جهاز drill عليه نفس الـ `.env` من غير `config:cache`):
 
-1. `php artisan backup:restore-tenant central --drop-after-verify --db-user=sroor_provisioner`
-2. نفس الأمر لـ 2 مستأجرين: أكبر مستأجر + واحد عشوائي.
-3. مرة كل 3 شهور: استعادة من نسخة **شهرية** (`--backup=<id>` أقدم واحدة في السجل) عشان نتأكد إن الاحتفاظ شغال.
-4. سجّل النتيجة هنا:
+1. `php artisan backup:restore-tenant central --db-user=sroor_provisioner` (بيمسح النسخة المستعادة بعد التحقق من نفسه)
+2. نفس الأمر لـ 2 مستأجرين: أكبر مستأجر + واحد عشوائي. (لا تستخدم `--keep-restored` في الـ drill العادي.)
+3. مرة كل 3 شهور: استعادة من نسخة **شهرية** (`--backup=<id>` أقدم واحدة في السجل، مع `--keep-restored` لو عايز تفحصها) عشان نتأكد إن الاحتفاظ شغال.
+4. **مرة كل شهر على staging (BKP-02):** استعادة محل كامل بـ §5.1 (`--keep-restored` ثم `backup:swap-tenant`) على محل تجريبي، واحسب الزمن من أول أمر لحد أول فاتورة ناجحة (RTO). مرة كل ربع سنة خلّي شخص تاني ينفّذ الـ runbook حرفيًا من غير مساعدة. لو احتاج أي خطوة مش مكتوبة، الـ runbook ده bug.
+5. سجّل النتيجة هنا:
 
-| التاريخ | Subject | النسخة (id / تاريخ) | الجداول | الصفوف | النتيجة | مين |
-|---|---|---|---|---|---|---|
-| — | — | — | — | — | لم يُنفَّذ | — |
+| التاريخ | Subject | النسخة (id / تاريخ) | الجداول | الصفوف | الزمن (RTO) | النتيجة | مين |
+|---|---|---|---|---|---|---|---|
+| 2026-11-12 | perf04 (47 ألف فاتورة، 123MB) | تمرين يدوي | 46 | 378,295 | 20–40 دقيقة (يدوي) | مطابق 100% (CHECKSUM TABLE) | — |
 
 لو الـ drill فشل: ده incident — وقّف الـ deploys لحد ما السبب يتعرف (§8).
 
@@ -179,6 +208,8 @@ php artisan backup:restore-tenant shop1 --drop-after-verify --db-user=sroor_prov
 | `جدول سجل النسخ tenant_backups ... مش موجود` | الـ release اللي فيه OPS-5 لسه ماعملش migrate | طبيعي في أول deploy (الأرشيفات بتترفع من غير سجل)؛ بعد الـ migrate بيختفي |
 | `ملف التفريغ مش مطابق لقاعدة البيانات الحية` | dump ناقص (الـ disk اتملى، الـ timeout، `--compact`/`--skip-comments` في الخيارات) أو جدول فيه بيانات طلع فاضي في الـ dump | التفاصيل لكل جدول في الـ log؛ اتأكد من `mysqldump --version` (§1.1) والمساحة، وشغّل `backup:tenants --tenant=<id>` تاني |
 | الـ drill: `Unknown command '\-'` في السطر الأول | dump معمول بـ `mariadb-dump` ومستعاد بعميل `mysql` قديم بتاع Oracle | نفس عيلة العميل للاتنين (§1.1) |
+| `الأرشيف تالف` / `archive_corrupt` (BKP-01) | الملف اتغيّر بعد الـ backup (تخزين/رفع/تحميل) أو الباسورد غلط | جرّب أرشيف أقدم؛ ماتستخدمش `--allow-unverified` لتخطي ده (مش بيتخطاه) |
+| `backup:swap-tenant`: `migrations failed` | النسخة أقدم من كود ومعها بيانات تعارض الـ migration | المحل اترجّع للقاعدة القديمة تلقائيًا؛ شوف الـ log، حلّ الـ migration وأعد |
 | `BackupFreshness` أحمر | فشل الليلة (شوف الإيميل) أو الـ scheduler واقف | `php artisan backup:tenants` يدويًا بعد إصلاح السبب |
 
 ---
@@ -188,7 +219,7 @@ php artisan backup:restore-tenant shop1 --drop-after-verify --db-user=sroor_prov
 ```bash
 cd backend
 php artisan test --filter='BackupTenantsCommandTest|RestoreTenantBackupCommandTest|BackupTelegramAlertTest|HealthChecksTest|ScheduledTelegramJobsGuardTest|BackupConfigTest'
-php artisan test --filter='MysqlDumpRowCounterTest|BackupDumpCountCheckTest|BackupManifestFromDumpTest'
+php artisan test --filter='MysqlDumpRowCounterTest|BackupDumpCountCheckTest|BackupManifestFromDumpTest|BackupContentDigestTest|SwapTenantDatabaseCommandTest'
 # OPS-23 على MySQL حقيقي (group mysql، محتاج mysqldump + mysql على الـ PATH، سيرفر رمي بس):
 DB_HOST=127.0.0.1 DB_PORT=3306 DB_USERNAME=root DB_PASSWORD= php artisan test -c phpunit.mysql.xml --filter=BackupMysqlRoundTripTest
 bash ../scripts/ops/tests/deploy-test.sh
