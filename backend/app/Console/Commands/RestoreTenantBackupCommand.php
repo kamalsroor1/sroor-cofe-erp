@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Health\Notifications\BackupFailedNotification;
 use App\Models\TenantBackup;
+use App\Support\Backup\BackupIntegrity;
 use App\Support\Backup\BackupTelegramAlert;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
@@ -136,6 +137,7 @@ final class RestoreTenantBackupCommand extends Command
             }
 
             $dumpFile = $this->extractDump($archive, (string) $manifest['dump'], $password, $work);
+            $this->verifyDumpIntegrity($dumpFile, $manifest);
             $database = $this->targetDatabaseName($subject);
             $driver = (string) ($manifest['driver'] ?? '');
 
@@ -148,6 +150,9 @@ final class RestoreTenantBackupCommand extends Command
 
             /** @var array<string, int> $expected */
             $expected = array_map('intval', (array) $manifest['tables']);
+            if (array_sum($expected) === 0) {
+                throw new RuntimeException((string) __('console.restore.empty_backup'));
+            }
             $actual = BackupTenantsCommand::countRows(DB::connection(self::RESTORE_CONNECTION));
             $mismatches = $this->compare($expected, $actual);
 
@@ -192,6 +197,42 @@ final class RestoreTenantBackupCommand extends Command
             }
             File::deleteDirectory($work);
         }
+    }
+
+    /**
+     * BKP-01: the extracted dump must be byte-identical to what was dumped (sha256) and every table's
+     * content digest must match the manifest, BEFORE anything is imported. Runs with
+     * --allow-unverified too: it only needs the archive itself, never the ledger. A manifest from
+     * before BKP-01 has no digests: warned, then the row-count check is all there is.
+     *
+     * @param  array<string, mixed>  $manifest
+     */
+    private function verifyDumpIntegrity(string $dumpFile, array $manifest): void
+    {
+        $expectedSha = $manifest['dump_sha256'] ?? null;
+        if (! is_string($expectedSha)) {
+            $this->warn((string) __('console.restore.no_digest'));
+
+            return;
+        }
+
+        if (! hash_equals($expectedSha, BackupIntegrity::fileSha256($dumpFile))) {
+            throw new RuntimeException((string) __('console.backups.archive_corrupt'));
+        }
+
+        $expectedTables = $manifest['table_digests'] ?? null;
+        if (! is_array($expectedTables)) {
+            throw new RuntimeException((string) __('console.backups.archive_digest_missing'));
+        }
+        /** @var array<string, string> $expectedTables */
+        $bad = BackupIntegrity::differences(array_map('strval', $expectedTables), BackupIntegrity::tableDigests($dumpFile, (string) ($manifest['driver'] ?? '')));
+        if ($bad !== []) {
+            throw new RuntimeException((string) __('console.restore.digest_mismatch', [
+                'count' => count($bad),
+                'tables' => implode(', ', array_slice($bad, 0, 5)),
+            ]));
+        }
+        $this->line((string) __('console.restore.digest_ok', ['tables' => count($expectedTables)]));
     }
 
     /**

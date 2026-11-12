@@ -8,6 +8,7 @@ use App\Enums\TenantBackupKind;
 use App\Health\Notifications\BackupFailedNotification;
 use App\Models\Tenant;
 use App\Models\TenantBackup;
+use App\Support\Backup\BackupIntegrity;
 use App\Support\Backup\BackupTelegramAlert;
 use App\Support\Backup\MysqlDumpRowCounter;
 use Carbon\CarbonImmutable;
@@ -22,6 +23,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\LazyCollection;
 use Illuminate\Support\Str;
+use JsonException;
 use RuntimeException;
 use Spatie\Backup\Tasks\Backup\DbDumperFactory;
 use Spatie\DbDumper\Databases\MySql;
@@ -277,7 +279,7 @@ final class BackupTenantsCommand extends Command
      *
      * @return array<string, mixed>
      */
-    public static function readManifest(string $archive, ?string $password): array
+    public static function readManifest(string $archive, ?string $password, bool $requireDigest = false): array
     {
         $zip = new ZipArchive;
         if ($zip->open($archive, ZipArchive::RDONLY) !== true) {
@@ -299,7 +301,11 @@ final class BackupTenantsCommand extends Command
             if (! is_string($raw) || $raw === '') {
                 throw new RuntimeException((string) __('console.backups.archive_unreadable'));
             }
-            $manifest = json_decode($raw, true, 32, JSON_THROW_ON_ERROR);
+            try {
+                $manifest = json_decode($raw, true, 32, JSON_THROW_ON_ERROR);
+            } catch (JsonException) {
+                throw new RuntimeException((string) __('console.backups.archive_corrupt'));
+            }
             if (! is_array($manifest)
                 || ($manifest['format'] ?? null) !== self::MANIFEST_FORMAT
                 || ! is_string($manifest['dump'] ?? null)
@@ -308,19 +314,44 @@ final class BackupTenantsCommand extends Command
                 throw new RuntimeException((string) __('console.backups.archive_unreadable'));
             }
 
-            // Reading the dump to the end makes zip check its CRC through decryption.
+            // BKP-01: PHP's zip stream does not prove a flipped bit (AES entries carry no CRC), so the
+            // dump is hashed while it is read and compared with the manifest's own sha256 (and with
+            // the zip CRC32 when the entry has one). A mismatch means the archive is damaged.
+            $expected = $manifest['dump_sha256'] ?? null;
+            if ($expected !== null && (! is_string($expected) || preg_match('/^[a-f0-9]{64}$/', $expected) !== 1)) {
+                throw new RuntimeException((string) __('console.backups.archive_corrupt'));
+            }
+            if ($requireDigest && $expected === null) {
+                throw new RuntimeException((string) __('console.backups.archive_digest_missing'));
+            }
+
             $stream = $zip->getStream($manifest['dump']);
             if ($stream === false) {
                 throw new RuntimeException((string) __('console.backups.archive_unreadable'));
             }
+            $sha = hash_init('sha256');
+            $crc = hash_init('crc32b');
             try {
                 while (! feof($stream)) {
-                    if (fread($stream, 1048576) === false) {
-                        throw new RuntimeException((string) __('console.backups.archive_unreadable'));
+                    $chunk = fread($stream, 1048576);
+                    if ($chunk === false) {
+                        throw new RuntimeException((string) __('console.backups.archive_corrupt'));
                     }
+                    hash_update($sha, $chunk);
+                    hash_update($crc, $chunk);
                 }
             } finally {
                 fclose($stream);
+            }
+
+            $shaHex = hash_final($sha);
+            $crcValue = hexdec(hash_final($crc));
+            if ($expected !== null && ! hash_equals($expected, $shaHex)) {
+                throw new RuntimeException((string) __('console.backups.archive_corrupt'));
+            }
+            $stat = $zip->statName($manifest['dump']);
+            if ($stat !== false && (int) $stat['crc'] !== 0 && (int) $stat['crc'] !== (int) $crcValue) {
+                throw new RuntimeException((string) __('console.backups.archive_corrupt'));
             }
 
             /** @var array<string, mixed> $manifest */
@@ -424,6 +455,10 @@ final class BackupTenantsCommand extends Command
             [$dumpFile, $manifest] = $tenant === null
                 ? $this->dumpConnection(self::centralBackupConnection(), $dumpBase)
                 : $this->dumpTenant($tenant, $dumpBase);
+
+            // BKP-01: the dump's own sha256 and a content digest per table travel inside the manifest.
+            $manifest['dump_sha256'] = BackupIntegrity::fileSha256($dumpFile);
+            $manifest['table_digests'] = BackupIntegrity::tableDigests($dumpFile, (string) $manifest['driver']);
 
             $manifest = [
                 'format' => self::MANIFEST_FORMAT,
@@ -680,6 +715,9 @@ final class BackupTenantsCommand extends Command
     public static function dumpCountProblems(array $dump, bool $complete, array $countsBefore, array $countsAfter, array $autoBefore, array $autoAfter): array
     {
         $problems = [];
+        if (array_sum($dump) === 0 && array_sum($countsBefore) + array_sum($countsAfter) > 0) {
+            $problems[] = '*: '.__('console.backups.dump_zero_rows');
+        }
         if (! $complete) {
             $problems[] = '*: '.__('console.backups.dump_incomplete');
         }
@@ -749,7 +787,7 @@ final class BackupTenantsCommand extends Command
             throw new RuntimeException((string) __('console.backups.archive_failed'));
         }
 
-        self::readManifest($archive, $password);
+        self::readManifest($archive, $password, true);
     }
 
     private function upload(string $disk, string $path, string $archive, string $sha256, int $size, string $subject, bool $ledger): void
