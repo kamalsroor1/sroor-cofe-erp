@@ -8,8 +8,8 @@ use App\DTOs\Expenses\ExpenseDTO;
 use App\Models\Expense;
 use App\Models\Store;
 use App\Services\DocumentNumberService;
+use App\Support\Database\TransactionRetry;
 use App\Support\TenantClock;
-use Illuminate\Support\Facades\DB;
 
 final class CreateExpenseAction
 {
@@ -23,12 +23,16 @@ final class CreateExpenseAction
      */
     public function execute(ExpenseDTO $dto, int $userId): Expense
     {
-        return DB::transaction(function () use ($dto, $userId) {
+        // SETG-2 ext: number and daily counter follow the tenant business day.
+        $prefix = 'EXP-'.substr(str_replace('-', '', $this->tenantClock->businessDate()), 2);
+
+        // BUG-04: the day's counter row exists before the transaction takes its first read.
+        $this->documentNumbers->prepareFor($prefix, Expense::class, 'expense_number');
+
+        // BUG-07: restarted as a whole on a lock conflict; a failed attempt's number rolls back.
+        return TransactionRetry::run(function () use ($dto, $userId, $prefix) {
             $storeId = $dto->store_id ?: Store::getMainStore()?->id ?: Store::first()?->id;
 
-            // SETG-2 ext: number and daily counter follow the tenant business day.
-            $businessDate = $this->tenantClock->businessDate();
-            $prefix = 'EXP-'.substr(str_replace('-', '', $businessDate), 2);
             $expenseNumber = $this->documentNumbers->nextFor($prefix, 4, Expense::class, 'expense_number');
 
             return Expense::create([

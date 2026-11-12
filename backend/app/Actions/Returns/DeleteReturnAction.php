@@ -8,7 +8,7 @@ use App\Models\Payment;
 use App\Models\ReturnDocument;
 use App\Services\AuditLogService;
 use App\Services\ReturnReversalService;
-use Illuminate\Support\Facades\DB;
+use App\Support\Database\TransactionRetry;
 
 /**
  * BE-02: deleting a return exactly reverses what creating it did, in one transaction.
@@ -34,7 +34,8 @@ final class DeleteReturnAction
 
     public function execute(int $returnId): ReturnDocument
     {
-        return DB::transaction(function () use ($returnId): ReturnDocument {
+        // BUG-07: restarted as a whole on a lock conflict (only the id is captured).
+        return TransactionRetry::run(function () use ($returnId): ReturnDocument {
             // 1. Lock the document (a soft-deleted one is not found: no double reversal).
             $returnDoc = ReturnDocument::query()->whereKey($returnId)->lockForUpdate()->firstOrFail();
 

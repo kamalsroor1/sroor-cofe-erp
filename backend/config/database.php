@@ -212,6 +212,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Lock-conflict retry (BUG-07)
+    |--------------------------------------------------------------------------
+    |
+    | App\Support\Database\TransactionRetry wraps the sale, transfer, return,
+    | purchase, payment and expense transactions: it restarts the whole unit
+    | of work on 1213 / 1205 / 1020 up to `attempts` times, then answers 409.
+    | `isolation` is the level of those transactions on MySQL/MariaDB (READ
+    | COMMITTED: no MariaDB 1020, fewer gap-lock deadlocks; needs binlog_format
+    | ROW or MIXED when the binary log is on). Empty = keep the server level.
+    |
+    */
+
+    'transaction_retry' => [
+        'attempts' => (int) env('DB_TRANSACTION_ATTEMPTS', 3),
+        'isolation' => env('DB_WRITE_ISOLATION', 'READ COMMITTED'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Redis Databases
     |--------------------------------------------------------------------------
     |

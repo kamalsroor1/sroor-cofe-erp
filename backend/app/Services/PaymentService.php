@@ -10,10 +10,10 @@ use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Support\ActiveStore;
+use App\Support\Database\TransactionRetry;
 use App\Support\TenantClock;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class PaymentService
@@ -82,7 +82,14 @@ class PaymentService
      */
     public function recordCustomerPayment(array $data): Payment
     {
-        return DB::transaction(function () use ($data) {
+        // BUG-04: the day's counter row exists before the transaction takes its first read.
+        if (empty($data['payment_number'])) {
+            $this->documentNumbers->prepareDated('PAY-CUST', Payment::class, 'payment_number');
+        }
+
+        // BUG-07: restarted as a whole on a lock conflict (1213/1205/1020); only plain input is
+        // captured, every row is read again inside and a failed attempt's number rolls back.
+        return TransactionRetry::run(function () use ($data) {
             // Lock order: document -> party (same as cancel / update / returns).
             $invoiceId = $data['invoice_id'] ?? null;
             $invoice = $invoiceId ? Invoice::where('id', $invoiceId)->lockForUpdate()->firstOrFail() : null;
@@ -153,14 +160,22 @@ class PaymentService
      */
     public function recordSupplierPayment(array $data): Payment
     {
-        return DB::transaction(function () use ($data) {
+        // BUG-04: the day's counter row exists before the transaction takes its first read.
+        if (empty($data['payment_number'])) {
+            $this->documentNumbers->prepareDated('PAY-SUPP', Payment::class, 'payment_number');
+        }
+
+        // BUG-07: restarted as a whole on a lock conflict (1213/1205/1020), see recordCustomerPayment().
+        return TransactionRetry::run(function () use ($data) {
+            // BUG-07 lock order: document -> party (as recordCustomerPayment, the purchase return and
+            // restorePurchase). It used to lock the supplier first, the inverse of those flows.
+            $purchaseId = $data['purchase_id'] ?? null;
+            $purchase = $purchaseId ? Purchase::where('id', $purchaseId)->lockForUpdate()->firstOrFail() : null;
             $supplier = Supplier::where('id', $data['supplier_id'])->lockForUpdate()->firstOrFail();
             $amount = $data['amount'];
 
-            $purchaseId = $data['purchase_id'] ?? null;
             $documentStoreId = null;
-            if ($purchaseId) {
-                $purchase = Purchase::where('id', $purchaseId)->lockForUpdate()->firstOrFail();
+            if ($purchase !== null) {
                 // SEC-1 (M4): before anything changes: the purchase is readable by the actor
                 // (else 404) and belongs to this supplier (else 422).
                 $this->assertDocumentReadable($purchase->store_id, Purchase::class, (int) $purchase->id);

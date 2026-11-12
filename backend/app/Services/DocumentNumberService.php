@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Support\TenantClock;
+use Closure;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
@@ -32,7 +33,12 @@ use Illuminate\Support\Facades\DB;
  * numbers after. The sequence row is held until commit, so a flow that allocated a number
  * and only then locked a customer/supplier would deadlock (MySQL 1213) with a flow that
  * locks the party first. Among sequences, flows allocate the document number before
- * payment/expense numbers. Keep the transaction short after the first call.
+ * payment/expense numbers. Keep the transaction short after the first call. BUG-07: flows
+ * that move stock lock their items/store_stocks rows (StockService::lockStockRows(), sorted)
+ * right after the party/document rows, i.e. also BEFORE their numbers.
+ *
+ * Daily scopes (BUG-04): a flow creates the counter rows it needs with prepareFor() /
+ * prepareDated() before opening its transaction; see ensureScopeRow() for why.
  *
  * Seeding: the first use of a scope (a tenant upgrading with numbers already issued, or a
  * manually typed number) starts from the highest sequence that already exists, read once
@@ -68,10 +74,7 @@ final class DocumentNumberService
      */
     public function nextFor(string $prefix, int $pad, string $modelClass, string $column, ?string $scope = null): string
     {
-        // Soft-deleted rows included (what withTrashed() does) so a deleted document keeps its number.
-        $query = fn (): EloquentBuilder => in_array(SoftDeletes::class, class_uses_recursive($modelClass), true)
-            ? $modelClass::query()->withoutGlobalScope(SoftDeletingScope::class)
-            : $modelClass::query();
+        $query = $this->documentsQuery($modelClass);
 
         return $this->next(
             $prefix,
@@ -80,6 +83,57 @@ final class DocumentNumberService
             fn (): int => $this->highestSequence($query(), $column, $prefix),
             $scope,
         );
+    }
+
+    /**
+     * BUG-04: create the counter row of a nextDated() scope BEFORE the document transaction.
+     *
+     * Call it with no transaction open, right before the DB::transaction()/TransactionRetry
+     * that will call nextDated() with the same arguments. The row is then committed before the
+     * transaction's first read, so the allocation inside finds it on the hot path. Without it,
+     * the first document of a scope each day inserted the row on a side connection AFTER the
+     * transaction's read view existed, and MariaDB 11.6.2+ (innodb_snapshot_isolation=ON)
+     * refused the locking read with 1020 "Record has changed since last read".
+     *
+     * Allocates nothing (no number is consumed, so no gap). No-op inside an open transaction:
+     * a write there would join the caller's transaction, which is what this step avoids.
+     *
+     * @param  class-string<Model>  $modelClass
+     */
+    public function prepareDated(string $prefix, string $modelClass, string $column, ?string $scopePrefix = null): void
+    {
+        $date = str_replace('-', '', $this->tenantClock->businessDate());
+
+        $this->prepareFor($prefix.'-'.$date, $modelClass, $column, $scopePrefix !== null ? $scopePrefix.'-'.$date : null);
+    }
+
+    /**
+     * prepareDated() for a nextFor() scope (same $prefix / $scope as the later nextFor() call).
+     *
+     * @param  class-string<Model>  $modelClass
+     */
+    public function prepareFor(string $prefix, string $modelClass, string $column, ?string $scope = null): void
+    {
+        if (DB::transactionLevel() > 0) {
+            return;
+        }
+
+        $query = $this->documentsQuery($modelClass);
+
+        $this->ensureScopeRow($scope ?? $prefix, fn (): int => $this->highestSequence($query(), $column, $prefix));
+    }
+
+    /**
+     * Soft-deleted rows included (what withTrashed() does) so a deleted document keeps its number.
+     *
+     * @param  class-string<Model>  $modelClass
+     * @return Closure(): EloquentBuilder<Model>
+     */
+    private function documentsQuery(string $modelClass): Closure
+    {
+        return fn (): EloquentBuilder => in_array(SoftDeletes::class, class_uses_recursive($modelClass), true)
+            ? $modelClass::query()->withoutGlobalScope(SoftDeletingScope::class)
+            : $modelClass::query();
     }
 
     /**
@@ -94,6 +148,9 @@ final class DocumentNumberService
     public function next(string $prefix, int $pad, ?callable $existsCheck = null, ?callable $seed = null, ?string $scope = null): string
     {
         if (DB::transactionLevel() === 0) {
+            // BUG-04: create the row before the transaction exists (see prepareFor()).
+            $this->ensureScopeRow($scope ?? $prefix, $seed);
+
             return DB::transaction(fn (): string => $this->allocate($prefix, $pad, $existsCheck, $seed, $scope ?? $prefix));
         }
 
@@ -163,6 +220,14 @@ final class DocumentNumberService
      * rolled-back document leaves the counter exactly as it would have been found.
      * sqlite has a single writer: plain statements.
      *
+     * BUG-04 (MariaDB 11.6.2+, innodb_snapshot_isolation=ON, REPEATABLE READ): when the slow
+     * path runs INSIDE a transaction whose read view already exists, the row committed here is
+     * newer than that view and the lockForUpdate() in allocate() fails with 1020. The money
+     * flows avoid it twice over: they call prepareFor()/prepareDated() before their transaction
+     * (the row is then older than the view), and they run under TransactionRetry (READ
+     * COMMITTED, no snapshot check; and a 1020 that still happens is retried, the row then
+     * exists). Any other caller gets a 409 "try again" from the exception handler at worst.
+     *
      * @param  (callable(): int)|null  $seed
      */
     private function ensureScopeRow(string $scope, ?callable $seed): void
@@ -173,7 +238,9 @@ final class DocumentNumberService
             return;
         }
 
-        if (! in_array($connection->getDriverName(), ['mysql', 'mariadb'], true)) {
+        // No transaction open (prepareFor(), or next() before its own transaction): a plain
+        // autocommit insert on the caller's connection commits at once. sqlite: single writer.
+        if ($connection->transactionLevel() === 0 || ! in_array($connection->getDriverName(), ['mysql', 'mariadb'], true)) {
             $this->insertScopeRow($connection, $scope, $seed);
 
             return;

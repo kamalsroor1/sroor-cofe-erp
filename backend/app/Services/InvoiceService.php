@@ -18,11 +18,11 @@ use App\Services\Invoices\InvoiceCancelGuard;
 use App\Services\Pricing\SaleDiscountGuard;
 use App\Services\Pricing\SalePriceGuard;
 use App\Services\Settings\TenantSettings;
+use App\Support\Database\TransactionRetry;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class InvoiceService
@@ -84,6 +84,9 @@ class InvoiceService
             );
         }
 
+        // BUG-04: the day's counter rows exist before the transaction takes its first read.
+        $this->prepareNumberScopes($data);
+
         try {
             return $this->persistConfirmedInvoice($data, $clientUuid, $priceGuard, $discountGuard);
         } catch (UniqueConstraintViolationException $e) {
@@ -119,9 +122,34 @@ class InvoiceService
         }
     }
 
+    /**
+     * BUG-04: create the counter rows this checkout will allocate from (invoice, payment, and
+     * expense numbers) before its transaction. Consumes no number.
+     */
+    private function prepareNumberScopes(array $data): void
+    {
+        $numbers = app(DocumentNumberService::class);
+
+        if (empty($data['invoice_number'])) {
+            $numbers->prepareFor($this->invoiceNumberPrefix($this->resolveInvoiceStoreId($data)), Invoice::class, 'invoice_number');
+        }
+        if (($data['payment_type'] ?? 'cash') !== 'credit') {
+            $numbers->prepareDated('PAY-INV', Payment::class, 'payment_number');
+        }
+        if (! empty($data['additional_expenses']) || ! empty($data['shipping_cost'])) {
+            $numbers->prepareDated('EXP', Expense::class, 'expense_number');
+        }
+    }
+
+    /**
+     * BUG-07: TransactionRetry restarts the whole closure on a lock conflict (1213/1205/1020).
+     * It only captures plain input ($data) and the pre-transaction guards, whose approvals are
+     * memoised (a retry re-reads the same approver, no new PIN/limiter hit); every row is read
+     * again inside, and the invoice/payment numbers of a failed attempt roll back with it.
+     */
     private function persistConfirmedInvoice(array $data, ?string $clientUuid, SalePriceGuard $priceGuard, SaleDiscountGuard $discountGuard): Invoice
     {
-        return DB::transaction(function () use ($data, $clientUuid, $priceGuard, $discountGuard) {
+        return TransactionRetry::run(function () use ($data, $clientUuid, $priceGuard, $discountGuard) {
             $customer = Customer::where('id', $data['customer_id'])->lockForUpdate()->firstOrFail();
 
             $subtotal = '0.000';
@@ -130,6 +158,9 @@ class InvoiceService
             $totalCost = '0.000';
 
             $storeId = $this->resolveInvoiceStoreId($data);
+
+            // BUG-07 lock order: customer -> items / store_stocks (sorted) -> number sequences.
+            $this->stockService->lockStockRows(array_column((array) ($data['items'] ?? []), 'item_id'), [$storeId]);
 
             if ($clientUuid !== null) {
                 // Plain read on purpose. The customer row lock above already serialises replays of the
@@ -569,8 +600,13 @@ class InvoiceService
      */
     public function cancelInvoice(Invoice $invoice, string $reason, ?int $approvedBy = null): Invoice
     {
-        return DB::transaction(function () use ($invoice, $reason, $approvedBy) {
-            $lockedInvoice = Invoice::where('id', $invoice->id)->lockForUpdate()->firstOrFail();
+        // BUG-04: the day's refund-voucher counter row exists before the transaction starts.
+        app(DocumentNumberService::class)->prepareDated('PAY-REF', Payment::class, 'payment_number');
+        $invoiceId = (int) $invoice->id;
+
+        // BUG-07: restarted as a whole on a lock conflict; only the id is captured.
+        return TransactionRetry::run(function () use ($invoiceId, $reason, $approvedBy) {
+            $lockedInvoice = Invoice::where('id', $invoiceId)->lockForUpdate()->firstOrFail();
 
             if ($lockedInvoice->status === 'cancelled') {
                 throw BusinessRuleException::conflict('invoices.already_cancelled');
@@ -589,6 +625,8 @@ class InvoiceService
             if ($lockedInvoice->customer_id) {
                 Customer::query()->whereKey($lockedInvoice->customer_id)->lockForUpdate()->first();
             }
+            // BUG-07: the lines' items / store_stocks in the global sorted order, not line order.
+            $this->stockService->lockStockRows($lockedInvoice->items->pluck('item_id'), [$lockedInvoice->store_id]);
 
             $oldState = $lockedInvoice->toArray();
 
@@ -679,8 +717,16 @@ class InvoiceService
             );
         }
 
-        return DB::transaction(function () use ($invoice, $data, $priceGuard, $discountGuard) {
-            $lockedInvoice = Invoice::where('id', $invoice->id)->lockForUpdate()->firstOrFail();
+        // BUG-04: the day's payment counter row exists before the transaction takes its first read.
+        if (($data['payment_type'] ?? 'cash') !== 'credit') {
+            app(DocumentNumberService::class)->prepareDated('PAY-INV', Payment::class, 'payment_number');
+        }
+        $invoiceId = (int) $invoice->id;
+
+        // BUG-07: restarted as a whole on a lock conflict (1213/1205/1020). Only the id of the
+        // passed invoice is used; the row is locked and read again by every attempt.
+        return TransactionRetry::run(function () use ($invoiceId, $data, $priceGuard, $discountGuard) {
+            $lockedInvoice = Invoice::where('id', $invoiceId)->lockForUpdate()->firstOrFail();
             if ($lockedInvoice->status === 'cancelled') {
                 throw BusinessRuleException::conflict('invoices.cannot_edit_cancelled');
             }
@@ -697,6 +743,12 @@ class InvoiceService
             $customer = Customer::query()->findOrFail($newCustomerId);
             $this->assertWalkInPaidInFull($customer, (string) ($data['payment_type'] ?? 'cash'));
             $storeId = $lockedInvoice->store_id !== null ? (int) $lockedInvoice->store_id : null;
+
+            // BUG-07: the old and the new lines' stock rows, in the global sorted order.
+            $this->stockService->lockStockRows(
+                [...$lockedInvoice->items->pluck('item_id')->all(), ...array_column((array) ($data['items'] ?? []), 'item_id')],
+                [$storeId],
+            );
 
             // 1. If invoice was confirmed, reverse previous stock back to warehouse
             if ($lockedInvoice->status === 'confirmed') {
@@ -979,11 +1031,21 @@ class InvoiceService
             throw BusinessRuleException::forbidden('invoices.delete_admin_only');
         }
 
-        return DB::transaction(function () use ($invoice) {
-            $lockedInvoice = Invoice::where('id', $invoice->id)->lockForUpdate()->firstOrFail();
+        $invoiceId = (int) $invoice->id;
+
+        // BUG-07: restarted as a whole on a lock conflict; only the id is captured.
+        return TransactionRetry::run(function () use ($invoiceId) {
+            $lockedInvoice = Invoice::where('id', $invoiceId)->lockForUpdate()->firstOrFail();
             ReturnSourceService::assertNoLiveReturns($lockedInvoice);
             $customerId = $lockedInvoice->customer_id;
             $invoiceNumber = $lockedInvoice->invoice_number;
+
+            // BUG-07 lock order (as the sale and cancel): document -> party -> items / store_stocks
+            // sorted. The customer used to be locked last (in the balance recompute), after the items.
+            if ($customerId) {
+                Customer::query()->whereKey($customerId)->lockForUpdate()->first();
+            }
+            $this->stockService->lockStockRows($lockedInvoice->items->pluck('item_id'), [$lockedInvoice->store_id]);
 
             // 1. If invoice was confirmed, reverse the inventory back to warehouse
             if ($lockedInvoice->status === 'confirmed') {
@@ -1049,6 +1111,15 @@ class InvoiceService
      */
     public function generateUniqueNumber(?int $storeId = null): string
     {
+        return app(DocumentNumberService::class)->nextFor($this->invoiceNumberPrefix($storeId), 4, Invoice::class, 'invoice_number');
+    }
+
+    /**
+     * "INV-{branch code}-{business date}": the visible prefix and the counter scope of a
+     * branch's invoice numbers.
+     */
+    private function invoiceNumberPrefix(?int $storeId): string
+    {
         $storeCode = null;
         if ($storeId) {
             $store = Store::find($storeId);
@@ -1067,8 +1138,6 @@ class InvoiceService
         }
 
         // SETG-2 ext: the date in the number is the business date (tenant clock + cutoff).
-        $prefix = "INV-{$storeCode}-".str_replace('-', '', $this->tenantClock->businessDate());
-
-        return app(DocumentNumberService::class)->nextFor($prefix, 4, Invoice::class, 'invoice_number');
+        return "INV-{$storeCode}-".str_replace('-', '', $this->tenantClock->businessDate());
     }
 }

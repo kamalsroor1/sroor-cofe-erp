@@ -12,12 +12,12 @@ use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\Supplier;
 use App\Services\Settings\TenantSettings;
+use App\Support\Database\TransactionRetry;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class PurchaseService
 {
@@ -73,12 +73,28 @@ class PurchaseService
      */
     public function createPurchase(array $data): Purchase
     {
-        return DB::transaction(function () use ($data) {
+        // BUG-04: the day's counter rows exist before the transaction takes its first read.
+        if (empty($data['purchase_number'])) {
+            $this->documentNumbers->prepareFor($this->purchaseNumberPrefix(), Purchase::class, 'purchase_number');
+        }
+        if (is_numeric($data['paid_amount'] ?? null) && bccomp((string) $data['paid_amount'], '0.000', 3) > 0) {
+            $this->documentNumbers->prepareDated('PAY-PUR', Payment::class, 'payment_number');
+        }
+        if (! empty($data['additional_expenses'])) {
+            $this->documentNumbers->prepareDated('PAY-EXP', Payment::class, 'payment_number');
+        }
+
+        // BUG-07: restarted as a whole on a lock conflict (1213/1205/1020); only plain input is
+        // captured, every row is read again inside and a failed attempt's numbers roll back.
+        return TransactionRetry::run(function () use ($data) {
             $baseSubtotal = '0.000';
             $storeId = $data['store_id'] ?? Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
 
             // BE-09 lock order: the supplier row first, then the purchase number and payment numbers.
             Supplier::where('id', $data['supplier_id'])->lockForUpdate()->firstOrFail();
+
+            // BUG-07: then the items / store_stocks rows in the global sorted order, before the numbers.
+            $this->stockService->lockStockRows(array_column((array) $data['items'], 'item_id'), [$storeId]);
 
             $purchase = Purchase::create([
                 'purchase_number' => $data['purchase_number'] ?? $this->generateUniqueNumber(),
@@ -301,8 +317,11 @@ class PurchaseService
      */
     public function cancelPurchase(Purchase $purchase, ?string $reason = null): Purchase
     {
-        return DB::transaction(function () use ($purchase, $reason) {
-            $lockedPurchase = Purchase::where('id', $purchase->id)->lockForUpdate()->firstOrFail();
+        $purchaseId = (int) $purchase->id;
+
+        // BUG-07: restarted as a whole on a lock conflict; only the id is captured.
+        return TransactionRetry::run(function () use ($purchaseId, $reason) {
+            $lockedPurchase = Purchase::where('id', $purchaseId)->lockForUpdate()->firstOrFail();
 
             if ($lockedPurchase->status === 'cancelled') {
                 throw BusinessRuleException::conflict('purchases.already_cancelled', ['number' => $lockedPurchase->purchase_number]);
@@ -310,8 +329,13 @@ class PurchaseService
 
             ReturnSourceService::assertNoLiveReturns($lockedPurchase);
 
+            // BUG-07 lock order: document -> supplier -> items / store_stocks (sorted). The supplier
+            // used to be locked last (in the balance recompute), after the items.
+            Supplier::where('id', $lockedPurchase->supplier_id)->lockForUpdate()->first();
+
             $storeId = $lockedPurchase->store_id;
             $lines = $lockedPurchase->items()->orderBy('id')->get();
+            $this->stockService->lockStockRows($lines->pluck('item_id'), [$storeId]);
             $items = $this->lockItemsInIdOrder($lines);
 
             // 1. Verify stock sufficiency for every item before reversing to prevent negative stock
@@ -401,8 +425,13 @@ class PurchaseService
      */
     public function restorePurchase(Purchase $purchase): Purchase
     {
-        return DB::transaction(function () use ($purchase) {
-            $lockedPurchase = Purchase::where('id', $purchase->id)->lockForUpdate()->firstOrFail();
+        // BUG-04: the day's payment counter row exists before the transaction starts.
+        $this->documentNumbers->prepareDated('PAY-PUR', Payment::class, 'payment_number');
+        $purchaseId = (int) $purchase->id;
+
+        // BUG-07: restarted as a whole on a lock conflict; only the id is captured.
+        return TransactionRetry::run(function () use ($purchaseId) {
+            $lockedPurchase = Purchase::where('id', $purchaseId)->lockForUpdate()->firstOrFail();
 
             if ($lockedPurchase->status !== 'cancelled') {
                 throw BusinessRuleException::conflict('purchases.not_cancelled', ['number' => $lockedPurchase->purchase_number]);
@@ -414,6 +443,7 @@ class PurchaseService
             $storeId = $lockedPurchase->store_id;
 
             $lines = $lockedPurchase->items()->orderBy('id')->get();
+            $this->stockService->lockStockRows($lines->pluck('item_id'), [$storeId]);
             $items = $this->lockItemsInIdOrder($lines);
 
             // BUG-03: cost_price is the last purchase's landed cost, so restoring an older
@@ -514,9 +544,14 @@ class PurchaseService
      */
     public function deletePurchase(Purchase $purchase): bool
     {
-        return DB::transaction(function () use ($purchase) {
-            $lockedPurchase = Purchase::where('id', $purchase->id)->lockForUpdate()->firstOrFail();
+        $purchaseId = (int) $purchase->id;
+
+        // BUG-07: restarted as a whole on a lock conflict; the nested cancel joins this transaction.
+        return TransactionRetry::run(function () use ($purchaseId) {
+            $lockedPurchase = Purchase::where('id', $purchaseId)->lockForUpdate()->firstOrFail();
             ReturnSourceService::assertNoLiveReturns($lockedPurchase);
+            // BUG-07 lock order: document -> supplier, before the nested cancel locks the items.
+            Supplier::where('id', $lockedPurchase->supplier_id)->lockForUpdate()->first();
 
             if ($lockedPurchase->status === 'confirmed') {
                 $this->cancelPurchase($lockedPurchase, 'حذف الفاتورة من النظام');
@@ -768,9 +803,12 @@ class PurchaseService
      */
     public function generateUniqueNumber(): string
     {
-        // SETG-2 ext: the date in the number is the business date (tenant clock + cutoff).
-        $prefix = 'PUR-'.str_replace('-', '', $this->tenantClock->businessDate());
+        return $this->documentNumbers->nextFor($this->purchaseNumberPrefix(), 4, Purchase::class, 'purchase_number');
+    }
 
-        return $this->documentNumbers->nextFor($prefix, 4, Purchase::class, 'purchase_number');
+    private function purchaseNumberPrefix(): string
+    {
+        // SETG-2 ext: the date in the number is the business date (tenant clock + cutoff).
+        return 'PUR-'.str_replace('-', '', $this->tenantClock->businessDate());
     }
 }

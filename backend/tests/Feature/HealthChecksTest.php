@@ -8,6 +8,7 @@ use App\Health\Checks\BackupArchivePasswordCheck;
 use App\Health\Checks\BackupFreshnessCheck;
 use App\Health\Checks\DiskSpaceCheck;
 use App\Health\Checks\ReleaseRehearsalCheck;
+use App\Health\Checks\WriteIsolationBinlogCheck;
 use App\Models\Tenant;
 use App\Models\TenantBackup;
 use App\Providers\HealthServiceProvider;
@@ -48,6 +49,7 @@ final class HealthChecksTest extends TenantTestCase
             RedisCheck::class,
             DiskSpaceCheck::class,
             BackupArchivePasswordCheck::class,
+            WriteIsolationBinlogCheck::class,
             HorizonCheck::class,
             QueueCheck::class,
             ScheduleCheck::class,
@@ -102,6 +104,7 @@ final class HealthChecksTest extends TenantTestCase
             RedisCheck::class,
             DiskSpaceCheck::class,
             BackupArchivePasswordCheck::class,
+            WriteIsolationBinlogCheck::class,
         ], $this->classes(HealthServiceProvider::checks(true)));
     }
 
@@ -112,7 +115,7 @@ final class HealthChecksTest extends TenantTestCase
 
         putenv(HealthServiceProvider::DEPLOY_GATE_ENV.'=1');
         $this->assertTrue(HealthServiceProvider::isDeployGate());
-        $this->assertCount(5, HealthServiceProvider::checks());
+        $this->assertCount(6, HealthServiceProvider::checks());
 
         putenv(HealthServiceProvider::DEPLOY_GATE_ENV.'=0');
         $this->assertFalse(HealthServiceProvider::isDeployGate());

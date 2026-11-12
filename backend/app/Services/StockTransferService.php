@@ -9,9 +9,9 @@ use App\Models\StockMovement;
 use App\Models\StockTransfer;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Support\Database\TransactionRetry;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class StockTransferService
 {
@@ -54,7 +54,18 @@ class StockTransferService
             throw BusinessRuleException::make('inventory.transfer_same_location');
         }
 
-        return DB::transaction(function () use ($data, $fromStoreId, $toStoreId) {
+        // BUG-04: the day's TRF counter row exists before the transaction takes its first read.
+        if (empty($data['transfer_number'])) {
+            $this->documentNumbers->prepareFor($this->transferNumberPrefix(), StockTransfer::class, 'transfer_number');
+        }
+
+        // BUG-07: restarted as a whole on a lock conflict (1213/1205/1020); only plain input is
+        // captured, every row is read again inside and a failed attempt's number rolls back.
+        return TransactionRetry::run(function () use ($data, $fromStoreId, $toStoreId) {
+            // BUG-07: stable lock order first, so opposing transfers (1->2 and 2->1) and sales of
+            // the same items queue on the same rows in the same order instead of deadlocking.
+            $this->stockService()->lockStockRows(array_column((array) $data['items'], 'item_id'), [$fromStoreId, $toStoreId]);
+
             $fromStore = Store::where('id', $fromStoreId)->firstOrFail();
             $toStore = Store::where('id', $toStoreId)->firstOrFail();
 
@@ -191,14 +202,23 @@ class StockTransferService
     {
         $userId = $this->actorId($actorId);
 
-        return DB::transaction(function () use ($transfer, $reason, $userId) {
-            $lockedTransfer = StockTransfer::where('id', $transfer->id)->lockForUpdate()->firstOrFail();
+        $transferId = (int) $transfer->id;
+
+        // BUG-07: restarted as a whole on a lock conflict; only the id is captured.
+        return TransactionRetry::run(function () use ($transferId, $reason, $userId) {
+            $lockedTransfer = StockTransfer::where('id', $transferId)->lockForUpdate()->firstOrFail();
 
             if ($lockedTransfer->status === 'cancelled') {
                 throw BusinessRuleException::conflict('inventory.transfer_already_cancelled');
             }
 
             if ($lockedTransfer->status === 'confirmed') {
+                // BUG-07: the lines' items / both stores' store_stocks in the global sorted order.
+                $this->stockService()->lockStockRows(
+                    $lockedTransfer->items->pluck('item_id'),
+                    [$lockedTransfer->from_store_id, $lockedTransfer->to_store_id],
+                );
+
                 $fromStore = $lockedTransfer->fromStore;
                 $toStore = $lockedTransfer->toStore;
 
@@ -300,9 +320,17 @@ class StockTransferService
      */
     public function generateUniqueNumber(): string
     {
-        // SETG-2 ext: the number carries the tenant business date, not the server date.
-        $prefix = 'TRF-'.str_replace('-', '', $this->tenantClock->businessDate());
+        return $this->documentNumbers->nextFor($this->transferNumberPrefix(), 4, StockTransfer::class, 'transfer_number');
+    }
 
-        return $this->documentNumbers->nextFor($prefix, 4, StockTransfer::class, 'transfer_number');
+    private function transferNumberPrefix(): string
+    {
+        // SETG-2 ext: the number carries the tenant business date, not the server date.
+        return 'TRF-'.str_replace('-', '', $this->tenantClock->businessDate());
+    }
+
+    private function stockService(): StockService
+    {
+        return app(StockService::class);
     }
 }

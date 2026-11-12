@@ -9,8 +9,8 @@ use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\StoreStock;
 use App\Services\DocumentNumberService;
+use App\Support\Database\TransactionRetry;
 use App\Support\TenantClock;
-use Illuminate\Support\Facades\DB;
 
 final class AdjustItemStockAction
 {
@@ -24,7 +24,14 @@ final class AdjustItemStockAction
      */
     public function execute(AdjustStockDTO $dto, int $userId): StockMovement
     {
-        return DB::transaction(function () use ($dto, $userId) {
+        // SETG-2 ext: number and daily counter follow the tenant business day.
+        $prefix = 'ADJ-'.substr(str_replace('-', '', $this->tenantClock->businessDate()), 2);
+
+        // BUG-04: the day's counter row exists before the transaction takes its first read.
+        $this->documentNumbers->prepareFor($prefix, StockMovement::class, 'document_number');
+
+        // BUG-07: restarted as a whole on a lock conflict; a failed attempt's number rolls back.
+        return TransactionRetry::run(function () use ($dto, $userId, $prefix) {
             $item = Item::where('id', $dto->item_id)->lockForUpdate()->firstOrFail();
             $storeStock = StoreStock::firstOrCreate(
                 ['store_id' => $dto->store_id, 'item_id' => $item->id],
@@ -45,9 +52,6 @@ final class AdjustItemStockAction
                 $newStoreQty = bcsub($currentStoreQty, $adjustQty, 3);
             }
 
-            // SETG-2 ext: number and daily counter follow the tenant business day.
-            $businessDate = $this->tenantClock->businessDate();
-            $prefix = 'ADJ-'.substr(str_replace('-', '', $businessDate), 2);
             $docNumber = $this->documentNumbers->nextFor($prefix, 4, StockMovement::class, 'document_number');
 
             $movement = StockMovement::create([

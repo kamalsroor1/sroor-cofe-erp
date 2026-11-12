@@ -9,7 +9,7 @@ use App\Models\ReturnDocument;
 use App\Models\Supplier;
 use App\Services\AuditLogService;
 use App\Services\ReturnReversalService;
-use Illuminate\Support\Facades\DB;
+use App\Support\Database\TransactionRetry;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
@@ -45,7 +45,9 @@ final class ReverseDeletedReturnAction
         $result = ['reversed' => false, 'party_balance_before' => null, 'party_balance_after' => null];
 
         try {
-            DB::transaction(function () use ($returnId, $dryRun, &$result): void {
+            // BUG-07: restarted as a whole on a lock conflict, so the result starts fresh every attempt.
+            TransactionRetry::run(function () use ($returnId, $dryRun, &$result): void {
+                $result = ['reversed' => false, 'party_balance_before' => null, 'party_balance_after' => null];
                 $returnDoc = ReturnDocument::onlyTrashed()->whereKey($returnId)->lockForUpdate()->firstOrFail();
 
                 if ($this->reversal->hasReversalMovement((int) $returnDoc->id)) {

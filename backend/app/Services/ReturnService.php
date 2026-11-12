@@ -12,10 +12,10 @@ use App\Models\Purchase;
 use App\Models\ReturnDocument;
 use App\Models\Store;
 use App\Models\Supplier;
+use App\Support\Database\TransactionRetry;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class ReturnService
 {
@@ -28,6 +28,7 @@ class ReturnService
         protected ReturnSourceService $returnSourceService,
         protected DocumentNumberService $documentNumbers,
         protected ResolveWalkInCustomerAction $walkInCustomer,
+        protected SupplierBalanceService $supplierBalanceService,
     ) {}
 
     /**
@@ -63,7 +64,15 @@ class ReturnService
      */
     public function createSalesReturn(array $data): ReturnDocument
     {
-        return DB::transaction(function () use ($data) {
+        // BUG-04: the day's counter rows exist before the transaction takes its first read.
+        if (empty($data['return_number'])) {
+            $this->documentNumbers->prepareFor($this->returnNumberPrefix('RET-SALES'), ReturnDocument::class, 'return_number');
+        }
+        $this->documentNumbers->prepareDated('PAY-RET', Payment::class, 'payment_number');
+
+        // BUG-07: restarted as a whole on a lock conflict (1213/1205/1020); only plain input is
+        // captured, every row is read again inside and a failed attempt's numbers roll back.
+        return TransactionRetry::run(function () use ($data) {
             $invoiceId = $data['invoice_id'] ?? null;
 
             $totalAmount = '0.000';
@@ -79,6 +88,9 @@ class ReturnService
             $lines = $invoice !== null
                 ? $this->returnSourceService->resolveLines(ReturnSourceService::SALES, $invoice, (int) $customer->id, $data['items'])
                 : $this->manualLines($data['items']);
+
+            // BUG-07 lock order: document -> party -> items / store_stocks (sorted) -> numbers.
+            $this->stockService->lockStockRows(array_column($lines, 'item_id'), [$storeId]);
 
             // BE-09: allocate the number after the document and party locks.
             $returnNumber = $data['return_number'] ?? $this->generateUniqueNumber('RET-SALES');
@@ -216,7 +228,13 @@ class ReturnService
      */
     public function createPurchaseReturn(array $data): ReturnDocument
     {
-        return DB::transaction(function () use ($data) {
+        // BUG-04: the day's counter row exists before the transaction takes its first read.
+        if (empty($data['return_number'])) {
+            $this->documentNumbers->prepareFor($this->returnNumberPrefix('RET-PURCH'), ReturnDocument::class, 'return_number');
+        }
+
+        // BUG-07: restarted as a whole on a lock conflict (1213/1205/1020), see createSalesReturn().
+        return TransactionRetry::run(function () use ($data) {
             $purchaseId = $data['purchase_id'] ?? null;
 
             $totalAmount = '0.000';
@@ -230,6 +248,9 @@ class ReturnService
             $lines = $purchase !== null
                 ? $this->returnSourceService->resolveLines(ReturnSourceService::PURCHASE, $purchase, (int) $supplier->id, $data['items'])
                 : $this->manualLines($data['items']);
+
+            // BUG-07 lock order: document -> party -> items / store_stocks (sorted) -> numbers.
+            $this->stockService->lockStockRows(array_column($lines, 'item_id'), [$storeId]);
 
             // BE-09: allocate the number after the document and party locks.
             $returnNumber = $data['return_number'] ?? $this->generateUniqueNumber('RET-PURCH');
@@ -295,14 +316,10 @@ class ReturnService
 
             $returnDoc->update(['total_amount' => $totalAmount]);
 
-            // Adjust supplier balance: purchases - payments - returns
-            $totalPurchases = Purchase::where('supplier_id', $supplier->id)->where('status', 'confirmed')->sum('net_total');
-            $totalPayments = Payment::where('supplier_id', $supplier->id)->sum('amount');
-            $totalReturns = ReturnDocument::where('supplier_id', $supplier->id)->where('return_type', 'purchase_return')->sum('total_amount');
-
-            $bal = bcsub(bcsub((string) $totalPurchases, (string) $totalPayments, 3), (string) $totalReturns, 3);
-            $supplier->current_balance = $bal;
-            $supplier->save();
+            // BUG-07 review: the one supplier balance formula (opening balance + purchases - payments
+            // - returns). The inline copy that was here left out the imported opening balance, so a
+            // purchase return wiped it from current_balance until the next recompute.
+            $this->supplierBalanceService->updateBalance((int) $supplier->id);
 
             $this->auditLogService->log(
                 action: 'purchase_return_created',
@@ -338,9 +355,12 @@ class ReturnService
      */
     public function generateUniqueNumber(string $prefix): string
     {
-        // SETG-2 ext: the date in the number is the business date (tenant clock + cutoff).
-        $datePrefix = $prefix.'-'.str_replace('-', '', $this->tenantClock->businessDate());
+        return $this->documentNumbers->nextFor($this->returnNumberPrefix($prefix), 4, ReturnDocument::class, 'return_number');
+    }
 
-        return $this->documentNumbers->nextFor($datePrefix, 4, ReturnDocument::class, 'return_number');
+    private function returnNumberPrefix(string $prefix): string
+    {
+        // SETG-2 ext: the date in the number is the business date (tenant clock + cutoff).
+        return $prefix.'-'.str_replace('-', '', $this->tenantClock->businessDate());
     }
 }

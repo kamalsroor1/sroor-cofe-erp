@@ -15,12 +15,19 @@ declare(strict_types=1);
  * Usage (by the test only): php concurrency-worker.php <scenario> <tenant-db> <base64-json-payload>
  */
 
+use App\Exceptions\DatabaseBusyException;
 use App\Models\Invoice;
 use App\Models\Item;
 use App\Services\InvoiceService;
+use App\Services\PaymentService;
+use App\Services\ReturnService;
 use App\Services\StockService;
+use App\Services\StockTransferService;
+use App\Support\Database\TransactionRetry;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Database\Events\TransactionRolledBack;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 
 require __DIR__.'/../../vendor/autoload.php';
 
@@ -57,13 +64,21 @@ config(['database.connections.concurrency_worker' => array_merge($baseConnection
 DB::setDefaultConnection('concurrency_worker');
 DB::connection()->getPdo();
 
+// BUG-07: every rolled-back attempt is counted, so the test can report how many lock conflicts
+// the retry helper absorbed (a nested savepoint rollback would count too; these flows have none).
+$rollbacks = 0;
+Event::listen(TransactionRolledBack::class, static function () use (&$rollbacks): void {
+    $rollbacks++;
+});
+
 fwrite(STDOUT, 'READY'.PHP_EOL);
 fflush(STDOUT);
 fgets(STDIN);
 
 try {
     $result = match ($scenario) {
-        'deduct' => DB::transaction(static function () use ($payload): array {
+        // Through the same retry helper the sale/transfer/return/purchase flows use (BUG-07).
+        'deduct' => TransactionRetry::run(static function () use ($payload): array {
             $item = Item::query()->findOrFail((int) $payload['item_id']);
             $movement = app(StockService::class)->deductStock(
                 $item,
@@ -87,10 +102,54 @@ try {
 
             return ['invoice_id' => (int) $invoice->getKey(), 'invoice_number' => (string) $invoice->invoice_number, 'created' => false];
         })(),
+        'payment' => (static function () use ($payload): array {
+            $payment = app(PaymentService::class)->recordCustomerPayment($payload);
+
+            return ['payment_id' => (int) $payment->getKey(), 'payment_number' => (string) $payment->payment_number];
+        })(),
+        'return' => (static function () use ($payload): array {
+            $return = app(ReturnService::class)->createReturn($payload);
+
+            return ['return_id' => (int) $return->getKey(), 'return_number' => (string) $return->return_number];
+        })(),
+        // BUG-07: a REAL lock conflict the helper must absorb. Locks counter row `first`, waits, then
+        // locks `second` (two workers with opposite orders deadlock: 1213), bumping both by one. The
+        // optional `isolation` override ('' = server level) lets a plain read open a snapshot first,
+        // which MariaDB answers with 1020 once another worker changed the row.
+        'lockorder', 'snapshot' => (static function () use ($payload, $scenario): array {
+            if (array_key_exists('isolation', $payload)) {
+                config(['database.transaction_retry.isolation' => (string) $payload['isolation']]);
+            }
+
+            TransactionRetry::run(static function () use ($payload, $scenario): void {
+                if ($scenario === 'snapshot') {
+                    DB::table('document_sequences')->where('scope', (string) $payload['first'])->value('last_value');
+                    usleep((int) $payload['pause_ms'] * 1000);
+                }
+                DB::table('document_sequences')->where('scope', (string) $payload['first'])->lockForUpdate()->value('last_value');
+                DB::table('document_sequences')->where('scope', (string) $payload['first'])->increment('last_value');
+                if ($scenario === 'lockorder') {
+                    usleep((int) $payload['pause_ms'] * 1000);
+                    DB::table('document_sequences')->where('scope', (string) $payload['second'])->lockForUpdate()->value('last_value');
+                    DB::table('document_sequences')->where('scope', (string) $payload['second'])->increment('last_value');
+                }
+            });
+
+            return [];
+        })(),
+        'transfer' => (static function () use ($payload): array {
+            $transfer = app(StockTransferService::class)->createTransfer($payload);
+
+            return ['transfer_id' => (int) $transfer->getKey(), 'transfer_number' => (string) $transfer->transfer_number];
+        })(),
         default => throw new InvalidArgumentException("Unknown scenario [{$scenario}]."),
     };
 
-    $respond(['ok' => true] + $result);
+    $respond(['ok' => true, 'rollbacks' => $rollbacks] + $result);
 } catch (Throwable $e) {
-    $respond(['ok' => false, 'error_class' => $e::class, 'error' => $e->getMessage()], 1);
+    // The driver error code (1213 / 1205 / 1020 ...) of the root database error, if any.
+    $root = $e instanceof DatabaseBusyException && $e->getPrevious() !== null ? $e->getPrevious() : $e;
+    $driverCode = $root instanceof PDOException ? ($root->errorInfo[1] ?? null) : null;
+
+    $respond(['ok' => false, 'error_class' => $e::class, 'error' => $e->getMessage(), 'driver_code' => $driverCode, 'rollbacks' => $rollbacks], 1);
 }

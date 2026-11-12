@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Concurrency;
 
 use App\Exceptions\BusinessRuleException;
+use App\Exceptions\DatabaseBusyException;
 use App\Exceptions\Stock\InsufficientStockException;
 use App\Models\Customer;
 use App\Models\Invoice;
@@ -16,12 +17,11 @@ use App\Services\DocumentNumberService;
 use App\Services\InvoiceService;
 use App\Services\StockService;
 use App\Services\TreasuryService;
-use Illuminate\Database\Connection;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Group;
-use RuntimeException;
+use Tests\Concerns\RunsConcurrencyWorkers;
 use Tests\Concerns\SeedsStoreStock;
 use Tests\TenantTestCase;
 
@@ -48,13 +48,11 @@ use Tests\TenantTestCase;
 #[Group('concurrency')]
 final class MysqlConcurrencyTest extends TenantTestCase
 {
+    use RunsConcurrencyWorkers;
     use SeedsStoreStock;
 
     /** MySQL error code for "Lock wait timeout exceeded". */
     private const LOCK_WAIT_TIMEOUT = 1205;
-
-    /** Seconds a worker may take to boot Laravel and connect before the race starts. */
-    private const WORKER_READY_TIMEOUT = 60;
 
     private const WORKERS = 6;
 
@@ -223,6 +221,12 @@ final class MysqlConcurrencyTest extends TenantTestCase
                     return null;
                 } catch (QueryException $e) {
                     return (int) ($e->errorInfo[1] ?? 0);
+                } catch (DatabaseBusyException $e) {
+                    // BUG-07: transfer() runs in TransactionRetry, which answers a 1205 with the
+                    // busy error (409) at once, wrapping the very same QueryException.
+                    $previous = $e->getPrevious();
+
+                    return $previous instanceof QueryException ? (int) ($previous->errorInfo[1] ?? 0) : null;
                 } catch (BusinessRuleException) {
                     return null; // balance check ran without waiting for the lock
                 }
@@ -423,94 +427,5 @@ final class MysqlConcurrencyTest extends TenantTestCase
             $item = Item::query()->findOrFail($itemId);
             app(StockService::class)->deductStock($item, $quantity, $item, $document, 'sales_out', null, $storeId);
         });
-    }
-
-    /** A second MySQL session on the tenant's schema (a different transaction than the test's). */
-    private function tenantSideConnection(Tenant $tenant, string $name): Connection
-    {
-        config([
-            "database.connections.{$name}" => array_merge(
-                (array) config('database.connections.'.$this->centralConnectionName()),
-                ['database' => $this->tenantDatabaseName($tenant)],
-            ),
-        ]);
-
-        return DB::connection($name);
-    }
-
-    /**
-     * Start one PHP process per payload, wait until every process has booted and
-     * connected, release them at the same moment and collect their JSON results.
-     *
-     * @param  list<array<string, mixed>>  $payloads
-     * @return list<array<string, mixed>>
-     */
-    private function runWorkers(string $scenario, Tenant $tenant, array $payloads): array
-    {
-        $script = base_path('tests/Support/concurrency-worker.php');
-        $database = $this->tenantDatabaseName($tenant);
-        $workers = [];
-
-        try {
-            foreach ($payloads as $payload) {
-                // A payload may pick its own scenario (checkout and update racing together).
-                $workerScenario = (string) ($payload['__scenario'] ?? $scenario);
-                unset($payload['__scenario']);
-                $stderr = (string) tempnam(sys_get_temp_dir(), 'qa-worker-');
-                $pipes = [];
-                $process = proc_open(
-                    [PHP_BINARY, $script, $workerScenario, $database, base64_encode((string) json_encode($payload))],
-                    [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['file', $stderr, 'w']],
-                    $pipes,
-                    base_path(),
-                );
-
-                if (! is_resource($process)) {
-                    throw new RuntimeException('Could not start a concurrency worker.');
-                }
-
-                $workers[] = ['process' => $process, 'pipes' => $pipes, 'stderr' => $stderr];
-            }
-
-            foreach ($workers as $worker) {
-                stream_set_timeout($worker['pipes'][1], self::WORKER_READY_TIMEOUT);
-                $line = trim((string) fgets($worker['pipes'][1]));
-                if ($line !== 'READY') {
-                    throw new RuntimeException('Worker did not become ready: '.$line.' '.(string) file_get_contents($worker['stderr']));
-                }
-            }
-
-            // Barrier released: all workers hit the database at (almost) the same moment.
-            foreach ($workers as $worker) {
-                fwrite($worker['pipes'][0], "GO\n");
-                fflush($worker['pipes'][0]);
-            }
-
-            $results = [];
-            foreach ($workers as $worker) {
-                $output = trim((string) stream_get_contents($worker['pipes'][1]));
-                // Not \R: without /u it also splits on byte 0x85, which occurs inside Arabic UTF-8.
-                $lines = preg_split('/\r?\n/', $output) ?: [];
-                $decoded = json_decode((string) end($lines), true);
-
-                if (! is_array($decoded) || ! array_key_exists('ok', $decoded)) {
-                    throw new RuntimeException('Worker returned no result: '.$output.' '.(string) file_get_contents($worker['stderr']));
-                }
-
-                $results[] = $decoded;
-            }
-
-            return $results;
-        } finally {
-            foreach ($workers as $worker) {
-                foreach ($worker['pipes'] as $pipe) {
-                    if (is_resource($pipe)) {
-                        fclose($pipe);
-                    }
-                }
-                proc_close($worker['process']);
-                @unlink($worker['stderr']);
-            }
-        }
     }
 }

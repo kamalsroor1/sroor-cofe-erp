@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\BusinessRuleException;
+use App\Exceptions\DatabaseBusyException;
 use App\Exceptions\DiscountCapExceededException;
 use App\Http\Middleware\AdminSecurityHeaders;
 use App\Http\Middleware\AuthenticateCentral;
@@ -9,12 +10,15 @@ use App\Http\Middleware\EnsureTenantFeature;
 use App\Http\Middleware\RequireRecentTwoFactor;
 use App\Http\Middleware\ResolveActiveStore;
 use App\Http\Middleware\ResolveApiTenancy;
+use App\Http\Middleware\RestrictLivewireToConsole;
 use App\Http\Middleware\SpaSecurityHeaders;
 use App\Http\Middleware\StoreAccess;
 use App\Http\Middleware\StoreScope;
 use App\Http\Middleware\ThrottleTenantMisses;
+use App\Support\Database\TransactionRetry;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -28,6 +32,7 @@ use Spatie\Permission\Exceptions\UnauthorizedException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -58,6 +63,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // IDEN-1.11: strict CSP / HSTS / Referrer-Policy on the platform-console host only
         // (no-op on every other host). Global, so API, SPA and error responses all carry it.
         $middleware->append(AdminSecurityHeaders::class);
+
+        // SEC-21: Livewire (a Pulse dependency) answers on the platform console only, never on a shop host.
+        $middleware->append(RestrictLivewireToConsole::class);
 
         // IDEN-4.6: the tenant must be resolved before any named limiter runs (tenant-login and
         // quick-login key by tenant) and before route-model binding. Without this entry the
@@ -120,6 +128,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // time so the request locale wins; never reported (a refused operation is not a fault).
         $exceptions->dontReport([BusinessRuleException::class]);
 
+        // BUG-07: a lock conflict (1213 / 1205 / 1020) that reached the handler, from a flow without
+        // TransactionRetry or after its last attempt, is a 409 "busy, try again", never a 500. PDOException
+        // covers QueryException and the DeadlockException Laravel throws from a nested transaction.
+        $exceptions->map(fn (PDOException $e): Throwable => TransactionRetry::isLockConflict($e) ? DatabaseBusyException::fromThrowable($e) : $e);
+
         $exceptions->render(function (BusinessRuleException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
@@ -136,6 +149,17 @@ return Application::configure(basePath: dirname(__DIR__))
                     'success' => false,
                     'message' => __('auth.unauthorized'),
                 ], 401);
+            }
+        });
+
+        // SEC-21: a missing model (findOrFail / route-model binding) is a translated 404 in the API
+        // envelope. The framework default echoed "No query results for model [App\Models\X] id".
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
+            if (($request->is('api/*') || $request->expectsJson()) && $e->getPrevious() instanceof ModelNotFoundException) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('common.record_not_found'),
+                ], 404);
             }
         });
 

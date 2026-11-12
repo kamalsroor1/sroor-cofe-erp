@@ -8,6 +8,7 @@ use App\Health\Checks\BackupArchivePasswordCheck;
 use App\Health\Checks\BackupFreshnessCheck;
 use App\Health\Checks\DiskSpaceCheck;
 use App\Health\Checks\ReleaseRehearsalCheck;
+use App\Health\Checks\WriteIsolationBinlogCheck;
 use Google\Client as GoogleClient;
 use Google\Service\Drive;
 use Illuminate\Contracts\Foundation\Application;
@@ -35,7 +36,7 @@ use Spatie\Health\Facades\Health;
  *
  *    Deploy gate (deploy.sh exports SROOR_HEALTH_DEPLOY_GATE=1 to that artisan process):
  *    only what decides whether THIS release can serve requests: central DB, cache, Redis,
- *    disk, archive password (D4), and never as a warning. Monitoring only (not registered
+ *    disk, archive password (D4), the write-isolation/binlog rule (BUG-07), and never as a warning. Monitoring only (not registered
  *    in the gate): Horizon, the queue and schedule heartbeats and backup freshness. Those
  *    depend on the cron / supervisor of the box, not on the release; gating on them would
  *    refuse the very first deploy (nothing has run yet) and roll back a good release while
@@ -78,6 +79,8 @@ final class HealthServiceProvider extends ServiceProvider
                 ->warnWhenUsedSpaceIsAbovePercentage($gate ? $diskFail : (int) config('health.sroor.disk_warn_percent', 80))
                 ->failWhenUsedSpaceIsAbovePercentage($diskFail),
             BackupArchivePasswordCheck::new()->failuresOnly($gate),
+            // BUG-07: READ COMMITTED writes on a STATEMENT binlog fail every sale; fail-or-ok only.
+            WriteIsolationBinlogCheck::new(),
         ];
 
         if ($gate) {

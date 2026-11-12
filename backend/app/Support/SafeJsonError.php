@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Support;
 
 use App\Exceptions\BusinessRuleException;
+use App\Exceptions\DatabaseBusyException;
+use App\Support\Database\TransactionRetry;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -17,7 +19,7 @@ use Throwable;
 /**
  * SEC-1 (L4): the body of a controller `catch`. Exceptions that already carry a safe, translated
  * answer (validation 422, authorization 403, domain rule refusals (BusinessRuleException 422/409), any HTTP exception or prepared response) are
- * rethrown for the framework to render. A missing record is a translated 404 in the API
+ * rethrown for the framework to render, and so is a lock conflict (DatabaseBusyException, 409). A missing record is a translated 404 in the API
  * envelope (never the model class name). Anything else is reported to the log and answered
  * with a translated generic message: raw exception text (SQL, paths, class names) never
  * reaches the client.
@@ -33,7 +35,13 @@ final class SafeJsonError
             ], 404);
         }
 
+        // BUG-07: a lock conflict keeps its own answer (409 "busy, try again"), never the generic one.
+        if (! $e instanceof DatabaseBusyException && TransactionRetry::isLockConflict($e)) {
+            throw DatabaseBusyException::fromThrowable($e);
+        }
+
         if ($e instanceof ValidationException
+            || $e instanceof DatabaseBusyException
             || $e instanceof BusinessRuleException
             || $e instanceof AuthorizationException
             || $e instanceof AuthenticationException

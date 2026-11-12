@@ -10,6 +10,7 @@ use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Services\Settings\TenantSettings;
+use App\Support\Database\TransactionRetry;
 use App\Support\TenantClock;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -48,6 +49,68 @@ class StockService
         }
 
         return bccomp((string) $item->current_stock, $requestedQuantity, 3) >= 0;
+    }
+
+    /**
+     * BUG-07: take the row locks of a multi-line stock operation up front: every `items` row by
+     * id ascending, then every existing `store_stocks` row by (item_id, store_id) ascending.
+     *
+     * THE GLOBAL LOCK ORDER (every money/stock writer follows it; a flow skips the steps it has
+     * no row for):
+     *   1. the existing document being changed (invoice / purchase / transfer / return / shift);
+     *   2. the party: customer or supplier (the balance recompute re-locks it later, harmless);
+     *   3. items by id, then store_stocks by (item_id, store_id)   <- this method;
+     *   4. branch rows of the treasury scope (`stores`, TreasuryService::lockTreasuryScope);
+     *   5. document_sequences: the document number first, then payment / expense numbers.
+     * Document before party is the order the existing customer flows already used (update and
+     * cancel invoice, sales return, receipts); the create flows have no existing document and
+     * start at 2. Call this inside the transaction right after steps 1-2, before the first line
+     * is processed and before any number is allocated.
+     *
+     * Without it each flow locked rows in its own line order (cart order, transfer line order),
+     * so two sales of [A, B] and [B, A], or two opposing multi-item transfers, could each hold
+     * one row and wait for the other (1213 deadlock / 1205 timeout). The per-line code keeps its
+     * own lockForUpdate() calls: re-locking a row this transaction already holds is free, and
+     * every row read then changed is still read under a lock.
+     *
+     * Rows are locked one by one by their key so the acquisition order is exactly the sorted
+     * order (a multi-row IN scan locks in index order, which for store_stocks is store first).
+     * A missing store_stocks pair is skipped here; the line code creates it as before.
+     *
+     * @param  iterable<int|string|null>  $itemIds
+     * @param  iterable<int|string|null>  $storeIds
+     */
+    public function lockStockRows(iterable $itemIds, iterable $storeIds): void
+    {
+        $items = $this->sortedIds($itemIds);
+        $stores = $this->sortedIds($storeIds);
+
+        foreach ($items as $itemId) {
+            DB::table('items')->where('id', $itemId)->lockForUpdate()->value('id');
+        }
+
+        foreach ($items as $itemId) {
+            foreach ($stores as $storeId) {
+                DB::table('store_stocks')->where('item_id', $itemId)->where('store_id', $storeId)->lockForUpdate()->value('id');
+            }
+        }
+    }
+
+    /**
+     * @param  iterable<int|string|null>  $ids
+     * @return list<int>
+     */
+    private function sortedIds(iterable $ids): array
+    {
+        $unique = [];
+        foreach ($ids as $id) {
+            if (is_numeric($id) && (int) $id > 0) {
+                $unique[(int) $id] = (int) $id;
+            }
+        }
+        ksort($unique);
+
+        return array_values($unique);
     }
 
     /**
@@ -298,8 +361,13 @@ class StockService
         ?int $storeId = null,
         ?int $actorId = null,
     ): StockMovement {
-        return DB::transaction(function () use ($item, $actualQuantity, $reason, $storeId, $actorId) {
-            $lockedItem = Item::where('id', $item->id)->lockForUpdate()->firstOrFail();
+        // BUG-04: the day's ADJ counter row exists before the transaction takes its first read.
+        $this->documentNumbers->prepareDated('ADJ', StockMovement::class, 'document_number');
+        $itemId = (int) $item->id;
+
+        // BUG-07: restarted as a whole on a lock conflict; only the id and plain input are captured.
+        return TransactionRetry::run(function () use ($itemId, $actualQuantity, $reason, $storeId, $actorId) {
+            $lockedItem = Item::where('id', $itemId)->lockForUpdate()->firstOrFail();
 
             if (! $storeId) {
                 $storeId = Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;

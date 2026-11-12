@@ -93,6 +93,22 @@ mysql_is_84() {
     [[ "$(mysql --protocol=socket -uroot -N -B -e 'SELECT VERSION()')" == 8.4.* ]]
 }
 
+# BUG-07: the app runs its money/stock writes at READ COMMITTED (DB_WRITE_ISOLATION, default on;
+# empty = server level). InnoDB refuses such writes when the binary log is ON with
+# binlog_format=STATEMENT (error 1665: every sale would fail). Same rule as
+# `php artisan db:check-write-isolation`, checked in SQL here because no release exists yet.
+write_isolation_binlog_ok() {
+    local isolation="READ COMMITTED" row log_bin format
+    declare -A WI_ENV=()
+    if [[ -s "$APP_ROOT/shared/.env" ]] && parse_env_file "$APP_ROOT/shared/.env" WI_ENV && [[ -v 'WI_ENV[DB_WRITE_ISOLATION]' ]]; then
+        isolation="${WI_ENV[DB_WRITE_ISOLATION]}"
+    fi
+    [[ "${isolation^^}" == "READ COMMITTED" ]] || return 0
+    row="$(mysql --protocol=socket -uroot -N -B -e 'SELECT @@GLOBAL.log_bin, @@GLOBAL.binlog_format')" || return 1
+    read -r log_bin format <<<"$row"
+    ! [[ ("$log_bin" == 1 || "${log_bin^^}" == ON) && "${format^^}" == STATEMENT ]]
+}
+
 php_is_expected() {
     [[ "$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')" == "$PHP_VERSION" ]]
 }
@@ -153,6 +169,7 @@ for client in mysqldump mysql; do
 done
 check "SHOW GRANTS of app/migrator/provisioner/backup/audit_pruner == runbook" grants_match_runbook
 check "central database exists" mysql --protocol=socket -uroot -N -B -e "USE \`$CENTRAL_DB_NAME\`"
+check "binlog_format is ROW/MIXED when log_bin is ON (READ COMMITTED writes, BUG-07)" write_isolation_binlog_ok
 check "per-table central grants: app has no UPDATE/DELETE on $CENTRAL_AUDIT_TABLES $CENTRAL_APPEND_ONLY_TABLES" central_grants_append_only
 
 echo "== tls + nginx"

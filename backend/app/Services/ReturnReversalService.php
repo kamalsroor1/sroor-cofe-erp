@@ -25,7 +25,7 @@ use Illuminate\Validation\ValidationException;
  *   average cost returns to the snapshot taken when the return was made (or the moving-average
  *   formula when something moved the cost since).
  *
- * reverseStock() MUST run inside the caller's DB::transaction() with the return row already
+ * reverseStock() MUST run inside the caller's transaction (TransactionRetry::run) with the return row already
  * locked (lock order: document -> party -> items by id). A return has no treasury effect.
  */
 final class ReturnReversalService
@@ -66,6 +66,9 @@ final class ReturnReversalService
         }
 
         $storeId = $returnDoc->store_id !== null ? (int) $returnDoc->store_id : null;
+
+        // BUG-07: the store_stocks rows too, in the global (item_id, store_id) order.
+        $this->stockService->lockStockRows($itemIds, [$storeId]);
 
         if ($returnDoc->return_type === 'purchase_return') {
             $this->reversePurchaseReturn($returnDoc, $lines, $items, $storeId);
