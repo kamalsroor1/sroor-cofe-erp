@@ -60,6 +60,15 @@
         </div>
       </div>
 
+      <p
+        v-if="periodError"
+        role="alert"
+        data-testid="report-period-error"
+        class="w-full text-xs font-bold text-rose-600 dark:text-rose-400"
+      >
+        {{ periodError }}
+      </p>
+
       <div v-if="activeTab === 'inventory'" class="flex items-center gap-2">
         <BaseSelect
           :model-value="stockFilter"
@@ -90,6 +99,7 @@ const props = defineProps({
   stores: { type: Array, default: () => [] },
   stockFilter: { type: String, default: 'all' },
   activeTab: { type: String, default: 'sales' },
+  periodError: { type: String, default: '' },
 });
 
 defineEmits(['set-period', 'update:from', 'update:to', 'update:storeId', 'update:stockFilter', 'date-change']);
@@ -102,7 +112,6 @@ const storeOptions = computed(() => [
 const stockOptions = computed(() => [
   { value: 'all', label: t('inventory.all_stock') },
   { value: 'in_stock', label: t('reports.in_stock_only') },
-  { value: 'low_stock', label: t('reports.low_stock_only') },
-  { value: 'out_of_stock', label: t('reports.out_of_stock_only') },
+  { value: 'zero_stock', label: t('reports.out_of_stock_only') },
 ]);
 </script>

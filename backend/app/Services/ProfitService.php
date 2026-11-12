@@ -3,12 +3,14 @@
 namespace App\Services;
 
 use App\Models\Invoice;
+use App\Services\Reports\InvoiceAggregates;
 use App\Services\Reports\SalesReturnAggregates;
 
 class ProfitService
 {
     public function __construct(
         private readonly SalesReturnAggregates $salesReturns,
+        private readonly InvoiceAggregates $invoices,
     ) {}
 
     /**
@@ -40,20 +42,10 @@ class ProfitService
      */
     public function getPeriodicProfits(?string $fromDate = null, ?string $toDate = null, ?int $storeId = null): array
     {
-        $query = Invoice::where('status', 'confirmed')
-            ->when($fromDate, fn ($q) => $q->whereDate('invoice_date', '>=', $fromDate))
-            ->when($toDate, fn ($q) => $q->whereDate('invoice_date', '<=', $toDate))
-            ->when($storeId, fn ($q) => $q->where('store_id', $storeId));
-
-        $invoices = $query->get();
-
-        $grossSales = '0.000';
-        $grossCost = '0.000';
-
-        foreach ($invoices as $inv) {
-            $grossSales = bcadd($grossSales, $inv->net_total, 3);
-            $grossCost = bcadd($grossCost, $inv->total_cost, 3);
-        }
+        // PERF-01: one aggregate statement instead of a model per invoice of the period.
+        $sold = $this->invoices->totals($fromDate, $toDate, $storeId ?: null);
+        $grossSales = $sold['net_total'];
+        $grossCost = $sold['cost'];
 
         // BUG-01: sales returns dated in the period reduce its sales and its cost.
         $returns = $this->salesReturns->totals($fromDate, $toDate, $storeId);
@@ -67,7 +59,7 @@ class ProfitService
         }
 
         return [
-            'invoice_count' => $invoices->count(),
+            'invoice_count' => $sold['count'],
             // total_sales / total_cost are NET of the period's sales returns.
             'total_sales' => $totalSales,
             'gross_sales' => $grossSales,

@@ -7,9 +7,9 @@ namespace App\Actions\Reports;
 use App\DTOs\Reports\ReportFilterDTO;
 use App\Models\Customer;
 use App\Models\Expense;
-use App\Models\Invoice;
-use App\Models\Item;
-use App\Models\StoreStock;
+use App\Services\Reports\InventoryValuation;
+use App\Services\Reports\InvoiceAggregates;
+use App\Services\Reports\ReportDateRange;
 use App\Services\Reports\SalesReturnAggregates;
 use App\Support\Money\Decimal;
 
@@ -17,6 +17,8 @@ final class GetProfitLossReportAction
 {
     public function __construct(
         private readonly SalesReturnAggregates $salesReturns,
+        private readonly InvoiceAggregates $invoices,
+        private readonly InventoryValuation $inventoryValuation,
     ) {}
 
     /**
@@ -24,24 +26,13 @@ final class GetProfitLossReportAction
      */
     public function execute(ReportFilterDTO $dto): array
     {
-        $invoicesQuery = Invoice::where('status', 'confirmed')
-            ->whereDate('invoice_date', '>=', $dto->from_date)
-            ->whereDate('invoice_date', '<=', $dto->to_date)
-            ->when($dto->store_id, fn ($q) => $q->where('store_id', $dto->store_id));
-
-        $invoices = (clone $invoicesQuery)->get();
-        $grossSales = '0.000';
-        $totalPaid = '0.000';
-        $totalRemaining = '0.000';
-        $grossCost = '0.000'; // COGS of the invoices, before returns
-        $invoicesCount = $invoices->count();
-
-        foreach ($invoices as $inv) {
-            $grossSales = bcadd($grossSales, (string) $inv->net_total, 3);
-            $totalPaid = bcadd($totalPaid, (string) $inv->paid_amount, 3);
-            $totalRemaining = bcadd($totalRemaining, (string) $inv->remaining_amount, 3);
-            $grossCost = bcadd($grossCost, (string) $inv->total_cost, 3);
-        }
+        // PERF-01: aggregates in SQL (never a model per invoice); half-open date range on the column.
+        $sold = $this->invoices->totals($dto->from_date, $dto->to_date, $dto->store_id ?: null);
+        $grossSales = $sold['net_total'];
+        $totalPaid = $sold['paid'];
+        $totalRemaining = $sold['remaining'];
+        $grossCost = $sold['cost']; // COGS of the invoices, before returns
+        $invoicesCount = $sold['count'];
 
         // BUG-01: the period's sales returns (by return date) reduce sales by their value and
         // COGS by the original lines' cost; profit is computed on the net figures.
@@ -59,52 +50,24 @@ final class GetProfitLossReportAction
         $avgInvoice = $invoicesCount > 0 ? bcdiv($grossSales, (string) $invoicesCount, 2) : '0.00';
 
         // Expenses
-        $expensesQuery = Expense::whereDate('expense_date', '>=', $dto->from_date)
-            ->whereDate('expense_date', '<=', $dto->to_date)
-            ->when($dto->store_id, fn ($q) => $q->where('store_id', $dto->store_id));
-
-        $totalExpenses = (string) ($expensesQuery->sum('amount') ?: '0.000');
-        $expensesCount = $expensesQuery->count();
+        $expensesQuery = Expense::query()->when($dto->store_id, fn ($q) => $q->where('store_id', $dto->store_id));
+        ReportDateRange::apply($expensesQuery, 'expense_date', $dto->from_date, $dto->to_date);
+        $expenseRow = $expensesQuery->toBase()
+            ->selectRaw('COUNT(*) as expenses_count')
+            ->selectRaw('COALESCE(SUM(amount), 0) as expenses_sum')
+            ->first(); // an aggregate without GROUP BY always returns one row
+        $totalExpenses = Decimal::normalize(InvoiceAggregates::scalar($expenseRow->expenses_sum));
+        $expensesCount = (int) $expenseRow->expenses_count;
         $netProfit = bcsub($grossProfit, $totalExpenses, 3);
 
         // Overall Customers Debt
         $totalCustomersDebt = Decimal::normalize((string) (Customer::where('is_active', true)->sum('current_balance') ?: 0));
 
-        // Inventory Stock Valuation
-        $stockCostValuation = '0.000';
-        $stockSellingValuation = '0.000';
-
-        if ($dto->store_id) {
-            $storeStocks = StoreStock::with('item')
-                ->where('store_id', $dto->store_id)
-                ->whereHas('item', fn ($q) => $q->where('is_active', true))
-                ->get();
-
-            foreach ($storeStocks as $stk) {
-                $item = $stk->item;
-                if (! $item) {
-                    continue;
-                }
-                $qty = (string) ($stk->quantity ?? '0.000');
-                $costPrice = (string) ($item->cost_price ?? '0.000');
-                $sellingPrice = (string) ($stk->custom_selling_price ?: $item->selling_price);
-
-                $stockCostValuation = bcadd($stockCostValuation, bcmul($qty, $costPrice, 3), 3);
-                $stockSellingValuation = bcadd($stockSellingValuation, bcmul($qty, $sellingPrice, 3), 3);
-            }
-        } else {
-            $allItems = Item::where('is_active', true)->get();
-            foreach ($allItems as $itm) {
-                $qty = (string) ($itm->current_stock ?? '0.000');
-                $costPrice = (string) ($itm->cost_price ?? '0.000');
-                $sellingPrice = (string) ($itm->selling_price ?? '0.000');
-
-                $stockCostValuation = bcadd($stockCostValuation, bcmul($qty, $costPrice, 3), 3);
-                $stockSellingValuation = bcadd($stockSellingValuation, bcmul($qty, $sellingPrice, 3), 3);
-            }
-        }
-
-        $expectedStockProfit = bcsub($stockSellingValuation, $stockCostValuation, 3);
+        // Inventory Stock Valuation (shared with the inventory report; streamed, no models)
+        $valuation = $this->inventoryValuation->totals($dto->store_id ?: null);
+        $stockCostValuation = $valuation['cost'];
+        $stockSellingValuation = $valuation['selling'];
+        $expectedStockProfit = $valuation['profit'];
 
         return [
             'period' => [

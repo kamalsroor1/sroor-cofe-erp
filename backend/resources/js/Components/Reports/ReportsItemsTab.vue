@@ -6,14 +6,21 @@
       <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300">
         {{ $t('reports.items_profitability_title') }}
       </h3>
-      <span class="text-xs text-slate-500 font-mono">{{
-        $t('reports.items_count_badge', { count: itemProfits.length })
+      <span v-if="!loading" data-testid="items-count-badge" class="text-xs text-slate-500 font-mono">{{
+        $t('reports.items_showing_badge', { shown: itemProfits.length, total })
       }}</span>
     </div>
 
     <div v-if="loading" class="p-6">
       <TableSkeleton :rows="8" :cols="8" />
     </div>
+
+    <ErrorState
+      v-else-if="error && itemProfits.length === 0"
+      data-testid="items-error"
+      :message="errorMessage"
+      @retry="$emit('retry')"
+    />
 
     <div v-else-if="itemProfits.length > 0">
       <!-- Desktop Table -->
@@ -62,6 +69,34 @@
               <td class="p-3 text-end font-mono font-bold text-theme-primary">{{ it.margin }}%</td>
             </tr>
           </tbody>
+          <tfoot v-if="totals">
+            <tr
+              data-testid="items-totals-row"
+              class="bg-slate-100/90 dark:bg-slate-900 border-t-2 border-slate-300 dark:border-slate-700 font-black"
+            >
+              <td class="p-3 text-start" colspan="3">{{ $t('reports.totals_row_label') }}</td>
+              <td class="p-3 text-end">
+                <ReportsNetValue
+                  :value="formatQty(totals.total_qty)"
+                  :detail="qtyDetail(totals.returned_qty)"
+                  value-class="font-mono font-bold text-cyan-600 dark:text-cyan-400"
+                />
+              </td>
+              <td class="p-3 text-end">
+                <ReportsNetValue
+                  :value="formatMoney(totals.total_revenue)"
+                  :detail="moneyDetail(totals.gross_revenue, totals.returned_value)"
+                />
+              </td>
+              <td class="p-3 text-end font-mono text-rose-500 dark:text-rose-400">
+                {{ formatMoney(totals.total_cogs) }}
+              </td>
+              <td class="p-3 text-end font-mono text-emerald-500 dark:text-emerald-400">
+                {{ formatMoney(totals.profit) }}
+              </td>
+              <td class="p-3 text-end font-mono text-theme-primary">{{ totals.margin }}%</td>
+            </tr>
+          </tfoot>
         </table>
       </div>
 
@@ -102,7 +137,29 @@
             >
           </div>
         </div>
+        <div
+          v-if="totals"
+          data-testid="items-totals-card"
+          class="p-4 rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900 text-xs space-y-1"
+        >
+          <h4 class="font-black text-slate-900 dark:text-white">{{ $t('reports.totals_row_label') }}</h4>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500">{{ $t('reports.net_sales_label') }}</span>
+            <span class="font-mono font-bold">{{ formatMoney(totals.total_revenue) }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500">{{ $t('reports.gross_profit_label') }}</span>
+            <span class="font-mono font-black text-emerald-500">{{ formatMoney(totals.profit) }}</span>
+          </div>
+        </div>
       </div>
+
+      <Pagination
+        :pagination="meta"
+        class="px-4 pb-4"
+        data-testid="items-pagination"
+        @page-change="$emit('page-change', $event)"
+      />
     </div>
 
     <EmptyState v-else :title="$t('reports.no_data_title')" :description="$t('reports.no_data_desc')" icon="coffee" />
@@ -112,6 +169,8 @@
 <script setup>
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
+import ErrorState from '../Common/ErrorState.vue';
+import Pagination from '../Common/Pagination.vue';
 import ReportsNetValue from './ReportsNetValue.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useReturnsDisplay } from '../../Composables/useReturnsDisplay';
@@ -121,6 +180,13 @@ const { moneyDetail, qtyDetail } = useReturnsDisplay();
 
 defineProps({
   itemProfits: { type: Array, default: () => [] },
+  totals: { type: Object, default: null },
+  meta: { type: Object, default: () => ({}) },
+  total: { type: Number, default: 0 },
   loading: { type: Boolean, default: false },
+  error: { type: Boolean, default: false },
+  errorMessage: { type: String, default: '' },
 });
+
+defineEmits(['page-change', 'retry']);
 </script>

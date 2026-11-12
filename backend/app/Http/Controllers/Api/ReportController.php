@@ -28,6 +28,15 @@ use Illuminate\Http\Request;
 
 final class ReportController extends Controller
 {
+    /**
+     * PERF-01: rows per embedded list of the comprehensive bundle (item_profits, inventory
+     * items, ABC lists, treasury ledger). The full lists are paged on their own endpoints.
+     */
+    public const COMPREHENSIVE_LIST_LIMIT = 100;
+
+    /** Rows of /reports/top-items. */
+    public const TOP_ITEMS_LIMIT = 20;
+
     public function __construct(
         private readonly GetProfitLossReportAction $getProfitLossReportAction,
         private readonly GetItemsProfitabilityReportAction $getItemsProfitabilityReportAction,
@@ -74,6 +83,19 @@ final class ReportController extends Controller
     }
 
     /**
+     * @return array{current_page: int, per_page: int, total: int, last_page: int}
+     */
+    private function pageMeta(int $page, int $perPage, int $total): array
+    {
+        return [
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'total' => $total,
+            'last_page' => max(1, (int) ceil($total / max(1, $perPage))),
+        ];
+    }
+
+    /**
      * Profit & Loss Executive Summary
      */
     public function summary(FilterReportRequest $request, ActiveStore $activeStore): JsonResponse
@@ -95,11 +117,13 @@ final class ReportController extends Controller
     public function items(FilterReportRequest $request, ActiveStore $activeStore): JsonResponse
     {
         $dto = $this->buildDTO($request, $activeStore);
-        $items = $this->getItemsProfitabilityReportAction->execute($dto);
+        $items = $this->getItemsProfitabilityReportAction->execute($dto, $dto->page, $dto->per_page);
 
         return response()->json([
             'success' => true,
-            'data' => $items,
+            'data' => $items['rows'],
+            'totals' => $items['totals'],
+            'meta' => $this->pageMeta($dto->page, $dto->per_page, $items['total']),
         ], 200);
     }
 
@@ -165,7 +189,8 @@ final class ReportController extends Controller
     public function treasury(FilterReportRequest $request, ActiveStore $activeStore): JsonResponse
     {
         $dto = $this->buildDTO($request, $activeStore);
-        $treasury = $this->getTreasuryReportAction->execute($dto);
+        $treasury = $this->getTreasuryReportAction->execute($dto, $dto->per_page, $dto->page);
+        $treasury['meta'] = $this->pageMeta($dto->page, $dto->per_page, $treasury['ledger_total']);
 
         return response()->json([
             'success' => true,
@@ -178,26 +203,37 @@ final class ReportController extends Controller
      */
     public function comprehensive(FilterReportRequest $request, ActiveStore $activeStore): JsonResponse
     {
-        $dto = $this->buildDTO($request, $activeStore);
+        // PERF-01: every embedded list is capped (first page of COMPREHENSIVE_LIST_LIMIT rows);
+        // totals are always over the whole period. `meta` says how many rows each list has.
+        $dto = $this->buildDTO($request, $activeStore)->withPage(1, self::COMPREHENSIVE_LIST_LIMIT);
 
         $summary = $this->getProfitLossReportAction->execute($dto);
-        $items = $this->getItemsProfitabilityReportAction->execute($dto);
+        $items = $this->getItemsProfitabilityReportAction->execute($dto, 1, self::COMPREHENSIVE_LIST_LIMIT);
         $stores = $this->visibleStoreRows($request, $this->getStoresComparativeReportAction->execute($dto));
         $customers = $this->getCustomersSalesReportAction->execute($dto);
         $expenses = $this->getExpensesBreakdownReportAction->execute($dto);
-        $inventory = $this->getInventoryValuationReportAction->execute($dto);
-        $treasury = $this->getTreasuryReportAction->execute($dto);
+        // The ABC analysis reuses the per-item sales the items report has just grouped.
+        $inventory = $this->getInventoryValuationReportAction->execute($dto, $items['sold_by_item']);
+        $treasury = $this->getTreasuryReportAction->execute($dto, self::COMPREHENSIVE_LIST_LIMIT, 1);
+        $treasury['meta'] = $this->pageMeta(1, self::COMPREHENSIVE_LIST_LIMIT, $treasury['ledger_total']);
 
         return response()->json([
             'success' => true,
             'period' => $summary['period'],
             'summary' => $summary['summary'],
-            'item_profits' => $items,
+            'item_profits' => $items['rows'],
+            'item_profits_totals' => $items['totals'],
             'store_breakdown' => $stores,
             'customer_sales' => $customers,
             'expenses_breakdown' => $expenses,
             'inventory_data' => $inventory,
             'treasury_data' => $treasury,
+            'meta' => [
+                'list_limit' => self::COMPREHENSIVE_LIST_LIMIT,
+                'item_profits' => ['total' => $items['total'], 'shown' => count($items['rows'])],
+                'inventory_items' => ['total' => $inventory['meta']['total'], 'shown' => count($inventory['items'])],
+                'treasury_ledger' => ['total' => $treasury['ledger_total'], 'shown' => count($treasury['ledger_entries'])],
+            ],
         ], 200);
     }
 
@@ -209,11 +245,11 @@ final class ReportController extends Controller
         // BUG-01 review: validated like every other report (an unparseable date is a 422, not a
         // 500); FilterReportRequest::authorize() is the same admin-or-reports.view check.
         $dto = $this->buildDTO($request, $activeStore);
-        $items = $this->getItemsProfitabilityReportAction->execute($dto);
+        $items = $this->getItemsProfitabilityReportAction->execute($dto, 1, self::TOP_ITEMS_LIMIT);
 
         return response()->json([
             'success' => true,
-            'top_items' => array_slice($items, 0, 20),
+            'top_items' => $items['rows'],
         ], 200);
     }
 

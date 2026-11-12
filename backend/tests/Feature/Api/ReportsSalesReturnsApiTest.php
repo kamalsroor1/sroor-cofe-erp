@@ -37,6 +37,7 @@ use Tests\TenantTestCase;
  * leftJoinSub), which sqlite can accept while MySQL rejects it.
  */
 #[Group('mysql')]
+#[Group('mariadb-reports')]
 final class ReportsSalesReturnsApiTest extends TenantTestCase
 {
     private Tenant $tenant;

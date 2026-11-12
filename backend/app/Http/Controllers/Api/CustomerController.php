@@ -12,13 +12,16 @@ use App\Actions\Customers\ToggleCustomerActiveAction;
 use App\Actions\Customers\UpdateCustomerAction;
 use App\DTOs\Customers\CollectCustomerPaymentDTO;
 use App\DTOs\Customers\CustomerDTO;
+use App\DTOs\Customers\CustomerStatementFilterDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CollectCustomerPaymentRequest;
+use App\Http\Requests\CustomerStatementRequest;
 use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Requests\UpdateCustomerRequest;
 use App\Http\Resources\CustomerResource;
 use App\Models\Customer;
 use App\Support\Money\Decimal;
+use App\Support\TenantClock;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -30,7 +33,8 @@ final class CustomerController extends Controller
         private readonly DeleteCustomerAction $deleteCustomerAction,
         private readonly ToggleCustomerActiveAction $toggleCustomerActiveAction,
         private readonly CollectCustomerPaymentAction $collectCustomerPaymentAction,
-        private readonly GetCustomerStatementAction $getCustomerStatementAction
+        private readonly GetCustomerStatementAction $getCustomerStatementAction,
+        private readonly TenantClock $tenantClock,
     ) {}
 
     /**
@@ -166,22 +170,14 @@ final class CustomerController extends Controller
     /**
      * Get Customer Statement of Account (Ledger)
      */
-    public function statement(Request $request, int $id): JsonResponse
+    public function statement(CustomerStatementRequest $request, int $id): JsonResponse
     {
-        $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('customers.statement') && ! $user->can('customers.manage')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
-        }
-
         $customer = Customer::findOrFail($id);
-        $fromDate = $request->query('from_date') ?: $request->query('from');
-        $toDate = $request->query('to_date') ?: $request->query('to');
-
-        $data = $this->getCustomerStatementAction->execute($customer, $fromDate, $toDate);
+        $filter = CustomerStatementFilterDTO::fromArray($request->validated(), $this->tenantClock->businessDate());
 
         return response()->json([
             'success' => true,
-            'data' => $data,
+            'data' => $this->getCustomerStatementAction->execute($customer, $filter),
         ], 200);
     }
 

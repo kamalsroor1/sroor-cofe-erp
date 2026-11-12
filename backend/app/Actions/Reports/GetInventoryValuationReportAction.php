@@ -5,108 +5,58 @@ declare(strict_types=1);
 namespace App\Actions\Reports;
 
 use App\DTOs\Reports\ReportFilterDTO;
-use App\Models\Item;
-use App\Models\StoreStock;
 use App\Services\InventoryAnalyticsService;
-use App\Support\Money\Decimal;
+use App\Services\Reports\InventoryValuation;
 
 final class GetInventoryValuationReportAction
 {
     public function __construct(
-        private readonly InventoryAnalyticsService $inventoryAnalyticsService
+        private readonly InventoryAnalyticsService $inventoryAnalyticsService,
+        private readonly InventoryValuation $inventoryValuation,
     ) {}
 
     /**
-     * Compute Inventory items valuation at cost and retail, plus ABC categorization
+     * Inventory valuation at cost and at selling price, plus the ABC analysis.
+     *
+     * PERF-01: the three valuation totals cover EVERY active item (streamed, never the page);
+     * `items` is one page of the valued rows (most valuable stock first, `stock_filter` applied)
+     * and `abc_data.items` / `abc_data.dead_stock` are capped at the same page size (they are
+     * already ranked by profit). `meta` tells the client how many rows exist in total.
+     *
+     * @param  array<int, array{quantity: string, revenue: string}>|null  $salesByItem  the period's
+     *                                                                                  sales per item, when the caller already has them (comprehensive bundle)
+     * @return array<string, mixed>
      */
-    public function execute(ReportFilterDTO $dto): array
+    public function execute(ReportFilterDTO $dto, ?array $salesByItem = null): array
     {
-        $stockCostValuation = '0.000';
-        $stockSellingValuation = '0.000';
-        $inventoryItems = [];
+        $storeId = $dto->store_id ?: null;
 
-        if ($dto->store_id) {
-            $storeStocks = StoreStock::with('item')
-                ->where('store_id', $dto->store_id)
-                ->whereHas('item', fn ($q) => $q->where('is_active', true))
-                ->get();
+        $totals = $this->inventoryValuation->totals($storeId);
+        $page = $this->inventoryValuation->page($storeId, $dto->stock_filter, $dto->page, $dto->per_page);
 
-            foreach ($storeStocks as $stk) {
-                $item = $stk->item;
-                if (! $item) {
-                    continue;
-                }
-
-                $qty = (string) ($stk->quantity ?? '0.000');
-                $costPrice = (string) ($item->cost_price ?? '0.000');
-                $sellingPrice = (string) ($stk->custom_selling_price ?: $item->selling_price);
-
-                $costVal = bcmul($qty, $costPrice, 3);
-                $sellVal = bcmul($qty, $sellingPrice, 3);
-                $profit = bcsub($sellVal, $costVal, 3);
-
-                $stockCostValuation = bcadd($stockCostValuation, $costVal, 3);
-                $stockSellingValuation = bcadd($stockSellingValuation, $sellVal, 3);
-
-                $inventoryItems[] = [
-                    'id' => $item->id,
-                    'name' => $item->name,
-                    'code' => $item->code,
-                    'category' => $item->category,
-                    'unit' => $item->unit,
-                    'current_stock' => Decimal::normalize((string) $qty),
-                    'cost_price' => Decimal::normalize((string) $costPrice),
-                    'selling_price' => Decimal::normalize((string) $sellingPrice),
-                    'cost_val' => Decimal::normalize((string) $costVal),
-                    'sell_val' => Decimal::normalize((string) $sellVal),
-                    'profit' => Decimal::normalize((string) $profit),
-                ];
-            }
-        } else {
-            $allItems = Item::where('is_active', true)->get();
-            foreach ($allItems as $itm) {
-                $qty = (string) ($itm->current_stock ?? '0.000');
-                $costPrice = (string) ($itm->cost_price ?? '0.000');
-                $sellingPrice = (string) ($itm->selling_price ?? '0.000');
-
-                $costVal = bcmul($qty, $costPrice, 3);
-                $sellVal = bcmul($qty, $sellingPrice, 3);
-                $profit = bcsub($sellVal, $costVal, 3);
-
-                $stockCostValuation = bcadd($stockCostValuation, $costVal, 3);
-                $stockSellingValuation = bcadd($stockSellingValuation, $sellVal, 3);
-
-                $inventoryItems[] = [
-                    'id' => $itm->id,
-                    'name' => $itm->name,
-                    'code' => $itm->code,
-                    'category' => $itm->category,
-                    'unit' => $itm->unit,
-                    'current_stock' => Decimal::normalize((string) $qty),
-                    'cost_price' => Decimal::normalize((string) $costPrice),
-                    'selling_price' => Decimal::normalize((string) $sellingPrice),
-                    'cost_val' => Decimal::normalize((string) $costVal),
-                    'sell_val' => Decimal::normalize((string) $sellVal),
-                    'profit' => Decimal::normalize((string) $profit),
-                ];
-            }
-        }
-
-        if ($dto->stock_filter === 'in_stock') {
-            $inventoryItems = array_values(array_filter($inventoryItems, fn ($i) => $i['current_stock'] > 0));
-        } elseif ($dto->stock_filter === 'zero_stock') {
-            $inventoryItems = array_values(array_filter($inventoryItems, fn ($i) => $i['current_stock'] <= 0));
-        }
-
-        $expectedProfit = bcsub($stockSellingValuation, $stockCostValuation, 3);
-        $abcData = $this->inventoryAnalyticsService->getAbcAnalysis($dto->from_date, $dto->to_date, $dto->store_id);
+        $abcData = $this->inventoryAnalyticsService->getAbcAnalysis($dto->from_date, $dto->to_date, $storeId, salesByItem: $salesByItem);
+        $abcItemsTotal = count($abcData['items']);
+        $deadStockTotal = count($abcData['dead_stock']);
+        $abcData['items'] = array_slice($abcData['items'], 0, $dto->per_page);
+        $abcData['dead_stock'] = array_slice($abcData['dead_stock'], 0, $dto->per_page);
+        $abcData['dead_stock_count'] = $deadStockTotal;
 
         return [
-            'stock_cost_valuation' => Decimal::normalize((string) $stockCostValuation),
-            'stock_selling_valuation' => Decimal::normalize((string) $stockSellingValuation),
-            'expected_stock_profit' => Decimal::normalize((string) $expectedProfit),
-            'items' => $inventoryItems,
+            'stock_cost_valuation' => $totals['cost'],
+            'stock_selling_valuation' => $totals['selling'],
+            'expected_stock_profit' => $totals['profit'],
+            'items' => $page['rows'],
             'abc_data' => $abcData,
+            'meta' => [
+                'current_page' => $dto->page,
+                'per_page' => $dto->per_page,
+                'total' => $page['total'],
+                'last_page' => max(1, (int) ceil($page['total'] / $dto->per_page)),
+                'valued_items_count' => $totals['count'],
+                'abc_items_total' => $abcItemsTotal,
+                'abc_items_shown' => count($abcData['items']),
+                'dead_stock_shown' => count($abcData['dead_stock']),
+            ],
         ];
     }
 }

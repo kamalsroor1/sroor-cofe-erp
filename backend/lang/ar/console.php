@@ -182,6 +182,15 @@ return [
         'unencrypted_refused' => 'الأرشيف غير المشفر (أو BACKUP_ARCHIVE_PASSWORD فاضي) مسموح بيه في بيئة local/testing بس: الاسترجاع اترفض.',
         'restore_user_required' => 'في الإنتاج الاسترجاع محتاج حساب MySQL مخصص (DB_RESTORE_USERNAME أو --db-user)، مش حساب التطبيق.',
     ],
+    // BUG-07: php artisan db:check-write-isolation
+    'write_isolation' => [
+        'level' => 'مستوى العزل لعمليات الفلوس والمخزون: :level',
+        'server_level' => 'الافتراضي بتاع السيرفر (DB_WRITE_ISOLATION فاضي)',
+        'ok' => 'تمام: صيغة الـ binary log بتقبل العمليات دي.',
+        'statement_binlog' => 'فشل [:connection]: الـ binary log شغال بـ binlog_format=STATEMENT وده بيرفض الكتابة بـ READ COMMITTED (خطأ 1665). خلّي binlog_format يبقى ROW أو MIXED، أو فضّي DB_WRITE_ISOLATION.',
+        'unreachable' => 'فشل [:connection]: مقدرناش نتأكد من الاتصال ده.',
+    ],
+
     'health' => [
         'telegram_title' => 'فشل فحص السلامة على :application_name (:env_name)',
         'heartbeat_sent' => 'اتبعت الـ heartbeat.',
@@ -195,6 +204,7 @@ return [
         'disk_unknown' => 'تعذرت قراءة المساحة الفاضية على القرص.',
         'disk_usage' => 'القرص ممتلئ بنسبة :percent%.',
         'release_rehearsal_short' => 'وضع البروفة',
+        'write_isolation_statement_binlog' => 'عمليات البيع والتحصيل والمخزون شغالة بـ READ COMMITTED لكن الـ binary log شغال بـ binlog_format=STATEMENT على: :connections. كل العمليات دي هتفشل (خطأ 1665). خلّي binlog_format يبقى ROW أو MIXED، أو فضّي DB_WRITE_ISOLATION.',
         'release_rehearsal' => 'وضع البروفة (RELEASE_REHEARSAL=true): البيئة مش جاهزة للإنتاج. المتساهَل فيه: :relaxed. ضيف إعدادات SMTP و Telegram و Google Drive واعمل release تاني في الوضع الصارم.',
     ],
     'tenants' => [
@@ -303,5 +313,11 @@ return [
         'col_stores_stock' => 'مجموع الفروع',
         'col_drift' => 'الفرق',
         'summary' => 'فحص فروق المخزون (للقراءة فقط): :count صنف به فرق في :total مستأجر. لم يتم تعديل أي شيء.',
+    ],
+    // PERF-01: cache:prune-expired
+    'cache_prune' => [
+        'description' => 'حذف صفوف الكاش المنتهية من جدول الكاش في قاعدة البيانات.',
+        'not_database' => 'مخزن الكاش الحالي مش قاعدة بيانات (:driver): مفيش حاجة تتمسح.',
+        'done' => 'اتمسح :count صف كاش منتهي.',
     ],
 ];

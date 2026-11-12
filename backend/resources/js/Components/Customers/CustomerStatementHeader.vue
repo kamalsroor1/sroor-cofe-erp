@@ -28,6 +28,8 @@
         type="button"
         variant="secondary"
         size="md"
+        :disabled="printing"
+        data-testid="statement-print-button"
         @click="$emit('print')"
         class="font-bold flex items-center gap-2"
       >
@@ -44,6 +46,7 @@ import BaseButton from '../Common/BaseButton.vue';
 
 defineProps({
   customerName: { type: String, default: '' },
+  printing: { type: Boolean, default: false },
 });
 
 defineEmits(['print']);

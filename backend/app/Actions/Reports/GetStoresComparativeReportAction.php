@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Actions\Reports;
 
 use App\DTOs\Reports\ReportFilterDTO;
-use App\Models\Invoice;
 use App\Models\Store;
+use App\Services\Reports\InvoiceAggregates;
 use App\Services\Reports\SalesReturnAggregates;
 use App\Support\Money\Decimal;
 
@@ -14,6 +14,7 @@ final class GetStoresComparativeReportAction
 {
     public function __construct(
         private readonly SalesReturnAggregates $salesReturns,
+        private readonly InvoiceAggregates $invoices,
     ) {}
 
     /**
@@ -27,15 +28,14 @@ final class GetStoresComparativeReportAction
         $stores = Store::where('is_active', true)->select('id', 'name')->get();
         $storeBreakdown = [];
 
-        // Global total sales in period for share_pct calculation
-        $allInvoices = Invoice::where('status', 'confirmed')
-            ->whereDate('invoice_date', '>=', $dto->from_date)
-            ->whereDate('invoice_date', '<=', $dto->to_date)
-            ->get();
+        // PERF-01: ONE grouped statement for every store (it used to load the whole period twice
+        // plus once per store). The overall total is every counted invoice, whatever its store.
+        $soldByStore = $this->invoices->byStore($dto->from_date, $dto->to_date);
+        $none = ['count' => 0, 'net_total' => '0.000', 'paid' => '0.000', 'remaining' => '0.000', 'cost' => '0.000'];
 
         $overallSales = '0.000';
-        foreach ($allInvoices as $ai) {
-            $overallSales = bcadd($overallSales, (string) $ai->net_total, 3);
+        foreach ($soldByStore as $storeSold) {
+            $overallSales = bcadd($overallSales, $storeSold['net_total'], 3);
         }
 
         $returnsByStore = $this->salesReturns->byStore($dto->from_date, $dto->to_date);
@@ -44,23 +44,11 @@ final class GetStoresComparativeReportAction
         }
 
         foreach ($stores as $st) {
-            $stInvoices = Invoice::where('status', 'confirmed')
-                ->where('store_id', $st->id)
-                ->whereDate('invoice_date', '>=', $dto->from_date)
-                ->whereDate('invoice_date', '<=', $dto->to_date)
-                ->get();
-
-            $stGrossSales = '0.000';
-            $stPaid = '0.000';
-            $stRemaining = '0.000';
-            $stCost = '0.000';
-
-            foreach ($stInvoices as $si) {
-                $stGrossSales = bcadd($stGrossSales, (string) $si->net_total, 3);
-                $stPaid = bcadd($stPaid, (string) $si->paid_amount, 3);
-                $stRemaining = bcadd($stRemaining, (string) $si->remaining_amount, 3);
-                $stCost = bcadd($stCost, (string) $si->total_cost, 3);
-            }
+            $stSold = $soldByStore[(int) $st->id] ?? $none;
+            $stGrossSales = $stSold['net_total'];
+            $stPaid = $stSold['paid'];
+            $stRemaining = $stSold['remaining'];
+            $stCost = $stSold['cost'];
 
             $stReturns = $returnsByStore[(int) $st->id] ?? ['value' => '0.000', 'cost' => '0.000', 'count' => 0];
             $stSales = bcsub($stGrossSales, $stReturns['value'], 3);
@@ -80,7 +68,7 @@ final class GetStoresComparativeReportAction
             $storeBreakdown[] = [
                 'id' => $st->id,
                 'name' => $st->name,
-                'invoice_count' => $stInvoices->count(),
+                'invoice_count' => $stSold['count'],
                 'total_sales' => Decimal::normalize((string) $stSales),
                 'gross_sales' => Decimal::normalize((string) $stGrossSales),
                 'total_returns' => $stReturns['value'],

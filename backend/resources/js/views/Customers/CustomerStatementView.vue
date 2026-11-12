@@ -1,65 +1,98 @@
 <template>
   <div class="space-y-6 max-w-5xl mx-auto font-tajawal">
-    <!-- Header & Print Action -->
-    <CustomerStatementHeader :customer-name="customer?.name" @print="printStatement" />
+    <div class="space-y-6 print:hidden">
+      <CustomerStatementHeader :customer-name="customer?.name" :printing="printing.active" @print="printStatement" />
 
-    <!-- Summary KPI Profile Cards -->
-    <CustomerStatementSummaryCards
-      :summary="summary"
-      :current-balance="customer?.current_balance ?? '0.000'"
-      :loading="isLoading"
+      <CustomerStatementSummaryCards
+        :summary="summary"
+        :current-balance="customer?.current_balance ?? '0.000'"
+        :loading="isLoading && !customer"
+      />
+
+      <CustomerStatementFilterBar
+        v-model:date-from="dateFrom"
+        v-model:date-to="dateTo"
+        :active-preset="activePreset"
+        :range-error="rangeError"
+        @filter="applyFilter"
+        @preset="applyPreset"
+      />
+
+      <CustomerStatementPrintProgress
+        v-if="printing.active"
+        :loaded="printing.loaded"
+        :total="printing.total"
+        @cancel="cancelPrint"
+      />
+
+      <template v-if="error && ledger.length === 0">
+        <ErrorState data-testid="error-state" :message="errorMessage" @retry="reload" />
+      </template>
+      <section v-else ref="tableSection">
+        <InlineErrorBar v-if="error" :message="errorMessage" @retry="reload" />
+        <CustomerStatementTable
+          :ledger="rows"
+          :loading="isLoading"
+          :pagination="meta"
+          :offset="pageOffset"
+          :has-opening="hasOpening"
+          @page-change="changePage"
+        />
+      </section>
+    </div>
+
+    <CustomerStatementPrintSheet
+      :customer="customer"
+      :rows="printRows"
+      :summary="printSummary"
+      :period-text="periodText"
     />
-
-    <!-- Date Range Filter Bar -->
-    <CustomerStatementFilterBar
-      v-model:date-from="dateFrom"
-      v-model:date-to="dateTo"
-      :active-preset="activePreset"
-      @filter="fetchStatement"
-      @preset="applyPreset"
-    />
-
-    <!-- Ledger Table & Mobile Cards -->
-
-    <template v-if="error && (!ledger || ledger.length === 0)">
-      <ErrorState data-testid="error-state" :message="errorMessage" @retry="fetchStatement()" />
-    </template>
-    <template v-else>
-      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchStatement()" />
-      <CustomerStatementTable :ledger="ledger" :loading="isLoading" />
-    </template>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import ErrorState from '../../Components/Common/ErrorState.vue';
 import CustomerStatementHeader from '../../Components/Customers/CustomerStatementHeader.vue';
 import CustomerStatementSummaryCards from '../../Components/Customers/CustomerStatementSummaryCards.vue';
 import CustomerStatementFilterBar from '../../Components/Customers/CustomerStatementFilterBar.vue';
 import CustomerStatementTable from '../../Components/Customers/CustomerStatementTable.vue';
+import CustomerStatementPrintProgress from '../../Components/Customers/CustomerStatementPrintProgress.vue';
+import CustomerStatementPrintSheet from '../../Components/Customers/CustomerStatementPrintSheet.vue';
 import { useCustomerStatement } from '../../Composables/useCustomerStatement';
 
 const {
   customer,
   ledger,
+  rows,
+  hasOpening,
+  pageOffset,
   summary,
+  meta,
+  periodText,
   dateFrom,
   dateTo,
   activePreset,
   error,
   errorMessage,
+  rangeError,
   isLoading,
+  printing,
+  printRows,
+  printSummary,
   applyPreset,
-  fetchStatement,
+  applyFilter,
+  goToPage,
+  reload,
   printStatement,
+  cancelPrint,
 } = useCustomerStatement();
-</script>
 
-<style scoped>
-@media print {
-  .no-print {
-    display: none !important;
-  }
-}
-</style>
+const tableSection = ref(null);
+
+const changePage = (page) => {
+  goToPage(page);
+  tableSection.value?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+};
+</script>

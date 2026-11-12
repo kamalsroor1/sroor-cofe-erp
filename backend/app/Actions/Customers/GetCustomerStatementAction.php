@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Customers;
 
+use App\DTOs\Customers\CustomerStatementFilterDTO;
 use App\Models\Customer;
 use App\Services\CustomerBalanceService;
 use App\Support\Money\Decimal;
@@ -15,19 +16,22 @@ final class GetCustomerStatementAction
     ) {}
 
     /**
-     * Generate customer statement of account (Ledger)
+     * Customer statement of account (ledger), one page of the period.
+     *
+     * PERF-01: summary totals cover the whole period; opening_balance is carried forward from
+     * before the period and every balance_after continues it exactly across pages.
+     *
+     * @return array<string, mixed>
      */
-    public function execute(Customer $customer, ?string $fromDate = null, ?string $toDate = null): array
+    public function execute(Customer $customer, CustomerStatementFilterDTO $filter): array
     {
-        $ledgerData = $this->customerBalanceService->getCustomerLedger($customer, $fromDate, $toDate);
-
-        $totalDebit = '0.000';
-        $totalCredit = '0.000';
-
-        foreach ($ledgerData['entries'] as $entry) {
-            $totalDebit = bcadd($totalDebit, (string) $entry['debit'], 3);
-            $totalCredit = bcadd($totalCredit, (string) $entry['credit'], 3);
-        }
+        $ledgerData = $this->customerBalanceService->getCustomerLedger(
+            $customer,
+            $filter->fromDate,
+            $filter->toDate,
+            $filter->page,
+            $filter->perPage,
+        );
 
         return [
             'customer' => [
@@ -39,24 +43,33 @@ final class GetCustomerStatementAction
                 'current_balance' => Decimal::normalize((string) $customer->current_balance),
             ],
             'filters' => [
-                'from_date' => $fromDate,
-                'to_date' => $toDate,
+                'from_date' => $filter->fromDate,
+                'to_date' => $filter->toDate,
+                'all_history' => $filter->allHistory,
             ],
             'summary' => [
-                'total_debit' => Decimal::normalize((string) $totalDebit),
-                'total_credit' => Decimal::normalize((string) $totalCredit),
+                'total_debit' => $ledgerData['total_debit'],
+                'total_credit' => $ledgerData['total_credit'],
                 'current_balance' => Decimal::normalize((string) $customer->current_balance),
-                'transactions_count' => count($ledgerData['entries']),
+                'transactions_count' => $ledgerData['total'],
+                'opening_balance' => $ledgerData['opening_balance'],
+                'closing_balance' => $ledgerData['closing_balance'],
             ],
-            'ledger' => array_map(fn ($row) => [
+            'ledger' => array_map(fn (array $row): array => [
                 'date' => $row['date'],
                 'type' => $row['type'],
                 'ref_number' => $row['ref_number'],
-                'debit' => Decimal::normalize((string) $row['debit']),
-                'credit' => Decimal::normalize((string) $row['credit']),
-                'balance_after' => Decimal::normalize((string) $row['balance_after']),
+                'debit' => $row['debit'],
+                'credit' => $row['credit'],
+                'balance_after' => $row['balance_after'],
                 'notes' => $row['notes'],
             ], $ledgerData['entries']),
+            'meta' => [
+                'current_page' => $filter->page,
+                'per_page' => $filter->perPage,
+                'total' => $ledgerData['total'],
+                'last_page' => max(1, (int) ceil($ledgerData['total'] / $filter->perPage)),
+            ],
         ];
     }
 }

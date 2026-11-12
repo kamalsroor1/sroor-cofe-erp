@@ -24,6 +24,7 @@
       v-model:stock-filter="filters.stock_filter"
       :stores="stores"
       :active-tab="activeTab"
+      :period-error="periodError"
       @set-period="setPeriod"
       @date-change="customDateChanged"
       @update:store-id="fetchReportsData"
@@ -44,8 +45,15 @@
       <ReportsItemsTab
         v-else-if="activeTab === 'items'"
         :key="'items'"
-        :item-profits="itemProfits"
-        :loading="isLoading"
+        :item-profits="itemsReport.rows.value"
+        :totals="itemsReport.totals.value"
+        :meta="itemsReport.meta.value"
+        :total="itemsTotal"
+        :loading="itemsReport.showSkeleton.value"
+        :error="itemsReport.error.value"
+        :error-message="itemsReport.errorMessage.value"
+        @page-change="itemsReport.goToPage"
+        @retry="itemsReport.reload"
       />
 
       <ReportsStoresTab
@@ -73,7 +81,15 @@
         v-else-if="activeTab === 'inventory'"
         :key="'inventory'"
         :inventory-data="inventoryData"
+        :items="inventoryReport.rows.value"
+        :meta="inventoryReport.meta.value"
+        :total="inventoryTotal"
         :loading="isLoading"
+        :table-loading="inventoryReport.showSkeleton.value"
+        :error="inventoryReport.error.value"
+        :error-message="inventoryReport.errorMessage.value"
+        @page-change="inventoryReport.goToPage"
+        @retry="inventoryReport.reload"
       />
 
       <ReportsStockDriftTab v-else-if="activeTab === 'stock_drift'" :key="'stock_drift'" />
@@ -82,7 +98,15 @@
         v-else-if="activeTab === 'treasury'"
         :key="'treasury'"
         :treasury-data="treasuryData"
+        :ledger="treasuryReport.rows.value"
+        :meta="treasuryReport.meta.value"
+        :total="treasuryLedgerTotal"
         :loading="isLoading"
+        :ledger-loading="treasuryReport.showSkeleton.value"
+        :error="treasuryReport.error.value"
+        :error-message="treasuryReport.errorMessage.value"
+        @page-change="treasuryReport.goToPage"
+        @retry="treasuryReport.reload"
       />
     </Transition>
   </div>
@@ -114,7 +138,13 @@ const {
   tabs,
   presets,
   summary,
-  itemProfits,
+  periodError,
+  itemsReport,
+  inventoryReport,
+  treasuryReport,
+  itemsTotal,
+  inventoryTotal,
+  treasuryLedgerTotal,
   storeBreakdown,
   customerSales,
   expensesBreakdown,

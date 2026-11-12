@@ -16,11 +16,16 @@ use App\Models\User;
 use App\Services\DailyCashFlowService;
 use App\Services\DashboardAnalyticsService;
 use App\Services\ProfitService;
+use App\Services\Reports\InvoiceAggregates;
+use App\Services\Reports\ReportDateRange;
 use App\Services\Reports\SalesReturnAggregates;
 use App\Services\Settings\TenantSettings;
 use App\Services\ShiftService;
+use App\Support\CostVisibility;
+use App\Support\DashboardCache;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 final class GetDashboardOverviewAction
@@ -33,6 +38,7 @@ final class GetDashboardOverviewAction
         private readonly ShiftService $shiftService,
         private readonly DailyCashFlowService $dailyCashFlow,
         private readonly SalesReturnAggregates $salesReturns,
+        private readonly InvoiceAggregates $invoices,
     ) {}
 
     /**
@@ -73,119 +79,19 @@ final class GetDashboardOverviewAction
 
         $storeFilter = $storeId ? (int) $storeId : null;
 
-        // 2. 7-Day Trend & Peak Analytics
-        $analytics = $this->analyticsService->getAnalytics(storeId: $storeFilter, trendDays: 7);
-
-        // 3. Today's Invoices & Sales Metrics
-        $todayInvoicesQuery = Invoice::with(['customer', 'store', 'user'])
-            ->where('status', 'confirmed')
-            ->whereDate('invoice_date', $today)
-            ->when($storeFilter, fn ($q) => $q->where('store_id', $storeFilter));
-
-        $todayInvoices = (clone $todayInvoicesQuery)->latest('id')->get();
-        $grossSales = '0.000';
-        $totalPaid = '0.000';
-        $totalRemaining = '0.000';
-        $cashSales = '0.000';
-        $creditSales = '0.000';
-        $partialSales = '0.000';
-        $invoicesCount = $todayInvoices->count();
-
-        foreach ($todayInvoices as $inv) {
-            $grossSales = bcadd($grossSales, (string) $inv->net_total, 3);
-            $totalPaid = bcadd($totalPaid, (string) $inv->paid_amount, 3);
-            $totalRemaining = bcadd($totalRemaining, (string) $inv->remaining_amount, 3);
-
-            if ($inv->payment_type === 'cash') {
-                $cashSales = bcadd($cashSales, (string) $inv->net_total, 3);
-            } elseif ($inv->payment_type === 'credit') {
-                $creditSales = bcadd($creditSales, (string) $inv->net_total, 3);
-            } elseif ($inv->payment_type === 'partial') {
-                $partialSales = bcadd($partialSales, (string) $inv->net_total, 3);
-            }
-        }
-
-        // BUG-01: today's sales are net of the sales returns booked today.
-        $todayReturns = $this->salesReturns->totals($today, $today, $storeFilter);
-        $totalSales = bcsub($grossSales, $todayReturns['value'], 3);
-
-        // 4. Cash collected today (BUG-01): the cash vouchers of the store(s) in scope only. The
-        // invoice writes its own sale voucher, so adding invoices.paid_amount counted it twice.
-        $cashFlow = $this->dailyCashFlow->forDate($today, $storeFilter);
-        $totalCashCollected = $cashFlow['total_cash_in'];
-
-        // 5. Operating Expenses Today (all methods; only the cash ones leave the drawer)
-        $expensesQuery = Expense::whereDate('expense_date', $today)
-            ->when($storeFilter, fn ($q) => $q->where('store_id', $storeFilter));
-
-        $totalExpenses = (string) ($expensesQuery->sum('amount') ?: '0.000');
-        $expensesCount = $expensesQuery->count();
-
-        // 6. Supplier cash payments today and the day's net drawer cash
-        $supplierPaid = $cashFlow['supplier_paid'];
-        $netCashToday = $cashFlow['net_cash'];
-
         // SEC-1 (M6): profit, margin and receivable/payable totals are financial report data:
         // reports.view only (there is no dashboard.* permission). Without it they are null.
         $showFinancials = $user instanceof User && $user->can('reports.view');
 
-        // 7. Customers & Suppliers Totals
-        $customersCount = (int) Customer::where('is_active', true)->count();
-        $suppliersCount = (int) Supplier::where('is_active', true)->count();
-        $totalCustomersDebt = $showFinancials ? Decimal::normalize((string) (Customer::where('is_active', true)->sum('current_balance') ?: 0)) : null;
-        $totalSuppliersDebt = $showFinancials ? Decimal::normalize((string) (Supplier::where('is_active', true)->sum('current_balance') ?: 0)) : null;
-
-        // 8. Low Stock Items Radar (SETG-10: own minimum, else the tenant default threshold)
-        $lowStockThreshold = $this->tenantSettings->lowStockDefaultThreshold();
-        $lowStockItems = $this->tenantSettings->whereLowStock(Item::where('is_active', true))
-            ->orderBy('current_stock', 'asc')
-            ->take(8)
-            ->get(['id', 'name', 'code', 'category', 'current_stock', 'min_stock_level', 'unit'])
-            ->map(fn ($it) => [
-                'id' => $it->id,
-                'name' => $it->name,
-                'code' => $it->code,
-                'category' => $it->category,
-                'current_stock' => Decimal::normalize((string) $it->current_stock),
-                'min_stock' => Decimal::normalize((string) (bccomp((string) ($it->min_stock_level ?? '0'), '0', 3) > 0 ? $it->min_stock_level : $lowStockThreshold)),
-                'unit' => $it->unit ?? __('inventory.unit_weight_short'),
-            ]);
-
-        $lowStockCount = $this->tenantSettings->whereLowStock(Item::where('is_active', true))->count();
-
-        // 9. Monthly Profits & Margin
-        $startOfMonth = $this->tenantClock->businessNow()->startOfMonth()->toDateString();
-        $periodic = $this->profitService->getPeriodicProfits($startOfMonth, $today, $storeFilter);
-
-        // 10. Top Selling Items this Month (BUG-01: net of this month's sales returns; the
-        // returns are pre-grouped per item, so the join never multiplies the invoice lines)
-        $monthReturns = $this->salesReturns->byItemSubquery($startOfMonth, $today, $storeFilter);
-        $topSellingItems = InvoiceItem::select(
-            'items.id as item_id',
-            'items.name as item_name',
-            'items.code as item_code',
-            'items.unit',
-            DB::raw('SUM(invoice_items.quantity) - COALESCE(MAX(item_returns.returned_qty), 0) as total_qty'),
-            DB::raw('SUM(invoice_items.total_price) - COALESCE(MAX(item_returns.returned_value), 0) as total_revenue')
-        )
-            ->join('items', 'items.id', '=', 'invoice_items.item_id')
-            ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
-            ->leftJoinSub($monthReturns, 'item_returns', 'item_returns.returned_item_id', '=', 'items.id')
-            ->where('invoices.status', 'confirmed')
-            ->whereDate('invoices.invoice_date', '>=', $startOfMonth)
-            ->when($storeFilter, fn ($q) => $q->where('invoices.store_id', $storeFilter))
-            ->groupBy('items.id', 'items.name', 'items.code', 'items.unit')
-            ->orderByDesc('total_qty')
-            ->take(6)
-            ->get()
-            ->map(fn ($t) => [
-                'item_id' => $t->item_id,
-                'name' => $t->item_name,
-                'code' => $t->item_code,
-                'unit' => $t->unit ?? __('inventory.unit_weight_short'),
-                'total_qty' => Decimal::normalize((string) $t->total_qty),
-                'total_revenue' => Decimal::normalize((string) $t->total_revenue),
-            ]);
+        // PERF-01: the aggregate blocks are cached for a few seconds per tenant, store scope,
+        // permission set, business day and locale (see DashboardCache). The live blocks below
+        // (active shift, recent invoices) are always fresh.
+        $cacheKey = DashboardCache::key($storeFilter, $showFinancials, CostVisibility::allows($user), $today, app()->getLocale());
+        $aggregates = Cache::remember(
+            $cacheKey,
+            DashboardCache::TTL_SECONDS,
+            fn (): array => $this->aggregates($storeFilter, $today, $showFinancials),
+        );
 
         // 11. Active Cash Shift
         $activeShift = null;
@@ -234,6 +140,126 @@ final class GetDashboardOverviewAction
                 'code' => $activeStore->code,
                 'type' => $activeStore->type,
             ] : null,
+            'metrics' => $aggregates['metrics'],
+            'can_view_financials' => $showFinancials,
+            'analytics' => $aggregates['analytics'],
+            'low_stock_items' => $aggregates['low_stock_items'],
+            'top_selling_items' => $aggregates['top_selling_items'],
+            'active_shift' => $activeShift,
+            'recent_invoices' => $recentInvoices,
+        ];
+    }
+
+    /**
+     * The cacheable part of the dashboard: every figure that is an aggregate of the period.
+     *
+     * @return array{metrics: array<string, mixed>, analytics: array<string, mixed>, low_stock_items: list<array<string, mixed>>, top_selling_items: list<array<string, mixed>>}
+     */
+    private function aggregates(?int $storeFilter, string $today, bool $showFinancials): array
+    {
+
+        // 2. 7-Day Trend & Peak Analytics
+        $analytics = $this->analyticsService->getAnalytics(storeId: $storeFilter, trendDays: 7);
+
+        // 3. Today's Invoices & Sales Metrics (PERF-01: one grouped statement)
+        $todayByType = $this->invoices->byColumn('payment_type', $today, $today, $storeFilter);
+        $grossSales = '0.000';
+        $invoicesCount = 0;
+        foreach ($todayByType as $typeSold) {
+            $grossSales = bcadd($grossSales, $typeSold['net_total'], 3);
+            $invoicesCount += $typeSold['count'];
+        }
+        $cashSales = $todayByType['cash']['net_total'] ?? '0.000';
+        $creditSales = $todayByType['credit']['net_total'] ?? '0.000';
+
+        // BUG-01: today's sales are net of the sales returns booked today.
+        $todayReturns = $this->salesReturns->totals($today, $today, $storeFilter);
+        $totalSales = bcsub($grossSales, $todayReturns['value'], 3);
+
+        // 4. Cash collected today (BUG-01): the cash vouchers of the store(s) in scope only. The
+        // invoice writes its own sale voucher, so adding invoices.paid_amount counted it twice.
+        $cashFlow = $this->dailyCashFlow->forDate($today, $storeFilter);
+        $totalCashCollected = $cashFlow['total_cash_in'];
+
+        // 5. Operating Expenses Today (all methods; only the cash ones leave the drawer)
+        $expensesQuery = Expense::query()->when($storeFilter, fn ($q) => $q->where('store_id', $storeFilter));
+        ReportDateRange::apply($expensesQuery, 'expense_date', $today, $today);
+        $expenseRow = $expensesQuery->toBase()
+            ->selectRaw('COUNT(*) as expenses_count')
+            ->selectRaw('COALESCE(SUM(amount), 0) as expenses_sum')
+            ->first(); // an aggregate without GROUP BY always returns one row
+        $totalExpenses = Decimal::normalize(InvoiceAggregates::scalar($expenseRow->expenses_sum));
+        $expensesCount = (int) $expenseRow->expenses_count;
+
+        // 6. Supplier cash payments today and the day's net drawer cash
+        $supplierPaid = $cashFlow['supplier_paid'];
+        $netCashToday = $cashFlow['net_cash'];
+
+        // 7. Customers & Suppliers Totals
+        $customersCount = (int) Customer::where('is_active', true)->count();
+        $suppliersCount = (int) Supplier::where('is_active', true)->count();
+        $totalCustomersDebt = $showFinancials ? Decimal::normalize((string) (Customer::where('is_active', true)->sum('current_balance') ?: 0)) : null;
+        $totalSuppliersDebt = $showFinancials ? Decimal::normalize((string) (Supplier::where('is_active', true)->sum('current_balance') ?: 0)) : null;
+
+        // 8. Low Stock Items Radar (SETG-10: own minimum, else the tenant default threshold)
+        $lowStockThreshold = $this->tenantSettings->lowStockDefaultThreshold();
+        $lowStockItems = $this->tenantSettings->whereLowStock(Item::where('is_active', true))
+            ->orderBy('current_stock', 'asc')
+            ->take(8)
+            ->get(['id', 'name', 'code', 'category', 'current_stock', 'min_stock_level', 'unit'])
+            ->map(fn ($it) => [
+                'id' => $it->id,
+                'name' => $it->name,
+                'code' => $it->code,
+                'category' => $it->category,
+                'current_stock' => Decimal::normalize((string) $it->current_stock),
+                'min_stock' => Decimal::normalize((string) (bccomp((string) ($it->min_stock_level ?? '0'), '0', 3) > 0 ? $it->min_stock_level : $lowStockThreshold)),
+                'unit' => $it->unit ?? __('inventory.unit_weight_short'),
+            ])
+            ->values()
+            ->all();
+
+        $lowStockCount = $this->tenantSettings->whereLowStock(Item::where('is_active', true))->count();
+
+        // 9. Monthly Profits & Margin
+        $startOfMonth = $this->tenantClock->businessNow()->startOfMonth()->toDateString();
+        $periodic = $this->profitService->getPeriodicProfits($startOfMonth, $today, $storeFilter);
+
+        // 10. Top Selling Items this Month (BUG-01: net of this month's sales returns; the
+        // returns are pre-grouped per item, so the join never multiplies the invoice lines)
+        $monthReturns = $this->salesReturns->byItemSubquery($startOfMonth, $today, $storeFilter);
+        $topSellingItems = InvoiceItem::select(
+            'items.id as item_id',
+            'items.name as item_name',
+            'items.code as item_code',
+            'items.unit',
+            DB::raw('SUM(invoice_items.quantity) - COALESCE(MAX(item_returns.returned_qty), 0) as total_qty'),
+            DB::raw('SUM(invoice_items.total_price) - COALESCE(MAX(item_returns.returned_value), 0) as total_revenue')
+        )
+            ->join('items', 'items.id', '=', 'invoice_items.item_id')
+            ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
+            ->leftJoinSub($monthReturns, 'item_returns', 'item_returns.returned_item_id', '=', 'items.id')
+            ->where('invoices.status', 'confirmed')
+            ->whereNull('invoices.deleted_at')
+            ->where('invoices.invoice_date', '>=', $startOfMonth)
+            ->when($storeFilter, fn ($q) => $q->where('invoices.store_id', $storeFilter))
+            ->groupBy('items.id', 'items.name', 'items.code', 'items.unit')
+            ->orderByDesc('total_qty')
+            ->orderBy('items.id') // PERF-01: deterministic order of equal quantities on every engine
+            ->take(6)
+            ->get()
+            ->map(fn ($t) => [
+                'item_id' => $t->item_id,
+                'name' => $t->item_name,
+                'code' => $t->item_code,
+                'unit' => $t->unit ?? __('inventory.unit_weight_short'),
+                'total_qty' => Decimal::normalize((string) $t->total_qty),
+                'total_revenue' => Decimal::normalize((string) $t->total_revenue),
+            ])
+            ->values()
+            ->all();
+
+        return [
             'metrics' => [
                 // BUG-01: today_sales, monthly_sales, monthly_gross_profit and monthly_margin are NET of returns.
                 'today_sales' => Decimal::normalize((string) $totalSales),
@@ -259,12 +285,9 @@ final class GetDashboardOverviewAction
                 'suppliers_count' => $suppliersCount,
                 'low_stock_count' => $lowStockCount,
             ],
-            'can_view_financials' => $showFinancials,
             'analytics' => $analytics,
             'low_stock_items' => $lowStockItems,
             'top_selling_items' => $topSellingItems,
-            'active_shift' => $activeShift,
-            'recent_invoices' => $recentInvoices,
         ];
     }
 }

@@ -215,4 +215,21 @@ return [
         'check' => 'شيك',
         'other' => 'أخرى',
     ],
+    // PERF-01: treasury ledger rows (were hardcoded in TreasuryService)
+    'ledger' => [
+        'customer_receipt_type' => 'تحصيل مبيعات / سند قبض',
+        'cash_customer' => 'عميل نقدي',
+        'customer_receipt_note' => 'تحصيل مبيعات',
+        'supplier_payment_type' => 'سداد مورد / دفعة توريد',
+        'supplier' => 'مورد',
+        'supplier_payment_note' => 'سداد دفعة للمورد',
+        'expense_type' => 'مصروف ونثريات',
+        'general_expenses' => 'مصروفات عامة',
+        'transfer_out_type' => 'تحويل صادر إلى [:to]',
+        'transfer_in_type' => 'تحويل وارد من [:from]',
+        'transfer_to' => 'إلى: :to',
+        'transfer_from' => 'من: :from',
+        'transfer_fee_note' => 'شامل عمولة :fee :currency - :notes',
+        'transfer_default_note' => 'تحويل بين الخزن',
+    ],
 ];

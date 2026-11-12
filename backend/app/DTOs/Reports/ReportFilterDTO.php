@@ -17,7 +17,32 @@ final class ReportFilterDTO
         public readonly ?int $store_id = null,
         public readonly string $treasury_method = 'all',
         public readonly string $stock_filter = 'all',
+        public readonly int $page = 1,
+        public readonly int $per_page = self::DEFAULT_PER_PAGE,
     ) {}
+
+    /** PERF-01: paged report lists (items, inventory): default and maximum page sizes. */
+    public const DEFAULT_PER_PAGE = 100;
+
+    public const MAX_PER_PAGE = 200;
+
+    /**
+     * The same filter on another page / page size (e.g. the capped lists of the comprehensive bundle).
+     */
+    public function withPage(int $page, int $perPage): self
+    {
+        return new self(
+            tab: $this->tab,
+            period: $this->period,
+            from_date: $this->from_date,
+            to_date: $this->to_date,
+            store_id: $this->store_id,
+            treasury_method: $this->treasury_method,
+            stock_filter: $this->stock_filter,
+            page: max(1, $page),
+            per_page: max(1, $perPage),
+        );
+    }
 
     /**
      * @param  CarbonInterface|null  $now  "now" on the tenant clock (SETG-2, TenantClock::now()). Presets such as
@@ -62,6 +87,8 @@ final class ReportFilterDTO
             store_id: $storeId,
             treasury_method: (string) ($data['treasury_method'] ?? 'all'),
             stock_filter: (string) ($data['stock_filter'] ?? 'all'),
+            page: max(1, (int) ($data['page'] ?? 1)),
+            per_page: max(1, min(self::MAX_PER_PAGE, (int) ($data['per_page'] ?? self::DEFAULT_PER_PAGE))),
         );
     }
 }

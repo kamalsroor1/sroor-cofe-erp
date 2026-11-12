@@ -3,19 +3,19 @@
 namespace App\Services;
 
 use App\Exceptions\BusinessRuleException;
+use App\Jobs\SendShiftDiscrepancyAlertJob;
 use App\Models\CashShift;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Store;
 use App\Services\Settings\TenantSettings;
+use App\Support\Database\TransactionRetry;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class ShiftService
 {
@@ -53,6 +53,20 @@ class ShiftService
             ?? Auth::user()?->getCurrentStore()?->id
             ?? Store::getMainStore()?->id;
 
+        // BUG-04: the day's SHIFT counter row exists before the transaction takes its first read.
+        $this->documentNumbers->prepareFor($this->shiftNumberPrefix(), CashShift::class, 'shift_number');
+
+        // BUG-04 / BUG-07: the number used to be allocated with no surrounding transaction (its
+        // own short one), so a failed insert left a gap. Now one unit of work, restarted as a
+        // whole on a lock conflict; only plain input is captured.
+        return TransactionRetry::run(fn (): CashShift => $this->createShift($targetStoreId, $openingCash, $notes, $actorId));
+    }
+
+    /**
+     * The body of openShift(): one attempt of TransactionRetry::run().
+     */
+    private function createShift(mixed $targetStoreId, string $openingCash, ?string $notes, ?int $actorId): CashShift
+    {
         $existing = $this->getActiveShift(storeId: $targetStoreId);
         if ($existing) {
             throw BusinessRuleException::conflict('treasury.shift_already_open', ['number' => $existing->shift_number]);
@@ -96,9 +110,12 @@ class ShiftService
      */
     private function nextShiftNumber(): string
     {
-        $prefix = 'SHIFT-'.str_replace('-', '', $this->tenantClock->businessDate());
+        return $this->documentNumbers->nextFor($this->shiftNumberPrefix(), 3, CashShift::class, 'shift_number');
+    }
 
-        return $this->documentNumbers->nextFor($prefix, 3, CashShift::class, 'shift_number');
+    private function shiftNumberPrefix(): string
+    {
+        return 'SHIFT-'.str_replace('-', '', $this->tenantClock->businessDate());
     }
 
     /**
@@ -188,7 +205,14 @@ class ShiftService
      */
     public function closeShift(CashShift $shift, string $actualCash, ?string $notes = null): CashShift
     {
-        return DB::transaction(function () use ($shift, $actualCash, $notes) {
+        $shiftId = (int) $shift->id;
+
+        // BUG-07: restarted as a whole on a lock conflict. The row is locked and read again by every
+        // attempt: reusing the caller's model would make a retry see its attributes as already saved
+        // (a rolled-back update() leaves them "clean") and silently skip the UPDATE. The discrepancy
+        // job below is afterCommit, so a rolled-back attempt never dispatches it.
+        $closed = TransactionRetry::run(function () use ($shiftId, $actualCash, $notes): CashShift {
+            $shift = CashShift::query()->whereKey($shiftId)->lockForUpdate()->firstOrFail();
             $totals = $this->calculateShiftTotals($shift);
 
             $diff = bcsub($actualCash, $totals['expected_cash_balance'], 3);
@@ -229,16 +253,19 @@ class ShiftService
                 ]
             );
 
-            // Send instant Telegram alert if there is a cash discrepancy
+            // PERF-01: the Telegram alert for a cash discrepancy is a queued job, dispatched only
+            // after this transaction commits: the HTTP call never runs while the locks are held,
+            // and a slow or failing Telegram can no longer delay (or break) the close.
             if (bccomp($diff, '0.000', 3) !== 0) {
-                try {
-                    app(TelegramService::class)->sendShiftDiscrepancyNotification($shift);
-                } catch (\Throwable $e) {
-                    Log::error('Shift discrepancy notification failed: '.$e->getMessage());
-                }
+                SendShiftDiscrepancyAlertJob::dispatch((int) $shift->id)->afterCommit();
             }
 
             return $shift;
         });
+
+        // Callers keep using the instance they passed in (as before): sync it with the saved row.
+        $shift->setRawAttributes($closed->getAttributes(), true);
+
+        return $shift;
     }
 }

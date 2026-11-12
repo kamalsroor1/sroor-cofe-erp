@@ -6,6 +6,7 @@ namespace App\Actions\Reports;
 
 use App\DTOs\Reports\ReportFilterDTO;
 use App\Models\Invoice;
+use App\Services\Reports\ReportDateRange;
 use App\Services\Reports\SalesReturnAggregates;
 use App\Support\Money\Decimal;
 use Illuminate\Support\Facades\DB;
@@ -27,9 +28,11 @@ final class GetCustomersSalesReportAction
     {
         $returns = $this->salesReturns->byCustomerSubquery($dto->from_date, $dto->to_date, $dto->store_id);
 
-        $customerSales = Invoice::where('invoices.status', 'confirmed')
-            ->whereDate('invoices.invoice_date', '>=', $dto->from_date)
-            ->whereDate('invoices.invoice_date', '<=', $dto->to_date)
+        $invoices = Invoice::where('invoices.status', 'confirmed');
+        // PERF-01: half-open range on the column itself (index-friendly), as for returns.
+        ReportDateRange::apply($invoices, 'invoices.invoice_date', $dto->from_date, $dto->to_date);
+
+        $customerSales = $invoices
             ->when($dto->store_id, fn ($q) => $q->where('invoices.store_id', $dto->store_id))
             ->leftJoinSub($returns, 'customer_returns', 'customer_returns.returned_customer_id', '=', 'invoices.customer_id')
             ->select(

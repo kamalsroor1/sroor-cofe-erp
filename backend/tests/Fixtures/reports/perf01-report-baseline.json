@@ -1,0 +1,4904 @@
+{
+    "all.month.summary": {
+        "total_sales": "3704.100",
+        "gross_sales": "4059.100",
+        "total_returns": "355.000",
+        "returns_count": 2,
+        "returns_cost": "241.728",
+        "net_sales": "3704.100",
+        "gross_cogs": "3061.728",
+        "total_cogs": "2820.000",
+        "gross_profit": "884.100",
+        "margin_percentage": "23.86",
+        "total_expenses": "465.750",
+        "expenses_count": 3,
+        "net_profit": "418.350",
+        "invoices_count": 5,
+        "avg_invoice": "811.820",
+        "total_paid": "1256.600",
+        "total_remaining": "2802.500",
+        "total_customers_debt": "2232.700",
+        "stock_cost_valuation": "160074.557",
+        "stock_selling_valuation": "216097.150",
+        "expected_stock_profit": "56022.593"
+    },
+    "all.month.items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "3.000",
+            "total_revenue": "2175.000",
+            "total_cogs": "1740.000",
+            "profit": "435.000",
+            "margin": "20.0",
+            "gross_qty": "3.000",
+            "gross_revenue": "2175.000",
+            "gross_cogs": "1740.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "5.000",
+            "total_revenue": "1300.000",
+            "total_cogs": "900.000",
+            "profit": "400.000",
+            "margin": "30.7",
+            "gross_qty": "6.000",
+            "gross_revenue": "1560.000",
+            "gross_cogs": "1080.000",
+            "returned_qty": "1.000",
+            "returned_value": "260.000",
+            "returned_cogs": "180.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "1.458",
+            "total_revenue": "296.600",
+            "total_cogs": "180.001",
+            "profit": "116.599",
+            "margin": "39.3",
+            "gross_qty": "1.958",
+            "gross_revenue": "391.600",
+            "gross_cogs": "241.729",
+            "returned_qty": "0.500",
+            "returned_value": "95.000",
+            "returned_cogs": "61.728"
+        }
+    ],
+    "all.month.top_items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "3.000",
+            "total_revenue": "2175.000",
+            "total_cogs": "1740.000",
+            "profit": "435.000",
+            "margin": "20.0",
+            "gross_qty": "3.000",
+            "gross_revenue": "2175.000",
+            "gross_cogs": "1740.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "5.000",
+            "total_revenue": "1300.000",
+            "total_cogs": "900.000",
+            "profit": "400.000",
+            "margin": "30.7",
+            "gross_qty": "6.000",
+            "gross_revenue": "1560.000",
+            "gross_cogs": "1080.000",
+            "returned_qty": "1.000",
+            "returned_value": "260.000",
+            "returned_cogs": "180.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "1.458",
+            "total_revenue": "296.600",
+            "total_cogs": "180.001",
+            "profit": "116.599",
+            "margin": "39.3",
+            "gross_qty": "1.958",
+            "gross_revenue": "391.600",
+            "gross_cogs": "241.729",
+            "returned_qty": "0.500",
+            "returned_value": "95.000",
+            "returned_cogs": "61.728"
+        }
+    ],
+    "all.month.customers": [
+        {
+            "customer_id": "#",
+            "name": "عميل أول",
+            "phone": "01000009001",
+            "current_balance": "2140.000",
+            "total_invoices": 4,
+            "total_bought": "3096.600",
+            "gross_bought": "3451.600",
+            "total_returns": "355.000",
+            "net_bought": "3096.600",
+            "total_paid": "1256.600",
+            "total_debt_in_period": "2195.000"
+        },
+        {
+            "customer_id": "#",
+            "name": "عميل ثان",
+            "phone": "01000009002",
+            "current_balance": "92.700",
+            "total_invoices": 1,
+            "total_bought": "607.500",
+            "gross_bought": "607.500",
+            "total_returns": "0.000",
+            "net_bought": "607.500",
+            "total_paid": "0.000",
+            "total_debt_in_period": "607.500"
+        }
+    ],
+    "all.month.expenses": [
+        {
+            "category": "utilities",
+            "amount": "300.000",
+            "count": 1
+        },
+        {
+            "category": "rent",
+            "amount": "120.500",
+            "count": 1
+        },
+        {
+            "category": "supplies",
+            "amount": "45.250",
+            "count": 1
+        }
+    ],
+    "all.ytd.summary": {
+        "total_sales": "5726.300",
+        "gross_sales": "6596.100",
+        "total_returns": "869.800",
+        "returns_count": 3,
+        "returns_cost": "601.728",
+        "net_sales": "5726.300",
+        "gross_cogs": "4850.371",
+        "total_cogs": "4248.643",
+        "gross_profit": "1477.657",
+        "margin_percentage": "25.80",
+        "total_expenses": "465.750",
+        "expenses_count": 3,
+        "net_profit": "1011.907",
+        "invoices_count": 8,
+        "avg_invoice": "824.510",
+        "total_paid": "3293.600",
+        "total_remaining": "3302.500",
+        "total_customers_debt": "2232.700",
+        "stock_cost_valuation": "160074.557",
+        "stock_selling_valuation": "216097.150",
+        "expected_stock_profit": "56022.593"
+    },
+    "all.ytd.items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "4.000",
+            "total_revenue": "2925.000",
+            "total_cogs": "2320.000",
+            "profit": "605.000",
+            "margin": "20.6",
+            "gross_qty": "4.000",
+            "gross_revenue": "2925.000",
+            "gross_cogs": "2320.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "8.000",
+            "total_revenue": "2073.000",
+            "total_cogs": "1440.000",
+            "profit": "633.000",
+            "margin": "30.5",
+            "gross_qty": "11.000",
+            "gross_revenue": "2847.000",
+            "gross_cogs": "1980.000",
+            "returned_qty": "3.000",
+            "returned_value": "774.000",
+            "returned_cogs": "540.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "3.958",
+            "total_revenue": "796.600",
+            "total_cogs": "488.643",
+            "profit": "307.957",
+            "margin": "38.6",
+            "gross_qty": "4.458",
+            "gross_revenue": "891.600",
+            "gross_cogs": "550.371",
+            "returned_qty": "0.500",
+            "returned_value": "95.000",
+            "returned_cogs": "61.728"
+        }
+    ],
+    "all.ytd.top_items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "4.000",
+            "total_revenue": "2925.000",
+            "total_cogs": "2320.000",
+            "profit": "605.000",
+            "margin": "20.6",
+            "gross_qty": "4.000",
+            "gross_revenue": "2925.000",
+            "gross_cogs": "2320.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "8.000",
+            "total_revenue": "2073.000",
+            "total_cogs": "1440.000",
+            "profit": "633.000",
+            "margin": "30.5",
+            "gross_qty": "11.000",
+            "gross_revenue": "2847.000",
+            "gross_cogs": "1980.000",
+            "returned_qty": "3.000",
+            "returned_value": "774.000",
+            "returned_cogs": "540.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "3.958",
+            "total_revenue": "796.600",
+            "total_cogs": "488.643",
+            "profit": "307.957",
+            "margin": "38.6",
+            "gross_qty": "4.458",
+            "gross_revenue": "891.600",
+            "gross_cogs": "550.371",
+            "returned_qty": "0.500",
+            "returned_value": "95.000",
+            "returned_cogs": "61.728"
+        }
+    ],
+    "all.ytd.customers": [
+        {
+            "customer_id": "#",
+            "name": "عميل أول",
+            "phone": "01000009001",
+            "current_balance": "2140.000",
+            "total_invoices": 5,
+            "total_bought": "3596.600",
+            "gross_bought": "3951.600",
+            "total_returns": "355.000",
+            "net_bought": "3596.600",
+            "total_paid": "1256.600",
+            "total_debt_in_period": "2695.000"
+        },
+        {
+            "customer_id": "#",
+            "name": "عميل ثان",
+            "phone": "01000009002",
+            "current_balance": "92.700",
+            "total_invoices": 3,
+            "total_bought": "2129.700",
+            "gross_bought": "2644.500",
+            "total_returns": "514.800",
+            "net_bought": "2129.700",
+            "total_paid": "2037.000",
+            "total_debt_in_period": "607.500"
+        }
+    ],
+    "all.ytd.expenses": [
+        {
+            "category": "utilities",
+            "amount": "300.000",
+            "count": 1
+        },
+        {
+            "category": "rent",
+            "amount": "120.500",
+            "count": 1
+        },
+        {
+            "category": "supplies",
+            "amount": "45.250",
+            "count": 1
+        }
+    ],
+    "all.wide.summary": {
+        "total_sales": "5986.300",
+        "gross_sales": "6856.100",
+        "total_returns": "869.800",
+        "returns_count": 3,
+        "returns_cost": "601.728",
+        "net_sales": "5986.300",
+        "gross_cogs": "5030.371",
+        "total_cogs": "4428.643",
+        "gross_profit": "1557.657",
+        "margin_percentage": "26.02",
+        "total_expenses": "465.750",
+        "expenses_count": 3,
+        "net_profit": "1091.907",
+        "invoices_count": 9,
+        "avg_invoice": "761.780",
+        "total_paid": "3553.600",
+        "total_remaining": "3302.500",
+        "total_customers_debt": "2232.700",
+        "stock_cost_valuation": "160074.557",
+        "stock_selling_valuation": "216097.150",
+        "expected_stock_profit": "56022.593"
+    },
+    "all.wide.items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "4.000",
+            "total_revenue": "2925.000",
+            "total_cogs": "2320.000",
+            "profit": "605.000",
+            "margin": "20.6",
+            "gross_qty": "4.000",
+            "gross_revenue": "2925.000",
+            "gross_cogs": "2320.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "9.000",
+            "total_revenue": "2333.000",
+            "total_cogs": "1620.000",
+            "profit": "713.000",
+            "margin": "30.5",
+            "gross_qty": "12.000",
+            "gross_revenue": "3107.000",
+            "gross_cogs": "2160.000",
+            "returned_qty": "3.000",
+            "returned_value": "774.000",
+            "returned_cogs": "540.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "3.958",
+            "total_revenue": "796.600",
+            "total_cogs": "488.643",
+            "profit": "307.957",
+            "margin": "38.6",
+            "gross_qty": "4.458",
+            "gross_revenue": "891.600",
+            "gross_cogs": "550.371",
+            "returned_qty": "0.500",
+            "returned_value": "95.000",
+            "returned_cogs": "61.728"
+        }
+    ],
+    "all.wide.top_items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "4.000",
+            "total_revenue": "2925.000",
+            "total_cogs": "2320.000",
+            "profit": "605.000",
+            "margin": "20.6",
+            "gross_qty": "4.000",
+            "gross_revenue": "2925.000",
+            "gross_cogs": "2320.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "9.000",
+            "total_revenue": "2333.000",
+            "total_cogs": "1620.000",
+            "profit": "713.000",
+            "margin": "30.5",
+            "gross_qty": "12.000",
+            "gross_revenue": "3107.000",
+            "gross_cogs": "2160.000",
+            "returned_qty": "3.000",
+            "returned_value": "774.000",
+            "returned_cogs": "540.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "3.958",
+            "total_revenue": "796.600",
+            "total_cogs": "488.643",
+            "profit": "307.957",
+            "margin": "38.6",
+            "gross_qty": "4.458",
+            "gross_revenue": "891.600",
+            "gross_cogs": "550.371",
+            "returned_qty": "0.500",
+            "returned_value": "95.000",
+            "returned_cogs": "61.728"
+        }
+    ],
+    "all.wide.customers": [
+        {
+            "customer_id": "#",
+            "name": "عميل أول",
+            "phone": "01000009001",
+            "current_balance": "2140.000",
+            "total_invoices": 6,
+            "total_bought": "3856.600",
+            "gross_bought": "4211.600",
+            "total_returns": "355.000",
+            "net_bought": "3856.600",
+            "total_paid": "1516.600",
+            "total_debt_in_period": "2695.000"
+        },
+        {
+            "customer_id": "#",
+            "name": "عميل ثان",
+            "phone": "01000009002",
+            "current_balance": "92.700",
+            "total_invoices": 3,
+            "total_bought": "2129.700",
+            "gross_bought": "2644.500",
+            "total_returns": "514.800",
+            "net_bought": "2129.700",
+            "total_paid": "2037.000",
+            "total_debt_in_period": "607.500"
+        }
+    ],
+    "all.wide.expenses": [
+        {
+            "category": "utilities",
+            "amount": "300.000",
+            "count": 1
+        },
+        {
+            "category": "rent",
+            "amount": "120.500",
+            "count": 1
+        },
+        {
+            "category": "supplies",
+            "amount": "45.250",
+            "count": 1
+        }
+    ],
+    "all.today.summary": {
+        "total_sales": "1972.500",
+        "gross_sales": "2232.500",
+        "total_returns": "260.000",
+        "returns_count": 1,
+        "returns_cost": "180.000",
+        "net_sales": "1972.500",
+        "gross_cogs": "1680.617",
+        "total_cogs": "1500.617",
+        "gross_profit": "471.883",
+        "margin_percentage": "23.92",
+        "total_expenses": "165.750",
+        "expenses_count": 2,
+        "net_profit": "306.133",
+        "invoices_count": 3,
+        "avg_invoice": "744.160",
+        "total_paid": "930.000",
+        "total_remaining": "1302.500",
+        "total_customers_debt": "2232.700",
+        "stock_cost_valuation": "160074.557",
+        "stock_selling_valuation": "216097.150",
+        "expected_stock_profit": "56022.593"
+    },
+    "all.today.items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "4.000",
+            "total_revenue": "1040.000",
+            "total_cogs": "720.000",
+            "profit": "320.000",
+            "margin": "30.7",
+            "gross_qty": "5.000",
+            "gross_revenue": "1300.000",
+            "gross_cogs": "900.000",
+            "returned_qty": "1.000",
+            "returned_value": "260.000",
+            "returned_cogs": "180.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "1.000",
+            "total_revenue": "675.000",
+            "total_cogs": "580.000",
+            "profit": "95.000",
+            "margin": "14.0",
+            "gross_qty": "1.000",
+            "gross_revenue": "675.000",
+            "gross_cogs": "580.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "1.625",
+            "total_revenue": "325.000",
+            "total_cogs": "200.618",
+            "profit": "124.382",
+            "margin": "38.2",
+            "gross_qty": "1.625",
+            "gross_revenue": "325.000",
+            "gross_cogs": "200.618",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        }
+    ],
+    "all.today.top_items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "4.000",
+            "total_revenue": "1040.000",
+            "total_cogs": "720.000",
+            "profit": "320.000",
+            "margin": "30.7",
+            "gross_qty": "5.000",
+            "gross_revenue": "1300.000",
+            "gross_cogs": "900.000",
+            "returned_qty": "1.000",
+            "returned_value": "260.000",
+            "returned_cogs": "180.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "1.000",
+            "total_revenue": "675.000",
+            "total_cogs": "580.000",
+            "profit": "95.000",
+            "margin": "14.0",
+            "gross_qty": "1.000",
+            "gross_revenue": "675.000",
+            "gross_cogs": "580.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "1.625",
+            "total_revenue": "325.000",
+            "total_cogs": "200.618",
+            "profit": "124.382",
+            "margin": "38.2",
+            "gross_qty": "1.625",
+            "gross_revenue": "325.000",
+            "gross_cogs": "200.618",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        }
+    ],
+    "all.today.customers": [
+        {
+            "customer_id": "#",
+            "name": "عميل أول",
+            "phone": "01000009001",
+            "current_balance": "2140.000",
+            "total_invoices": 2,
+            "total_bought": "1365.000",
+            "gross_bought": "1625.000",
+            "total_returns": "260.000",
+            "net_bought": "1365.000",
+            "total_paid": "930.000",
+            "total_debt_in_period": "695.000"
+        },
+        {
+            "customer_id": "#",
+            "name": "عميل ثان",
+            "phone": "01000009002",
+            "current_balance": "92.700",
+            "total_invoices": 1,
+            "total_bought": "607.500",
+            "gross_bought": "607.500",
+            "total_returns": "0.000",
+            "net_bought": "607.500",
+            "total_paid": "0.000",
+            "total_debt_in_period": "607.500"
+        }
+    ],
+    "all.today.expenses": [
+        {
+            "category": "rent",
+            "amount": "120.500",
+            "count": 1
+        },
+        {
+            "category": "supplies",
+            "amount": "45.250",
+            "count": 1
+        }
+    ],
+    "all.ytd.stores": [
+        {
+            "id": "#",
+            "name": "الفرع الرئيسي",
+            "invoice_count": 6,
+            "total_sales": "4159.100",
+            "gross_sales": "4514.100",
+            "total_returns": "355.000",
+            "returns_count": 2,
+            "net_sales": "4159.100",
+            "total_paid": "1906.600",
+            "total_remaining": "2607.500",
+            "gross_profit": "980.210",
+            "margin": "23.56",
+            "share_pct": "72.6"
+        },
+        {
+            "id": "#",
+            "name": "فرع ب",
+            "invoice_count": 2,
+            "total_sales": "1567.200",
+            "gross_sales": "2082.000",
+            "total_returns": "514.800",
+            "returns_count": 1,
+            "net_sales": "1567.200",
+            "total_paid": "1387.000",
+            "total_remaining": "695.000",
+            "gross_profit": "497.447",
+            "margin": "31.74",
+            "share_pct": "27.3"
+        }
+    ],
+    "all.month.stores": [
+        {
+            "id": "#",
+            "name": "الفرع الرئيسي",
+            "invoice_count": 4,
+            "total_sales": "2909.100",
+            "gross_sales": "3264.100",
+            "total_returns": "355.000",
+            "returns_count": 2,
+            "net_sales": "2909.100",
+            "total_paid": "1156.600",
+            "total_remaining": "2107.500",
+            "gross_profit": "618.853",
+            "margin": "21.27",
+            "share_pct": "78.5"
+        },
+        {
+            "id": "#",
+            "name": "فرع ب",
+            "invoice_count": 1,
+            "total_sales": "795.000",
+            "gross_sales": "795.000",
+            "total_returns": "0.000",
+            "returns_count": 0,
+            "net_sales": "795.000",
+            "total_paid": "100.000",
+            "total_remaining": "695.000",
+            "gross_profit": "265.247",
+            "margin": "33.36",
+            "share_pct": "21.4"
+        }
+    ],
+    "all.inventory.totals": {
+        "stock_cost_valuation": "160074.557",
+        "stock_selling_valuation": "216097.150",
+        "expected_stock_profit": "56022.593"
+    },
+    "all.inventory.items": [
+        {
+            "id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "current_stock": "96.042",
+            "cost_price": "123.457",
+            "selling_price": "200.000",
+            "cost_val": "11857.057",
+            "sell_val": "19208.400",
+            "profit": "7351.343"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "current_stock": "191.000",
+            "cost_price": "180.000",
+            "selling_price": "260.000",
+            "cost_val": "34380.000",
+            "sell_val": "49660.000",
+            "profit": "15280.000"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "current_stock": "196.000",
+            "cost_price": "580.000",
+            "selling_price": "750.000",
+            "cost_val": "113680.000",
+            "sell_val": "147000.000",
+            "profit": "33320.000"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-IDLE",
+            "code": "PF-IDLE",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "current_stock": "15.000",
+            "cost_price": "10.500",
+            "selling_price": "15.250",
+            "cost_val": "157.500",
+            "sell_val": "228.750",
+            "profit": "71.250"
+        }
+    ],
+    "all.inventory.abc_totals": {
+        "total_items_count": 4,
+        "total_profit": "1813.229",
+        "total_revenue": "6663.600",
+        "days_in_period": 166,
+        "class_a": {
+            "count": 2,
+            "profit": "1472.000",
+            "share": "81.1"
+        },
+        "class_b": {
+            "count": 1,
+            "profit": "341.229",
+            "share": "18.8"
+        },
+        "class_c": {
+            "count": 1,
+            "profit": "0.000",
+            "share": "0.0"
+        }
+    },
+    "all.inventory.abc_items": [
+        {
+            "id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "unit": "كجم",
+            "current_stock": "96.042",
+            "stock_value": "11857.057",
+            "unit_price": "200.000",
+            "unit_cost": "123.457",
+            "quantity_sold": "4.458",
+            "revenue": "891.6",
+            "cogs": "550.371",
+            "gross_profit": "341.229",
+            "velocity": "0.026",
+            "profit_margin": "38.27",
+            "is_sold": true,
+            "profit_share": "18.81",
+            "cum_profit_share": "100.00",
+            "revenue_share": "13.38",
+            "abc_class": "B"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "unit": "كجم",
+            "current_stock": "191.000",
+            "stock_value": "34380.000",
+            "unit_price": "260.000",
+            "unit_cost": "180.000",
+            "quantity_sold": "11",
+            "revenue": "2847",
+            "cogs": "1980.000",
+            "gross_profit": "867.000",
+            "velocity": "0.066",
+            "profit_margin": "30.45",
+            "is_sold": true,
+            "profit_share": "47.81",
+            "cum_profit_share": "47.81",
+            "revenue_share": "42.72",
+            "abc_class": "A"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "unit": "كجم",
+            "current_stock": "196.000",
+            "stock_value": "113680.000",
+            "unit_price": "750.000",
+            "unit_cost": "580.000",
+            "quantity_sold": "4",
+            "revenue": "2925",
+            "cogs": "2320.000",
+            "gross_profit": "605.000",
+            "velocity": "0.024",
+            "profit_margin": "20.68",
+            "is_sold": true,
+            "profit_share": "33.36",
+            "cum_profit_share": "81.18",
+            "revenue_share": "43.89",
+            "abc_class": "A"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-IDLE",
+            "code": "PF-IDLE",
+            "unit": "كجم",
+            "current_stock": "15.000",
+            "stock_value": "157.500",
+            "unit_price": "15.250",
+            "unit_cost": "10.500",
+            "quantity_sold": "0.000",
+            "revenue": "0.000",
+            "cogs": "0.000",
+            "gross_profit": "0.000",
+            "velocity": "0.000",
+            "profit_margin": "0.00",
+            "is_sold": false,
+            "abc_class": "C",
+            "profit_share": "0.00",
+            "cum_profit_share": "100.00",
+            "revenue_share": "0.00"
+        }
+    ],
+    "all.inventory.in_stock_count": 4,
+    "all.treasury.totals": {
+        "total_opening": "2297.000",
+        "total_inflows": "1456.600",
+        "total_outflows": "465.750",
+        "total_transfers_in": "0.000",
+        "total_transfers_out": "0.000",
+        "total_fees": "0.000",
+        "total_liquidity": "3287.850"
+    },
+    "all.treasury.accounts": {
+        "cash": {
+            "enum": "cash",
+            "key": "cash",
+            "label": "نقداً (كاش)",
+            "short_label": "كاش",
+            "icon": "banknote",
+            "badge_class": "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+            "opening_balance": "2297.000",
+            "inflows": "1030.000",
+            "outflows": "165.750",
+            "transfers_in": "0.000",
+            "transfers_out": "0.000",
+            "fees": "0.000",
+            "net_change": "864.250",
+            "closing_balance": "3161.250",
+            "liquidity_share": "96.1"
+        },
+        "instapay": {
+            "enum": "instapay",
+            "key": "instapay",
+            "label": "إنستاباي (InstaPay)",
+            "short_label": "إنستاباي",
+            "icon": "zap",
+            "badge_class": "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+            "opening_balance": "0.000",
+            "inflows": "426.600",
+            "outflows": "300.000",
+            "transfers_in": "0.000",
+            "transfers_out": "0.000",
+            "fees": "0.000",
+            "net_change": "126.600",
+            "closing_balance": "126.600",
+            "liquidity_share": "3.8"
+        },
+        "e_wallet": {
+            "enum": "e_wallet",
+            "key": "e_wallet",
+            "label": "محفظة إلكترونية (فودافون/أورانج/اتصالات)",
+            "short_label": "محفظة",
+            "icon": "smartphone",
+            "badge_class": "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+            "opening_balance": "0.000",
+            "inflows": "0.000",
+            "outflows": "0.000",
+            "transfers_in": "0.000",
+            "transfers_out": "0.000",
+            "fees": "0.000",
+            "net_change": "0.000",
+            "closing_balance": "0.000",
+            "liquidity_share": "0.00"
+        }
+    },
+    "all.treasury.ledger": [
+        {
+            "date": "2026-06-15",
+            "time": "14:45",
+            "timestamp": 1781523900,
+            "doc_number": "EXP-260615-0002",
+            "type": "expense",
+            "type_label": "مصروف ونثريات",
+            "method": "cash",
+            "method_label": "كاش",
+            "party": "supplies",
+            "notes": "أدوات",
+            "debit": "0.000",
+            "credit": "45.250",
+            "running_balance": "3287.850"
+        },
+        {
+            "date": "2026-06-15",
+            "time": "14:45",
+            "timestamp": 1781523900,
+            "doc_number": "EXP-260615-0001",
+            "type": "expense",
+            "type_label": "مصروف ونثريات",
+            "method": "cash",
+            "method_label": "كاش",
+            "party": "rent",
+            "notes": "إيجار",
+            "debit": "0.000",
+            "credit": "120.500",
+            "running_balance": "3333.100"
+        },
+        {
+            "date": "2026-06-15",
+            "time": "14:45",
+            "timestamp": 1781523900,
+            "doc_number": "PAY-CUST-20260615-000001",
+            "type": "inflow",
+            "type_label": "تحصيل مبيعات / سند قبض",
+            "method": "cash",
+            "method_label": "كاش",
+            "party": "عميل أول",
+            "notes": "سند قبض فلوس (تحصيل من زبون)",
+            "debit": "200.000",
+            "credit": "0.000",
+            "running_balance": "3453.600"
+        },
+        {
+            "date": "2026-06-15",
+            "time": "14:05",
+            "timestamp": 1781521500,
+            "doc_number": "PAY-INV-20260615-000002",
+            "type": "inflow",
+            "type_label": "تحصيل مبيعات / سند قبض",
+            "method": "instapay",
+            "method_label": "إنستاباي",
+            "party": "عميل أول",
+            "notes": "سداد عند إصدار الفاتورة رقم INV-PERFB-20260615-0001",
+            "debit": "100.000",
+            "credit": "0.000",
+            "running_balance": "3253.600"
+        },
+        {
+            "date": "2026-06-15",
+            "time": "09:15",
+            "timestamp": 1781504100,
+            "doc_number": "PAY-INV-20260615-000001",
+            "type": "inflow",
+            "type_label": "تحصيل مبيعات / سند قبض",
+            "method": "cash",
+            "method_label": "كاش",
+            "party": "عميل أول",
+            "notes": "سداد عند إصدار الفاتورة رقم INV-MAIN01-20260615-0001",
+            "debit": "830.000",
+            "credit": "0.000",
+            "running_balance": "3153.600"
+        },
+        {
+            "date": "2026-06-12",
+            "time": "19:50",
+            "timestamp": 1781283000,
+            "doc_number": "PAY-INV-20260612-000001",
+            "type": "inflow",
+            "type_label": "تحصيل مبيعات / سند قبض",
+            "method": "instapay",
+            "method_label": "إنستاباي",
+            "party": "عميل أول",
+            "notes": "سداد عند إصدار الفاتورة رقم INV-MAIN01-20260612-0002",
+            "debit": "326.600",
+            "credit": "0.000",
+            "running_balance": "2323.600"
+        },
+        {
+            "date": "2026-06-01",
+            "time": "15:00",
+            "timestamp": 1780315200,
+            "doc_number": "EXP-260601-0001",
+            "type": "expense",
+            "type_label": "مصروف ونثريات",
+            "method": "instapay",
+            "method_label": "إنستاباي",
+            "party": "utilities",
+            "notes": "كهرباء",
+            "debit": "0.000",
+            "credit": "300.000",
+            "running_balance": "1997.000"
+        }
+    ],
+    "all.comprehensive.summary": {
+        "total_sales": "5726.300",
+        "gross_sales": "6596.100",
+        "total_returns": "869.800",
+        "returns_count": 3,
+        "returns_cost": "601.728",
+        "net_sales": "5726.300",
+        "gross_cogs": "4850.371",
+        "total_cogs": "4248.643",
+        "gross_profit": "1477.657",
+        "margin_percentage": "25.80",
+        "total_expenses": "465.750",
+        "expenses_count": 3,
+        "net_profit": "1011.907",
+        "invoices_count": 8,
+        "avg_invoice": "824.510",
+        "total_paid": "3293.600",
+        "total_remaining": "3302.500",
+        "total_customers_debt": "2232.700",
+        "stock_cost_valuation": "160074.557",
+        "stock_selling_valuation": "216097.150",
+        "expected_stock_profit": "56022.593"
+    },
+    "all.comprehensive.item_profits": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "4.000",
+            "total_revenue": "2925.000",
+            "total_cogs": "2320.000",
+            "profit": "605.000",
+            "margin": "20.6",
+            "gross_qty": "4.000",
+            "gross_revenue": "2925.000",
+            "gross_cogs": "2320.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "8.000",
+            "total_revenue": "2073.000",
+            "total_cogs": "1440.000",
+            "profit": "633.000",
+            "margin": "30.5",
+            "gross_qty": "11.000",
+            "gross_revenue": "2847.000",
+            "gross_cogs": "1980.000",
+            "returned_qty": "3.000",
+            "returned_value": "774.000",
+            "returned_cogs": "540.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "3.958",
+            "total_revenue": "796.600",
+            "total_cogs": "488.643",
+            "profit": "307.957",
+            "margin": "38.6",
+            "gross_qty": "4.458",
+            "gross_revenue": "891.600",
+            "gross_cogs": "550.371",
+            "returned_qty": "0.500",
+            "returned_value": "95.000",
+            "returned_cogs": "61.728"
+        }
+    ],
+    "all.comprehensive.store_breakdown": [
+        {
+            "id": "#",
+            "name": "الفرع الرئيسي",
+            "invoice_count": 6,
+            "total_sales": "4159.100",
+            "gross_sales": "4514.100",
+            "total_returns": "355.000",
+            "returns_count": 2,
+            "net_sales": "4159.100",
+            "total_paid": "1906.600",
+            "total_remaining": "2607.500",
+            "gross_profit": "980.210",
+            "margin": "23.56",
+            "share_pct": "72.6"
+        },
+        {
+            "id": "#",
+            "name": "فرع ب",
+            "invoice_count": 2,
+            "total_sales": "1567.200",
+            "gross_sales": "2082.000",
+            "total_returns": "514.800",
+            "returns_count": 1,
+            "net_sales": "1567.200",
+            "total_paid": "1387.000",
+            "total_remaining": "695.000",
+            "gross_profit": "497.447",
+            "margin": "31.74",
+            "share_pct": "27.3"
+        }
+    ],
+    "all.comprehensive.customer_sales": [
+        {
+            "customer_id": "#",
+            "name": "عميل أول",
+            "phone": "01000009001",
+            "current_balance": "2140.000",
+            "total_invoices": 5,
+            "total_bought": "3596.600",
+            "gross_bought": "3951.600",
+            "total_returns": "355.000",
+            "net_bought": "3596.600",
+            "total_paid": "1256.600",
+            "total_debt_in_period": "2695.000"
+        },
+        {
+            "customer_id": "#",
+            "name": "عميل ثان",
+            "phone": "01000009002",
+            "current_balance": "92.700",
+            "total_invoices": 3,
+            "total_bought": "2129.700",
+            "gross_bought": "2644.500",
+            "total_returns": "514.800",
+            "net_bought": "2129.700",
+            "total_paid": "2037.000",
+            "total_debt_in_period": "607.500"
+        }
+    ],
+    "all.comprehensive.expenses_breakdown": [
+        {
+            "category": "utilities",
+            "amount": "300.000",
+            "count": 1
+        },
+        {
+            "category": "rent",
+            "amount": "120.500",
+            "count": 1
+        },
+        {
+            "category": "supplies",
+            "amount": "45.250",
+            "count": 1
+        }
+    ],
+    "all.dashboard.metrics": {
+        "today_sales": "1972.500",
+        "today_gross_sales": "2232.500",
+        "today_returns": "260.000",
+        "today_returns_count": 1,
+        "today_invoices_count": 3,
+        "cash_sales": "830.000",
+        "credit_sales": "607.500",
+        "total_cash_collected": "1030.000",
+        "today_expenses": "165.750",
+        "expenses_count": 2,
+        "supplier_payments": "0.000",
+        "net_cash_today": "864.250",
+        "customers_debt": "2232.700",
+        "suppliers_debt": "0.000",
+        "monthly_sales": "3704.100",
+        "monthly_gross_sales": "4059.100",
+        "monthly_returns": "355.000",
+        "monthly_gross_profit": "884.100",
+        "monthly_margin": "23.86",
+        "customers_count": 2,
+        "suppliers_count": 0,
+        "low_stock_count": 0
+    },
+    "all.dashboard.analytics": {
+        "today": {
+            "sales": "1972.500",
+            "gross_sales": "2232.500",
+            "returns": "260.000",
+            "invoices_count": 3,
+            "basket_size": "744.16"
+        },
+        "period": {
+            "days": 7,
+            "sales": "2204.100",
+            "gross_sales": "2559.100",
+            "returns": "355.000",
+            "invoices_count": 4,
+            "basket_size": "639.77"
+        },
+        "daily_trend": [
+            {
+                "date": "2026-06-09",
+                "label": "الثلاثاء 9/6",
+                "sales": 0,
+                "sales_formatted": "0.00 ج.م",
+                "invoices": 0,
+                "returns": "0.000"
+            },
+            {
+                "date": "2026-06-10",
+                "label": "الأربعاء 10/6",
+                "sales": 0,
+                "sales_formatted": "0.00 ج.م",
+                "invoices": 0,
+                "returns": "0.000"
+            },
+            {
+                "date": "2026-06-11",
+                "label": "الخميس 11/6",
+                "sales": 0,
+                "sales_formatted": "0.00 ج.م",
+                "invoices": 0,
+                "returns": "0.000"
+            },
+            {
+                "date": "2026-06-12",
+                "label": "الجمعة 12/6",
+                "sales": 231.6,
+                "sales_formatted": "231.60 ج.م",
+                "invoices": 1,
+                "returns": "95.000"
+            },
+            {
+                "date": "2026-06-13",
+                "label": "السبت 13/6",
+                "sales": 0,
+                "sales_formatted": "0.00 ج.م",
+                "invoices": 0,
+                "returns": "0.000"
+            },
+            {
+                "date": "2026-06-14",
+                "label": "الأحد 14/6",
+                "sales": 0,
+                "sales_formatted": "0.00 ج.م",
+                "invoices": 0,
+                "returns": "0.000"
+            },
+            {
+                "date": "2026-06-15",
+                "label": "الاثنين 15/6",
+                "sales": 1972.5,
+                "sales_formatted": "1,972.50 ج.م",
+                "invoices": 3,
+                "returns": "260.000"
+            }
+        ],
+        "hourly_sales": [
+            {
+                "hour": 0,
+                "label": "12 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 1,
+                "label": "1 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 2,
+                "label": "2 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 3,
+                "label": "3 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 4,
+                "label": "4 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 5,
+                "label": "5 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 6,
+                "label": "6 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 7,
+                "label": "7 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 8,
+                "label": "8 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 9,
+                "label": "9 ص",
+                "sales": "830.000",
+                "invoices": 1,
+                "intensity": 100,
+                "sales_formatted": "830.00 ج.م"
+            },
+            {
+                "hour": 10,
+                "label": "10 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 11,
+                "label": "11 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 12,
+                "label": "12 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 13,
+                "label": "1 م",
+                "sales": "607.500",
+                "invoices": 1,
+                "intensity": 73,
+                "sales_formatted": "607.50 ج.م"
+            },
+            {
+                "hour": 14,
+                "label": "2 م",
+                "sales": "795.000",
+                "invoices": 1,
+                "intensity": 96,
+                "sales_formatted": "795.00 ج.م"
+            },
+            {
+                "hour": 15,
+                "label": "3 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 16,
+                "label": "4 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 17,
+                "label": "5 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 18,
+                "label": "6 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 19,
+                "label": "7 م",
+                "sales": "326.600",
+                "invoices": 1,
+                "intensity": 39,
+                "sales_formatted": "326.60 ج.م"
+            },
+            {
+                "hour": 20,
+                "label": "8 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 21,
+                "label": "9 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 22,
+                "label": "10 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 23,
+                "label": "11 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            }
+        ],
+        "peak_hour": {
+            "hour": 9,
+            "label": "9 ص",
+            "sales": "830.000",
+            "invoices": 1,
+            "intensity": 100,
+            "sales_formatted": "830.00 ج.م"
+        },
+        "payment_distribution": [
+            {
+                "key": "cash",
+                "label": "درج الكاش (نقداً)",
+                "amount": "830",
+                "percentage": 66
+            },
+            {
+                "key": "instapay",
+                "label": "إنستاباي (InstaPay)",
+                "amount": "426.6",
+                "percentage": 33.9
+            },
+            {
+                "key": "e_wallet",
+                "label": "المحافظ الذكية",
+                "amount": "0.000",
+                "percentage": 0
+            },
+            {
+                "key": "visa",
+                "label": "فيزا / بطاقة بنكية",
+                "amount": "0.000",
+                "percentage": 0
+            },
+            {
+                "key": "bank_transfer",
+                "label": "تحويل بنكي",
+                "amount": "0.000",
+                "percentage": 0
+            }
+        ]
+    },
+    "all.dashboard.top_selling_items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "unit": "كجم",
+            "total_qty": "5.000",
+            "total_revenue": "1300.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "unit": "كجم",
+            "total_qty": "3.000",
+            "total_revenue": "2175.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "unit": "كجم",
+            "total_qty": "1.458",
+            "total_revenue": "296.600"
+        }
+    ],
+    "all.dashboard.recent_invoices": [
+        {
+            "id": "#",
+            "invoice_number": "INV-PERFB-20260615-0001",
+            "customer_name": "عميل أول",
+            "invoice_date": "2026-06-15",
+            "net_total": "795.000",
+            "paid_amount": "100.000",
+            "remaining_amount": "695.000",
+            "payment_type": "partial",
+            "status": "confirmed"
+        },
+        {
+            "id": "#",
+            "invoice_number": "INV-MAIN01-20260615-0002",
+            "customer_name": "عميل ثان",
+            "invoice_date": "2026-06-15",
+            "net_total": "607.500",
+            "paid_amount": "0.000",
+            "remaining_amount": "607.500",
+            "payment_type": "credit",
+            "status": "confirmed"
+        },
+        {
+            "id": "#",
+            "invoice_number": "INV-MAIN01-20260615-0001",
+            "customer_name": "عميل أول",
+            "invoice_date": "2026-06-15",
+            "net_total": "830.000",
+            "paid_amount": "830.000",
+            "remaining_amount": "0.000",
+            "payment_type": "cash",
+            "status": "confirmed"
+        },
+        {
+            "id": "#",
+            "invoice_number": "INV-MAIN01-20260612-0002",
+            "customer_name": "عميل أول",
+            "invoice_date": "2026-06-12",
+            "net_total": "326.600",
+            "paid_amount": "326.600",
+            "remaining_amount": "0.000",
+            "payment_type": "cash",
+            "status": "confirmed"
+        },
+        {
+            "id": "#",
+            "invoice_number": "INV-MAIN01-20260601-0001",
+            "customer_name": "عميل أول",
+            "invoice_date": "2026-06-01",
+            "net_total": "1500.000",
+            "paid_amount": "0.000",
+            "remaining_amount": "1500.000",
+            "payment_type": "credit",
+            "status": "confirmed"
+        },
+        {
+            "id": "#",
+            "invoice_number": "INV-PERFB-20260520-0001",
+            "customer_name": "عميل ثان",
+            "invoice_date": "2026-05-20",
+            "net_total": "1287.000",
+            "paid_amount": "1287.000",
+            "remaining_amount": "0.000",
+            "payment_type": "cash",
+            "status": "confirmed"
+        },
+        {
+            "id": "#",
+            "invoice_number": "INV-MAIN01-20260410-0001",
+            "customer_name": "عميل أول",
+            "invoice_date": "2026-04-10",
+            "net_total": "500.000",
+            "paid_amount": "0.000",
+            "remaining_amount": "500.000",
+            "payment_type": "credit",
+            "status": "confirmed"
+        },
+        {
+            "id": "#",
+            "invoice_number": "INV-MAIN01-20260105-0001",
+            "customer_name": "عميل ثان",
+            "invoice_date": "2026-01-05",
+            "net_total": "750.000",
+            "paid_amount": "750.000",
+            "remaining_amount": "0.000",
+            "payment_type": "cash",
+            "status": "confirmed"
+        }
+    ],
+    "all.dashboard.low_stock_items": [],
+    "a.month.summary": {
+        "total_sales": "2909.100",
+        "gross_sales": "3264.100",
+        "total_returns": "355.000",
+        "returns_count": 2,
+        "returns_cost": "241.728",
+        "net_sales": "2909.100",
+        "gross_cogs": "2531.975",
+        "total_cogs": "2290.247",
+        "gross_profit": "618.853",
+        "margin_percentage": "21.27",
+        "total_expenses": "420.500",
+        "expenses_count": 2,
+        "net_profit": "198.353",
+        "invoices_count": 4,
+        "avg_invoice": "816.020",
+        "total_paid": "1156.600",
+        "total_remaining": "2107.500",
+        "total_customers_debt": "2232.700",
+        "stock_cost_valuation": "78892.710",
+        "stock_selling_valuation": "106557.775",
+        "expected_stock_profit": "27665.065"
+    },
+    "a.month.items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "3.000",
+            "total_revenue": "2175.000",
+            "total_cogs": "1740.000",
+            "profit": "435.000",
+            "margin": "20.0",
+            "gross_qty": "3.000",
+            "gross_revenue": "2175.000",
+            "gross_cogs": "1740.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "3.000",
+            "total_revenue": "780.000",
+            "total_cogs": "540.000",
+            "profit": "240.000",
+            "margin": "30.7",
+            "gross_qty": "4.000",
+            "gross_revenue": "1040.000",
+            "gross_cogs": "720.000",
+            "returned_qty": "1.000",
+            "returned_value": "260.000",
+            "returned_cogs": "180.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "0.083",
+            "total_revenue": "21.600",
+            "total_cogs": "10.247",
+            "profit": "11.353",
+            "margin": "52.5",
+            "gross_qty": "0.583",
+            "gross_revenue": "116.600",
+            "gross_cogs": "71.975",
+            "returned_qty": "0.500",
+            "returned_value": "95.000",
+            "returned_cogs": "61.728"
+        }
+    ],
+    "a.month.top_items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "3.000",
+            "total_revenue": "2175.000",
+            "total_cogs": "1740.000",
+            "profit": "435.000",
+            "margin": "20.0",
+            "gross_qty": "3.000",
+            "gross_revenue": "2175.000",
+            "gross_cogs": "1740.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "3.000",
+            "total_revenue": "780.000",
+            "total_cogs": "540.000",
+            "profit": "240.000",
+            "margin": "30.7",
+            "gross_qty": "4.000",
+            "gross_revenue": "1040.000",
+            "gross_cogs": "720.000",
+            "returned_qty": "1.000",
+            "returned_value": "260.000",
+            "returned_cogs": "180.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "0.083",
+            "total_revenue": "21.600",
+            "total_cogs": "10.247",
+            "profit": "11.353",
+            "margin": "52.5",
+            "gross_qty": "0.583",
+            "gross_revenue": "116.600",
+            "gross_cogs": "71.975",
+            "returned_qty": "0.500",
+            "returned_value": "95.000",
+            "returned_cogs": "61.728"
+        }
+    ],
+    "a.month.customers": [
+        {
+            "customer_id": "#",
+            "name": "عميل أول",
+            "phone": "01000009001",
+            "current_balance": "2140.000",
+            "total_invoices": 3,
+            "total_bought": "2301.600",
+            "gross_bought": "2656.600",
+            "total_returns": "355.000",
+            "net_bought": "2301.600",
+            "total_paid": "1156.600",
+            "total_debt_in_period": "1500.000"
+        },
+        {
+            "customer_id": "#",
+            "name": "عميل ثان",
+            "phone": "01000009002",
+            "current_balance": "92.700",
+            "total_invoices": 1,
+            "total_bought": "607.500",
+            "gross_bought": "607.500",
+            "total_returns": "0.000",
+            "net_bought": "607.500",
+            "total_paid": "0.000",
+            "total_debt_in_period": "607.500"
+        }
+    ],
+    "a.month.expenses": [
+        {
+            "category": "utilities",
+            "amount": "300.000",
+            "count": 1
+        },
+        {
+            "category": "rent",
+            "amount": "120.500",
+            "count": 1
+        }
+    ],
+    "a.ytd.summary": {
+        "total_sales": "4159.100",
+        "gross_sales": "4514.100",
+        "total_returns": "355.000",
+        "returns_count": 2,
+        "returns_cost": "241.728",
+        "net_sales": "4159.100",
+        "gross_cogs": "3420.618",
+        "total_cogs": "3178.890",
+        "gross_profit": "980.210",
+        "margin_percentage": "23.56",
+        "total_expenses": "420.500",
+        "expenses_count": 2,
+        "net_profit": "559.710",
+        "invoices_count": 6,
+        "avg_invoice": "752.350",
+        "total_paid": "1906.600",
+        "total_remaining": "2607.500",
+        "total_customers_debt": "2232.700",
+        "stock_cost_valuation": "78892.710",
+        "stock_selling_valuation": "106557.775",
+        "expected_stock_profit": "27665.065"
+    },
+    "a.ytd.items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "4.000",
+            "total_revenue": "2925.000",
+            "total_cogs": "2320.000",
+            "profit": "605.000",
+            "margin": "20.6",
+            "gross_qty": "4.000",
+            "gross_revenue": "2925.000",
+            "gross_cogs": "2320.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "3.000",
+            "total_revenue": "780.000",
+            "total_cogs": "540.000",
+            "profit": "240.000",
+            "margin": "30.7",
+            "gross_qty": "4.000",
+            "gross_revenue": "1040.000",
+            "gross_cogs": "720.000",
+            "returned_qty": "1.000",
+            "returned_value": "260.000",
+            "returned_cogs": "180.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "2.583",
+            "total_revenue": "521.600",
+            "total_cogs": "318.890",
+            "profit": "202.710",
+            "margin": "38.8",
+            "gross_qty": "3.083",
+            "gross_revenue": "616.600",
+            "gross_cogs": "380.618",
+            "returned_qty": "0.500",
+            "returned_value": "95.000",
+            "returned_cogs": "61.728"
+        }
+    ],
+    "a.ytd.top_items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "4.000",
+            "total_revenue": "2925.000",
+            "total_cogs": "2320.000",
+            "profit": "605.000",
+            "margin": "20.6",
+            "gross_qty": "4.000",
+            "gross_revenue": "2925.000",
+            "gross_cogs": "2320.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "3.000",
+            "total_revenue": "780.000",
+            "total_cogs": "540.000",
+            "profit": "240.000",
+            "margin": "30.7",
+            "gross_qty": "4.000",
+            "gross_revenue": "1040.000",
+            "gross_cogs": "720.000",
+            "returned_qty": "1.000",
+            "returned_value": "260.000",
+            "returned_cogs": "180.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "2.583",
+            "total_revenue": "521.600",
+            "total_cogs": "318.890",
+            "profit": "202.710",
+            "margin": "38.8",
+            "gross_qty": "3.083",
+            "gross_revenue": "616.600",
+            "gross_cogs": "380.618",
+            "returned_qty": "0.500",
+            "returned_value": "95.000",
+            "returned_cogs": "61.728"
+        }
+    ],
+    "a.ytd.customers": [
+        {
+            "customer_id": "#",
+            "name": "عميل أول",
+            "phone": "01000009001",
+            "current_balance": "2140.000",
+            "total_invoices": 4,
+            "total_bought": "2801.600",
+            "gross_bought": "3156.600",
+            "total_returns": "355.000",
+            "net_bought": "2801.600",
+            "total_paid": "1156.600",
+            "total_debt_in_period": "2000.000"
+        },
+        {
+            "customer_id": "#",
+            "name": "عميل ثان",
+            "phone": "01000009002",
+            "current_balance": "92.700",
+            "total_invoices": 2,
+            "total_bought": "1357.500",
+            "gross_bought": "1357.500",
+            "total_returns": "0.000",
+            "net_bought": "1357.500",
+            "total_paid": "750.000",
+            "total_debt_in_period": "607.500"
+        }
+    ],
+    "a.ytd.expenses": [
+        {
+            "category": "utilities",
+            "amount": "300.000",
+            "count": 1
+        },
+        {
+            "category": "rent",
+            "amount": "120.500",
+            "count": 1
+        }
+    ],
+    "a.wide.summary": {
+        "total_sales": "4419.100",
+        "gross_sales": "4774.100",
+        "total_returns": "355.000",
+        "returns_count": 2,
+        "returns_cost": "241.728",
+        "net_sales": "4419.100",
+        "gross_cogs": "3600.618",
+        "total_cogs": "3358.890",
+        "gross_profit": "1060.210",
+        "margin_percentage": "23.99",
+        "total_expenses": "420.500",
+        "expenses_count": 2,
+        "net_profit": "639.710",
+        "invoices_count": 7,
+        "avg_invoice": "682.010",
+        "total_paid": "2166.600",
+        "total_remaining": "2607.500",
+        "total_customers_debt": "2232.700",
+        "stock_cost_valuation": "78892.710",
+        "stock_selling_valuation": "106557.775",
+        "expected_stock_profit": "27665.065"
+    },
+    "a.wide.items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "4.000",
+            "total_revenue": "2925.000",
+            "total_cogs": "2320.000",
+            "profit": "605.000",
+            "margin": "20.6",
+            "gross_qty": "4.000",
+            "gross_revenue": "2925.000",
+            "gross_cogs": "2320.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "4.000",
+            "total_revenue": "1040.000",
+            "total_cogs": "720.000",
+            "profit": "320.000",
+            "margin": "30.7",
+            "gross_qty": "5.000",
+            "gross_revenue": "1300.000",
+            "gross_cogs": "900.000",
+            "returned_qty": "1.000",
+            "returned_value": "260.000",
+            "returned_cogs": "180.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "2.583",
+            "total_revenue": "521.600",
+            "total_cogs": "318.890",
+            "profit": "202.710",
+            "margin": "38.8",
+            "gross_qty": "3.083",
+            "gross_revenue": "616.600",
+            "gross_cogs": "380.618",
+            "returned_qty": "0.500",
+            "returned_value": "95.000",
+            "returned_cogs": "61.728"
+        }
+    ],
+    "a.wide.top_items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "4.000",
+            "total_revenue": "2925.000",
+            "total_cogs": "2320.000",
+            "profit": "605.000",
+            "margin": "20.6",
+            "gross_qty": "4.000",
+            "gross_revenue": "2925.000",
+            "gross_cogs": "2320.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "4.000",
+            "total_revenue": "1040.000",
+            "total_cogs": "720.000",
+            "profit": "320.000",
+            "margin": "30.7",
+            "gross_qty": "5.000",
+            "gross_revenue": "1300.000",
+            "gross_cogs": "900.000",
+            "returned_qty": "1.000",
+            "returned_value": "260.000",
+            "returned_cogs": "180.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "2.583",
+            "total_revenue": "521.600",
+            "total_cogs": "318.890",
+            "profit": "202.710",
+            "margin": "38.8",
+            "gross_qty": "3.083",
+            "gross_revenue": "616.600",
+            "gross_cogs": "380.618",
+            "returned_qty": "0.500",
+            "returned_value": "95.000",
+            "returned_cogs": "61.728"
+        }
+    ],
+    "a.wide.customers": [
+        {
+            "customer_id": "#",
+            "name": "عميل أول",
+            "phone": "01000009001",
+            "current_balance": "2140.000",
+            "total_invoices": 5,
+            "total_bought": "3061.600",
+            "gross_bought": "3416.600",
+            "total_returns": "355.000",
+            "net_bought": "3061.600",
+            "total_paid": "1416.600",
+            "total_debt_in_period": "2000.000"
+        },
+        {
+            "customer_id": "#",
+            "name": "عميل ثان",
+            "phone": "01000009002",
+            "current_balance": "92.700",
+            "total_invoices": 2,
+            "total_bought": "1357.500",
+            "gross_bought": "1357.500",
+            "total_returns": "0.000",
+            "net_bought": "1357.500",
+            "total_paid": "750.000",
+            "total_debt_in_period": "607.500"
+        }
+    ],
+    "a.wide.expenses": [
+        {
+            "category": "utilities",
+            "amount": "300.000",
+            "count": 1
+        },
+        {
+            "category": "rent",
+            "amount": "120.500",
+            "count": 1
+        }
+    ],
+    "a.today.summary": {
+        "total_sales": "1177.500",
+        "gross_sales": "1437.500",
+        "total_returns": "260.000",
+        "returns_count": 1,
+        "returns_cost": "180.000",
+        "net_sales": "1177.500",
+        "gross_cogs": "1150.864",
+        "total_cogs": "970.864",
+        "gross_profit": "206.636",
+        "margin_percentage": "17.54",
+        "total_expenses": "120.500",
+        "expenses_count": 1,
+        "net_profit": "86.136",
+        "invoices_count": 2,
+        "avg_invoice": "718.750",
+        "total_paid": "830.000",
+        "total_remaining": "607.500",
+        "total_customers_debt": "2232.700",
+        "stock_cost_valuation": "78892.710",
+        "stock_selling_valuation": "106557.775",
+        "expected_stock_profit": "27665.065"
+    },
+    "a.today.items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "1.000",
+            "total_revenue": "675.000",
+            "total_cogs": "580.000",
+            "profit": "95.000",
+            "margin": "14.0",
+            "gross_qty": "1.000",
+            "gross_revenue": "675.000",
+            "gross_cogs": "580.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "2.000",
+            "total_revenue": "520.000",
+            "total_cogs": "360.000",
+            "profit": "160.000",
+            "margin": "30.7",
+            "gross_qty": "3.000",
+            "gross_revenue": "780.000",
+            "gross_cogs": "540.000",
+            "returned_qty": "1.000",
+            "returned_value": "260.000",
+            "returned_cogs": "180.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "0.250",
+            "total_revenue": "50.000",
+            "total_cogs": "30.864",
+            "profit": "19.136",
+            "margin": "38.2",
+            "gross_qty": "0.250",
+            "gross_revenue": "50.000",
+            "gross_cogs": "30.864",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        }
+    ],
+    "a.today.top_items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "1.000",
+            "total_revenue": "675.000",
+            "total_cogs": "580.000",
+            "profit": "95.000",
+            "margin": "14.0",
+            "gross_qty": "1.000",
+            "gross_revenue": "675.000",
+            "gross_cogs": "580.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "2.000",
+            "total_revenue": "520.000",
+            "total_cogs": "360.000",
+            "profit": "160.000",
+            "margin": "30.7",
+            "gross_qty": "3.000",
+            "gross_revenue": "780.000",
+            "gross_cogs": "540.000",
+            "returned_qty": "1.000",
+            "returned_value": "260.000",
+            "returned_cogs": "180.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "0.250",
+            "total_revenue": "50.000",
+            "total_cogs": "30.864",
+            "profit": "19.136",
+            "margin": "38.2",
+            "gross_qty": "0.250",
+            "gross_revenue": "50.000",
+            "gross_cogs": "30.864",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        }
+    ],
+    "a.today.customers": [
+        {
+            "customer_id": "#",
+            "name": "عميل ثان",
+            "phone": "01000009002",
+            "current_balance": "92.700",
+            "total_invoices": 1,
+            "total_bought": "607.500",
+            "gross_bought": "607.500",
+            "total_returns": "0.000",
+            "net_bought": "607.500",
+            "total_paid": "0.000",
+            "total_debt_in_period": "607.500"
+        },
+        {
+            "customer_id": "#",
+            "name": "عميل أول",
+            "phone": "01000009001",
+            "current_balance": "2140.000",
+            "total_invoices": 1,
+            "total_bought": "570.000",
+            "gross_bought": "830.000",
+            "total_returns": "260.000",
+            "net_bought": "570.000",
+            "total_paid": "830.000",
+            "total_debt_in_period": "0.000"
+        }
+    ],
+    "a.today.expenses": [
+        {
+            "category": "rent",
+            "amount": "120.500",
+            "count": 1
+        }
+    ],
+    "a.ytd.stores": [
+        {
+            "id": "#",
+            "name": "الفرع الرئيسي",
+            "invoice_count": 6,
+            "total_sales": "4159.100",
+            "gross_sales": "4514.100",
+            "total_returns": "355.000",
+            "returns_count": 2,
+            "net_sales": "4159.100",
+            "total_paid": "1906.600",
+            "total_remaining": "2607.500",
+            "gross_profit": "980.210",
+            "margin": "23.56",
+            "share_pct": "72.6"
+        },
+        {
+            "id": "#",
+            "name": "فرع ب",
+            "invoice_count": 2,
+            "total_sales": "1567.200",
+            "gross_sales": "2082.000",
+            "total_returns": "514.800",
+            "returns_count": 1,
+            "net_sales": "1567.200",
+            "total_paid": "1387.000",
+            "total_remaining": "695.000",
+            "gross_profit": "497.447",
+            "margin": "31.74",
+            "share_pct": "27.3"
+        }
+    ],
+    "a.month.stores": [
+        {
+            "id": "#",
+            "name": "الفرع الرئيسي",
+            "invoice_count": 4,
+            "total_sales": "2909.100",
+            "gross_sales": "3264.100",
+            "total_returns": "355.000",
+            "returns_count": 2,
+            "net_sales": "2909.100",
+            "total_paid": "1156.600",
+            "total_remaining": "2107.500",
+            "gross_profit": "618.853",
+            "margin": "21.27",
+            "share_pct": "78.5"
+        },
+        {
+            "id": "#",
+            "name": "فرع ب",
+            "invoice_count": 1,
+            "total_sales": "795.000",
+            "gross_sales": "795.000",
+            "total_returns": "0.000",
+            "returns_count": 0,
+            "net_sales": "795.000",
+            "total_paid": "100.000",
+            "total_remaining": "695.000",
+            "gross_profit": "265.247",
+            "margin": "33.36",
+            "share_pct": "21.4"
+        }
+    ],
+    "a.inventory.totals": {
+        "stock_cost_valuation": "78892.710",
+        "stock_selling_valuation": "106557.775",
+        "expected_stock_profit": "27665.065"
+    },
+    "a.inventory.items": [
+        {
+            "id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "current_stock": "47.417",
+            "cost_price": "123.457",
+            "selling_price": "200.000",
+            "cost_val": "5853.960",
+            "sell_val": "9483.400",
+            "profit": "3629.440"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "current_stock": "96.000",
+            "cost_price": "180.000",
+            "selling_price": "260.000",
+            "cost_val": "17280.000",
+            "sell_val": "24960.000",
+            "profit": "7680.000"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "current_stock": "96.000",
+            "cost_price": "580.000",
+            "selling_price": "750.000",
+            "cost_val": "55680.000",
+            "sell_val": "72000.000",
+            "profit": "16320.000"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-IDLE",
+            "code": "PF-IDLE",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "current_stock": "7.500",
+            "cost_price": "10.500",
+            "selling_price": "15.250",
+            "cost_val": "78.750",
+            "sell_val": "114.375",
+            "profit": "35.625"
+        }
+    ],
+    "a.inventory.abc_totals": {
+        "total_items_count": 4,
+        "total_profit": "1160.983",
+        "total_revenue": "4581.600",
+        "days_in_period": 166,
+        "class_a": {
+            "count": 3,
+            "profit": "1160.983",
+            "share": "100.0"
+        },
+        "class_b": {
+            "count": 0,
+            "profit": "0.000",
+            "share": "0.0"
+        },
+        "class_c": {
+            "count": 1,
+            "profit": "0.000",
+            "share": "0.0"
+        }
+    },
+    "a.inventory.abc_items": [
+        {
+            "id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "unit": "كجم",
+            "current_stock": "96.042",
+            "stock_value": "11857.057",
+            "unit_price": "200.000",
+            "unit_cost": "123.457",
+            "quantity_sold": "3.083",
+            "revenue": "616.6",
+            "cogs": "380.617",
+            "gross_profit": "235.983",
+            "velocity": "0.018",
+            "profit_margin": "38.27",
+            "is_sold": true,
+            "profit_share": "20.32",
+            "cum_profit_share": "100.00",
+            "revenue_share": "13.45",
+            "abc_class": "A"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "unit": "كجم",
+            "current_stock": "191.000",
+            "stock_value": "34380.000",
+            "unit_price": "260.000",
+            "unit_cost": "180.000",
+            "quantity_sold": "4",
+            "revenue": "1040",
+            "cogs": "720.000",
+            "gross_profit": "320.000",
+            "velocity": "0.024",
+            "profit_margin": "30.76",
+            "is_sold": true,
+            "profit_share": "27.56",
+            "cum_profit_share": "79.67",
+            "revenue_share": "22.69",
+            "abc_class": "A"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "unit": "كجم",
+            "current_stock": "196.000",
+            "stock_value": "113680.000",
+            "unit_price": "750.000",
+            "unit_cost": "580.000",
+            "quantity_sold": "4",
+            "revenue": "2925",
+            "cogs": "2320.000",
+            "gross_profit": "605.000",
+            "velocity": "0.024",
+            "profit_margin": "20.68",
+            "is_sold": true,
+            "profit_share": "52.11",
+            "cum_profit_share": "52.11",
+            "revenue_share": "63.84",
+            "abc_class": "A"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-IDLE",
+            "code": "PF-IDLE",
+            "unit": "كجم",
+            "current_stock": "15.000",
+            "stock_value": "157.500",
+            "unit_price": "15.250",
+            "unit_cost": "10.500",
+            "quantity_sold": "0.000",
+            "revenue": "0.000",
+            "cogs": "0.000",
+            "gross_profit": "0.000",
+            "velocity": "0.000",
+            "profit_margin": "0.00",
+            "is_sold": false,
+            "abc_class": "C",
+            "profit_share": "0.00",
+            "cum_profit_share": "100.00",
+            "revenue_share": "0.00"
+        }
+    ],
+    "a.inventory.in_stock_count": 4,
+    "a.treasury.totals": {
+        "total_opening": "1010.000",
+        "total_inflows": "1356.600",
+        "total_outflows": "420.500",
+        "total_transfers_in": "0.000",
+        "total_transfers_out": "0.000",
+        "total_fees": "0.000",
+        "total_liquidity": "1946.100"
+    },
+    "a.treasury.accounts": {
+        "cash": {
+            "enum": "cash",
+            "key": "cash",
+            "label": "نقداً (كاش)",
+            "short_label": "كاش",
+            "icon": "banknote",
+            "badge_class": "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+            "opening_balance": "1010.000",
+            "inflows": "1030.000",
+            "outflows": "120.500",
+            "transfers_in": "0.000",
+            "transfers_out": "0.000",
+            "fees": "0.000",
+            "net_change": "909.500",
+            "closing_balance": "1919.500",
+            "liquidity_share": "98.6"
+        },
+        "instapay": {
+            "enum": "instapay",
+            "key": "instapay",
+            "label": "إنستاباي (InstaPay)",
+            "short_label": "إنستاباي",
+            "icon": "zap",
+            "badge_class": "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+            "opening_balance": "0.000",
+            "inflows": "326.600",
+            "outflows": "300.000",
+            "transfers_in": "0.000",
+            "transfers_out": "0.000",
+            "fees": "0.000",
+            "net_change": "26.600",
+            "closing_balance": "26.600",
+            "liquidity_share": "1.3"
+        },
+        "e_wallet": {
+            "enum": "e_wallet",
+            "key": "e_wallet",
+            "label": "محفظة إلكترونية (فودافون/أورانج/اتصالات)",
+            "short_label": "محفظة",
+            "icon": "smartphone",
+            "badge_class": "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+            "opening_balance": "0.000",
+            "inflows": "0.000",
+            "outflows": "0.000",
+            "transfers_in": "0.000",
+            "transfers_out": "0.000",
+            "fees": "0.000",
+            "net_change": "0.000",
+            "closing_balance": "0.000",
+            "liquidity_share": "0.00"
+        }
+    },
+    "a.treasury.ledger": [
+        {
+            "date": "2026-06-15",
+            "time": "14:45",
+            "timestamp": 1781523900,
+            "doc_number": "EXP-260615-0001",
+            "type": "expense",
+            "type_label": "مصروف ونثريات",
+            "method": "cash",
+            "method_label": "كاش",
+            "party": "rent",
+            "notes": "إيجار",
+            "debit": "0.000",
+            "credit": "120.500",
+            "running_balance": "1946.100"
+        },
+        {
+            "date": "2026-06-15",
+            "time": "14:45",
+            "timestamp": 1781523900,
+            "doc_number": "PAY-CUST-20260615-000001",
+            "type": "inflow",
+            "type_label": "تحصيل مبيعات / سند قبض",
+            "method": "cash",
+            "method_label": "كاش",
+            "party": "عميل أول",
+            "notes": "سند قبض فلوس (تحصيل من زبون)",
+            "debit": "200.000",
+            "credit": "0.000",
+            "running_balance": "2066.600"
+        },
+        {
+            "date": "2026-06-15",
+            "time": "09:15",
+            "timestamp": 1781504100,
+            "doc_number": "PAY-INV-20260615-000001",
+            "type": "inflow",
+            "type_label": "تحصيل مبيعات / سند قبض",
+            "method": "cash",
+            "method_label": "كاش",
+            "party": "عميل أول",
+            "notes": "سداد عند إصدار الفاتورة رقم INV-MAIN01-20260615-0001",
+            "debit": "830.000",
+            "credit": "0.000",
+            "running_balance": "1866.600"
+        },
+        {
+            "date": "2026-06-12",
+            "time": "19:50",
+            "timestamp": 1781283000,
+            "doc_number": "PAY-INV-20260612-000001",
+            "type": "inflow",
+            "type_label": "تحصيل مبيعات / سند قبض",
+            "method": "instapay",
+            "method_label": "إنستاباي",
+            "party": "عميل أول",
+            "notes": "سداد عند إصدار الفاتورة رقم INV-MAIN01-20260612-0002",
+            "debit": "326.600",
+            "credit": "0.000",
+            "running_balance": "1036.600"
+        },
+        {
+            "date": "2026-06-01",
+            "time": "15:00",
+            "timestamp": 1780315200,
+            "doc_number": "EXP-260601-0001",
+            "type": "expense",
+            "type_label": "مصروف ونثريات",
+            "method": "instapay",
+            "method_label": "إنستاباي",
+            "party": "utilities",
+            "notes": "كهرباء",
+            "debit": "0.000",
+            "credit": "300.000",
+            "running_balance": "710.000"
+        }
+    ],
+    "a.comprehensive.summary": {
+        "total_sales": "4159.100",
+        "gross_sales": "4514.100",
+        "total_returns": "355.000",
+        "returns_count": 2,
+        "returns_cost": "241.728",
+        "net_sales": "4159.100",
+        "gross_cogs": "3420.618",
+        "total_cogs": "3178.890",
+        "gross_profit": "980.210",
+        "margin_percentage": "23.56",
+        "total_expenses": "420.500",
+        "expenses_count": 2,
+        "net_profit": "559.710",
+        "invoices_count": 6,
+        "avg_invoice": "752.350",
+        "total_paid": "1906.600",
+        "total_remaining": "2607.500",
+        "total_customers_debt": "2232.700",
+        "stock_cost_valuation": "78892.710",
+        "stock_selling_valuation": "106557.775",
+        "expected_stock_profit": "27665.065"
+    },
+    "a.comprehensive.item_profits": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "4.000",
+            "total_revenue": "2925.000",
+            "total_cogs": "2320.000",
+            "profit": "605.000",
+            "margin": "20.6",
+            "gross_qty": "4.000",
+            "gross_revenue": "2925.000",
+            "gross_cogs": "2320.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "3.000",
+            "total_revenue": "780.000",
+            "total_cogs": "540.000",
+            "profit": "240.000",
+            "margin": "30.7",
+            "gross_qty": "4.000",
+            "gross_revenue": "1040.000",
+            "gross_cogs": "720.000",
+            "returned_qty": "1.000",
+            "returned_value": "260.000",
+            "returned_cogs": "180.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "2.583",
+            "total_revenue": "521.600",
+            "total_cogs": "318.890",
+            "profit": "202.710",
+            "margin": "38.8",
+            "gross_qty": "3.083",
+            "gross_revenue": "616.600",
+            "gross_cogs": "380.618",
+            "returned_qty": "0.500",
+            "returned_value": "95.000",
+            "returned_cogs": "61.728"
+        }
+    ],
+    "a.comprehensive.store_breakdown": [
+        {
+            "id": "#",
+            "name": "الفرع الرئيسي",
+            "invoice_count": 6,
+            "total_sales": "4159.100",
+            "gross_sales": "4514.100",
+            "total_returns": "355.000",
+            "returns_count": 2,
+            "net_sales": "4159.100",
+            "total_paid": "1906.600",
+            "total_remaining": "2607.500",
+            "gross_profit": "980.210",
+            "margin": "23.56",
+            "share_pct": "72.6"
+        },
+        {
+            "id": "#",
+            "name": "فرع ب",
+            "invoice_count": 2,
+            "total_sales": "1567.200",
+            "gross_sales": "2082.000",
+            "total_returns": "514.800",
+            "returns_count": 1,
+            "net_sales": "1567.200",
+            "total_paid": "1387.000",
+            "total_remaining": "695.000",
+            "gross_profit": "497.447",
+            "margin": "31.74",
+            "share_pct": "27.3"
+        }
+    ],
+    "a.comprehensive.customer_sales": [
+        {
+            "customer_id": "#",
+            "name": "عميل أول",
+            "phone": "01000009001",
+            "current_balance": "2140.000",
+            "total_invoices": 4,
+            "total_bought": "2801.600",
+            "gross_bought": "3156.600",
+            "total_returns": "355.000",
+            "net_bought": "2801.600",
+            "total_paid": "1156.600",
+            "total_debt_in_period": "2000.000"
+        },
+        {
+            "customer_id": "#",
+            "name": "عميل ثان",
+            "phone": "01000009002",
+            "current_balance": "92.700",
+            "total_invoices": 2,
+            "total_bought": "1357.500",
+            "gross_bought": "1357.500",
+            "total_returns": "0.000",
+            "net_bought": "1357.500",
+            "total_paid": "750.000",
+            "total_debt_in_period": "607.500"
+        }
+    ],
+    "a.comprehensive.expenses_breakdown": [
+        {
+            "category": "utilities",
+            "amount": "300.000",
+            "count": 1
+        },
+        {
+            "category": "rent",
+            "amount": "120.500",
+            "count": 1
+        }
+    ],
+    "a.dashboard.metrics": {
+        "today_sales": "1177.500",
+        "today_gross_sales": "1437.500",
+        "today_returns": "260.000",
+        "today_returns_count": 1,
+        "today_invoices_count": 2,
+        "cash_sales": "830.000",
+        "credit_sales": "607.500",
+        "total_cash_collected": "1030.000",
+        "today_expenses": "120.500",
+        "expenses_count": 1,
+        "supplier_payments": "0.000",
+        "net_cash_today": "909.500",
+        "customers_debt": "2232.700",
+        "suppliers_debt": "0.000",
+        "monthly_sales": "2909.100",
+        "monthly_gross_sales": "3264.100",
+        "monthly_returns": "355.000",
+        "monthly_gross_profit": "618.853",
+        "monthly_margin": "21.27",
+        "customers_count": 2,
+        "suppliers_count": 0,
+        "low_stock_count": 0
+    },
+    "a.dashboard.analytics": {
+        "today": {
+            "sales": "1177.500",
+            "gross_sales": "1437.500",
+            "returns": "260.000",
+            "invoices_count": 2,
+            "basket_size": "718.75"
+        },
+        "period": {
+            "days": 7,
+            "sales": "1409.100",
+            "gross_sales": "1764.100",
+            "returns": "355.000",
+            "invoices_count": 3,
+            "basket_size": "588.03"
+        },
+        "daily_trend": [
+            {
+                "date": "2026-06-09",
+                "label": "الثلاثاء 9/6",
+                "sales": 0,
+                "sales_formatted": "0.00 ج.م",
+                "invoices": 0,
+                "returns": "0.000"
+            },
+            {
+                "date": "2026-06-10",
+                "label": "الأربعاء 10/6",
+                "sales": 0,
+                "sales_formatted": "0.00 ج.م",
+                "invoices": 0,
+                "returns": "0.000"
+            },
+            {
+                "date": "2026-06-11",
+                "label": "الخميس 11/6",
+                "sales": 0,
+                "sales_formatted": "0.00 ج.م",
+                "invoices": 0,
+                "returns": "0.000"
+            },
+            {
+                "date": "2026-06-12",
+                "label": "الجمعة 12/6",
+                "sales": 231.6,
+                "sales_formatted": "231.60 ج.م",
+                "invoices": 1,
+                "returns": "95.000"
+            },
+            {
+                "date": "2026-06-13",
+                "label": "السبت 13/6",
+                "sales": 0,
+                "sales_formatted": "0.00 ج.م",
+                "invoices": 0,
+                "returns": "0.000"
+            },
+            {
+                "date": "2026-06-14",
+                "label": "الأحد 14/6",
+                "sales": 0,
+                "sales_formatted": "0.00 ج.م",
+                "invoices": 0,
+                "returns": "0.000"
+            },
+            {
+                "date": "2026-06-15",
+                "label": "الاثنين 15/6",
+                "sales": 1177.5,
+                "sales_formatted": "1,177.50 ج.م",
+                "invoices": 2,
+                "returns": "260.000"
+            }
+        ],
+        "hourly_sales": [
+            {
+                "hour": 0,
+                "label": "12 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 1,
+                "label": "1 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 2,
+                "label": "2 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 3,
+                "label": "3 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 4,
+                "label": "4 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 5,
+                "label": "5 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 6,
+                "label": "6 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 7,
+                "label": "7 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 8,
+                "label": "8 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 9,
+                "label": "9 ص",
+                "sales": "830.000",
+                "invoices": 1,
+                "intensity": 100,
+                "sales_formatted": "830.00 ج.م"
+            },
+            {
+                "hour": 10,
+                "label": "10 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 11,
+                "label": "11 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 12,
+                "label": "12 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 13,
+                "label": "1 م",
+                "sales": "607.500",
+                "invoices": 1,
+                "intensity": 73,
+                "sales_formatted": "607.50 ج.م"
+            },
+            {
+                "hour": 14,
+                "label": "2 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 15,
+                "label": "3 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 16,
+                "label": "4 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 17,
+                "label": "5 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 18,
+                "label": "6 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 19,
+                "label": "7 م",
+                "sales": "326.600",
+                "invoices": 1,
+                "intensity": 39,
+                "sales_formatted": "326.60 ج.م"
+            },
+            {
+                "hour": 20,
+                "label": "8 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 21,
+                "label": "9 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 22,
+                "label": "10 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 23,
+                "label": "11 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            }
+        ],
+        "peak_hour": {
+            "hour": 9,
+            "label": "9 ص",
+            "sales": "830.000",
+            "invoices": 1,
+            "intensity": 100,
+            "sales_formatted": "830.00 ج.م"
+        },
+        "payment_distribution": [
+            {
+                "key": "cash",
+                "label": "درج الكاش (نقداً)",
+                "amount": "830",
+                "percentage": 71.7
+            },
+            {
+                "key": "instapay",
+                "label": "إنستاباي (InstaPay)",
+                "amount": "326.6",
+                "percentage": 28.2
+            },
+            {
+                "key": "e_wallet",
+                "label": "المحافظ الذكية",
+                "amount": "0.000",
+                "percentage": 0
+            },
+            {
+                "key": "visa",
+                "label": "فيزا / بطاقة بنكية",
+                "amount": "0.000",
+                "percentage": 0
+            },
+            {
+                "key": "bank_transfer",
+                "label": "تحويل بنكي",
+                "amount": "0.000",
+                "percentage": 0
+            }
+        ]
+    },
+    "a.dashboard.top_selling_items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "unit": "كجم",
+            "total_qty": "3.000",
+            "total_revenue": "780.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "unit": "كجم",
+            "total_qty": "3.000",
+            "total_revenue": "2175.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "unit": "كجم",
+            "total_qty": "0.083",
+            "total_revenue": "21.600"
+        }
+    ],
+    "a.dashboard.recent_invoices": [
+        {
+            "id": "#",
+            "invoice_number": "INV-MAIN01-20260615-0002",
+            "customer_name": "عميل ثان",
+            "invoice_date": "2026-06-15",
+            "net_total": "607.500",
+            "paid_amount": "0.000",
+            "remaining_amount": "607.500",
+            "payment_type": "credit",
+            "status": "confirmed"
+        },
+        {
+            "id": "#",
+            "invoice_number": "INV-MAIN01-20260615-0001",
+            "customer_name": "عميل أول",
+            "invoice_date": "2026-06-15",
+            "net_total": "830.000",
+            "paid_amount": "830.000",
+            "remaining_amount": "0.000",
+            "payment_type": "cash",
+            "status": "confirmed"
+        },
+        {
+            "id": "#",
+            "invoice_number": "INV-MAIN01-20260612-0002",
+            "customer_name": "عميل أول",
+            "invoice_date": "2026-06-12",
+            "net_total": "326.600",
+            "paid_amount": "326.600",
+            "remaining_amount": "0.000",
+            "payment_type": "cash",
+            "status": "confirmed"
+        },
+        {
+            "id": "#",
+            "invoice_number": "INV-MAIN01-20260601-0001",
+            "customer_name": "عميل أول",
+            "invoice_date": "2026-06-01",
+            "net_total": "1500.000",
+            "paid_amount": "0.000",
+            "remaining_amount": "1500.000",
+            "payment_type": "credit",
+            "status": "confirmed"
+        },
+        {
+            "id": "#",
+            "invoice_number": "INV-MAIN01-20260410-0001",
+            "customer_name": "عميل أول",
+            "invoice_date": "2026-04-10",
+            "net_total": "500.000",
+            "paid_amount": "0.000",
+            "remaining_amount": "500.000",
+            "payment_type": "credit",
+            "status": "confirmed"
+        },
+        {
+            "id": "#",
+            "invoice_number": "INV-MAIN01-20260105-0001",
+            "customer_name": "عميل ثان",
+            "invoice_date": "2026-01-05",
+            "net_total": "750.000",
+            "paid_amount": "750.000",
+            "remaining_amount": "0.000",
+            "payment_type": "cash",
+            "status": "confirmed"
+        },
+        {
+            "id": "#",
+            "invoice_number": "INV-MAIN01-20251231-0001",
+            "customer_name": "عميل أول",
+            "invoice_date": "2025-12-31",
+            "net_total": "260.000",
+            "paid_amount": "260.000",
+            "remaining_amount": "0.000",
+            "payment_type": "cash",
+            "status": "confirmed"
+        }
+    ],
+    "a.dashboard.low_stock_items": [],
+    "b.month.summary": {
+        "total_sales": "795.000",
+        "gross_sales": "795.000",
+        "total_returns": "0.000",
+        "returns_count": 0,
+        "returns_cost": "0.000",
+        "net_sales": "795.000",
+        "gross_cogs": "529.753",
+        "total_cogs": "529.753",
+        "gross_profit": "265.247",
+        "margin_percentage": "33.36",
+        "total_expenses": "45.250",
+        "expenses_count": 1,
+        "net_profit": "219.997",
+        "invoices_count": 1,
+        "avg_invoice": "795.000",
+        "total_paid": "100.000",
+        "total_remaining": "695.000",
+        "total_customers_debt": "2232.700",
+        "stock_cost_valuation": "81181.846",
+        "stock_selling_valuation": "109539.375",
+        "expected_stock_profit": "28357.529"
+    },
+    "b.month.items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "2.000",
+            "total_revenue": "520.000",
+            "total_cogs": "360.000",
+            "profit": "160.000",
+            "margin": "30.7",
+            "gross_qty": "2.000",
+            "gross_revenue": "520.000",
+            "gross_cogs": "360.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "1.375",
+            "total_revenue": "275.000",
+            "total_cogs": "169.753",
+            "profit": "105.247",
+            "margin": "38.2",
+            "gross_qty": "1.375",
+            "gross_revenue": "275.000",
+            "gross_cogs": "169.753",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        }
+    ],
+    "b.month.top_items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "2.000",
+            "total_revenue": "520.000",
+            "total_cogs": "360.000",
+            "profit": "160.000",
+            "margin": "30.7",
+            "gross_qty": "2.000",
+            "gross_revenue": "520.000",
+            "gross_cogs": "360.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "1.375",
+            "total_revenue": "275.000",
+            "total_cogs": "169.753",
+            "profit": "105.247",
+            "margin": "38.2",
+            "gross_qty": "1.375",
+            "gross_revenue": "275.000",
+            "gross_cogs": "169.753",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        }
+    ],
+    "b.month.customers": [
+        {
+            "customer_id": "#",
+            "name": "عميل أول",
+            "phone": "01000009001",
+            "current_balance": "2140.000",
+            "total_invoices": 1,
+            "total_bought": "795.000",
+            "gross_bought": "795.000",
+            "total_returns": "0.000",
+            "net_bought": "795.000",
+            "total_paid": "100.000",
+            "total_debt_in_period": "695.000"
+        }
+    ],
+    "b.month.expenses": [
+        {
+            "category": "supplies",
+            "amount": "45.250",
+            "count": 1
+        }
+    ],
+    "b.ytd.summary": {
+        "total_sales": "1567.200",
+        "gross_sales": "2082.000",
+        "total_returns": "514.800",
+        "returns_count": 1,
+        "returns_cost": "360.000",
+        "net_sales": "1567.200",
+        "gross_cogs": "1429.753",
+        "total_cogs": "1069.753",
+        "gross_profit": "497.447",
+        "margin_percentage": "31.74",
+        "total_expenses": "45.250",
+        "expenses_count": 1,
+        "net_profit": "452.197",
+        "invoices_count": 2,
+        "avg_invoice": "1041.000",
+        "total_paid": "1387.000",
+        "total_remaining": "695.000",
+        "total_customers_debt": "2232.700",
+        "stock_cost_valuation": "81181.846",
+        "stock_selling_valuation": "109539.375",
+        "expected_stock_profit": "28357.529"
+    },
+    "b.ytd.items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "5.000",
+            "total_revenue": "1293.000",
+            "total_cogs": "900.000",
+            "profit": "393.000",
+            "margin": "30.3",
+            "gross_qty": "7.000",
+            "gross_revenue": "1807.000",
+            "gross_cogs": "1260.000",
+            "returned_qty": "2.000",
+            "returned_value": "514.000",
+            "returned_cogs": "360.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "1.375",
+            "total_revenue": "275.000",
+            "total_cogs": "169.753",
+            "profit": "105.247",
+            "margin": "38.2",
+            "gross_qty": "1.375",
+            "gross_revenue": "275.000",
+            "gross_cogs": "169.753",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        }
+    ],
+    "b.ytd.top_items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "5.000",
+            "total_revenue": "1293.000",
+            "total_cogs": "900.000",
+            "profit": "393.000",
+            "margin": "30.3",
+            "gross_qty": "7.000",
+            "gross_revenue": "1807.000",
+            "gross_cogs": "1260.000",
+            "returned_qty": "2.000",
+            "returned_value": "514.000",
+            "returned_cogs": "360.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "1.375",
+            "total_revenue": "275.000",
+            "total_cogs": "169.753",
+            "profit": "105.247",
+            "margin": "38.2",
+            "gross_qty": "1.375",
+            "gross_revenue": "275.000",
+            "gross_cogs": "169.753",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        }
+    ],
+    "b.ytd.customers": [
+        {
+            "customer_id": "#",
+            "name": "عميل أول",
+            "phone": "01000009001",
+            "current_balance": "2140.000",
+            "total_invoices": 1,
+            "total_bought": "795.000",
+            "gross_bought": "795.000",
+            "total_returns": "0.000",
+            "net_bought": "795.000",
+            "total_paid": "100.000",
+            "total_debt_in_period": "695.000"
+        },
+        {
+            "customer_id": "#",
+            "name": "عميل ثان",
+            "phone": "01000009002",
+            "current_balance": "92.700",
+            "total_invoices": 1,
+            "total_bought": "772.200",
+            "gross_bought": "1287.000",
+            "total_returns": "514.800",
+            "net_bought": "772.200",
+            "total_paid": "1287.000",
+            "total_debt_in_period": "0.000"
+        }
+    ],
+    "b.ytd.expenses": [
+        {
+            "category": "supplies",
+            "amount": "45.250",
+            "count": 1
+        }
+    ],
+    "b.wide.summary": {
+        "total_sales": "1567.200",
+        "gross_sales": "2082.000",
+        "total_returns": "514.800",
+        "returns_count": 1,
+        "returns_cost": "360.000",
+        "net_sales": "1567.200",
+        "gross_cogs": "1429.753",
+        "total_cogs": "1069.753",
+        "gross_profit": "497.447",
+        "margin_percentage": "31.74",
+        "total_expenses": "45.250",
+        "expenses_count": 1,
+        "net_profit": "452.197",
+        "invoices_count": 2,
+        "avg_invoice": "1041.000",
+        "total_paid": "1387.000",
+        "total_remaining": "695.000",
+        "total_customers_debt": "2232.700",
+        "stock_cost_valuation": "81181.846",
+        "stock_selling_valuation": "109539.375",
+        "expected_stock_profit": "28357.529"
+    },
+    "b.wide.items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "5.000",
+            "total_revenue": "1293.000",
+            "total_cogs": "900.000",
+            "profit": "393.000",
+            "margin": "30.3",
+            "gross_qty": "7.000",
+            "gross_revenue": "1807.000",
+            "gross_cogs": "1260.000",
+            "returned_qty": "2.000",
+            "returned_value": "514.000",
+            "returned_cogs": "360.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "1.375",
+            "total_revenue": "275.000",
+            "total_cogs": "169.753",
+            "profit": "105.247",
+            "margin": "38.2",
+            "gross_qty": "1.375",
+            "gross_revenue": "275.000",
+            "gross_cogs": "169.753",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        }
+    ],
+    "b.wide.top_items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "5.000",
+            "total_revenue": "1293.000",
+            "total_cogs": "900.000",
+            "profit": "393.000",
+            "margin": "30.3",
+            "gross_qty": "7.000",
+            "gross_revenue": "1807.000",
+            "gross_cogs": "1260.000",
+            "returned_qty": "2.000",
+            "returned_value": "514.000",
+            "returned_cogs": "360.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "1.375",
+            "total_revenue": "275.000",
+            "total_cogs": "169.753",
+            "profit": "105.247",
+            "margin": "38.2",
+            "gross_qty": "1.375",
+            "gross_revenue": "275.000",
+            "gross_cogs": "169.753",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        }
+    ],
+    "b.wide.customers": [
+        {
+            "customer_id": "#",
+            "name": "عميل أول",
+            "phone": "01000009001",
+            "current_balance": "2140.000",
+            "total_invoices": 1,
+            "total_bought": "795.000",
+            "gross_bought": "795.000",
+            "total_returns": "0.000",
+            "net_bought": "795.000",
+            "total_paid": "100.000",
+            "total_debt_in_period": "695.000"
+        },
+        {
+            "customer_id": "#",
+            "name": "عميل ثان",
+            "phone": "01000009002",
+            "current_balance": "92.700",
+            "total_invoices": 1,
+            "total_bought": "772.200",
+            "gross_bought": "1287.000",
+            "total_returns": "514.800",
+            "net_bought": "772.200",
+            "total_paid": "1287.000",
+            "total_debt_in_period": "0.000"
+        }
+    ],
+    "b.wide.expenses": [
+        {
+            "category": "supplies",
+            "amount": "45.250",
+            "count": 1
+        }
+    ],
+    "b.today.summary": {
+        "total_sales": "795.000",
+        "gross_sales": "795.000",
+        "total_returns": "0.000",
+        "returns_count": 0,
+        "returns_cost": "0.000",
+        "net_sales": "795.000",
+        "gross_cogs": "529.753",
+        "total_cogs": "529.753",
+        "gross_profit": "265.247",
+        "margin_percentage": "33.36",
+        "total_expenses": "45.250",
+        "expenses_count": 1,
+        "net_profit": "219.997",
+        "invoices_count": 1,
+        "avg_invoice": "795.000",
+        "total_paid": "100.000",
+        "total_remaining": "695.000",
+        "total_customers_debt": "2232.700",
+        "stock_cost_valuation": "81181.846",
+        "stock_selling_valuation": "109539.375",
+        "expected_stock_profit": "28357.529"
+    },
+    "b.today.items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "2.000",
+            "total_revenue": "520.000",
+            "total_cogs": "360.000",
+            "profit": "160.000",
+            "margin": "30.7",
+            "gross_qty": "2.000",
+            "gross_revenue": "520.000",
+            "gross_cogs": "360.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "1.375",
+            "total_revenue": "275.000",
+            "total_cogs": "169.753",
+            "profit": "105.247",
+            "margin": "38.2",
+            "gross_qty": "1.375",
+            "gross_revenue": "275.000",
+            "gross_cogs": "169.753",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        }
+    ],
+    "b.today.top_items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "2.000",
+            "total_revenue": "520.000",
+            "total_cogs": "360.000",
+            "profit": "160.000",
+            "margin": "30.7",
+            "gross_qty": "2.000",
+            "gross_revenue": "520.000",
+            "gross_cogs": "360.000",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "1.375",
+            "total_revenue": "275.000",
+            "total_cogs": "169.753",
+            "profit": "105.247",
+            "margin": "38.2",
+            "gross_qty": "1.375",
+            "gross_revenue": "275.000",
+            "gross_cogs": "169.753",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        }
+    ],
+    "b.today.customers": [
+        {
+            "customer_id": "#",
+            "name": "عميل أول",
+            "phone": "01000009001",
+            "current_balance": "2140.000",
+            "total_invoices": 1,
+            "total_bought": "795.000",
+            "gross_bought": "795.000",
+            "total_returns": "0.000",
+            "net_bought": "795.000",
+            "total_paid": "100.000",
+            "total_debt_in_period": "695.000"
+        }
+    ],
+    "b.today.expenses": [
+        {
+            "category": "supplies",
+            "amount": "45.250",
+            "count": 1
+        }
+    ],
+    "b.ytd.stores": [
+        {
+            "id": "#",
+            "name": "الفرع الرئيسي",
+            "invoice_count": 6,
+            "total_sales": "4159.100",
+            "gross_sales": "4514.100",
+            "total_returns": "355.000",
+            "returns_count": 2,
+            "net_sales": "4159.100",
+            "total_paid": "1906.600",
+            "total_remaining": "2607.500",
+            "gross_profit": "980.210",
+            "margin": "23.56",
+            "share_pct": "72.6"
+        },
+        {
+            "id": "#",
+            "name": "فرع ب",
+            "invoice_count": 2,
+            "total_sales": "1567.200",
+            "gross_sales": "2082.000",
+            "total_returns": "514.800",
+            "returns_count": 1,
+            "net_sales": "1567.200",
+            "total_paid": "1387.000",
+            "total_remaining": "695.000",
+            "gross_profit": "497.447",
+            "margin": "31.74",
+            "share_pct": "27.3"
+        }
+    ],
+    "b.month.stores": [
+        {
+            "id": "#",
+            "name": "الفرع الرئيسي",
+            "invoice_count": 4,
+            "total_sales": "2909.100",
+            "gross_sales": "3264.100",
+            "total_returns": "355.000",
+            "returns_count": 2,
+            "net_sales": "2909.100",
+            "total_paid": "1156.600",
+            "total_remaining": "2107.500",
+            "gross_profit": "618.853",
+            "margin": "21.27",
+            "share_pct": "78.5"
+        },
+        {
+            "id": "#",
+            "name": "فرع ب",
+            "invoice_count": 1,
+            "total_sales": "795.000",
+            "gross_sales": "795.000",
+            "total_returns": "0.000",
+            "returns_count": 0,
+            "net_sales": "795.000",
+            "total_paid": "100.000",
+            "total_remaining": "695.000",
+            "gross_profit": "265.247",
+            "margin": "33.36",
+            "share_pct": "21.4"
+        }
+    ],
+    "b.inventory.totals": {
+        "stock_cost_valuation": "81181.846",
+        "stock_selling_valuation": "109539.375",
+        "expected_stock_profit": "28357.529"
+    },
+    "b.inventory.items": [
+        {
+            "id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "current_stock": "48.625",
+            "cost_price": "123.457",
+            "selling_price": "200.000",
+            "cost_val": "6003.096",
+            "sell_val": "9725.000",
+            "profit": "3721.904"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "current_stock": "95.000",
+            "cost_price": "180.000",
+            "selling_price": "260.000",
+            "cost_val": "17100.000",
+            "sell_val": "24700.000",
+            "profit": "7600.000"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "current_stock": "100.000",
+            "cost_price": "580.000",
+            "selling_price": "750.000",
+            "cost_val": "58000.000",
+            "sell_val": "75000.000",
+            "profit": "17000.000"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-IDLE",
+            "code": "PF-IDLE",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "current_stock": "7.500",
+            "cost_price": "10.500",
+            "selling_price": "15.250",
+            "cost_val": "78.750",
+            "sell_val": "114.375",
+            "profit": "35.625"
+        }
+    ],
+    "b.inventory.abc_totals": {
+        "total_items_count": 4,
+        "total_profit": "652.247",
+        "total_revenue": "2082.000",
+        "days_in_period": 166,
+        "class_a": {
+            "count": 1,
+            "profit": "547.000",
+            "share": "83.8"
+        },
+        "class_b": {
+            "count": 1,
+            "profit": "105.247",
+            "share": "16.1"
+        },
+        "class_c": {
+            "count": 2,
+            "profit": "0.000",
+            "share": "0.0"
+        }
+    },
+    "b.inventory.abc_items": [
+        {
+            "id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "unit": "كجم",
+            "current_stock": "96.042",
+            "stock_value": "11857.057",
+            "unit_price": "200.000",
+            "unit_cost": "123.457",
+            "quantity_sold": "1.375",
+            "revenue": "275",
+            "cogs": "169.753",
+            "gross_profit": "105.247",
+            "velocity": "0.008",
+            "profit_margin": "38.27",
+            "is_sold": true,
+            "profit_share": "16.13",
+            "cum_profit_share": "100.00",
+            "revenue_share": "13.20",
+            "abc_class": "B"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "unit": "كجم",
+            "current_stock": "191.000",
+            "stock_value": "34380.000",
+            "unit_price": "260.000",
+            "unit_cost": "180.000",
+            "quantity_sold": "7",
+            "revenue": "1807",
+            "cogs": "1260.000",
+            "gross_profit": "547.000",
+            "velocity": "0.042",
+            "profit_margin": "30.27",
+            "is_sold": true,
+            "profit_share": "83.86",
+            "cum_profit_share": "83.86",
+            "revenue_share": "86.79",
+            "abc_class": "A"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-GRD",
+            "code": "PF-GRD",
+            "unit": "كجم",
+            "current_stock": "196.000",
+            "stock_value": "113680.000",
+            "unit_price": "750.000",
+            "unit_cost": "580.000",
+            "quantity_sold": "0.000",
+            "revenue": "0.000",
+            "cogs": "0.000",
+            "gross_profit": "0.000",
+            "velocity": "0.000",
+            "profit_margin": "0.00",
+            "is_sold": false,
+            "abc_class": "C",
+            "profit_share": "0.00",
+            "cum_profit_share": "100.00",
+            "revenue_share": "0.00"
+        },
+        {
+            "id": "#",
+            "name": "صنف PF-IDLE",
+            "code": "PF-IDLE",
+            "unit": "كجم",
+            "current_stock": "15.000",
+            "stock_value": "157.500",
+            "unit_price": "15.250",
+            "unit_cost": "10.500",
+            "quantity_sold": "0.000",
+            "revenue": "0.000",
+            "cogs": "0.000",
+            "gross_profit": "0.000",
+            "velocity": "0.000",
+            "profit_margin": "0.00",
+            "is_sold": false,
+            "abc_class": "C",
+            "profit_share": "0.00",
+            "cum_profit_share": "100.00",
+            "revenue_share": "0.00"
+        }
+    ],
+    "b.inventory.in_stock_count": 4,
+    "b.treasury.totals": {
+        "total_opening": "1287.000",
+        "total_inflows": "100.000",
+        "total_outflows": "45.250",
+        "total_transfers_in": "0.000",
+        "total_transfers_out": "0.000",
+        "total_fees": "0.000",
+        "total_liquidity": "1341.750"
+    },
+    "b.treasury.accounts": {
+        "cash": {
+            "enum": "cash",
+            "key": "cash",
+            "label": "نقداً (كاش)",
+            "short_label": "كاش",
+            "icon": "banknote",
+            "badge_class": "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+            "opening_balance": "1287.000",
+            "inflows": "0.000",
+            "outflows": "45.250",
+            "transfers_in": "0.000",
+            "transfers_out": "0.000",
+            "fees": "0.000",
+            "net_change": "-45.250",
+            "closing_balance": "1241.750",
+            "liquidity_share": "92.5"
+        },
+        "instapay": {
+            "enum": "instapay",
+            "key": "instapay",
+            "label": "إنستاباي (InstaPay)",
+            "short_label": "إنستاباي",
+            "icon": "zap",
+            "badge_class": "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+            "opening_balance": "0.000",
+            "inflows": "100.000",
+            "outflows": "0.000",
+            "transfers_in": "0.000",
+            "transfers_out": "0.000",
+            "fees": "0.000",
+            "net_change": "100.000",
+            "closing_balance": "100.000",
+            "liquidity_share": "7.4"
+        },
+        "e_wallet": {
+            "enum": "e_wallet",
+            "key": "e_wallet",
+            "label": "محفظة إلكترونية (فودافون/أورانج/اتصالات)",
+            "short_label": "محفظة",
+            "icon": "smartphone",
+            "badge_class": "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+            "opening_balance": "0.000",
+            "inflows": "0.000",
+            "outflows": "0.000",
+            "transfers_in": "0.000",
+            "transfers_out": "0.000",
+            "fees": "0.000",
+            "net_change": "0.000",
+            "closing_balance": "0.000",
+            "liquidity_share": "0.00"
+        }
+    },
+    "b.treasury.ledger": [
+        {
+            "date": "2026-06-15",
+            "time": "14:45",
+            "timestamp": 1781523900,
+            "doc_number": "EXP-260615-0002",
+            "type": "expense",
+            "type_label": "مصروف ونثريات",
+            "method": "cash",
+            "method_label": "كاش",
+            "party": "supplies",
+            "notes": "أدوات",
+            "debit": "0.000",
+            "credit": "45.250",
+            "running_balance": "1341.750"
+        },
+        {
+            "date": "2026-06-15",
+            "time": "14:05",
+            "timestamp": 1781521500,
+            "doc_number": "PAY-INV-20260615-000002",
+            "type": "inflow",
+            "type_label": "تحصيل مبيعات / سند قبض",
+            "method": "instapay",
+            "method_label": "إنستاباي",
+            "party": "عميل أول",
+            "notes": "سداد عند إصدار الفاتورة رقم INV-PERFB-20260615-0001",
+            "debit": "100.000",
+            "credit": "0.000",
+            "running_balance": "1387.000"
+        }
+    ],
+    "b.comprehensive.summary": {
+        "total_sales": "1567.200",
+        "gross_sales": "2082.000",
+        "total_returns": "514.800",
+        "returns_count": 1,
+        "returns_cost": "360.000",
+        "net_sales": "1567.200",
+        "gross_cogs": "1429.753",
+        "total_cogs": "1069.753",
+        "gross_profit": "497.447",
+        "margin_percentage": "31.74",
+        "total_expenses": "45.250",
+        "expenses_count": 1,
+        "net_profit": "452.197",
+        "invoices_count": 2,
+        "avg_invoice": "1041.000",
+        "total_paid": "1387.000",
+        "total_remaining": "695.000",
+        "total_customers_debt": "2232.700",
+        "stock_cost_valuation": "81181.846",
+        "stock_selling_valuation": "109539.375",
+        "expected_stock_profit": "28357.529"
+    },
+    "b.comprehensive.item_profits": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "5.000",
+            "total_revenue": "1293.000",
+            "total_cogs": "900.000",
+            "profit": "393.000",
+            "margin": "30.3",
+            "gross_qty": "7.000",
+            "gross_revenue": "1807.000",
+            "gross_cogs": "1260.000",
+            "returned_qty": "2.000",
+            "returned_value": "514.000",
+            "returned_cogs": "360.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "category": "coffee_beans",
+            "unit": "كجم",
+            "total_qty": "1.375",
+            "total_revenue": "275.000",
+            "total_cogs": "169.753",
+            "profit": "105.247",
+            "margin": "38.2",
+            "gross_qty": "1.375",
+            "gross_revenue": "275.000",
+            "gross_cogs": "169.753",
+            "returned_qty": "0.000",
+            "returned_value": "0.000",
+            "returned_cogs": "0.000"
+        }
+    ],
+    "b.comprehensive.store_breakdown": [
+        {
+            "id": "#",
+            "name": "الفرع الرئيسي",
+            "invoice_count": 6,
+            "total_sales": "4159.100",
+            "gross_sales": "4514.100",
+            "total_returns": "355.000",
+            "returns_count": 2,
+            "net_sales": "4159.100",
+            "total_paid": "1906.600",
+            "total_remaining": "2607.500",
+            "gross_profit": "980.210",
+            "margin": "23.56",
+            "share_pct": "72.6"
+        },
+        {
+            "id": "#",
+            "name": "فرع ب",
+            "invoice_count": 2,
+            "total_sales": "1567.200",
+            "gross_sales": "2082.000",
+            "total_returns": "514.800",
+            "returns_count": 1,
+            "net_sales": "1567.200",
+            "total_paid": "1387.000",
+            "total_remaining": "695.000",
+            "gross_profit": "497.447",
+            "margin": "31.74",
+            "share_pct": "27.3"
+        }
+    ],
+    "b.comprehensive.customer_sales": [
+        {
+            "customer_id": "#",
+            "name": "عميل أول",
+            "phone": "01000009001",
+            "current_balance": "2140.000",
+            "total_invoices": 1,
+            "total_bought": "795.000",
+            "gross_bought": "795.000",
+            "total_returns": "0.000",
+            "net_bought": "795.000",
+            "total_paid": "100.000",
+            "total_debt_in_period": "695.000"
+        },
+        {
+            "customer_id": "#",
+            "name": "عميل ثان",
+            "phone": "01000009002",
+            "current_balance": "92.700",
+            "total_invoices": 1,
+            "total_bought": "772.200",
+            "gross_bought": "1287.000",
+            "total_returns": "514.800",
+            "net_bought": "772.200",
+            "total_paid": "1287.000",
+            "total_debt_in_period": "0.000"
+        }
+    ],
+    "b.comprehensive.expenses_breakdown": [
+        {
+            "category": "supplies",
+            "amount": "45.250",
+            "count": 1
+        }
+    ],
+    "b.dashboard.metrics": {
+        "today_sales": "795.000",
+        "today_gross_sales": "795.000",
+        "today_returns": "0.000",
+        "today_returns_count": 0,
+        "today_invoices_count": 1,
+        "cash_sales": "0.000",
+        "credit_sales": "0.000",
+        "total_cash_collected": "0.000",
+        "today_expenses": "45.250",
+        "expenses_count": 1,
+        "supplier_payments": "0.000",
+        "net_cash_today": "-45.250",
+        "customers_debt": "2232.700",
+        "suppliers_debt": "0.000",
+        "monthly_sales": "795.000",
+        "monthly_gross_sales": "795.000",
+        "monthly_returns": "0.000",
+        "monthly_gross_profit": "265.247",
+        "monthly_margin": "33.36",
+        "customers_count": 2,
+        "suppliers_count": 0,
+        "low_stock_count": 0
+    },
+    "b.dashboard.analytics": {
+        "today": {
+            "sales": "795.000",
+            "gross_sales": "795.000",
+            "returns": "0.000",
+            "invoices_count": 1,
+            "basket_size": "795.00"
+        },
+        "period": {
+            "days": 7,
+            "sales": "795.000",
+            "gross_sales": "795.000",
+            "returns": "0.000",
+            "invoices_count": 1,
+            "basket_size": "795.00"
+        },
+        "daily_trend": [
+            {
+                "date": "2026-06-09",
+                "label": "الثلاثاء 9/6",
+                "sales": 0,
+                "sales_formatted": "0.00 ج.م",
+                "invoices": 0,
+                "returns": "0.000"
+            },
+            {
+                "date": "2026-06-10",
+                "label": "الأربعاء 10/6",
+                "sales": 0,
+                "sales_formatted": "0.00 ج.م",
+                "invoices": 0,
+                "returns": "0.000"
+            },
+            {
+                "date": "2026-06-11",
+                "label": "الخميس 11/6",
+                "sales": 0,
+                "sales_formatted": "0.00 ج.م",
+                "invoices": 0,
+                "returns": "0.000"
+            },
+            {
+                "date": "2026-06-12",
+                "label": "الجمعة 12/6",
+                "sales": 0,
+                "sales_formatted": "0.00 ج.م",
+                "invoices": 0,
+                "returns": "0.000"
+            },
+            {
+                "date": "2026-06-13",
+                "label": "السبت 13/6",
+                "sales": 0,
+                "sales_formatted": "0.00 ج.م",
+                "invoices": 0,
+                "returns": "0.000"
+            },
+            {
+                "date": "2026-06-14",
+                "label": "الأحد 14/6",
+                "sales": 0,
+                "sales_formatted": "0.00 ج.م",
+                "invoices": 0,
+                "returns": "0.000"
+            },
+            {
+                "date": "2026-06-15",
+                "label": "الاثنين 15/6",
+                "sales": 795,
+                "sales_formatted": "795.00 ج.م",
+                "invoices": 1,
+                "returns": "0.000"
+            }
+        ],
+        "hourly_sales": [
+            {
+                "hour": 0,
+                "label": "12 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 1,
+                "label": "1 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 2,
+                "label": "2 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 3,
+                "label": "3 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 4,
+                "label": "4 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 5,
+                "label": "5 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 6,
+                "label": "6 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 7,
+                "label": "7 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 8,
+                "label": "8 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 9,
+                "label": "9 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 10,
+                "label": "10 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 11,
+                "label": "11 ص",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 12,
+                "label": "12 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 13,
+                "label": "1 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 14,
+                "label": "2 م",
+                "sales": "795.000",
+                "invoices": 1,
+                "intensity": 100,
+                "sales_formatted": "795.00 ج.م"
+            },
+            {
+                "hour": 15,
+                "label": "3 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 16,
+                "label": "4 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 17,
+                "label": "5 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 18,
+                "label": "6 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 19,
+                "label": "7 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 20,
+                "label": "8 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 21,
+                "label": "9 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 22,
+                "label": "10 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            },
+            {
+                "hour": 23,
+                "label": "11 م",
+                "sales": "0.000",
+                "invoices": 0,
+                "intensity": 0,
+                "sales_formatted": "0.00 ج.م"
+            }
+        ],
+        "peak_hour": {
+            "hour": 14,
+            "label": "2 م",
+            "sales": "795.000",
+            "invoices": 1,
+            "intensity": 100,
+            "sales_formatted": "795.00 ج.م"
+        },
+        "payment_distribution": [
+            {
+                "key": "cash",
+                "label": "درج الكاش (نقداً)",
+                "amount": "0.000",
+                "percentage": 0
+            },
+            {
+                "key": "instapay",
+                "label": "إنستاباي (InstaPay)",
+                "amount": "100",
+                "percentage": 100
+            },
+            {
+                "key": "e_wallet",
+                "label": "المحافظ الذكية",
+                "amount": "0.000",
+                "percentage": 0
+            },
+            {
+                "key": "visa",
+                "label": "فيزا / بطاقة بنكية",
+                "amount": "0.000",
+                "percentage": 0
+            },
+            {
+                "key": "bank_transfer",
+                "label": "تحويل بنكي",
+                "amount": "0.000",
+                "percentage": 0
+            }
+        ]
+    },
+    "b.dashboard.top_selling_items": [
+        {
+            "item_id": "#",
+            "name": "صنف PF-CUP",
+            "code": "PF-CUP",
+            "unit": "كجم",
+            "total_qty": "2.000",
+            "total_revenue": "520.000"
+        },
+        {
+            "item_id": "#",
+            "name": "صنف PF-BEAN",
+            "code": "PF-BEAN",
+            "unit": "كجم",
+            "total_qty": "1.375",
+            "total_revenue": "275.000"
+        }
+    ],
+    "b.dashboard.recent_invoices": [
+        {
+            "id": "#",
+            "invoice_number": "INV-PERFB-20260615-0001",
+            "customer_name": "عميل أول",
+            "invoice_date": "2026-06-15",
+            "net_total": "795.000",
+            "paid_amount": "100.000",
+            "remaining_amount": "695.000",
+            "payment_type": "partial",
+            "status": "confirmed"
+        },
+        {
+            "id": "#",
+            "invoice_number": "INV-PERFB-20260520-0001",
+            "customer_name": "عميل ثان",
+            "invoice_date": "2026-05-20",
+            "net_total": "1287.000",
+            "paid_amount": "1287.000",
+            "remaining_amount": "0.000",
+            "payment_type": "cash",
+            "status": "confirmed"
+        }
+    ],
+    "b.dashboard.low_stock_items": [],
+    "statement.c1.summary": {
+        "total_debit": "4211.600",
+        "total_credit": "2071.600",
+        "current_balance": "2140.000",
+        "transactions_count": 13
+    },
+    "statement.c1.ledger": [
+        {
+            "date": "2025-12-31",
+            "type": "فاتورة مبيعات",
+            "ref_number": "INV-MAIN01-20251231-0001",
+            "debit": "260.000",
+            "credit": "0.000",
+            "balance_after": "260.000",
+            "notes": null
+        },
+        {
+            "date": "2025-12-31",
+            "type": "سند قبض نقدي",
+            "ref_number": "PAY-INV-20251231-000001",
+            "debit": "0.000",
+            "credit": "260.000",
+            "balance_after": "0.000",
+            "notes": "سداد عند إصدار الفاتورة رقم INV-MAIN01-20251231-0001"
+        },
+        {
+            "date": "2026-04-10",
+            "type": "فاتورة مبيعات",
+            "ref_number": "INV-MAIN01-20260410-0001",
+            "debit": "500.000",
+            "credit": "0.000",
+            "balance_after": "500.000",
+            "notes": null
+        },
+        {
+            "date": "2026-06-01",
+            "type": "فاتورة مبيعات",
+            "ref_number": "INV-MAIN01-20260601-0001",
+            "debit": "1500.000",
+            "credit": "0.000",
+            "balance_after": "2000.000",
+            "notes": null
+        },
+        {
+            "date": "2026-06-12",
+            "type": "فاتورة مبيعات",
+            "ref_number": "INV-MAIN01-20260612-0002",
+            "debit": "326.600",
+            "credit": "0.000",
+            "balance_after": "2326.600",
+            "notes": null
+        },
+        {
+            "date": "2026-06-12",
+            "type": "سند قبض نقدي",
+            "ref_number": "PAY-INV-20260612-000001",
+            "debit": "0.000",
+            "credit": "326.600",
+            "balance_after": "2000.000",
+            "notes": "سداد عند إصدار الفاتورة رقم INV-MAIN01-20260612-0002"
+        },
+        {
+            "date": "2026-06-12",
+            "type": "مرتجع مبيعات",
+            "ref_number": "RET-SALES-20260612-0001",
+            "debit": "0.000",
+            "credit": "95.000",
+            "balance_after": "1905.000",
+            "notes": "مرتجع مبيعات"
+        },
+        {
+            "date": "2026-06-15",
+            "type": "فاتورة مبيعات",
+            "ref_number": "INV-MAIN01-20260615-0001",
+            "debit": "830.000",
+            "credit": "0.000",
+            "balance_after": "2735.000",
+            "notes": null
+        },
+        {
+            "date": "2026-06-15",
+            "type": "سند قبض نقدي",
+            "ref_number": "PAY-INV-20260615-000001",
+            "debit": "0.000",
+            "credit": "830.000",
+            "balance_after": "1905.000",
+            "notes": "سداد عند إصدار الفاتورة رقم INV-MAIN01-20260615-0001"
+        },
+        {
+            "date": "2026-06-15",
+            "type": "فاتورة مبيعات",
+            "ref_number": "INV-PERFB-20260615-0001",
+            "debit": "795.000",
+            "credit": "0.000",
+            "balance_after": "2700.000",
+            "notes": null
+        },
+        {
+            "date": "2026-06-15",
+            "type": "سند قبض نقدي",
+            "ref_number": "PAY-INV-20260615-000002",
+            "debit": "0.000",
+            "credit": "100.000",
+            "balance_after": "2600.000",
+            "notes": "سداد عند إصدار الفاتورة رقم INV-PERFB-20260615-0001"
+        },
+        {
+            "date": "2026-06-15",
+            "type": "مرتجع مبيعات",
+            "ref_number": "RET-SALES-20260615-0001",
+            "debit": "0.000",
+            "credit": "260.000",
+            "balance_after": "2340.000",
+            "notes": "مرتجع مبيعات"
+        },
+        {
+            "date": "2026-06-15",
+            "type": "سند قبض نقدي",
+            "ref_number": "PAY-CUST-20260615-000001",
+            "debit": "0.000",
+            "credit": "200.000",
+            "balance_after": "2140.000",
+            "notes": "سند قبض فلوس (تحصيل من زبون)"
+        }
+    ],
+    "statement.c2.summary": {
+        "total_debit": "2644.500",
+        "total_credit": "2551.800",
+        "current_balance": "92.700",
+        "transactions_count": 6
+    },
+    "statement.c2.ledger": [
+        {
+            "date": "2026-01-05",
+            "type": "فاتورة مبيعات",
+            "ref_number": "INV-MAIN01-20260105-0001",
+            "debit": "750.000",
+            "credit": "0.000",
+            "balance_after": "750.000",
+            "notes": null
+        },
+        {
+            "date": "2026-01-05",
+            "type": "سند قبض نقدي",
+            "ref_number": "PAY-INV-20260105-000001",
+            "debit": "0.000",
+            "credit": "750.000",
+            "balance_after": "0.000",
+            "notes": "سداد عند إصدار الفاتورة رقم INV-MAIN01-20260105-0001"
+        },
+        {
+            "date": "2026-05-20",
+            "type": "فاتورة مبيعات",
+            "ref_number": "INV-PERFB-20260520-0001",
+            "debit": "1287.000",
+            "credit": "0.000",
+            "balance_after": "1287.000",
+            "notes": null
+        },
+        {
+            "date": "2026-05-20",
+            "type": "سند قبض نقدي",
+            "ref_number": "PAY-INV-20260520-000001",
+            "debit": "0.000",
+            "credit": "1287.000",
+            "balance_after": "0.000",
+            "notes": "سداد عند إصدار الفاتورة رقم INV-PERFB-20260520-0001"
+        },
+        {
+            "date": "2026-05-21",
+            "type": "مرتجع مبيعات",
+            "ref_number": "RET-SALES-20260521-0001",
+            "debit": "0.000",
+            "credit": "514.800",
+            "balance_after": "-514.800",
+            "notes": "مرتجع مبيعات"
+        },
+        {
+            "date": "2026-06-15",
+            "type": "فاتورة مبيعات",
+            "ref_number": "INV-MAIN01-20260615-0002",
+            "debit": "607.500",
+            "credit": "0.000",
+            "balance_after": "92.700",
+            "notes": null
+        }
+    ]
+}

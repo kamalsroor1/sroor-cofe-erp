@@ -6,6 +6,7 @@ namespace App\Actions\Reports;
 
 use App\DTOs\Reports\ReportFilterDTO;
 use App\Models\Expense;
+use App\Services\Reports\ReportDateRange;
 use App\Support\Money\Decimal;
 use Illuminate\Support\Facades\DB;
 
@@ -16,8 +17,11 @@ final class GetExpensesBreakdownReportAction
      */
     public function execute(ReportFilterDTO $dto): array
     {
-        $expensesByCategory = Expense::whereDate('expense_date', '>=', $dto->from_date)
-            ->whereDate('expense_date', '<=', $dto->to_date)
+        $expenses = Expense::query();
+        // PERF-01: half-open range on the column itself (index-friendly).
+        ReportDateRange::apply($expenses, 'expense_date', $dto->from_date, $dto->to_date);
+
+        $expensesByCategory = $expenses
             ->when($dto->store_id, fn ($q) => $q->where('store_id', $dto->store_id))
             ->select('category', DB::raw('SUM(amount) as total_amount'), DB::raw('COUNT(*) as count'))
             ->groupBy('category')

@@ -1,7 +1,16 @@
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { TrendingUp, Coffee, Store, Users, Receipt, Package, Building2, Scale } from 'lucide-vue-next';
 import api from '../Services/api';
 import { useTrans } from './useTrans';
+import { usePagedReport } from './usePagedReport';
+import { rangeIsReversed } from '../helpers/customerStatement';
+import {
+    buildReportParams,
+    normalizeInventoryResponse,
+    normalizeItemsResponse,
+    normalizeTreasuryResponse,
+    reportTotal,
+} from '../helpers/reportPaging';
 import { addDays, businessToday, startOfMonth, startOfWeek, startOfYear } from './useBusinessDate';
 
 export function useReports() {
@@ -12,6 +21,7 @@ export function useReports() {
     const error = ref(false);
     const errorMessage = ref('');
     const stores = ref([]);
+    const periodError = ref('');
 
     const filters = reactive({
         period: 'this_month',
@@ -55,7 +65,6 @@ export function useReports() {
         total_customers_debt: 0,
     });
 
-    const itemProfits = ref([]);
     const storeBreakdown = ref([]);
     const customerSales = ref([]);
     const expensesBreakdown = ref([]);
@@ -67,10 +76,47 @@ export function useReports() {
         abc_data: null,
     });
     const treasuryData = ref({
-        total_inflow: 0,
-        total_outflow: 0,
-        net_cash_flow: 0,
+        total_inflows: '0.000',
+        total_outflows: '0.000',
+        total_net_change: '0.000',
     });
+    // /reports/comprehensive caps its embedded lists; `meta` says how many rows really exist.
+    const listMeta = ref({});
+
+    const reportParams = (withStock) => (page, perPage) => buildReportParams(filters, { withStock, page, perPage });
+
+    const itemsReport = usePagedReport({
+        endpoint: '/reports/items',
+        getParams: reportParams(false),
+        normalize: normalizeItemsResponse,
+        periodError,
+    });
+    const inventoryReport = usePagedReport({
+        endpoint: '/reports/inventory',
+        getParams: reportParams(true),
+        normalize: normalizeInventoryResponse,
+        periodError,
+    });
+    const treasuryReport = usePagedReport({
+        endpoint: '/reports/treasury',
+        getParams: reportParams(false),
+        normalize: normalizeTreasuryResponse,
+        periodError,
+    });
+
+    const pagedByTab = { items: itemsReport, inventory: inventoryReport, treasury: treasuryReport };
+
+    const itemsTotal = computed(() =>
+        reportTotal(itemsReport.meta.value, itemsReport.loaded.value, listMeta.value.item_profits?.total)
+    );
+    const inventoryTotal = computed(() =>
+        reportTotal(inventoryReport.meta.value, inventoryReport.loaded.value, listMeta.value.inventory_items?.total)
+    );
+    const treasuryLedgerTotal = computed(() =>
+        reportTotal(treasuryReport.meta.value, treasuryReport.loaded.value, listMeta.value.treasury_ledger?.total)
+    );
+
+    watch(activeTab, (tab) => pagedByTab[tab]?.ensureLoaded());
 
     const setPeriod = (period) => {
         filters.period = period;
@@ -109,6 +155,11 @@ export function useReports() {
     };
 
     const fetchReportsData = async () => {
+        if (rangeIsReversed(filters.from, filters.to)) {
+            periodError.value = t('reports.period_reversed');
+            return;
+        }
+        periodError.value = '';
         isLoading.value = true;
         error.value = false;
         errorMessage.value = '';
@@ -125,16 +176,24 @@ export function useReports() {
             const d = res.data || {};
 
             summary.value = d.summary || {};
-            itemProfits.value = d.item_profits || [];
             storeBreakdown.value = d.store_breakdown || [];
             customerSales.value = d.customer_sales || [];
             expensesBreakdown.value = d.expenses_breakdown || [];
             inventoryData.value = d.inventory_data || {};
             treasuryData.value = d.treasury_data || {};
+            listMeta.value = d.meta || {};
+
+            Object.values(pagedByTab).forEach((report) => report.invalidate());
+            pagedByTab[activeTab.value]?.ensureLoaded();
         } catch (e) {
-            error.value = true;
-            errorMessage.value = e.userMessage || e.message || t('common.error_occurred');
-            console.error('Failed to load comprehensive reports:', e);
+            const message = e.userMessage || e.message || t('common.error_occurred');
+            if (e?.response?.status === 422) {
+                // Too long / reversed period: explain it by the date filter, keep the data on screen.
+                periodError.value = message;
+            } else {
+                error.value = true;
+                errorMessage.value = message;
+            }
         } finally {
             isLoading.value = false;
         }
@@ -163,7 +222,13 @@ export function useReports() {
         tabs,
         presets,
         summary,
-        itemProfits,
+        periodError,
+        itemsReport,
+        inventoryReport,
+        treasuryReport,
+        itemsTotal,
+        inventoryTotal,
+        treasuryLedgerTotal,
         storeBreakdown,
         customerSales,
         expensesBreakdown,

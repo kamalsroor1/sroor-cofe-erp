@@ -209,4 +209,21 @@ return [
         'check' => 'Check',
         'other' => 'Other',
     ],
+    // PERF-01: treasury ledger rows (were hardcoded in TreasuryService)
+    'ledger' => [
+        'customer_receipt_type' => 'Sales collection / receipt voucher',
+        'cash_customer' => 'Cash customer',
+        'customer_receipt_note' => 'Sales collection',
+        'supplier_payment_type' => 'Supplier payment',
+        'supplier' => 'Supplier',
+        'supplier_payment_note' => 'Payment to supplier',
+        'expense_type' => 'Expense',
+        'general_expenses' => 'General expenses',
+        'transfer_out_type' => 'Transfer out to [:to]',
+        'transfer_in_type' => 'Transfer in from [:from]',
+        'transfer_to' => 'To: :to',
+        'transfer_from' => 'From: :from',
+        'transfer_fee_note' => 'Includes a :fee :currency fee - :notes',
+        'transfer_default_note' => 'Transfer between accounts',
+    ],
 ];

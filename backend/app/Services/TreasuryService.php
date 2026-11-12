@@ -9,9 +9,12 @@ use App\Models\Expense;
 use App\Models\Payment;
 use App\Models\Store;
 use App\Models\TreasuryTransfer;
+use App\Services\Reports\ReportDateRange;
 use App\Services\Settings\TenantSettings;
+use App\Support\Database\TransactionRetry;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -44,10 +47,13 @@ class TreasuryService
         $balances = [];
         $totalLiquidity = '0.000';
 
+        // PERF-01: every method's sums in one grouped statement per source.
+        $all = $this->movementWindows($storeId, null, $date)['from'];
+
         foreach (PaymentMethod::cases() as $methodEnum) {
             $methodKey = $methodEnum->value;
 
-            $m = $this->movements($methodKey, $storeId, onOrBefore: $date);
+            $m = $all[$methodKey];
 
             // Net Balance calculation: (Inflows + Inbound Transfers) - (Outflows + Outbound Transfers + Fees)
             $totalIn = bcadd($m['customer_inflows'], $m['transfers_in'], 3);
@@ -123,7 +129,11 @@ class TreasuryService
             $fee = '0.000';
         }
 
-        return DB::transaction(function () use ($fromMethod, $toMethod, $amount, $fee, $storeId, $notes, $date, $actorId) {
+        // BUG-04: the day's TTRF counter row exists before the transaction takes its first read.
+        $this->documentNumbers->prepareDated('TRF', TreasuryTransfer::class, 'transfer_number', 'TTRF');
+
+        // BUG-07: restarted as a whole on a lock conflict; only plain input is captured.
+        return TransactionRetry::run(function () use ($fromMethod, $toMethod, $amount, $fee, $storeId, $notes, $date, $actorId) {
             $this->lockTreasuryScope($storeId);
 
             // Check source balance sufficiency (under the lock)
@@ -200,7 +210,14 @@ class TreasuryService
      * Get a comprehensive report for all treasuries, accounts, and inter-account transfers over a date range.
      * Same method coverage rule as getBalances(): non-active methods appear only with any movement.
      */
-    public function getTreasuryReport(string $fromDate, string $toDate, ?int $storeId = null, string $selectedMethod = 'all'): array
+    /**
+     * PERF-01: the ledger is paged: `ledger_entries` is page $ledgerPage of $ledgerPerPage
+     * entries, newest first (`transfers` = the latest $ledgerPerPage transfers); null = every
+     * entry (the A4 print). Running balances are exact on every page: they are walked back from
+     * the period's closing balance (opening + SQL sums of every entry). `ledger_total` is the
+     * number of entries of the whole period.
+     */
+    public function getTreasuryReport(string $fromDate, string $toDate, ?int $storeId = null, string $selectedMethod = 'all', ?int $ledgerPerPage = null, int $ledgerPage = 1): array
     {
         $activeKeys = array_map(fn (PaymentMethod $m): string => $m->value, PaymentMethod::activeMethods());
         $accountSummaries = [];
@@ -212,11 +229,16 @@ class TreasuryService
         $totalPeriodFees = '0.000';
         $totalCurrentBalance = '0.000';
 
+        // PERF-01: every method's sums, before the period and in it, in one pass per source.
+        $windows = $this->movementWindows($storeId, $fromDate, $toDate);
+        $priorByMethod = $windows['before'];
+        $periodByMethod = $windows['from'];
+
         foreach (PaymentMethod::cases() as $methodEnum) {
             $key = $methodEnum->value;
 
             // 1. Opening Balance (All movements before $fromDate)
-            $prior = $this->movements($key, $storeId, before: $fromDate);
+            $prior = $priorByMethod[$key];
 
             $priorTotalIn = bcadd($prior['customer_inflows'], $prior['transfers_in'], 3);
             $priorTotalOut = bcadd($prior['supplier_outflows'], bcadd($prior['general_expenses'], bcadd($prior['expense_payments'], bcadd($prior['transfers_out'], $prior['fees'], 3), 3), 3), 3);
@@ -228,7 +250,7 @@ class TreasuryService
             }
 
             // 2. Period Movements ($fromDate to $toDate)
-            $period = $this->movements($key, $storeId, onOrAfter: $fromDate, onOrBefore: $toDate);
+            $period = $periodByMethod[$key];
 
             $periodInflows = $period['customer_inflows'];
             $periodInTransfers = $period['transfers_in'];
@@ -283,8 +305,7 @@ class TreasuryService
 
         // 3. Period Transfers Query
         $transfers = TreasuryTransfer::with(['creator', 'store'])
-            ->when($fromDate, fn ($q) => $q->whereDate('transfer_date', '>=', $fromDate))
-            ->when($toDate, fn ($q) => $q->whereDate('transfer_date', '<=', $toDate))
+            ->tap(fn ($q) => ReportDateRange::apply($q, 'transfer_date', $fromDate, $toDate))
             ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
             ->when($selectedMethod !== 'all', function ($q) use ($selectedMethod) {
                 $q->where(function ($sub) use ($selectedMethod) {
@@ -293,10 +314,11 @@ class TreasuryService
                 });
             })
             ->latest('id')
+            ->when($ledgerPerPage !== null, fn ($q) => $q->limit((int) $ledgerPerPage))
             ->get();
 
         // 4. Build Chronological Ledger Entries
-        $ledgerEntries = $this->buildLedgerEntries($fromDate, $toDate, $storeId, $selectedMethod, $accountSummaries);
+        ['entries' => $ledgerEntries, 'total' => $ledgerTotal] = $this->buildLedgerEntries($fromDate, $toDate, $storeId, $selectedMethod, $accountSummaries, $ledgerPerPage, $ledgerPage);
 
         return [
             'accounts' => $accountSummaries,
@@ -306,165 +328,269 @@ class TreasuryService
             'total_transfers_in' => $totalPeriodTransfersIn,
             'total_transfers_out' => $totalPeriodTransfersOut,
             'total_fees' => $totalPeriodFees,
+            // PERF-01: net change of all accounts over the period (closing - opening).
+            'total_net_change' => bcsub($totalCurrentBalance, $totalOpeningBalance, 3),
             'total_liquidity' => $totalCurrentBalance,
             'transfers' => $transfers,
             'ledger_entries' => $ledgerEntries,
+            'ledger_total' => $ledgerTotal,
         ];
     }
 
     /**
-     * Build Chronological Running Ledger of Treasury Operations
+     * Build Chronological Running Ledger of Treasury Operations, one page, newest first.
+     *
+     * The five sources (customer receipts, supplier payments, expenses, transfers out, transfers
+     * in) are one UNION ALL in SQL, ordered and paged there; only the page's documents are loaded
+     * as models for their labels. Order (unchanged): created_at, then the source (customer
+     * receipt, supplier payment, expense, transfer), then the id, transfer out before in;
+     * reversed for "newest first".
+     *
+     * Running balance: the closing balance (the selected account's opening balance - the cash
+     * drawer's for "all" - plus every entry of the period) minus every entry NEWER than the page,
+     * then walked back through the page. Every page therefore shows the full ledger's figures.
+     *
+     * @param  array<string, array<string, mixed>>  $accountSummaries
+     * @return array{entries: list<array<string, mixed>>, total: int}
      */
-    protected function buildLedgerEntries(string $fromDate, string $toDate, ?int $storeId, string $selectedMethod, array $accountSummaries): array
+    protected function buildLedgerEntries(string $fromDate, string $toDate, ?int $storeId, string $selectedMethod, array $accountSummaries, ?int $perPage = null, int $page = 1): array
     {
-        $entries = [];
+        $method = $selectedMethod !== 'all' ? $selectedMethod : null;
 
-        // Customer Payments (Inflows)
-        $payments = Payment::with(['customer', 'invoice'])
+        $customerPayments = Payment::query()
             ->excludingCancelledInvoices()
-            ->whereNotNull('customer_id')
-            ->whereDate('payment_date', '>=', $fromDate)
-            ->whereDate('payment_date', '<=', $toDate)
+            ->whereNotNull('payments.customer_id')
+            ->tap(fn ($q) => ReportDateRange::apply($q, 'payments.payment_date', $fromDate, $toDate))
             ->when($storeId, fn ($q) => $q->forStore($storeId))
-            ->when($selectedMethod !== 'all', fn ($q) => $q->where('payment_method', $selectedMethod))
-            ->get();
-
-        foreach ($payments as $p) {
-            // BE-10: a refund voucher (negative amount) is cash going OUT to the customer.
-            $isRefund = bccomp((string) $p->amount, '0.000', 3) < 0;
-            $entries[] = [
-                'date' => $p->payment_date->format('Y-m-d'),
-                'time' => $p->created_at->format('H:i'),
-                'timestamp' => $p->created_at->timestamp,
-                'doc_number' => $p->payment_number,
-                'type' => $isRefund ? 'outflow' : 'inflow',
-                'type_label' => $isRefund ? __('treasury.customer_refund_label') : 'تحصيل مبيعات / سند قبض',
-                'method' => $p->payment_method,
-                'method_label' => PaymentMethod::tryFrom($p->payment_method)?->shortLabel() ?? $p->payment_method,
-                'party' => $p->customer?->name ?? 'عميل نقدي',
-                'notes' => $p->notes ?? 'تحصيل مبيعات',
-                'debit' => $isRefund ? '0.000' : (string) $p->amount,
-                'credit' => $isRefund ? bcsub('0.000', (string) $p->amount, 3) : '0.000',
-            ];
-        }
-
-        // Supplier Payments (Outflows)
-        $supplierPayments = Payment::with(['supplier', 'purchase'])
-            ->whereNotNull('supplier_id')
-            ->whereDate('payment_date', '>=', $fromDate)
-            ->whereDate('payment_date', '<=', $toDate)
+            ->when($method !== null, fn ($q) => $q->where('payments.payment_method', $method))
+            ->toBase()
+            ->select([
+                'payments.created_at as sort_at', DB::raw('0 as source_rank'), 'payments.id as entry_id', DB::raw('0 as sub_rank'),
+                // BE-10: a refund voucher (negative amount) is cash going OUT to the customer.
+                DB::raw('CASE WHEN payments.amount < 0 THEN 0 ELSE payments.amount END as debit'),
+                DB::raw('CASE WHEN payments.amount < 0 THEN 0 - payments.amount ELSE 0 END as credit'),
+            ]);
+        $supplierPayments = Payment::query()
+            ->whereNotNull('payments.supplier_id')
+            ->tap(fn ($q) => ReportDateRange::apply($q, 'payments.payment_date', $fromDate, $toDate))
             ->when($storeId, fn ($q) => $q->forStore($storeId))
-            ->when($selectedMethod !== 'all', fn ($q) => $q->where('payment_method', $selectedMethod))
-            ->get();
+            ->when($method !== null, fn ($q) => $q->where('payments.payment_method', $method))
+            ->toBase()
+            ->select(['payments.created_at as sort_at', DB::raw('1 as source_rank'), 'payments.id as entry_id', DB::raw('0 as sub_rank'), DB::raw('0 as debit'), 'payments.amount as credit']);
+        $expenses = Expense::query()
+            ->tap(fn ($q) => ReportDateRange::apply($q, 'expenses.expense_date', $fromDate, $toDate))
+            ->when($storeId, fn ($q) => $q->where('expenses.store_id', $storeId))
+            ->when($method !== null, fn ($q) => $q->where('expenses.payment_method', $method))
+            ->toBase()
+            ->select(['expenses.created_at as sort_at', DB::raw('2 as source_rank'), 'expenses.id as entry_id', DB::raw('0 as sub_rank'), DB::raw('0 as debit'), 'expenses.amount as credit']);
+        $transfersOut = TreasuryTransfer::query()
+            ->tap(fn ($q) => ReportDateRange::apply($q, 'treasury_transfers.transfer_date', $fromDate, $toDate))
+            ->when($storeId, fn ($q) => $q->where('treasury_transfers.store_id', $storeId))
+            ->when($method !== null, fn ($q) => $q->where('treasury_transfers.from_method', $method))
+            ->toBase()
+            ->select([
+                'treasury_transfers.created_at as sort_at', DB::raw('3 as source_rank'), 'treasury_transfers.id as entry_id', DB::raw('0 as sub_rank'),
+                DB::raw('0 as debit'), DB::raw('treasury_transfers.amount + treasury_transfers.transfer_fee as credit'),
+            ]);
+        $transfersIn = TreasuryTransfer::query()
+            ->tap(fn ($q) => ReportDateRange::apply($q, 'treasury_transfers.transfer_date', $fromDate, $toDate))
+            ->when($storeId, fn ($q) => $q->where('treasury_transfers.store_id', $storeId))
+            ->when($method !== null, fn ($q) => $q->where('treasury_transfers.to_method', $method))
+            ->toBase()
+            ->select(['treasury_transfers.created_at as sort_at', DB::raw('3 as source_rank'), 'treasury_transfers.id as entry_id', DB::raw('1 as sub_rank'), 'treasury_transfers.amount as debit', DB::raw('0 as credit')]);
 
-        foreach ($supplierPayments as $sp) {
-            $entries[] = [
-                'date' => $sp->payment_date->format('Y-m-d'),
-                'time' => $sp->created_at->format('H:i'),
-                'timestamp' => $sp->created_at->timestamp,
-                'doc_number' => $sp->payment_number,
-                'type' => 'outflow',
-                'type_label' => 'سداد مورد / دفعة توريد',
-                'method' => $sp->payment_method,
-                'method_label' => PaymentMethod::tryFrom($sp->payment_method)?->shortLabel() ?? $sp->payment_method,
-                'party' => $sp->supplier?->name ?? 'مورد',
-                'notes' => $sp->notes ?? 'سداد دفعة للمورد',
-                'debit' => '0.000',
-                'credit' => (string) $sp->amount,
-            ];
-        }
+        $union = $customerPayments->unionAll($supplierPayments)->unionAll($expenses)->unionAll($transfersOut)->unionAll($transfersIn);
 
-        // Expenses (Outflows)
-        $expenses = Expense::with(['store', 'user'])
-            ->whereDate('expense_date', '>=', $fromDate)
-            ->whereDate('expense_date', '<=', $toDate)
-            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-            ->when($selectedMethod !== 'all', fn ($q) => $q->where('payment_method', $selectedMethod))
-            ->get();
+        $totals = DB::query()->fromSub($union, 'ledger')
+            ->selectRaw('COUNT(*) as entries_count')
+            ->selectRaw('COALESCE(SUM(ledger.debit), 0) as debit_sum')
+            ->selectRaw('COALESCE(SUM(ledger.credit), 0) as credit_sum')
+            ->first();
+        $total = (int) ($totals->entries_count ?? 0);
+        $net = bcsub(Decimal::normalize((string) ($totals->debit_sum ?? '0')), Decimal::normalize((string) ($totals->credit_sum ?? '0')), 3);
 
-        foreach ($expenses as $e) {
-            $entries[] = [
-                'date' => $e->expense_date->format('Y-m-d'),
-                'time' => $e->created_at->format('H:i'),
-                'timestamp' => $e->created_at->timestamp,
-                'doc_number' => $e->expense_number,
-                'type' => 'expense',
-                'type_label' => 'مصروف ونثريات',
-                'method' => $e->payment_method,
-                'method_label' => PaymentMethod::tryFrom($e->payment_method)?->shortLabel() ?? $e->payment_method,
-                'party' => $e->category ?: 'مصروفات عامة',
-                'notes' => $e->title.($e->notes ? " ({$e->notes})" : ''),
-                'debit' => '0.000',
-                'credit' => (string) $e->amount,
-            ];
-        }
+        $newestFirst = fn () => DB::query()->fromSub($union, 'ledger')
+            ->orderByDesc('ledger.sort_at')
+            ->orderByDesc('ledger.source_rank')
+            ->orderByDesc('ledger.entry_id')
+            ->orderByDesc('ledger.sub_rank');
 
-        // Treasury Transfers (Inbound & Outbound)
-        $transfers = TreasuryTransfer::with(['creator', 'store'])
-            ->whereDate('transfer_date', '>=', $fromDate)
-            ->whereDate('transfer_date', '<=', $toDate)
-            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-            ->get();
+        $page = max(1, $page);
+        $offset = $perPage !== null ? ($page - 1) * max(1, $perPage) : 0;
 
-        foreach ($transfers as $tr) {
-            $fromLabel = PaymentMethod::tryFrom($tr->from_method)?->shortLabel() ?? $tr->from_method;
-            $toLabel = PaymentMethod::tryFrom($tr->to_method)?->shortLabel() ?? $tr->to_method;
-
-            if ($selectedMethod === 'all' || $selectedMethod === $tr->from_method) {
-                $totalOut = bcadd((string) $tr->amount, (string) $tr->transfer_fee, 3);
-                $entries[] = [
-                    'date' => $tr->transfer_date->format('Y-m-d'),
-                    'time' => $tr->created_at->format('H:i'),
-                    'timestamp' => $tr->created_at->timestamp,
-                    'doc_number' => $tr->transfer_number,
-                    'type' => 'transfer_out',
-                    'type_label' => "تحويل صادر إلى [{$toLabel}]",
-                    'method' => $tr->from_method,
-                    'method_label' => $fromLabel,
-                    'party' => "إلى: {$toLabel}",
-                    'notes' => (bccomp((string) $tr->transfer_fee, '0.000', 3) > 0 ? "شامل عمولة {$tr->transfer_fee} {$this->currency()} - " : '').($tr->notes ?: 'تحويل بين الخزن'),
-                    'debit' => '0.000',
-                    'credit' => $totalOut,
-                ];
-            }
-
-            if ($selectedMethod === 'all' || $selectedMethod === $tr->to_method) {
-                $entries[] = [
-                    'date' => $tr->transfer_date->format('Y-m-d'),
-                    'time' => $tr->created_at->format('H:i'),
-                    'timestamp' => $tr->created_at->timestamp,
-                    'doc_number' => $tr->transfer_number,
-                    'type' => 'transfer_in',
-                    'type_label' => "تحويل وارد من [{$fromLabel}]",
-                    'method' => $tr->to_method,
-                    'method_label' => $toLabel,
-                    'party' => "من: {$fromLabel}",
-                    'notes' => $tr->notes ?: 'تحويل بين الخزن',
-                    'debit' => (string) $tr->amount,
-                    'credit' => '0.000',
-                ];
-            }
-        }
-
-        // Sort by timestamp asc to compute running balance correctly
-        usort($entries, fn ($a, $b) => $a['timestamp'] <=> $b['timestamp']);
-
-        // Calculate running balance
-        $runningBal = ($selectedMethod !== 'all' && isset($accountSummaries[$selectedMethod]))
-            ? $accountSummaries[$selectedMethod]['opening_balance']
+        $opening = ($method !== null && isset($accountSummaries[$method]))
+            ? $accountSummaries[$method]['opening_balance']
             : ($accountSummaries['cash']['opening_balance'] ?? '0.000');
 
-        foreach ($entries as $idx => $ent) {
-            $runningBal = bcadd(bcsub($runningBal, $ent['credit'], 3), $ent['debit'], 3);
-            $entries[$idx]['running_balance'] = $runningBal;
+        // Balance after the newest entry of the page = closing - every newer entry.
+        $balance = bcadd((string) $opening, $net, 3);
+        if ($offset > 0) {
+            $newer = DB::query()
+                ->fromSub($newestFirst()->select(['ledger.debit', 'ledger.credit'])->limit($offset), 'newer')
+                ->selectRaw('COALESCE(SUM(newer.debit), 0) as debit_sum')
+                ->selectRaw('COALESCE(SUM(newer.credit), 0) as credit_sum')
+                ->first();
+            $balance = bcsub($balance, bcsub(Decimal::normalize((string) ($newer->debit_sum ?? '0')), Decimal::normalize((string) ($newer->credit_sum ?? '0')), 3), 3);
         }
 
-        // Reverse to show latest on top for UI
-        return array_reverse($entries);
+        $pageRows = $newestFirst()
+            ->select(['ledger.source_rank', 'ledger.entry_id', 'ledger.sub_rank'])
+            ->when($perPage !== null, fn ($q) => $q->offset($offset)->limit(max(1, (int) $perPage)))
+            ->get();
+
+        // Only the page's documents, with their relations.
+        $ids = [0 => [], 1 => [], 2 => [], 3 => []];
+        foreach ($pageRows as $row) {
+            $ids[(int) $row->source_rank][] = (int) $row->entry_id;
+        }
+        $payments = Payment::with(['customer', 'invoice', 'supplier', 'purchase'])->whereIn('id', array_merge($ids[0], $ids[1]))->get()->keyBy('id');
+        $expenseRows = Expense::with(['store', 'user'])->whereIn('id', $ids[2])->get()->keyBy('id');
+        $transferRows = TreasuryTransfer::with(['creator', 'store'])->whereIn('id', $ids[3])->get()->keyBy('id');
+
+        $out = [];
+        foreach ($pageRows as $row) {
+            $id = (int) $row->entry_id;
+            $entry = match ((int) $row->source_rank) {
+                0 => $this->customerPaymentEntry($payments[$id]),
+                1 => $this->supplierPaymentEntry($payments[$id]),
+                2 => $this->expenseEntry($expenseRows[$id]),
+                default => (int) $row->sub_rank === 0
+                    ? $this->transferOutEntry($transferRows[$id])
+                    : $this->transferInEntry($transferRows[$id]),
+            };
+            $entry['running_balance'] = $balance;
+            $out[] = $entry;
+            $balance = bcsub(bcsub($balance, $entry['debit'], 3), bcsub('0.000', $entry['credit'], 3), 3);
+        }
+
+        return ['entries' => $out, 'total' => $total];
     }
 
     /**
-     * Every movement of one payment method, as scale-3 strings, over an optional date window.
+     * @return array<string, mixed>
+     */
+    private function customerPaymentEntry(Payment $p): array
+    {
+        // BE-10: a refund voucher (negative amount) is cash going OUT to the customer.
+        $isRefund = bccomp((string) $p->amount, '0.000', 3) < 0;
+
+        return $this->ledgerRow($p->created_at, [
+            'date' => $p->payment_date->format('Y-m-d'),
+            'doc_number' => $p->payment_number,
+            'type' => $isRefund ? 'outflow' : 'inflow',
+            'type_label' => $isRefund ? __('treasury.customer_refund_label') : __('treasury.ledger.customer_receipt_type'),
+            'method' => $p->payment_method,
+            'method_label' => PaymentMethod::tryFrom($p->payment_method)?->shortLabel() ?? $p->payment_method,
+            'party' => $p->customer?->name ?? __('treasury.ledger.cash_customer'),
+            'notes' => $p->notes ?? __('treasury.ledger.customer_receipt_note'),
+            'debit' => $isRefund ? '0.000' : (string) $p->amount,
+            'credit' => $isRefund ? bcsub('0.000', (string) $p->amount, 3) : '0.000',
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function supplierPaymentEntry(Payment $sp): array
+    {
+        return $this->ledgerRow($sp->created_at, [
+            'date' => $sp->payment_date->format('Y-m-d'),
+            'doc_number' => $sp->payment_number,
+            'type' => 'outflow',
+            'type_label' => __('treasury.ledger.supplier_payment_type'),
+            'method' => $sp->payment_method,
+            'method_label' => PaymentMethod::tryFrom($sp->payment_method)?->shortLabel() ?? $sp->payment_method,
+            'party' => $sp->supplier?->name ?? __('treasury.ledger.supplier'),
+            'notes' => $sp->notes ?? __('treasury.ledger.supplier_payment_note'),
+            'debit' => '0.000',
+            'credit' => (string) $sp->amount,
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function expenseEntry(Expense $e): array
+    {
+        return $this->ledgerRow($e->created_at, [
+            'date' => $e->expense_date->format('Y-m-d'),
+            'doc_number' => $e->expense_number,
+            'type' => 'expense',
+            'type_label' => __('treasury.ledger.expense_type'),
+            'method' => $e->payment_method,
+            'method_label' => PaymentMethod::tryFrom($e->payment_method)?->shortLabel() ?? $e->payment_method,
+            'party' => $e->category ?: __('treasury.ledger.general_expenses'),
+            'notes' => $e->title.($e->notes ? " ({$e->notes})" : ''),
+            'debit' => '0.000',
+            'credit' => (string) $e->amount,
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function transferOutEntry(TreasuryTransfer $tr): array
+    {
+        $fromLabel = PaymentMethod::tryFrom($tr->from_method)?->shortLabel() ?? $tr->from_method;
+        $toLabel = PaymentMethod::tryFrom($tr->to_method)?->shortLabel() ?? $tr->to_method;
+        $notes = $tr->notes ?: __('treasury.ledger.transfer_default_note');
+
+        return $this->ledgerRow($tr->created_at, [
+            'date' => $tr->transfer_date->format('Y-m-d'),
+            'doc_number' => $tr->transfer_number,
+            'type' => 'transfer_out',
+            'type_label' => __('treasury.ledger.transfer_out_type', ['to' => $toLabel]),
+            'method' => $tr->from_method,
+            'method_label' => $fromLabel,
+            'party' => __('treasury.ledger.transfer_to', ['to' => $toLabel]),
+            'notes' => bccomp((string) $tr->transfer_fee, '0.000', 3) > 0
+                ? __('treasury.ledger.transfer_fee_note', ['fee' => (string) $tr->transfer_fee, 'currency' => $this->currency(), 'notes' => $notes])
+                : $notes,
+            'debit' => '0.000',
+            'credit' => bcadd((string) $tr->amount, (string) $tr->transfer_fee, 3),
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function transferInEntry(TreasuryTransfer $tr): array
+    {
+        $fromLabel = PaymentMethod::tryFrom($tr->from_method)?->shortLabel() ?? $tr->from_method;
+        $toLabel = PaymentMethod::tryFrom($tr->to_method)?->shortLabel() ?? $tr->to_method;
+
+        return $this->ledgerRow($tr->created_at, [
+            'date' => $tr->transfer_date->format('Y-m-d'),
+            'doc_number' => $tr->transfer_number,
+            'type' => 'transfer_in',
+            'type_label' => __('treasury.ledger.transfer_in_type', ['from' => $fromLabel]),
+            'method' => $tr->to_method,
+            'method_label' => $toLabel,
+            'party' => __('treasury.ledger.transfer_from', ['from' => $fromLabel]),
+            'notes' => $tr->notes ?: __('treasury.ledger.transfer_default_note'),
+            'debit' => (string) $tr->amount,
+            'credit' => '0.000',
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $fields
+     * @return array<string, mixed>
+     */
+    private function ledgerRow(?\DateTimeInterface $createdAt, array $fields): array
+    {
+        return array_merge([
+            'date' => $fields['date'],
+            'time' => $createdAt?->format('H:i'),
+            'timestamp' => $createdAt?->getTimestamp() ?? 0,
+        ], $fields);
+    }
+
+    /**
+     * Every movement of EVERY payment method, as scale-3 strings, keyed by method (every
+     * PaymentMethod case is present, zero when it has no movement), split into two windows:
+     * 'before' = dated before $splitAt, 'from' = dated on/after $splitAt (all of it when
+     * $splitAt is null), both up to and including $onOrBefore when given.
      * Payments are scoped to the branch with Payment::forStore (payments.store_id, falling back
      * to the invoice/purchase store for legacy rows); all branches when $storeId is null.
      *
@@ -472,44 +598,81 @@ class TreasuryService
      * in supplier_outflows (as DailyCashFlowService counts them: supplier_paid). The
      * expense_payments bucket therefore only holds PAY-EXP vouchers WITHOUT a supplier.
      *
-     * @return array{customer_inflows: string, supplier_outflows: string, general_expenses: string, expense_payments: string, transfers_in: string, transfers_out: string, fees: string}
+     * PERF-01: each source is read ONCE for both windows, grouped by method and window (5
+     * statements instead of 7 per method and window), with half-open bounds on the date column
+     * itself (same rows as whereDate(), index-friendly).
+     *
+     * @return array{before: array<string, array<string, string>>, from: array<string, array<string, string>>}
      */
-    private function movements(string $method, ?int $storeId, ?string $onOrAfter = null, ?string $before = null, ?string $onOrBefore = null): array
+    private function movementWindows(?int $storeId, ?string $splitAt, ?string $onOrBefore): array
     {
-        $window = function ($q, string $column) use ($onOrAfter, $before, $onOrBefore) {
-            return $q
-                ->when($onOrAfter !== null, fn ($w) => $w->whereDate($column, '>=', $onOrAfter))
-                ->when($before !== null, fn ($w) => $w->whereDate($column, '<', $before))
-                ->when($onOrBefore !== null, fn ($w) => $w->whereDate($column, '<=', $onOrBefore));
+        $splitAt = $splitAt !== null && $splitAt !== '' ? CarbonImmutable::parse($splitAt)->toDateString() : null;
+
+        $windowKey = fn (string $column): array => $splitAt === null
+            ? ["'from'", []]
+            : ["CASE WHEN {$column} < ? THEN 'before' ELSE 'from' END", [$splitAt]];
+
+        /**
+         * @return list<object> rows with window_key, method_key and the selected sums
+         */
+        $read = function ($query, string $dateColumn, string $methodColumn, array $sums) use ($windowKey, $onOrBefore): array {
+            ReportDateRange::apply($query, $dateColumn, null, $onOrBefore);
+            [$windowSql, $bindings] = $windowKey($dateColumn);
+            $base = $query->toBase()
+                ->selectRaw($windowSql.' as window_key', $bindings)
+                ->selectRaw($methodColumn.' as method_key');
+            foreach ($sums as $alias => $expression) {
+                $base->selectRaw('COALESCE(SUM('.$expression.'), 0) as '.$alias);
+            }
+
+            return $base->groupBy('window_key', 'method_key')->get()->all();
         };
 
-        $payments = fn () => $window(
-            Payment::query()
-                ->excludingCancelledInvoices()
-                ->where('payments.payment_method', $method)
-                ->when($storeId, fn ($q) => $q->forStore($storeId)),
-            'payments.payment_date'
-        );
-        $transfers = fn () => $window(
-            TreasuryTransfer::query()->when($storeId, fn ($q) => $q->where('store_id', $storeId)),
-            'transfer_date'
-        );
+        $buckets = ['customer_inflows', 'supplier_outflows', 'general_expenses', 'expense_payments', 'transfers_in', 'transfers_out', 'fees'];
+        $out = ['before' => [], 'from' => []];
+        foreach (['before', 'from'] as $window) {
+            foreach (PaymentMethod::cases() as $methodEnum) {
+                $out[$window][$methodEnum->value] = array_fill_keys($buckets, '0.000');
+            }
+        }
+        $add = function (array $rows, array $map) use (&$out): void {
+            foreach ($rows as $row) {
+                $window = (string) $row->window_key;
+                $method = (string) $row->method_key;
+                if (! isset($out[$window][$method])) {
+                    continue; // a method outside PaymentMethod is not an account
+                }
+                foreach ($map as $alias => $bucket) {
+                    $out[$window][$method][$bucket] = bcadd($out[$window][$method][$bucket], Decimal::normalize((string) $row->{$alias}), 3);
+                }
+            }
+        };
 
-        return [
-            'customer_inflows' => Decimal::normalize((string) $payments()->whereNotNull('payments.customer_id')->sum('payments.amount')),
-            'supplier_outflows' => Decimal::normalize((string) $payments()->whereNotNull('payments.supplier_id')->sum('payments.amount')),
-            'general_expenses' => Decimal::normalize((string) $window(
-                Expense::query()->where('payment_method', $method)->when($storeId, fn ($q) => $q->where('store_id', $storeId)),
-                'expense_date'
-            )->sum('amount')),
-            'expense_payments' => Decimal::normalize((string) $payments()
-                ->where('payments.payment_number', 'like', 'PAY-EXP-%')
-                ->whereNull('payments.supplier_id')
-                ->sum('payments.amount')),
-            'transfers_in' => Decimal::normalize((string) $transfers()->where('to_method', $method)->sum('amount')),
-            'transfers_out' => Decimal::normalize((string) $transfers()->where('from_method', $method)->sum('amount')),
-            'fees' => Decimal::normalize((string) $transfers()->where('from_method', $method)->sum('transfer_fee')),
-        ];
+        // The three payment buckets in ONE pass over the vouchers (conditional sums): the voucher
+        // filter (cancelled-invoice exclusion, branch) is the expensive part.
+        $add($read(
+            Payment::query()->excludingCancelledInvoices()->when($storeId, fn ($q) => $q->forStore($storeId)),
+            'payments.payment_date',
+            'payments.payment_method',
+            [
+                'customer_sum' => 'CASE WHEN payments.customer_id IS NOT NULL THEN payments.amount ELSE 0 END',
+                'supplier_sum' => 'CASE WHEN payments.supplier_id IS NOT NULL THEN payments.amount ELSE 0 END',
+                'expense_payment_sum' => "CASE WHEN payments.supplier_id IS NULL AND payments.payment_number LIKE 'PAY-EXP-%' THEN payments.amount ELSE 0 END",
+            ],
+        ), ['customer_sum' => 'customer_inflows', 'supplier_sum' => 'supplier_outflows', 'expense_payment_sum' => 'expense_payments']);
+
+        $add($read(
+            Expense::query()->when($storeId, fn ($q) => $q->where('store_id', $storeId)),
+            'expense_date',
+            'payment_method',
+            ['expense_sum' => 'amount'],
+        ), ['expense_sum' => 'general_expenses']);
+
+        $transfers = fn () => TreasuryTransfer::query()->when($storeId, fn ($q) => $q->where('store_id', $storeId));
+        $add($read($transfers(), 'transfer_date', 'to_method', ['in_sum' => 'amount']), ['in_sum' => 'transfers_in']);
+        $add($read($transfers(), 'transfer_date', 'from_method', ['out_sum' => 'amount', 'fee_sum' => 'transfer_fee']), ['out_sum' => 'transfers_out', 'fee_sum' => 'fees']);
+
+        return $out;
     }
 
     /**

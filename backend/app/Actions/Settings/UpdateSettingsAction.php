@@ -11,6 +11,7 @@ use App\Services\ActivityLogService;
 use App\Services\Branding\TenantBranding;
 use App\Services\Settings\SettingSecrets;
 use App\Services\Settings\TenantSettings;
+use App\Support\DashboardCache;
 use App\Support\Media\SanitizedImage;
 use Illuminate\Support\Facades\DB;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -67,6 +68,8 @@ final class UpdateSettingsAction
         }
 
         Setting::clearCache();
+        // PERF-01: the cached dashboard embeds the currency label and the low-stock threshold.
+        DashboardCache::invalidate();
         $this->removeMedia($previous);
 
         return SettingSecrets::mask(Setting::allCached());

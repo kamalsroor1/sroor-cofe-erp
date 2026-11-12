@@ -173,6 +173,7 @@ return [
     'statement_balance_col' => 'الرصيد',
     'collect_cash_payment' => 'تحصيل نقدية',
     'cash_receipt_voucher' => 'سند قبض نقدي',
+    'sales_return_entry' => 'مرتجع مبيعات',
     'disburse_cash_payment' => 'صرف نقدية',
     'cash_disbursement_voucher' => 'سند صرف نقدي',
 
@@ -182,4 +183,17 @@ return [
     'payment_invoice_customer_mismatch' => 'الفاتورة دي مش تبع العميل المختار.',
     'payment_purchase_supplier_mismatch' => 'فاتورة الشراء دي مش تبع المورد المختار.',
     'deleted_customer' => 'عميل محذوف',
+    // PERF-01: paged customer statement
+    'statement_opening_row' => 'رصيد أول الفترة (مُرحَّل)',
+    'statement_current_balance_note' => 'الرصيد الحالي: :amount',
+    'statement_period_label' => 'الفترة',
+    'statement_period_all' => 'كل السجل',
+    'statement_period_range' => 'من :from إلى :to',
+    'statement_period_from' => 'من :from',
+    'statement_period_until' => 'حتى :to',
+    'statement_print_title' => 'كشف حساب',
+    'statement_print_progress' => 'جاري تجهيز الكشف للطباعة: :loaded من :total حركة',
+    'statement_print_too_large' => 'الكشف فيه :total حركة، أكتر من :max اللي ينفع تتطبع مرة واحدة. اختار فترة أقصر.',
+    'statement_print_failed' => 'مقدرناش نحمّل الكشف كله للطباعة. جرّب تاني.',
+    'statement_print_cancelled' => 'اتلغت الطباعة.',
 ];

@@ -3,7 +3,8 @@
 namespace App\Services;
 
 use App\Models\InvoiceItem;
-use App\Models\Item;
+use App\Services\Reports\ReportDateRange;
+use App\Support\Money\Decimal;
 use App\Support\TenantCache;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -19,37 +20,32 @@ class InventoryAnalyticsService
 
     /**
      * Perform ABC Analysis and calculate sales velocity and dead stock
+     *
+     * PERF-01: $salesByItem (item id => ['quantity' => ..., 'revenue' => ...], the period's
+     * confirmed invoice lines per item, as the item profitability report computes them as its
+     * gross figures) skips the sales aggregate when a caller already has it. Sold quantity and
+     * revenue are scale-3 strings whichever path computed them.
+     *
+     * @param  array<int, array{quantity: string, revenue: string}>|null  $salesByItem
      */
-    public function getAbcAnalysis(string $fromDate, string $toDate, ?int $storeId = null, string $sortBy = 'profit'): array
+    public function getAbcAnalysis(string $fromDate, string $toDate, ?int $storeId = null, string $sortBy = 'profit', ?array $salesByItem = null): array
     {
         $cacheKey = TenantCache::key('erp_abc:v'.TenantCache::version('erp_abc').':'.($storeId ?? 'all').":{$fromDate}:{$toDate}:{$sortBy}");
 
-        return Cache::remember($cacheKey, now()->addMinutes(15), function () use ($fromDate, $toDate, $storeId, $sortBy) {
+        return Cache::remember($cacheKey, now()->addMinutes(15), function () use ($fromDate, $toDate, $storeId, $sortBy, $salesByItem) {
             $daysInPeriod = max(1, Carbon::parse($fromDate)->diffInDays(Carbon::parse($toDate)) + 1);
 
-            // 1. Get all active items with their current stock and unit cost
-            $items = Item::active()->get()->keyBy('id');
+            // 1. Every active item with its current stock and unit cost. PERF-01: plain rows of
+            // the needed columns (no models); values settled at scale 3 like the decimal:3 casts.
+            $items = DB::table('items')
+                ->where('is_active', true)
+                ->whereNull('deleted_at')
+                ->orderBy('id')
+                ->get(['id', 'name', 'code', 'unit', 'current_stock', 'cost_price', 'weighted_avg_cost', 'selling_price'])
+                ->keyBy('id');
 
-            // 2. Aggregate sales per item in period
-            $salesQuery = InvoiceItem::query()
-                ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
-                ->where('invoices.status', 'confirmed')
-                ->whereDate('invoices.invoice_date', '>=', $fromDate)
-                ->whereDate('invoices.invoice_date', '<=', $toDate);
-
-            if ($storeId) {
-                $salesQuery->where('invoices.store_id', $storeId);
-            }
-
-            $aggregatedSales = $salesQuery
-                ->select([
-                    'invoice_items.item_id',
-                    DB::raw('SUM(invoice_items.quantity) as total_quantity'),
-                    DB::raw('SUM(invoice_items.total_price) as total_revenue'),
-                ])
-                ->groupBy('invoice_items.item_id')
-                ->get()
-                ->keyBy('item_id');
+            // 2. Sales per item in the period (PERF-01: half-open range on the column)
+            $salesByItem ??= $this->salesByItem($fromDate, $toDate, $storeId);
 
             $analyzedItems = [];
             $totalCompanyProfit = '0.000';
@@ -57,12 +53,14 @@ class InventoryAnalyticsService
             $soldItemIds = [];
 
             foreach ($items as $itemId => $item) {
-                $salesData = $aggregatedSales->get($itemId);
+                $salesData = $salesByItem[(int) $itemId] ?? null;
 
-                $qtySold = $salesData ? (string) $salesData->total_quantity : '0.000';
-                $revenue = $salesData ? (string) $salesData->total_revenue : '0.000';
-                $unitCost = (string) ($item->weighted_avg_cost ?: ($item->cost_price ?: '0.000'));
-                $cogs = bcmul($qtySold, $unitCost, 3);
+                $qtySold = $salesData['quantity'] ?? '0.000';
+                $revenue = $salesData['revenue'] ?? '0.000';
+                $weightedCost = $this->decimalOrNull($item->weighted_avg_cost);
+                $costPrice = $this->decimalOrNull($item->cost_price);
+                $unitCost = $weightedCost ?? ($costPrice ?? '0.000');
+                $cogs = Decimal::mul($qtySold, $unitCost); // PERF-01: half-up per line (money rule); was truncated
                 $grossProfit = bcsub($revenue, $cogs, 3);
 
                 $velocity = bcdiv($qtySold, (string) $daysInPeriod, 3); // Daily run rate
@@ -73,17 +71,17 @@ class InventoryAnalyticsService
                     $totalCompanyRevenue = bcadd($totalCompanyRevenue, $revenue, 3);
                 }
 
-                $currentStock = (string) ($item->current_stock ?: '0.000');
-                $stockValue = bcmul($currentStock, $unitCost, 3);
+                $currentStock = $this->decimalOrNull($item->current_stock) ?? '0.000';
+                $stockValue = Decimal::mul($currentStock, $unitCost); // PERF-01: half-up, as the valuation lines
 
                 $analyzedItems[] = [
-                    'id' => $item->id,
+                    'id' => (int) $item->id,
                     'name' => $item->name,
                     'code' => $item->code,
                     'unit' => $item->unit,
                     'current_stock' => $currentStock,
                     'stock_value' => $stockValue,
-                    'unit_price' => (string) $item->selling_price,
+                    'unit_price' => (string) $this->decimalOrNull($item->selling_price),
                     'unit_cost' => $unitCost,
                     'quantity_sold' => $qtySold,
                     'revenue' => $revenue,
@@ -203,5 +201,45 @@ class InventoryAnalyticsService
                 ],
             ];
         });
+    }
+
+    /**
+     * @return array<int, array{quantity: string, revenue: string}>
+     */
+    private function salesByItem(string $fromDate, string $toDate, ?int $storeId): array
+    {
+        $salesQuery = InvoiceItem::query()
+            ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
+            ->where('invoices.status', 'confirmed')
+            ->whereNull('invoices.deleted_at');
+        ReportDateRange::apply($salesQuery, 'invoices.invoice_date', $fromDate, $toDate);
+
+        if ($storeId) {
+            $salesQuery->where('invoices.store_id', $storeId);
+        }
+
+        $out = [];
+        foreach ($salesQuery->toBase()
+            ->select('invoice_items.item_id')
+            ->selectRaw('SUM(invoice_items.quantity) as total_quantity')
+            ->selectRaw('SUM(invoice_items.total_price) as total_revenue')
+            ->groupBy('invoice_items.item_id')
+            ->get() as $row) {
+            $out[(int) $row->item_id] = [
+                'quantity' => Decimal::normalize((string) $row->total_quantity),
+                'revenue' => Decimal::normalize((string) $row->total_revenue),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * A raw DECIMAL column as the decimal:3 cast reads it ("12.500"), or null when NULL.
+     * Matches the former `$item->col ?: …` checks on the cast model, where "0.000" is truthy.
+     */
+    private function decimalOrNull(mixed $value): ?string
+    {
+        return $value === null || $value === '' ? null : Decimal::normalize((string) $value);
     }
 }

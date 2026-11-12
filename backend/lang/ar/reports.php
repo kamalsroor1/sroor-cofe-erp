@@ -204,4 +204,18 @@ return [
     'gross_minus_returns' => 'الإجمالي :gross - المرتجعات :returns',
     'net_bought_label' => 'صافي المسحوبات',
     'returned_qty_detail' => 'مرتجع: :qty',
+    // PERF-01
+    'period_too_long' => 'فترة التقرير لا يمكن أن تزيد عن :days يوم. اختار فترة أقصر.',
+    'period_reversed' => 'تاريخ البداية لازم يكون قبل تاريخ النهاية.',
+    'items_showing_badge' => 'معروض :shown من :total صنف',
+    'totals_row_label' => 'إجماليات الفترة كاملة',
+    'ledger_showing_badge' => 'معروض :shown من :total حركة',
+    'treasury_ledger_title' => 'حركة الخزينة (الأحدث أولاً)',
+    'treasury_col_doc' => 'المستند',
+    'treasury_col_type' => 'النوع',
+    'treasury_col_method' => 'طريقة الدفع',
+    'treasury_col_party' => 'الطرف',
+    'treasury_col_in' => 'داخل',
+    'treasury_col_out' => 'خارج',
+    'treasury_col_balance' => 'الرصيد الجاري',
 ];

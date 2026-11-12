@@ -182,6 +182,15 @@ return [
         'unencrypted_refused' => 'Unencrypted archives (or an empty BACKUP_ARCHIVE_PASSWORD) are accepted in local/testing only: restore refused.',
         'restore_user_required' => 'In production a restore needs a dedicated MySQL account (DB_RESTORE_USERNAME or --db-user), never the application account.',
     ],
+    // BUG-07: php artisan db:check-write-isolation
+    'write_isolation' => [
+        'level' => 'Write isolation of the money/stock transactions: :level',
+        'server_level' => 'the server default (DB_WRITE_ISOLATION is empty)',
+        'ok' => 'OK: the binary log format accepts these writes.',
+        'statement_binlog' => 'FAIL [:connection]: binary log ON with binlog_format=STATEMENT refuses READ COMMITTED writes (error 1665). Set binlog_format to ROW or MIXED, or empty DB_WRITE_ISOLATION.',
+        'unreachable' => 'FAIL [:connection]: the connection could not be checked.',
+    ],
+
     'health' => [
         'telegram_title' => 'Health check FAILED on :application_name (:env_name)',
         'heartbeat_sent' => 'Heartbeat sent.',
@@ -195,6 +204,7 @@ return [
         'disk_unknown' => 'The free disk space could not be read.',
         'disk_usage' => 'The disk is :percent% full.',
         'release_rehearsal_short' => 'Rehearsal mode',
+        'write_isolation_statement_binlog' => 'Sales, payments and stock writes run at READ COMMITTED but the binary log is ON with binlog_format=STATEMENT on: :connections. Every such write fails (error 1665). Set binlog_format to ROW or MIXED, or empty DB_WRITE_ISOLATION.',
         'release_rehearsal' => 'REHEARSAL MODE (RELEASE_REHEARSAL=true): not production-ready. Relaxed: :relaxed. Add the SMTP / Telegram / Google Drive settings and release again in strict mode.',
     ],
     'tenants' => [
@@ -303,5 +313,11 @@ return [
         'col_stores_stock' => 'Branches Sum',
         'col_drift' => 'Drift',
         'summary' => 'Stock drift check (read-only): :count drifted item(s) across :total tenant(s). Nothing was modified.',
+    ],
+    // PERF-01: cache:prune-expired
+    'cache_prune' => [
+        'description' => 'Delete expired rows from the database cache table.',
+        'not_database' => 'The default cache store is not a database store (:driver): nothing to prune.',
+        'done' => 'Deleted :count expired cache row(s).',
     ],
 ];

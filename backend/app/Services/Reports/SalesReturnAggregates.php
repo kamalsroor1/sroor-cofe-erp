@@ -41,6 +41,13 @@ use Illuminate\Support\Facades\DB;
  *
  * The *Subquery() methods return grouped query builders meant for leftJoinSub(), so an
  * invoice-side aggregate (PERF-01) can net the returns in the same SQL statement.
+ *
+ * Portability (PERF-01 / ONLY_FULL_GROUP_BY): the per-line cost uses correlated subqueries
+ * that read returns.invoice_id and return_items.return_id. They are evaluated in costedLines(),
+ * a NON-grouped derived table (one row per return line), and every GROUP BY runs outside it on
+ * its plain columns. Putting the correlated subquery inside SUM() of a grouped statement is
+ * valid SQL and accepted by MySQL 5.7/8.0/8.4 and MariaDB 11.8.9+, but MariaDB 11.8.8 rejects
+ * it with 1055 "'returns.invoice_id' isn't in GROUP BY" (the developer's local server).
  */
 final class SalesReturnAggregates
 {
@@ -71,17 +78,41 @@ final class SalesReturnAggregates
     }
 
     /**
+     * One row per counted return line with its cost already computed (no grouping), for the
+     * aggregates to group OUTSIDE it: return_id, store_id, customer_id, item_id,
+     * invoice_item_id, quantity, total_price, line_cost, and the linked invoice line's
+     * quantity / total (invoice_line_qty, invoice_line_total; NULL when not linked).
+     */
+    public function costedLines(?string $fromDate, ?string $toDate, ?int $storeId = null): Builder
+    {
+        return $this->lines($fromDate, $toDate, $storeId)
+            ->select([
+                'returns.id as return_id',
+                'returns.store_id as store_id',
+                'returns.customer_id as customer_id',
+                'return_items.item_id as item_id',
+                'return_items.invoice_item_id as invoice_item_id',
+                'return_items.quantity as quantity',
+                'return_items.total_price as total_price',
+                'invoice_items.quantity as invoice_line_qty',
+                'invoice_items.total_price as invoice_line_total',
+            ])
+            ->selectRaw($this->lineCostSql().' as line_cost', $this->lineCostBindings());
+    }
+
+    /**
      * Totals of the period: value, cost, quantity and number of return documents.
      *
      * @return array{value: string, cost: string, quantity: string, count: int}
      */
     public function totals(?string $fromDate, ?string $toDate, ?int $storeId = null): array
     {
-        $row = $this->lines($fromDate, $toDate, $storeId)
-            ->selectRaw('COUNT(DISTINCT returns.id) as returns_count')
-            ->selectRaw('COALESCE(SUM(return_items.quantity), 0) as returned_qty')
-            ->selectRaw('COALESCE(SUM(return_items.total_price), 0) as returned_value')
-            ->selectRaw('COALESCE(SUM('.$this->lineCostSql().'), 0) as returned_cost', $this->lineCostBindings())
+        $row = DB::query()
+            ->fromSub($this->costedLines($fromDate, $toDate, $storeId), 'costed')
+            ->selectRaw('COUNT(DISTINCT costed.return_id) as returns_count')
+            ->selectRaw('COALESCE(SUM(costed.quantity), 0) as returned_qty')
+            ->selectRaw('COALESCE(SUM(costed.total_price), 0) as returned_value')
+            ->selectRaw('COALESCE(SUM(costed.line_cost), 0) as returned_cost')
             ->first();
 
         // An aggregate without GROUP BY always returns exactly one row.
@@ -100,13 +131,13 @@ final class SalesReturnAggregates
      */
     public function byStore(?string $fromDate, ?string $toDate): array
     {
-        $rows = $this->lines($fromDate, $toDate)
-            ->whereNotNull('returns.store_id')
-            ->groupBy('returns.store_id')
-            ->select('returns.store_id')
-            ->selectRaw('COUNT(DISTINCT returns.id) as returns_count')
-            ->selectRaw('COALESCE(SUM(return_items.total_price), 0) as returned_value')
-            ->selectRaw('COALESCE(SUM('.$this->lineCostSql().'), 0) as returned_cost', $this->lineCostBindings())
+        $rows = DB::query()
+            ->fromSub($this->costedLines($fromDate, $toDate)->whereNotNull('returns.store_id'), 'costed')
+            ->groupBy('costed.store_id')
+            ->select('costed.store_id')
+            ->selectRaw('COUNT(DISTINCT costed.return_id) as returns_count')
+            ->selectRaw('COALESCE(SUM(costed.total_price), 0) as returned_value')
+            ->selectRaw('COALESCE(SUM(costed.line_cost), 0) as returned_cost')
             ->get();
 
         $out = [];
@@ -176,18 +207,19 @@ final class SalesReturnAggregates
      */
     public function byItemSubquery(?string $fromDate, ?string $toDate, ?int $storeId = null): Builder
     {
-        $perLine = $this->lines($fromDate, $toDate, $storeId)
-            ->groupBy('return_items.item_id', 'return_items.invoice_item_id')
-            ->select('return_items.item_id as line_item_id')
-            ->selectRaw('SUM(return_items.quantity) as line_returned_qty')
+        $perLine = DB::query()
+            ->fromSub($this->costedLines($fromDate, $toDate, $storeId), 'costed')
+            ->groupBy('costed.item_id', 'costed.invoice_item_id')
+            ->select('costed.item_id as line_item_id')
+            ->selectRaw('SUM(costed.quantity) as line_returned_qty')
             ->selectRaw(
-                'CASE WHEN return_items.invoice_item_id IS NULL'
-                .' OR COALESCE(MAX(invoice_items.quantity), 0) = 0'
-                .' THEN SUM(return_items.total_price)'
-                .' ELSE ROUND(SUM(return_items.quantity) * MAX(invoice_items.total_price) / MAX(invoice_items.quantity), 3)'
+                'CASE WHEN costed.invoice_item_id IS NULL'
+                .' OR COALESCE(MAX(costed.invoice_line_qty), 0) = 0'
+                .' THEN SUM(costed.total_price)'
+                .' ELSE ROUND(SUM(costed.quantity) * MAX(costed.invoice_line_total) / MAX(costed.invoice_line_qty), 3)'
                 .' END as line_returned_value'
             )
-            ->selectRaw('SUM('.$this->lineCostSql().') as line_returned_cost', $this->lineCostBindings());
+            ->selectRaw('SUM(costed.line_cost) as line_returned_cost');
 
         return DB::query()
             ->fromSub($perLine, 'returned_lines')

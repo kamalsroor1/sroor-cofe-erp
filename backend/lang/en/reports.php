@@ -204,4 +204,18 @@ return [
     'gross_minus_returns' => 'Gross :gross - Returns :returns',
     'net_bought_label' => 'Net Purchased',
     'returned_qty_detail' => 'Returned: :qty',
+    // PERF-01
+    'period_too_long' => 'The report period cannot be longer than :days days. Choose a shorter period.',
+    'period_reversed' => 'The start date must not be after the end date.',
+    'items_showing_badge' => 'Showing :shown of :total items',
+    'totals_row_label' => 'Totals for the whole period',
+    'ledger_showing_badge' => 'Showing :shown of :total entries',
+    'treasury_ledger_title' => 'Treasury ledger (newest first)',
+    'treasury_col_doc' => 'Document',
+    'treasury_col_type' => 'Type',
+    'treasury_col_method' => 'Method',
+    'treasury_col_party' => 'Party',
+    'treasury_col_in' => 'Money in',
+    'treasury_col_out' => 'Money out',
+    'treasury_col_balance' => 'Running balance',
 ];

@@ -9,6 +9,7 @@ use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Store;
 use App\Services\DailyCashFlowService;
+use App\Services\Reports\ReportDateRange;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Illuminate\Support\Collection;
@@ -37,8 +38,9 @@ final class GetDailyJournalAction
             ->first();
 
         // Invoices on selected date
+        // PERF-01: [date, date + 1 day) on the column itself, so the date indexes are usable.
         $invoices = Invoice::with('customer')
-            ->whereDate('invoice_date', $date)
+            ->tap(fn ($q) => ReportDateRange::apply($q, 'invoice_date', $date, $date))
             ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
             ->latest('id')
             ->get();
@@ -56,7 +58,8 @@ final class GetDailyJournalAction
         $cashExpenses = $cashFlow['cash_expenses'];
 
         // Expenses on selected date (the list and the all-methods total)
-        $expenses = Expense::whereDate('expense_date', $date)
+        $expenses = Expense::query()
+            ->tap(fn ($q) => ReportDateRange::apply($q, 'expense_date', $date, $date))
             ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
             ->latest('id')
             ->get();

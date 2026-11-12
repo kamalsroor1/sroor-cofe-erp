@@ -47,7 +47,12 @@ return [
 
         'database' => [
             'driver' => 'database',
-            'connection' => env('DB_QUEUE_CONNECTION'),
+            // PERF-01: the CENTRAL database connection by default (same default as
+            // tenancy.database.central_connection). Unset, the queue used the *current* default
+            // connection, i.e. the tenant database inside a tenant request: a job dispatched
+            // there (shift discrepancy / account-locked alerts) landed in the tenant's own
+            // `jobs` table, which no worker reads.
+            'connection' => env('DB_QUEUE_CONNECTION') ?: env('DB_CONNECTION', 'mysql'),
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
             'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),

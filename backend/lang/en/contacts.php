@@ -173,6 +173,7 @@ return [
     'statement_balance_col' => 'Balance',
     'collect_cash_payment' => 'Cash collection',
     'cash_receipt_voucher' => 'Cash receipt voucher',
+    'sales_return_entry' => 'Sales return',
     'disburse_cash_payment' => 'Cash disbursement',
     'cash_disbursement_voucher' => 'Cash payment voucher',
 
@@ -182,4 +183,17 @@ return [
     'payment_invoice_customer_mismatch' => 'This invoice does not belong to the selected customer.',
     'payment_purchase_supplier_mismatch' => 'This purchase invoice does not belong to the selected supplier.',
     'deleted_customer' => 'Deleted Customer',
+    // PERF-01: paged customer statement
+    'statement_opening_row' => 'Opening balance (carried forward)',
+    'statement_current_balance_note' => 'Current balance: :amount',
+    'statement_period_label' => 'Period',
+    'statement_period_all' => 'Entire history',
+    'statement_period_range' => 'From :from to :to',
+    'statement_period_from' => 'From :from',
+    'statement_period_until' => 'Until :to',
+    'statement_print_title' => 'Account statement',
+    'statement_print_progress' => 'Preparing the statement for print: :loaded of :total entries',
+    'statement_print_too_large' => 'This statement has :total entries, more than the :max that can be printed at once. Choose a shorter period.',
+    'statement_print_failed' => 'Could not load the whole statement for printing. Try again.',
+    'statement_print_cancelled' => 'Printing cancelled.',
 ];

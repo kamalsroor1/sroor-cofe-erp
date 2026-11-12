@@ -128,3 +128,9 @@ Schedule::command('tenants:apply-lifecycle')
 Schedule::command('tenants:run sanctum:prune-expired --option="hours=24"')
     ->dailyAt('03:30')
     ->withoutOverlapping();
+
+// PERF-01: drop expired rows of the database cache store (dashboard keys carry the business date
+// and a version, so expired ones are never read - and lazily deleted - again).
+Schedule::command('cache:prune-expired')
+    ->dailyAt('03:45')
+    ->withoutOverlapping();

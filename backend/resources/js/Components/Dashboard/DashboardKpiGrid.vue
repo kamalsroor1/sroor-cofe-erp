@@ -53,7 +53,7 @@
     <MetricCard
       v-if="hasMetric(metrics.customers_debt)"
       data-testid="kpi-customers-debt"
-      class="[&_[data-metric-value]]:text-orange-600 dark:[&_[data-metric-value]]:text-orange-400"
+      class="[&_[data-metric-value]]:text-warning-fg"
       :title="$t('dashboard.customers_debt')"
       :value="formatMoney(metrics.customers_debt)"
       :currency="currencyLabel"

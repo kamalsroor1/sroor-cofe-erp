@@ -4,7 +4,7 @@
 # `main` is a different (single-tenant) codebase handled by deploy.yml; it is
 # deliberately excluded here.
 #
-# Job names (php / mysql / frontend / desktop / gitleaks) are the "required status
+# Job names (php / mysql / mariadb / frontend / desktop / gitleaks) are the "required status
 # checks" to enable in branch protection for feature/multi-tenant. Renaming a job
 # breaks that protection rule - update the rule at the same time.
 #
@@ -20,6 +20,10 @@
 # literal, so a query on a missing column only fails on MySQL (BUG-05). Tests that are
 # MySQL-ONLY also carry the `mysql-only` group, which phpunit.xml excludes from the
 # sqlite run in the `php` job (so they are not collected there instead of skipped).
+#
+# The `mariadb` job (BUG-04 / BUG-07) runs the `concurrency` PHPUnit group on MariaDB 11.8,
+# the second supported engine (developer machines, Hostinger), whose snapshot isolation
+# check (error 1020) behaves differently from MySQL under concurrent writes.
 #
 # The `frontend` job also runs the JS unit tests (`npm run test:js`, node:test).
 #
@@ -144,6 +148,9 @@ jobs:
       DB_PORT: '3306'
       DB_USERNAME: root
       DB_PASSWORD: ''
+      # PERF-01: wall-time budget of ReportsLargeDatasetPerformanceTest on shared runners
+      # (memory, response size and query count stay hard limits).
+      PERF_REPORT_MAX_SECONDS: '5'
       MYSQL_IMAGE: mysql:8.4
     steps:
       - name: Checkout
@@ -217,6 +224,125 @@ jobs:
         if: failure()
         working-directory: .
         run: docker logs mysql 2>&1 | tail -100
+
+  # BUG-04 / BUG-07: we support BOTH MySQL 8.4 (production VPS) and MariaDB 11.x (developer
+  # machines, Hostinger-hosted shop/staging). MariaDB 11.6.2+ turns innodb_snapshot_isolation ON,
+  # so a locking read of a row changed after the transaction's snapshot fails with 1020 where
+  # MySQL just waits. Only the `concurrency` group runs here (MysqlConcurrencyTest +
+  # MysqlLockConflictTest: real parallel processes, first document of the day, retry
+  # idempotency), ~1-2 min of tests on top of the shared setup; the rest of the `mysql` group
+  # is engine-agnostic DDL/harness work already covered by the `mysql` job. Separate job (not a
+  # matrix on `mysql`) so the required status check name `mysql` stays unchanged; add
+  # `mariadb` to the branch protection rule as well.
+  mariadb:
+    name: mariadb
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      # Throwaway container on the runner: empty root password, no secret involved.
+      DB_HOST: 127.0.0.1
+      DB_PORT: '3306'
+      DB_USERNAME: root
+      DB_PASSWORD: ''
+      MARIADB_IMAGE: mariadb:11.8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Same ephemeral, durability-off setup as the `mysql` job. No innodb_snapshot_isolation
+      # flag on purpose: the 11.8 default (ON) is what the shops run.
+      - name: Start MariaDB 11.8 (ephemeral)
+        working-directory: .
+        run: |
+          docker run -d --name mariadb -p 3306:3306 \
+            -e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=yes \
+            -e MARIADB_DATABASE=sroor_testing \
+            --tmpfs /var/lib/mysql:rw \
+            "$MARIADB_IMAGE" \
+            --character-set-server=utf8mb4 \
+            --collation-server=utf8mb4_unicode_ci \
+            --skip-log-bin \
+            --innodb-flush-log-at-trx-commit=0 \
+            --innodb-doublewrite=0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}, pdo_mysql
+          coverage: none
+          tools: composer:v2
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-php${{ env.PHP_VERSION }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-php${{ env.PHP_VERSION }}-
+
+      - name: Composer install
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Generate APP_KEY
+        run: echo "APP_KEY=$(php artisan key:generate --show --no-ansi)" >> "$GITHUB_ENV"
+
+      - name: Wait for MariaDB
+        working-directory: .
+        run: |
+          for i in $(seq 1 60); do
+            if docker exec mariadb mariadb -h127.0.0.1 -uroot -N -e \
+                "SELECT 1 FROM information_schema.schemata WHERE schema_name = 'sroor_testing'" 2>/dev/null | grep -q 1; then
+              docker exec mariadb mariadb -h127.0.0.1 -uroot -N -e "SELECT VERSION(), @@innodb_snapshot_isolation"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "MariaDB did not become ready in time" >&2
+          docker logs mariadb | tail -50
+          exit 1
+
+      - name: PHPUnit (MariaDB 11.8, group concurrency)
+        run: php artisan test -c phpunit.mysql.xml --group concurrency
+
+      # PERF-01 / BUG-01: guard for the MariaDB 11.8.8 ONLY_FULL_GROUP_BY bug (1055 "'returns.invoice_id'
+      # isn't in GROUP BY" on grouped report SQL). 11.8.9+ (the floating image above) no longer
+      # reproduces it, so this step pins 11.8.8.
+      - name: Start MariaDB 11.8.8 (reports guard)
+        working-directory: .
+        run: |
+          docker run -d --name mariadb-1188 -p 3307:3306 \
+            -e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=yes \
+            -e MARIADB_DATABASE=sroor_testing \
+            --tmpfs /var/lib/mysql:rw \
+            mariadb:11.8.8 \
+            --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci \
+            --skip-log-bin --innodb-flush-log-at-trx-commit=0 --innodb-doublewrite=0
+          for i in $(seq 1 60); do
+            if docker exec mariadb-1188 mariadb -h127.0.0.1 -uroot -N -e \
+                "SELECT 1 FROM information_schema.schemata WHERE schema_name = 'sroor_testing'" 2>/dev/null | grep -q 1; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs mariadb-1188 | tail -50
+          exit 1
+
+      - name: PHPUnit (MariaDB 11.8.8, group mariadb-reports)
+        env:
+          DB_PORT: '3307'
+        run: php artisan test -c phpunit.mysql.xml --group mariadb-reports
+
+      - name: MariaDB server log (on failure)
+        if: failure()
+        working-directory: .
+        run: docker logs mariadb 2>&1 | tail -100
 
   frontend:
     name: frontend

@@ -4,22 +4,31 @@
     :rows="ledger"
     :columns="columns"
     :loading="loading"
+    :pagination="pagination"
+    :skeleton-rows="8"
+    @page-change="$emit('page-change', $event)"
     :empty-title="$t('contacts.no_transactions_found')"
     :empty-message="$t('contacts.no_transactions_in_period')"
   >
     <!-- # Cell -->
-    <template #cell-index="{ rowIndex }">
-      <div class="font-mono text-slate-500">{{ rowIndex + 1 }}</div>
+    <template #cell-index="{ row, index }">
+      <div class="font-mono text-slate-500">{{ row._opening ? '' : offset + index + (hasOpening ? 0 : 1) }}</div>
     </template>
 
     <!-- Date Cell -->
     <template #cell-date="{ row }">
-      <div class="font-mono text-slate-700 dark:text-slate-300">{{ row.date }}</div>
+      <div class="font-mono whitespace-nowrap text-slate-700 dark:text-slate-300">{{ row.date }}</div>
     </template>
 
     <!-- Type Cell -->
     <template #cell-type="{ row }">
-      <div class="font-bold text-slate-900 dark:text-white font-tajawal">{{ row.type }}</div>
+      <div
+        class="font-bold font-tajawal"
+        :class="row._opening ? 'text-slate-500 dark:text-slate-400 italic' : 'text-slate-900 dark:text-white'"
+        :data-testid="row._opening ? 'statement-opening-row' : undefined"
+      >
+        {{ row.type }}
+      </div>
     </template>
 
     <!-- Reference No Cell -->
@@ -30,6 +39,7 @@
     <!-- Debit Cell -->
     <template #cell-debit="{ row }">
       <div
+        v-if="!row._opening"
         class="font-mono font-bold text-end"
         :class="row.debit > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400'"
       >
@@ -40,6 +50,7 @@
     <!-- Credit Cell -->
     <template #cell-credit="{ row }">
       <div
+        v-if="!row._opening"
         class="font-mono font-bold text-end"
         :class="row.credit > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-400'"
       >
@@ -84,7 +95,12 @@ const { t } = useTrans();
 defineProps({
   ledger: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
+  pagination: { type: Object, default: null },
+  offset: { type: Number, default: 0 },
+  hasOpening: { type: Boolean, default: false },
 });
+
+defineEmits(['page-change']);
 
 const columns = computed(() => [
   { key: 'index', label: '#', align: 'start' },

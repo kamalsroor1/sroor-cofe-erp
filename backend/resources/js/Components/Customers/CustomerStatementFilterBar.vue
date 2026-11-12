@@ -1,6 +1,6 @@
 <template>
   <div
-    class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 no-print"
+    class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row md:flex-wrap items-stretch md:items-center justify-between gap-3 no-print"
   >
     <!-- Date Inputs -->
     <div class="flex items-center gap-2 flex-wrap font-tajawal">
@@ -32,7 +32,7 @@
       <button
         type="button"
         @click="$emit('preset', 'today')"
-        class="min-h-[32px] px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
+        class="min-h-[32px] coarse:min-h-[44px] px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
         :class="
           activePreset === 'today'
             ? 'bg-theme-primary text-white shadow-theme-primary font-black'
@@ -45,7 +45,7 @@
       <button
         type="button"
         @click="$emit('preset', 'this_month')"
-        class="min-h-[32px] px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
+        class="min-h-[32px] coarse:min-h-[44px] px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
         :class="
           activePreset === 'this_month'
             ? 'bg-theme-primary text-white shadow-theme-primary font-black'
@@ -58,7 +58,7 @@
       <button
         type="button"
         @click="$emit('preset', 'this_year')"
-        class="min-h-[32px] px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
+        class="min-h-[32px] coarse:min-h-[44px] px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
         :class="
           activePreset === 'this_year'
             ? 'bg-theme-primary text-white shadow-theme-primary font-black'
@@ -68,6 +68,15 @@
         {{ $t('common.this_year') }}
       </button>
     </div>
+
+    <p
+      v-if="rangeError"
+      role="alert"
+      data-testid="statement-range-error"
+      class="w-full text-xs font-bold text-rose-600 dark:text-rose-400 font-tajawal"
+    >
+      {{ rangeError }}
+    </p>
   </div>
 </template>
 
@@ -79,6 +88,7 @@ defineProps({
   dateFrom: { type: String, default: '' },
   dateTo: { type: String, default: '' },
   activePreset: { type: String, default: '' },
+  rangeError: { type: String, default: '' },
 });
 
 defineEmits(['update:dateFrom', 'update:dateTo', 'filter', 'preset']);

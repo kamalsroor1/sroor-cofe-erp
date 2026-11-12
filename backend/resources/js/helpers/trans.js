@@ -71,9 +71,12 @@ export function trans(key, replace = {}) {
     }
 
     if (typeof value === 'string') {
-        Object.keys(replace).forEach((placeholder) => {
-            value = value.replace(new RegExp(`:${placeholder}`, 'g'), replace[placeholder]);
-        });
+        // Longest placeholder first (like Laravel): `:to` must not eat the start of `:total`.
+        Object.keys(replace)
+            .sort((a, b) => b.length - a.length)
+            .forEach((placeholder) => {
+                value = value.replace(new RegExp(`:${placeholder}`, 'g'), () => String(replace[placeholder]));
+            });
         return value;
     }
 

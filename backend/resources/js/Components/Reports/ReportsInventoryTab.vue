@@ -51,16 +51,23 @@
         <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300">
           {{ $t('reports.items_stock_valuation_title') }}
         </h3>
-        <span class="text-xs text-slate-500 font-mono">{{
-          $t('reports.items_count_badge', { count: inventoryData.items?.length || 0 })
+        <span v-if="!tableLoading" data-testid="inventory-count-badge" class="text-xs text-slate-500 font-mono">{{
+          $t('reports.items_showing_badge', { shown: items.length, total })
         }}</span>
       </div>
 
-      <div v-if="loading" class="p-6">
+      <div v-if="tableLoading" class="p-6">
         <TableSkeleton :rows="8" :cols="8" />
       </div>
 
-      <div v-else-if="inventoryData.items && inventoryData.items.length > 0">
+      <ErrorState
+        v-else-if="error && items.length === 0"
+        data-testid="inventory-error"
+        :message="errorMessage"
+        @retry="$emit('retry')"
+      />
+
+      <div v-else-if="items.length > 0">
         <!-- Desktop Table -->
         <div class="hidden md:block overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
@@ -80,7 +87,7 @@
             </thead>
             <tbody class="divide-y divide-slate-200 dark:divide-slate-800/50 font-sans">
               <tr
-                v-for="itm in inventoryData.items"
+                v-for="itm in items"
                 :key="itm.id"
                 class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors"
               >
@@ -110,7 +117,7 @@
         <!-- Mobile Tactile Cards -->
         <div class="block md:hidden divide-y divide-slate-200 dark:divide-slate-800 p-2 space-y-2">
           <div
-            v-for="itm in inventoryData.items"
+            v-for="itm in items"
             :key="itm.id"
             class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 space-y-2"
           >
@@ -136,6 +143,13 @@
             </div>
           </div>
         </div>
+
+        <Pagination
+          :pagination="meta"
+          class="px-4 pb-4"
+          data-testid="inventory-pagination"
+          @page-change="$emit('page-change', $event)"
+        />
       </div>
 
       <EmptyState
@@ -152,12 +166,22 @@
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
+import ErrorState from '../Common/ErrorState.vue';
+import Pagination from '../Common/Pagination.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
 const { formatMoney, formatQty, currencyLabel } = useFormatters();
 
 defineProps({
   inventoryData: { type: Object, default: () => ({}) },
+  items: { type: Array, default: () => [] },
+  meta: { type: Object, default: () => ({}) },
+  total: { type: Number, default: 0 },
   loading: { type: Boolean, default: false },
+  tableLoading: { type: Boolean, default: false },
+  error: { type: Boolean, default: false },
+  errorMessage: { type: String, default: '' },
 });
+
+defineEmits(['page-change', 'retry']);
 </script>
