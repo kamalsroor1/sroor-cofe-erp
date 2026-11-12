@@ -58,6 +58,9 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
             'new_password_confirmation',
             'telegram_bot_token',
             'token',
+            // SEC-20: manager approval PINs (user/profile PIN endpoints, POS price and cancel overrides).
+            'pin',
+            'override.pin',
         ]);
 
         Telescope::hideRequestHeaders([

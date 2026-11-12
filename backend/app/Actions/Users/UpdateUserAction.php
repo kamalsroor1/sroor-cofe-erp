@@ -6,6 +6,7 @@ namespace App\Actions\Users;
 
 use App\DTOs\Users\UpdateUserDTO;
 use App\Models\User;
+use App\Services\ActivityLogService;
 use App\Support\Roles\RoleGrantGuard;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +14,10 @@ use Illuminate\Support\Facades\Hash;
 
 final class UpdateUserAction
 {
-    public function __construct(private readonly RoleGrantGuard $roleGrantGuard) {}
+    public function __construct(
+        private readonly RoleGrantGuard $roleGrantGuard,
+        private readonly ActivityLogService $activityLogService,
+    ) {}
 
     /**
      * Update user details, optional password and sync role.
@@ -22,6 +26,11 @@ final class UpdateUserAction
      * assign the admin role, may not change an admin's role, password or active flag, and may
      * not change their own role. Checked on the locked row, before anything is written (403).
      * CTO 2026-10-11: nor an admin's identity (name, phone, email); only an admin edits an admin.
+     * SEC-20: nor another user's password, phone or email unless the actor holds every permission
+     * and every store that user works in (RoleGrantGuard::assertCanTakeOverAccount); the same rule
+     * applies before changing another user's role; and a new default store must be one the actor
+     * can access (RoleGrantGuard::assertCanAssignStore). A password set for another user
+     * is written to the activity log (never the value) and, as before, revokes all of their tokens.
      */
     public function execute(UpdateUserDTO $dto, ?User $actor = null): User
     {
@@ -56,6 +65,16 @@ final class UpdateUserAction
                 $user->tokens()->delete();
             }
 
+            if ($dto->password !== null && (int) $actor?->id !== (int) $user->id) {
+                $this->activityLogService->log(
+                    module: 'users',
+                    action: 'password_reset',
+                    description: __('users.activity_password_reset', ['name' => $user->name, 'actor' => $actor->name ?? '-']),
+                    subject: $user,
+                    properties: ['tokens_revoked' => true],
+                );
+            }
+
             return $user;
         });
     }
@@ -82,9 +101,32 @@ final class UpdateUserAction
         }
 
         // SEC-04: a role change may not hand out permissions the actor does not hold.
+        // SEC-20 review: nor strip the role of a user who holds permissions or stores the actor
+        // lacks (demote first, then reset the password, would otherwise pass in two requests).
         if ($currentRoles !== [$dto->role]) {
             $this->roleGrantGuard->assertCanAssignRole($actor, $dto->role);
+            $this->roleGrantGuard->assertCanTakeOverAccount($actor, $target);
         }
+
+        // SEC-20 review: moving a user (self included) to a store widens that user's store access,
+        // so the new default store must be one the actor can access.
+        $currentStoreId = $target->default_store_id !== null ? (int) $target->default_store_id : null;
+        if ($dto->default_store_id !== $currentStoreId) {
+            $this->roleGrantGuard->assertCanAssignStore($actor, $dto->default_store_id);
+        }
+
+        // SEC-20: a new password, phone or email of another user is an account takeover in all but
+        // name, so the actor must already hold everything that user holds.
+        if ($dto->password !== null || $this->credentialsChanged($target, $dto)) {
+            $this->roleGrantGuard->assertCanTakeOverAccount($actor, $target);
+        }
+    }
+
+    /** Login identifiers (phone, email) differ from the stored value (a null email equals an empty one). */
+    private function credentialsChanged(User $target, UpdateUserDTO $dto): bool
+    {
+        return (string) $target->phone !== $dto->phone
+            || (string) $target->email !== (string) $dto->email;
     }
 
     /** Name, phone, email or default store differs from the stored value (a null email equals an empty one). */

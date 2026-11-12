@@ -6,6 +6,7 @@ namespace App\Support\Roles;
 
 use App\Exceptions\PermissionEscalationException;
 use App\Models\User;
+use App\Support\ActiveStore;
 use Spatie\Permission\Models\Role;
 
 /**
@@ -39,6 +40,67 @@ final class RoleGrantGuard
         if (array_diff($permissions, $this->heldPermissions($actor)) !== []) {
             throw new PermissionEscalationException(__('roles.cannot_grant_unheld_permission'));
         }
+    }
+
+    /**
+     * SEC-20: changing another user's login credentials (password, phone, email) or manager
+     * approval PIN hands the actor that user's identity, so it is treated like granting the
+     * target's permissions to the actor: the actor must already hold every permission the target
+     * holds (via roles or directly) and be able to access (not merely view) each of the target's
+     * stores. Admins are exempt; a user acting on their own account too.
+     */
+    public function assertCanTakeOverAccount(User $actor, User $target): void
+    {
+        if ($actor->hasRole('admin') || (int) $actor->getKey() === (int) $target->getKey()) {
+            return;
+        }
+
+        $fresh = User::query()->findOrFail($target->getKey());
+
+        /** @var list<string> $targetPermissions */
+        $targetPermissions = $fresh->getAllPermissions()->pluck('name')->all();
+
+        if (array_diff($targetPermissions, $this->heldPermissions($actor)) !== []) {
+            throw new PermissionEscalationException(__('users.cannot_change_credentials_of_more_privileged_user'));
+        }
+
+        // SEC-20 review: the target's stores come with the account too, so an actor confined to
+        // some stores may not take over a user who works in a store outside them. Read-only
+        // `stores.view_all` is deliberately not enough: the taken-over account can sell there.
+        foreach ($this->storeIdsOf($fresh) as $storeId) {
+            if (! ActiveStore::canAccess($actor, $storeId)) {
+                throw new PermissionEscalationException(__('users.cannot_change_credentials_of_more_privileged_user'));
+            }
+        }
+    }
+
+    /**
+     * SEC-20 review: a non-admin actor may only point a user (themselves included) at a store
+     * the actor can access; assigning a store widens that user's store access.
+     */
+    public function assertCanAssignStore(User $actor, ?int $storeId): void
+    {
+        if ($storeId === null || ActiveStore::canAccess($actor, $storeId)) {
+            return;
+        }
+
+        throw new PermissionEscalationException(__('users.cannot_assign_inaccessible_store'));
+    }
+
+    /**
+     * Default store plus every assigned store of the user.
+     *
+     * @return list<int>
+     */
+    private function storeIdsOf(User $user): array
+    {
+        $ids = $user->stores()->pluck('stores.id')->map(fn ($id): int => (int) $id)->all();
+
+        if ($user->default_store_id !== null) {
+            $ids[] = (int) $user->default_store_id;
+        }
+
+        return array_values(array_unique($ids));
     }
 
     /** Assigning a role to a user grants every permission of that role. */

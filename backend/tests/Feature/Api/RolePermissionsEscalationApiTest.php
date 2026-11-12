@@ -243,7 +243,9 @@ class RolePermissionsEscalationApiTest extends TenantTestCase
     {
         $this->makeRole('zz_held_role', ['zz.held']);
         $this->makeRole('zz_unheld_role', ['zz.not_held']);
-        $target = $this->createTenantUser($this->tenant, 'cashier');
+        // SEC-20: the delegate must also hold the target's CURRENT permissions to change its role.
+        $this->makeRole('zz_start_role', ['zz.other_held']);
+        $target = $this->createTenantUser($this->tenant, 'zz_start_role');
         $payload = fn (string $role): array => [
             'name' => $target->name, 'phone' => $target->phone, 'email' => $target->email,
             'role' => $role, 'is_active' => true,

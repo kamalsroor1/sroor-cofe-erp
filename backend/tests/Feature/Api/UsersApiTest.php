@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
+use App\Models\ActivityLog;
 use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TenantTestCase;
@@ -276,9 +278,11 @@ class UsersApiTest extends TenantTestCase
         $this->assertFalse($this->inTenant($this->tenant, fn (): bool => User::query()->where('phone', '01000007301')->exists()));
 
         // Ordinary edits of a non-admin account still work, provided the manager holds every
-        // permission of the target role (SEC-04: no granting what you do not hold).
+        // permission of the target role (SEC-04: no granting what you do not hold) and of the
+        // user's current role (SEC-20: no stripping a role you could not have granted).
         $this->inTenant($this->tenant, function () use ($manager): void {
             $manager->givePermissionTo(Role::findByName('storekeeper')->permissions->pluck('name')->all());
+            $manager->givePermissionTo(Role::findByName('cashier')->permissions->pluck('name')->all());
             app(PermissionRegistrar::class)->forgetCachedPermissions();
         });
         $this->putJson("/api/v1/users/{$cashier->id}", $this->updatePayload($cashier, 'storekeeper', ['name' => 'أمين مخزن']), $headers)
@@ -477,5 +481,378 @@ class UsersApiTest extends TenantTestCase
             ->assertOk()
             ->assertJson(['success' => true, 'has_pos_pin' => true]);
         $this->assertTrue(Hash::check('1234', (string) $this->inTenant($this->tenant, fn () => User::query()->findOrFail($this->unauthorizedUser->id)->pos_pin)));
+    }
+
+    // ------------------------------------------------------------------ SEC-20
+
+    /** @param  list<string>  $permissions */
+    private function makeRole(string $name, array $permissions): void
+    {
+        $this->inTenant($this->tenant, function () use ($name, $permissions): void {
+            foreach ($permissions as $permission) {
+                Permission::findOrCreate($permission, 'web');
+            }
+            Role::findOrCreate($name, 'web')->syncPermissions($permissions);
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+        });
+    }
+
+    /** A non-admin delegate whose only permission is roles.manage (plus any extra given). */
+    private function makeDelegate(array $extraPermissions = []): User
+    {
+        $this->makeRole('sec20_user_manager', ['roles.manage']);
+
+        return $this->createTenantUser($this->tenant, 'sec20_user_manager', $extraPermissions);
+    }
+
+    /** A user whose role grants billing.manage, which the bare delegate does not hold. */
+    private function makeBillingClerk(): User
+    {
+        $this->makeRole('sec20_billing_clerk', ['billing.manage']);
+
+        return $this->createTenantUser($this->tenant, 'sec20_billing_clerk', attributes: ['password' => Hash::make('password')]);
+    }
+
+    /** @return array{password: string, pos_pin: string|null, phone: string|null, email: string|null, tokens: int} */
+    private function credentialSnapshot(int $userId): array
+    {
+        return $this->inTenant($this->tenant, function () use ($userId): array {
+            $user = User::query()->findOrFail($userId);
+
+            return [
+                'password' => (string) $user->password,
+                'pos_pin' => $user->pos_pin,
+                'phone' => $user->phone,
+                'email' => $user->email,
+                'tokens' => $user->tokens()->count(),
+            ];
+        });
+    }
+
+    public function test_a_delegate_cannot_change_credentials_or_pin_of_a_user_with_permissions_they_lack(): void
+    {
+        $delegate = $this->makeDelegate();
+        $headers = $this->tenantHeaders($this->tenant, $delegate);
+        $victim = $this->makeBillingClerk();
+        $victimHeaders = $this->tenantHeaders($this->tenant, $victim);
+        $before = $this->credentialSnapshot($victim->id);
+        $message = __('users.cannot_change_credentials_of_more_privileged_user');
+
+        foreach ([
+            ['password' => 'hijacked12'],
+            ['phone' => '01000007555'],
+            ['email' => 'hijacked-clerk@example.test'],
+        ] as $change) {
+            $this->putJson("/api/v1/users/{$victim->id}", $this->updatePayload($victim, 'sec20_billing_clerk', $change), $headers)
+                ->assertStatus(403)
+                ->assertJsonPath('success', false)
+                ->assertJsonPath('message', $message);
+        }
+
+        $this->putJson("/api/v1/users/{$victim->id}/pos-pin", ['pin' => '4826'], $headers)
+            ->assertStatus(403)
+            ->assertJsonPath('message', $message);
+
+        $this->assertSame($before, $this->credentialSnapshot($victim->id));
+        $this->getJson('/api/v1/profile', $victimHeaders)->assertOk();
+        $this->assertFalse($this->inTenant($this->tenant, fn (): bool => ActivityLog::query()
+            ->where('subject_id', $victim->id)
+            ->whereIn('action', ['password_reset', 'pos_pin_set', 'pos_pin_cleared'])
+            ->exists()));
+
+        // Editing what is not a credential (the name) of the same user is still allowed.
+        $this->putJson("/api/v1/users/{$victim->id}", $this->updatePayload($victim, 'sec20_billing_clerk', ['name' => 'محاسب فواتير']), $headers)
+            ->assertOk();
+    }
+
+    public function test_a_direct_permission_of_the_target_also_counts(): void
+    {
+        $delegate = $this->makeDelegate(['pos.access']);
+        $this->makeRole('sec20_pos_helper', ['pos.access']);
+        $target = $this->createTenantUser($this->tenant, 'sec20_pos_helper', ['pos.price.below_min']);
+
+        $headers = $this->tenantHeaders($this->tenant, $delegate);
+        $message = __('users.cannot_change_credentials_of_more_privileged_user');
+        $this->putJson("/api/v1/users/{$target->id}", $this->updatePayload($target, 'sec20_pos_helper', ['password' => 'hijacked12']), $headers)
+            ->assertStatus(403)
+            ->assertJsonPath('message', $message);
+        $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '4826'], $headers)
+            ->assertStatus(403)
+            ->assertJsonPath('message', $message);
+    }
+
+    public function test_a_delegate_cannot_clear_the_pin_of_a_more_privileged_user(): void
+    {
+        $delegate = $this->makeDelegate();
+        $victim = $this->makeBillingClerk();
+        $this->putJson("/api/v1/users/{$victim->id}/pos-pin", ['pin' => '7391'], $this->adminHeaders)->assertOk();
+
+        $this->putJson("/api/v1/users/{$victim->id}/pos-pin", ['pin' => null], $this->tenantHeaders($this->tenant, $delegate))
+            ->assertStatus(403)
+            ->assertJsonPath('message', __('users.cannot_change_credentials_of_more_privileged_user'));
+
+        $this->assertTrue(Hash::check('7391', (string) $this->credentialSnapshot($victim->id)['pos_pin']));
+    }
+
+    private function makeSecondStore(): int
+    {
+        return $this->inTenant($this->tenant, fn (): int => (int) Store::query()->create(['name' => 'فرع ب', 'code' => 'BR-SEC20', 'is_active' => true])->id);
+    }
+
+    private function attachStore(User $user, int $storeId): void
+    {
+        $this->inTenant($this->tenant, fn () => User::query()->findOrFail($user->id)->stores()->attach($storeId));
+    }
+
+    public function test_a_store_confined_delegate_cannot_take_over_a_user_of_another_store(): void
+    {
+        $storeB = $this->makeSecondStore();
+        $this->makeRole('sec20_pos_helper', ['pos.access']);
+        $delegate = $this->makeDelegate(['pos.access']);
+        $headers = $this->tenantHeaders($this->tenant, $delegate);
+        $message = __('users.cannot_change_credentials_of_more_privileged_user');
+
+        // Same permissions, but the target works in store B (by default store, or by assignment).
+        $byDefault = $this->createTenantUser($this->tenant, 'sec20_pos_helper', attributes: ['default_store_id' => $storeB]);
+        $byAssignment = $this->createTenantUser($this->tenant, 'sec20_pos_helper');
+        $this->attachStore($byAssignment, $storeB);
+
+        foreach ([$byDefault, $byAssignment] as $target) {
+            $before = $this->credentialSnapshot($target->id);
+            $this->putJson("/api/v1/users/{$target->id}", $this->updatePayload($target, 'sec20_pos_helper', ['password' => 'hijacked12']), $headers)
+                ->assertStatus(403)
+                ->assertJsonPath('message', $message);
+            $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '4826'], $headers)
+                ->assertStatus(403)
+                ->assertJsonPath('message', $message);
+            $this->assertSame($before, $this->credentialSnapshot($target->id));
+        }
+
+        // Once the delegate may work in store B too, the same changes go through.
+        $this->attachStore($delegate, $storeB);
+        $this->putJson("/api/v1/users/{$byDefault->id}", $this->updatePayload($byDefault, 'sec20_pos_helper', ['password' => 'resetpass1']), $headers)
+            ->assertOk();
+        $this->putJson("/api/v1/users/{$byAssignment->id}/pos-pin", ['pin' => '4826'], $headers)->assertOk();
+    }
+
+    public function test_viewing_all_stores_is_not_enough_to_take_over_a_user_of_another_store(): void
+    {
+        $storeB = $this->makeSecondStore();
+        $this->makeRole('sec20_pos_helper', ['pos.access']);
+        $delegate = $this->makeDelegate(['pos.access', 'stores.view_all']);
+        $target = $this->createTenantUser($this->tenant, 'sec20_pos_helper', attributes: ['default_store_id' => $storeB]);
+        $headers = $this->tenantHeaders($this->tenant, $delegate);
+        $message = __('users.cannot_change_credentials_of_more_privileged_user');
+
+        $this->putJson("/api/v1/users/{$target->id}", $this->updatePayload($target, 'sec20_pos_helper', ['password' => 'resetpass1']), $headers)
+            ->assertStatus(403)
+            ->assertJsonPath('message', $message);
+        $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '4826'], $headers)
+            ->assertStatus(403)
+            ->assertJsonPath('message', $message);
+    }
+
+    public function test_a_delegate_cannot_assign_a_default_store_they_cannot_access(): void
+    {
+        $storeB = $this->makeSecondStore();
+        $mainStore = $this->storeId;
+        $this->makeRole('sec20_pos_helper', ['pos.access']);
+        $delegate = $this->makeDelegate(['pos.access']);
+        $target = $this->createTenantUser($this->tenant, 'sec20_pos_helper');
+        $headers = $this->tenantHeaders($this->tenant, $delegate);
+        $message = __('users.cannot_assign_inaccessible_store');
+
+        // On themselves.
+        $this->putJson("/api/v1/users/{$delegate->id}", $this->updatePayload($delegate, 'sec20_user_manager', ['default_store_id' => $storeB]), $headers)
+            ->assertStatus(403)
+            ->assertJsonPath('message', $message);
+        // On another user, even one the delegate may otherwise edit.
+        $this->putJson("/api/v1/users/{$target->id}", $this->updatePayload($target, 'sec20_pos_helper', ['default_store_id' => $storeB]), $headers)
+            ->assertStatus(403)
+            ->assertJsonPath('message', $message);
+        // On a new account.
+        $this->postJson('/api/v1/users', [
+            'name' => 'كاشير فرع ب',
+            'phone' => '01000007560',
+            'password' => 'secret123',
+            'role' => 'sec20_pos_helper',
+            'default_store_id' => $storeB,
+        ], $headers)->assertStatus(403)->assertJsonPath('message', $message);
+
+        $this->inTenant($this->tenant, function () use ($delegate, $target, $mainStore): void {
+            $this->assertSame($mainStore, (int) User::query()->findOrFail($delegate->id)->default_store_id);
+            $this->assertSame($mainStore, (int) User::query()->findOrFail($target->id)->default_store_id);
+            $this->assertFalse(User::query()->where('phone', '01000007560')->exists());
+        });
+
+        // Resubmitting the current store is not a change; the admin may move anyone anywhere.
+        $this->putJson("/api/v1/users/{$target->id}", $this->updatePayload($target, 'sec20_pos_helper', ['name' => 'كاشير معدل']), $headers)
+            ->assertOk();
+        $this->putJson("/api/v1/users/{$target->id}", $this->updatePayload($target, 'sec20_pos_helper', ['default_store_id' => $storeB]), $this->adminHeaders)
+            ->assertOk();
+        $this->assertSame($storeB, $this->inTenant($this->tenant, fn (): int => (int) User::query()->findOrFail($target->id)->default_store_id));
+    }
+
+    public function test_a_delegate_cannot_demote_a_more_privileged_user_and_then_reset_the_password(): void
+    {
+        $delegate = $this->makeDelegate();
+        $headers = $this->tenantHeaders($this->tenant, $delegate);
+        $victim = $this->makeBillingClerk();
+        $this->makeRole('sec20_no_permissions', []);
+        $before = $this->credentialSnapshot($victim->id);
+
+        // Step 1: the weaker role holds nothing the delegate lacks, but the victim's current role does.
+        $this->putJson("/api/v1/users/{$victim->id}", $this->updatePayload($victim, 'sec20_no_permissions'), $headers)
+            ->assertStatus(403)
+            ->assertJsonPath('message', __('users.cannot_change_credentials_of_more_privileged_user'));
+        $this->assertTrue($this->inTenant($this->tenant, fn (): bool => User::query()->findOrFail($victim->id)->hasRole('sec20_billing_clerk')));
+
+        // Step 2 therefore still meets the victim's full permissions.
+        $this->putJson("/api/v1/users/{$victim->id}", $this->updatePayload($victim, 'sec20_billing_clerk', ['password' => 'hijacked12']), $headers)
+            ->assertStatus(403);
+        $this->assertSame($before, $this->credentialSnapshot($victim->id));
+    }
+
+    public function test_a_delegate_may_change_credentials_of_a_user_whose_permissions_they_hold(): void
+    {
+        $delegate = $this->makeDelegate(['pos.access']);
+        $this->makeRole('sec20_pos_helper', ['pos.access']);
+        $target = $this->createTenantUser($this->tenant, 'sec20_pos_helper');
+        $headers = $this->tenantHeaders($this->tenant, $delegate);
+
+        $this->putJson("/api/v1/users/{$target->id}", $this->updatePayload($target, 'sec20_pos_helper', [
+            'phone' => '01000007556',
+            'email' => 'pos-helper@example.test',
+            'password' => 'resetpass1',
+        ]), $headers)->assertOk();
+
+        $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '4826'], $headers)
+            ->assertOk()
+            ->assertJson(['success' => true, 'has_pos_pin' => true]);
+
+        $this->inTenant($this->tenant, function () use ($target): void {
+            $fresh = User::query()->findOrFail($target->id);
+            $this->assertSame('01000007556', $fresh->phone);
+            $this->assertSame('pos-helper@example.test', $fresh->email);
+            $this->assertTrue(Hash::check('resetpass1', (string) $fresh->password));
+            $this->assertTrue(Hash::check('4826', (string) $fresh->pos_pin));
+        });
+    }
+
+    public function test_an_admin_may_change_credentials_and_pin_of_any_user(): void
+    {
+        $victim = $this->makeBillingClerk();
+
+        $this->putJson("/api/v1/users/{$victim->id}", $this->updatePayload($victim, 'sec20_billing_clerk', [
+            'phone' => '01000007557',
+            'email' => 'clerk-by-admin@example.test',
+            'password' => 'resetpass1',
+        ]), $this->adminHeaders)->assertOk();
+        $this->putJson("/api/v1/users/{$victim->id}/pos-pin", ['pin' => '7391'], $this->adminHeaders)->assertOk();
+
+        $this->inTenant($this->tenant, function () use ($victim): void {
+            $fresh = User::query()->findOrFail($victim->id);
+            $this->assertSame('01000007557', $fresh->phone);
+            $this->assertTrue(Hash::check('resetpass1', (string) $fresh->password));
+            $this->assertTrue(Hash::check('7391', (string) $fresh->pos_pin));
+        });
+    }
+
+    public function test_a_delegate_may_change_their_own_credentials_and_pin(): void
+    {
+        $delegate = $this->makeDelegate();
+        $headers = $this->tenantHeaders($this->tenant, $delegate);
+
+        $this->putJson("/api/v1/users/{$delegate->id}", $this->updatePayload($delegate, 'sec20_user_manager', [
+            'phone' => '01000007558',
+            'email' => 'delegate-self@example.test',
+            'password' => 'resetpass1',
+        ]), $headers)->assertOk();
+
+        $selfHeaders = $this->tenantHeaders($this->tenant, $delegate);
+        $this->putJson("/api/v1/users/{$delegate->id}/pos-pin", ['pin' => '2468'], $selfHeaders)->assertOk();
+
+        $this->inTenant($this->tenant, function () use ($delegate): void {
+            $fresh = User::query()->findOrFail($delegate->id);
+            $this->assertSame('01000007558', $fresh->phone);
+            $this->assertTrue(Hash::check('resetpass1', (string) $fresh->password));
+            $this->assertTrue(Hash::check('2468', (string) $fresh->pos_pin));
+            // Own changes are not "another user's credentials": no audit row for them.
+            $this->assertFalse(ActivityLog::query()->where('subject_id', $delegate->id)->whereIn('action', ['password_reset', 'pos_pin_set'])->exists());
+        });
+    }
+
+    public function test_changing_another_users_password_revokes_their_tokens_and_is_logged_without_the_value(): void
+    {
+        $delegate = $this->makeDelegate(['pos.access']);
+        $this->makeRole('sec20_pos_helper', ['pos.access']);
+        $target = $this->createTenantUser($this->tenant, 'sec20_pos_helper');
+        $targetHeaders = $this->tenantHeaders($this->tenant, $target);
+        $this->getJson('/api/v1/profile', $targetHeaders)->assertOk();
+
+        $this->putJson("/api/v1/users/{$target->id}", $this->updatePayload($target, 'sec20_pos_helper', ['password' => 'Sec20Secret9']), $this->tenantHeaders($this->tenant, $delegate))
+            ->assertOk();
+
+        $this->getJson('/api/v1/profile', $targetHeaders)->assertStatus(401);
+        $this->assertSame(0, $this->credentialSnapshot($target->id)['tokens']);
+
+        $log = $this->inTenant($this->tenant, fn (): ?ActivityLog => ActivityLog::query()
+            ->where('module', 'users')->where('action', 'password_reset')
+            ->where('subject_type', User::class)->where('subject_id', $target->id)->first());
+        $this->assertNotNull($log);
+        $this->assertSame($delegate->id, $log->user_id);
+        $hash = $this->credentialSnapshot($target->id)['password'];
+        $serialized = json_encode($log->getAttributes(), JSON_UNESCAPED_UNICODE);
+        $this->assertStringNotContainsString('Sec20Secret9', (string) $serialized);
+        $this->assertStringNotContainsString($hash, (string) $serialized);
+    }
+
+    public function test_setting_another_users_pin_is_logged_without_the_value_and_keeps_their_sessions(): void
+    {
+        $delegate = $this->makeDelegate(['pos.access']);
+        $this->makeRole('sec20_pos_helper', ['pos.access']);
+        $target = $this->createTenantUser($this->tenant, 'sec20_pos_helper');
+        $targetHeaders = $this->tenantHeaders($this->tenant, $target);
+        $headers = $this->tenantHeaders($this->tenant, $delegate);
+
+        $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => '583920'], $headers)->assertOk();
+        $this->putJson("/api/v1/users/{$target->id}/pos-pin", ['pin' => null], $headers)->assertOk();
+
+        $logs = $this->inTenant($this->tenant, fn () => ActivityLog::query()
+            ->where('module', 'users')->where('subject_id', $target->id)
+            ->whereIn('action', ['pos_pin_set', 'pos_pin_cleared'])->orderBy('id')->get());
+        $this->assertSame(['pos_pin_set', 'pos_pin_cleared'], $logs->pluck('action')->all());
+        foreach ($logs as $log) {
+            $this->assertSame($delegate->id, $log->user_id);
+            $this->assertStringNotContainsString('583920', (string) json_encode($log->getAttributes()));
+        }
+
+        // Deliberate: the approval PIN is not a sign-in credential, so the target's sessions stay.
+        $this->getJson('/api/v1/profile', $targetHeaders)->assertOk();
+    }
+
+    public function test_pin_and_password_of_another_tenants_user_cannot_be_changed(): void
+    {
+        $other = $this->createTenant();
+        $foreign = $this->createTenantUser($other, 'cashier', attributes: ['phone' => '01000007559']);
+        $foreignHash = $this->inTenant($other, fn (): string => (string) User::query()->findOrFail($foreign->id)->password);
+
+        $this->putJson("/api/v1/users/{$foreign->id}/pos-pin", ['pin' => '1357'], $this->adminHeaders)
+            ->assertNotFound()
+            ->assertJsonPath('success', false);
+        $this->putJson("/api/v1/users/{$foreign->id}", [
+            'name' => 'اختراق',
+            'phone' => '01000007559',
+            'password' => 'hijacked12',
+            'role' => 'cashier',
+            'is_active' => true,
+        ], $this->adminHeaders)->assertNotFound();
+
+        $this->inTenant($other, function () use ($foreign, $foreignHash): void {
+            $fresh = User::query()->findOrFail($foreign->id);
+            $this->assertNull($fresh->pos_pin);
+            $this->assertSame($foreignHash, (string) $fresh->password);
+            $this->assertFalse(ActivityLog::query()->where('subject_id', $foreign->id)->exists());
+        });
     }
 }

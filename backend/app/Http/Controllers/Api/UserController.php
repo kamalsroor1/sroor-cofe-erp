@@ -11,6 +11,7 @@ use App\Actions\Users\ToggleUserActiveAction;
 use App\Actions\Users\UnlockUserLoginAction;
 use App\Actions\Users\UpdateUserAction;
 use App\DTOs\Users\CreateUserDTO;
+use App\DTOs\Users\SetUserPosPinDTO;
 use App\DTOs\Users\UpdateUserDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRequest;
@@ -222,10 +223,10 @@ final class UserController extends Controller
     public function updatePosPin(UpdateUserPosPinRequest $request, int $id): JsonResponse
     {
         $actor = $request->user();
-        $target = User::query()->findOrFail($id);
+        abort_unless($actor instanceof User, 401);
 
         try {
-            $this->setUserPosPinAction->execute($target, $request->validated('pin'), $actor);
+            $target = $this->setUserPosPinAction->execute(SetUserPosPinDTO::fromArray($id, $request->validated()), $actor);
         } catch (Throwable $e) {
             // SEC-1 (L4): 422/403/404 pass through; anything else is logged, never echoed.
             return SafeJsonError::respond($e);

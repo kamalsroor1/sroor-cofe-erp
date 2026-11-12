@@ -22,13 +22,17 @@ final class CreateUserAction
     /**
      * Create user, hash password and assign role inside Transaction.
      *
-     * SEC-04: a non-admin actor may only assign a role whose permissions they all hold (403).
+     * SEC-04: a non-admin actor may only assign a role whose permissions they all hold (403),
+     * and (SEC-20 review) only a default store they can access (403).
      */
     public function execute(CreateUserDTO $dto, ?User $actor = null): User
     {
         return DB::transaction(function () use ($dto, $actor) {
             if ($actor instanceof User) {
                 $this->roleGrantGuard->assertCanAssignRole($actor, $dto->role);
+                // SEC-20 review: a new account in a store the actor cannot access would be a way
+                // into that store (the actor sets its password).
+                $this->roleGrantGuard->assertCanAssignStore($actor, $dto->default_store_id);
             }
 
             // SEC-06 / BE-12: plan users limit (active and inactive seats), counted under the tenant lock.

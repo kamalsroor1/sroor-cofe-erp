@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Actions\Profile\UpdateProfileAction;
 use App\Actions\Profile\UpdateProfileLocaleAction;
 use App\Actions\Users\SetUserPosPinAction;
+use App\DTOs\Users\SetUserPosPinDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateProfileLocaleRequest;
 use App\Http\Requests\UpdateProfilePosPinRequest;
@@ -84,7 +85,7 @@ final class ProfileController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 401);
         }
 
-        $this->setUserPosPinAction->execute($user, $request->validated('pin'), $user);
+        $user = $this->setUserPosPinAction->execute(SetUserPosPinDTO::fromArray((int) $user->id, $request->validated()), $user);
 
         return response()->json([
             'success' => true,
