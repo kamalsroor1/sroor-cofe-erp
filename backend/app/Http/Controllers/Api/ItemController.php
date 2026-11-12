@@ -66,7 +66,8 @@ final class ItemController extends Controller
             ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
-        $query = Item::with($this->readableStoreStocks($user));
+        // PERF-02: the deletion blockers are counted in the page query (no per-row queries).
+        $query = Item::with($this->readableStoreStocks($user))->withDeletionBlockers();
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {

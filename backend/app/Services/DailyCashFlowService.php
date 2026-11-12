@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Expense;
 use App\Models\Payment;
+use App\Services\Reports\ReportDateRange;
 use App\Support\Money\Decimal;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -38,10 +39,11 @@ final class DailyCashFlowService
         $supplierPaid = $this->sum($this->cashVouchers($date, $storeId)->whereNotNull('payments.supplier_id'), 'payments.amount');
 
         // Operating expenses paid in cash
-        $cashExpenses = $this->sum(Expense::query()
-            ->whereDate('expense_date', $date)
+        $expenses = Expense::query()
             ->where('payment_method', 'cash')
-            ->when($storeId !== null, fn (Builder $q) => $q->where('store_id', $storeId)), 'amount');
+            ->when($storeId !== null, fn (Builder $q) => $q->where('store_id', $storeId));
+        ReportDateRange::apply($expenses, 'expense_date', $date, $date);
+        $cashExpenses = $this->sum($expenses, 'amount');
 
         // BE-10: cash handed back to customers for sales returns (negative refund vouchers),
         // shown as a positive outflow.
@@ -67,10 +69,14 @@ final class DailyCashFlowService
      */
     private function cashVouchers(string $date, ?int $storeId): Builder
     {
-        return Payment::query()
+        $query = Payment::query()
             ->where('payments.payment_method', 'cash')
-            ->whereDate('payments.payment_date', $date)
             ->when($storeId !== null, fn (Builder $q) => $q->forStore((int) $storeId));
+        // PERF-02: a half-open range on the column itself (whereDate() = DATE(col) hid the
+        // payment_date index and read every voucher of the tenant).
+        ReportDateRange::apply($query, 'payments.payment_date', $date, $date);
+
+        return $query;
     }
 
     /**

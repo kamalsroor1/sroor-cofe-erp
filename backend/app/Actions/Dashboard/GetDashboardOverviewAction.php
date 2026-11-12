@@ -25,7 +25,6 @@ use App\Support\CostVisibility;
 use App\Support\DashboardCache;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 final class GetDashboardOverviewAction
@@ -87,9 +86,8 @@ final class GetDashboardOverviewAction
         // permission set, business day and locale (see DashboardCache). The live blocks below
         // (active shift, recent invoices) are always fresh.
         $cacheKey = DashboardCache::key($storeFilter, $showFinancials, CostVisibility::allows($user), $today, app()->getLocale());
-        $aggregates = Cache::remember(
+        $aggregates = DashboardCache::remember(
             $cacheKey,
-            DashboardCache::TTL_SECONDS,
             fn (): array => $this->aggregates($storeFilter, $today, $showFinancials),
         );
 

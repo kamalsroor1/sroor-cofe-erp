@@ -650,16 +650,24 @@ class TreasuryService
 
         // The three payment buckets in ONE pass over the vouchers (conditional sums): the voucher
         // filter (cancelled-invoice exclusion, branch) is the expensive part.
-        $add($read(
-            Payment::query()->excludingCancelledInvoices()->when($storeId, fn ($q) => $q->forStore($storeId)),
-            'payments.payment_date',
-            'payments.payment_method',
-            [
-                'customer_sum' => 'CASE WHEN payments.customer_id IS NOT NULL THEN payments.amount ELSE 0 END',
-                'supplier_sum' => 'CASE WHEN payments.supplier_id IS NOT NULL THEN payments.amount ELSE 0 END',
-                'expense_payment_sum' => "CASE WHEN payments.supplier_id IS NULL AND payments.payment_number LIKE 'PAY-EXP-%' THEN payments.amount ELSE 0 END",
-            ],
-        ), ['customer_sum' => 'customer_inflows', 'supplier_sum' => 'supplier_outflows', 'expense_payment_sum' => 'expense_payments']);
+        // PERF-02: a branch is read as its two disjoint halves (stamped store_id / legacy NULL
+        // store_id rows), whose sums add up to exactly forStore(): the OR of both halves kept
+        // MySQL off the store_id index and made it read every voucher of every branch.
+        $branchHalves = $storeId
+            ? [fn ($q) => $q->stampedForStore($storeId), fn ($q) => $q->legacyForStore($storeId)]
+            : [fn ($q) => $q];
+        foreach ($branchHalves as $half) {
+            $add($read(
+                $half(Payment::query()->excludingCancelledInvoices()),
+                'payments.payment_date',
+                'payments.payment_method',
+                [
+                    'customer_sum' => 'CASE WHEN payments.customer_id IS NOT NULL THEN payments.amount ELSE 0 END',
+                    'supplier_sum' => 'CASE WHEN payments.supplier_id IS NOT NULL THEN payments.amount ELSE 0 END',
+                    'expense_payment_sum' => "CASE WHEN payments.supplier_id IS NULL AND payments.payment_number LIKE 'PAY-EXP-%' THEN payments.amount ELSE 0 END",
+                ],
+            ), ['customer_sum' => 'customer_inflows', 'supplier_sum' => 'supplier_outflows', 'expense_payment_sum' => 'expense_payments']);
+        }
 
         $add($read(
             Expense::query()->when($storeId, fn ($q) => $q->where('store_id', $storeId)),

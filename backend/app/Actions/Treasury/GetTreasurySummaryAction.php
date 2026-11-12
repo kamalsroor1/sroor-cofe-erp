@@ -10,6 +10,7 @@ use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Supplier;
 use App\Services\DailyCashFlowService;
+use App\Services\Reports\ReportDateRange;
 use App\Services\TreasuryService;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
@@ -40,14 +41,14 @@ final class GetTreasurySummaryAction
         // The tenant's business day (SETG-2), not the server's.
         $today = $this->tenantClock->today();
 
-        $salesTotal = $this->sum(Invoice::query()
-            ->where('status', '!=', 'cancelled')
-            ->whereDate('invoice_date', $today)
-            ->where('store_id', $storeId), 'net_total');
+        // PERF-02: half-open date ranges on the columns (whereDate() hid the date indexes).
+        $sales = Invoice::query()->where('status', '!=', 'cancelled')->where('store_id', $storeId);
+        ReportDateRange::apply($sales, 'invoice_date', $today, $today);
+        $salesTotal = $this->sum($sales, 'net_total');
 
-        $expensesTotal = $this->sum(Expense::query()
-            ->whereDate('expense_date', $today)
-            ->where('store_id', $storeId), 'amount');
+        $expenses = Expense::query()->where('store_id', $storeId);
+        ReportDateRange::apply($expenses, 'expense_date', $today, $today);
+        $expensesTotal = $this->sum($expenses, 'amount');
 
         $cashFlow = $this->dailyCashFlow->forDate($today, $storeId);
 

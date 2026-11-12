@@ -125,6 +125,47 @@ final class InvoiceAggregates
         return $out;
     }
 
+    /**
+     * PERF-02: per 15-minute bucket of created_at on the STORAGE wall clock ('Y-m-d H:i', the
+     * minute being 00/15/30/45), for the dashboard's peak-hours chart. Invoices without
+     * created_at are left out.
+     *
+     * Why 15 minutes: every UTC offset in use (including :30 / :45 zones and DST shifts) is a
+     * multiple of 15 minutes and changes on a 15-minute boundary, so all instants of one bucket
+     * fall in the SAME tenant-local hour; the caller converts each bucket start to the tenant
+     * clock exactly as it would convert each invoice. At most 96 rows per day of the window.
+     *
+     * @return array<string, array{count: int, net_total: string}>
+     */
+    public function byStorageQuarterHour(?string $fromDate, ?string $toDate, ?int $storeId = null): array
+    {
+        $query = $this->confirmed($fromDate, $toDate, $storeId)->whereNotNull('invoices.created_at');
+
+        // confirmed() builds on the default connection (DB::table), so this is its driver.
+        $bucket = match (DB::connection()->getDriverName()) {
+            'mysql', 'mariadb' => "CONCAT(DATE_FORMAT(invoices.created_at, '%Y-%m-%d %H:'), LPAD(FLOOR(MINUTE(invoices.created_at) / 15) * 15, 2, '0'))",
+            'sqlite' => "strftime('%Y-%m-%d %H:', invoices.created_at) || printf('%02d', (CAST(strftime('%M', invoices.created_at) AS INTEGER) / 15) * 15)",
+            default => throw new \RuntimeException('InvoiceAggregates::byStorageQuarterHour() supports mysql, mariadb and sqlite.'),
+        };
+
+        $rows = $query
+            ->selectRaw($bucket.' as bucket')
+            ->selectRaw('COUNT(*) as invoices_count')
+            ->selectRaw('COALESCE(SUM(invoices.net_total), 0) as net_total_sum')
+            ->groupByRaw($bucket)
+            ->get();
+
+        $out = [];
+        foreach ($rows as $row) {
+            $out[(string) $row->bucket] = [
+                'count' => (int) $row->invoices_count,
+                'net_total' => Decimal::normalize(self::scalar($row->net_total_sum)),
+            ];
+        }
+
+        return $out;
+    }
+
     private function withSums(Builder $query): Builder
     {
         return $query

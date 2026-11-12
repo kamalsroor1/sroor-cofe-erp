@@ -166,6 +166,29 @@ class Item extends Model
         return $this->hasMany(StoreStock::class);
     }
 
+    /**
+     * @return HasMany<StockTransferItem, $this>
+     */
+    public function stockTransferItems(): HasMany
+    {
+        return $this->hasMany(StockTransferItem::class);
+    }
+
+    /**
+     * PERF-02: preload everything getDeletionBlockers() needs in the page query itself (one
+     * correlated COUNT / EXISTS per blocker), so a list never runs those queries per row. Counts
+     * go through the relations, so they apply the same soft-delete scopes as the per-row path.
+     *
+     * @param  Builder<Item>  $query
+     * @return Builder<Item>
+     */
+    public function scopeWithDeletionBlockers(Builder $query): Builder
+    {
+        return $query
+            ->withCount(['invoiceItems', 'purchaseItems', 'stockMovements', 'returnItems', 'stockTransferItems'])
+            ->withExists(['storeStocks as has_positive_store_stock' => fn (Builder $q) => $q->where('quantity', '>', 0)]);
+    }
+
     public function getStockInStore(?int $storeId): string
     {
         if (! $storeId) {
@@ -214,12 +237,12 @@ class Item extends Model
     /**
      * Same rule as scopeLowStock() / TenantSettings::whereLowStock(), for one row.
      */
-    public function isLowStock(): bool
+    public function isLowStock(?string $defaultThreshold = null): bool
     {
         $min = (string) $this->min_stock_level;
         $threshold = bccomp($min, '0', 3) > 0
             ? $min
-            : app(TenantSettings::class)->lowStockDefaultThreshold();
+            : ($defaultThreshold ?? app(TenantSettings::class)->lowStockDefaultThreshold());
 
         return bccomp((string) $this->current_stock, $threshold, 3) <= 0;
     }
@@ -243,36 +266,47 @@ class Item extends Model
             $blockers[] = 'يوجد رصيد بضاعة متبقي بالمخزن ('.number_format((float) $this->current_stock, 3)." {$this->unit})";
         }
 
-        $hasStoreStock = $this->storeStocks()->where('quantity', '>', 0)->exists();
+        // PERF-02: the values preloaded by scopeWithDeletionBlockers() when present, else one query each.
+        $hasStoreStock = array_key_exists('has_positive_store_stock', $this->attributes)
+            ? (bool) $this->attributes['has_positive_store_stock']
+            : $this->storeStocks()->where('quantity', '>', 0)->exists();
         if ($hasStoreStock) {
             $blockers[] = 'يوجد رصيد متوفر في أحد الفروع أو عربات التوزيع';
         }
 
-        $invoicesCount = $this->invoiceItems()->count();
+        $invoicesCount = $this->preloadedCount('invoice_items_count') ?? $this->invoiceItems()->count();
         if ($invoicesCount > 0) {
             $blockers[] = "مسجل به {$invoicesCount} فاتورة مبيعات معتمدة";
         }
 
-        $purchasesCount = $this->purchaseItems()->count();
+        $purchasesCount = $this->preloadedCount('purchase_items_count') ?? $this->purchaseItems()->count();
         if ($purchasesCount > 0) {
             $blockers[] = "مسجل به {$purchasesCount} فاتورة مشتريات وتوريد";
         }
 
-        $movementsCount = $this->stockMovements()->count();
+        $movementsCount = $this->preloadedCount('stock_movements_count') ?? $this->stockMovements()->count();
         if ($movementsCount > 0) {
             $blockers[] = "يوجد له {$movementsCount} حركة مخزنية مسجلة";
         }
 
-        $returnsCount = $this->returnItems()->count();
+        $returnsCount = $this->preloadedCount('return_items_count') ?? $this->returnItems()->count();
         if ($returnsCount > 0) {
             $blockers[] = "مرتبط بـ {$returnsCount} حركة مرتجعات";
         }
 
-        $transfersCount = StockTransferItem::where('item_id', $this->id)->count();
+        $transfersCount = $this->preloadedCount('stock_transfer_items_count') ?? $this->stockTransferItems()->count();
         if ($transfersCount > 0) {
             $blockers[] = "مرتبط بـ {$transfersCount} إذن تحويل بين الفروع";
         }
 
         return $blockers;
+    }
+
+    /**
+     * A withCount() column of this row, or null when the query did not preload it.
+     */
+    private function preloadedCount(string $attribute): ?int
+    {
+        return array_key_exists($attribute, $this->attributes) ? (int) $this->attributes[$attribute] : null;
     }
 }

@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Services\Reports\InvoiceAggregates;
 use App\Services\Reports\SalesReturnAggregates;
 use App\Services\Settings\TenantSettings;
-use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
@@ -94,21 +93,15 @@ class DashboardAnalyticsService
             ];
         }
 
-        // The hour is the tenant-local hour of created_at: read as plain (created_at, net_total)
-        // pairs of the trend window, streamed, so a half-hour timezone stays exact.
+        // The hour is the tenant-local hour of created_at. PERF-02: grouped in SQL per 15-minute
+        // bucket of the storage clock (at most 96 rows a day instead of every invoice of the
+        // window); each bucket lies in one tenant hour, so half-hour zones stay exact.
         $storageZone = $this->tenantClock->storageTimezone();
-        $hourly = $this->invoices->confirmed($startDate, $today, $storeId ?: null)
-            ->select(['invoices.id', 'invoices.created_at', 'invoices.net_total'])
-            ->orderBy('invoices.id')
-            ->cursor();
-        foreach ($hourly as $inv) {
-            if ($inv->created_at === null) {
-                continue;
-            }
-            $hour = (int) $this->tenantClock->toTenant(CarbonImmutable::parse((string) $inv->created_at, $storageZone))?->format('G');
+        foreach ($this->invoices->byStorageQuarterHour($startDate, $today, $storeId ?: null) as $bucket => $sold) {
+            $hour = (int) $this->tenantClock->toTenant(CarbonImmutable::parse($bucket.':00', $storageZone))?->format('G');
             if (isset($hourlySales[$hour])) {
-                $hourlySales[$hour]['sales'] = bcadd((string) $hourlySales[$hour]['sales'], Decimal::normalize((string) $inv->net_total), 3);
-                $hourlySales[$hour]['invoices']++;
+                $hourlySales[$hour]['sales'] = bcadd((string) $hourlySales[$hour]['sales'], $sold['net_total'], 3);
+                $hourlySales[$hour]['invoices'] += $sold['count'];
             }
         }
 

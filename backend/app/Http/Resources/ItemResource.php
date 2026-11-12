@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Item;
+use App\Services\Settings\TenantSettings;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use App\Support\CostVisibility;
@@ -17,19 +18,22 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class ItemResource extends JsonResource
 {
+    private const CONTEXT_ATTRIBUTE = 'item_resource.context';
+
     public function toArray(Request $request): array
     {
-        $storeId = $this->resolveStoreId($request);
+        // PERF-02: the request-wide values are resolved once per request, not once per row.
+        ['store_id' => $storeId, 'show_cost' => $showCost, 'low_stock_threshold' => $lowStockThreshold] = $this->context($request);
 
         $storeStock = $storeId ? Decimal::normalize((string) $this->getStockInStore($storeId)) : Decimal::normalize((string) $this->current_stock);
         $effectivePrice = $storeId ? Decimal::normalize((string) $this->getEffectivePriceForStore($storeId)) : Decimal::normalize((string) $this->selling_price);
 
-        // SEC-1 (M6): cost and cost-derived values only with items.view_cost. Without it the
-        // minimum selling price is the stored one, never the cost fallback.
-        $showCost = CostVisibility::allows($request->user());
+        // SEC-1 (M6): cost and cost-derived values only with items.view_cost (see context()).
         // BE-08: the floor value is hidden from users without it (null, never 0: the edit form must not
         // send it back); has_min_price still tells them a floor exists.
         $minSellingPrice = $showCost ? Decimal::normalize((string) ($this->min_selling_price ?? 0)) : null;
+
+        $deletionBlockers = $this->resource->getDeletionBlockers();
 
         return [
             'id' => $this->id,
@@ -50,7 +54,7 @@ class ItemResource extends JsonResource
             'min_stock_level' => Decimal::normalize((string) $this->min_stock_level),
             'is_active' => (bool) $this->is_active,
             'is_weighted' => $this->resource->isSoldByWeight(),
-            'is_low_stock' => method_exists($this->resource, 'isLowStock') ? $this->isLowStock() : false,
+            'is_low_stock' => $this->resource->isLowStock($lowStockThreshold),
             'notes' => $this->notes,
             'store_stocks' => $this->relationLoaded('storeStocks') ? $this->storeStocks->map(fn ($ss) => [
                 'store_id' => $ss->store_id,
@@ -58,10 +62,31 @@ class ItemResource extends JsonResource
                 'quantity' => Decimal::normalize((string) $ss->quantity),
                 'custom_selling_price' => $ss->custom_selling_price ? Decimal::normalize((string) $ss->custom_selling_price) : null,
             ])->values() : [],
-            'can_be_deleted' => method_exists($this->resource, 'canBeDeleted') ? $this->canBeDeleted() : true,
-            'deletion_blockers' => method_exists($this->resource, 'getDeletionBlockers') ? $this->getDeletionBlockers() : [],
+            'can_be_deleted' => $deletionBlockers === [],
+            'deletion_blockers' => $deletionBlockers,
             'created_at' => $this->created_at?->toDateTimeString(),
         ];
+    }
+
+    /**
+     * Store, cost visibility and the tenant low-stock threshold: identical for every row of a
+     * request, so resolved once and kept on the request (a list resolves this resource per row).
+     *
+     * @return array{store_id: ?int, show_cost: bool, low_stock_threshold: string}
+     */
+    private function context(Request $request): array
+    {
+        $context = $request->attributes->get(self::CONTEXT_ATTRIBUTE);
+        if (! is_array($context)) {
+            $context = [
+                'store_id' => $this->resolveStoreId($request),
+                'show_cost' => CostVisibility::allows($request->user()),
+                'low_stock_threshold' => app(TenantSettings::class)->lowStockDefaultThreshold(),
+            ];
+            $request->attributes->set(self::CONTEXT_ATTRIBUTE, $context);
+        }
+
+        return $context;
     }
 
     /**

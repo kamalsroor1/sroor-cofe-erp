@@ -120,30 +120,63 @@ class Payment extends Model
      */
     public function scopeForStore(Builder $query, int $storeId): void
     {
-        $isMainStore = Store::getMainStore()?->id === $storeId;
-
-        $query->where(function (Builder $q) use ($storeId, $isMainStore): void {
+        $query->where(function (Builder $q) use ($storeId): void {
             $q->where('payments.store_id', $storeId)
-                ->orWhere(function (Builder $legacy) use ($storeId, $isMainStore): void {
-                    $legacy->whereNull('payments.store_id')
-                        ->where(function (Builder $doc) use ($storeId, $isMainStore): void {
-                            $doc->whereIn('payments.invoice_id', Invoice::withTrashed()->select('id')->where('store_id', $storeId))
-                                ->orWhereIn('payments.purchase_id', Purchase::withTrashed()->select('id')->where('store_id', $storeId))
-                                ->orWhere(function (Builder $unlinked) use ($storeId, $isMainStore): void {
-                                    $unlinked->whereNull('payments.invoice_id')
-                                        ->whereNull('payments.purchase_id')
-                                        ->where(function (Builder $owner) use ($storeId, $isMainStore): void {
-                                            $owner->whereIn('payments.user_id', User::withTrashed()->select('id')->where('default_store_id', $storeId));
-
-                                            if ($isMainStore) {
-                                                $owner->orWhereNull('payments.user_id')
-                                                    ->orWhereIn('payments.user_id', User::withTrashed()->select('id')->whereNull('default_store_id'));
-                                            }
-                                        });
-                                });
-                        });
+                ->orWhere(function (Builder $legacy) use ($storeId): void {
+                    self::legacyStoreConditions($legacy, $storeId);
                 });
         });
+    }
+
+    /**
+     * PERF-02: the first half of forStore(): vouchers stamped with the branch. Disjoint from
+     * legacyForStore() (store_id = X vs store_id IS NULL), and together they are exactly
+     * forStore(). Reading the halves as two statements lets the database use the store_id
+     * index (it cannot for the OR of both halves) on full-history sums.
+     *
+     * @param  Builder<Payment>  $query
+     */
+    public function scopeStampedForStore(Builder $query, int $storeId): void
+    {
+        $query->where('payments.store_id', $storeId);
+    }
+
+    /**
+     * PERF-02: the second half of forStore(): vouchers without store_id that map to the branch.
+     *
+     * @param  Builder<Payment>  $query
+     */
+    public function scopeLegacyForStore(Builder $query, int $storeId): void
+    {
+        $query->where(function (Builder $legacy) use ($storeId): void {
+            self::legacyStoreConditions($legacy, $storeId);
+        });
+    }
+
+    /**
+     * @param  Builder<Payment>  $legacy
+     */
+    private static function legacyStoreConditions(Builder $legacy, int $storeId): void
+    {
+        $isMainStore = Store::getMainStore()?->id === $storeId;
+
+        $legacy->whereNull('payments.store_id')
+            ->where(function (Builder $doc) use ($storeId, $isMainStore): void {
+                $doc->whereIn('payments.invoice_id', Invoice::withTrashed()->select('id')->where('store_id', $storeId))
+                    ->orWhereIn('payments.purchase_id', Purchase::withTrashed()->select('id')->where('store_id', $storeId))
+                    ->orWhere(function (Builder $unlinked) use ($storeId, $isMainStore): void {
+                        $unlinked->whereNull('payments.invoice_id')
+                            ->whereNull('payments.purchase_id')
+                            ->where(function (Builder $owner) use ($storeId, $isMainStore): void {
+                                $owner->whereIn('payments.user_id', User::withTrashed()->select('id')->where('default_store_id', $storeId));
+
+                                if ($isMainStore) {
+                                    $owner->orWhereNull('payments.user_id')
+                                        ->orWhereIn('payments.user_id', User::withTrashed()->select('id')->whereNull('default_store_id'));
+                                }
+                            });
+                    });
+            });
     }
 
     /**
