@@ -5,7 +5,7 @@ import { sanitizeAmountInput } from '../helpers/posCheckout';
 import { trans } from '../helpers/trans';
 
 /** The default cap when a branch never saved one (mirrors StorePosSetting::DEFAULT_MAX_DISCOUNT_PERCENT). */
-export const DEFAULT_MAX_DISCOUNT_PERCENT = '10';
+export const DEFAULT_MAX_DISCOUNT_PERCENT = '5';
 
 /**
  * POS-07: the branch's `max_discount_percent` (0 to 100, % of a sale a cashier may discount without a manager).

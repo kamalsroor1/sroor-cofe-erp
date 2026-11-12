@@ -10,6 +10,7 @@ use App\Models\Invoice;
 use App\Models\Item;
 use App\Models\Payment;
 use App\Models\Store;
+use App\Models\StorePosSetting;
 use App\Models\StoreStock;
 use App\Models\Tenant;
 use App\Models\User;
@@ -55,6 +56,12 @@ final class InvoiceUpdatePriceGuardsTest extends TenantTestCase
         $this->tenant = $this->createTenant();
         $this->useTenantForTest($this->tenant);
         $this->store = $this->adoptMainStore(['name' => 'Main', 'code' => 'MAIN-UP', 'type' => 'retail', 'is_main' => true, 'is_active' => true]);
+
+        // ROLE-02: the unset default cap is now 5 %; these fixtures keep the historical 10 % explicitly.
+        StorePosSetting::query()->updateOrCreate(
+            ['store_id' => $this->store->id],
+            ['max_discount_percent' => '10.000', 'require_shift_for_sales' => (bool) config('pos.require_shift_by_default', true)],
+        );
 
         $this->cashier = $this->makeUser('01000000021', 'cashier');
         $this->manager = $this->makeUser('01000000022', 'cashier');

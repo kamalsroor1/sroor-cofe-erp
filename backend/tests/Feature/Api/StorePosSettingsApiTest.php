@@ -101,7 +101,7 @@ final class StorePosSettingsApiTest extends TenantTestCase
         ], $row);
     }
 
-    public function test_effective_max_discount_percent_defaults_to_ten_and_follows_the_saved_value(): void
+    public function test_effective_max_discount_percent_defaults_to_five_and_follows_the_saved_value(): void
     {
         $tenant = $this->createTenant();
         $storeId = (int) $this->tenantStore($tenant)->id;
@@ -110,7 +110,7 @@ final class StorePosSettingsApiTest extends TenantTestCase
         $this->getJson($this->url($storeId), $headers)
             ->assertOk()
             ->assertJsonPath('data.max_discount_percent', null)
-            ->assertJsonPath('data.effective_max_discount_percent', '10.000');
+            ->assertJsonPath('data.effective_max_discount_percent', '5.000');
 
         $this->putJson($this->url($storeId), ['max_discount_percent' => '0'], $headers)
             ->assertOk()
@@ -123,7 +123,7 @@ final class StorePosSettingsApiTest extends TenantTestCase
         // Clearing it goes back to the default.
         $this->putJson($this->url($storeId), ['max_discount_percent' => null], $headers)
             ->assertOk()
-            ->assertJsonPath('data.effective_max_discount_percent', '10.000');
+            ->assertJsonPath('data.effective_max_discount_percent', '5.000');
     }
 
     public function test_put_is_partial_and_second_put_updates_the_same_row(): void

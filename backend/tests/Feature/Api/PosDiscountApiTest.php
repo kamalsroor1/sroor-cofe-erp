@@ -22,7 +22,7 @@ use Tests\TenantTestCase;
 
 /**
  * POS-07: discounts as a percent or an amount, on a line and/or on the invoice, with a per-store cap
- * (`max_discount_percent`, default 10) that a cashier cannot exceed without `pos.discount.override` or a
+ * (`max_discount_percent`, default 5, fixtures pin 10) that a cashier cannot exceed without `pos.discount.override` or a
  * manager PIN. The BE-08 price floor still applies after the discounts.
  *
  * Fixtures: PLAIN = price 100.000, no floor. FLOORED = price 100.000, floor 70.000.
@@ -69,7 +69,8 @@ final class PosDiscountApiTest extends TenantTestCase
         $this->plain = $this->makeItem('DS-1', ['min_selling_price' => '0.000']);
         $this->floored = $this->makeItem('DS-2', ['min_selling_price' => '70.000']);
 
-        $this->setStoreSettings(['max_discount_percent' => null]);
+        // ROLE-02: the unset default is now 5 %; these fixtures keep the historical 10 % cap explicitly.
+        $this->setStoreSettings(['max_discount_percent' => '10.000']);
     }
 
     private function makeUser(string $phone, string $role): User
@@ -159,6 +160,15 @@ final class PosDiscountApiTest extends TenantTestCase
         $this->checkout($this->cashier, [], ['discount_type' => 'percentage', 'discount_value' => '10'])->assertCreated();
         $this->assertSame('10.000', (string) $this->lastInvoice()->discount_amount);
         $this->assertNull($this->lastInvoice()->discount_override_by);
+    }
+
+    public function test_default_cap_without_a_saved_value_is_five_percent(): void
+    {
+        $this->setStoreSettings(['max_discount_percent' => null]);
+
+        $this->checkout($this->cashier, [], ['discount_type' => 'percentage', 'discount_value' => '5'])->assertCreated();
+        $this->assertCapRejected($this->checkout($this->cashier, [], ['discount_type' => 'percentage', 'discount_value' => '5.001']));
+        $this->assertCapRejected($this->checkout($this->cashier, [], ['discount_type' => 'percentage', 'discount_value' => '10']));
     }
 
     public function test_cashier_over_the_cap_gets_422_with_error_code_and_override_hint(): void

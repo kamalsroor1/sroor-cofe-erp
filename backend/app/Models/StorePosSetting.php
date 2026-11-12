@@ -33,8 +33,11 @@ use Illuminate\Support\Carbon;
  */
 class StorePosSetting extends Model
 {
-    /** POS-07: the cap used when a store never set `max_discount_percent` (or cleared it). */
-    public const DEFAULT_MAX_DISCOUNT_PERCENT = '10.000';
+    /**
+     * POS-07: the cap used when a store never set `max_discount_percent` (or cleared it).
+     * ROLE-02: 5 % (was 10 %); stores that existed at deploy keep 10 via a data migration.
+     */
+    public const DEFAULT_MAX_DISCOUNT_PERCENT = '5.000';
 
     /** @var list<string> */
     public const CARDS_PER_ROW = ['2', '3', 'auto'];
