@@ -58,6 +58,22 @@ final class PlanEnforcer
     }
 
     /**
+     * Non-throwing form of assertFeature(): may the current tenant use $featureKey? Used to hide
+     * fields of a response (e.g. profit figures) instead of refusing the whole request.
+     * True when nothing is enforced (grandfathered planless tenant); false outside tenancy.
+     */
+    public function hasFeature(string $featureKey): bool
+    {
+        $tenant = $this->currentTenant();
+
+        if ($tenant === null) {
+            return false;
+        }
+
+        return ! $this->isEnforced($tenant) || $this->features->isFeatureEnabled($tenant, $featureKey);
+    }
+
+    /**
      * Refuse when creating $adding more records of $resource would pass the effective
      * limit (plan + add-ons; null = unlimited). Call inside DB::transaction().
      *

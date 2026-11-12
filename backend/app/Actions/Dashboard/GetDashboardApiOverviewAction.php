@@ -13,6 +13,7 @@ use App\Models\InvoiceItem;
 use App\Models\Item;
 use App\Models\Supplier;
 use App\Services\Settings\TenantSettings;
+use App\Support\ProfitVisibility;
 use App\Support\TenantClock;
 
 class GetDashboardApiOverviewAction
@@ -100,12 +101,13 @@ class GetDashboardApiOverviewAction
             'today_metrics' => [
                 'net_sales' => $netSales,
                 'total_paid' => $totalPaid,
-                'total_cogs' => $totalCogs,
                 'total_expenses' => $todayExpenses,
+                'invoices_count' => $invoicesCount,
+            ] + (ProfitVisibility::allows() ? [
+                'total_cogs' => $totalCogs,
                 'net_profit' => $netProfit,
                 'margin_percentage' => $margin,
-                'invoices_count' => $invoicesCount,
-            ],
+            ] : []),
             'current_shift' => $activeShift,
             'has_active_shift' => (bool) $activeShift,
             'low_stock_count' => $lowStockCount,

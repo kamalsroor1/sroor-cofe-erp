@@ -22,6 +22,7 @@ use App\Models\StockMovement;
 use App\Models\User;
 use App\Support\ActiveStore;
 use App\Support\CostVisibility;
+use App\Support\ProfitVisibility;
 use App\Support\TenantClock;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -73,13 +74,13 @@ final class ReportController extends Controller
     {
         $user = $request->user();
         if ($user instanceof User && ActiveStore::canViewAll($user)) {
-            return $rows;
+            return ProfitVisibility::storeRows($rows);
         }
 
-        return array_values(array_filter(
+        return ProfitVisibility::storeRows(array_values(array_filter(
             $rows,
             fn (array $row): bool => $user instanceof User && ActiveStore::canAccess($user, (int) $row['id']),
-        ));
+        )));
     }
 
     /**
@@ -106,8 +107,8 @@ final class ReportController extends Controller
         return response()->json([
             'success' => true,
             'period' => $result['period'],
-            'metrics' => $result['summary'],
-            'summary' => $result['summary'],
+            'metrics' => ProfitVisibility::summary($result['summary']),
+            'summary' => ProfitVisibility::summary($result['summary']),
         ], 200);
     }
 
@@ -121,8 +122,8 @@ final class ReportController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $items['rows'],
-            'totals' => $items['totals'],
+            'data' => ProfitVisibility::itemRows($items['rows']),
+            'totals' => ProfitVisibility::itemRow($items['totals']),
             'meta' => $this->pageMeta($dto->page, $dto->per_page, $items['total']),
         ], 200);
     }
@@ -175,7 +176,7 @@ final class ReportController extends Controller
     public function inventory(FilterReportRequest $request, ActiveStore $activeStore): JsonResponse
     {
         $dto = $this->buildDTO($request, $activeStore);
-        $inventory = $this->getInventoryValuationReportAction->execute($dto, showUnitCost: CostVisibility::allows($request->user()));
+        $inventory = ProfitVisibility::storeRows($this->getInventoryValuationReportAction->execute($dto, showUnitCost: CostVisibility::allows($request->user())));
 
         return response()->json([
             'success' => true,
@@ -213,16 +214,16 @@ final class ReportController extends Controller
         $customers = $this->getCustomersSalesReportAction->execute($dto);
         $expenses = $this->getExpensesBreakdownReportAction->execute($dto);
         // The ABC analysis reuses the per-item sales the items report has just grouped.
-        $inventory = $this->getInventoryValuationReportAction->execute($dto, $items['sold_by_item'], CostVisibility::allows($request->user()));
+        $inventory = ProfitVisibility::storeRows($this->getInventoryValuationReportAction->execute($dto, $items['sold_by_item'], CostVisibility::allows($request->user())));
         $treasury = $this->getTreasuryReportAction->execute($dto, self::COMPREHENSIVE_LIST_LIMIT, 1);
         $treasury['meta'] = $this->pageMeta(1, self::COMPREHENSIVE_LIST_LIMIT, $treasury['ledger_total']);
 
         return response()->json([
             'success' => true,
             'period' => $summary['period'],
-            'summary' => $summary['summary'],
-            'item_profits' => $items['rows'],
-            'item_profits_totals' => $items['totals'],
+            'summary' => ProfitVisibility::summary($summary['summary']),
+            'item_profits' => ProfitVisibility::itemRows($items['rows']),
+            'item_profits_totals' => ProfitVisibility::itemRow($items['totals']),
             'store_breakdown' => $stores,
             'customer_sales' => $customers,
             'expenses_breakdown' => $expenses,
@@ -249,7 +250,7 @@ final class ReportController extends Controller
 
         return response()->json([
             'success' => true,
-            'top_items' => $items['rows'],
+            'top_items' => ProfitVisibility::itemRows($items['rows']),
         ], 200);
     }
 

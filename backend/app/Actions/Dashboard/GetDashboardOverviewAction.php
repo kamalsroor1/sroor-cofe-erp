@@ -23,6 +23,7 @@ use App\Services\ShiftService;
 use App\Support\CostVisibility;
 use App\Support\DashboardCache;
 use App\Support\Money\Decimal;
+use App\Support\ProfitVisibility;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\DB;
 
@@ -89,6 +90,9 @@ final class GetDashboardOverviewAction
         // reports.view only (there is no dashboard.* permission). ROLE-01: a user without it
         // never reaches this point, so every entry of the store cache is a reports.view one.
         $showFinancials = $user->can('reports.view');
+        // BILL-03: profit figures additionally need the reports.advanced plan feature. The
+        // aggregate cache is per tenant, so the plan state needs no extra cache-key part.
+        $showProfit = $showFinancials && ProfitVisibility::allows();
 
         // PERF-01: the aggregate blocks are cached for a few seconds per tenant, store scope,
         // permission set, business day and locale (see DashboardCache). The live blocks below
@@ -96,7 +100,7 @@ final class GetDashboardOverviewAction
         $cacheKey = DashboardCache::key($storeFilter, $showFinancials, CostVisibility::allows($user), $today, app()->getLocale());
         $aggregates = DashboardCache::remember(
             $cacheKey,
-            fn (): array => $this->aggregates($storeFilter, $today, $showFinancials),
+            fn (): array => $this->aggregates($storeFilter, $today, $showFinancials, $showProfit),
         );
 
         // 11. Active Cash Shift
@@ -163,7 +167,7 @@ final class GetDashboardOverviewAction
      *
      * @return array{metrics: array<string, mixed>, analytics: array<string, mixed>, low_stock_items: list<array<string, mixed>>, top_selling_items: list<array<string, mixed>>}
      */
-    private function aggregates(?int $storeFilter, string $today, bool $showFinancials): array
+    private function aggregates(?int $storeFilter, string $today, bool $showFinancials, bool $showProfit): array
     {
 
         // 2. 7-Day Trend & Peak Analytics
@@ -271,8 +275,8 @@ final class GetDashboardOverviewAction
                 'monthly_sales' => Decimal::normalize((string) $periodic['total_sales']),
                 'monthly_gross_sales' => Decimal::normalize((string) $periodic['gross_sales']),
                 'monthly_returns' => Decimal::normalize((string) $periodic['total_returns']),
-                'monthly_gross_profit' => $showFinancials ? Decimal::normalize((string) $periodic['gross_profit']) : null,
-                'monthly_margin' => $showFinancials ? Decimal::normalize((string) $periodic['margin_percentage'], 2) : null,
+                'monthly_gross_profit' => $showProfit ? Decimal::normalize((string) $periodic['gross_profit']) : null,
+                'monthly_margin' => $showProfit ? Decimal::normalize((string) $periodic['margin_percentage'], 2) : null,
                 'customers_count' => $customersCount,
                 'suppliers_count' => $suppliersCount,
                 'low_stock_count' => $lowStockCount,
