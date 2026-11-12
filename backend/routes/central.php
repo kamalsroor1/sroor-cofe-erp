@@ -178,6 +178,10 @@ Route::prefix('v1/super-admin')
         Route::post('/billing-invoices/{invoice}/void', [BillingInvoiceController::class, 'void'])
             ->whereNumber('invoice')
             ->middleware([$can(CentralPermission::BillingManage), RequireRecentTwoFactor::class])->name('billing.invoices.void');
+        // OPS-20: record a payment received outside the system; verified in the same transaction.
+        Route::post('/billing-invoices/{invoice}/record-payment', [BillingInvoiceController::class, 'recordPayment'])
+            ->whereNumber('invoice')
+            ->middleware([$can(CentralPermission::BillingManage), RequireRecentTwoFactor::class, 'throttle:20,1'])->name('billing.invoices.record_payment');
         Route::get('/billing/payments', [BillingReviewController::class, 'index'])
             ->middleware($can(CentralPermission::BillingView))->name('billing.payments.index');
         Route::get('/billing/payments/{payment}/receipt', [BillingReviewController::class, 'receipt'])

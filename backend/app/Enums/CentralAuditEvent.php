@@ -108,6 +108,9 @@ enum CentralAuditEvent: string
     case SignupRequestRejected = 'signup_request_rejected';
     // SELL-01: console reset of a shop owner's forgotten password (temporary password, never logged)
     case TenantOwnerPasswordReset = 'tenant_owner_password_reset';
+    // OPS-20: an operator recorded an out-of-system payment; an operator's 2FA was reset from the CLI
+    case BillingPaymentRecorded = 'billing_payment_recorded';
+    case TwoFactorReset = 'two_factor_reset';
 
     public function translationKey(): string
     {

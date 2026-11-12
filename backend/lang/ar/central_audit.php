@@ -75,6 +75,8 @@ return [
         'plan_change_invoiced' => 'إصدار فاتورة لطلب تغيير باقة',
         'plan_change_rejected' => 'رفض طلب تغيير باقة',
         'tenant_owner_password_reset' => 'إعادة تعيين كلمة مرور مالك المتجر',
+        'billing_payment_recorded' => 'تسجيل دفعة يدويًا بواسطة مشغّل',
+        'two_factor_reset' => 'إعادة تعيين المصادقة الثنائية لمشغّل (الهاتف ضاع)',
     ],
     'prune' => [
         'done' => 'تم حذف :count من سجلات مراجعة المنصة الأقدم من :date.',

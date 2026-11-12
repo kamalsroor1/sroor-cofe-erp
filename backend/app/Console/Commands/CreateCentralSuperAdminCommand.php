@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Actions\Central\SuperAdmins\CreateCentralSuperAdminAction;
+use App\Enums\CentralPermission;
 use App\Models\CentralUser;
 use Illuminate\Console\Command;
 use Illuminate\Database\QueryException;
@@ -25,7 +26,8 @@ final class CreateCentralSuperAdminCommand extends Command
 
     protected $signature = 'central:create-super-admin
         {email : Operator email (stored lowercase)}
-        {--name= : Display name (asked when omitted)}';
+        {--name= : Display name (asked when omitted)}
+        {--role=super_admin : Central role: super_admin (full access) or support (read-only)}';
 
     public function __construct()
     {
@@ -46,6 +48,14 @@ final class CreateCentralSuperAdminCommand extends Command
 
         if (CentralUser::query()->where('email', $email)->exists()) {
             $this->error((string) __('console.create_super_admin.email_taken'));
+
+            return self::FAILURE;
+        }
+
+        $role = mb_strtolower(trim((string) $this->option('role')));
+
+        if (! in_array($role, [CentralPermission::ROLE_SUPER_ADMIN, CentralPermission::ROLE_SUPPORT], true)) {
+            $this->error((string) __('console.create_super_admin.invalid_role'));
 
             return self::FAILURE;
         }
@@ -73,7 +83,7 @@ final class CreateCentralSuperAdminCommand extends Command
         }
 
         try {
-            $user = $action->execute($name, $email, $password);
+            $user = $action->execute($name, $email, $password, $role);
         } catch (QueryException) {
             // Never echo a QueryException: its message carries the bound values (password hash).
             $this->error((string) __('console.create_super_admin.failed_database'));

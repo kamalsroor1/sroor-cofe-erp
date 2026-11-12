@@ -1,5 +1,5 @@
 <script setup>
-import { Eye, Printer, Ban } from 'lucide-vue-next';
+import { Eye, Printer, Ban, HandCoins } from 'lucide-vue-next';
 import StatusBadge from '../../Common/StatusBadge.vue';
 import { useFormatters } from '../../../Composables/useFormatters';
 
@@ -9,7 +9,7 @@ defineProps({
   voidingId: { type: Number, default: null },
 });
 
-defineEmits(['void']);
+defineEmits(['void', 'record-payment']);
 
 const { formatMoney, formatDate } = useFormatters();
 
@@ -82,6 +82,17 @@ const columns = ['number', 'type', 'status', 'total', 'paid', 'remaining', 'issu
               >
                 <Printer class="w-4 h-4" />
               </a>
+              <button
+                v-if="canManage && invoice.status?.value === 'pending'"
+                type="button"
+                :aria-label="$t('billing.console.tenant.record_payment')"
+                :title="$t('billing.console.tenant.record_payment')"
+                :data-testid="`record-payment-${invoice.id}`"
+                class="w-11 h-11 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center cursor-pointer transition active:scale-95"
+                @click="$emit('record-payment', invoice)"
+              >
+                <HandCoins class="w-4 h-4" />
+              </button>
               <button
                 v-if="canManage && invoice.status?.value === 'pending'"
                 type="button"

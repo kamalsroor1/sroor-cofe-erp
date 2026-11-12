@@ -130,4 +130,25 @@ final class CreateCentralSuperAdminCommandTest extends TenantTestCase
         $this->assertSame(0, CentralUser::query()->count());
         $this->assertSame(0, CentralAuditLog::query()->count());
     }
+
+    public function test_the_role_option_creates_a_read_only_support_operator(): void
+    {
+        $this->artisan(self::COMMAND, ['email' => 'support@platform.test', '--name' => 'Support', '--role' => 'support'])
+            ->expectsQuestion($this->passwordQuestion(), self::PASSWORD)
+            ->expectsQuestion($this->confirmationQuestion(), self::PASSWORD)
+            ->assertSuccessful();
+
+        $user = CentralUser::query()->where('email', 'support@platform.test')->sole();
+        $this->assertTrue($user->hasRole(CentralPermission::ROLE_SUPPORT, CentralPermission::GUARD));
+        $this->assertFalse($user->hasRole(CentralPermission::ROLE_SUPER_ADMIN, CentralPermission::GUARD));
+    }
+
+    public function test_an_unknown_role_is_refused_and_nothing_is_created(): void
+    {
+        $this->artisan(self::COMMAND, ['email' => 'bad@platform.test', '--name' => 'Bad', '--role' => 'owner'])
+            ->expectsOutputToContain((string) __('console.create_super_admin.invalid_role'))
+            ->assertFailed();
+
+        $this->assertSame(0, CentralUser::query()->count());
+    }
 }

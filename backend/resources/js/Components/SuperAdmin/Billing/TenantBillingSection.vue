@@ -7,8 +7,10 @@ import Skeleton from '../../Common/Skeletons/Skeleton.vue';
 import TenantSubscriptionSummary from './TenantSubscriptionSummary.vue';
 import TenantInvoicesTable from './TenantInvoicesTable.vue';
 import IssueInvoiceModal from './IssueInvoiceModal.vue';
+import RecordPaymentModal from './RecordPaymentModal.vue';
 import { useTenantBilling } from '../../../Composables/useTenantBilling';
 import { useIssueInvoice } from '../../../Composables/useIssueInvoice';
+import { useRecordPayment } from '../../../Composables/useRecordPayment';
 
 const props = defineProps({
   tenantId: { type: [String, Number], required: true },
@@ -29,6 +31,7 @@ const {
 } = useTenantBilling(props.tenantId);
 
 const issue = useIssueInvoice(props.tenantId, fetchBilling, () => subscription.value?.plan?.id ?? null);
+const record = useRecordPayment(fetchBilling);
 </script>
 
 <template>
@@ -86,8 +89,21 @@ const issue = useIssueInvoice(props.tenantId, fetchBilling, () => subscription.v
         :can-manage="canManage"
         :voiding-id="voidingId"
         @void="voidInvoice"
+        @record-payment="record.open"
       />
     </div>
+
+    <RecordPaymentModal
+      v-if="canManage"
+      :show="record.isOpen.value"
+      :invoice="record.invoice.value"
+      :form="record.form.value"
+      :errors="record.errors.value"
+      :is-submitting="record.isSubmitting.value"
+      @close="record.close"
+      @submit="record.submit"
+      @update:field="record.setField"
+    />
 
     <IssueInvoiceModal
       v-if="canManage"

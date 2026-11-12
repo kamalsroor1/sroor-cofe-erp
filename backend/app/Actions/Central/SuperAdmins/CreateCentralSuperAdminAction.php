@@ -28,18 +28,22 @@ final class CreateCentralSuperAdminAction
         private readonly CentralAuditLogger $auditLogger,
     ) {}
 
-    public function execute(string $name, string $email, string $password): CentralUser
+    public function execute(string $name, string $email, string $password, string $roleName = CentralPermission::ROLE_SUPER_ADMIN): CentralUser
     {
         if (function_exists('tenancy') && tenancy()->initialized) {
             throw new RuntimeException('central:create-super-admin must run in the central context.');
         }
 
+        if (! in_array($roleName, [CentralPermission::ROLE_SUPER_ADMIN, CentralPermission::ROLE_SUPPORT], true)) {
+            throw new RuntimeException('Unknown central role.');
+        }
+
         $email = mb_strtolower(trim($email));
         $connection = (string) (new CentralUser)->getConnectionName();
 
-        $user = DB::connection($connection)->transaction(function () use ($connection, $name, $email, $password): CentralUser {
+        $user = DB::connection($connection)->transaction(function () use ($connection, $name, $email, $password, $roleName): CentralUser {
             $role = Role::on($connection)
-                ->where('name', CentralPermission::ROLE_SUPER_ADMIN)
+                ->where('name', $roleName)
                 ->where('guard_name', CentralPermission::GUARD)
                 ->first();
 
@@ -61,7 +65,7 @@ final class CreateCentralSuperAdminAction
 
             $this->auditLogger->record(
                 CentralAuditEvent::CentralUserCreated,
-                ['email' => $email, 'role' => CentralPermission::ROLE_SUPER_ADMIN, 'source' => 'console'],
+                ['email' => $email, 'role' => $roleName, 'source' => 'console'],
                 subject: $user,
             );
 

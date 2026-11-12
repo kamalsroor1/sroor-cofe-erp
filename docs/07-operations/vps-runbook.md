@@ -467,3 +467,24 @@ bash scripts/ops/tests/render-env-test.sh    # يشمل رفض --optional لـ M
 | 13 | `.env` بـ `TELESCOPE_ENABLED=true` أو `BACKUP_ARCHIVE_PASSWORD` فاضي (عدّل الـ secret مؤقتًا) | الـ workflow يفشل في «Production standards gate» قبل أي اتصال بالخادم | ☐ |
 | 14 | `reboot` ثم `verify.sh` | كل الخدمات رجعت | ☐ |
 | 15 | **قبل go-live:** Rebuild كامل + أسرار جديدة كلها + `CERTBOT_STAGING=0` (§10 آخر بند) | — | ☐ |
+
+## An operator lost the phone (2FA recovery, OPS-20)
+
+The console requires 2FA. Recovery codes (shown once at enrolment) are the first way back in. If the
+phone AND the codes are lost, another person with server access resets it from the terminal:
+
+```bash
+php artisan central:reset-2fa operator@example.com
+```
+
+- Interactive only (no `--no-interaction`): it prints who will be reset and asks twice, first whether
+  you verified the person's identity outside the system (phone call, in person), then to confirm.
+- It does not sign anyone in and does not touch the password. It wipes the authenticator secret and the
+  recovery codes, revokes every session of that operator, and writes a `two_factor_reset` row to the
+  central audit log (with the OS user that ran it).
+- The operator then signs in with the password, is sent to the 2FA setup, scans a new authenticator and
+  must save the new recovery codes.
+
+Add a second operator so one lost phone never locks the console:
+`php artisan central:create-super-admin ops@example.com --name="Ops" [--role=support]` (`support` is read-only:
+it sees signup requests and billing but cannot confirm a payment).
