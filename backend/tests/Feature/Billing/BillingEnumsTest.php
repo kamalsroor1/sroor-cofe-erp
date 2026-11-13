@@ -50,7 +50,7 @@ class BillingEnumsTest extends TestCase
             'BillingPaymentMethod' => [BillingPaymentMethod::class, ['instapay', 'vodafone_cash', 'bank_transfer', 'cash', 'paymob_card', 'paymob_wallet', 'fawry_reference']],
             'BillingGateway' => [BillingGateway::class, ['manual', 'paymob', 'fawry']],
             'PlanChangeRequestKind' => [PlanChangeRequestKind::class, ['plan_change', 'addon']],
-            'PlanChangeRequestStatus' => [PlanChangeRequestStatus::class, ['pending', 'invoiced', 'rejected', 'cancelled']],
+            'PlanChangeRequestStatus' => [PlanChangeRequestStatus::class, ['pending', 'invoiced', 'completed', 'rejected', 'cancelled']],
         ];
     }
 

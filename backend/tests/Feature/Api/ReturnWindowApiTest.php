@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Services\ActivityLogService;
 use App\Services\InvoiceService;
 use App\Services\Settings\TenantSettings;
+use App\Support\TenantClock;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -99,7 +100,10 @@ final class ReturnWindowApiTest extends TenantTestCase
         [$invoiceId, $lineId] = $this->invoiceDated('2026-11-01');
         $this->at('2026-11-10 12:00');
 
-        $this->postReturn($invoiceId, $lineId, $this->cashier(), returnDate: '2026-11-02')
+        // DATE-02: back-dating needs documents.backdate; with it the date is accepted yet the window still counts from the invoice.
+        $backdater = $this->createTenantUser($this->tenant, null, ['returns.manage', 'documents.backdate']);
+
+        $this->postReturn($invoiceId, $lineId, $backdater, returnDate: '2026-11-05')
             ->assertStatus(422)->assertJsonPath('error_code', 'returns.window_expired');
     }
 
@@ -318,7 +322,7 @@ final class ReturnWindowApiTest extends TenantTestCase
      */
     private function postReturn(int $invoiceId, int $lineId, ?User $user, string $qty = '1.000', ?string $returnDate = null, ?array $override = null, ?string $locale = null): TestResponse
     {
-        $payload = $this->payload($invoiceId, $lineId, $qty, $returnDate ?? CarbonImmutable::now('Africa/Cairo')->toDateString());
+        $payload = $this->payload($invoiceId, $lineId, $qty, $returnDate ?? $this->inTenant($this->tenant, fn () => app(TenantClock::class)->businessDate()));
         if ($override !== null) {
             $payload['override'] = $override;
         }

@@ -13,6 +13,7 @@ use App\Support\Backup\BackupTelegramAlert;
 use App\Support\Backup\MysqlDumpRowCounter;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use ErrorException;
 use Illuminate\Console\Command;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
@@ -340,6 +341,9 @@ final class BackupTenantsCommand extends Command
                     hash_update($sha, $chunk);
                     hash_update($crc, $chunk);
                 }
+            } catch (ErrorException) {
+                // The zip stream raises a PHP warning ("CRC error") on a damaged entry, which Laravel turns into an ErrorException.
+                throw new RuntimeException((string) __('console.backups.archive_corrupt'));
             } finally {
                 fclose($stream);
             }

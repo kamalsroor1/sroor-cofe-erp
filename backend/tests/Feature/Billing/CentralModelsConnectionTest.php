@@ -27,6 +27,7 @@ use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
 use App\Models\TenantBackup;
 use App\Models\TenantCreditLedgerEntry;
+use App\Models\TenantLifecycleReminder;
 use App\Models\TenantRateLimitOverride;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Model;
@@ -97,6 +98,7 @@ final class CentralModelsConnectionTest extends TenantTestCase
             'PlatformSetting' => [PlatformSetting::class, self::VIA_OWN_METHOD],
             'AppVersion' => [AppVersion::class, self::VIA_OWN_METHOD],
             'SignupRequest' => [SignupRequest::class, self::VIA_TRAIT],
+            'TenantLifecycleReminder' => [TenantLifecycleReminder::class, self::VIA_TRAIT],
             'Tenant' => [Tenant::class, self::VIA_STANCL],
             'Domain' => [Domain::class, self::VIA_STANCL],
         ];

@@ -141,9 +141,10 @@ final class TenantBillingApiTest extends BillingTestCase
         $this->postJson('/api/v1/customers', [], $this->tenantHeaders($tenant))->assertStatus(423);
     }
 
+    // SELL-07: only a NON-PAYMENT suspension reaches billing (PaymentRecoveryTest); any other reason stays blocked.
     public function test_a_suspended_shop_is_blocked_from_billing(): void
     {
-        $tenant = $this->createTenant(['status' => 'suspended', 'suspension_reason' => 'non_payment', 'status_changed_at' => now()->subDay()]);
+        $tenant = $this->createTenant(['status' => 'suspended', 'suspension_reason' => 'violation', 'status_changed_at' => now()->subDay()]);
         $headers = $this->tenantHeaders($tenant);
 
         $this->getJson('/api/v1/billing/subscription', $headers)->assertForbidden();
