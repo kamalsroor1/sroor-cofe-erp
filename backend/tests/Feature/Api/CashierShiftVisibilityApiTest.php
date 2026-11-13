@@ -403,6 +403,39 @@ final class CashierShiftVisibilityApiTest extends TenantTestCase
         $this->assertSame($foreign, $this->inTenant($this->tenant, fn (): int => (int) User::findOrFail($target->id)->default_store_id));
     }
 
+    public function test_delegate_may_resend_the_form_of_a_user_whose_default_branch_has_no_store_user_row(): void
+    {
+        $foreign = $this->branch('VIS-LEGACY');
+        [$delegate, $target] = $this->delegateAndTarget();
+        // A legacy user: their default branch grants access without a store_user row.
+        $this->inTenant($this->tenant, fn () => User::findOrFail($target->id)->forceFill(['default_store_id' => $foreign])->save());
+
+        $this->putJson('/api/v1/users/'.$target->id, [
+            'name' => 'اسم جديد', 'phone' => $target->phone, 'email' => $target->email, 'role' => 'shift-cashier', 'is_active' => true,
+            'default_store_id' => $foreign, 'store_ids' => [$this->storeId],
+        ], $this->tenantHeaders($this->tenant, $delegate))->assertOk();
+
+        $this->assertSame('اسم جديد', $this->inTenant($this->tenant, fn (): string => (string) User::findOrFail($target->id)->name));
+        $this->assertSame($foreign, $this->inTenant($this->tenant, fn (): int => (int) User::findOrFail($target->id)->default_store_id));
+        // No branch was widened: the foreign one was already theirs through the default.
+        $this->assertEqualsCanonicalizing([$this->storeId, $foreign], $this->storeIdsOf($target->id));
+    }
+
+    public function test_delegate_still_cannot_drop_an_inaccessible_default_branch_by_omitting_it(): void
+    {
+        $foreign = $this->branch('VIS-LEGACY2');
+        [$delegate, $target] = $this->delegateAndTarget();
+        $this->inTenant($this->tenant, fn () => User::findOrFail($target->id)->forceFill(['default_store_id' => $foreign])->save());
+
+        $this->putJson('/api/v1/users/'.$target->id, [
+            'name' => $target->name, 'phone' => $target->phone, 'email' => $target->email, 'role' => 'shift-cashier', 'is_active' => true,
+            'store_ids' => [$this->storeId],
+        ], $this->tenantHeaders($this->tenant, $delegate))->assertForbidden();
+
+        $this->assertSame($foreign, $this->inTenant($this->tenant, fn (): int => (int) User::findOrFail($target->id)->default_store_id));
+        $this->assertSame([$this->storeId], $this->storeIdsOf($target->id));
+    }
+
     public function test_store_ids_null_on_update_keeps_the_branches(): void
     {
         $b2 = $this->branch('VIS-K2');

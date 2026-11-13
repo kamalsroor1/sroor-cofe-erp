@@ -135,8 +135,13 @@ final class UpdateUserAction
         }
 
         // ROLE-01: every branch added to or removed from the user must be one the actor can access.
+        // The user's current default store counts as already held (it grants access without a
+        // store_user row), so resending the form for such a user is not an "added" branch.
         if ($storeIds !== null) {
             $current = $target->stores()->pluck('stores.id')->map(fn ($id): int => (int) $id)->all();
+            if ($currentStoreId !== null) {
+                $current = array_values(array_unique([...$current, $currentStoreId]));
+            }
             foreach (array_merge(array_diff($storeIds, $current), array_diff($current, $storeIds)) as $storeId) {
                 $this->roleGrantGuard->assertCanAssignStore($actor, (int) $storeId);
             }
