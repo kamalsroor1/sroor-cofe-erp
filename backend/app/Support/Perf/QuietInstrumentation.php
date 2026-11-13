@@ -17,7 +17,7 @@ use Laravel\Telescope\Telescope;
  * With Telescope recording, the perf seed of 2026-11-12 took more than 5 minutes for 5,000
  * invoices instead of 1.5 s: every INSERT was captured, serialised and written back as a
  * telescope_entries row. While $callback runs:
- *  - Telescope and Pulse stop recording (restored afterwards if they were on);
+ *  - Telescope and Pulse stop recording (each restored to its previous state afterwards);
  *  - the default connection has no event dispatcher, so no QueryExecuted / transaction event
  *    reaches any listener (Telescope, Pulse, debug listeners), and its query log is off;
  *  - Eloquent model events are muted (observers, activity/audit logging).
@@ -41,7 +41,6 @@ final class QuietInstrumentation
         }
 
         $pulse = class_exists(Pulse::class) && app()->bound(Pulse::class) ? app(Pulse::class) : null;
-        $pulse?->stopRecording();
 
         /** @var Connection $connection */
         $connection = DB::connection();
@@ -51,7 +50,10 @@ final class QuietInstrumentation
         $connection->unsetEventDispatcher();
 
         try {
-            return Model::withoutEvents($callback);
+            // Pulse::ignore() restores Pulse's own previous recording state (on or off).
+            return $pulse !== null
+                ? $pulse->ignore(fn (): mixed => Model::withoutEvents($callback))
+                : Model::withoutEvents($callback);
         } finally {
             if ($dispatcher !== null) {
                 $connection->setEventDispatcher($dispatcher);
@@ -59,7 +61,6 @@ final class QuietInstrumentation
             if ($queryLogWasOn) {
                 $connection->enableQueryLog();
             }
-            $pulse?->startRecording();
             if ($telescopeWasRecording) {
                 Telescope::startRecording(false);
             }
