@@ -1,12 +1,13 @@
 <template>
   <div class="space-y-6 font-tajawal">
     <!-- Stock Valuation Top Cards -->
-    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(14rem,1fr))] gap-4">
       <StatCardSkeleton v-for="i in 3" :key="i" />
     </div>
 
-    <div v-else class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div v-else class="grid grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(14rem,1fr))] gap-4">
       <div
+        v-if="hasKey(inventoryData, 'stock_cost_valuation')"
         class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1"
       >
         <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{
@@ -31,6 +32,7 @@
       </div>
 
       <div
+        v-if="hasKey(inventoryData, 'expected_stock_profit')"
         class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-slate-900/90 border border-emerald-200 dark:border-emerald-500/30 shadow-sm dark:shadow-md space-y-1"
       >
         <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">{{
@@ -80,9 +82,9 @@
                 <th class="p-3 text-end font-bold">{{ $t('inventory.current_stock') }}</th>
                 <th class="p-3 text-end font-bold">{{ $t('inventory.average_cost') }}</th>
                 <th class="p-3 text-end font-bold">{{ $t('inventory.selling_price') }}</th>
-                <th class="p-3 text-end font-bold">{{ $t('reports.cost_valuation') }}</th>
+                <th v-if="showCostVal" class="p-3 text-end font-bold">{{ $t('reports.cost_valuation') }}</th>
                 <th class="p-3 text-end font-bold">{{ $t('reports.selling_valuation') }}</th>
-                <th class="p-3 text-end font-bold">{{ $t('reports.expected_profit') }}</th>
+                <th v-if="showProfit" class="p-3 text-end font-bold">{{ $t('reports.expected_profit') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-200 dark:divide-slate-800/50 font-sans">
@@ -104,11 +106,13 @@
                 <td class="p-3 text-end font-mono text-emerald-500 dark:text-emerald-400">
                   {{ formatMoney(itm.selling_price) }}
                 </td>
-                <td class="p-3 text-end font-mono text-rose-500 dark:text-rose-400">{{ formatMoney(itm.cost_val) }}</td>
+                <td v-if="showCostVal" class="p-3 text-end font-mono text-rose-500 dark:text-rose-400">
+                  {{ formatMoney(itm.cost_val) }}
+                </td>
                 <td class="p-3 text-end font-mono font-bold text-slate-900 dark:text-white">
                   {{ formatMoney(itm.sell_val) }}
                 </td>
-                <td class="p-3 text-end font-mono font-black text-emerald-500 dark:text-emerald-400">
+                <td v-if="showProfit" class="p-3 text-end font-mono font-black text-emerald-500 dark:text-emerald-400">
                   {{ formatMoney(itm.profit) }}
                 </td>
               </tr>
@@ -132,13 +136,17 @@
                 <span class="text-xs font-mono font-bold text-cyan-500"
                   >{{ formatQty(itm.current_stock) }} {{ itm.unit }}</span
                 >
-                <span class="text-sm font-black font-mono text-emerald-500 block">+{{ formatMoney(itm.profit) }}</span>
+                <span v-if="hasKey(itm, 'profit')" class="text-sm font-black font-mono text-emerald-500 block"
+                  >+{{ formatMoney(itm.profit) }}</span
+                >
               </div>
             </div>
             <div
               class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs font-mono"
             >
-              <span class="text-slate-500">{{ $t('reports.cost_valuation') }}: {{ formatMoney(itm.cost_val) }}</span>
+              <span v-if="hasKey(itm, 'cost_val')" class="text-slate-500"
+                >{{ $t('reports.cost_valuation') }}: {{ formatMoney(itm.cost_val) }}</span
+              >
               <span class="text-slate-900 dark:text-white font-bold"
                 >{{ $t('reports.selling_valuation') }}: {{ formatMoney(itm.sell_val) }}</span
               >
@@ -170,12 +178,13 @@ import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
 import ErrorState from '../Common/ErrorState.vue';
 import Pagination from '../Common/Pagination.vue';
+import { computed } from 'vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { effectiveAverageCost } from '../../helpers/itemCost';
 
 const { formatMoney, formatQty, currencyLabel } = useFormatters();
 
-defineProps({
+const props = defineProps({
   inventoryData: { type: Object, default: () => ({}) },
   items: { type: Array, default: () => [] },
   meta: { type: Object, default: () => ({}) },
@@ -187,4 +196,9 @@ defineProps({
 });
 
 defineEmits(['page-change', 'retry']);
+
+// The plan may strip cost/profit keys from the payload: a missing key hides the column or card.
+const hasKey = (obj, key) => obj != null && Object.prototype.hasOwnProperty.call(obj, key);
+const showCostVal = computed(() => props.items.some((itm) => hasKey(itm, 'cost_val')));
+const showProfit = computed(() => props.items.some((itm) => hasKey(itm, 'profit')));
 </script>

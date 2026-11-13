@@ -19,13 +19,17 @@ defineProps({
 defineEmits(['export-abc']);
 
 const { formatMoney } = useMoney();
+
+// The plan may strip cost/profit keys from the payload: a missing key hides the card.
+const hasKey = (obj, key) => obj != null && Object.prototype.hasOwnProperty.call(obj, key);
 </script>
 
 <template>
   <div class="space-y-6 font-tajawal">
     <!-- Valuation Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(14rem,1fr))] gap-4">
       <div
+        v-if="hasKey(summary, 'stock_cost_valuation')"
         class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 space-y-1 shadow-xs"
       >
         <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{
@@ -50,6 +54,7 @@ const { formatMoney } = useMoney();
       </div>
 
       <div
+        v-if="hasKey(summary, 'expected_stock_profit')"
         class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 space-y-1 shadow-xs"
       >
         <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{
