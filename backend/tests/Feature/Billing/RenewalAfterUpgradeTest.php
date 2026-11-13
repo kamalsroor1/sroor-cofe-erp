@@ -136,4 +136,76 @@ final class RenewalAfterUpgradeTest extends PlanChangeTestCase
         $this->assertSame(-1, bccomp($invoice->lines[0]['amount'], '450.000', 3));
         $this->assertEquals($tenant->subscription_ends_at->toIso8601String(), $invoice->period_end->toIso8601String());
     }
+
+    private function differenceInvoiceId(Tenant $tenant, int $planId, string $amount = '200'): int
+    {
+        $row = $this->requestRow($tenant, ['requested_plan_id' => $planId]);
+
+        return (int) $this->postJson(self::QUEUE.'/'.$row->getKey().'/invoice', ['amount' => $amount], $this->admin)
+            ->assertCreated()->json('data.invoice.id');
+    }
+
+    public function test_a_difference_paid_after_a_renewal_moved_the_term_is_409(): void
+    {
+        $small = $this->plan();
+        $big = $this->plan(['price_monthly' => '899.000']);
+        $tenant = $this->subscribedTenant($small, 12);
+        $termEnd = $tenant->subscription_ends_at;
+
+        // Support issues the difference for the current term, then a renewal is issued and paid first.
+        $differenceId = $this->differenceInvoiceId($tenant, (int) $big->getKey());
+        $renewal = $this->renewal($tenant, (int) $small->getKey());
+        $this->verify($this->pay($tenant, (int) $renewal->getKey(), $renewal->total))->assertOk();
+        $movedEnd = $tenant->fresh()->subscription_ends_at;
+        $this->assertTrue($movedEnd->gt($termEnd));
+
+        // The old difference priced only the old remainder: it must not upgrade the new term.
+        $paymentId = $this->pay($tenant, $differenceId, BillingInvoice::query()->findOrFail($differenceId)->total);
+        $this->verify($paymentId)->assertStatus(409)->assertJsonPath('error_code', 'billing.difference_term_changed');
+
+        $tenant->refresh();
+        $this->assertSame($small->getKey(), $tenant->plan_id);
+        $this->assertSame($movedEnd->toIso8601String(), $tenant->subscription_ends_at->toIso8601String());
+        $this->assertSame('pending', BillingInvoice::query()->findOrFail($differenceId)->status->value);
+    }
+
+    public function test_issuing_a_difference_voids_an_unpaid_open_renewal_at_once(): void
+    {
+        $small = $this->plan();
+        $big = $this->plan(['price_monthly' => '899.000']);
+        $tenant = $this->subscribedTenant($small, 12);
+        $renewal = $this->renewal($tenant, (int) $small->getKey());
+
+        $this->differenceInvoiceId($tenant, (int) $big->getKey());
+
+        // Voided at issue time: the shop can no longer pay it and move the term under the difference.
+        $this->assertSame('void', $renewal->fresh()->status->value);
+        $this->post('/api/v1/billing/invoices/'.$renewal->getKey().'/payments', [
+            'receipt' => $this->receipt(),
+            'method' => 'vodafone_cash',
+            'amount' => $renewal->total,
+            'payer_reference' => '01000000888',
+            'paid_at' => now()->toDateString(),
+        ], $this->multipart($this->tenantHeaders($tenant)))->assertStatus(409)->assertJsonPath('error_code', 'billing.invoice_not_payable');
+    }
+
+    public function test_a_difference_is_refused_while_a_renewal_has_a_payment_in_flight(): void
+    {
+        $small = $this->plan();
+        $big = $this->plan(['price_monthly' => '899.000']);
+        $tenant = $this->subscribedTenant($small, 12);
+        $renewal = $this->renewal($tenant, (int) $small->getKey());
+        $this->pay($tenant, (int) $renewal->getKey(), $renewal->total);
+        $row = $this->requestRow($tenant, ['requested_plan_id' => $big->getKey()]);
+        $before = BillingInvoice::query()->count();
+
+        $this->postJson(self::QUEUE.'/'.$row->getKey().'/invoice', ['amount' => '200'], $this->admin)
+            ->assertStatus(409)
+            ->assertJsonPath('error_code', 'billing.renewal_in_flight')
+            ->assertJsonPath('details.invoice_id', (int) $renewal->getKey());
+
+        $this->assertSame($before, BillingInvoice::query()->count());
+        $this->assertSame('pending', $renewal->fresh()->status->value);
+        $this->assertSame('pending', $row->fresh()->status->value);
+    }
 }

@@ -39,6 +39,8 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * | addonNeedsActiveSubscription() | 422 | billing.addon_needs_active_subscription |
  * | differenceNeedsActiveTerm() | 409 | billing.difference_needs_active_term |
  * | renewalPlanMismatch()    | 409  | billing.renewal_plan_mismatch    |
+ * | differenceTermChanged()  | 409  | billing.difference_term_changed  |
+ * | renewalInFlight()        | 409  | billing.renewal_in_flight (details.invoice_id/number) |
  */
 final class BillingException extends HttpException
 {
@@ -177,6 +179,21 @@ final class BillingException extends HttpException
     public static function renewalPlanMismatch(): self
     {
         return self::make(Response::HTTP_CONFLICT, 'renewal_plan_mismatch');
+    }
+
+    /** BILL-01 review: the term the difference priced has moved (a renewal was paid since it was issued). */
+    public static function differenceTermChanged(): self
+    {
+        return self::make(Response::HTTP_CONFLICT, 'difference_term_changed');
+    }
+
+    /** BILL-01 review: an open renewal invoice already has a payment, so a difference cannot be issued yet. */
+    public static function renewalInFlight(BillingInvoice $renewal): self
+    {
+        return new self(Response::HTTP_CONFLICT, 'billing.renewal_in_flight', (string) __('billing.errors.renewal_in_flight', ['number' => $renewal->number]), [
+            'invoice_id' => (int) $renewal->getKey(),
+            'invoice_number' => $renewal->number,
+        ]);
     }
 
     public static function differenceRequired(): self

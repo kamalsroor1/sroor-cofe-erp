@@ -50,6 +50,9 @@ use Illuminate\Support\Facades\DB;
  */
 final class IssueSubscriptionInvoiceAction
 {
+    /** Upper bound of the months one monthly add-on purchase can be charged for (a prepaid term). */
+    private const MAX_ADDON_MONTHS = 36;
+
     public function __construct(
         private readonly BillingSequenceService $sequences,
         private readonly FounderPricingService $founder,
@@ -91,6 +94,11 @@ final class IssueSubscriptionInvoiceAction
                 throw BillingException::differenceNeedsActiveTerm();
             }
 
+            // BILL-01 review: a renewal paid after this difference would move the term it prices.
+            if ($dto->differenceLine !== null) {
+                $this->settleOpenRenewals($tenant, $actor);
+            }
+
             $lines = [];
             if ($plan instanceof Plan && $cycle instanceof BillingCycle) {
                 $lines[] = $dto->differenceLine !== null
@@ -98,7 +106,7 @@ final class IssueSubscriptionInvoiceAction
                     : $this->planLine($dto, $plan, $cycle, $tenant, $subscription);
             }
             if ($dto->type === BillingInvoiceType::Renewal && $cycle instanceof BillingCycle && $subscription instanceof Subscription) {
-                foreach ($this->renewalAddonLines($subscription, $tenant, $periodStart, $this->periodEnd($periodStart, $cycle)) as $renewalLine) {
+                foreach ($this->renewalAddonLines($subscription, $tenant, $periodStart, $this->periodEnd($periodStart, $cycle), $cycle) as $renewalLine) {
                     $lines[] = $renewalLine;
                 }
             }
@@ -109,8 +117,9 @@ final class IssueSubscriptionInvoiceAction
                 if (! $subscription->isInForce()) {
                     throw BillingException::addonNeedsActiveSubscription();
                 }
+                $months = $cycle === BillingCycle::Monthly ? $this->addonMonths($termEnd) : 1;
                 foreach ($dto->addonLines as $addonLine) {
-                    $lines[] = $this->addonLine($addonLine, $cycle, $tenant);
+                    $lines[] = $this->addonLine($addonLine, $cycle, $tenant, $months);
                 }
             }
             foreach ($dto->serviceLines as $service) {
@@ -191,14 +200,89 @@ final class IssueSubscriptionInvoiceAction
     }
 
     /**
+     * BILL-01 review: an upgrade difference prices the rest of the CURRENT term, so no renewal may be
+     * paid while it is open. Every open renewal invoice of the tenant (locked, id order) is voided
+     * when nothing was paid on it; one with a payment pending review or already (partly) verified
+     * refuses the difference with 409 `billing.renewal_in_flight` (support settles the renewal
+     * first, then issues the difference for the new term). Voiding is safe: SubmitManualPayment
+     * locks the same invoice row and re-checks it is pending, and after the upgrade the shop
+     * requests a renewal at the new plan. ActivateSubscriptionAction is the second line of defence.
+     */
+    private function settleOpenRenewals(Tenant $tenant, ?CentralUser $actor): void
+    {
+        $open = BillingInvoice::query()
+            ->where('tenant_id', $tenant->getKey())
+            ->where('type', BillingInvoiceType::Renewal->value)
+            ->whereIn('status', [BillingInvoiceStatus::Draft->value, BillingInvoiceStatus::Pending->value])
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($open as $renewal) {
+            $paid = BillingPayment::query()
+                ->where('billing_invoice_id', $renewal->getKey())
+                ->whereIn('status', [BillingPaymentStatus::Verified->value, BillingPaymentStatus::Pending->value])
+                ->exists();
+
+            if ($paid) {
+                throw BillingException::renewalInFlight($renewal);
+            }
+        }
+
+        foreach ($open as $renewal) {
+            $renewal->status = BillingInvoiceStatus::Void;
+            $renewal->voided_at = now();
+            $renewal->save();
+
+            $this->audit->record(
+                CentralAuditEvent::BillingInvoiceVoided,
+                ['invoice_id' => (int) $renewal->getKey(), 'number' => $renewal->number, 'type' => $renewal->type->value, 'reason' => 'superseded_by_upgrade'],
+                $actor,
+                $renewal,
+                (string) $renewal->tenant_id,
+            );
+        }
+    }
+
+    /**
+     * BILL-02: the whole months a MONTHLY add-on bought now must be charged for so it can run to the
+     * paid term end (rounded UP: a started month is a month, no daily proration), 1 when there is no
+     * running term. ActivateSubscriptionAction grants exactly these months, capped at the term end.
+     */
+    private function addonMonths(?CarbonImmutable $termEnd): int
+    {
+        if ($termEnd === null) {
+            return 1;
+        }
+
+        $now = CarbonImmutable::now();
+        $months = 1;
+
+        while ($months < self::MAX_ADDON_MONTHS && $now->addMonthsNoOverflow($months)->lessThan($termEnd)) {
+            $months++;
+        }
+
+        return $months;
+    }
+
+    /** Months in one renewal period of the subscription's cycle. */
+    private static function monthsIn(BillingCycle $cycle): int
+    {
+        return $cycle === BillingCycle::Yearly ? 12 : 1;
+    }
+
+    /**
      * BILL-02: add-ons are billed on renewal. An ACTIVE add-on line is charged when its own paid
      * end falls inside the period being renewed (a yearly add-on on a monthly subscription is only
-     * due once a year), at its own cycle, priced from the tenant's plan catalog and falling back to
-     * the stored unit price. ActivateSubscriptionAction extends exactly the lines found here.
+     * due once a year), priced from the tenant's plan catalog and falling back to the stored unit
+     * price. A YEARLY add-on is charged one year. A MONTHLY add-on is charged for every month of the
+     * renewed period (x12 on a yearly renewal): `unit_price` is then the per-unit price of the whole
+     * period, `cycle_unit_price` the monthly one and `months` the count, so quantity x unit_price =
+     * amount still holds. ActivateSubscriptionAction extends exactly the lines found here.
      *
      * @return list<array<string, mixed>>
      */
-    private function renewalAddonLines(Subscription $subscription, Tenant $tenant, CarbonImmutable $periodStart, ?CarbonImmutable $periodEnd): array
+    private function renewalAddonLines(Subscription $subscription, Tenant $tenant, CarbonImmutable $periodStart, ?CarbonImmutable $periodEnd, BillingCycle $renewalCycle): array
     {
         if ($periodEnd === null) {
             return [];
@@ -232,6 +316,8 @@ final class IssueSubscriptionInvoiceAction
             $unit = $planAddon instanceof PlanAddon
                 ? Decimal::normalize($planAddon->unitPriceFor($addonCycle, $quantity))
                 : Decimal::normalize((string) $row->unit_price);
+            $months = $addonCycle === BillingCycle::Monthly ? self::monthsIn($renewalCycle) : 1;
+            $periodUnit = bcmul($unit, (string) $months, 3);
 
             $lines[] = [
                 'type' => 'addon',
@@ -240,9 +326,11 @@ final class IssueSubscriptionInvoiceAction
                 'addon_key' => $addon->key,
                 'description' => (string) __('billing.invoice.addon_line', ['addon' => (string) __($addon->name_key), 'cycle' => $addonCycle->label()]),
                 'billing_cycle' => $addonCycle->value,
+                'months' => $months,
                 'quantity' => $quantity,
-                'unit_price' => $unit,
-                'amount' => bcmul($unit, (string) $quantity, 3),
+                'cycle_unit_price' => $unit,
+                'unit_price' => $periodUnit,
+                'amount' => bcmul($periodUnit, (string) $quantity, 3),
             ];
         }
 
@@ -336,10 +424,14 @@ final class IssueSubscriptionInvoiceAction
      * One add-on line, priced from the tenant's plan (plan override, then catalog tier) unless the
      * admin overrides the unit price. The add-on must be active and offered on the tenant's plan.
      *
+     * BILL-02: a MONTHLY add-on is charged for $months months (see addonMonths()); an admin unit
+     * price override is a per-month price too. `unit_price` is the per-unit price of the whole
+     * charged period, `cycle_unit_price` the per-cycle one stored on the subscription line.
+     *
      * @param  array{addon_id: int, quantity: int, unit_price: string|null}  $line
      * @return array<string, mixed>
      */
-    private function addonLine(array $line, BillingCycle $cycle, Tenant $tenant): array
+    private function addonLine(array $line, BillingCycle $cycle, Tenant $tenant, int $months = 1): array
     {
         $addon = Addon::query()->find($line['addon_id']);
         $planAddon = $addon === null || $tenant->plan_id === null ? null : PlanAddon::query()
@@ -356,7 +448,9 @@ final class IssueSubscriptionInvoiceAction
         $unit = $line['unit_price'] !== null
             ? Decimal::normalize($line['unit_price'])
             : Decimal::normalize($planAddon->unitPriceFor($cycle, $quantity));
-        $amount = bcmul($unit, (string) $quantity, 3);
+        $months = $cycle === BillingCycle::Monthly ? max(1, $months) : 1;
+        $periodUnit = bcmul($unit, (string) $months, 3);
+        $amount = bcmul($periodUnit, (string) $quantity, 3);
 
         return [
             'type' => 'addon',
@@ -364,8 +458,10 @@ final class IssueSubscriptionInvoiceAction
             'addon_key' => $addon->key,
             'description' => (string) __('billing.invoice.addon_line', ['addon' => (string) __($addon->name_key), 'cycle' => $cycle->label()]),
             'billing_cycle' => $cycle->value,
+            'months' => $months,
             'quantity' => $quantity,
-            'unit_price' => $unit,
+            'cycle_unit_price' => $unit,
+            'unit_price' => $periodUnit,
             'amount' => $amount,
         ];
     }

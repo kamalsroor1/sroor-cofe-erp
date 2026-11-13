@@ -123,6 +123,8 @@ return [
         'addon_needs_active_subscription' => 'An add-on needs a running subscription: renew your subscription first.',
         'difference_needs_active_term' => 'The subscription has expired: issue a regular plan invoice instead of an upgrade difference.',
         'renewal_plan_mismatch' => 'This renewal invoice is for a plan the shop is no longer on. Void it and request a new renewal.',
+        'difference_term_changed' => 'This upgrade difference was priced for a subscription term that has since changed (a renewal was paid after it). Void it and issue a new difference for the current term.',
+        'renewal_in_flight' => 'Renewal invoice :number has a payment under review or partly paid. Settle it first, then issue the upgrade difference.',
     ],
     'messages' => [
         'payment_cancelled' => 'The pending payment was cancelled; you can submit a new one.',

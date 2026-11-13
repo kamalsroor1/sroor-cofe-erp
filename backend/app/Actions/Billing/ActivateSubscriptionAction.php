@@ -57,9 +57,13 @@ use LogicException;
  *  - a DIFFERENCE upgrade (type upgrade, plan line flagged `difference`): the plan switches at
  *    once and the paid term is KEPT (ends_at untouched) while it is still in the future; with no
  *    future end it behaves like a normal plan invoice (extends by the cycle);
- *  - an ADD-ON invoice (type addon): creates or tops up the `subscription_addons` line (active,
- *    aligned to the subscription end, or one cycle from now when there is none) so the add-on
- *    counts in TenantEntitlementService. The plan, the term and the tenant status are untouched.
+ *  - an ADD-ON invoice (type addon): creates or tops up the `subscription_addons` line (active;
+ *    a monthly line runs the months its invoice charged, capped at the subscription end, a yearly
+ *    line one year from now) so the add-on counts in TenantEntitlementService. The plan, the term
+ *    and the tenant status are untouched.
+ *
+ * BILL-01 review: a difference invoice is refused (409 difference_term_changed) unless its
+ * period_end is still the tenant's subscription_ends_at: a renewal paid in between moved the term.
  *
  * Idempotency lives in the caller (a payment is verified once); the invoice can only settle once.
  */
@@ -116,6 +120,16 @@ final class ActivateSubscriptionAction
             throw BillingException::differenceNeedsActiveTerm();
         }
 
+        // BILL-01 review: a difference prices the term that was running when it was issued (its
+        // period_end is that term's end). If the term moved since (a renewal was paid first), paying
+        // the old difference would upgrade the NEW term for the price of the old remainder: refuse,
+        // support re-issues the difference for the current term.
+        // ($currentEnd is non-null here: a difference without a future end was refused above.)
+        if ($difference && ($invoice->period_end === null
+            || $invoice->period_end->getTimestamp() !== $currentEnd->getTimestamp())) {
+            throw BillingException::differenceTermChanged();
+        }
+
         // BILL-01: an old renewal invoice (issued before an upgrade) must never move the shop back.
         if ($invoice->type === BillingInvoiceType::Renewal
             && $tenant->plan_id !== null
@@ -166,7 +180,7 @@ final class ActivateSubscriptionAction
 
         if ($invoice->type === BillingInvoiceType::Renewal) {
             // BILL-02: add-ons renew only when the renewal invoice charged for them.
-            $this->extendPaidAddons($invoice, $subscription, $now);
+            $this->extendPaidAddons($invoice, $subscription, $now, $newEnd);
         } elseif (! $keepsTerm) {
             // Plan / upgrade-after-expiry invoices still carry running add-ons (owner decision pending).
             $this->carryAddonsForward($subscription, $currentEnd, $now, $newEnd);
@@ -244,10 +258,18 @@ final class ActivateSubscriptionAction
 
         $now = CarbonImmutable::now();
         $end = $tenant->subscription_ends_at;
-        // A monthly add-on rides the subscription term; a YEARLY one lasts its own year (BILL-02).
-        $endsAt = $cycle !== BillingCycle::Yearly && $end !== null && $end->isAfter($now)
-            ? CarbonImmutable::instance($end)
-            : ($cycle === BillingCycle::Yearly ? $now->addYearNoOverflow() : $now->addMonthNoOverflow());
+        // BILL-02: a YEARLY add-on lasts its own year. A MONTHLY one lasts the months its invoice line
+        // charged (`months`, see IssueSubscriptionInvoiceAction::addonMonths), never past the
+        // subscription end: it rides the term only as far as it was paid for.
+        $months = $this->paidMonths($invoice);
+        if ($cycle === BillingCycle::Yearly) {
+            $endsAt = $now->addYearNoOverflow();
+        } else {
+            $endsAt = $now->addMonthsNoOverflow($months);
+            if ($end !== null && $end->isAfter($now) && $endsAt->isAfter($end)) {
+                $endsAt = CarbonImmutable::instance($end);
+            }
+        }
 
         $applied = [];
 
@@ -279,7 +301,8 @@ final class ActivateSubscriptionAction
                     'subscription_id' => $subscription->getKey(),
                     'addon_id' => $addon->getKey(),
                     'quantity' => $quantity,
-                    'unit_price' => Decimal::normalize((string) ($row['unit_price'] ?? '0')),
+                    // The per-cycle unit price, not the line's unit_price for its whole period (BILL-02).
+                    'unit_price' => Decimal::normalize((string) ($row['cycle_unit_price'] ?? $row['unit_price'] ?? '0')),
                     'billing_cycle' => $cycle,
                 ]);
             }
@@ -354,10 +377,12 @@ final class ActivateSubscriptionAction
     }
 
     /**
-     * BILL-02: extend every add-on line the paid renewal invoice charged, by that line's own cycle,
-     * from the later of its current end and now. Lines not on the invoice are left to lapse.
+     * BILL-02: extend every add-on line the paid renewal invoice charged. A YEARLY line gets one more
+     * year from the later of its current end and now. A MONTHLY line was charged for every month of
+     * the renewed period, so it runs to the new subscription end ($newEnd). Lines not on the invoice
+     * are left to lapse.
      */
-    private function extendPaidAddons(BillingInvoice $invoice, Subscription $subscription, CarbonImmutable $now): void
+    private function extendPaidAddons(BillingInvoice $invoice, Subscription $subscription, CarbonImmutable $now, CarbonImmutable $newEnd): void
     {
         foreach ($invoice->lines as $row) {
             if (($row['type'] ?? null) !== 'addon' || ! isset($row['addon_id'])) {
@@ -377,7 +402,12 @@ final class ActivateSubscriptionAction
 
             $from = $line->ends_at !== null && $line->ends_at->isAfter($now) ? CarbonImmutable::instance($line->ends_at) : $now;
             $addonCycle = BillingCycle::tryFrom((string) ($row['billing_cycle'] ?? '')) ?? BillingCycle::Monthly;
-            $line->ends_at = Carbon::instance($addonCycle === BillingCycle::Yearly ? $from->addYearNoOverflow() : $from->addMonthNoOverflow());
+
+            if ($addonCycle === BillingCycle::Yearly) {
+                $line->ends_at = Carbon::instance($from->addYearNoOverflow());
+            } elseif ($line->ends_at === null || $line->ends_at->lt($newEnd)) {
+                $line->ends_at = Carbon::instance($newEnd);
+            }
             $line->save();
         }
     }
@@ -433,6 +463,23 @@ final class ActivateSubscriptionAction
             ->where('billing_invoice_id', $invoice->getKey())
             ->where('status', PlanChangeRequestStatus::Invoiced->value)
             ->update(['status' => PlanChangeRequestStatus::Completed->value]);
+    }
+
+    /**
+     * BILL-02: the months a MONTHLY add-on invoice charged (the largest `months` of its add-on lines,
+     * at least 1; lines issued as a single month carry 1).
+     */
+    private function paidMonths(BillingInvoice $invoice): int
+    {
+        $months = 1;
+
+        foreach ($invoice->lines as $line) {
+            if (($line['type'] ?? null) === 'addon') {
+                $months = max($months, (int) ($line['months'] ?? 1));
+            }
+        }
+
+        return $months;
     }
 
     /** True for the single "difference" plan line a support-decided upgrade carries. */
