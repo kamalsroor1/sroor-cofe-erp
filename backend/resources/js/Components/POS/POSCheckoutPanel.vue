@@ -257,8 +257,9 @@
 
         <div
           v-if="showTender && isCashMethod"
-          class="grid grid-cols-5 gap-1.5"
-          :class="compact ? 'order-last col-span-2' : ''"
+          data-testid="pos-tender-grid"
+          class="grid gap-1.5"
+          :class="[tenderColsClass, compact ? 'order-last col-span-2' : '']"
         >
           <button
             v-for="d in denominations"
@@ -277,7 +278,7 @@
             data-testid="pos-tender-exact"
             @click="setExact"
             class="rounded-lg border px-0.5 text-xs leading-tight text-balance font-black transition active:scale-95 cursor-pointer bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
-            :class="controlHeight"
+            :class="[controlHeight, tenderLastSpanClass]"
           >
             {{ $t('pos.exact_amount') }}
           </button>
@@ -288,7 +289,7 @@
             :aria-label="$t('pos.tender_clear')"
             @click="$emit('update:cashReceived', '0')"
             class="rounded-lg border transition active:scale-95 cursor-pointer bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 flex items-center justify-center"
-            :class="controlHeight"
+            :class="[controlHeight, tenderLastSpanClass]"
           >
             <X class="w-4 h-4" aria-hidden="true" />
           </button>
@@ -425,7 +426,7 @@ import { useFormatters } from '../../Composables/useFormatters';
 import { useMediaQuery } from '../../Composables/useMediaQuery';
 import { useTrans } from '../../Composables/useTrans';
 import POSDiscountBox from './POSDiscountBox.vue';
-import { usePosSaleSettings } from '../../Composables/POS/usePosSaleSettings';
+import { usePosSaleSettings, tenderGridLayout } from '../../Composables/POS/usePosSaleSettings';
 import { sanitizeAmountInput } from '../../helpers/posCheckout';
 import { normalize, dAdd, dSub, dCmp, dMax0, isZero, isPositive } from '../../helpers/decimal';
 
@@ -434,6 +435,12 @@ const isTouch = useMediaQuery('(pointer: coarse)');
 const { t } = useTrans();
 
 const { enabledMethods, cashDenominations: denominations } = usePosSaleSettings();
+// SET-01: the tender row holds up to 6 denominations + the exact/clear button; keep the columns even.
+// Static class names so Tailwind generates them.
+const TENDER_COLS = ['grid-cols-1', 'grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4', 'grid-cols-5'];
+const tenderLayout = computed(() => tenderGridLayout(denominations.value.length + 1));
+const tenderColsClass = computed(() => TENDER_COLS[tenderLayout.value.cols] ?? 'grid-cols-5');
+const tenderLastSpanClass = computed(() => (tenderLayout.value.lastSpan === 2 ? 'col-span-2' : ''));
 const idleClass =
   'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
 

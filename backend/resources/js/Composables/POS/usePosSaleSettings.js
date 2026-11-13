@@ -27,6 +27,18 @@ export function presetsWithinCap(presets, cap) {
     return Number.isFinite(max) ? list.filter((n) => n <= max) : list;
 }
 
+/**
+ * Pure: even layout of the quick-tender row (the denominations + the exact/clear button). Up to 5 buttons
+ * share one row; more wrap into two rows of equal columns, and when the count is odd the last (exact)
+ * button spans two columns so both rows end flush.
+ */
+export function tenderGridLayout(count) {
+    const n = Math.max(1, Number.isInteger(count) ? count : 1);
+    const cols = n <= 5 ? n : Math.ceil(n / 2);
+    const lastSpan = n > cols && n % 2 === 1 ? 2 : 1;
+    return { cols, lastSpan };
+}
+
 /** Shared by the catalog loader (writes from /pos/bootstrap) and the checkout components (read). */
 export function usePosSaleSettings() {
     const applySaleSettings = (payload) => {

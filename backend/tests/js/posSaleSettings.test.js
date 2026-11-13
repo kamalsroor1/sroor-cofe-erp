@@ -5,9 +5,14 @@ import {
     DEFAULT_SALE_SETTINGS,
     presetsWithinCap,
     receiptCopiesToPrint,
+    tenderGridLayout,
     usePosSaleSettings,
 } from '../../resources/js/Composables/POS/usePosSaleSettings.js';
-import { cleanNumber, saleSettingsFromApi, validateSaleSettings } from '../../resources/js/helpers/posSaleSettingsForm.js';
+import {
+    cleanNumber,
+    saleSettingsFromApi,
+    validateSaleSettings,
+} from '../../resources/js/helpers/posSaleSettingsForm.js';
 
 test('defaults equal the behaviour before the setting existed', () => {
     assert.deepEqual(DEFAULT_SALE_SETTINGS.cash_denominations, ['50', '100', '200', '500']);
@@ -17,8 +22,13 @@ test('defaults equal the behaviour before the setting existed', () => {
 });
 
 test('the checkout shows the methods, buttons and presets from the bootstrap', () => {
-    const { applySaleSettings, enabledMethods, isMethodEnabled, cashDenominations, saleSettings } = usePosSaleSettings();
-    applySaleSettings({ payment_methods: ['cash', 'visa'], cash_denominations: ['20', '50', '100'], discount_presets: ['0', '3', '15'] });
+    const { applySaleSettings, enabledMethods, isMethodEnabled, cashDenominations, saleSettings } =
+        usePosSaleSettings();
+    applySaleSettings({
+        payment_methods: ['cash', 'visa'],
+        cash_denominations: ['20', '50', '100'],
+        discount_presets: ['0', '3', '15'],
+    });
     assert.deepEqual(enabledMethods.value, ['cash', 'visa']);
     assert.equal(isMethodEnabled('instapay'), false);
     assert.equal(isMethodEnabled('visa'), true);
@@ -55,7 +65,25 @@ test('settings form: number cleaning and list limits', () => {
     assert.equal(cleanNumber('-5', { min: 1 }), null);
     assert.equal(cleanNumber('0', { min: 0, max: 100 }), '0');
     assert.equal(cleanNumber('101', { min: 0, max: 100 }), null);
-    assert.deepEqual(validateSaleSettings({ pos_cash_denominations: ['1', '2', '3', '4', '5', '6', '7'], pos_discount_presets: ['5'] }), {
-        pos_cash_denominations: ['settings.pos_denominations_invalid'],
-    });
+    assert.deepEqual(
+        validateSaleSettings({
+            pos_cash_denominations: ['1', '2', '3', '4', '5', '6', '7'],
+            pos_discount_presets: ['5'],
+        }),
+        {
+            pos_cash_denominations: ['settings.pos_denominations_invalid'],
+        }
+    );
+});
+
+test('the tender grid keeps even columns for 1..6 denominations + the exact button', () => {
+    assert.deepEqual(tenderGridLayout(2), { cols: 2, lastSpan: 1 });
+    assert.deepEqual(tenderGridLayout(5), { cols: 5, lastSpan: 1 }); // the 4 defaults + exact: one row
+    assert.deepEqual(tenderGridLayout(6), { cols: 3, lastSpan: 1 }); // 3 + 3
+    assert.deepEqual(tenderGridLayout(7), { cols: 4, lastSpan: 2 }); // 4 + (3 + a double-width exact)
+    assert.deepEqual(tenderGridLayout(0), { cols: 1, lastSpan: 1 });
+    for (let n = 1; n <= 7; n++) {
+        const { cols, lastSpan } = tenderGridLayout(n);
+        assert.equal((n - 1 + lastSpan) % cols, 0, `rows end flush for ${n} buttons`);
+    }
 });

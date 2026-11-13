@@ -50,7 +50,11 @@ export function usePosReceipt({
 
         // Fallback for Web Browser
         for (let i = 0; i < count; i++) {
-            window.open(`/invoices/${lastCreatedInvoice.value.id}/print?autoprint=true`, '_blank', 'width=800,height=600');
+            window.open(
+                `/invoices/${lastCreatedInvoice.value.id}/print?autoprint=true`,
+                '_blank',
+                'width=800,height=600'
+            );
         }
     };
 

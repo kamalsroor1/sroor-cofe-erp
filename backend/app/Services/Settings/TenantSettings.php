@@ -100,6 +100,14 @@ final class TenantSettings
     /** Methods the POS checkout panel offered before SET-01 (what a never-configured shop keeps seeing). */
     public const DEFAULT_POS_PAYMENT_METHODS = ['cash', 'instapay', 'e_wallet', 'visa', 'bank_transfer'];
 
+    /**
+     * Methods KEY_POS_ENABLED_PAYMENT_METHODS can switch off (the Settings form toggles). Every other
+     * PaymentMethod (check, other) is always accepted.
+     *
+     * @var list<string>
+     */
+    public const POS_TOGGLEABLE_PAYMENT_METHODS = ['cash', 'instapay', 'e_wallet', 'visa', 'bank_transfer'];
+
     public const DEFAULT_CURRENCY = 'EGP';
 
     public const DEFAULT_TIMEZONE = 'Africa/Cairo';

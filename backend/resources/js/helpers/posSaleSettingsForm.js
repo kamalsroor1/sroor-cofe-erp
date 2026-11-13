@@ -50,8 +50,10 @@ export function cleanNumber(value, { min, max }) {
 export function validateSaleSettings(form) {
     const found = {};
     const dens = form.pos_cash_denominations || [];
-    if (dens.length < 1 || dens.length > MAX_DENOMINATIONS) found.pos_cash_denominations = ['settings.pos_denominations_invalid'];
+    if (dens.length < 1 || dens.length > MAX_DENOMINATIONS)
+        found.pos_cash_denominations = ['settings.pos_denominations_invalid'];
     const presets = form.pos_discount_presets || [];
-    if (presets.length < 1 || presets.length > MAX_PRESETS) found.pos_discount_presets = ['settings.pos_presets_invalid'];
+    if (presets.length < 1 || presets.length > MAX_PRESETS)
+        found.pos_discount_presets = ['settings.pos_presets_invalid'];
     return found;
 }

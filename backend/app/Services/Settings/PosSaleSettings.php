@@ -19,9 +19,8 @@ use App\Models\StorePosSetting;
 final class PosSaleSettings
 {
     /**
-     * Payment methods the SERVER accepts on invoices and receipts. null = the shop never saved the
-     * setting: the legacy checkout list stays accepted (existing shops are unaffected).
-     * Cash is always part of a saved list.
+     * The saved list of enabled toggleable methods. null = the shop never saved the setting (every
+     * method stays enabled: existing shops are unaffected). Cash is always part of a saved list.
      *
      * @return list<string>|null
      */
@@ -32,10 +31,9 @@ final class PosSaleSettings
             return null;
         }
 
-        $valid = array_map(static fn (PaymentMethod $m): string => $m->value, PaymentMethod::cases());
         $list = array_values(array_unique(array_filter(
             array_map('trim', explode(',', $raw)),
-            static fn (string $v): bool => in_array($v, $valid, true),
+            static fn (string $v): bool => in_array($v, TenantSettings::POS_TOGGLEABLE_PAYMENT_METHODS, true),
         )));
 
         if ($list === []) {
@@ -60,19 +58,19 @@ final class PosSaleSettings
     }
 
     /**
-     * Methods a new invoice/payment may use: saved list, else every PaymentMethod value.
-     *
-     * @return list<string>
+     * Whether a NEW invoice/payment may use $method. Only the methods the setting can toggle are
+     * checked; any other PaymentMethod (check, other, ...) is always accepted, so saving the form
+     * can never lock a method the shop has no UI to re-enable.
      */
-    public function acceptedPaymentMethods(): array
-    {
-        return $this->storedPaymentMethods()
-            ?? array_map(static fn (PaymentMethod $m): string => $m->value, PaymentMethod::cases());
-    }
-
     public function isMethodAccepted(string $method): bool
     {
-        return in_array($method, $this->acceptedPaymentMethods(), true);
+        if (! in_array($method, TenantSettings::POS_TOGGLEABLE_PAYMENT_METHODS, true)) {
+            return true;
+        }
+
+        $stored = $this->storedPaymentMethods();
+
+        return $stored === null || in_array($method, $stored, true);
     }
 
     /** @return list<string> */
@@ -86,8 +84,29 @@ final class PosSaleSettings
             : TenantSettings::DEFAULT_POS_CASH_DENOMINATIONS;
     }
 
-    /** @return list<string> */
+    /**
+     * Quick discount percents the POS offers: the configured list (saved, else the default) without
+     * the presets above highestDiscountCap() - no store could apply them. Never empty: 0 stays.
+     *
+     * @return list<string>
+     */
     public function discountPresets(): array
+    {
+        $cap = $this->highestDiscountCap();
+        $list = array_values(array_filter(
+            $this->configuredDiscountPresets(),
+            static fn (string $v): bool => bccomp($v, $cap, 3) <= 0,
+        ));
+
+        return $list !== [] ? $list : ['0'];
+    }
+
+    /**
+     * The saved presets (or the default list) before the cap filter.
+     *
+     * @return list<string>
+     */
+    public function configuredDiscountPresets(): array
     {
         $list = $this->parseDecimals(TenantSettings::KEY_POS_DISCOUNT_PRESETS);
         $list = array_values(array_filter(
@@ -98,6 +117,44 @@ final class PosSaleSettings
         return $list !== [] && count($list) <= TenantSettings::POS_DISCOUNT_PRESETS_MAX
             ? $list
             : TenantSettings::DEFAULT_POS_DISCOUNT_PRESETS;
+    }
+
+    /**
+     * True when a submitted list setting equals what the shop already has: the effective list (what
+     * GET /settings returns), or - for presets - the configured list before the cap filter (an older
+     * form still sending the defaults). Such a save changes nothing, so it is neither cap-checked
+     * nor written (the default stays dynamic). Values that are not plain scalars count as a change.
+     *
+     * @param  array<int|string, mixed>  $values
+     */
+    public function isListUnchanged(string $key, array $values): bool
+    {
+        $current = match ($key) {
+            TenantSettings::KEY_POS_ENABLED_PAYMENT_METHODS => [$this->posPaymentMethods()],
+            TenantSettings::KEY_POS_CASH_DENOMINATIONS => [$this->cashDenominations()],
+            TenantSettings::KEY_POS_DISCOUNT_PRESETS => [$this->discountPresets(), $this->configuredDiscountPresets()],
+            default => [],
+        };
+
+        if ($current === [] || $values === []) {
+            return false;
+        }
+
+        $numeric = $key !== TenantSettings::KEY_POS_ENABLED_PAYMENT_METHODS;
+        foreach ($values as $value) {
+            if (! is_scalar($value) || ($numeric && preg_match('/^\d{1,9}(\.\d{1,3})?$/', trim((string) $value)) !== 1)) {
+                return false;
+            }
+        }
+
+        $submitted = self::serialize($key, $values);
+        foreach ($current as $list) {
+            if (self::serialize($key, $list) === $submitted) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function autoPrint(): string
@@ -157,6 +214,22 @@ final class PosSaleSettings
             'discount_presets' => $this->discountPresets(),
             'auto_print' => $this->autoPrint(),
             'receipt_copies' => $this->receiptCopies(),
+        ];
+    }
+
+    /**
+     * The same effective values in the GET /settings dictionary (lists as CSV, as the form reads them).
+     *
+     * @return array<string, string|int>
+     */
+    public function toSettingsArray(): array
+    {
+        return [
+            TenantSettings::KEY_POS_ENABLED_PAYMENT_METHODS => implode(',', $this->posPaymentMethods()),
+            TenantSettings::KEY_POS_CASH_DENOMINATIONS => implode(',', $this->cashDenominations()),
+            TenantSettings::KEY_POS_DISCOUNT_PRESETS => implode(',', $this->discountPresets()),
+            TenantSettings::KEY_POS_AUTO_PRINT => $this->autoPrint(),
+            TenantSettings::KEY_POS_RECEIPT_COPIES => $this->receiptCopies(),
         ];
     }
 

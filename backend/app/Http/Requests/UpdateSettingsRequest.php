@@ -274,20 +274,25 @@ class UpdateSettingsRequest extends FormRequest
      */
     private function posSaleRules(): array
     {
-        $cap = app(PosSaleSettings::class)->highestDiscountCap();
+        $saleSettings = app(PosSaleSettings::class);
+        $cap = $saleSettings->highestDiscountCap();
+        $presets = $this->input(TenantSettings::KEY_POS_DISCOUNT_PRESETS);
+        // The cap only applies to a CHANGED preset list: re-sending what the shop already has (e.g. saving
+        // another settings tab) must pass even when a store cap went down since.
+        $checkCap = ! (is_array($presets) && $saleSettings->isListUnchanged(TenantSettings::KEY_POS_DISCOUNT_PRESETS, $presets));
 
         return [
-            TenantSettings::KEY_POS_ENABLED_PAYMENT_METHODS => ['sometimes', 'required', 'array', 'min:1', 'max:'.count(PaymentMethod::cases()), function (string $attribute, mixed $value, Closure $fail): void {
+            TenantSettings::KEY_POS_ENABLED_PAYMENT_METHODS => ['sometimes', 'required', 'array', 'min:1', 'max:'.count(TenantSettings::POS_TOGGLEABLE_PAYMENT_METHODS), function (string $attribute, mixed $value, Closure $fail): void {
                 if (is_array($value) && ! in_array(PaymentMethod::Cash->value, $value, true)) {
                     $fail(__('settings.pos_cash_method_required'));
                 }
             }],
-            TenantSettings::KEY_POS_ENABLED_PAYMENT_METHODS.'.*' => ['required', 'string', 'distinct', Rule::enum(PaymentMethod::class)],
+            TenantSettings::KEY_POS_ENABLED_PAYMENT_METHODS.'.*' => ['required', 'string', 'distinct', Rule::in(TenantSettings::POS_TOGGLEABLE_PAYMENT_METHODS)],
             TenantSettings::KEY_POS_CASH_DENOMINATIONS => ['sometimes', 'required', 'array', 'min:1', 'max:'.TenantSettings::POS_CASH_DENOMINATIONS_MAX],
             TenantSettings::KEY_POS_CASH_DENOMINATIONS.'.*' => ['required', 'numeric', 'gt:0', 'max:999999999', 'decimal:0,3', 'distinct'],
             TenantSettings::KEY_POS_DISCOUNT_PRESETS => ['sometimes', 'required', 'array', 'min:1', 'max:'.TenantSettings::POS_DISCOUNT_PRESETS_MAX],
-            TenantSettings::KEY_POS_DISCOUNT_PRESETS.'.*' => ['required', 'numeric', 'min:0', 'max:100', 'decimal:0,3', 'distinct', function (string $attribute, mixed $value, Closure $fail) use ($cap): void {
-                if (is_numeric($value) && bccomp(bcadd((string) $value, '0', 3), $cap, 3) > 0) {
+            TenantSettings::KEY_POS_DISCOUNT_PRESETS.'.*' => ['required', 'numeric', 'min:0', 'max:100', 'decimal:0,3', 'distinct', function (string $attribute, mixed $value, Closure $fail) use ($cap, $checkCap): void {
+                if ($checkCap && is_numeric($value) && bccomp(bcadd((string) $value, '0', 3), $cap, 3) > 0) {
                     $fail(__('settings.pos_discount_preset_over_cap', ['max' => rtrim(rtrim($cap, '0'), '.')]));
                 }
             }],

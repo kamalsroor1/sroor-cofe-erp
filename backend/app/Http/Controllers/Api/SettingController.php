@@ -15,6 +15,7 @@ use App\Models\Setting;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\Branding\TenantBranding;
+use App\Services\Settings\PosSaleSettings;
 use App\Services\Settings\SettingSecrets;
 use App\Services\Settings\TenantSettings;
 use Illuminate\Http\JsonResponse;
@@ -28,6 +29,7 @@ final class SettingController extends Controller
         private readonly TenantSettings $tenantSettings,
         private readonly SendTestTelegramAction $sendTestTelegramAction,
         private readonly GetBrandingAction $getBrandingAction,
+        private readonly PosSaleSettings $posSaleSettings,
     ) {}
 
     /**
@@ -72,6 +74,8 @@ final class SettingController extends Controller
             TenantSettings::KEY_TAX_REGISTRATION_NO => Setting::get(TenantSettings::KEY_TAX_REGISTRATION_NO, ''),
             'telegram_notifications_enabled' => Setting::getBool('telegram_notifications_enabled', true),
             ...$this->tenantSettings->toArray(),
+            // SET-01: effective POS sale settings (presets already filtered by the discount cap).
+            ...$this->posSaleSettings->toSettingsArray(),
         ];
 
         // SETG-7: secrets are write-only — never echo them, only whether one is stored.

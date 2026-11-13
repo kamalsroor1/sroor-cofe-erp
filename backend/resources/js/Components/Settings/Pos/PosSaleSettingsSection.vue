@@ -115,7 +115,9 @@ const choiceClass = (active) =>
     />
 
     <div class="space-y-2" data-testid="setting-pos_auto_print">
-      <span class="block text-sm font-black text-slate-800 dark:text-slate-200">{{ $t('settings.pos_auto_print') }}</span>
+      <span class="block text-sm font-black text-slate-800 dark:text-slate-200">{{
+        $t('settings.pos_auto_print')
+      }}</span>
       <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t('settings.pos_auto_print_desc') }}</p>
       <div class="flex flex-wrap gap-2">
         <button
@@ -136,7 +138,9 @@ const choiceClass = (active) =>
     </div>
 
     <div class="space-y-2" data-testid="setting-pos_receipt_copies">
-      <span class="block text-sm font-black text-slate-800 dark:text-slate-200">{{ $t('settings.pos_receipt_copies') }}</span>
+      <span class="block text-sm font-black text-slate-800 dark:text-slate-200">{{
+        $t('settings.pos_receipt_copies')
+      }}</span>
       <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t('settings.pos_receipt_copies_desc') }}</p>
       <div class="flex gap-2">
         <button

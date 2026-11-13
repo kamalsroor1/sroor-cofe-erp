@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Rules\DocumentDate;
 use App\Rules\PaymentMethodEnabled;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -25,7 +26,7 @@ final class StoreCustomerPaymentReceiptRequest extends FormRequest
             'customer_id' => ['required', 'integer', 'exists:customers,id'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'invoice_id' => ['nullable', 'integer', 'exists:invoices,id'],
-            'payment_date' => ['nullable', 'date', new \App\Rules\DocumentDate($this->user())],
+            'payment_date' => ['nullable', 'date', new DocumentDate($this->user())],
             'payment_method' => ['nullable', 'string', 'in:cash,instapay,e_wallet,visa,bank_transfer,check,other', new PaymentMethodEnabled],
             'notes' => ['nullable', 'string', 'max:500'],
         ];

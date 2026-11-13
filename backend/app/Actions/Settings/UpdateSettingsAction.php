@@ -26,6 +26,7 @@ final class UpdateSettingsAction
     public function __construct(
         private readonly UploadTenantBrandAssetAction $uploadTenantBrandAssetAction,
         private readonly ActivityLogService $activityLogService,
+        private readonly PosSaleSettings $posSaleSettings,
     ) {}
 
     /**
@@ -96,6 +97,12 @@ final class UpdateSettingsAction
                 if ($key === TenantBranding::KEY_RECEIPT_HEADER_LINES) {
                     // Stored normalized: trimmed lines, blanks dropped, one per "\n".
                     $value = implode("\n", TenantBranding::parseHeaderLines(is_string($value) ? $value : null));
+                }
+
+                if (is_array($value) && $this->posSaleSettings->isListUnchanged((string) $key, $value)) {
+                    // SET-01: an untouched list (another tab was saved) is not written, so a default
+                    // stays dynamic and a list hidden by a lower cap is not narrowed.
+                    continue;
                 }
 
                 if (is_array($value)) {
