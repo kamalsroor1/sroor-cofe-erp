@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Actions\Logs;
 
+use App\DTOs\Logs\ActivityLogStoreScope;
+use App\Filters\ActivityLogs\ReadableStoresFilter;
 use App\Models\ActivityLog;
+use App\Models\Store;
 use App\Support\TenantClock;
 
 final class GetActivityLogsAction
@@ -16,13 +19,12 @@ final class GetActivityLogsAction
     /**
      * Fetch paginated and filtered activity logs
      */
-    public function execute(array $filters): array
+    public function execute(array $filters, ActivityLogStoreScope $scope): array
     {
         $search = trim((string) ($filters['search'] ?? ''));
         $module = (string) ($filters['module'] ?? 'all');
         $action = (string) ($filters['action'] ?? 'all');
         $userId = $filters['user_id'] ?? 'all';
-        $storeId = $filters['store_id'] ?? 'all';
         $fromDate = $filters['from_date'] ?? $filters['from'] ?? null;
         $toDate = $filters['to_date'] ?? $filters['to'] ?? null;
         $perPage = max(1, min(200, (int) ($filters['per_page'] ?? 25)));
@@ -64,9 +66,9 @@ final class GetActivityLogsAction
             $query->where('user_id', (int) $userId);
         }
 
-        if ($storeId !== 'all' && $storeId !== null && $storeId !== '') {
-            $query->where('store_id', (int) $storeId);
-        }
+        // LOG-01: only the branches the reader may see (and the access-checked store_id filter).
+        $storesFilter = new ReadableStoresFilter($scope);
+        $storesFilter->apply($query);
 
         if ($fromDate) {
             $query->whereDate('created_at', '>=', $fromDate);
@@ -82,7 +84,10 @@ final class GetActivityLogsAction
         // Optimized Stats
         // SETG-2 ext: "today" is the tenant business day, as a [start, end) timestamp range.
         [$dayStart, $dayEnd] = $this->tenantClock->businessDayRange($this->tenantClock->businessDate());
-        $todayLogs = ActivityLog::where('created_at', '>=', $dayStart)->where('created_at', '<', $dayEnd);
+        // Stats ignore the store_id filter (as before) but never count a branch the reader cannot see.
+        $todayLogs = (new ReadableStoresFilter(new ActivityLogStoreScope($scope->readableStoreIds)))->apply(
+            ActivityLog::where('created_at', '>=', $dayStart)->where('created_at', '<', $dayEnd)
+        );
         $stats = [
             'today_total' => (int) (clone $todayLogs)->count(),
             'today_critical' => (int) (clone $todayLogs)->whereIn('action', ['cancelled', 'deleted', 'login_failed'])->count(),
@@ -113,8 +118,16 @@ final class GetActivityLogsAction
             ];
         });
 
+        // LOG-01: the branch filter lists only the branches the reader may see.
+        $stores = Store::query()
+            ->where('is_active', true)
+            ->when(! $scope->seesEveryStore(), fn ($q) => $q->whereIn('id', $scope->readableStoreIds ?? []))
+            ->select(['id', 'name'])
+            ->get();
+
         return [
             'logs' => $formattedLogs,
+            'stores' => $stores,
             'stats' => $stats,
             'total_count' => $totalCount,
             'pagination' => [

@@ -10,6 +10,7 @@ use App\Actions\Logs\GetActivityLogsAction;
 use App\DTOs\Expenses\ExpenseDTO;
 use App\DTOs\Invoices\CreateInvoiceDTO;
 use App\DTOs\Items\AdjustStockDTO;
+use App\DTOs\Logs\ActivityLogStoreScope;
 use App\DTOs\Purchases\PurchaseDTO;
 use App\DTOs\Returns\ReturnDocumentDTO;
 use App\DTOs\Transfers\CreateTransferDTO;
@@ -137,7 +138,7 @@ final class BusinessDayDocumentDefaultsTest extends TenantTestCase
             $this->logAt('2026-10-09 01:00:00'); // still the business day of the 8th
             $this->logAt('2026-10-09 03:00:00'); // next business day (future here, but outside)
 
-            $stats = app(GetActivityLogsAction::class)->execute([])['stats'];
+            $stats = app(GetActivityLogsAction::class)->execute([], new ActivityLogStoreScope(null))['stats'];
 
             $this->assertSame(2, $stats['today_total']);
         });

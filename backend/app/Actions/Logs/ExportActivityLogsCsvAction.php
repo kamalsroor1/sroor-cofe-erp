@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Actions\Logs;
 
+use App\DTOs\Logs\ActivityLogStoreScope;
+use App\Filters\ActivityLogs\ReadableStoresFilter;
 use App\Models\ActivityLog;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -12,13 +14,12 @@ final class ExportActivityLogsCsvAction
     /**
      * Stream CSV export for filtered activity logs.
      */
-    public function execute(array $filters): StreamedResponse
+    public function execute(array $filters, ActivityLogStoreScope $scope): StreamedResponse
     {
         $search = trim((string) ($filters['search'] ?? ''));
         $module = (string) ($filters['module'] ?? 'all');
         $action = (string) ($filters['action'] ?? 'all');
         $userId = $filters['user_id'] ?? 'all';
-        $storeId = $filters['store_id'] ?? 'all';
         $fromDate = $filters['from_date'] ?? $filters['from'] ?? null;
         $toDate = $filters['to_date'] ?? $filters['to'] ?? null;
 
@@ -45,9 +46,9 @@ final class ExportActivityLogsCsvAction
             $query->where('user_id', (int) $userId);
         }
 
-        if ($storeId !== 'all' && $storeId !== null && $storeId !== '') {
-            $query->where('store_id', (int) $storeId);
-        }
+        // LOG-01: only the branches the reader may see (and the access-checked store_id filter).
+        $storesFilter = new ReadableStoresFilter($scope);
+        $storesFilter->apply($query);
 
         if ($fromDate) {
             $query->whereDate('created_at', '>=', $fromDate);

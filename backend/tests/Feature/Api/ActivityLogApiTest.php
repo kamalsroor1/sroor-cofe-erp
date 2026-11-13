@@ -576,6 +576,154 @@ class ActivityLogApiTest extends TenantTestCase
             ->assertJsonMissing(['description' => 'سجل فرع المعادي']);
     }
 
+    public function test_branch_restricted_user_sees_only_their_branch_in_list_stats_and_store_options(): void
+    {
+        $this->seedBranchLogs();
+        $auditor = $this->branchAuditor();
+
+        $response = $this->getJson('/api/v1/activity-logs', $this->tenantHeaders($this->tenant, $auditor, $this->branchStoreId))
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.description', 'سجل فرع المعادي')
+            ->assertJsonPath('total_count', 1)
+            ->assertJsonPath('pagination.total', 1)
+            ->assertJsonPath('stats.today_total', 1)
+            ->assertJsonPath('stats.today_critical', 0)
+            ->assertJsonPath('stats.today_stores', 1)
+            ->assertJsonMissing(['description' => 'سجل الفرع الرئيسي'])
+            ->assertJsonMissing(['description' => 'سجل عام بدون فرع']);
+
+        $this->assertSame([$this->branchStoreId], array_map('intval', array_column($response->json('stores'), 'id')));
+
+        // The SPA's default "all" filter and an explicit filter on their own branch keep the same scope.
+        foreach (['store_id=all', 'store_id='.$this->branchStoreId, 'search='.urlencode('سجل')] as $query) {
+            $this->getJson('/api/v1/activity-logs?'.$query, $this->tenantHeaders($this->tenant, $auditor, $this->branchStoreId))
+                ->assertOk()
+                ->assertJsonCount(1, 'data')
+                ->assertJsonPath('data.0.description', 'سجل فرع المعادي');
+        }
+
+        // X-Store-Id of their branch does not widen anything either way.
+        $this->getJson('/api/v1/activity-logs', $this->tenantHeaders($this->tenant, $auditor, $this->branchStoreId))
+            ->assertJsonMissing(['description' => 'سجل الفرع الرئيسي']);
+    }
+
+    public function test_branch_restricted_user_export_holds_only_their_branch(): void
+    {
+        $this->seedBranchLogs();
+        $auditor = $this->branchAuditor();
+
+        $csv = $this->get('/api/v1/activity-logs/export-csv', $this->tenantHeaders($this->tenant, $auditor, $this->branchStoreId))->assertOk();
+        $body = $this->inTenant($this->tenant, fn (): string => (string) $csv->streamedContent());
+
+        $this->assertStringContainsString('سجل فرع المعادي', $body);
+        $this->assertStringNotContainsString('سجل الفرع الرئيسي', $body);
+        $this->assertStringNotContainsString('سجل عام بدون فرع', $body);
+    }
+
+    public function test_store_filter_of_a_branch_the_user_cannot_access_is_forbidden_on_list_and_export(): void
+    {
+        $this->seedBranchLogs();
+        $headers = $this->tenantHeaders($this->tenant, $this->branchAuditor(), $this->branchStoreId);
+
+        foreach (['/api/v1/activity-logs', '/api/v1/activity-logs/export-csv'] as $uri) {
+            $this->getJson($uri.'?store_id='.$this->mainStoreId, $headers)
+                ->assertStatus(403)
+                ->assertJsonPath('success', false)
+                ->assertJsonPath('error_code', 'store_access_denied')
+                ->assertJsonMissing(['description' => 'سجل الفرع الرئيسي']);
+
+            // Malformed ids are refused too, never read as "no filter".
+            $this->getJson($uri.'?store_id=abc', $headers)
+                ->assertStatus(403)
+                ->assertJsonPath('error_code', 'store_access_denied');
+        }
+    }
+
+    public function test_user_with_an_assigned_branch_sees_their_default_and_assigned_branches_only(): void
+    {
+        $thirdStoreId = $this->inTenant($this->tenant, fn (): int => Store::create([
+            'name' => 'فرع الزمالك',
+            'code' => 'ZAMALEK',
+            'type' => 'branch',
+            'is_default' => false,
+            'is_active' => true,
+        ])->id);
+        $this->seedBranchLogs();
+        $this->log(['user_id' => $this->adminUser->id, 'store_id' => $thirdStoreId, 'module' => 'sales', 'action' => 'sale', 'description' => 'سجل فرع الزمالك']);
+
+        $auditor = $this->branchAuditor();
+        $this->inTenant($this->tenant, fn () => $auditor->stores()->attach($thirdStoreId));
+
+        $response = $this->getJson('/api/v1/activity-logs', $this->tenantHeaders($this->tenant, $auditor, $this->branchStoreId))
+            ->assertOk()
+            ->assertJsonPath('total_count', 2)
+            ->assertJsonMissing(['description' => 'سجل الفرع الرئيسي'])
+            ->assertJsonMissing(['description' => 'سجل عام بدون فرع']);
+
+        $descriptions = array_column($response->json('data'), 'description');
+        sort($descriptions);
+        $this->assertSame(['سجل فرع الزمالك', 'سجل فرع المعادي'], $descriptions);
+
+        $this->getJson('/api/v1/activity-logs?store_id='.$thirdStoreId, $this->tenantHeaders($this->tenant, $auditor, $this->branchStoreId))
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.description', 'سجل فرع الزمالك');
+    }
+
+    public function test_view_all_user_and_admin_see_every_branch_and_shop_wide_logs(): void
+    {
+        $this->seedBranchLogs();
+        $viewAll = $this->createTenantUser($this->tenant, permissions: ['logs.view', 'stores.view_all'], attributes: [
+            'default_store_id' => $this->branchStoreId,
+        ]);
+
+        foreach ([$this->tenantHeaders($this->tenant, $viewAll, $this->branchStoreId), $this->adminHeaders] as $headers) {
+            $response = $this->getJson('/api/v1/activity-logs', $headers)
+                ->assertOk()
+                ->assertJsonCount(3, 'data')
+                ->assertJsonPath('total_count', 3)
+                ->assertJsonPath('stats.today_total', 3);
+
+            $descriptions = array_column($response->json('data'), 'description');
+            $this->assertContains('سجل عام بدون فرع', $descriptions);
+            $this->assertContains('سجل الفرع الرئيسي', $descriptions);
+            $this->assertContains('سجل فرع المعادي', $descriptions);
+            $this->assertEqualsCanonicalizing(
+                [$this->mainStoreId, $this->branchStoreId],
+                array_map('intval', array_column($response->json('stores'), 'id')),
+            );
+
+            // They may filter on any branch.
+            $this->getJson('/api/v1/activity-logs?store_id='.$this->mainStoreId, $headers)
+                ->assertOk()
+                ->assertJsonCount(1, 'data')
+                ->assertJsonPath('data.0.description', 'سجل الفرع الرئيسي');
+
+            $csv = $this->get('/api/v1/activity-logs/export-csv', $headers)->assertOk();
+            $body = $this->inTenant($this->tenant, fn (): string => (string) $csv->streamedContent());
+            $this->assertStringContainsString('سجل عام بدون فرع', $body);
+            $this->assertStringContainsString('سجل الفرع الرئيسي', $body);
+        }
+    }
+
+    /** A logs.view holder limited to the Maadi branch (no admin, no stores.view_all). */
+    private function branchAuditor(): User
+    {
+        return $this->createTenantUser($this->tenant, permissions: ['logs.view'], attributes: [
+            'name' => 'مراجع فرع المعادي',
+            'default_store_id' => $this->branchStoreId,
+        ]);
+    }
+
+    /** One log on the main store, one on the Maadi branch and one shop-wide log (no store). */
+    private function seedBranchLogs(): void
+    {
+        $this->log(['user_id' => $this->adminUser->id, 'store_id' => $this->mainStoreId, 'module' => 'sales', 'action' => 'cancelled', 'description' => 'سجل الفرع الرئيسي']);
+        $this->log(['user_id' => $this->regularUser->id, 'store_id' => $this->branchStoreId, 'module' => 'sales', 'action' => 'sale', 'description' => 'سجل فرع المعادي']);
+        $this->log(['user_id' => $this->adminUser->id, 'store_id' => null, 'module' => 'settings', 'action' => 'updated', 'description' => 'سجل عام بدون فرع']);
+    }
+
     /**
      * A plan with every catalog feature on, except the overrides.
      *
