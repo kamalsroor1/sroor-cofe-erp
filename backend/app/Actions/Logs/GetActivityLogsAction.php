@@ -8,6 +8,7 @@ use App\DTOs\Logs\ActivityLogStoreScope;
 use App\Filters\ActivityLogs\ReadableStoresFilter;
 use App\Models\ActivityLog;
 use App\Models\Store;
+use App\Models\User;
 use App\Support\TenantClock;
 
 final class GetActivityLogsAction
@@ -125,9 +126,21 @@ final class GetActivityLogsAction
             ->select(['id', 'name'])
             ->get();
 
+        // LOG-01: the user filter lists only people of the readable branches (default or assigned
+        // branch), and never their phone numbers.
+        $readable = $scope->readableStoreIds ?? [];
+        $users = User::query()
+            ->when(! $scope->seesEveryStore(), fn ($q) => $q->where(fn ($w) => $w
+                ->whereIn('default_store_id', $readable)
+                ->orWhereHas('stores', fn ($sq) => $sq->whereIn('stores.id', $readable))))
+            ->orderBy('name')
+            ->select(['id', 'name'])
+            ->get();
+
         return [
             'logs' => $formattedLogs,
             'stores' => $stores,
+            'users' => $users,
             'stats' => $stats,
             'total_count' => $totalCount,
             'pagination' => [

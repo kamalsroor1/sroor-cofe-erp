@@ -8,7 +8,6 @@ use App\Actions\Logs\ExportActivityLogsCsvAction;
 use App\Actions\Logs\GetActivityLogsAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FilterActivityLogsRequest;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -25,8 +24,6 @@ final class ActivityLogController extends Controller
     public function index(FilterActivityLogsRequest $request): JsonResponse
     {
         $result = $this->getActivityLogsAction->execute($request->validated(), $request->storeScope());
-
-        $users = User::orderBy('name')->select(['id', 'name', 'phone'])->get();
 
         $modulesList = [
             'sales' => __('dashboard.modules_sales') ?: 'المبيعات و POS 🛒',
@@ -47,7 +44,7 @@ final class ActivityLogController extends Controller
             'stats' => $result['stats'],
             'total_count' => $result['total_count'],
             'pagination' => $result['pagination'],
-            'users' => $users,
+            'users' => $result['users'],
             'stores' => $result['stores'],
             'modules_list' => $modulesList,
         ]);

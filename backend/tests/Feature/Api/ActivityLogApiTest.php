@@ -10,6 +10,7 @@ use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
 use Database\Seeders\Catalog\FeatureCatalog;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\TenantTestCase;
@@ -705,6 +706,48 @@ class ActivityLogApiTest extends TenantTestCase
             $this->assertStringContainsString('سجل عام بدون فرع', $body);
             $this->assertStringContainsString('سجل الفرع الرئيسي', $body);
         }
+    }
+
+    public function test_user_filter_lists_only_people_of_readable_branches_and_never_phones(): void
+    {
+        $auditor = $this->branchAuditor();
+        // Default branch is the main store, but assigned to Maadi: still listed for a Maadi reader.
+        $assigned = $this->createTenantUser($this->tenant, attributes: ['name' => 'موظف معار للمعادي']);
+        $this->inTenant($this->tenant, fn () => $assigned->stores()->attach($this->branchStoreId));
+        $mainOnly = $this->createTenantUser($this->tenant, attributes: ['name' => 'موظف الرئيسي فقط']);
+
+        $restricted = $this->getJson('/api/v1/activity-logs', $this->tenantHeaders($this->tenant, $auditor, $this->branchStoreId))
+            ->assertOk();
+        $ids = array_map('intval', array_column($restricted->json('users'), 'id'));
+        $this->assertEqualsCanonicalizing([$this->regularUser->id, $auditor->id, $assigned->id], $ids);
+        $this->assertNotContains($mainOnly->id, $ids);
+        $this->assertNotContains($this->adminUser->id, $ids);
+        $this->assertSame(['id', 'name'], array_keys($restricted->json('users.0')));
+
+        $all = $this->getJson('/api/v1/activity-logs', $this->adminHeaders)->assertOk();
+        $allIds = array_map('intval', array_column($all->json('users'), 'id'));
+        $this->assertContains($mainOnly->id, $allIds);
+        $this->assertContains($this->adminUser->id, $allIds);
+        $this->assertSame(['id', 'name'], array_keys($all->json('users.0')));
+    }
+
+    public function test_tenant_web_csv_export_is_refused_on_a_plan_without_audit_logs(): void
+    {
+        $without = $this->createTenant(['plan_id' => $this->plan(['audit.logs' => false])->id]);
+        $with = $this->createTenant(['plan_id' => $this->plan(['audit.logs' => true])->id]);
+
+        $this->assertContains(
+            'feature:audit.logs',
+            Route::getRoutes()->getByName('tenant.activity-logs.export.csv')?->gatherMiddleware() ?? [],
+        );
+
+        $refused = $this->actingAs($this->tenantAdmin($without), 'web')->get($this->tenantUrl($without, '/activity-logs/export-csv'));
+        $this->assertSame(403, $refused->status());
+        $this->assertStringNotContainsString('text/csv', (string) $refused->headers->get('Content-Type'));
+
+        $this->actingAs($this->tenantAdmin($with), 'web')->get($this->tenantUrl($with, '/activity-logs/export-csv'))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
     }
 
     /** A logs.view holder limited to the Maadi branch (no admin, no stores.view_all). */

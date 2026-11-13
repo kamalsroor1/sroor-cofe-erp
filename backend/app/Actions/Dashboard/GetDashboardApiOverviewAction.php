@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Actions\Dashboard;
 
+use App\DTOs\Logs\ActivityLogStoreScope;
+use App\Filters\ActivityLogs\ReadableStoresFilter;
 use App\Models\ActivityLog;
 use App\Models\CashShift;
 use App\Models\Customer;
@@ -25,8 +27,12 @@ class GetDashboardApiOverviewAction
 
     /**
      * حساب وتجميع مؤشرات أداء لوحة التحكم لـ API الموبايل والويب
+     *
+     * LOG-01: $storeId is an access-checked branch. Without it (every store) the recent-logs feed
+     * follows $logScope (the reader's branches; store-less logs only for all-store readers) and
+     * shows nothing when no scope is given, so it can never fall back to every branch.
      */
-    public function execute(?int $storeId = null): array
+    public function execute(?int $storeId = null, ?ActivityLogStoreScope $logScope = null): array
     {
         // SETG-2 (+ ext): "today" is the tenant's current business day (timezone + cutoff).
         $today = $this->tenantClock->today();
@@ -87,8 +93,10 @@ class GetDashboardApiOverviewAction
             ->get();
 
         // 8. Recent 4 Activity Logs
-        $recentLogs = ActivityLog::with('user')
-            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
+        $logsScope = $storeId !== null
+            ? new ActivityLogStoreScope($logScope?->readableStoreIds, $storeId)
+            : ($logScope ?? new ActivityLogStoreScope([]));
+        $recentLogs = (new ReadableStoresFilter($logsScope))->apply(ActivityLog::with('user'))
             ->latest('id')
             ->take(4)
             ->get();

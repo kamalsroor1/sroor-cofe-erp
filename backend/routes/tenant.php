@@ -156,7 +156,7 @@ Route::middleware([
         })->name('reports.print')->middleware(['can:reports.view', 'store.access']);
 
         // Activity log CSV export (SEC-21: the only web definition; the SPA catch-all in
-        // routes/web.php excludes this path).
-        Route::get('/activity-logs/export-csv', [ActivityLogController::class, 'exportCsv'])->name('tenant.activity-logs.export.csv')->middleware('can:logs.view');
+        // routes/web.php excludes this path). LOG-01: same plan gate as the API export.
+        Route::get('/activity-logs/export-csv', [ActivityLogController::class, 'exportCsv'])->name('tenant.activity-logs.export.csv')->middleware('can:logs.view')->middleware('feature:audit.logs');
     });
 });

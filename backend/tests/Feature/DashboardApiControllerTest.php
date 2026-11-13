@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Actions\Dashboard\GetDashboardApiOverviewAction;
+use App\DTOs\Logs\ActivityLogStoreScope;
 use App\Http\Resources\Api\DashboardOverviewResource;
 use App\Models\ActivityLog;
 use App\Models\CashShift;
@@ -153,6 +154,34 @@ class DashboardApiControllerTest extends TenantTestCase
             $this->assertEquals('0.000', $response['data']['total_receivable']);
             $this->assertEquals('0.000', $response['data']['total_payable']);
             $this->assertFalse($response['data']['has_active_shift']);
+        });
+    }
+
+    public function test_recent_logs_feed_in_all_stores_mode_follows_the_readers_branches(): void
+    {
+        $this->inTenant($this->tenant, function (): void {
+            $this->actingAs($this->user);
+            $branchId = Store::create(['name' => 'فرع المعادي', 'code' => 'MAADI', 'type' => 'branch', 'is_default' => false, 'is_active' => true])->id;
+
+            foreach ([[$this->store->id, 'سجل الرئيسي'], [$branchId, 'سجل المعادي'], [null, 'سجل عام بدون فرع']] as [$storeId, $description]) {
+                ActivityLog::create(['user_id' => $this->user->id, 'store_id' => $storeId, 'module' => 'sales', 'action' => 'sale', 'description' => $description]);
+            }
+
+            $feed = fn (?int $storeId, ?ActivityLogStoreScope $scope): array => array_column(
+                (new DashboardOverviewResource(app(GetDashboardApiOverviewAction::class)->execute($storeId, $scope)))->response()->getData(true)['data']['recent_logs'],
+                'description',
+            );
+
+            // Branch-restricted reader with store_id=all: only their branch, no store-less log.
+            $this->assertSame(['سجل المعادي'], $feed(null, new ActivityLogStoreScope([$branchId])));
+            // A concrete branch outside the reader's scope yields nothing.
+            $this->assertSame([], $feed($this->store->id, new ActivityLogStoreScope([$branchId])));
+            // No scope in all-stores mode never falls back to every branch.
+            $this->assertSame([], $feed(null, null));
+            // All-store readers see every branch and the shop-wide log.
+            $this->assertEqualsCanonicalizing(['سجل الرئيسي', 'سجل المعادي', 'سجل عام بدون فرع'], $feed(null, new ActivityLogStoreScope(null)));
+            // A concrete, access-checked branch keeps the old behaviour.
+            $this->assertSame(['سجل الرئيسي'], $feed($this->store->id, null));
         });
     }
 }
