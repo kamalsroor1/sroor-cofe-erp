@@ -121,6 +121,13 @@ for (const [name, palette] of Object.entries(PRESET_PALETTES)) {
         assert.equal(onPrimary, palette.text, `${name}: app.css and PRESET_PALETTES disagree on the label colour`);
         assert.equal(palette.text, bestOnColor(fill).color, `${name}: label is not the higher-contrast choice`);
         assert.ok(contrastRatio(parseHex(onPrimary), fill) >= floor, `${name} text on fill`);
+        // COLOR-01: the label must stay readable on the hover fill too (css and JS palette agree).
+        assert.equal(
+            prop(block, 'color-primary-hover'),
+            palette.hover.toLowerCase(),
+            `${name}: app.css and PRESET_PALETTES disagree on hover`
+        );
+        assert.ok(contrastRatio(parseHex(onPrimary), parseHex(palette.hover)) >= floor, `${name} text on hover fill`);
         // ink on white and on its own 15% tint (bg-theme-light badges)
         const tint = flattenLayers([[...fill, 0.15]], [255, 255, 255]);
         assert.ok(ratio(ink, '#ffffff') >= 4.5, `${name} ink on white`);

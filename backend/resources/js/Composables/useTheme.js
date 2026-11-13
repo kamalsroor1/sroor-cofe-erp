@@ -22,19 +22,19 @@ export const PRESET_PALETTES = {
     },
     blue: {
         hex: '#3b82f6',
-        hover: '#2563eb',
+        hover: '#3575dd',
         rgb: '59, 130, 246',
         text: '#020617',
     },
     purple: {
         hex: '#a855f7',
-        hover: '#9333ea',
+        hover: '#9e50e8',
         rgb: '168, 85, 247',
         text: '#020617',
     },
     rose: {
         hex: '#f43f5e',
-        hover: '#e11d48',
+        hover: '#dc3955',
         rgb: '244, 63, 94',
         text: '#020617',
     },
@@ -52,7 +52,7 @@ export const PRESET_PALETTES = {
     },
     indigo: {
         hex: '#6366f1',
-        hover: '#4f46e5',
+        hover: '#6568f2',
         rgb: '99, 102, 241',
         text: '#020617',
     },
