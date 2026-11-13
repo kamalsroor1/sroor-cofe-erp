@@ -12,14 +12,17 @@ use Illuminate\Database\QueryException;
 use RuntimeException;
 
 /**
- * OPS-20: `php artisan central:reset-2fa operator@example.com`, for an operator who lost the phone
+ * OPS-20: `php artisan central:reset-2fa operator@example.com --reason="ticket 42, identity checked by video call"`,
+ * for an operator who lost the phone
  * (and the recovery codes). Interactive on purpose: it shows who will be reset and asks for two
  * explicit confirmations (identity verified out-of-band, then reset). No --force/--no-interaction
  * bypass, so it cannot be run by a script by accident. See docs/07-operations/vps-runbook.md.
  */
 final class ResetCentralTwoFactorCommand extends Command
 {
-    protected $signature = 'central:reset-2fa {email : Email of the operator who lost the authenticator}';
+    protected $signature = 'central:reset-2fa
+        {email : Email of the operator who lost the authenticator}
+        {--reason= : Why the reset is done (ticket / how the identity was verified); required, stored in the audit row}';
 
     public function __construct()
     {
@@ -32,6 +35,13 @@ final class ResetCentralTwoFactorCommand extends Command
     {
         if (! $this->input->isInteractive()) {
             $this->error((string) __('console.reset_2fa.interactive_only'));
+
+            return self::FAILURE;
+        }
+
+        $reason = trim((string) $this->option('reason'));
+        if ($reason === '') {
+            $this->error((string) __('console.reset_2fa.reason_required'));
 
             return self::FAILURE;
         }
@@ -60,7 +70,7 @@ final class ResetCentralTwoFactorCommand extends Command
         }
 
         try {
-            $revoked = $action->execute($user->email, get_current_user() ?: 'unknown');
+            $revoked = $action->execute($user->email, $this->osUser(), $reason);
         } catch (ModelNotFoundException) {
             $this->error((string) __('console.reset_2fa.not_found'));
 
@@ -80,5 +90,21 @@ final class ResetCentralTwoFactorCommand extends Command
         $this->line((string) __('console.reset_2fa.next_steps'));
 
         return self::SUCCESS;
+    }
+
+    /**
+     * The OS account actually running the command (effective uid). get_current_user() returns the
+     * OWNER of the script file, which is the deploy user for everyone who runs artisan.
+     */
+    private function osUser(): string
+    {
+        if (function_exists('posix_geteuid') && function_exists('posix_getpwuid')) {
+            $entry = posix_getpwuid(posix_geteuid());
+            if (is_array($entry) && $entry['name'] !== '') {
+                return $entry['name'];
+            }
+        }
+
+        return get_current_user() ?: 'unknown';
     }
 }

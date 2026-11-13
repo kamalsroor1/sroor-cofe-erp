@@ -9,6 +9,8 @@ use App\Enums\CentralPermission;
 use App\Models\CentralAuditLog;
 use App\Models\CentralUser;
 use Database\Seeders\CentralPermissionsSeeder;
+use Illuminate\Auth\SessionGuard;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Tests\TenantTestCase;
 
@@ -21,6 +23,8 @@ final class ResetCentralTwoFactorCommandTest extends TenantTestCase
     private const COMMAND = 'central:reset-2fa';
 
     private const PASSWORD = 'fixtureOperatorPassword1';
+
+    private const REASON = 'ticket 42, identity checked by phone call';
 
     protected function setUp(): void
     {
@@ -51,7 +55,7 @@ final class ResetCentralTwoFactorCommandTest extends TenantTestCase
     {
         $user = $this->operatorWithTwoFactor();
 
-        $this->artisan(self::COMMAND, ['email' => ' Lost-Phone@Central.test '])
+        $this->artisan(self::COMMAND, ['email' => ' Lost-Phone@Central.test ', '--reason' => self::REASON])
             ->expectsConfirmation((string) __('console.reset_2fa.confirm_identity'), 'yes')
             ->expectsConfirmation((string) __('console.reset_2fa.confirm_reset', ['email' => $user->email]), 'yes')
             ->assertSuccessful();
@@ -72,7 +76,7 @@ final class ResetCentralTwoFactorCommandTest extends TenantTestCase
     {
         $user = $this->operatorWithTwoFactor();
 
-        $this->artisan(self::COMMAND, ['email' => $user->email])
+        $this->artisan(self::COMMAND, ['email' => $user->email, '--reason' => self::REASON])
             ->expectsConfirmation((string) __('console.reset_2fa.confirm_identity'), 'yes')
             ->expectsConfirmation((string) __('console.reset_2fa.confirm_reset', ['email' => $user->email]), 'yes')
             ->assertSuccessful();
@@ -91,11 +95,11 @@ final class ResetCentralTwoFactorCommandTest extends TenantTestCase
     {
         $user = $this->operatorWithTwoFactor();
 
-        $this->artisan(self::COMMAND, ['email' => $user->email])
+        $this->artisan(self::COMMAND, ['email' => $user->email, '--reason' => self::REASON])
             ->expectsConfirmation((string) __('console.reset_2fa.confirm_identity'), 'no')
             ->assertFailed();
 
-        $this->artisan(self::COMMAND, ['email' => $user->email])
+        $this->artisan(self::COMMAND, ['email' => $user->email, '--reason' => self::REASON])
             ->expectsConfirmation((string) __('console.reset_2fa.confirm_identity'), 'yes')
             ->expectsConfirmation((string) __('console.reset_2fa.confirm_reset', ['email' => $user->email]), 'no')
             ->assertFailed();
@@ -110,11 +114,60 @@ final class ResetCentralTwoFactorCommandTest extends TenantTestCase
     {
         $user = $this->operatorWithTwoFactor();
 
-        $this->artisan(self::COMMAND, ['email' => $user->email, '--no-interaction' => true])->assertFailed();
+        $this->artisan(self::COMMAND, ['email' => $user->email, '--reason' => self::REASON, '--no-interaction' => true])->assertFailed();
         $this->assertNotNull($user->refresh()->two_factor_confirmed_at);
 
-        $this->artisan(self::COMMAND, ['email' => 'nobody@central.test'])
+        $this->artisan(self::COMMAND, ['email' => 'nobody@central.test', '--reason' => self::REASON])
             ->expectsOutputToContain((string) __('console.reset_2fa.not_found'))
             ->assertFailed();
+    }
+
+    public function test_it_requires_a_reason_and_audits_it_with_the_os_user(): void
+    {
+        $user = $this->operatorWithTwoFactor();
+
+        foreach ([[], ['--reason' => '   ']] as $options) {
+            $this->artisan(self::COMMAND, array_merge(['email' => $user->email], $options))
+                ->expectsOutputToContain((string) __('console.reset_2fa.reason_required'))
+                ->assertFailed();
+        }
+        $this->assertNotNull($user->refresh()->two_factor_confirmed_at);
+
+        $this->artisan(self::COMMAND, ['email' => $user->email, '--reason' => '  '.self::REASON.'  '])
+            ->expectsConfirmation((string) __('console.reset_2fa.confirm_identity'), 'yes')
+            ->expectsConfirmation((string) __('console.reset_2fa.confirm_reset', ['email' => $user->email]), 'yes')
+            ->assertSuccessful();
+
+        $properties = CentralAuditLog::query()->where('event', CentralAuditEvent::TwoFactorReset->value)->sole()->properties;
+        $this->assertSame(self::REASON, $properties['reason']);
+        $expected = function_exists('posix_geteuid') ? posix_getpwuid(posix_geteuid())['name'] : get_current_user();
+        $this->assertSame($expected, $properties['performed_by']);
+    }
+
+    public function test_it_revokes_the_operators_central_web_sessions_only(): void
+    {
+        config(['session.driver' => 'database', 'session.encrypt' => false]);
+        $user = $this->operatorWithTwoFactor();
+        $other = CentralUser::factory()->create(['email' => 'other-op@central.test', 'is_active' => true]);
+        $key = 'login_central_web_'.sha1(SessionGuard::class);
+        $encode = static fn (array $data): string => base64_encode((string) json_encode($data));
+        $connection = config('session.connection');
+        $sessions = DB::connection(is_string($connection) ? $connection : null)->table((string) config('session.table'));
+        $sessions->insert([
+            ['id' => 'sess-target', 'user_id' => null, 'ip_address' => null, 'user_agent' => null, 'payload' => $encode(['_token' => 'a', $key => $user->getKey()]), 'last_activity' => time()],
+            ['id' => 'sess-other-op', 'user_id' => null, 'ip_address' => null, 'user_agent' => null, 'payload' => $encode(['_token' => 'b', $key => $other->getKey()]), 'last_activity' => time()],
+            ['id' => 'sess-guest', 'user_id' => null, 'ip_address' => null, 'user_agent' => null, 'payload' => $encode(['_token' => 'c']), 'last_activity' => time()],
+            ['id' => 'sess-garbage', 'user_id' => null, 'ip_address' => null, 'user_agent' => null, 'payload' => '%%%not-base64', 'last_activity' => time()],
+        ]);
+
+        $this->artisan(self::COMMAND, ['email' => $user->email, '--reason' => self::REASON])
+            ->expectsConfirmation((string) __('console.reset_2fa.confirm_identity'), 'yes')
+            ->expectsConfirmation((string) __('console.reset_2fa.confirm_reset', ['email' => $user->email]), 'yes')
+            ->assertSuccessful();
+
+        $this->assertSame(['sess-garbage', 'sess-guest', 'sess-other-op'], $sessions->orderBy('id')->pluck('id')->all());
+        $properties = CentralAuditLog::query()->where('event', CentralAuditEvent::TwoFactorReset->value)->sole()->properties;
+        $this->assertSame(1, $properties['revoked_web_sessions']);
+        $this->assertSame(1, $properties['revoked_sessions']);
     }
 }

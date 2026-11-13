@@ -10,6 +10,7 @@ use Carbon\CarbonImmutable;
 
 /**
  * Input of RecordManualPaymentAction (OPS-20): a payment the operator received outside the system.
+ * `idempotencyKey` is the optional per-dialog UUID the console sends (lower-cased).
  */
 final readonly class RecordManualPaymentDTO
 {
@@ -20,6 +21,7 @@ final readonly class RecordManualPaymentDTO
         public ?string $reference,
         public ?string $note,
         public CarbonImmutable $paidAt,
+        public ?string $idempotencyKey = null,
     ) {}
 
     /**
@@ -29,6 +31,7 @@ final readonly class RecordManualPaymentDTO
     {
         $reference = trim((string) ($data['reference'] ?? ''));
         $note = trim((string) ($data['note'] ?? ''));
+        $key = mb_strtolower(trim((string) ($data['idempotency_key'] ?? '')));
 
         return new self(
             invoiceId: $invoiceId,
@@ -37,6 +40,7 @@ final readonly class RecordManualPaymentDTO
             reference: $reference === '' ? null : $reference,
             note: $note === '' ? null : $note,
             paidAt: CarbonImmutable::parse((string) $data['paid_at']),
+            idempotencyKey: $key === '' ? null : $key,
         );
     }
 }

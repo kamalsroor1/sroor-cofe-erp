@@ -115,6 +115,49 @@ final class RecordManualPaymentApiTest extends BillingTestCase
         $this->assertNotNull(BillingInvoice::query()->findOrFail($invoice->id)->paid_at);
     }
 
+    public function test_a_retry_with_the_same_idempotency_key_records_the_partial_payment_once(): void
+    {
+        $tenant = $this->tenantOn($this->plan());
+        $invoice = $this->pendingInvoice($tenant);
+        $body = $this->body('40.000', ['idempotency_key' => '6f1c2b8e-4d1a-4c6e-9a51-0b7d3f2e9c11']);
+
+        $this->postJson($this->url($invoice->id), $body, $this->admin)->assertOk()->assertJsonPath('data.remaining', '60.000');
+        $this->postJson($this->url($invoice->id), $body, $this->admin)->assertOk()->assertJsonPath('data.remaining', '60.000');
+
+        $this->assertSame(1, BillingPayment::query()->where('billing_invoice_id', $invoice->id)->count());
+        $this->assertSame(1, CentralAuditLog::query()->where('event', CentralAuditEvent::BillingPaymentRecorded->value)->count());
+    }
+
+    public function test_an_identical_partial_payment_within_ten_minutes_is_409_even_without_a_key(): void
+    {
+        $tenant = $this->tenantOn($this->plan());
+        $invoice = $this->pendingInvoice($tenant);
+
+        $this->postJson($this->url($invoice->id), $this->body('30.000'), $this->admin)->assertOk();
+        $this->postJson($this->url($invoice->id), $this->body('30.000'), $this->admin)
+            ->assertStatus(409)
+            ->assertJsonPath('error_code', 'billing.payment_duplicate');
+        $this->assertSame(1, BillingPayment::query()->where('billing_invoice_id', $invoice->id)->count());
+
+        // A different reference is a different payment; the same one after the window is allowed again.
+        $this->postJson($this->url($invoice->id), $this->body('30.000', ['reference' => 'WA-2']), $this->admin)->assertOk();
+        $this->travel(11)->minutes();
+        $this->postJson($this->url($invoice->id), $this->body('30.000'), $this->admin)
+            ->assertOk()
+            ->assertJsonPath('data.remaining', '10.000');
+        $this->assertSame(3, BillingPayment::query()->where('billing_invoice_id', $invoice->id)->count());
+    }
+
+    public function test_a_malformed_idempotency_key_is_422(): void
+    {
+        $tenant = $this->tenantOn($this->plan());
+        $invoice = $this->pendingInvoice($tenant);
+
+        $this->postJson($this->url($invoice->id), $this->body('10.000', ['idempotency_key' => 'not-a-uuid']), $this->admin)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['idempotency_key']);
+    }
+
     public function test_an_amount_above_the_remaining_is_422_and_nothing_is_written(): void
     {
         $invoice = $this->pendingInvoice($this->tenantOn($this->plan()));

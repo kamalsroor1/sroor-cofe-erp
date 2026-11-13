@@ -41,6 +41,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * | renewalPlanMismatch()    | 409  | billing.renewal_plan_mismatch    |
  * | differenceTermChanged()  | 409  | billing.difference_term_changed  |
  * | renewalInFlight()        | 409  | billing.renewal_in_flight (details.invoice_id/number) |
+ * | duplicatePayment()       | 409  | billing.payment_duplicate        |
  */
 final class BillingException extends HttpException
 {
@@ -194,6 +195,12 @@ final class BillingException extends HttpException
             'invoice_id' => (int) $renewal->getKey(),
             'invoice_number' => $renewal->number,
         ]);
+    }
+
+    /** OPS-20: the same payment (amount + method + reference) was just recorded on this invoice. */
+    public static function duplicatePayment(): self
+    {
+        return self::make(Response::HTTP_CONFLICT, 'payment_duplicate');
     }
 
     public static function differenceRequired(): self

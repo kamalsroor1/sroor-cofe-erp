@@ -32,9 +32,20 @@ use Illuminate\Support\Facades\DB;
  * after settlement a harmless 409); no other payment is awaiting review (422, verify it instead);
  * 0 < amount <= total - verified payments (422 amount_out_of_range). Audited `billing_payment_recorded`
  * on top of the `billing_payment_verified` row written by the verify step.
+ *
+ * Idempotency (OPS-20 review), both checked under the invoice lock so two concurrent clicks are
+ * serialised:
+ *  - `idempotency_key` (optional, one UUID per opened dialog, stored in raw_payload): a request whose
+ *    key was already recorded on this invoice returns THAT payment and writes nothing;
+ *  - independent of the key: the same amount + method + reference on the same invoice, recorded
+ *    (pending or verified) within the last DUPLICATE_WINDOW_MINUTES, is refused with 409
+ *    billing.payment_duplicate. A genuine second identical payment waits out the window or carries a
+ *    different reference.
  */
 final class RecordManualPaymentAction
 {
+    private const DUPLICATE_WINDOW_MINUTES = 10;
+
     public function __construct(
         private readonly VerifyManualPaymentAction $verify,
         private readonly CentralAuditLogger $audit,
@@ -46,6 +57,12 @@ final class RecordManualPaymentAction
 
         return $connection->transaction(function () use ($dto, $operator): BillingPayment {
             $invoice = BillingInvoice::query()->whereKey($dto->invoiceId)->lockForUpdate()->firstOrFail();
+
+            // Before the status check: a retry after the payment settled the invoice is a replay, not a 409.
+            $replayed = $this->alreadyRecorded($invoice, $dto->idempotencyKey);
+            if ($replayed instanceof BillingPayment) {
+                return $replayed;
+            }
 
             if ($invoice->status !== BillingInvoiceStatus::Pending) {
                 throw BillingException::invoiceNotPayable();
@@ -59,6 +76,8 @@ final class RecordManualPaymentAction
             if ($hasPending) {
                 throw BillingException::paymentAlreadyPending();
             }
+
+            $this->assertNotDuplicate($invoice, $dto);
 
             $remaining = $this->remaining($invoice);
 
@@ -81,6 +100,7 @@ final class RecordManualPaymentAction
                     'note' => $dto->note,
                     'source' => 'operator',
                     'recorded_by' => (int) $operator->getKey(),
+                    'idempotency_key' => $dto->idempotencyKey,
                 ],
             ]);
 
@@ -101,6 +121,45 @@ final class RecordManualPaymentAction
 
             return $this->verify->execute((int) $payment->getKey(), $operator);
         });
+    }
+
+    /** The payment this invoice already recorded with the same idempotency key, if any. */
+    private function alreadyRecorded(BillingInvoice $invoice, ?string $key): ?BillingPayment
+    {
+        if ($key === null) {
+            return null;
+        }
+
+        $payments = BillingPayment::query()
+            ->where('billing_invoice_id', $invoice->getKey())
+            ->orderBy('id')
+            ->get();
+
+        foreach ($payments as $payment) {
+            if (($payment->raw_payload['idempotency_key'] ?? null) === $key) {
+                return $payment;
+            }
+        }
+
+        return null;
+    }
+
+    /** 409 when the same amount + method + reference was recorded on this invoice moments ago. */
+    private function assertNotDuplicate(BillingInvoice $invoice, RecordManualPaymentDTO $dto): void
+    {
+        $recent = BillingPayment::query()
+            ->where('billing_invoice_id', $invoice->getKey())
+            ->whereIn('status', [BillingPaymentStatus::Verified->value, BillingPaymentStatus::Pending->value])
+            ->where('method', $dto->method->value)
+            ->where('created_at', '>=', now()->subMinutes(self::DUPLICATE_WINDOW_MINUTES))
+            ->get();
+
+        foreach ($recent as $payment) {
+            if (bccomp((string) $payment->amount, $dto->amount, 3) === 0
+                && ($payment->raw_payload['payer_reference'] ?? null) === $dto->reference) {
+                throw BillingException::duplicatePayment();
+            }
+        }
     }
 
     /** Invoice total minus the verified payments, scale 3. */

@@ -3,12 +3,15 @@ import centralApi from '../Services/centralApi';
 import { notifyError, notifySuccess, notifyWarning } from '../helpers/alert';
 import { useTrans } from './useTrans';
 import { toTenantDateString } from './useBusinessDate';
+import { newUuid } from '../helpers/uuid';
 
 /**
  * "Record manual payment" of the tenant billing section (OPS-20):
- *   POST /super-admin/billing-invoices/{id}/record-payment { amount, method, reference?, note?, paid_at }
+ *   POST /super-admin/billing-invoices/{id}/record-payment { amount, method, reference?, note?, paid_at, idempotency_key }
  *   -> 200 invoice resource; 422 billing.amount_out_of_range (details.remaining) / billing.payment_already_pending;
- *   409 billing.invoice_not_payable. Step-up is handled by centralApi. The server owns every amount check.
+ *   409 billing.invoice_not_payable / billing.payment_duplicate. Step-up is handled by centralApi. The server owns
+ *   every amount check. `idempotency_key` is one UUID per opened dialog: a double click or a retry of the same
+ *   dialog returns the payment already recorded instead of recording it twice.
  */
 
 export const RECORD_METHODS = Object.freeze(['cash', 'instapay', 'vodafone_cash', 'bank_transfer']);
@@ -31,9 +34,11 @@ export function useRecordPayment(onRecorded) {
     const invoice = ref(null);
     const form = ref(emptyForm());
     const errors = ref({});
+    let idempotencyKey = newUuid();
 
     const open = (target) => {
         invoice.value = target;
+        idempotencyKey = newUuid();
         form.value = emptyForm(String(target?.remaining ?? ''));
         errors.value = {};
         isOpen.value = true;
@@ -59,6 +64,7 @@ export function useRecordPayment(onRecorded) {
             amount: String(current.amount).trim(),
             method: current.method,
             paid_at: current.paid_at,
+            idempotency_key: idempotencyKey,
         };
         if (current.reference.trim() !== '') payload.reference = current.reference.trim();
         if (current.note.trim() !== '') payload.note = current.note.trim();

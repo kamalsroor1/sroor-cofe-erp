@@ -121,6 +121,7 @@ return [
     'reset_2fa' => [
         'description' => 'Reset an operator two-factor authentication after the phone was lost (interactive, audited, revokes the operator sessions).',
         'interactive_only' => 'This command is interactive only and cannot run with --no-interaction.',
+        'reason_required' => 'A reason is required: pass --reason="..." (the ticket and how the operator identity was verified). It is stored in the audit log.',
         'not_found' => 'No central operator with this email.',
         'target' => 'Operator #:id :name <:email>',
         'confirm_identity' => 'Did you verify the identity of this operator outside the system (phone call, in person)?',

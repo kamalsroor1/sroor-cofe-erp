@@ -474,14 +474,16 @@ The console requires 2FA. Recovery codes (shown once at enrolment) are the first
 phone AND the codes are lost, another person with server access resets it from the terminal:
 
 ```bash
-php artisan central:reset-2fa operator@example.com
+php artisan central:reset-2fa operator@example.com --reason="ticket 42, identity checked by phone call"
 ```
 
 - Interactive only (no `--no-interaction`): it prints who will be reset and asks twice, first whether
   you verified the person's identity outside the system (phone call, in person), then to confirm.
 - It does not sign anyone in and does not touch the password. It wipes the authenticator secret and the
-  recovery codes, revokes every session of that operator, and writes a `two_factor_reset` row to the
-  central audit log (with the OS user that ran it).
+  recovery codes, revokes every API token of that operator and (with `SESSION_DRIVER=database`) every
+  `central_web` browser session (Pulse / Telescope / Horizon), and writes a `two_factor_reset` row to the
+  central audit log with the OS user that ran it (effective uid) and the mandatory `--reason`. With
+  another session driver the browser sessions cannot be targeted and expire with `SESSION_LIFETIME`.
 - The operator then signs in with the password, is sent to the 2FA setup, scans a new authenticator and
   must save the new recovery codes.
 

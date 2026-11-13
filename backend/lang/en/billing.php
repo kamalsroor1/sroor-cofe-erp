@@ -125,6 +125,7 @@ return [
         'renewal_plan_mismatch' => 'This renewal invoice is for a plan the shop is no longer on. Void it and request a new renewal.',
         'difference_term_changed' => 'This upgrade difference was priced for a subscription term that has since changed (a renewal was paid after it). Void it and issue a new difference for the current term.',
         'renewal_in_flight' => 'Renewal invoice :number has a payment under review or partly paid. Settle it first, then issue the upgrade difference.',
+        'payment_duplicate' => 'This payment (same amount, method and reference) was recorded on this invoice a few minutes ago. If it is really a second payment, enter a different reference.',
     ],
     'messages' => [
         'payment_cancelled' => 'The pending payment was cancelled; you can submit a new one.',

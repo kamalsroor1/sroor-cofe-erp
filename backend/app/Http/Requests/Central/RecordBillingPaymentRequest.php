@@ -14,6 +14,7 @@ use Illuminate\Validation\Rule;
  * POST /api/v1/super-admin/billing-invoices/{invoice}/record-payment (OPS-20):
  * super_admin.billing.manage. Only the manual methods are accepted (the gateways record
  * their own payments). The "amount <= remaining" rule needs the invoice lock, so the Action owns it.
+ * `idempotency_key` (optional UUID) makes a double click / retry return the payment already recorded.
  */
 final class RecordBillingPaymentRequest extends FormRequest
 {
@@ -38,6 +39,8 @@ final class RecordBillingPaymentRequest extends FormRequest
             'reference' => ['nullable', 'string', 'max:100', 'not_regex:/[<>]/'],
             'note' => ['nullable', 'string', 'max:500', 'not_regex:/[<>]/'],
             'paid_at' => ['required', 'date', 'before_or_equal:now'],
+            // OPS-20: one UUID per opened "record payment" dialog; a retry with it records nothing new.
+            'idempotency_key' => ['nullable', 'string', 'uuid'],
         ];
     }
 }
