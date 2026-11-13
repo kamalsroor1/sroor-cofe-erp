@@ -35,7 +35,7 @@ final class GetSetupProgressAction
             return null;
         }
 
-        $cacheKey = 'setup_progress_complete_'.self::CACHE_VERSION.'_'.(function_exists('tenant') && tenant('id') ? (string) tenant('id') : 'central');
+        $cacheKey = self::cacheKeyFor(function_exists('tenant') && tenant('id') ? (string) tenant('id') : 'central');
         $complete = Cache::get($cacheKey);
         if (is_array($complete)) {
             return $complete;
@@ -62,6 +62,12 @@ final class GetSetupProgressAction
         }
 
         return $result;
+    }
+
+    /** The "setup complete" key of one tenant, usable from any context (e.g. central console commands). */
+    public static function cacheKeyFor(string $tenantId): string
+    {
+        return 'setup_progress_complete_'.self::CACHE_VERSION.'_'.$tenantId;
     }
 
     private function mainBranchIsSetUp(): bool

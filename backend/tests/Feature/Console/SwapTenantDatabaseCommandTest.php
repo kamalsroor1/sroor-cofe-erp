@@ -4,9 +4,18 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Console;
 
+use App\Actions\System\GetSetupProgressAction;
 use App\Actions\Tenants\AdvanceDocumentSequencesAction;
+use App\Models\Setting;
+use App\Models\Tenant;
+use App\Support\DashboardCache;
+use App\Support\Tenancy\EndsTenantImpersonationSessions;
+use App\Support\TenantCache;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
+use RuntimeException;
 use Tests\TenantTestCase;
 
 /**
@@ -77,5 +86,114 @@ final class SwapTenantDatabaseCommandTest extends TenantTestCase
         $this->expectException(InvalidArgumentException::class);
 
         app(AdvanceDocumentSequencesAction::class)->execute(0);
+    }
+
+    public function test_a_swap_forgets_only_this_tenants_cache_and_keeps_central_and_other_tenants_keys(): void
+    {
+        $tenant = $this->createTenant();
+        $other = $this->createTenant();
+        $id = (string) $tenant->getTenantKey();
+        $otherId = (string) $other->getTenantKey();
+        $restored = $this->copyTenantDatabase($tenant);
+
+        try {
+            Cache::forever('c:central-state', 'keep');
+            Cache::forever(TenantCache::keyFor($otherId, 'x'), 'keep');
+            Cache::forever(Setting::cacheKeyFor($otherId), ['company_name' => 'keep']);
+            Cache::forever(Setting::cacheKeyFor($id), ['company_name' => 'stale']);
+            Cache::forever(GetSetupProgressAction::cacheKeyFor($id), ['completed' => 7]);
+            $dashboardBefore = TenantCache::versionFor($id, DashboardCache::NAMESPACE);
+
+            $this->artisan('backup:swap-tenant', ['tenant' => $id, '--database' => $restored, '--force' => true])
+                ->assertExitCode(0);
+
+            $this->assertSame('keep', Cache::get('c:central-state'));
+            $this->assertSame('keep', Cache::get(TenantCache::keyFor($otherId, 'x')));
+            $this->assertSame(['company_name' => 'keep'], Cache::get(Setting::cacheKeyFor($otherId)));
+            $this->assertNull(Cache::get(Setting::cacheKeyFor($id)));
+            $this->assertNull(Cache::get(GetSetupProgressAction::cacheKeyFor($id)));
+            $this->assertNotSame($dashboardBefore, TenantCache::versionFor($id, DashboardCache::NAMESPACE));
+            $this->assertSame($restored, (string) $tenant->fresh()?->database()->getName());
+        } finally {
+            $this->dropCopiedDatabase($restored);
+        }
+    }
+
+    public function test_a_failure_after_the_repoint_points_the_shop_back_at_the_previous_database(): void
+    {
+        $tenant = $this->createTenant();
+        $id = (string) $tenant->getTenantKey();
+        $previous = (string) $tenant->database()->getName();
+        $restored = $this->copyTenantDatabase($tenant);
+
+        $this->app->instance(AdvanceDocumentSequencesAction::class, new class
+        {
+            /** @return array{bumped: int, created: int} */
+            public function execute(int $margin): array
+            {
+                throw new RuntimeException('sequence table locked');
+            }
+        });
+
+        try {
+            $this->artisan('backup:swap-tenant', ['tenant' => $id, '--database' => $restored, '--force' => true])
+                ->expectsOutputToContain((string) __('console.swap.rolled_back', ['database' => $previous, 'reason' => RuntimeException::class]))
+                ->assertExitCode(1);
+
+            $this->assertSame($previous, (string) $tenant->fresh()?->database()->getName());
+        } finally {
+            $this->dropCopiedDatabase($restored);
+        }
+    }
+
+    public function test_a_token_revocation_failure_points_the_shop_back_at_the_previous_database(): void
+    {
+        $tenant = $this->createTenant();
+        $id = (string) $tenant->getTenantKey();
+        $previous = (string) $tenant->database()->getName();
+        $restored = $this->copyTenantDatabase($tenant);
+
+        $this->app->instance(EndsTenantImpersonationSessions::class, new class implements EndsTenantImpersonationSessions
+        {
+            public function endAllForTenant(Tenant $tenant): int
+            {
+                throw new RuntimeException('central down');
+            }
+        });
+
+        try {
+            $this->artisan('backup:swap-tenant', ['tenant' => $id, '--database' => $restored, '--force' => true])
+                ->assertExitCode(1);
+
+            $this->assertSame($previous, (string) $tenant->fresh()?->database()->getName());
+        } finally {
+            $this->dropCopiedDatabase($restored);
+        }
+    }
+
+    /** sqlite only: a "restored" database is a copy of the tenant's file under a swap-safe name. */
+    private function copyTenantDatabase(Tenant $tenant): string
+    {
+        $source = database_path($this->tenantDatabaseName($tenant));
+        if (! is_file($source)) {
+            $this->markTestSkipped('The swap round-trip test copies the sqlite tenant file.');
+        }
+
+        // The provisioner (MySQL-only GRANT / schema lookup) is skipped on a non-MySQL connection.
+        config(['tenancy.provisioning.connection' => config('database.default')]);
+
+        $name = 'tenant_zz_restore_'.Str::lower(Str::random(10));
+        $this->assertTrue(copy($source, database_path($name)));
+
+        return $name;
+    }
+
+    private function dropCopiedDatabase(string $name): void
+    {
+        if (tenancy()->initialized) {
+            tenancy()->end();
+        }
+        DB::purge('tenant');
+        @unlink(database_path($name));
     }
 }

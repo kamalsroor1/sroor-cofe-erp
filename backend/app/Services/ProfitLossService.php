@@ -11,10 +11,12 @@ use Illuminate\Support\Facades\Cache;
 
 class ProfitLossService
 {
+    public const CACHE_NAMESPACE = 'erp_pnl';
+
     public static function clearCache(?int $storeId = null): void
     {
         // Version bump invalidates every P&L key (all stores, all date ranges) of the current tenant.
-        TenantCache::bump('erp_pnl');
+        TenantCache::bump(self::CACHE_NAMESPACE);
     }
 
     /**
@@ -22,7 +24,7 @@ class ProfitLossService
      */
     public function getProfitLossReport(string $fromDate, string $toDate, ?int $storeId = null): array
     {
-        $cacheKey = TenantCache::key('erp_pnl:v'.TenantCache::version('erp_pnl').':'.($storeId ?? 'all').":{$fromDate}:{$toDate}");
+        $cacheKey = TenantCache::key(self::CACHE_NAMESPACE.':v'.TenantCache::version(self::CACHE_NAMESPACE).':'.($storeId ?? 'all').":{$fromDate}:{$toDate}");
 
         return Cache::remember($cacheKey, now()->addMinutes(15), function () use ($fromDate, $toDate, $storeId) {
             $stores = Store::active()->get();

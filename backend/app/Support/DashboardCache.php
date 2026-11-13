@@ -52,7 +52,7 @@ final class DashboardCache
      */
     public const LOCK_WAIT_SECONDS = 2;
 
-    private const NAMESPACE = 'dashboard';
+    public const NAMESPACE = 'dashboard';
 
     private const VIEWER_PATTERN = '/^[A-Za-z0-9_.-]{1,64}$/';
 

@@ -13,10 +13,12 @@ use Illuminate\Support\Facades\DB;
 
 class InventoryAnalyticsService
 {
+    public const CACHE_NAMESPACE = 'erp_abc';
+
     public static function clearCache(?int $storeId = null): void
     {
         // Version bump invalidates every ABC key (all stores, all date ranges) of the current tenant.
-        TenantCache::bump('erp_abc');
+        TenantCache::bump(self::CACHE_NAMESPACE);
     }
 
     /**
@@ -31,7 +33,7 @@ class InventoryAnalyticsService
      */
     public function getAbcAnalysis(string $fromDate, string $toDate, ?int $storeId = null, string $sortBy = 'profit', ?array $salesByItem = null): array
     {
-        $cacheKey = TenantCache::key('erp_abc:v'.TenantCache::version('erp_abc').':'.($storeId ?? 'all').":{$fromDate}:{$toDate}:{$sortBy}");
+        $cacheKey = TenantCache::key(self::CACHE_NAMESPACE.':v'.TenantCache::version(self::CACHE_NAMESPACE).':'.($storeId ?? 'all').":{$fromDate}:{$toDate}:{$sortBy}");
 
         return Cache::remember($cacheKey, now()->addMinutes(15), function () use ($fromDate, $toDate, $storeId, $sortBy, $salesByItem) {
             $daysInPeriod = max(1, Carbon::parse($fromDate)->diffInDays(Carbon::parse($toDate)) + 1);

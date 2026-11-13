@@ -26,8 +26,12 @@ class Setting extends Model
 
     public static function getCacheKey(): string
     {
-        $tenantId = function_exists('tenant') && tenant('id') ? (string) tenant('id') : 'central';
+        return self::cacheKeyFor(function_exists('tenant') && tenant('id') ? (string) tenant('id') : 'central');
+    }
 
+    /** The settings dictionary key of one tenant, usable from any context (e.g. central console commands). */
+    public static function cacheKeyFor(string $tenantId): string
+    {
         return "app_settings_{$tenantId}";
     }
 

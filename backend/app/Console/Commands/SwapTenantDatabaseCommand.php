@@ -4,16 +4,23 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Actions\System\GetSetupProgressAction;
 use App\Actions\Tenants\AdvanceDocumentSequencesAction;
 use App\Actions\Tenants\RevokeTenantTokensAction;
 use App\Actions\Tenants\UpdateTenantDatabaseConfigAction;
+use App\Models\Setting;
 use App\Models\Tenant;
+use App\Services\InventoryAnalyticsService;
+use App\Services\ProfitLossService;
 use App\Services\Tenancy\ProvisionerMySQLDatabaseManager;
 use App\Services\TenantProvisionerService;
+use App\Support\DashboardCache;
+use App\Support\TenantCache;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Spatie\Permission\PermissionRegistrar;
 use Throwable;
 
 /**
@@ -36,7 +43,9 @@ use Throwable;
  *      after it, must not come back to life);
  *   6. document counters are pushed forward by --number-margin (AdvanceDocumentSequencesAction), so
  *      numbers printed after the backup are not handed out again;
- *   7. the tenant's cache is flushed; a report is printed.
+ *   7. this tenant's cache entries are forgotten (never Cache::flush(): the store is shared);
+ *      a report is printed.
+ * If step 5 or 6 fails, the tenant is pointed back at the previous database and the command exits 1.
  *
  * There is no per-shop maintenance switch in the app: steps 3-5 take seconds, and every user is
  * logged out at step 5. To keep sales out meanwhile, suspend the shop in the operator console first
@@ -62,7 +71,6 @@ final class SwapTenantDatabaseCommand extends Command
     public function handle(
         UpdateTenantDatabaseConfigAction $updateDatabase,
         RevokeTenantTokensAction $revokeTokens,
-        AdvanceDocumentSequencesAction $advanceSequences,
     ): int {
         if (tenancy()->initialized) {
             tenancy()->end();
@@ -107,10 +115,12 @@ final class SwapTenantDatabaseCommand extends Command
             return self::FAILURE;
         }
 
+        $repointed = false;
         try {
             $this->grant($tenant, $manager, $database);
 
             $updateDatabase->execute($tenant, ['tenancy_db_name' => $database]);
+            $repointed = true;
             $this->info((string) __('console.swap.pointed', ['database' => $database]));
             $tenant = $tenant->fresh() ?? $tenant;
 
@@ -126,17 +136,25 @@ final class SwapTenantDatabaseCommand extends Command
             /** @var array{bumped: int, created: int} $sequences */
             $sequences = $tenant->run(static fn (): array => app(AdvanceDocumentSequencesAction::class)->execute($margin));
             $this->info((string) __('console.swap.sequences', ['bumped' => $sequences['bumped'], 'created' => $sequences['created'], 'margin' => $margin]));
-
-            $this->flushCache($tenant);
         } catch (Throwable $e) {
             Log::error('backup:swap-tenant failed', ['tenant' => (string) $tenant->getTenantKey(), 'exception' => $e::class, 'message' => $e->getMessage()]);
 
-            return $this->refuse((string) __('console.swap.failed', ['reason' => $e::class]));
+            if (tenancy()->initialized) {
+                tenancy()->end();
+            }
+
+            // Once repointed, a shop left on the restored database without its tokens revoked or
+            // its counters advanced would accept old sessions and re-issue printed document numbers.
+            return $repointed
+                ? $this->repointBack($updateDatabase, $tenant, $previous, $database, $e)
+                : $this->refuse((string) __('console.swap.failed', ['reason' => $e::class]));
         } finally {
             if (tenancy()->initialized) {
                 tenancy()->end();
             }
         }
+
+        $this->forgetTenantCache($tenant);
 
         $this->info((string) __('console.swap.done', ['tenant' => (string) $tenant->getTenantKey(), 'database' => $database, 'previous' => $previous]));
 
@@ -190,14 +208,52 @@ final class SwapTenantDatabaseCommand extends Command
         return true;
     }
 
-    private function flushCache(Tenant $tenant): void
+    private function repointBack(UpdateTenantDatabaseConfigAction $updateDatabase, Tenant $tenant, string $previous, string $restored, Throwable $cause): int
     {
         try {
-            $tenant->run(static fn (): bool => Cache::flush());
+            $updateDatabase->execute($tenant->fresh() ?? $tenant, ['tenancy_db_name' => $previous]);
+        } catch (Throwable $e) {
+            Log::critical('backup:swap-tenant could not point the tenant back at its previous database', [
+                'tenant' => (string) $tenant->getTenantKey(),
+                'previous' => $previous,
+                'restored' => $restored,
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+            ]);
+
+            return $this->refuse((string) __('console.swap.rollback_failed', ['reason' => $cause::class, 'database' => $previous, 'restored' => $restored]));
+        }
+
+        return $this->refuse((string) __('console.swap.rolled_back', ['reason' => $cause::class, 'database' => $previous]));
+    }
+
+    /**
+     * Forget only THIS tenant's cached data. The cache store is shared by every tenant and by central
+     * state (rate limiters, locks, 2FA challenges) because CacheTenancyBootstrapper is disabled, so
+     * Cache::flush() here would wipe them all (see App\Support\TenantCache).
+     */
+    private function forgetTenantCache(Tenant $tenant): void
+    {
+        $tenantId = (string) $tenant->getTenantKey();
+
+        try {
+            Cache::forget(Setting::cacheKeyFor($tenantId));
+            Cache::forget(GetSetupProgressAction::cacheKeyFor($tenantId));
+
+            foreach ([DashboardCache::NAMESPACE, ProfitLossService::CACHE_NAMESPACE, InventoryAnalyticsService::CACHE_NAMESPACE] as $namespace) {
+                TenantCache::bumpFor($tenantId, $namespace);
+            }
+
+            // spatie's permission cache key is scoped to the tenant once tenancy is bootstrapped.
+            $tenant->run(static fn (): bool => app(PermissionRegistrar::class)->forgetCachedPermissions());
             $this->info((string) __('console.swap.cache_cleared'));
         } catch (Throwable $e) {
-            Log::warning('backup:swap-tenant could not flush the tenant cache', ['exception' => $e::class]);
+            Log::warning('backup:swap-tenant could not clear the tenant cache', ['tenant' => $tenantId, 'exception' => $e::class]);
             $this->warn((string) __('console.swap.cache_failed'));
+        } finally {
+            if (tenancy()->initialized) {
+                tenancy()->end();
+            }
         }
     }
 
