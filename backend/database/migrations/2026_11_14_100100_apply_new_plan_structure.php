@@ -19,13 +19,11 @@ use Illuminate\Support\Facades\Schema;
  * - add-ons: the "control" bundle (bundle.control, 199 / 1,990, basic only) is created; the
  *   single reports.advanced / audit.logs add-ons and addon.items_5k are RETIRED (is_active =
  *   false, unavailable on every plan), mixes.manage is offered on basic only (pro includes it).
- * - NOTHING is taken away: subscription_addons rows are untouched (a retired add-on keeps
- *   working for the shops that already hold it) and every Basic tenant gets reports.advanced as
- *   a super-admin override, because until BILL-03 it saw profit figures for free.
+ * - subscription_addons rows are untouched (a retired add-on keeps working for any shop that
+ *   already holds it). No per-tenant overrides are written: the system starts fresh, so there
+ *   is nothing to grandfather.
  *
- * Idempotent (a second run changes nothing). It touches a handful of catalog rows and one cheap
- * per-tenant pass. down() reverts the catalog rows but NOT the per-tenant overrides (they cannot
- * be told apart from an override set by hand).
+ * Idempotent (a second run changes nothing). It touches a handful of catalog rows only.
  */
 return new class extends Migration
 {
@@ -45,7 +43,6 @@ return new class extends Migration
         $touchedPlans = $this->updatePlans();
         $this->updateFeatureRegistry();
         $this->updateAddons();
-        $this->grandfatherBasicTenants();
 
         // Every tenant on a changed plan resolves its entitlements again.
         if ($touchedPlans !== [] && Schema::hasTable('tenants') && Schema::hasColumn('tenants', 'plan_id')) {
@@ -189,42 +186,6 @@ return new class extends Migration
                 DB::table('plan_addon')->where('id', $existing->id)->update(['is_available' => $available, 'updated_at' => $now]);
             }
         }
-    }
-
-    /** Basic shops keep seeing profit figures: add reports.advanced to their feature overrides. */
-    private function grandfatherBasicTenants(): void
-    {
-        if (! Schema::hasTable('tenants') || ! Schema::hasColumn('tenants', 'enabled_features') || ! Schema::hasColumn('tenants', 'plan_id')) {
-            return;
-        }
-
-        $basicIds = DB::table('plans')->where('slug', 'basic')->pluck('id')->all();
-        if ($basicIds === []) {
-            return;
-        }
-
-        DB::table('tenants')->whereIn('plan_id', $basicIds)->orderBy('id')->get(['id', 'enabled_features'])
-            ->each(function (object $tenant): void {
-                $current = $this->decodeMap($tenant->enabled_features ?? null);
-
-                if (array_is_list($current)) {
-                    if (in_array('reports.advanced', $current, true)) {
-                        return;
-                    }
-                    $next = [...$current, 'reports.advanced'];
-                } else {
-                    if (($current['reports.advanced'] ?? false) === true) {
-                        return;
-                    }
-                    $next = $current + ['reports.advanced' => true];
-                }
-
-                DB::table('tenants')->where('id', $tenant->id)->update([
-                    'enabled_features' => json_encode($next, JSON_UNESCAPED_UNICODE),
-                ]);
-
-                TenantCache::bumpFor((string) $tenant->id, TenantEntitlementService::CACHE_NAMESPACE);
-            });
     }
 
     /**
