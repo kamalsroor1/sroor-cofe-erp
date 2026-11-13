@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $return_id
  * @property int|null $reverses_payment_id
  * @property int|null $user_id
+ * @property int|null $cash_shift_id stamped server-side on create (DATE-01, ShiftAttribution); never mass assignable
  * @property string $amount
  * @property Carbon|null $payment_date
  * @property string $payment_method

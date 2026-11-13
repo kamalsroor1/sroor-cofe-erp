@@ -21,9 +21,9 @@ use Illuminate\Database\Eloquent\Model;
  * that shift / their business day (treasury summary). Never the drawer balance,
  * other users' sales or store-wide totals.
  *
- * Documents are not linked to a shift by id; ShiftService ties them to a shift by its store and
- * time window [opened_at, closed_at ?? now] on `created_at`. This class narrows that same window
- * to `user_id` = the caller. Without a shift a business date may be given (documents of that day,
+ * Invoices and expenses belong to the shift they were stamped with (DATE-01, ShiftAttribution;
+ * unstamped history: the shift's time window [opened_at, closed_at ?? now] on `created_at`), sales
+ * returns to that window; this class narrows the same rule to `user_id` = the caller. Without a shift a business date may be given (documents of that day,
  * on their document-date columns); with neither, every figure is zero.
  *
  * Shared by GetOwnShiftDashboardAction and GetOwnShiftTreasurySummaryAction. Money is returned
@@ -187,6 +187,14 @@ final class OwnSalesSummary
     private function scoped(Builder $query, User $user, int $storeId, ?CashShift $shift, ?string $businessDate, string $dateColumn): Builder
     {
         $query->where('user_id', $user->id)->where('store_id', $storeId);
+
+        // DATE-01: invoices and expenses carry the shift they were created in (ShiftAttribution),
+        // the same rule as ShiftService::calculateShiftTotals(), unstamped history by the window.
+        // Sales returns carry no stamp and stay on the window.
+        $model = $query->getModel();
+        if ($shift instanceof CashShift && ($model instanceof Invoice || $model instanceof Expense)) {
+            return ShiftAttribution::scopeToShift($query, $shift, $shift->closed_at);
+        }
 
         if ($shift instanceof CashShift) {
             $query->where('created_at', '>=', $shift->opened_at);

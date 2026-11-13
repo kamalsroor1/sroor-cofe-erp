@@ -10,9 +10,11 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Store;
 use App\Services\Settings\TenantSettings;
+use App\Services\Shifts\ShiftAttribution;
 use App\Support\Database\TransactionRetry;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -125,20 +127,26 @@ class ShiftService
      * reaches the drawer is exactly one voucher: the invoice writes one per paid line at the
      * sale (PAY-INV-*), a debt collection writes its own. Summing invoices.paid_amount as
      * well counted every sale twice, also counted non-cash split lines as cash and later
-     * collections against the invoice again. Vouchers are limited to the shift's store and
-     * to the shift's window [opened_at, closed_at ?? now].
+     * collections against the invoice again.
+     *
+     * DATE-01: a voucher / expense / credit invoice belongs to the shift it was stamped with when
+     * it was created (cash_shift_id, ShiftAttribution), whatever the wall clock said. Unstamped
+     * history keeps the old rule: the shift's store and window [opened_at, $until ?? closed_at
+     * ?? now]. $until lets closeShift() compute with the closing instant it is about to store.
      */
-    public function calculateShiftTotals(CashShift $shift): array
+    public function calculateShiftTotals(CashShift $shift, ?CarbonInterface $until = null): array
     {
-        $openedAt = $shift->opened_at;
-        $closesAt = $shift->closed_at ?? now();
+        $closesAt = $until ?? $shift->closed_at ?? now();
         $storeId = $shift->store_id !== null ? (int) $shift->store_id : null;
 
-        $cashVouchers = fn () => Payment::query()
-            ->where('payments.payment_method', 'cash')
-            ->where('payments.created_at', '>=', $openedAt)
-            ->where('payments.created_at', '<=', $closesAt)
-            ->when($storeId !== null, fn ($q) => $q->forStore((int) $storeId));
+        $voucherStore = fn ($q) => $q->forStore((int) $storeId);
+        $cashVouchers = fn () => ShiftAttribution::scopeToShift(
+            Payment::query()->where('payments.payment_method', 'cash'),
+            $shift,
+            $closesAt,
+            $storeId !== null ? $voucherStore : null,
+        );
+        $storeColumn = fn (string $table) => $storeId !== null ? fn (Builder $q) => $q->where($table.'.store_id', $storeId) : null;
 
         // Cash taken at the sale (cash invoices and the paid part of partial invoices)
         $cashSales = $this->sumDecimal($cashVouchers()->collectedAtSale()->excludingCancelledInvoices(), 'payments.amount');
@@ -147,19 +155,22 @@ class ShiftService
         $customerReceipts = $this->sumDecimal($cashVouchers()->customerReceipts()->excludingCancelledInvoices(), 'payments.amount');
 
         // Credit sales on account
-        $creditSales = $this->sumDecimal(Invoice::where('status', 'confirmed')
-            ->whereIn('payment_type', ['credit', 'partial'])
-            ->where('created_at', '>=', $openedAt)
-            ->where('created_at', '<=', $closesAt)
-            ->when($storeId !== null, fn ($q) => $q->where('store_id', $storeId)), 'remaining_amount');
+        $creditSales = $this->sumDecimal(ShiftAttribution::scopeToShift(
+            Invoice::query()->where('invoices.status', 'confirmed')->whereIn('invoices.payment_type', ['credit', 'partial']),
+            $shift,
+            $closesAt,
+            $storeColumn('invoices'),
+        ), 'remaining_amount');
 
         $totalCashIn = bcadd($cashSales, $customerReceipts, 3);
 
         // Cash outflows: Operational expenses paid in cash
-        $expenses = $this->sumDecimal(Expense::where('created_at', '>=', $openedAt)
-            ->where('created_at', '<=', $closesAt)
-            ->where('payment_method', 'cash')
-            ->when($storeId !== null, fn ($q) => $q->where('store_id', $storeId)), 'amount');
+        $expenses = $this->sumDecimal(ShiftAttribution::scopeToShift(
+            Expense::query()->where('expenses.payment_method', 'cash'),
+            $shift,
+            $closesAt,
+            $storeColumn('expenses'),
+        ), 'amount');
 
         // Cash outflows: Supplier payments paid in cash from this drawer
         $supplierPaid = $this->sumDecimal($cashVouchers()->whereNotNull('payments.supplier_id'), 'payments.amount');
@@ -212,14 +223,26 @@ class ShiftService
         // (a rolled-back update() leaves them "clean") and silently skip the UPDATE. The discrepancy
         // job below is afterCommit, so a rolled-back attempt never dispatches it.
         $closed = TransactionRetry::run(function () use ($shiftId, $actualCash, $notes): CashShift {
+            // DATE-01: this exclusive lock also waits for every sale / voucher / expense still being
+            // stamped with this shift (ShiftAttribution reads it under a shared lock), so the sums
+            // below see them all, and anything written after the close finds the shift closed.
             $shift = CashShift::query()->whereKey($shiftId)->lockForUpdate()->firstOrFail();
-            $totals = $this->calculateShiftTotals($shift);
+
+            // DATE-01: the wall clock can go back (summer time ends, a corrected server clock), and
+            // a shift must never be stored as closing before it opened. Its figures do not depend on
+            // this instant for stamped rows; only unstamped history uses the window up to it.
+            $closedAt = now();
+            if ($shift->opened_at !== null && $closedAt->lessThan($shift->opened_at)) {
+                $closedAt = $shift->opened_at->copy();
+            }
+
+            $totals = $this->calculateShiftTotals($shift, $closedAt);
 
             $diff = bcsub($actualCash, $totals['expected_cash_balance'], 3);
 
             $shift->update([
                 'status' => 'closed',
-                'closed_at' => now(),
+                'closed_at' => $closedAt,
                 'total_cash_sales' => $totals['total_cash_sales'],
                 'total_credit_sales' => $totals['total_credit_sales'],
                 'total_payments_collected' => $totals['total_payments_collected'],

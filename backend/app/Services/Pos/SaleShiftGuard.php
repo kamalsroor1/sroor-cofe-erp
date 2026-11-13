@@ -19,8 +19,10 @@ use Illuminate\Validation\ValidationException;
  *
  * Known race: the check runs before the invoice transaction and does not lock the shift row, so a
  * shift closed in the exact moment between the check and the insert can still let that one sale
- * through (it is then counted by the next shift's window logic). Accepted: the window is milliseconds
- * and locking shifts on every sale would serialize the POS.
+ * through. Accepted: the window is milliseconds and an exclusive shift lock on every sale would
+ * serialize the POS. DATE-01: such a sale finds no open shift when it is stamped
+ * (ShiftAttribution), stays unstamped and is outside both shifts' windows; a sale stamped BEFORE
+ * the close is always in the closed shift's stored totals (the close waits for its shared lock).
  */
 final class SaleShiftGuard
 {

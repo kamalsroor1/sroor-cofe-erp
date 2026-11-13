@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property int|null $store_id
+ * @property int|null $cash_shift_id stamped server-side on create (DATE-01, ShiftAttribution); never mass assignable
  * @property Carbon|null $deleted_at
  * @property string $cost_center
  */

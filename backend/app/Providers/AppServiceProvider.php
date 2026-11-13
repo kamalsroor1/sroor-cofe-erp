@@ -12,6 +12,9 @@ use App\Contracts\TenantProvisionerInterface;
 use App\Enums\CentralPermission;
 use App\Models\Addon;
 use App\Models\CentralUser;
+use App\Models\Expense;
+use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Plan;
 use App\Models\PlanAddon;
 use App\Models\PlanFeature;
@@ -19,6 +22,7 @@ use App\Models\Subscription;
 use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
 use App\Observers\Billing\EntitlementsCacheObserver;
+use App\Observers\CashShiftStampObserver;
 use App\Observers\Landing\PublicCatalogObserver;
 use App\Observers\TenantObserver;
 use App\Services\Branding\PlatformBranding;
@@ -144,6 +148,12 @@ class AppServiceProvider extends ServiceProvider
 
         // Register Model Observers
         Tenant::observe(TenantObserver::class);
+
+        // DATE-01: every new voucher, expense and invoice is stamped with its store's open cash
+        // shift, so shift figures no longer depend on the wall clock (ShiftAttribution).
+        foreach ([Payment::class, Expense::class, Invoice::class] as $model) {
+            $model::observe(CashShiftStampObserver::class);
+        }
 
         // ENTI-2.2: any change to the central rows entitlements derive from bumps the
         // affected tenants' entitlement cache (explicit TenantCache::bumpFor scope).
