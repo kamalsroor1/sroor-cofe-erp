@@ -133,6 +133,16 @@ final class CorsAllowListTest extends TenantTestCase
      *
      * @return array<string, mixed>
      */
+    public function test_env_example_documents_both_cors_keys_with_empty_values_and_the_ibraa_example(): void
+    {
+        $example = (string) file_get_contents(base_path('.env.example'));
+
+        $this->assertMatchesRegularExpression('/^CORS_ALLOWED_ORIGINS=$/m', $example);
+        $this->assertMatchesRegularExpression('/^CORS_ALLOWED_ORIGIN_PATTERNS=$/m', $example);
+        $this->assertStringContainsString('CORS_ALLOWED_ORIGINS=https://ibraa.app', $example);
+        $this->assertStringContainsString('CORS_ALLOWED_ORIGIN_PATTERNS=https://*.ibraa.app', $example);
+    }
+
     private function configFor(string $appEnv, string $origins = '', string $patterns = ''): array
     {
         $saved = [];
