@@ -10,6 +10,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
+use App\Services\Entitlements\TenantEntitlementService;
 use Database\Seeders\Catalog\FeatureCatalog;
 use Database\Seeders\Catalog\PlanCatalog;
 use Illuminate\Support\Str;
@@ -92,7 +93,7 @@ final class ProfitReportsGatingApiTest extends TenantTestCase
 
         // Cancelling the bundle locks all three again.
         $line->update(['status' => SubscriptionAddonStatus::Cancelled, 'ends_at' => now()->subMinute()]);
-        app(\App\Services\Entitlements\TenantEntitlementService::class)->forget((string) $tenant->getKey());
+        app(TenantEntitlementService::class)->forget((string) $tenant->getKey());
 
         $this->getJson('/api/v1/purchases/smart-reorder', $this->tenantHeaders($tenant))->assertStatus(403);
     }
@@ -100,8 +101,8 @@ final class ProfitReportsGatingApiTest extends TenantTestCase
     public function test_the_catalog_matches_the_new_structure(): void
     {
         foreach (['basic', 'pro', 'enterprise'] as $slug) {
-            $this->assertNull(PlanCatalogProbe::value($slug, 'max_items'), "{$slug} has no item limit");
-            $this->assertNull(PlanCatalogProbe::value($slug, 'max_invoices_per_month'), "{$slug} has no monthly invoice limit");
+            $this->assertNull(self::catalogValue($slug, 'max_items'), "{$slug} has no item limit");
+            $this->assertNull(self::catalogValue($slug, 'max_invoices_per_month'), "{$slug} has no monthly invoice limit");
         }
 
         $this->assertTrue(PlanCatalog::features('basic')['transfers.manage']);
@@ -136,12 +137,9 @@ final class ProfitReportsGatingApiTest extends TenantTestCase
             'max_items' => null, 'is_active' => true, 'sort_order' => 1,
         ]);
     }
-}
 
-/** Reads a plan attribute straight from the approved catalog. */
-final class PlanCatalogProbe
-{
-    public static function value(string $slug, string $column): mixed
+    /** Reads a plan attribute straight from the approved catalog. */
+    private static function catalogValue(string $slug, string $column): mixed
     {
         foreach (PlanCatalog::all() as $plan) {
             if ($plan['slug'] === $slug) {
