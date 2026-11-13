@@ -8,6 +8,7 @@ use App\Models\Purchase;
 use App\Models\ReturnDocument;
 use App\Models\Supplier;
 use App\Support\Money\Decimal;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
 class SupplierBalanceService
@@ -178,7 +179,7 @@ class SupplierBalanceService
      */
     private function balanceBefore(Supplier $supplier, string $date): string
     {
-        $day = \Carbon\CarbonImmutable::parse($date)->toDateString();
+        $day = CarbonImmutable::parse($date)->toDateString();
 
         $openings = (string) (OpeningBalance::query()
             ->where('party_type', OpeningBalance::PARTY_SUPPLIER)

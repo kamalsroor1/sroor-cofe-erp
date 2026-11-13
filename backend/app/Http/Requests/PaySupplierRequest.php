@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Rules\DocumentDate;
 use Illuminate\Foundation\Http\FormRequest;
 
 class PaySupplierRequest extends FormRequest
@@ -18,7 +19,7 @@ class PaySupplierRequest extends FormRequest
         return [
             'amount' => ['required', 'numeric', 'min:0.01'],
             'payment_method' => ['required', 'string', 'in:cash,instapay,wallet,bank,visa,e_wallet,bank_transfer'],
-            'payment_date' => ['required', 'date', new \App\Rules\DocumentDate($this->user())],
+            'payment_date' => ['required', 'date', new DocumentDate($this->user())],
             'notes' => ['nullable', 'string', 'max:500'],
         ];
     }

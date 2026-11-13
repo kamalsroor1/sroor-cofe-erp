@@ -95,6 +95,45 @@ class DocumentDateLimitsApiTest extends TenantTestCase
             ->assertJsonValidationErrors('purchase_date');
     }
 
+    public function test_updating_an_expense_cannot_move_its_date_outside_the_allowed_window(): void
+    {
+        $this->tenantAdmin($this->tenant);
+        $id = $this->postJson('/api/v1/expenses', $this->expense($this->businessDate()), $this->tenantHeaders($this->tenant))
+            ->assertStatus(201)
+            ->json('data.id');
+        $user = $this->createTenantUser($this->tenant, permissions: ['expenses.manage']);
+        $headers = $this->tenantHeaders($this->tenant, $user);
+
+        $this->putJson('/api/v1/expenses/'.$id, $this->expense($this->daysFromToday(1)), $headers)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('expense_date');
+        $this->putJson('/api/v1/expenses/'.$id, $this->expense($this->daysFromToday(-2)), $headers)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('expense_date');
+    }
+
+    public function test_updating_an_old_expense_without_changing_its_date_is_accepted(): void
+    {
+        $this->tenantAdmin($this->tenant);
+        $oldDate = $this->daysFromToday(-3);
+        $id = $this->postJson('/api/v1/expenses', $this->expense($oldDate), $this->tenantHeaders($this->tenant))
+            ->assertStatus(201)
+            ->json('data.id');
+        $user = $this->createTenantUser($this->tenant, permissions: ['expenses.manage']);
+
+        $this->putJson('/api/v1/expenses/'.$id, ['title' => 'Rent (fixed)'] + $this->expense($oldDate), $this->tenantHeaders($this->tenant, $user))
+            ->assertStatus(200);
+    }
+
+    public function test_stock_transfer_with_future_date_is_rejected(): void
+    {
+        $this->tenantAdmin($this->tenant);
+
+        $this->postJson('/api/v1/transfers', ['transfer_date' => $this->daysFromToday(1)], $this->tenantHeaders($this->tenant))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('transfer_date');
+    }
+
     public function test_unauthenticated_request_is_rejected(): void
     {
         $this->postJson('/api/v1/expenses', $this->expense($this->businessDate()), $this->tenantGuestHeaders($this->tenant))

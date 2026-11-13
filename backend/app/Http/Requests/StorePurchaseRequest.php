@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Rules\DocumentDate;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StorePurchaseRequest extends FormRequest
@@ -17,7 +18,7 @@ class StorePurchaseRequest extends FormRequest
     {
         return [
             'supplier_id' => ['required', 'exists:suppliers,id'],
-            'purchase_date' => ['required', 'date', new \App\Rules\DocumentDate($this->user())],
+            'purchase_date' => ['required', 'date', new DocumentDate($this->user())],
             'supplier_invoice_ref' => ['nullable', 'string', 'max:100'],
             'paid_amount' => ['nullable', 'numeric', 'min:0'],
             'discount_amount' => ['nullable', 'numeric', 'min:0'],

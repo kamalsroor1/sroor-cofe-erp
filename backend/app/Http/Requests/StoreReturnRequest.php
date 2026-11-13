@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\ValidatesPriceOverride;
+use App\Rules\DocumentDate;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -40,7 +41,7 @@ class StoreReturnRequest extends FormRequest
             'supplier_id' => ['nullable', 'required_if:return_type,purchase_return', 'exists:suppliers,id'],
             'invoice_id' => ['nullable', 'integer', 'min:1', 'prohibited_unless:return_type,sales_return'],
             'purchase_id' => ['nullable', 'integer', 'min:1', 'prohibited_unless:return_type,purchase_return'],
-            'return_date' => ['required', 'date', new \App\Rules\DocumentDate($this->user())],
+            'return_date' => ['required', 'date', new DocumentDate($this->user())],
             // BE-10: how a sales return is paid back (cash from the drawer, or the customer's
             // balance); ignored for a purchase return. The refunded amount is always the return's total, computed server-side.
             'refund_method' => ['nullable', 'string', 'in:cash,balance'],

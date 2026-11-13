@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Rules\DocumentDate;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreExpenseRequest extends FormRequest
@@ -20,7 +21,7 @@ class StoreExpenseRequest extends FormRequest
             'category' => ['required', 'string', 'max:100'],
             'cost_center' => ['required', 'string', 'max:50'],
             'amount' => ['required', 'numeric', 'min:0.01'],
-            'expense_date' => ['required', 'date', new \App\Rules\DocumentDate($this->user())],
+            'expense_date' => ['required', 'date', new DocumentDate($this->user())],
             'payment_method' => ['required', 'string', 'in:cash,instapay,e_wallet,visa,bank_transfer,check'],
             'notes' => ['nullable', 'string', 'max:500'],
         ];

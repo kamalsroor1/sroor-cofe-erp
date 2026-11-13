@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
@@ -43,7 +44,7 @@ Schedule::command('notify:dispatch-tenant-alerts')
     ->everyFifteenMinutes()
     ->withoutOverlapping(10)
     ->onFailure(static function (): void {
-        \Illuminate\Support\Facades\Log::critical('notify:dispatch-tenant-alerts failed: at least one shop got no Telegram alert.');
+        Log::critical('notify:dispatch-tenant-alerts failed: at least one shop got no Telegram alert.');
     });
 
 // 5. Send daily low stock notification to Telegram at 09:00 AM (disabled by default)

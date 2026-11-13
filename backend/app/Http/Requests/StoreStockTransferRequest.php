@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Models\User;
+use App\Rules\DocumentDate;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use Illuminate\Foundation\Http\FormRequest;
@@ -21,7 +22,7 @@ class StoreStockTransferRequest extends FormRequest
         return [
             'from_store_id' => ['required', 'different:to_store_id', 'exists:stores,id'],
             'to_store_id' => ['required', 'different:from_store_id', 'exists:stores,id'],
-            'transfer_date' => ['required', 'date'],
+            'transfer_date' => ['required', 'date', new DocumentDate($this->user())],
             'notes' => ['nullable', 'string', 'max:500'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.item_id' => ['required', 'exists:items,id'],

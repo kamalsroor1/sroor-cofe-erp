@@ -7,6 +7,7 @@ namespace App\Actions\Tenants;
 use App\Models\Tenant;
 use App\Services\Branding\TenantBranding;
 use App\Support\PlatformHosts;
+use App\Support\Tenancy\TenantSuspensionReason;
 
 class ResolveTenantWorkspaceAction
 {
@@ -76,7 +77,7 @@ class ResolveTenantWorkspaceAction
         // Check if suspended
         // SELL-07: a shop suspended for NON-PAYMENT is still resolvable so it can sign in and pay
         // (EnsureTenantActive confines it to /billing/*); a violation stays refused.
-        $paymentRecovery = $tenant->suspension_reason === \App\Support\Tenancy\TenantSuspensionReason::NonPayment
+        $paymentRecovery = $tenant->suspension_reason === TenantSuspensionReason::NonPayment
             && ($tenant->status === 'suspended' || $tenant->isSuspended());
 
         if (! $paymentRecovery && ($tenant->status === 'suspended' || (method_exists($tenant, 'isSuspended') && $tenant->isSuspended()))) {
