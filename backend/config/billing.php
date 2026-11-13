@@ -47,9 +47,9 @@ return [
 
     /*
     | SELL-06: `billing:issue-trial-invoices` (daily) issues a trial tenant's first plan invoice
-    | this many days before the trial ends (owner decision: 3). Whole days, at least 0.
+    | this many days before the trial ends (owner decision: 7). Whole days, at least 0.
     */
-    'trial_invoice_lead_days' => max(0, (int) env('BILLING_TRIAL_INVOICE_LEAD_DAYS', 3)),
+    'trial_invoice_lead_days' => max(0, (int) env('BILLING_TRIAL_INVOICE_LEAD_DAYS', 7)),
 
     /*
     | Payment receipt uploads (ENTI-3.3): jpg/png/webp/pdf only (never SVG), size in kilobytes.

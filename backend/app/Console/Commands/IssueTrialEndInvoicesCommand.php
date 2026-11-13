@@ -9,7 +9,7 @@ use Illuminate\Console\Command;
 
 /**
  * SELL-06: daily, issue the first subscription invoice of trials ending within the lead days
- * (config billing.trial_invoice_lead_days, 3). Scheduled in routes/console.php. Idempotent.
+ * (config billing.trial_invoice_lead_days, 7). Scheduled in routes/console.php. Idempotent.
  *
  *   php artisan billing:issue-trial-invoices [--dry-run]
  */

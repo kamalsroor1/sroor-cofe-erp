@@ -23,7 +23,7 @@ use Throwable;
 
 /**
  * SELL-06: issue the first subscription invoice of every trial that ends within
- * config('billing.trial_invoice_lead_days') days (3), so the shop has something to pay before
+ * config('billing.trial_invoice_lead_days') days (7), so the shop has something to pay before
  * the trial (and its grace days) run out. Run daily by `billing:issue-trial-invoices`.
  *
  * Candidates: stored status `trial` (so suspended / cancelled / archived tenants are never

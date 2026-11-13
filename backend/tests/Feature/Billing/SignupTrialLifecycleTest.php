@@ -138,8 +138,8 @@ final class SignupTrialLifecycleTest extends BillingTestCase
         $trialEnd = CarbonImmutable::instance(Tenant::query()->findOrFail($slug)->trial_ends_at);
         $this->changeOwnerPassword($slug, $email);
 
-        // Trial end - 3 days: the daily command issues the first invoice (exactly one).
-        $this->travelTo($trialEnd->subDays(3));
+        // Trial end - 7 days: the daily command issues the first invoice (exactly one).
+        $this->travelTo($trialEnd->subDays(7));
         $this->artisan('billing:issue-trial-invoices')->assertSuccessful();
         $this->artisan('billing:issue-trial-invoices')->assertSuccessful();
         $invoice = BillingInvoice::query()->where('tenant_id', $slug)->sole();

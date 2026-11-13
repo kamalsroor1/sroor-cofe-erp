@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * SELL-06: `billing:issue-trial-invoices` issues a trial's first plan invoice 3 days before the
+ * SELL-06: `billing:issue-trial-invoices` issues a trial's first plan invoice 7 days before the
  * trial ends, exactly once per tenant and period, never for suspended / archived tenants or
  * free plans, and writes nothing on --dry-run.
  */
@@ -48,9 +48,9 @@ final class IssueTrialEndInvoicesCommandTest extends BillingTestCase
         parent::tearDown();
     }
 
-    public function test_it_issues_one_plan_invoice_three_days_before_the_trial_end_and_is_idempotent(): void
+    public function test_it_issues_one_plan_invoice_seven_days_before_the_trial_end_and_is_idempotent(): void
     {
-        $trialEnd = now()->addDays(3);
+        $trialEnd = now()->addDays(7);
         $tenant = $this->trialTenant($this->basic, $trialEnd);
 
         $this->artisan(self::COMMAND)->assertSuccessful();
@@ -74,10 +74,10 @@ final class IssueTrialEndInvoicesCommandTest extends BillingTestCase
         $this->assertSame(1, BillingInvoice::query()->where('tenant_id', $tenant->id)->count());
     }
 
-    public function test_it_waits_until_three_days_before_the_trial_end(): void
+    public function test_it_waits_until_seven_days_before_the_trial_end(): void
     {
-        $inFive = $this->trialTenant($this->basic, now()->addDays(5));
-        $justOutside = $this->trialTenant($this->basic, now()->addDays(3)->addMinute());
+        $inFive = $this->trialTenant($this->basic, now()->addDays(9));
+        $justOutside = $this->trialTenant($this->basic, now()->addDays(7)->addMinute());
         $inOne = $this->trialTenant($this->basic, now()->addDay());
 
         $this->artisan(self::COMMAND)->assertSuccessful();
