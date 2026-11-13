@@ -59,19 +59,28 @@ final class ApiLoginAction
             ]);
         }
 
-        // 3. Check active status
-        if (! $user->is_active) {
+        // 3. SELL-07: a shop suspended for non-payment lets only ACTIVE billing managers in, and only
+        //    to pay (EnsureTenantActive confines the token to /billing/*). Anyone else gets exactly the
+        //    wrong-password answer (same message, same failed-login log): a distinct error for a
+        //    correct password would be a password oracle while the shop is suspended.
+        $paymentRecovery = $this->isPaymentRecovery();
+        if ($paymentRecovery && (! $user->is_active || ! $user->can('billing.manage'))) {
+            $this->activityLogService->log(
+                module: 'auth',
+                action: 'api_login_failed',
+                description: __('auth.activity_login_failed', ['login' => $login]),
+                properties: ['login' => $login, 'ip' => $dto->deviceIp]
+            );
+
             throw ValidationException::withMessages([
-                'login' => __('auth.account_disabled'),
+                'login' => __('auth.failed'),
             ]);
         }
 
-        // 3b. SELL-07: a shop suspended for non-payment lets only billing managers in, and only to pay
-        //     (EnsureTenantActive confines the token to /billing/*).
-        $paymentRecovery = $this->isPaymentRecovery();
-        if ($paymentRecovery && ! $user->can('billing.manage')) {
+        // 3b. Check active status
+        if (! $user->is_active) {
             throw ValidationException::withMessages([
-                'login' => __('subscription.errors.payment_recovery_billing_only'),
+                'login' => __('auth.account_disabled'),
             ]);
         }
 

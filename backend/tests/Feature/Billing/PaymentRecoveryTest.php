@@ -50,6 +50,29 @@ final class PaymentRecoveryTest extends BillingTestCase
         $this->getJson('/api/v1/customers', $headers)->assertForbidden();
     }
 
+    public function test_a_non_billing_user_of_a_non_payment_suspended_shop_gets_the_wrong_password_answer(): void
+    {
+        $tenant = $this->suspended('non_payment');
+        $cashier = $this->createTenantUser($tenant, 'cashier');
+        $headers = ['X-Tenant' => (string) $tenant->getTenantKey()];
+
+        $right = $this->postJson('/api/v1/auth/login', ['login' => $cashier->email, 'password' => 'password'], $headers)
+            ->assertStatus(422);
+        $wrong = $this->postJson('/api/v1/auth/login', ['login' => $cashier->email, 'password' => 'not-the-password'], $headers)
+            ->assertStatus(422);
+
+        // No password oracle: a correct password is indistinguishable from a wrong one.
+        $this->assertSame($wrong->json(), $right->json());
+        $this->assertSame((string) __('auth.failed'), $right->json('errors.login.0'));
+        $this->assertArrayNotHasKey('token', (array) $right->json('data'));
+
+        // A disabled billing manager is refused the same way.
+        $disabled = $this->createTenantUser($tenant, 'admin', attributes: ['is_active' => false]);
+        $this->postJson('/api/v1/auth/login', ['login' => $disabled->email, 'password' => 'password'], $headers)
+            ->assertStatus(422)
+            ->assertJsonPath('errors.login.0', (string) __('auth.failed'));
+    }
+
     public function test_violation_suspended_shop_stays_fully_blocked(): void
     {
         $tenant = $this->suspended('violation');
