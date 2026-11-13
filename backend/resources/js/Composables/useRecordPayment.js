@@ -2,6 +2,7 @@ import { ref } from 'vue';
 import centralApi from '../Services/centralApi';
 import { notifyError, notifySuccess, notifyWarning } from '../helpers/alert';
 import { useTrans } from './useTrans';
+import { toTenantDateString } from './useBusinessDate';
 
 /**
  * "Record manual payment" of the tenant billing section (OPS-20):
@@ -12,7 +13,7 @@ import { useTrans } from './useTrans';
 
 export const RECORD_METHODS = Object.freeze(['cash', 'instapay', 'vodafone_cash', 'bank_transfer']);
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => toTenantDateString();
 
 const emptyForm = (remaining = '') => ({
     amount: remaining,
