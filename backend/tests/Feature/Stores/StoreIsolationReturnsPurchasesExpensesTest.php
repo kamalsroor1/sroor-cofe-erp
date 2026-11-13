@@ -30,7 +30,8 @@ final class StoreIsolationReturnsPurchasesExpensesTest extends TenantTestCase
 {
     /** Permissions the user of A gets, so only the STORE decides the outcome. */
     private const PERMISSIONS = [
-        'returns.manage', 'purchases.view', 'purchases.create', 'purchases.delete', 'expenses.manage',
+        // ROLE-01: deleting a return also needs returns.delete, so the delete route reaches the store check.
+        'returns.manage', 'returns.delete', 'purchases.view', 'purchases.create', 'purchases.delete', 'expenses.manage',
     ];
 
     /**
@@ -74,10 +75,11 @@ final class StoreIsolationReturnsPurchasesExpensesTest extends TenantTestCase
                 ->assertJsonPath('error_code', 'store_access_denied');
         }
 
-        // No header and no usable store: only ResolveActiveStore refuses this.
+        // No header and no usable store: only ResolveActiveStore refuses this. ROLE-01: a user
+        // assigned to no branch gets the specific `no_store_assigned` code (still a 403).
         $this->json($method, $uri, [], $this->headersFor($tenant, $storeless, null))
             ->assertStatus(403)
-            ->assertJsonPath('error_code', 'store_access_denied');
+            ->assertJsonPath('error_code', 'no_store_assigned');
 
         $all = $this->json($method, $uri, [], $this->headersFor($tenant, null, 'all'));
         if ($concrete) {
