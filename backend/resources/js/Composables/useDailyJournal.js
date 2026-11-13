@@ -1,10 +1,11 @@
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 import { businessToday } from './useBusinessDate';
 import { normalize } from '../helpers/decimal';
-import { isValidCountedCash } from '../helpers/shiftCash';
+import { isValidCountedCash, canCloseShift } from '../helpers/shiftCash';
+import { useAuthStore } from '../stores/auth';
 import { useShiftCloseFigures } from './useShiftCloseFigures';
 import { useZReportPrint } from './useZReportPrint';
 import { isOwnShiftJournal, canPrintJournal } from '../helpers/journalScope';
@@ -23,6 +24,7 @@ export function useDailyJournal() {
     const isOwnShiftScope = ref(false);
     const canPrint = ref(false);
     const closeFigures = useShiftCloseFigures();
+    const authStore = useAuthStore();
     const zPrint = useZReportPrint();
     const summary = ref({
         total_sales: 0,
@@ -64,6 +66,17 @@ export function useDailyJournal() {
     });
 
     let lastClosedShiftId = null;
+
+    // DEC-SHIFT: only the shift's opener (`is_own`) or a manager (reports.view) closes it; the server answers 403 otherwise.
+    const mayCloseShift = computed(
+        () =>
+            Boolean(activeShift.value) &&
+            canCloseShift({
+                canClose: authStore.can('daily_journal.close_shift'),
+                isManager: authStore.can('reports.view'),
+                isOwn: activeShift.value?.is_own === true,
+            })
+    );
 
     const fetchDailyJournal = async () => {
         isLoading.value = true;
@@ -134,7 +147,7 @@ export function useDailyJournal() {
         closeShiftForm.actual_cash_balance = '';
         closeShiftForm.notes = '';
         showCloseShiftModal.value = true;
-        // The expected cash is the server's figure for THIS shift, never the day's journal total.
+        // Blind count: only the shift's id and opening float are read; the expected cash appears after the close.
         closeFigures.load();
     };
 
@@ -241,5 +254,6 @@ export function useDailyJournal() {
         submitCloseShift,
         submitExpense,
         printActiveZReport,
+        mayCloseShift,
     };
 }

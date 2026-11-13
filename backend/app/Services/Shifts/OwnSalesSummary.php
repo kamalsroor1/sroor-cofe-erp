@@ -21,9 +21,9 @@ use Illuminate\Database\Eloquent\Model;
  * that shift / their business day (treasury summary). Never the drawer balance,
  * other users' sales or store-wide totals.
  *
- * Invoices and expenses belong to the shift they were stamped with (DATE-01, ShiftAttribution;
- * unstamped history: the shift's time window [opened_at, closed_at ?? now] on `created_at`), sales
- * returns to that window; this class narrows the same rule to `user_id` = the caller. Without a shift a business date may be given (documents of that day,
+ * Invoices, expenses and sales returns belong to the shift they were stamped with (DATE-01 /
+ * DEC-SHIFT, ShiftAttribution; unstamped history: the shift's time window [opened_at,
+ * closed_at ?? now] on `created_at`); this class narrows the same rule to `user_id` = the caller. Without a shift a business date may be given (documents of that day,
  * on their document-date columns); with neither, every figure is zero.
  *
  * Shared by GetOwnShiftDashboardAction and GetOwnShiftTreasurySummaryAction. Money is returned
@@ -188,21 +188,11 @@ final class OwnSalesSummary
     {
         $query->where('user_id', $user->id)->where('store_id', $storeId);
 
-        // DATE-01: invoices and expenses carry the shift they were created in (ShiftAttribution),
-        // the same rule as ShiftService::calculateShiftTotals(), unstamped history by the window.
-        // Sales returns carry no stamp and stay on the window.
-        $model = $query->getModel();
-        if ($shift instanceof CashShift && ($model instanceof Invoice || $model instanceof Expense)) {
-            return ShiftAttribution::scopeToShift($query, $shift, $shift->closed_at);
-        }
-
+        // DATE-01 / DEC-SHIFT: invoices, expenses and sales returns carry the shift they were
+        // created in (ShiftAttribution), the same rule as ShiftService::calculateShiftTotals();
+        // unstamped history by the shift's window.
         if ($shift instanceof CashShift) {
-            $query->where('created_at', '>=', $shift->opened_at);
-            if ($shift->closed_at !== null) {
-                $query->where('created_at', '<=', $shift->closed_at);
-            }
-
-            return $query;
+            return ShiftAttribution::scopeToShift($query, $shift, $shift->closed_at);
         }
 
         ReportDateRange::apply($query, $dateColumn, $businessDate, $businessDate);

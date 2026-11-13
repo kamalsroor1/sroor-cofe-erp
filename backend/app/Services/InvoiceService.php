@@ -15,6 +15,7 @@ use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\Invoices\InvoiceCancelGuard;
+use App\Services\Pos\SaleShiftGuard;
 use App\Services\Pricing\SaleDiscountGuard;
 use App\Services\Pricing\SalePriceGuard;
 use App\Services\Settings\TenantSettings;
@@ -56,8 +57,12 @@ class InvoiceService
      *
      * Idempotent when $data['client_uuid'] is set: a replay of the same key returns the
      * original invoice (wasRecentlyCreated === false) with no new side effects.
+     *
+     * $requireOpenShift (DEC-SHIFT): the sale actions that apply the POS-10 shift rule pass true,
+     * and the open shift is re-checked under lock inside the transaction (409 when it was closed
+     * meanwhile, SaleShiftGuard::assertShiftStillOpen). Internal callers (seeders) leave it off.
      */
-    public function confirmInvoice(array $data): Invoice
+    public function confirmInvoice(array $data, bool $requireOpenShift = false): Invoice
     {
         $clientUuid = ! empty($data['client_uuid']) ? (string) $data['client_uuid'] : null;
 
@@ -88,7 +93,7 @@ class InvoiceService
         $this->prepareNumberScopes($data);
 
         try {
-            return $this->persistConfirmedInvoice($data, $clientUuid, $priceGuard, $discountGuard);
+            return $this->persistConfirmedInvoice($data, $clientUuid, $priceGuard, $discountGuard, $requireOpenShift);
         } catch (UniqueConstraintViolationException $e) {
             // Backstop for a concurrent insert of the same client_uuid that slipped past the
             // replay check. Any other unique violation (e.g. invoice_number) is rethrown.
@@ -147,9 +152,9 @@ class InvoiceService
      * memoised (a retry re-reads the same approver, no new PIN/limiter hit); every row is read
      * again inside, and the invoice/payment numbers of a failed attempt roll back with it.
      */
-    private function persistConfirmedInvoice(array $data, ?string $clientUuid, SalePriceGuard $priceGuard, SaleDiscountGuard $discountGuard): Invoice
+    private function persistConfirmedInvoice(array $data, ?string $clientUuid, SalePriceGuard $priceGuard, SaleDiscountGuard $discountGuard, bool $requireOpenShift): Invoice
     {
-        return TransactionRetry::run(function () use ($data, $clientUuid, $priceGuard, $discountGuard) {
+        return TransactionRetry::run(function () use ($data, $clientUuid, $priceGuard, $discountGuard, $requireOpenShift) {
             $customer = Customer::where('id', $data['customer_id'])->lockForUpdate()->firstOrFail();
 
             $subtotal = '0.000';
@@ -181,6 +186,13 @@ class InvoiceService
             $this->assertWalkInPaidInFull($customer, (string) ($data['payment_type'] ?? 'cash'));
 
             $invoiceNumber = $data['invoice_number'] ?? $this->generateUniqueNumber($storeId);
+
+            // DEC-SHIFT: a sale subject to the shift rule (POS-10) is refused (409, everything above
+            // rolls back) when its store's shift was closed after the pre-transaction check. Same
+            // shared lock and same point as the DATE-01 stamp of the invoice below.
+            if ($requireOpenShift) {
+                app(SaleShiftGuard::class)->assertShiftStillOpen($storeId !== null ? (int) $storeId : null);
+            }
 
             $invoice = Invoice::create([
                 'invoice_number' => $invoiceNumber,

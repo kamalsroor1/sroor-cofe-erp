@@ -35,9 +35,10 @@ final class ShiftPolicyNullStoreTest extends TenantTestCase
             $this->assertTrue($policy->view($viewAll, $shift));
             $this->assertFalse($policy->close($viewAll, $shift));
 
-            // The cashier's own store still works.
+            // The cashier's own store still works (for a shift the cashier opened, DEC-SHIFT).
             $own = new CashShift;
             $own->store_id = (int) $cashier->default_store_id;
+            $own->user_id = (int) $cashier->id;
             $this->assertTrue($policy->close($cashier, $own));
         });
     }

@@ -3,7 +3,7 @@ import { useRouter } from 'vue-router';
 import api from '../../Services/api';
 import { trans } from '../../helpers/trans';
 import { normalize } from '../../helpers/decimal';
-import { isValidCountedCash } from '../../helpers/shiftCash';
+import { isValidCountedCash, canCloseShift, isShiftOpenedBy } from '../../helpers/shiftCash';
 import { useShiftCloseFigures } from '../useShiftCloseFigures';
 import { useZReportPrint } from '../useZReportPrint';
 import { sanitizeDecimalInput } from '../../helpers/posWeight';
@@ -27,6 +27,14 @@ export function usePosShift({ authStore, activeShift, requiresShift, isLoading, 
     let lastClosedShiftId = null;
 
     const canManageShift = computed(() => authStore.can('daily_journal.close_shift'));
+    // DEC-SHIFT: only the shift's opener or a manager (reports.view) closes it; the server answers 403 otherwise.
+    const canCloseActiveShift = computed(() =>
+        canCloseShift({
+            canClose: canManageShift.value,
+            isManager: authStore.can('reports.view'),
+            isOwn: isShiftOpenedBy(activeShift.value, authStore.user?.id),
+        })
+    );
     // The gate covers the workspace only when the branch needs a shift and none is open.
     const gateVisible = computed(() => !isLoading.value && requiresShift.value && !activeShift.value);
 
@@ -37,7 +45,8 @@ export function usePosShift({ authStore, activeShift, requiresShift, isLoading, 
         countedCash.value = sanitizeDecimalInput(value);
     };
 
-    // The expected cash comes from GET /shifts/current (this shift's own metrics), read fresh each time the panel opens.
+    // The shift's figures come from GET /shifts/current, read fresh each time the panel opens. Blind count: the
+    // server withholds the expected cash from a user without reports.view, and the panel never shows it before the close.
     const refreshReport = async () => {
         isReportLoading.value = true;
         reportFailed.value = false;
@@ -95,6 +104,7 @@ export function usePosShift({ authStore, activeShift, requiresShift, isLoading, 
 
     const submitClose = async () => {
         if (isSubmitting.value || !activeShift.value || isReportLoading.value || reportFailed.value) return;
+        if (!canCloseActiveShift.value) return;
         if (!guardOnline()) return;
         if (!isValidCountedCash(countedCash.value)) {
             errorMessage.value = trans('treasury.counted_cash_required');
@@ -129,7 +139,7 @@ export function usePosShift({ authStore, activeShift, requiresShift, isLoading, 
         reportFailed,
         errorMessage,
         canManageShift,
-        expectedCash: figures.expectedCash,
+        canCloseActiveShift,
         reportError: figures.errorMessage,
         zPrint: reactive(zPrint),
         leaveGate,

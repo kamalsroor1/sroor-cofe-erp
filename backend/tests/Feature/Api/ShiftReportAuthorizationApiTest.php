@@ -18,8 +18,9 @@ use Tests\TenantTestCase;
  * z-report: store readable AND (admin OR reports.view OR the shift's own cashier); a user
  * with none of pos.access / daily_journal.view gets 403 from the controller; a store or
  * ownership denial is 404.
- * close: daily_journal.close_shift (route) AND access to the shift's store, no ownership rule (a
- * supervisor closes a cashier's shift); a shift outside the active store is 404.
+ * close: daily_journal.close_shift (route) AND access to the shift's store AND (DEC-SHIFT) the
+ * shift's opener or a manager (reports.view / admin); a shift outside the active store is 404,
+ * another cashier's shift 403 (ShiftCloseRulesApiTest).
  */
 final class ShiftReportAuthorizationApiTest extends TenantTestCase
 {
@@ -119,7 +120,8 @@ final class ShiftReportAuthorizationApiTest extends TenantTestCase
     public function test_a_supervisor_with_close_shift_closes_a_cashiers_shift_by_id(): void
     {
         $cashier = $this->createTenantUser($this->tenant, null, ['pos.access']);
-        $supervisor = $this->createTenantUser($this->tenant, null, ['daily_journal.close_shift']);
+        // DEC-SHIFT: closing another user's shift needs reports.view (a manager) on top of close_shift.
+        $supervisor = $this->createTenantUser($this->tenant, null, ['daily_journal.close_shift', 'reports.view']);
         $shiftId = $this->openShiftFor($cashier, $this->storeA);
 
         // Exactly what useDailyJournal.js submitCloseShift() posts.

@@ -102,6 +102,8 @@ return [
     'x_report_provisional_note' => 'Provisional: the shift is still open, figures up to print time, drawer not counted',
     'close_shift_figures_failed' => 'Could not load the figures of this shift. Try again.',
     'counted_cash_required' => 'Enter the cash you counted in the drawer to close the shift.',
+    'shift_close_not_owner' => 'You cannot close this shift: only the user who opened it or a manager can close it.',
+    'blind_count_hint' => 'Count the cash in the drawer and enter the amount. The expected cash and the difference appear after closing.',
     'z_report_load_failed' => 'Could not load the closing report. The shift is closed; try again.',
     'journal_invoices_tab' => 'Daily Sales Invoices',
     'journal_expenses_tab' => 'Daily Expenses & Sundries',

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services\Pos;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\CashShift;
 use App\Models\Invoice;
 use App\Models\Store;
 use App\Models\StorePosSetting;
+use App\Services\Shifts\ShiftAttribution;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
@@ -17,15 +19,22 @@ use Illuminate\Validation\ValidationException;
  * store, shared by its cashiers), so the check is "this store has an open shift" - a shift of
  * another store never counts.
  *
- * Known race: the check runs before the invoice transaction and does not lock the shift row, so a
- * shift closed in the exact moment between the check and the insert can still let that one sale
- * through. Accepted: the window is milliseconds and an exclusive shift lock on every sale would
- * serialize the POS. DATE-01: such a sale finds no open shift when it is stamped
- * (ShiftAttribution), stays unstamped and is outside both shifts' windows; a sale stamped BEFORE
- * the close is always in the closed shift's stored totals (the close waits for its shared lock).
+ * Two checks:
+ *  - assertCanSell(), before the sale's transaction: no open shift -> 422 on `shift` (the POS
+ *    gate's message). Cheap, and it lets an offline replay of a saved sale through.
+ *  - assertShiftStillOpen(), INSIDE the sale's transaction (DEC-SHIFT, owner decision): the shift
+ *    closed between the first check and the write -> 409, and the whole sale rolls back. It reads
+ *    the open shift under the SAME shared lock the DATE-01 stamp takes, at the same point (right
+ *    before the invoice row is inserted), so it adds no lock and no new lock-order edge: the close
+ *    (ShiftService::closeShift, lockForUpdate on the shift row) either committed first, and the
+ *    sale sees it closed and is refused, or waits for the sale to commit and counts it.
  */
 final class SaleShiftGuard
 {
+    public function __construct(
+        private readonly ShiftAttribution $attribution,
+    ) {}
+
     /**
      * @throws ValidationException 422 on `shift` when the store requires a shift and none is open
      */
@@ -47,6 +56,24 @@ final class SaleShiftGuard
         }
 
         throw ValidationException::withMessages(['shift' => [__('pos.shift_required')]]);
+    }
+
+    /**
+     * Call inside the sale's transaction, right before the invoice row is inserted (after the
+     * idempotency replay check, so a replayed sale is never refused).
+     *
+     * @throws BusinessRuleException 409 `pos.shift_closed_during_sale` when the store requires a
+     *                               shift and none is open any more
+     */
+    public function assertShiftStillOpen(?int $storeId): void
+    {
+        if ($storeId === null || ! $this->isRequired($storeId)) {
+            return;
+        }
+
+        if ($this->attribution->openShiftIdFor($storeId) === null) {
+            throw BusinessRuleException::conflict('pos.shift_closed_during_sale');
+        }
     }
 
     public function isRequired(int $storeId): bool

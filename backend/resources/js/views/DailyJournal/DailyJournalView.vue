@@ -71,7 +71,6 @@
       :show="showCloseShiftModal"
       :shift-number="activeShift?.shift_number"
       :opening-cash-balance="closeFigures.openingCash ?? activeShift?.opening_cash_balance"
-      :expected-cash-in-drawer="closeFigures.expectedCash"
       :loading="closeFigures.isLoading"
       :failed="closeFigures.failed"
       :error-message="closeFigures.errorMessage"
@@ -160,6 +159,7 @@ const {
   submitCloseShift,
   submitExpense,
   printActiveZReport,
+  mayCloseShift,
 } = useDailyJournal();
 
 const { t } = useTrans();
@@ -167,8 +167,8 @@ const { canAccessPath } = useRoutePermission();
 // Creating an expense needs expenses.manage (and the plan feature): same rule as opening the Expenses screen.
 const canRecordExpense = computed(() => canAccessPath('/expenses'));
 // Stays mounted while the journal reloads (date change, retry): a button that unmounts and remounts under the
-// finger swallows the first tap, so only the missing shift or a failed load hides it.
-const canCloseShift = computed(() => !hasError.value && Boolean(activeShift.value));
+// finger swallows the first tap, so only the missing shift, a failed load or the close rule hides it.
+const canCloseShift = computed(() => !hasError.value && mayCloseShift.value);
 const headerActions = computed(() => [
   {
     key: 'expense',

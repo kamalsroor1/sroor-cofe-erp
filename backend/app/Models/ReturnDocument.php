@@ -28,6 +28,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property int|null $store_id
+ * @property int|null $cash_shift_id sales returns only: stamped server-side on create (DEC-SHIFT, ShiftAttribution); never mass assignable
  * @property Carbon|null $deleted_at
  */
 #[UsePolicy(ReturnPolicy::class)]

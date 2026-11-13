@@ -37,11 +37,21 @@ final class ShiftPolicy
             || $user->can('daily_journal.close_shift');
     }
 
+    /**
+     * DEC-SHIFT (owner decision): a shift is closed only by the user who opened it, or by a manager
+     * (admin, or `reports.view`, the same readers who see every shift's figures). A shift without
+     * an opener (user_id null, opened by a job) is closed by a manager only. Without a shift
+     * (route-level check) the permission alone decides. Controllers answer a store denial
+     * (storeChangeableBy) as 404 BEFORE asking this ability, so a refusal here is a 403.
+     */
     public function close(User $user, ?CashShift $shift = null): bool
     {
-        return ($user->hasRole('admin')
-            || $user->can('daily_journal.close_shift'))
-            && ($shift === null || self::canChangeStoreOf($user, $shift));
+        if (! $user->hasRole('admin') && ! $user->can('daily_journal.close_shift')) {
+            return false;
+        }
+
+        return $shift === null
+            || (self::storeChangeableBy($user, $shift) && self::isOpenerOrManager($user, $shift));
     }
 
     /**
@@ -67,9 +77,7 @@ final class ShiftPolicy
             return false;
         }
 
-        return $user->hasRole('admin')
-            || $user->can('reports.view')
-            || ($shift->user_id !== null && (int) $shift->user_id === (int) $user->getKey());
+        return self::isOpenerOrManager($user, $shift);
     }
 
     /** Store access alone (no ability): lets controllers tell a store denial (404) from a missing permission (403). */
@@ -78,8 +86,19 @@ final class ShiftPolicy
         return ActiveStore::canRead($user, self::storeOf($shift));
     }
 
+    /**
+     * The opener of the shift, or a manager (admin / reports.view): who may close it (DEC-SHIFT)
+     * and who reads its expected cash and difference.
+     */
+    public static function isOpenerOrManager(User $user, CashShift $shift): bool
+    {
+        return $user->hasRole('admin')
+            || $user->can('reports.view')
+            || ($shift->user_id !== null && (int) $shift->user_id === (int) $user->getKey());
+    }
+
     /** N4: a shift without a store is never "store 0": only admins (Gate::before) may close it. */
-    private static function canChangeStoreOf(User $user, CashShift $shift): bool
+    public static function storeChangeableBy(User $user, CashShift $shift): bool
     {
         $storeId = self::storeOf($shift);
 

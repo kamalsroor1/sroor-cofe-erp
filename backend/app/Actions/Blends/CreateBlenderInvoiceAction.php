@@ -70,6 +70,6 @@ final class CreateBlenderInvoiceAction
             'discount_type' => 'fixed',
             'discount_value' => '0.000',
             'notes' => $notesStr,
-        ]);
+        ], requireOpenShift: true);
     }
 }

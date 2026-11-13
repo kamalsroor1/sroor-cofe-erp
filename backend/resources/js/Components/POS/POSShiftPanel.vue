@@ -5,7 +5,6 @@ import AppModal from '../Common/AppModal.vue';
 import BaseButton from '../Common/BaseButton.vue';
 import POSShiftOpenForm from './POSShiftOpenForm.vue';
 import { useFormatters } from '../../Composables/useFormatters';
-import { hasMetric } from '../../helpers/dashboardMetrics';
 import { isValidCountedCash } from '../../helpers/shiftCash';
 import { visibleRows } from '../../helpers/journalScope';
 
@@ -13,10 +12,10 @@ const props = defineProps({
   show: { type: Boolean, default: false },
   shift: { type: Object, default: null },
   metrics: { type: Object, default: null },
-  expectedCash: { type: [String, Number], default: null },
   openingCash: { type: String, default: '0' },
   countedCash: { type: String, default: '' },
   canManage: { type: Boolean, default: false },
+  canClose: { type: Boolean, default: false },
   isSubmitting: { type: Boolean, default: false },
   isReportLoading: { type: Boolean, default: false },
   reportFailed: { type: Boolean, default: false },
@@ -99,7 +98,7 @@ const rows = computed(() => {
           <div v-for="n in 6" :key="n" class="h-8 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
         </div>
         <p
-          v-else-if="metrics && rows.length === 0 && !hasMetric(expectedCash)"
+          v-else-if="metrics && rows.length === 0"
           class="text-sm font-bold text-slate-500 dark:text-slate-400"
           data-testid="pos-shift-report-hidden"
         >
@@ -112,19 +111,10 @@ const rows = computed(() => {
               {{ formatMoney(row.value) }}
             </dd>
           </div>
-          <div
-            v-if="!isReportLoading && hasMetric(expectedCash)"
-            class="flex items-center justify-between py-3 text-base"
-          >
-            <dt class="font-black text-slate-900 dark:text-white">{{ $t('pos.shift_report_expected') }}</dt>
-            <dd class="font-mono font-black text-emerald-600 dark:text-emerald-400" dir="ltr">
-              {{ formatMoney(expectedCash) }} {{ currencyLabel }}
-            </dd>
-          </div>
         </dl>
 
-        <!-- Close shift -->
-        <div v-if="canManage" class="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-3">
+        <!-- Close shift (DEC-SHIFT: opener or manager only). Blind count: no expected cash before the close. -->
+        <div v-if="canClose" class="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-3">
           <div class="space-y-1.5">
             <label class="block text-xs font-bold text-slate-600 dark:text-slate-400" for="pos-shift-counted-cash">
               {{ $t('pos.shift_close_counted_cash') }} ({{ currencyLabel }})
@@ -142,6 +132,9 @@ const rows = computed(() => {
           </div>
           <p v-if="!isValidCountedCash(countedCash)" class="text-xs font-bold text-slate-500 dark:text-slate-400">
             {{ $t('treasury.counted_cash_required') }}
+          </p>
+          <p class="text-xs font-bold text-slate-500 dark:text-slate-400" data-testid="pos-shift-blind-hint">
+            {{ $t('treasury.blind_count_hint') }}
           </p>
           <p class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('pos.shift_close_warning') }}</p>
           <p v-if="errorMessage" class="text-sm font-bold text-rose-600 dark:text-rose-400" role="alert">
@@ -166,7 +159,7 @@ const rows = computed(() => {
           class="flex items-start gap-3 p-3 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 text-sm font-bold"
         >
           <Lock class="w-5 h-5 shrink-0" />
-          <p>{{ $t('pos.shift_gate_no_permission') }}</p>
+          <p>{{ canManage ? $t('treasury.shift_close_not_owner') : $t('pos.shift_gate_no_permission') }}</p>
         </div>
       </template>
     </div>

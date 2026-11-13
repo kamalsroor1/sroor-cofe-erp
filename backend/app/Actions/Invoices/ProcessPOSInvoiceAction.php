@@ -19,6 +19,6 @@ class ProcessPOSInvoiceAction
         // POS-10: a branch that requires a shift cannot sell without an open one.
         $this->saleShiftGuard->assertCanSell($dto->storeId, $dto->clientUuid);
 
-        return $this->invoiceService->confirmInvoice($dto->toArray());
+        return $this->invoiceService->confirmInvoice($dto->toArray(), requireOpenShift: true);
     }
 }

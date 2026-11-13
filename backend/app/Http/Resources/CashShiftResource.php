@@ -22,7 +22,14 @@ class CashShiftResource extends JsonResource
         'total_expenses', 'total_refunds', 'expected_cash_balance', 'actual_cash_balance', 'cash_difference',
     ];
 
+    /**
+     * DEC-SHIFT blind count: the figures a cashier must not know before counting the drawer.
+     */
+    public const BLIND_COUNT_FIELDS = ['expected_cash_balance', 'actual_cash_balance', 'cash_difference'];
+
     private bool $hideCash = false;
+
+    private bool $blindCount = false;
 
     /**
      * ROLE-01: a reader without `reports.view` looking at a shift they did not open sees no cash
@@ -31,6 +38,18 @@ class CashShiftResource extends JsonResource
     public function withoutCashFigures(bool $hide = true): static
     {
         $this->hideCash = $hide;
+
+        return $this;
+    }
+
+    /**
+     * DEC-SHIFT blind count: an OPEN shift read by a user without `reports.view` shows no expected
+     * cash (nor actual / difference, which an open shift does not have yet): BLIND_COUNT_FIELDS are
+     * null (keys kept). Off by default.
+     */
+    public function withBlindCount(bool $blind = true): static
+    {
+        $this->blindCount = $blind;
 
         return $this;
     }
@@ -63,6 +82,12 @@ class CashShiftResource extends JsonResource
 
         if ($this->hideCash) {
             foreach (self::CASH_FIELDS as $field) {
+                $data[$field] = null;
+            }
+        }
+
+        if ($this->blindCount) {
+            foreach (self::BLIND_COUNT_FIELDS as $field) {
                 $data[$field] = null;
             }
         }

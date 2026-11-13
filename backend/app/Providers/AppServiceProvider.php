@@ -18,6 +18,7 @@ use App\Models\Payment;
 use App\Models\Plan;
 use App\Models\PlanAddon;
 use App\Models\PlanFeature;
+use App\Models\ReturnDocument;
 use App\Models\Subscription;
 use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
@@ -151,7 +152,7 @@ class AppServiceProvider extends ServiceProvider
 
         // DATE-01: every new voucher, expense and invoice is stamped with its store's open cash
         // shift, so shift figures no longer depend on the wall clock (ShiftAttribution).
-        foreach ([Payment::class, Expense::class, Invoice::class] as $model) {
+        foreach ([Payment::class, Expense::class, Invoice::class, ReturnDocument::class] as $model) {
             $model::observe(CashShiftStampObserver::class);
         }
 

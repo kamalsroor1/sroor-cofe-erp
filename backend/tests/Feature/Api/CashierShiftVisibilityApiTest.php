@@ -330,13 +330,14 @@ final class CashierShiftVisibilityApiTest extends TenantTestCase
         }
         $this->assertArrayHasKey('expected_cash_balance', (array) $seen->json('metrics'));
 
-        // The opener (they close it) and a reports.view reader keep every figure.
+        // The opener (they close it) and a reports.view reader keep the figures; DEC-SHIFT blind
+        // count: the opener (no reports.view) does not get the expected cash before closing.
         foreach ([$opener, null] as $reader) {
             $this->getJson('/api/v1/shifts/current', $this->tenantHeaders($this->tenant, $reader))->assertOk()
                 ->assertJsonPath('active_shift.opening_cash_balance', '500.000')
                 ->assertJsonPath('metrics.opening_cash_balance', '500.000')
                 ->assertJsonPath('metrics.total_cash_sales', '100.000')
-                ->assertJsonPath('metrics.expected_cash_balance', '600.000');
+                ->assertJsonPath('metrics.expected_cash_balance', $reader === null ? '600.000' : null);
         }
     }
 

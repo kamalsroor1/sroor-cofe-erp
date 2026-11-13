@@ -13,27 +13,25 @@
         </BaseButton>
       </div>
 
-      <div
-        v-else-if="hasOpening || hasExpected"
-        class="p-3.5 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2"
-      >
-        <div v-if="hasOpening" class="flex items-center justify-between text-xs">
-          <span class="text-slate-500 dark:text-slate-400 font-bold">{{
-            $t('treasury.shift_opening_balance_label')
-          }}</span>
-          <span class="font-mono text-slate-900 dark:text-slate-200 font-bold"
-            >{{ formatMoney(openingCashBalance) }} {{ currencyLabel }}</span
-          >
+      <template v-else>
+        <div
+          v-if="hasOpening"
+          class="p-3.5 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl"
+        >
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-500 dark:text-slate-400 font-bold">{{
+              $t('treasury.shift_opening_balance_label')
+            }}</span>
+            <span class="font-mono text-slate-900 dark:text-slate-200 font-bold"
+              >{{ formatMoney(openingCashBalance) }} {{ currencyLabel }}</span
+            >
+          </div>
         </div>
-        <div v-if="hasExpected" class="flex items-center justify-between text-xs">
-          <span class="text-slate-500 dark:text-slate-400 font-bold">{{
-            $t('treasury.shift_expected_balance_label')
-          }}</span>
-          <span class="font-mono text-theme-primary font-black text-sm"
-            >{{ formatMoney(expectedCashInDrawer) }} {{ currencyLabel }}</span
-          >
-        </div>
-      </div>
+        <!-- Blind count: no expected cash and no difference until the count is submitted -->
+        <p class="text-xs font-bold text-slate-500 dark:text-slate-400" data-testid="close-shift-blind-hint">
+          {{ $t('treasury.blind_count_hint') }}
+        </p>
+      </template>
 
       <BaseNumberInput
         :model-value="form.actual_cash_balance"
@@ -46,16 +44,6 @@
         :suffix="currencyLabel"
         class="text-emerald-500 dark:text-emerald-400 text-lg font-bold"
       />
-
-      <!-- Live Discrepancy Preview -->
-      <div
-        v-if="diff"
-        class="p-3 rounded-xl border text-xs font-bold flex items-center justify-between"
-        :class="diffClass"
-      >
-        <span>{{ $t('treasury.drawer_difference_label') }}</span>
-        <span class="font-mono text-sm">{{ diffText }}</span>
-      </div>
 
       <div>
         <BaseInput
@@ -94,18 +82,15 @@ import BaseInput from '../Form/BaseInput.vue';
 import BaseNumberInput from '../Form/BaseNumberInput.vue';
 import BaseButton from '../Common/BaseButton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
-import { useTrans } from '../../Composables/useTrans';
-import { drawerDifference, isValidCountedCash } from '../../helpers/shiftCash';
+import { isValidCountedCash } from '../../helpers/shiftCash';
 import { hasMetric } from '../../helpers/dashboardMetrics';
 
 const { formatMoney, currencyLabel } = useFormatters();
-const { t } = useTrans();
 
 const props = defineProps({
   show: { type: Boolean, default: false },
   shiftNumber: { type: [String, Number], default: '' },
   openingCashBalance: { type: [String, Number], default: null },
-  expectedCashInDrawer: { type: [String, Number], default: null },
   form: { type: Object, default: () => ({}) },
   submitting: { type: Boolean, default: false },
   loading: { type: Boolean, default: false },
@@ -116,33 +101,10 @@ const props = defineProps({
 const emit = defineEmits(['close', 'submit', 'update:field', 'retry']);
 
 const hasOpening = computed(() => hasMetric(props.openingCashBalance));
-const hasExpected = computed(() => hasMetric(props.expectedCashInDrawer));
 
 const canSubmit = computed(() => !props.loading && !props.failed && isValidCountedCash(props.form.actual_cash_balance));
-
-// Preview only once an amount was typed and the server gave the expected cash of this shift.
-const diff = computed(() =>
-  props.loading || props.failed || !isValidCountedCash(props.form.actual_cash_balance)
-    ? null
-    : drawerDifference(props.form.actual_cash_balance, props.expectedCashInDrawer)
-);
 
 const onSubmit = () => {
   if (canSubmit.value) emit('submit');
 };
-
-const diffClass = computed(() => {
-  if (diff.value?.sign === 0) return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400';
-  if (diff.value?.sign > 0) return 'bg-sky-500/10 border-sky-500/30 text-sky-600 dark:text-sky-400';
-  return 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400';
-});
-
-const diffText = computed(() => {
-  if (!diff.value) return '';
-  if (diff.value.sign === 0) return t('treasury.drawer_balanced');
-  if (diff.value.sign > 0) {
-    return `+${formatMoney(diff.value.amount)} ${currencyLabel.value} (${t('treasury.drawer_surplus')})`;
-  }
-  return `${formatMoney(diff.value.amount)} ${currencyLabel.value} (${t('treasury.drawer_shortage')})`;
-});
 </script>

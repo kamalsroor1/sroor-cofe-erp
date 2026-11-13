@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Shifts;
 
 use App\Models\CashShift;
+use App\Models\User;
 use App\Services\ShiftService;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
@@ -40,14 +41,21 @@ final class GetShiftZReportAction
      * total_customer_receipts is not stored: for a closed shift it is derived from the stored
      * lines (total_payments_collected = cash sales + customer receipts, see calculateShiftTotals).
      *
+     * DEC-SHIFT blind count: the provisional report of an open shift read by a $viewer without
+     * `reports.view` has no expected cash (null), so the drawer is counted before the target is
+     * known; the closed shift's report shows it. No $viewer (internal callers): unchanged.
+     *
      * @return array<string, mixed>
      */
-    public function execute(int $shiftId): array
+    public function execute(int $shiftId, ?User $viewer = null): array
     {
         $shift = CashShift::with(['user', 'store'])->findOrFail($shiftId);
         $isProvisional = $shift->status === 'open';
 
         $figures = $isProvisional ? $this->liveFigures($shift) : $this->storedFigures($shift);
+        if ($isProvisional && $viewer instanceof User && ! $viewer->can('reports.view')) {
+            $figures['expected_cash_balance'] = null;
+        }
 
         return [
             'id' => $shift->id,

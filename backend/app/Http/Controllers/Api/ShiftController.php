@@ -16,6 +16,7 @@ use App\Http\Requests\OpenShiftRequest;
 use App\Http\Resources\CashShiftResource;
 use App\Models\CashShift;
 use App\Models\User;
+use App\Policies\ShiftPolicy;
 use App\Services\Pos\SaleShiftGuard;
 use App\Services\Settings\TenantSettings;
 use App\Support\ActiveStore;
@@ -104,7 +105,11 @@ final class ShiftController extends Controller
             'has_active' => true,
             'requires_shift' => $requiresShift,
             // ROLE-01: another user's shift read without reports.view: cash figures null.
-            'active_shift' => (new CashShiftResource($result['shift']))->withoutCashFigures($result['cash_hidden'])->resolve(),
+            // DEC-SHIFT: without reports.view the open shift's expected cash is withheld (blind count).
+            'active_shift' => (new CashShiftResource($result['shift']))
+                ->withoutCashFigures($result['cash_hidden'])
+                ->withBlindCount($result['blind_count'])
+                ->resolve(),
             'metrics' => $result['metrics'],
         ], 200);
     }
@@ -141,10 +146,17 @@ final class ShiftController extends Controller
         $storeId = (int) $activeStore->requireStore()->id;
 
         $shiftId = (int) ($request->validated('shift_id') ?? 0);
-        if ($shiftId > 0) {
-            $this->findShiftOr404($request, $shiftId, 'close', $storeId);
-        } else {
+        if ($shiftId <= 0) {
             $shiftId = (int) CashShift::where('status', 'open')->where('store_id', $storeId)->value('id');
+        }
+
+        // DEC-SHIFT: a shift outside the active store is not found (404); one the caller neither
+        // opened nor manages (reports.view / admin) is forbidden (403). No open shift: 404 below.
+        if ($shiftId > 0) {
+            $shift = $this->findShiftToCloseOr404($request, $shiftId, $storeId);
+            if (Gate::forUser($request->user())->denies('close', $shift)) {
+                return response()->json(['success' => false, 'message' => __('treasury.shift_close_not_owner')], 403);
+            }
         }
 
         $dto = CloseShiftDTO::fromArray($shiftId, $request->validated());
@@ -178,7 +190,7 @@ final class ShiftController extends Controller
 
         $this->findShiftOr404($request, $id, 'zReport');
 
-        $report = $this->getShiftZReportAction->execute($id);
+        $report = $this->getShiftZReportAction->execute($id, $user instanceof User ? $user : null);
 
         return response()->json([
             'success' => true,
@@ -187,11 +199,29 @@ final class ShiftController extends Controller
     }
 
     /**
-     * STOR-2 (CTO Q13): the permission was already checked (403), so a denial here can only be the
-     * shift's store (or, with $storeId, a shift outside the active store): answered exactly like a
-     * missing shift (404).
+     * STOR-2 (CTO Q13): the shift to close, when it exists in the active store and the caller may
+     * change that store; anything else is answered exactly like a missing shift (404).
      */
-    private function findShiftOr404(Request $request, int $id, string $ability, ?int $storeId = null): void
+    private function findShiftToCloseOr404(Request $request, int $id, int $storeId): CashShift
+    {
+        $user = $request->user();
+        $shift = CashShift::query()->select(['id', 'store_id', 'user_id'])->find($id);
+
+        if (! $shift instanceof CashShift
+            || ! $user instanceof User
+            || (int) $shift->store_id !== $storeId
+            || ! ShiftPolicy::storeChangeableBy($user, $shift)) {
+            throw (new ModelNotFoundException)->setModel(CashShift::class, [$id]);
+        }
+
+        return $shift;
+    }
+
+    /**
+     * STOR-2 (CTO Q13): the permission was already checked (403), so a denial here can only be the
+     * shift's store: answered exactly like a missing shift (404).
+     */
+    private function findShiftOr404(Request $request, int $id, string $ability): void
     {
         $user = $request->user();
         // user_id: the z-report ability lets a cashier read their own shift (BUG-03).
@@ -199,7 +229,6 @@ final class ShiftController extends Controller
 
         $visible = $shift instanceof CashShift
             && $user instanceof User
-            && ($storeId === null || (int) $shift->store_id === $storeId)
             && Gate::forUser($user)->allows($ability, $shift);
 
         if (! $visible) {

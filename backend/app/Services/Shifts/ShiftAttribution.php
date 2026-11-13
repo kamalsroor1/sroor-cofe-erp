@@ -9,6 +9,7 @@ use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Purchase;
+use App\Models\ReturnDocument;
 use App\Models\Store;
 use App\Models\User;
 use Carbon\CarbonInterface;
@@ -17,7 +18,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * DATE-01: which cash shift a payment voucher, an expense or an invoice belongs to.
+ * DATE-01: which cash shift a payment voucher, an expense or an invoice (DEC-SHIFT: or a sales
+ * return) belongs to.
  *
  * Timestamps are stored on the tenant's wall clock (Africa/Cairo), so the old rule, "a row
  * belongs to the shift when created_at lies in [opened_at, closed_at ?? now]", broke whenever the
@@ -46,9 +48,18 @@ final class ShiftAttribution
 
     /**
      * Sets cash_shift_id on a row about to be inserted (overwrites any value already set).
+     *
+     * DEC-SHIFT: a sales return is stamped like an invoice (its store's open shift); a purchase
+     * return is not a drawer document and stays NULL.
      */
-    public function stamp(Invoice|Payment|Expense $row): void
+    public function stamp(Invoice|Payment|Expense|ReturnDocument $row): void
     {
+        if ($row instanceof ReturnDocument && $row->return_type !== 'sales_return') {
+            $row->setAttribute(self::COLUMN, null);
+
+            return;
+        }
+
         $storeId = $this->storeIdOf($row);
 
         $row->setAttribute(self::COLUMN, $storeId === null ? null : $this->openShiftIdFor($storeId));
@@ -60,7 +71,7 @@ final class ShiftAttribution
      * the store of its invoice, else of its purchase; an unlinked voucher to its user's default
      * store, and to the main store when the user has none (or there is no user).
      */
-    public function storeIdOf(Invoice|Payment|Expense $row): ?int
+    public function storeIdOf(Invoice|Payment|Expense|ReturnDocument $row): ?int
     {
         if ($row->store_id !== null) {
             return (int) $row->store_id;
@@ -150,7 +161,7 @@ final class ShiftAttribution
     }
 
     /**
-     * Restricts $query (payments, expenses or invoices) to the rows of $shift: stamped with it,
+     * Restricts $query (payments, expenses, invoices or returns) to the rows of $shift: stamped with it,
      * or unstamped history inside its legacy window [opened_at, $until] (no upper bound when
      * $until is null). $legacyStore filters the unstamped half by store (a stamped row already
      * belongs to the shift's store). One condition on the (cash_shift_id, created_at) index: both

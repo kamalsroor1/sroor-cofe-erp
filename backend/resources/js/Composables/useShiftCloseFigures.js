@@ -3,9 +3,9 @@ import api from '../Services/api';
 import { useTrans } from './useTrans';
 
 /**
- * Server figures of the shift being closed. The close-shift modal never derives the expected cash from the
- * day's journal: it asks GET /shifts/current, whose metrics belong to the open shift alone. A metric the server
- * withholds (cashier who did not open the shift) stays null so the modal shows no expected cash and no preview.
+ * The shift being closed, read fresh from GET /shifts/current when the close dialog opens: its id and opening
+ * float. DEC-SHIFT blind count: the expected cash is never read here; the dialog shows it, with the difference,
+ * only after the count is submitted (the closed shift's Z report).
  */
 export function useShiftCloseFigures() {
     const { t } = useTrans();
@@ -15,7 +15,6 @@ export function useShiftCloseFigures() {
     const errorMessage = ref('');
     const shiftId = ref(null);
     const openingCash = ref(null);
-    const expectedCash = ref(null);
 
     // Bumped by every load()/reset() so a response that lands after a newer request (dialog closed and reopened) is dropped.
     let requestId = 0;
@@ -26,7 +25,6 @@ export function useShiftCloseFigures() {
         errorMessage.value = '';
         shiftId.value = null;
         openingCash.value = null;
-        expectedCash.value = null;
     };
 
     const load = async () => {
@@ -45,7 +43,6 @@ export function useShiftCloseFigures() {
             shiftId.value = shift.id;
             const metrics = response.data?.metrics || {};
             openingCash.value = metrics.opening_cash_balance ?? null;
-            expectedCash.value = metrics.expected_cash_balance ?? null;
         } catch (error) {
             if (current !== requestId) return;
             failed.value = true;
@@ -55,5 +52,5 @@ export function useShiftCloseFigures() {
         }
     };
 
-    return { isLoading, failed, errorMessage, shiftId, openingCash, expectedCash, load, reset };
+    return { isLoading, failed, errorMessage, shiftId, openingCash, load, reset };
 }
