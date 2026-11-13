@@ -36,7 +36,8 @@ export function useInvoices() {
     const authStore = useAuthStore();
 
     const invoices = ref([]);
-    const summary = ref({ total_sales: 0, total_paid: 0, total_due: 0, total_count: 0 });
+    // ROLE-01: null when the server omits the totals (no reports.view).
+    const summary = ref(null);
     const pagination = ref({ current_page: 1, last_page: 1, per_page: PER_PAGE, total: 0 });
     const isLoading = ref(true);
     const isExporting = ref(false);
@@ -113,7 +114,7 @@ export function useInvoices() {
         try {
             const res = await api.get('/invoices', { params: { ...filterParams(), page, per_page: PER_PAGE } });
             invoices.value = res.data?.data || [];
-            summary.value = res.data?.summary || { total_sales: 0, total_paid: 0, total_due: 0, total_count: 0 };
+            summary.value = res.data?.summary || null;
             pagination.value = res.data?.meta || {
                 current_page: page,
                 last_page: 1,

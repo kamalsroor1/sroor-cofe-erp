@@ -3,8 +3,9 @@
     <StatCardSkeleton v-for="i in 3" :key="i" dense />
   </MetricStrip>
 
-  <MetricStrip v-else :columns="3">
+  <MetricStrip v-else :columns="hasDebtFigures ? 3 : 1">
     <MetricCard
+      v-if="hasDebtFigures"
       dense
       :title="$t('contacts.total_receivables')"
       :value="formatMoney(metrics.total_debt || 0)"
@@ -16,6 +17,7 @@
       :footer-left="$t('contacts.total_receivables_sub')"
     />
     <MetricCard
+      v-if="hasDebtFigures"
       dense
       :title="$t('contacts.debtors_count')"
       :value="String(metrics.debtors_count || 0)"
@@ -40,6 +42,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { TrendingUp, AlertCircle, Users } from 'lucide-vue-next';
 import MetricCard from '../Common/MetricCard.vue';
 import MetricStrip from '../Common/MetricStrip.vue';
@@ -48,8 +51,11 @@ import { useFormatters } from '../../Composables/useFormatters';
 
 const { formatMoney, currencyLabel } = useFormatters();
 
-defineProps({
+const props = defineProps({
   metrics: { type: Object, default: () => ({}) },
   loading: { type: Boolean, default: false },
 });
+
+// ROLE-01: the server omits the debt figures for a user without reports.view.
+const hasDebtFigures = computed(() => props.metrics?.total_debt !== undefined);
 </script>

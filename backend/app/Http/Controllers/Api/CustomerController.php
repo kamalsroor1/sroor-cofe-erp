@@ -79,9 +79,14 @@ final class CustomerController extends Controller
 
         $customers = $query->latest('id')->paginate($perPage);
 
-        $totalDebt = Decimal::normalize((string) Customer::where('current_balance', '>', 0)->sum('current_balance'));
-        $debtorsCount = Customer::where('current_balance', '>', 0)->count();
-        $totalCustomersCount = Customer::count();
+        // ROLE-01 (owner 2026-11-12): debt totals only for a reports.view reader.
+        $summary = ['total_customers' => Customer::count()];
+        if ($request->user()?->can('reports.view')) {
+            $summary = [
+                'total_debt' => Decimal::normalize((string) Customer::where('current_balance', '>', 0)->sum('current_balance')),
+                'debtors_count' => Customer::where('current_balance', '>', 0)->count(),
+            ] + $summary;
+        }
 
         return response()->json([
             'success' => true,
@@ -92,11 +97,7 @@ final class CustomerController extends Controller
                 'per_page' => $customers->perPage(),
                 'total' => $customers->total(),
             ],
-            'summary' => [
-                'total_debt' => $totalDebt,
-                'debtors_count' => $debtorsCount,
-                'total_customers' => $totalCustomersCount,
-            ],
+            'summary' => $summary,
         ], 200);
     }
 

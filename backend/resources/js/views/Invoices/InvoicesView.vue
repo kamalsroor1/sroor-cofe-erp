@@ -13,7 +13,7 @@
     </PageHeader>
 
     <!-- Financial Metrics Cards -->
-    <InvoicesMetricsCards :summary="summary" :is-loading="isLoading" />
+    <InvoicesMetricsCards v-if="summary || isLoading" :summary="summary || {}" :is-loading="isLoading" />
 
     <!-- Workspace: Search + Table + Sidebar -->
     <div class="flex flex-col lg:flex-row gap-5 items-start">

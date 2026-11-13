@@ -72,20 +72,26 @@ final class PaymentController extends Controller
 
         $payments = $query->latest('id')->paginate($perPage);
 
-        // BE-10: refund vouchers (negative) are not collections; they are reported on their own.
-        // BE-03: payments of legacy cancelled invoices that were never reversed stay hidden.
-        $totalCollections = (string) (Payment::whereNotNull('customer_id')->excludingRefunds()->excludingCancelledInvoices()->when($storeId !== null, fn ($q) => $q->forStore((int) $storeId))->sum('amount') ?: '0.000');
-        $totalDisbursements = (string) (Payment::whereNotNull('supplier_id')->when($storeId !== null, fn ($q) => $q->forStore((int) $storeId))->sum('amount') ?: '0.000');
+        $summary = null;
+        // ROLE-01 (owner 2026-11-12): the financial summary only for a reports.view reader.
+        if ($user && $user->can('reports.view')) {
+            // BE-10: refund vouchers (negative) are not collections; they are reported on their own.
+            // BE-03: payments of legacy cancelled invoices that were never reversed stay hidden.
+            $totalCollections = (string) (Payment::whereNotNull('customer_id')->excludingRefunds()->excludingCancelledInvoices()->when($storeId !== null, fn ($q) => $q->forStore((int) $storeId))->sum('amount') ?: '0.000');
+            $totalDisbursements = (string) (Payment::whereNotNull('supplier_id')->when($storeId !== null, fn ($q) => $q->forStore((int) $storeId))->sum('amount') ?: '0.000');
 
-        $totalRefunds = bcsub('0.000', (string) (Payment::whereNotNull('customer_id')->refunds()->excludingCancelledInvoices()->when($storeId !== null, fn ($q) => $q->forStore((int) $storeId))->sum('amount') ?: '0.000'), 3);
+            $totalRefunds = bcsub('0.000', (string) (Payment::whereNotNull('customer_id')->refunds()->excludingCancelledInvoices()->when($storeId !== null, fn ($q) => $q->forStore((int) $storeId))->sum('amount') ?: '0.000'), 3);
 
-        return response()->json([
-            'success' => true,
-            'summary' => [
+            $summary = [
                 'total_refunds' => Decimal::normalize((string) $totalRefunds),
                 'total_collections' => Decimal::normalize((string) $totalCollections),
                 'total_disbursements' => Decimal::normalize((string) $totalDisbursements),
-            ],
+            ];
+        }
+
+        return response()->json(array_filter([
+            'success' => true,
+            'summary' => $summary,
             'data' => $payments->items(),
             'pagination' => [
                 'current_page' => $payments->currentPage(),
@@ -93,7 +99,7 @@ final class PaymentController extends Controller
                 'per_page' => $payments->perPage(),
                 'total' => $payments->total(),
             ],
-        ], 200);
+        ], static fn ($v): bool => $v !== null), 200);
     }
 
     /**

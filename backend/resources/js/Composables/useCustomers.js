@@ -13,11 +13,7 @@ export function useCustomers() {
     const canDeleteCustomer = computed(() => authStore.hasPermission('customers.delete'));
 
     const customers = ref([]);
-    const metrics = ref({
-        total_debt: 0,
-        debtors_count: 0,
-        total_customers: 0,
-    });
+    const metrics = ref({});
 
     const searchQuery = ref('');
     const debtStatus = ref('all');
@@ -72,11 +68,8 @@ export function useCustomers() {
                 },
             });
             customers.value = response.data?.data || [];
-            metrics.value = response.data?.metrics || {
-                total_debt: 0,
-                debtors_count: 0,
-                total_customers: 0,
-            };
+            // ROLE-01: without reports.view the server omits total_debt / debtors_count.
+            metrics.value = response.data?.summary || response.data?.metrics || {};
             pagination.value = response.data?.meta || {
                 current_page: page,
                 last_page: 1,

@@ -55,7 +55,8 @@ final class InvoiceController extends Controller
 
         $query = $this->buildInvoiceListQueryAction->execute();
 
-        $summary = $this->getInvoicesSummaryAction->execute($query);
+        // ROLE-01 (owner 2026-11-12): aggregate money figures only for a reports.view reader.
+        $summary = $user && $user->can('reports.view') ? $this->getInvoicesSummaryAction->execute($query) : null;
 
         $invoices = $query->latest('id')->paginate($perPage);
 
@@ -68,8 +69,7 @@ final class InvoiceController extends Controller
                 'per_page' => $invoices->perPage(),
                 'total' => $invoices->total(),
             ],
-            'summary' => $summary,
-        ], 200);
+        ] + ($summary !== null ? ['summary' => $summary] : []), 200);
     }
 
     /**
