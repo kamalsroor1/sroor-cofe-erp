@@ -28,6 +28,24 @@ final class ProfitVisibility
     /** Keys of a per-store comparison row / inventory totals that reveal profit. */
     private const STORE_KEYS = ['gross_profit', 'margin', 'expected_stock_profit'];
 
+    /**
+     * BILL-03 review: inventory report top level. The cost valuation next to the selling valuation
+     * IS the expected stock profit, so it goes too.
+     */
+    private const INVENTORY_KEYS = ['stock_cost_valuation', 'expected_stock_profit'];
+
+    /** Keys of a valued stock row (`items`): its profit, and its cost value next to its selling value. */
+    private const INVENTORY_ROW_KEYS = ['profit', 'cost_val'];
+
+    /**
+     * Keys of an ABC analysis row (`abc_data.items` / `abc_data.dead_stock`): cost of goods sold,
+     * profit, margin, the profit shares, and the stock cost value next to the selling price.
+     */
+    private const ABC_ROW_KEYS = ['cogs', 'gross_profit', 'profit_margin', 'profit_share', 'cum_profit_share', 'stock_value'];
+
+    /** Keys of an ABC class summary (`abc_data.class_a|b|c`): its profit and its share of profit. */
+    private const ABC_CLASS_KEYS = ['profit', 'share'];
+
     public static function allows(): bool
     {
         return app(PlanEnforcer::class)->hasFeature(self::FEATURE);
@@ -62,6 +80,60 @@ final class ProfitVisibility
         }
 
         return array_map(static fn (array $row): array => self::itemRow($row), $rows);
+    }
+
+    /**
+     * BILL-03 review: the inventory valuation + ABC payload (GetInventoryValuationReportAction).
+     * Stripping only the top level left `abc_data.items[].cogs/gross_profit/profit_margin`,
+     * `abc_data.total_profit`, `abc_data.class_*.profit` and the cost valuation in the response.
+     *
+     * @param  array<string, mixed>  $inventory
+     * @return array<string, mixed>
+     */
+    public static function inventory(array $inventory): array
+    {
+        if (self::allows()) {
+            return $inventory;
+        }
+
+        $inventory = array_diff_key($inventory, array_flip(self::INVENTORY_KEYS));
+
+        if (isset($inventory['items']) && is_array($inventory['items'])) {
+            $inventory['items'] = self::withoutKeys($inventory['items'], self::INVENTORY_ROW_KEYS);
+        }
+
+        if (isset($inventory['abc_data']) && is_array($inventory['abc_data'])) {
+            $abc = $inventory['abc_data'];
+            unset($abc['total_profit']);
+
+            foreach (['items', 'dead_stock'] as $list) {
+                if (isset($abc[$list]) && is_array($abc[$list])) {
+                    $abc[$list] = self::withoutKeys($abc[$list], self::ABC_ROW_KEYS);
+                }
+            }
+
+            foreach (['class_a', 'class_b', 'class_c'] as $class) {
+                if (isset($abc[$class]) && is_array($abc[$class])) {
+                    $abc[$class] = array_diff_key($abc[$class], array_flip(self::ABC_CLASS_KEYS));
+                }
+            }
+
+            $inventory['abc_data'] = $abc;
+        }
+
+        return $inventory;
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $rows
+     * @param  list<string>  $keys
+     * @return list<mixed>
+     */
+    private static function withoutKeys(array $rows, array $keys): array
+    {
+        $drop = array_flip($keys);
+
+        return array_values(array_map(static fn (mixed $row): mixed => is_array($row) ? array_diff_key($row, $drop) : $row, $rows));
     }
 
     /**

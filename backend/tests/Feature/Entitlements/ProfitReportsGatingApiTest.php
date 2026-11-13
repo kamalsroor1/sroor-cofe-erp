@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Entitlements;
 
+use App\Actions\Dashboard\GetDashboardApiOverviewAction;
 use App\Enums\Billing\SubscriptionAddonStatus;
+use App\Http\Resources\Api\DashboardOverviewResource;
 use App\Models\Addon;
+use App\Models\Item;
 use App\Models\Plan;
+use App\Models\StoreStock;
 use App\Models\Subscription;
 use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
@@ -45,6 +49,93 @@ final class ProfitReportsGatingApiTest extends TenantTestCase
         $this->assertArrayHasKey('total_revenue', $bundle['item_profits_totals']);
 
         $this->getJson('/api/v1/reports/top-items', $this->tenantHeaders($tenant))->assertOk();
+    }
+
+    public function test_the_inventory_reports_hide_nested_profit_and_cost_valuation_without_reports_advanced(): void
+    {
+        $tenant = $this->tenantOn($this->plan(['reports.advanced' => false]));
+        $headers = $this->tenantHeaders($tenant);
+        $this->stockedItem($tenant, (int) $headers['X-Store-Id']);
+
+        $inventory = $this->getJson('/api/v1/reports/inventory', $headers)->assertOk()->json('data');
+        $this->assertInventoryHasNoProfit($inventory);
+        $this->assertArrayHasKey('stock_selling_valuation', $inventory);
+        $this->assertNotEmpty($inventory['items']);
+        $this->assertArrayHasKey('sell_val', $inventory['items'][0]);
+        $this->assertNotEmpty($inventory['abc_data']['items']);
+        $this->assertArrayHasKey('revenue', $inventory['abc_data']['items'][0]);
+        $this->assertArrayHasKey('count', $inventory['abc_data']['class_a']);
+
+        $bundle = $this->getJson('/api/v1/reports/comprehensive', $headers)->assertOk()->json('inventory_data');
+        $this->assertInventoryHasNoProfit($bundle);
+    }
+
+    public function test_the_inventory_reports_keep_nested_profit_with_reports_advanced(): void
+    {
+        $tenant = $this->tenantOn($this->plan(['reports.advanced' => true]));
+        $headers = $this->tenantHeaders($tenant);
+        $this->stockedItem($tenant, (int) $headers['X-Store-Id']);
+
+        $inventory = $this->getJson('/api/v1/reports/inventory', $headers)->assertOk()->json('data');
+        $this->assertArrayHasKey('stock_cost_valuation', $inventory);
+        $this->assertArrayHasKey('expected_stock_profit', $inventory);
+        $this->assertArrayHasKey('profit', $inventory['items'][0]);
+        $this->assertArrayHasKey('total_profit', $inventory['abc_data']);
+        $this->assertArrayHasKey('gross_profit', $inventory['abc_data']['items'][0]);
+        $this->assertArrayHasKey('profit', $inventory['abc_data']['class_a']);
+    }
+
+    public function test_the_dashboard_overview_resource_renders_without_the_profit_keys(): void
+    {
+        $tenant = $this->tenantOn($this->plan(['reports.advanced' => false]));
+        $store = $this->tenantStore($tenant);
+
+        $this->inTenant($tenant, function () use ($store): void {
+            $data = app(GetDashboardApiOverviewAction::class)->execute($store->id);
+            $metrics = (new DashboardOverviewResource($data))->response()->getData(true)['data']['today_metrics'];
+
+            $this->assertArrayHasKey('net_sales', $metrics);
+            foreach (['total_cogs', 'net_profit', 'margin_percentage'] as $key) {
+                $this->assertArrayNotHasKey($key, $metrics, $key);
+            }
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>  $inventory
+     */
+    private function assertInventoryHasNoProfit(array $inventory): void
+    {
+        foreach (['stock_cost_valuation', 'expected_stock_profit'] as $key) {
+            $this->assertArrayNotHasKey($key, $inventory, $key);
+        }
+        foreach ($inventory['items'] as $row) {
+            $this->assertArrayNotHasKey('profit', $row);
+            $this->assertArrayNotHasKey('cost_val', $row);
+        }
+        $this->assertArrayNotHasKey('total_profit', $inventory['abc_data']);
+        foreach (['items', 'dead_stock'] as $list) {
+            foreach ($inventory['abc_data'][$list] as $row) {
+                foreach (['cogs', 'gross_profit', 'profit_margin', 'profit_share', 'cum_profit_share', 'stock_value'] as $key) {
+                    $this->assertArrayNotHasKey($key, $row, $list.'.'.$key);
+                }
+            }
+        }
+        foreach (['class_a', 'class_b', 'class_c'] as $class) {
+            $this->assertArrayNotHasKey('profit', $inventory['abc_data'][$class], $class);
+            $this->assertArrayNotHasKey('share', $inventory['abc_data'][$class], $class);
+        }
+    }
+
+    private function stockedItem(Tenant $tenant, int $storeId): void
+    {
+        $tenant->run(function () use ($storeId): void {
+            $item = Item::query()->create([
+                'name' => 'Gating item', 'code' => 'PG-1', 'unit' => 'kg', 'cost_price' => '100.000',
+                'selling_price' => '150.000', 'current_stock' => '4.000', 'is_active' => true,
+            ]);
+            StoreStock::query()->create(['store_id' => $storeId, 'item_id' => $item->id, 'quantity' => '4.000']);
+        });
     }
 
     public function test_a_shop_with_reports_advanced_keeps_the_profit_fields(): void
