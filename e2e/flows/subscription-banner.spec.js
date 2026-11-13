@@ -45,7 +45,7 @@ async function open(page, role, banner) {
   await page.route("**/api/v1/**", (route) =>
     json(route, { success: true, data: [], meta: {}, pagination: {} }),
   );
-  await page.route("**/api/v1/system/context", (route) =>
+  await page.route("**/api/v1/system/context**", (route) =>
     json(route, {
       success: true,
       data: {
@@ -55,7 +55,7 @@ async function open(page, role, banner) {
       },
     }),
   );
-  await page.route("**/api/v1/auth/me", (route) =>
+  await page.route("**/api/v1/auth/me**", (route) =>
     json(route, { success: true, data: { user } }),
   );
   await page.goto("/");
