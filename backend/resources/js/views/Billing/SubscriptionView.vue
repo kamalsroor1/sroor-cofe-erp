@@ -14,7 +14,8 @@ import SubscriptionUsageList from '@/Components/Billing/SubscriptionUsageList.vu
 import { useFormatters } from '@/Composables/useFormatters';
 import { useSubscription } from '@/Composables/useSubscription';
 
-const { subscription, invoices, isLoading, error, load, renew, refreshInvoices, submitPayment, cancelPayment } = useSubscription();
+const { subscription, invoices, isLoading, error, load, renew, refreshInvoices, submitPayment, cancelPayment } =
+  useSubscription();
 
 const { formatMoney } = useFormatters();
 const renewing = ref(false);
