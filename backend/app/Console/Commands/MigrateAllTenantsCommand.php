@@ -51,7 +51,7 @@ final class MigrateAllTenantsCommand extends Command
         $only = array_filter((array) $this->option('tenants'));
         $this->startedAt = gmdate('c');
 
-        $tenants = Tenant::query()->orderBy('id')->get();
+        $tenants = Tenant::query()->orderBy('id')->cursor()->collect();
         if ($only !== []) {
             $tenants = $tenants->filter(fn (Tenant $t): bool => in_array((string) $t->getKey(), $only, true));
         }

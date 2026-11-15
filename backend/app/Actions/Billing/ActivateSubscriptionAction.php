@@ -137,7 +137,8 @@ final class ActivateSubscriptionAction
             throw BillingException::renewalPlanMismatch();
         }
 
-        $keepsTerm = $difference && $hasFutureEnd;
+        // A difference invoice without a running term was rejected above, so it always keeps its term.
+        $keepsTerm = $difference;
         $newEnd = $keepsTerm
             ? $base
             : ($cycle === BillingCycle::Yearly ? $base->addYearNoOverflow() : $base->addMonthNoOverflow());
@@ -154,7 +155,7 @@ final class ActivateSubscriptionAction
         $subscription->fill([
             'plan_id' => $plan->getKey(),
             // A kept term keeps its cycle: the end date is still the old cycle's end.
-            'billing_cycle' => $keepsTerm && $subscription->billing_cycle instanceof BillingCycle && $subscription->billing_cycle->isSellable()
+            'billing_cycle' => $keepsTerm && $subscription->exists && $subscription->billing_cycle->isSellable()
                 ? $subscription->billing_cycle
                 : $cycle,
             'status' => SubscriptionStatus::Active,

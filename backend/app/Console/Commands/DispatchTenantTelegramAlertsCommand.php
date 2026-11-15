@@ -67,7 +67,7 @@ final class DispatchTenantTelegramAlertsCommand extends Command
         $dispatched = 0;
         $failed = 0;
 
-        foreach ($query->get() as $tenant) {
+        foreach ($query->cursor() as $tenant) {
             $checked++;
 
             try {

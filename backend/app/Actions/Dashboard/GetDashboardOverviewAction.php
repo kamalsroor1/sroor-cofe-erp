@@ -92,7 +92,7 @@ final class GetDashboardOverviewAction
         $showFinancials = $user->can('reports.view');
         // BILL-03: profit figures additionally need the reports.advanced plan feature. The
         // aggregate cache is per tenant, so the plan state needs no extra cache-key part.
-        $showProfit = $showFinancials && ProfitVisibility::allows();
+        $showProfit = ProfitVisibility::allows();
 
         // PERF-01: the aggregate blocks are cached for a few seconds per tenant, store scope,
         // permission set, business day and locale (see DashboardCache). The live blocks below

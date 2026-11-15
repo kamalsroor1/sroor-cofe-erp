@@ -95,7 +95,7 @@ class Addon extends Model
         }
 
         foreach (($this->feature_keys ?? []) as $key) {
-            if (is_string($key) && $key !== '') {
+            if ($key !== '') {
                 $keys[] = $key;
             }
         }

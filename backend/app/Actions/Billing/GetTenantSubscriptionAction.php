@@ -66,7 +66,7 @@ final class GetTenantSubscriptionAction
         // SELL-07: one status for the screen. The subscription row says "trialing" while the shop
         // is read-only; show the shop's derived status instead of contradicting it.
         $subscriptionStatus = $subscription === null ? null : ['value' => $subscription->status->value, 'label' => $subscription->status->label()];
-        if ($subscriptionStatus !== null && $decision->effectiveStatus->value !== 'trial' && $subscription?->status->value === 'trialing') {
+        if ($subscriptionStatus !== null && $decision->effectiveStatus->value !== 'trial' && $subscription->status->value === 'trialing') {
             $subscriptionStatus = ['value' => $decision->effectiveStatus->value, 'label' => $decision->effectiveStatus->label()];
         }
 

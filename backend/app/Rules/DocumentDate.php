@@ -58,12 +58,10 @@ final class DocumentDate implements ValidationRule
 
         $maxDays = app(TenantSettings::class)->backdateMaxDays();
 
-        if ($maxDays !== null) {
-            $oldest = CarbonImmutable::parse($today)->subDays($maxDays)->toDateString();
+        $oldest = CarbonImmutable::parse($today)->subDays($maxDays)->toDateString();
 
-            if ($date < $oldest) {
-                $fail('documents.date_too_old')->translate(['days' => $maxDays]);
-            }
+        if ($date < $oldest) {
+            $fail('documents.date_too_old')->translate(['days' => $maxDays]);
         }
     }
 
