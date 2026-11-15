@@ -187,4 +187,5 @@ return [
     'not_cancelled' => 'Purchase invoice [:number] is not cancelled.',
     'cancel_stock_sold' => 'Cannot cancel the invoice: the current balance of [:item] (:current :unit) is less than the quantity to reverse (:required :unit) because sales were made from this shipment.',
     'cancel_store_stock_insufficient' => 'Cannot cancel the invoice: the balance of [:item] in [:store] (:current :unit) is not enough to deduct the quantity (:required :unit).',
+    'cannot_pay_cancelled' => 'A payment cannot be recorded against a cancelled purchase',
 ];

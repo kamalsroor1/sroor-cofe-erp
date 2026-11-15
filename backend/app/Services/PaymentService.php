@@ -176,6 +176,11 @@ class PaymentService
 
             $documentStoreId = null;
             if ($purchase !== null) {
+                // PUR-01: a cancelled purchase keeps its paid amount as supplier credit; paying it again
+                // would inflate paid_amount and leave a negative remaining on a later restore.
+                if ($purchase->status === 'cancelled') {
+                    throw BusinessRuleException::conflict('purchases.cannot_pay_cancelled');
+                }
                 // SEC-1 (M4): before anything changes: the purchase is readable by the actor
                 // (else 404) and belongs to this supplier (else 422).
                 $this->assertDocumentReadable($purchase->store_id, Purchase::class, (int) $purchase->id);

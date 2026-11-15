@@ -227,6 +227,25 @@ final class PurchaseCancelSupplierCreditApiTest extends TenantTestCase
         $this->assertSame('confirmed', $this->inTenant($this->tenant, fn () => Purchase::findOrFail($purchaseId)->status));
     }
 
+    public function test_a_cancelled_purchase_cannot_be_paid_again(): void
+    {
+        // 1.000 x 250.000 fully paid, then cancelled: the 250.000 is supplier credit.
+        $purchaseId = $this->createPurchase(quantity: '1.000', unitCost: '250.000', paid: '250.000');
+        $this->postJson('/api/v1/purchases/'.$purchaseId.'/cancel', [], $this->tenantHeaders($this->tenant))->assertOk();
+        $cashBefore = $this->treasuryCash();
+
+        $this->postJson('/api/v1/payments/supplier-voucher', [
+            'supplier_id' => $this->supplierId,
+            'purchase_id' => $purchaseId,
+            'amount' => '100.000',
+            'payment_method' => 'cash',
+        ], $this->tenantHeaders($this->tenant))->assertStatus(409);
+
+        $this->assertSame('-250.000', $this->supplierBalance());
+        $this->assertSame($cashBefore, $this->treasuryCash());
+        $this->assertSame(1, $this->inTenant($this->tenant, fn (): int => Payment::where('purchase_id', $purchaseId)->count()));
+    }
+
     private function createPurchase(string $quantity, string $unitCost, string $paid): int
     {
         return (int) $this->postJson('/api/v1/purchases', [
