@@ -9,8 +9,8 @@ use App\Jobs\SendDailySummaryReportJob;
 use App\Models\CashShift;
 use App\Models\Setting;
 use App\Models\Tenant;
+use App\Services\Settings\SettingSecrets;
 use App\Services\Settings\TenantSettings;
-use App\Services\TelegramService;
 use App\Support\TenantClock;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
@@ -95,8 +95,10 @@ final class DispatchTenantTelegramAlertsCommand extends Command
     /** Runs inside the tenant; returns the number of jobs dispatched. */
     private function dispatchFor(): int
     {
-        $telegram = app(TelegramService::class);
-        if (! $telegram->isEnabled() || ! $telegram->getBotToken() || ! $telegram->getDefaultChatId()) {
+        // Only a shop that configured its OWN bot, chat and explicit opt-in gets scheduled alerts.
+        // TelegramService falls back to the platform bot/chat, which would post this shop's
+        // sales and staff names into the platform chat (cross-tenant leak), so it is not used here.
+        if (! $this->shopOwnsTelegram()) {
             return 0;
         }
 
@@ -152,5 +154,21 @@ final class DispatchTenantTelegramAlertsCommand extends Command
         CheckOverdueShiftsJob::dispatch($hours, $fresh);
 
         return 1;
+    }
+
+    private function shopOwnsTelegram(): bool
+    {
+        if (Setting::get('telegram_notifications_enabled') === null
+            || ! Setting::getBool('telegram_notifications_enabled', false)) {
+            return false;
+        }
+
+        $stored = Setting::get('telegram_bot_token');
+        if ($stored === null || $stored === '' || SettingSecrets::isUnreadable($stored)
+            || (string) SettingSecrets::decrypt($stored) === '') {
+            return false;
+        }
+
+        return trim((string) Setting::get('telegram_chat_id', '')) !== '';
     }
 }

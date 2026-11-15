@@ -10,6 +10,7 @@ use App\Jobs\SendDailySummaryReportJob;
 use App\Models\CashShift;
 use App\Models\Setting;
 use App\Models\Tenant;
+use App\Services\Settings\SettingSecrets;
 use App\Support\TenantClock;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Bus;
@@ -32,9 +33,11 @@ final class DispatchTenantTelegramAlertsCommandTest extends TenantTestCase
 
     public function test_each_tenant_gets_its_own_summary_job_once_per_business_day(): void
     {
-        Bus::fake();
         $a = $this->createTenant();
         $b = $this->createTenant();
+        $this->configureOwnTelegram($a);
+        $this->configureOwnTelegram($b);
+        Bus::fake();
 
         $this->artisan('notify:dispatch-tenant-alerts', ['--tenants' => [$a->id, $b->id]])->assertSuccessful();
         Bus::assertDispatchedTimes(SendDailySummaryReportJob::class, 2);
@@ -46,12 +49,27 @@ final class DispatchTenantTelegramAlertsCommandTest extends TenantTestCase
         $this->assertNotNull($this->inTenant($a, fn () => Setting::get(DispatchTenantTelegramAlertsCommand::KEY_LAST_SUMMARY_DATE)));
     }
 
-    public function test_tenant_without_telegram_is_skipped_without_error(): void
+    public function test_a_shop_without_its_own_telegram_never_uses_the_platform_bot(): void
     {
-        // Create the tenant first: provisioning dispatches its own JobPipeline, which Bus::fake would record.
+        // The platform bot and chat are configured (setUp), as in production for backup alerts.
+        // A shop that never set up Telegram must not have its sales posted into the platform chat.
         $tenant = $this->createTenant();
+        $this->openShift($tenant, 'SHF-OPS24-0');
         Bus::fake();
-        config(['services.telegram.bot_token' => null, 'services.telegram.chat_id' => null]);
+
+        $this->artisan('notify:dispatch-tenant-alerts', ['--tenants' => [$tenant->id]])->assertSuccessful();
+
+        Bus::assertNothingDispatched();
+    }
+
+    public function test_a_shop_with_only_part_of_its_own_telegram_is_skipped(): void
+    {
+        $tenant = $this->createTenant();
+        $this->inTenant($tenant, function (): void {
+            Setting::set('telegram_notifications_enabled', '1');
+            Setting::set('telegram_bot_token', SettingSecrets::encrypt('shop-token'));
+        });
+        Bus::fake();
 
         $this->artisan('notify:dispatch-tenant-alerts', ['--tenants' => [$tenant->id]])->assertSuccessful();
 
@@ -60,9 +78,10 @@ final class DispatchTenantTelegramAlertsCommandTest extends TenantTestCase
 
     public function test_summary_is_for_the_finished_business_day(): void
     {
-        Bus::fake();
         $tenant = $this->createTenant();
+        $this->configureOwnTelegram($tenant);
         $expected = $this->inTenant($tenant, fn (): string => CarbonImmutable::parse(app(TenantClock::class)->today())->subDay()->toDateString());
+        Bus::fake();
 
         $this->artisan('notify:dispatch-tenant-alerts', ['--tenants' => [$tenant->id]])->assertSuccessful();
 
@@ -71,9 +90,10 @@ final class DispatchTenantTelegramAlertsCommandTest extends TenantTestCase
 
     public function test_overdue_shift_is_alerted_only_once(): void
     {
-        Bus::fake();
         $tenant = $this->createTenant();
+        $this->configureOwnTelegram($tenant);
         $this->openShift($tenant, 'SHF-OPS24-1');
+        Bus::fake();
 
         $this->artisan('notify:dispatch-tenant-alerts', ['--tenants' => [$tenant->id]])->assertSuccessful();
         $this->artisan('notify:dispatch-tenant-alerts', ['--tenants' => [$tenant->id]])->assertSuccessful();
@@ -83,10 +103,11 @@ final class DispatchTenantTelegramAlertsCommandTest extends TenantTestCase
 
     public function test_shift_below_the_configured_limit_is_not_alerted(): void
     {
-        Bus::fake();
         $tenant = $this->createTenant();
+        $this->configureOwnTelegram($tenant);
         $this->inTenant($tenant, fn () => Setting::set('overdue_shift_alert_hours', '48'));
         $this->openShift($tenant, 'SHF-OPS24-2');
+        Bus::fake();
 
         $this->artisan('notify:dispatch-tenant-alerts', ['--tenants' => [$tenant->id]])->assertSuccessful();
 
@@ -97,14 +118,27 @@ final class DispatchTenantTelegramAlertsCommandTest extends TenantTestCase
     {
         $broken = $this->createTenant();
         $good = $this->createTenant();
+        $this->configureOwnTelegram($broken);
+        $this->configureOwnTelegram($good);
+        // Break only the broken tenant's data (the shifts table the overdue check reads), leaving
+        // its database file in place so the harness can still clean it up.
+        $this->inTenant($broken, fn () => Schema::drop('cash_shifts'));
         Bus::fake();
-        // Break only the broken tenant's data (the settings table the command reads), leaving its
-        // database file in place so the harness can still clean it up.
-        $this->inTenant($broken, fn () => Schema::drop('settings'));
 
         $this->artisan('notify:dispatch-tenant-alerts', ['--tenants' => [$broken->id, $good->id]])->assertFailed();
 
-        Bus::assertDispatchedTimes(SendDailySummaryReportJob::class, 1);
+        // The broken shop fails after its summary was queued; the good shop is still processed.
+        Bus::assertDispatchedTimes(SendDailySummaryReportJob::class, 2);
+    }
+
+    /** The shop's OWN bot, chat and explicit opt-in (what the settings screen saves). */
+    private function configureOwnTelegram(Tenant $tenant): void
+    {
+        $this->inTenant($tenant, function (): void {
+            Setting::set('telegram_notifications_enabled', '1');
+            Setting::set('telegram_bot_token', SettingSecrets::encrypt('shop-token'));
+            Setting::set('telegram_chat_id', '777');
+        });
     }
 
     private function openShift(Tenant $tenant, string $number): void
