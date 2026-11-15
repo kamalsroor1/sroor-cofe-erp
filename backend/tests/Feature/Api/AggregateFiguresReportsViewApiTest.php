@@ -73,7 +73,7 @@ final class AggregateFiguresReportsViewApiTest extends TenantTestCase
     public function test_cashier_gets_the_invoice_list_without_summary(): void
     {
         $this->invoice('INV-1', $this->store);
-        $token = $this->user('01011110001', null, ['invoices.view']);
+        $token = $this->user('01000000011', null, ['invoices.view']);
 
         $res = $this->fetch($token, '/api/v1/invoices')->assertOk();
         $this->assertCount(1, $res->json('data'));
@@ -83,8 +83,8 @@ final class AggregateFiguresReportsViewApiTest extends TenantTestCase
     public function test_reports_viewer_and_admin_get_the_invoice_summary(): void
     {
         $this->invoice('INV-1', $this->store);
-        $manager = $this->user('01011110002', null, ['invoices.view', 'reports.view']);
-        $admin = $this->user('01011110003', 'admin');
+        $manager = $this->user('01000000012', null, ['invoices.view', 'reports.view']);
+        $admin = $this->user('01000000013', 'admin');
 
         foreach ([$manager, $admin] as $token) {
             $this->fetch($token, '/api/v1/invoices')->assertOk()->assertJsonStructure(['summary' => ['total_sales', 'total_paid', 'total_due']]);
@@ -95,7 +95,7 @@ final class AggregateFiguresReportsViewApiTest extends TenantTestCase
     {
         $this->invoice('INV-MAIN', $this->store);
         $this->invoice('INV-BRANCH', $this->branch);
-        $token = $this->user('01011110004', null, ['invoices.view']);
+        $token = $this->user('01000000014', null, ['invoices.view']);
 
         $res = $this->fetch($token, '/api/v1/invoices/export')->assertOk();
         $body = $res->streamedContent();
@@ -108,14 +108,14 @@ final class AggregateFiguresReportsViewApiTest extends TenantTestCase
 
     public function test_customers_list_hides_debt_totals_without_reports_view(): void
     {
-        $cashier = $this->user('01011110005', null, ['customers.manage']);
+        $cashier = $this->user('01000000015', null, ['customers.manage']);
         $res = $this->fetch($cashier, '/api/v1/customers')->assertOk();
         $this->assertNotEmpty($res->json('data'));
         $this->assertArrayNotHasKey('total_debt', $res->json('summary'));
         $this->assertArrayNotHasKey('debtors_count', $res->json('summary'));
         $this->assertArrayHasKey('total_customers', $res->json('summary'));
 
-        $manager = $this->user('01011110006', null, ['customers.manage', 'reports.view']);
+        $manager = $this->user('01000000016', null, ['customers.manage', 'reports.view']);
         $this->fetch($manager, '/api/v1/customers')->assertOk()
             ->assertJsonPath('summary.total_debt', '250.000')
             ->assertJsonPath('summary.debtors_count', 1);
@@ -123,12 +123,12 @@ final class AggregateFiguresReportsViewApiTest extends TenantTestCase
 
     public function test_payments_summary_is_omitted_without_reports_view(): void
     {
-        $cashier = $this->user('01011110007', null, ['customers.manage']);
+        $cashier = $this->user('01000000017', null, ['customers.manage']);
         $res = $this->fetch($cashier, '/api/v1/payments')->assertOk();
         $this->assertArrayNotHasKey('summary', $res->json());
         $this->assertArrayHasKey('data', $res->json());
 
-        $manager = $this->user('01011110008', null, ['customers.manage', 'reports.view']);
+        $manager = $this->user('01000000018', null, ['customers.manage', 'reports.view']);
         $this->fetch($manager, '/api/v1/payments')->assertOk()->assertJsonStructure(['summary' => ['total_collections', 'total_disbursements', 'total_refunds']]);
     }
 
