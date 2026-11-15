@@ -126,6 +126,8 @@ return [
     'payable_balance_label' => 'الرصيد المستحق',
     'due_to_supplier' => 'مستحق للمورد',
     'fully_settled' => 'مسدد بالكامل',
+    // PUR-01: negative supplier balance = the supplier holds money of ours.
+    'supplier_credit_in_our_favour' => 'رصيد لصالحنا عند المورد',
     'no_suppliers_description' => 'لم يتم العثور على أي مورد مطابق للبحث أو الفلتر',
     'supplier_creditors_only' => 'مستحق له (دائن) 🚨',
     'supplier_settled_only' => 'مسدد بالكامل ✅',
@@ -145,6 +147,13 @@ return [
     'supplier_save_failed' => 'تعذر حفظ بيانات المورد',
     'supplier_ledger_title' => 'كشف حساب المورد',
     'supplier_ledger_subtitle' => 'سجل التوريدات والمشتريات وسندات الصرف والدفعات',
+    'supplier_ledger_types' => [
+        'purchase' => 'فاتورة مشتريات وتوريد',
+        'payment' => 'سند صرف وسداد نقدي',
+        'purchase_return' => 'مرتجع مشتريات',
+        // PUR-01: payment of a cancelled purchase kept as credit on the supplier's account.
+        'cancelled_purchase_credit' => 'رصيد لصالحنا من فاتورة مشتريات ملغاة رقم :number',
+    ],
     'total_purchases_label' => 'إجمالي المشتريات',
     'total_payments_label' => 'إجمالي المدفوعات',
     'total_results_suppliers' => 'إجمالي النتائج: :count مورد',

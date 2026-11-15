@@ -182,6 +182,8 @@ return [
 
     // BE-07: business-rule refusals (BusinessRuleException)
     'already_cancelled' => 'فاتورة المشتريات رقم [:number] ملغاة بالفعل مسبقاً.',
+    // PUR-01: appended to the purchase notes when its payments stay as supplier credit.
+    'cancel_paid_kept_as_credit' => 'المبلغ المدفوع للمورد (:amount) محفوظ كرصيد لصالحنا عنده ولم يُرد إلى الخزينة',
     'not_cancelled' => 'فاتورة المشتريات رقم [:number] ليست ملغاة.',
     'cancel_stock_sold' => 'تعذر إلغاء الفاتورة: رصيد الصنف [:item] الحالي (:current :unit) أقل من الكمية المطلوب عكسها (:required :unit)، لوجود مبيعات تمت من هذه الشحنة.',
     'cancel_store_stock_insufficient' => 'تعذر إلغاء الفاتورة: رصيد الصنف [:item] في [:store] (:current :unit) غير كافٍ لخصم الكمية (:required :unit).',

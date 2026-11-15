@@ -126,6 +126,8 @@ return [
     'payable_balance_label' => 'Payable Balance',
     'due_to_supplier' => 'Due to Supplier',
     'fully_settled' => 'Fully Settled',
+    // PUR-01: negative supplier balance = the supplier holds money of ours.
+    'supplier_credit_in_our_favour' => 'Credit in our favour',
     'no_suppliers_description' => 'No suppliers matched your search or filter criteria',
     'supplier_creditors_only' => 'Due Balance (Creditor) 🚨',
     'supplier_settled_only' => 'Fully Settled ✅',
@@ -145,6 +147,13 @@ return [
     'supplier_save_failed' => 'Failed to save supplier',
     'supplier_ledger_title' => 'Supplier Statement',
     'supplier_ledger_subtitle' => 'Record of supplies, purchases, and disbursement vouchers',
+    'supplier_ledger_types' => [
+        'purchase' => 'Purchase invoice',
+        'payment' => 'Cash disbursement voucher',
+        'purchase_return' => 'Purchase return',
+        // PUR-01: payment of a cancelled purchase kept as credit on the supplier's account.
+        'cancelled_purchase_credit' => 'Credit from cancelled purchase #:number',
+    ],
     'total_purchases_label' => 'Total Purchases',
     'total_payments_label' => 'Total Payments',
     'total_results_suppliers' => 'Total results: :count suppliers',

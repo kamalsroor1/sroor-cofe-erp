@@ -69,7 +69,13 @@
           <span class="text-xs font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
         <div class="text-[10px] font-tajawal text-slate-500 dark:text-slate-400 mt-0.5 text-end">
-          {{ row.current_balance > 0 ? $t('contacts.due_to_supplier') : $t('contacts.fully_settled') }}
+          {{
+            row.current_balance > 0
+              ? $t('contacts.due_to_supplier')
+              : row.current_balance < 0
+                ? $t('contacts.supplier_credit_in_our_favour')
+                : $t('contacts.fully_settled')
+          }}
         </div>
       </template>
 

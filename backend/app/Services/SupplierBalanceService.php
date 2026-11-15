@@ -91,7 +91,7 @@ class SupplierBalanceService
         foreach ($purchases as $pur) {
             $entries->push([
                 'date' => $pur->purchase_date->format('Y-m-d'),
-                'type' => 'فاتورة مشتريات وتوريد',
+                'type' => __('contacts.supplier_ledger_types.purchase'),
                 'ref_number' => $pur->purchase_number,
                 'debit' => '0.000',
                 'credit' => $pur->net_total,    // دائن (مستحق للمورد)
@@ -102,14 +102,22 @@ class SupplierBalanceService
 
         // 2. Payments (Debit - المسدد للمورد)
         $payments = Payment::where('supplier_id', $supplier->id)
+            ->with('purchase:id,purchase_number,status,deleted_at')
             ->when($fromDate, fn ($q) => $q->whereDate('payment_date', '>=', $fromDate))
             ->when($toDate, fn ($q) => $q->whereDate('payment_date', '<=', $toDate))
             ->get();
 
         foreach ($payments as $pay) {
+            // PUR-01: a voucher of a cancelled (or deleted) purchase is money the supplier still
+            // holds: the credit in our favour that the cancel kept on the account.
+            $purchase = $pay->purchase;
+            $isRetainedCredit = $purchase !== null && ($purchase->status === 'cancelled' || $purchase->trashed());
+
             $entries->push([
                 'date' => $pay->payment_date ? $pay->payment_date->format('Y-m-d') : $pay->created_at->format('Y-m-d'),
-                'type' => 'سند صرف وسداد نقدي',
+                'type' => $isRetainedCredit
+                    ? __('contacts.supplier_ledger_types.cancelled_purchase_credit', ['number' => $purchase->purchase_number])
+                    : __('contacts.supplier_ledger_types.payment'),
                 'ref_number' => $pay->payment_number,
                 'debit' => $pay->amount,       // مدين (تخفيض مديونية المورد)
                 'credit' => '0.000',
@@ -129,7 +137,7 @@ class SupplierBalanceService
             foreach ($returns as $ret) {
                 $entries->push([
                     'date' => $ret->return_date ? $ret->return_date->format('Y-m-d') : $ret->created_at->format('Y-m-d'),
-                    'type' => 'مرتجع مشتريات',
+                    'type' => __('contacts.supplier_ledger_types.purchase_return'),
                     'ref_number' => $ret->return_number,
                     'debit' => $ret->total_amount, // مدين (تخفيض مستحقات المورد)
                     'credit' => '0.000',

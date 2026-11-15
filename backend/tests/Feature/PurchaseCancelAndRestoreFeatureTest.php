@@ -76,7 +76,8 @@ class PurchaseCancelAndRestoreFeatureTest extends TenantTestCase
             // Stock reversed to 0.000
             $this->assertEquals('0.000', $item->current_stock);
             $this->assertEquals('cancelled', $cancelledPurchase->status);
-            $this->assertEquals('0.000', $supplier->current_balance);
+            // PUR-01 (owner decision): the 2000 already paid stays as a credit in our favour.
+            $this->assertEquals('-2000.000', $supplier->current_balance);
 
             // Movement record created
             $this->assertDatabaseHas('stock_movements', [

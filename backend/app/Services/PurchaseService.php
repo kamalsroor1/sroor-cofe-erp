@@ -389,11 +389,27 @@ class PurchaseService
 
             $oldState = $lockedPurchase->toArray();
 
-            // 4. Cancel associated payment vouchers
-            Payment::where('purchase_id', $lockedPurchase->id)->delete();
+            // 4. PUR-01 (owner decision): money already paid to the supplier is neither lost nor put
+            //    back in the treasury. Its vouchers stay (treasury unchanged), still linked to this
+            //    purchase, and with the purchase out of the balance they become a credit in our
+            //    favour on the supplier's account, consumed by the next purchases/payments.
+            //    Only the treasury-paid expense vouchers (PAY-EXP, paid to third parties, not to
+            //    the supplier) are voided as before, so they never turn into supplier credit.
+            $expenseVoucherIds = $lockedPurchase->additionalExpenses()->whereNotNull('payment_id')->pluck('payment_id');
+            if ($expenseVoucherIds->isNotEmpty()) {
+                Payment::where('purchase_id', $lockedPurchase->id)->whereIn('id', $expenseVoucherIds)->delete();
+            }
+
+            $retainedCredit = '0.000';
+            foreach (Payment::where('purchase_id', $lockedPurchase->id)->pluck('amount') as $amount) {
+                $retainedCredit = bcadd($retainedCredit, (string) $amount, 3);
+            }
 
             // 5. Update purchase status
             $cancelNote = 'تم إلغاء الفاتورة وعكس المخزون'.($reason ? " (السبب: {$reason})" : '');
+            if (bccomp($retainedCredit, '0.000', 3) > 0) {
+                $cancelNote .= "\n".__('purchases.cancel_paid_kept_as_credit', ['amount' => Decimal::normalize($retainedCredit)]);
+            }
             $lockedPurchase->update([
                 'status' => 'cancelled',
                 'remaining_amount' => '0.000',
