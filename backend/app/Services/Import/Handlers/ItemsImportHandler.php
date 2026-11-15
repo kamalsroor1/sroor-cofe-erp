@@ -9,6 +9,7 @@ use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Services\DocumentNumberService;
 use App\Services\Import\ImportContext;
 use App\Services\Import\NumberNormalizer;
 use App\Services\Settings\TenantSettings;
@@ -26,7 +27,7 @@ use Illuminate\Support\Facades\DB;
  * instead of ~10 per row. It reproduces, row for row, what CreateItemAction + StoreStockInitializer
  * + StockService::addStock wrote for a brand-new item (none of them fire model events or observers
  * for these models). Every row written here is NEW: no existing stock or balance row is read and
- * changed, so there is nothing to lock beyond the ITM-code read.
+ * changed, so there is nothing to lock beyond the shared `ITM` code counter row.
  */
 final class ItemsImportHandler extends AbstractImportHandler
 {
@@ -35,11 +36,15 @@ final class ItemsImportHandler extends AbstractImportHandler
     /** Rows per INSERT (items have ~17 columns: well under MySQL's 65,535 and sqlite's 32,766 placeholders). */
     private const CHUNK = 500;
 
+    /** Auto-code counter shared with CreateItemAction (DocumentNumberService scope `ITM`). */
+    private const CODE_PREFIX = 'ITM';
+
     /** items.code is VARCHAR(50). */
     private const CODE_MAX = 50;
 
     public function __construct(
         private readonly TenantSettings $settings,
+        private readonly DocumentNumberService $documentNumbers,
     ) {}
 
     /** @var list<string> */
@@ -66,6 +71,10 @@ final class ItemsImportHandler extends AbstractImportHandler
     protected function prepare(): void
     {
         $this->units = $this->settings->inventoryUnits();
+
+        // The ITM counter row must exist before the commit transaction's first read (BUG-04);
+        // analyze() runs before CommitImportAction opens it. Allocates nothing.
+        $this->documentNumbers->prepareFor(self::CODE_PREFIX, Item::class, 'code');
     }
 
     protected function normalize(array $raw, array &$errors): array
@@ -281,41 +290,36 @@ final class ItemsImportHandler extends AbstractImportHandler
     }
 
     /**
-     * Auto codes (ITM-0001...) continue after the highest existing sequence (trashed items included,
-     * the unique index covers them) and never reuse a code that the file itself carries. Everything is
-     * resolved in memory from ONE locked read; the unique index is the last line of defence
-     * (CommitImportAction maps its violation to a 422).
+     * Auto codes come from the SAME `ITM` counter CreateItemAction uses (DocumentNumberService), as
+     * one block: the counter advances past every code taken here, so a create after the import
+     * continues after them, and a concurrent create waits on the counter row lock instead of
+     * picking a code this import is about to insert. Codes typed in the file are skipped; the
+     * unique index is the last line of defence (CommitImportAction maps its violation to a 422).
      *
      * @param  list<array<string, string|bool|null>>  $rows
      * @return array<int, string> row index => code
      */
     private function resolveCodes(array $rows): array
     {
-        $usedCodes = [];
-        $sequence = 0;
-        foreach (Item::withTrashed()->where('code', 'like', 'ITM-%')->lockForUpdate()->pluck('code') as $existing) {
-            $usedCodes[mb_strtolower((string) $existing)] = true;
-            if (preg_match('/^ITM-(\d+)$/i', (string) $existing, $m) === 1) {
-                $sequence = max($sequence, (int) $m[1]);
-            }
-        }
-        foreach ($rows as $row) {
-            if (($row['code'] ?? '') !== '') {
-                $usedCodes[mb_strtolower((string) $row['code'])] = true;
-            }
-        }
-
-        $codes = [];
+        $typed = [];
+        $missing = [];
         foreach ($rows as $index => $row) {
             $code = (string) ($row['code'] ?? '');
             if ($code === '') {
-                do {
-                    $sequence++;
-                    $code = 'ITM-'.str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
-                } while (isset($usedCodes[mb_strtolower($code)]));
-                $usedCodes[mb_strtolower($code)] = true;
+                $missing[] = $index;
+            } else {
+                $typed[] = $code;
             }
-            $codes[$index] = $code;
+        }
+
+        $auto = $this->documentNumbers->nextBlockFor(self::CODE_PREFIX, 4, Item::class, 'code', count($missing), $typed);
+
+        $codes = [];
+        foreach ($rows as $index => $row) {
+            $codes[$index] = (string) ($row['code'] ?? '');
+        }
+        foreach ($missing as $position => $index) {
+            $codes[$index] = $auto[$position];
         }
 
         return $codes;

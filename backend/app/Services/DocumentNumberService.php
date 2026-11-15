@@ -86,6 +86,63 @@ final class DocumentNumberService
     }
 
     /**
+     * nextFor() for $count numbers at once (bulk imports), from the SAME counter, so a later
+     * nextFor() continues after the block instead of re-trying the codes the block took.
+     *
+     * One locked read of the counter row, one read of the documents already numbered under
+     * "{prefix}-" (soft-deleted included) and one update: the per-number exists-check of nextFor()
+     * is done in memory. $reserved holds codes that will be written alongside the block (e.g.
+     * typed in the imported file); they are skipped, compared case-insensitively. The counter row
+     * stays locked until the caller's transaction ends, so a concurrent nextFor() waits and then
+     * starts after the block. Call prepareFor() with the same arguments before the transaction.
+     *
+     * @param  class-string<Model>  $modelClass
+     * @param  list<string>  $reserved
+     * @return list<string>
+     */
+    public function nextBlockFor(string $prefix, int $pad, string $modelClass, string $column, int $count, array $reserved = [], ?string $scope = null): array
+    {
+        if ($count < 1) {
+            return [];
+        }
+
+        if (DB::transactionLevel() === 0) {
+            $this->prepareFor($prefix, $modelClass, $column, $scope);
+
+            return DB::transaction(fn (): array => $this->nextBlockFor($prefix, $pad, $modelClass, $column, $count, $reserved, $scope));
+        }
+
+        $scope ??= $prefix;
+        $query = $this->documentsQuery($modelClass);
+        $this->ensureScopeRow($scope, fn (): int => $this->highestSequence($query(), $column, $prefix));
+
+        // Counter first (the lock that serialises issuers), then the taken numbers it guards.
+        $row = DB::table(self::TABLE)->where('scope', $scope)->lockForUpdate()->first();
+        $value = (int) ($row->last_value ?? 0);
+
+        $taken = [];
+        foreach ($query()->where($column, 'like', $prefix.'-%')->pluck($column) as $existing) {
+            $taken[mb_strtolower((string) $existing)] = true;
+        }
+        foreach ($reserved as $code) {
+            $taken[mb_strtolower($code)] = true;
+        }
+
+        $numbers = [];
+        while (count($numbers) < $count) {
+            $value++;
+            $candidate = $prefix.'-'.str_pad((string) $value, $pad, '0', STR_PAD_LEFT);
+            if (! isset($taken[mb_strtolower($candidate)])) {
+                $numbers[] = $candidate;
+            }
+        }
+
+        DB::table(self::TABLE)->where('scope', $scope)->update(['last_value' => $value, 'updated_at' => Carbon::now()]);
+
+        return $numbers;
+    }
+
+    /**
      * BUG-04: create the counter row of a nextDated() scope BEFORE the document transaction.
      *
      * Call it with no transaction open, right before the DB::transaction()/TransactionRetry
