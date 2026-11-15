@@ -49,7 +49,9 @@ set -euo pipefail
 # the release went live, and the history line says `deployed-rehearsal`.
 #
 # Test hooks (scripts/ops/tests/deploy-test.sh): OPS_PHP_BIN, OPS_HEALTH_DELAY,
-# OPS_HEALTH_ATTEMPTS. Nothing else changes behaviour.
+# OPS_HEALTH_ATTEMPTS, OPS_TM_POLL (tenant-migration poll interval, default 5s) and
+# OPS_TM_MAX_WAIT (replaces --tenant-migrate-max-wait without its 60s floor).
+# Nothing else changes behaviour.
 
 
 # Physical path: a manual --rollback started from current/ keeps using its own files.
@@ -147,6 +149,9 @@ PHP_BIN="${OPS_PHP_BIN:-php}"
 export SROOR_HEALTH_DEPLOY_GATE=1
 HEALTH_DELAY="${OPS_HEALTH_DELAY:-3}"
 HEALTH_ATTEMPTS="${OPS_HEALTH_ATTEMPTS:-10}"
+TM_POLL="${OPS_TM_POLL:-5}"
+TENANT_MAX_WAIT="${OPS_TM_MAX_WAIT:-$TENANT_MAX_WAIT}"
+[[ "$TM_POLL" =~ ^[0-9]+(\.[0-9]+)?$ && "$TENANT_MAX_WAIT" =~ ^[0-9]+$ ]] || die "OPS_TM_POLL / OPS_TM_MAX_WAIT must be numbers"
 RELEASES="$APP_ROOT/releases"
 SHARED="$APP_ROOT/shared"
 CURRENT="$APP_ROOT/current"
@@ -544,12 +549,23 @@ TM_STATUS="$SHARED/tenant-migrate-status.json"
 TM_RC="$SHARED/tenant-migrate.rc"
 TM_PID="$SHARED/tenant-migrate.pid"
 TM_LOG="$SHARED/tenant-migrate.log"
+# A recorded pid only counts while it is still OUR detached run (a reused pid of an unrelated
+# process must never make the deploy attach to it and wait for the cap).
 tm_pid_alive() {
-    [[ -s "$TM_PID" ]] && kill -0 "$(cat "$TM_PID")" 2>/dev/null
+    local pid
+    [[ -s "$TM_PID" ]] || return 1
+    pid="$(cat "$TM_PID")"
+    [[ "$pid" =~ ^[0-9]+$ ]] || return 1
+    kill -0 "$pid" 2>/dev/null || return 1
+    if [[ -r "/proc/$pid/cmdline" ]]; then
+        tr '\0' ' ' <"/proc/$pid/cmdline" | grep -q 'tenants:migrate-all'
+    fi
 }
-if tm_pid_alive; then
-    info "tenant migration run $(cat "$TM_PID") is still going (previous deploy): attaching to it"
-else
+# Starts tenants:migrate-all from THIS release, detached. The DB account is the same as the
+# pre-OPS-25 `artisan tenants:migrate --force`: no DB_* override (the app account reads the
+# central `tenants` table; every tenant DB is reached with its own per-tenant user). The
+# migrator account has no tenant privileges (lib/mysql-grants.sh) and is never handed over.
+tm_launch() {
     info "php artisan tenants:migrate-all (detached; per-tenant timeout ${TENANT_TIMEOUT}s; status: $TM_STATUS)"
     rm -f "$TM_RC" "$TM_STATUS"
     (
@@ -559,34 +575,52 @@ else
             _ "$PHP_BIN" "$TENANT_TIMEOUT" "$TM_STATUS" "$TM_LOG" "$TM_RC" </dev/null >/dev/null 2>&1 &
         echo $! >"$TM_PID"
     )
-fi
-tm_started=$SECONDS
-tm_last=""
-while [[ ! -s "$TM_RC" ]]; do
-    if ! tm_pid_alive && [[ ! -s "$TM_RC" ]]; then
-        sleep 2
-        [[ -s "$TM_RC" ]] && break
-        die "tenant migration process ended without an exit code (killed?). Re-run the deploy: migrations are idempotent. Log: $TM_LOG"
-    fi
-    if ((SECONDS - tm_started > TENANT_MAX_WAIT)); then
-        # Keep the release directory: the detached run still executes from it.
-        RELEASE_CREATED=0
-        warn "tenant migrations still running after ${TENANT_MAX_WAIT}s: NOT killed. Re-run the deploy later (it attaches). Status: $TM_STATUS"
-        die "tenant migrations exceeded --tenant-migrate-max-wait"
-    fi
-    if [[ -s "$TM_STATUS" ]]; then
-        tm_now="$(tr -d '\n ' <"$TM_STATUS" | grep -o '"done":[0-9]*,"counts"' || true)"
-        if [[ "$tm_now" != "$tm_last" ]]; then
-            tm_last="$tm_now"
-            info "tenant migrations progress: ${tm_now%,\"counts\"} (elapsed $((SECONDS - tm_started))s)"
+}
+# Waits for the run recorded in $TM_PID; sets TM_EXIT. The cap is shared by every wait of
+# this deploy (tm_started). Hitting it keeps the release directory: the run executes from it.
+tm_wait() {
+    local tm_now tm_last=""
+    while [[ ! -s "$TM_RC" ]]; do
+        if ! tm_pid_alive; then
+            sleep 2
+            [[ -s "$TM_RC" ]] && break
+            die "tenant migration process ended without an exit code (killed?). Re-run the deploy: migrations are idempotent. Log: $TM_LOG"
         fi
+        if ((SECONDS - tm_started > TENANT_MAX_WAIT)); then
+            RELEASE_CREATED=0
+            warn "tenant migrations still running after ${TENANT_MAX_WAIT}s: NOT killed, release $RELEASE_ID kept (the run executes from it). Re-run the deploy later (it attaches). Status: $TM_STATUS"
+            die "tenant migrations exceeded --tenant-migrate-max-wait"
+        fi
+        if [[ -s "$TM_STATUS" ]]; then
+            # No match yet (status file still being written) is not an error: keep the last value.
+            tm_now="$(tr -d '\n ' <"$TM_STATUS" | grep -o '"done":[0-9]*,"counts"')" || tm_now="$tm_last"
+            if [[ "$tm_now" != "$tm_last" ]]; then
+                tm_last="$tm_now"
+                info "tenant migrations progress: ${tm_now%,\"counts\"} (elapsed $((SECONDS - tm_started))s)"
+            fi
+        fi
+        sleep "$TM_POLL"
+    done
+    TM_EXIT="$(cat "$TM_RC")"
+    info "tenant migrations finished after $((SECONDS - tm_started))s (exit $TM_EXIT). Report:"
+    if [[ -r "$TM_LOG" ]]; then
+        sed 's/^/        /' "$TM_LOG" >&2
+    else
+        warn "tenant migration report $TM_LOG is missing"
     fi
-    sleep 5
-done
-TM_EXIT="$(cat "$TM_RC")"
-info "tenant migrations finished in $((SECONDS - tm_started))s (exit $TM_EXIT). Report:"
-sed 's/^/        /' "$TM_LOG" >&2 || true
-rm -f "$TM_PID"
+    rm -f "$TM_PID"
+}
+tm_started=$SECONDS
+TM_EXIT=""
+if tm_pid_alive; then
+    # The attached run executes the code of an EARLIER release: its result does not cover this
+    # release's migrations. Wait for it (never two runs at once), then run this release's own.
+    info "tenant migration run $(cat "$TM_PID") is still going (previous deploy): attaching to it"
+    tm_wait
+    info "the previous run ended (exit $TM_EXIT); now migrating the tenants with this release"
+fi
+tm_launch
+tm_wait
 [[ "$TM_EXIT" == "0" ]] || die "tenants:migrate-all reported failed/timed-out tenants (see the report above). The other tenants ARE migrated; the new release was NOT activated. Fix the tenant(s) and re-run the deploy"
 
 # APP-3 (CTO Q9) / R1: release binaries are COPIED from the web-served public disk to the

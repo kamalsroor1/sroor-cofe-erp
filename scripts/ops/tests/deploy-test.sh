@@ -13,7 +13,8 @@
 # before migrate, skipped on the first release, its failure stops the release,
 # explicit emergency skip), the health deploy gate env, automatic rollback
 # (health check after the switch fails), failures before the switch (central
-# migrate, tenants migrate, smoke health, grants drift), preflight refusals
+# migrate, tenants:migrate-all failing / killed / hitting the wait cap, attaching to a
+# still running run, smoke health, grants drift), preflight refusals
 # (TELESCOPE_ENABLED, BACKUP_ARCHIVE_PASSWORD, backup account, Google Drive,
 # SMTP, packaged .env, checksum), the deploy lock, manual rollback, pruning old
 # releases without touching shared/, app-releases:relocate copy-before / prune-after
@@ -84,6 +85,39 @@ where="$(basename "$(dirname "$PWD")")"
 flag=""
 [[ " $* " == *" --prune-legacy "* ]] && flag=" --prune-legacy"
 printf 'php %s%s @%s dbuser=%s gate=%s\n' "$cmd" "$flag" "$where" "${DB_USERNAME:-}" "${SROOR_HEALTH_DEPLOY_GATE:-}" >>"$FAKE_LOG"
+if [[ "$cmd" == "tenants:migrate-all" ]]; then
+    # OPS-25: deploy.sh starts this through `setsid nohup bash -c '...; echo $? >rc'`.
+    status_file="" timeout=""
+    for a in "$@"; do
+        case "$a" in
+            --status-file=*) status_file="${a#*=}" ;;
+            --timeout=*) timeout="${a#*=}" ;;
+        esac
+    done
+    # Detached = the wrapper shell (our parent) leads its own session (setsid).
+    detached="na"
+    if [[ -r "/proc/$PPID/stat" ]]; then
+        stat="$(cat "/proc/$PPID/stat")"
+        read -r _ _ _ sid _ <<<"${stat##*) }"
+        detached=0
+        [[ "$sid" == "$PPID" ]] && detached=1
+    fi
+    printf 'tm timeout=%s detached=%s status=%s stdin=%s\n' "$timeout" "$detached" "$(basename "$status_file")" "$(readlink /proc/$$/fd/0 2>/dev/null || echo na)" >>"$FAKE_LOG"
+    [[ -n "${FAKE_TM_SLEEP:-}" ]] && sleep "$FAKE_TM_SLEEP"
+    if [[ -n "${FAKE_TM_KILL:-}" ]]; then
+        kill -9 "$PPID"
+        exit 137
+    fi
+    failed=0
+    for f in ${FAKE_FAIL:-}; do [[ "$f" == "$cmd" ]] && failed=1; done
+    echo "migrating shop-a ..."
+    echo "shop-a ok (0s)"
+    echo "migrating shop-b ..."
+    if [[ "$failed" -eq 1 ]]; then echo "shop-b failed after 0s"; else echo "shop-b ok (0s)"; fi
+    printf '{"state":"done","total":2,"done":2,"counts":{"ok":%d,"failed":%d}}\n' $((2 - failed)) "$failed" >"$status_file"
+    echo "tenants:migrate-all report: ok=$((2 - failed)) failed=$failed timeout=0 skipped=0 (total 2)"
+    exit "$failed"
+fi
 for f in ${FAKE_FAIL:-}; do
     if [[ "$f" == "$cmd" ]]; then echo "stub: $cmd failed" >&2; exit 1; fi
 done
@@ -159,6 +193,8 @@ chmod +x "$STUBS"/*
 export PATH="$STUBS:$PATH"
 export OPS_HEALTH_DELAY=0
 export OPS_HEALTH_ATTEMPTS=2
+# Tenant migrations run detached; poll the rc file fast instead of every 5s.
+export OPS_TM_POLL=0.1
 
 # ---- fixtures ----------------------------------------------------------------------
 write_env() {
@@ -338,7 +374,15 @@ check "shared/.env installed from --env-file" grep -q 'Retail ERP one' "$ROOT/sh
 check "stale build-time config cache replaced by config:cache" grep -q stub "$ROOT/releases/$ID1/backend/bootstrap/cache/config.php"
 DETAIL="$(cat "$FAKE_LOG")"
 check "migrate ran with the migrator account" log_has "php migrate @$ID1 dbuser=sroor_migrator"
-check "tenants:migrate ran with the app account" log_has "php tenants:migrate @$ID1 dbuser="
+# Tenant DBs are reached with per-tenant users; the migrator has no tenant privileges
+# (lib/mysql-grants.sh). Same account as the pre-OPS-25 `tenants:migrate --force`: no override.
+check "tenants:migrate-all ran with the app account (no migrator override)" log_has "php tenants:migrate-all @$ID1 dbuser= gate=1"
+check "tenants:migrate-all gets the per-tenant timeout and the shared status file" log_has "tm timeout=900 detached="
+check "tenants:migrate-all runs detached (own session, stdin /dev/null)" bash -c "grep -qE '^tm .* detached=(1|na) status=tenant-migrate-status.json stdin=(/dev/null|na)$' '$FAKE_LOG'"
+check "tenant migration status file written in shared/" grep -q '"done":2' "$ROOT/shared/tenant-migrate-status.json"
+check "tenant migration exit code 0 recorded in shared/" grep -qx 0 "$ROOT/shared/tenant-migrate.rc"
+check "tenant migration pid file removed after the run" test ! -e "$ROOT/shared/tenant-migrate.pid"
+check "tenant migration report shown in the deploy output" grep -q 'tenants:migrate-all report: ok=2 failed=0' <<<"$OUT"
 check "storage:link --force ran in the new release" log_has "php storage:link @$ID1"
 check "first release: no pre-migration backup (nothing to back up yet)" bash -c "! grep -q 'php backup:tenants' '$FAKE_LOG'"
 check "artisan runs with the health deploy gate" log_has "php health:check @$ID1 dbuser= gate=1"
@@ -381,7 +425,7 @@ check "previous shared/.env kept as .env.previous" grep -q 'Retail ERP one' "$RO
 # ------------------------------------------------------------------------------------
 echo "3. Failure before the switch: nothing changes for users"
 # ------------------------------------------------------------------------------------
-for failing in "backup:tenants" "migrate" "db:seed" "tenants:migrate" "app-releases:relocate" "config:cache"; do
+for failing in "backup:tenants" "migrate" "db:seed" "tenants:migrate-all" "app-releases:relocate" "config:cache"; do
     FAKE_FAIL="$failing" run_deploy "$SHA3" "$WORK/good3.tar.gz" "$WORK/env-one"
     DETAIL="$OUT"
     check "[$failing fails] exit 1" test "$RC" -eq 1
@@ -398,8 +442,27 @@ check "central migrate failure: tenants:migrate never runs" bash -c "! grep -q '
 FAKE_FAIL="backup:tenants" run_deploy "$SHA3" "$WORK/good3.tar.gz" "$WORK/env-one"
 check "pre-migration backup failure: no migration runs" bash -c "! grep -qE 'php (migrate|tenants:migrate) ' '$FAKE_LOG'"
 check "pre-migration backup failure is recorded" bash -c "tail -1 '$ROOT/shared/deploy-history.log' | grep -q 'failed:pre-migration-backup'"
-FAKE_FAIL="tenants:migrate" run_deploy "$SHA3" "$WORK/good3.tar.gz" "$WORK/env-one"
-check "tenants:migrate failure is recorded" bash -c "tail -1 '$ROOT/shared/deploy-history.log' | grep -q 'failed:migrate-tenants'"
+FAKE_FAIL="tenants:migrate-all" run_deploy "$SHA3" "$WORK/good3.tar.gz" "$WORK/env-one"
+DETAIL="$OUT"
+check "tenants:migrate-all failure is recorded" bash -c "tail -1 '$ROOT/shared/deploy-history.log' | grep -q 'failed:migrate-tenants'"
+check "tenants:migrate-all failure: the report names the failed tenant" grep -q 'shop-b failed' <<<"$OUT"
+check "tenants:migrate-all failure: the deploy says the release was NOT activated" grep -q 'the new release was NOT activated' <<<"$OUT"
+check "tenants:migrate-all failure: non-zero exit code recorded in shared/" grep -qx 1 "$ROOT/shared/tenant-migrate.rc"
+DETAIL="$(cat "$FAKE_LOG")"
+check "tenants:migrate-all failure: nothing after it runs (no relocate, no caches)" bash -c "! grep -qE 'php (app-releases:relocate|config:cache) ' '$FAKE_LOG'"
+
+# Killed mid-run (OOM killer, kill -9): no exit code is ever written. Never treated as success.
+FAKE_TM_KILL=1 run_deploy "$SHA3" "$WORK/good3.tar.gz" "$WORK/env-one"
+DETAIL="$OUT"
+check "[tenant run killed] exit 1" test "$RC" -eq 1
+check "[tenant run killed] the deploy says it ended without an exit code" grep -q 'ended without an exit code' <<<"$OUT"
+check "[tenant run killed] current unchanged" test "$(current_id)" = "$ID2"
+check "[tenant run killed] failed release removed" test "$(release_count)" -eq 2
+check "[tenant run killed] shared/.env restored" grep -q 'Retail ERP two' "$ROOT/shared/.env"
+DETAIL="$(cat "$FAKE_LOG")"
+check "[tenant run killed] no php-fpm reload, no queue restart" bash -c "! grep -qE 'sudo|horizon:terminate' '$FAKE_LOG'"
+check "[tenant run killed] lock released" test ! -e "$ROOT/.deploy.lock"
+
 
 FAKE_HEALTH_NONE=1 run_deploy "$SHA3" "$WORK/good3.tar.gz" -
 DETAIL="$OUT"
@@ -411,6 +474,38 @@ DETAIL="$OUT"
 check "app with UPDATE on an audit table: release refused" test "$RC" -eq 1
 check "grants drift is reported" grep -q 'can UPDATE/DELETE the audit table central_audit_logs' <<<"$OUT"
 check "grants drift: current unchanged" test "$(current_id)" = "$ID2"
+
+# ------------------------------------------------------------------------------------
+echo "3b. Tenant migrations: wait cap and attaching to a still running run (OPS-25)"
+# ------------------------------------------------------------------------------------
+MAIN_ROOT="$ROOT"
+new_root tm-wait
+run_deploy "$SHA1" "$WORK/good1.tar.gz" "$WORK/env-one"
+W1="$(current_id)"
+# Wait cap hit: the run is NOT killed and its release directory is kept (it executes from it).
+FAKE_TM_SLEEP=4 OPS_TM_MAX_WAIT=1 run_deploy "$SHA3" "$WORK/good3.tar.gz" "$WORK/env-two"
+DETAIL="$OUT"
+check "[wait cap] exit 1" test "$RC" -eq 1
+check "[wait cap] the deploy says the run was not killed" grep -q 'NOT killed' <<<"$OUT"
+check "[wait cap] current unchanged" test "$(current_id)" = "$W1"
+check "[wait cap] release kept for the still running migration (documented exception)" test "$(release_count)" -eq 2
+check "[wait cap] shared/.env restored" grep -q 'Retail ERP one' "$ROOT/shared/.env"
+check "[wait cap] the run is still alive and recorded" bash -c "kill -0 \$(cat '$ROOT/shared/tenant-migrate.pid')"
+DETAIL="$(cat "$FAKE_LOG")"
+check "[wait cap] no php-fpm reload, no queue restart" bash -c "! grep -qE 'sudo|horizon:terminate' '$FAKE_LOG'"
+check "[wait cap] lock released" test ! -e "$ROOT/.deploy.lock"
+CAPPED_ID="$(find "$ROOT/releases" -mindepth 1 -maxdepth 1 -type d -name '*-333333333333' -printf '%f\n')"
+
+# Re-run while that run is still going: attach, wait, then migrate with THIS release.
+run_deploy "$SHA3" "$WORK/good3.tar.gz" "$WORK/env-two"
+DETAIL="$OUT"
+check "[re-run] attaches to the still running tenant migration" grep -q 'still going (previous deploy): attaching' <<<"$OUT"
+check "[re-run] exits 0 and switches" bash -c "[[ $RC -eq 0 && '$(current_id)' == *-333333333333 && '$(current_id)' != '$CAPPED_ID' ]]"
+DETAIL="$(cat "$FAKE_LOG")"
+check "[re-run] then runs tenants:migrate-all from its own release" log_has "php tenants:migrate-all @$(current_id) "
+# Back to the main APP_ROOT (current = ID2) for the next sections.
+ROOT="$MAIN_ROOT"
+export FAKE_LOG="$ROOT/calls.log" FAKE_SQL="$ROOT/applied.sql" FAKE_CURL_COUNT="$ROOT/curl.count"
 
 # ------------------------------------------------------------------------------------
 echo "4. Failure after the switch: automatic rollback"
@@ -560,7 +655,8 @@ check "the allowed seeders are the two central syncs only" bash -c "[[ \$(grep -
 check "pipeline never wipes or resets a database" bash -c "! grep -nE '^[^#]*(migrate:fresh|migrate:reset|migrate:refresh|db:wipe|tenants:migrate-fresh)' ${PIPELINE_FILES[*]}"
 check "pipeline never migrates a single tenant (--tenants=...)" bash -c "! grep -nE '^[^#]*tenants:migrate[^#]*--tenants' ${PIPELINE_FILES[*]}"
 check "no '|| true' on a migrate or backup line" bash -c "! grep -nE '^[^#]*(migrate|backup:tenants)[^#]*\\|\\|[[:space:]]*(true|:)' ${PIPELINE_FILES[*]}"
-check "tenants:migrate --force (all tenants) is present in deploy.sh" grep -q 'tenants:migrate --force' "$REPO_ROOT/scripts/ops/deploy.sh"
+check "tenants:migrate-all --force (all tenants) is present in deploy.sh" grep -q 'tenants:migrate-all --force' "$REPO_ROOT/scripts/ops/deploy.sh"
+check "tenants:migrate-all never gets the migrator credentials" bash -c "! grep -nE '^[^#]*DB_MIGRATOR[^#]*tenants:migrate|^[^#]*tenants:migrate[^#]*DB_MIGRATOR' '$REPO_ROOT/scripts/ops/deploy.sh'"
 check "pre-migration backup stage comes before migrate-central" bash -c "[[ \$(grep -n 'STAGE=\"pre-migration-backup\"' '$REPO_ROOT/scripts/ops/deploy.sh' | cut -d: -f1) -lt \$(grep -n 'STAGE=\"migrate-central\"' '$REPO_ROOT/scripts/ops/deploy.sh' | cut -d: -f1) ]]"
 check "legacy deploy_root_baraa.py refuses to run without the explicit override" grep -q 'SROOR_ALLOW_LEGACY_DEPLOY' "$REPO_ROOT/deploy_root_baraa.py"
 
