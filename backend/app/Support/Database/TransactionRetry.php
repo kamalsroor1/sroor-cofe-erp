@@ -92,14 +92,17 @@ final class TransactionRetry
      * @template TResult
      *
      * @param  Closure(): TResult  $callback
+     * @param  string|null  $connectionName  the connection that owns the transaction (null = the default
+     *                                       one). Central billing passes the central connection so the
+     *                                       retry wraps the right transaction even inside a tenant request.
      * @return TResult
      *
      * @throws DatabaseBusyException when the attempts ran out on lock conflicts, or at once on 1205
      * @throws Throwable anything else the callback throws, rethrown untouched (validation, domain rules...)
      */
-    public static function run(Closure $callback, ?int $attempts = null): mixed
+    public static function run(Closure $callback, ?int $attempts = null, ?string $connectionName = null): mixed
     {
-        $connection = DB::connection();
+        $connection = DB::connection($connectionName);
 
         if ($connection->transactionLevel() > 0) {
             return $connection->transaction($callback);

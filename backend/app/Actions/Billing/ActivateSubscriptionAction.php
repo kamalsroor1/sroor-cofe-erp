@@ -40,7 +40,8 @@ use LogicException;
  * PRD-03 / ENTI-3.4: apply a PAID plan / renewal / upgrade invoice to the tenant's subscription.
  *
  * Called only by VerifyManualPaymentAction, inside its central transaction (it refuses to run
- * outside one). Lock order after payment and invoice: tenant row, then the subscription row.
+ * outside one). The caller already holds the tenant row (billing lock order tenant -> payment ->
+ * invoice(s) -> subscription, see VerifyManualPaymentAction); re-locking it here is a no-op.
  *
  *  - subscription: plan + cycle from the invoice, status active, price = the billed plan line,
  *    period extended by one month / one year from max(now, current paid end, invoice period

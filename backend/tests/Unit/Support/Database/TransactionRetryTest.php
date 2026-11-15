@@ -253,6 +253,31 @@ final class TransactionRetryTest extends TestCase
         Sleep::assertNeverSlept();
     }
 
+    public function test_the_transaction_runs_and_retries_on_the_named_connection(): void
+    {
+        // Central billing passes the central connection: inside a tenant request the default
+        // connection is the tenant DB, and wrapping that one would leave the central writes unretried.
+        config(['database.connections.retry_other' => ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']]);
+        $calls = 0;
+        $levels = [];
+
+        $result = TransactionRetry::run(function () use (&$calls, &$levels): string {
+            $calls++;
+            $levels[] = [DB::connection('retry_other')->transactionLevel(), DB::connection()->transactionLevel()];
+            if ($calls === 1) {
+                throw $this->queryException(1213, '40001');
+            }
+
+            return 'done';
+        }, connectionName: 'retry_other');
+
+        $this->assertSame('done', $result);
+        $this->assertSame([[1, 0], [1, 0]], $levels, 'Each attempt opens its transaction on the named connection only.');
+        $this->assertSame(0, DB::connection('retry_other')->transactionLevel());
+        Sleep::assertSleptTimes(1);
+        DB::purge('retry_other');
+    }
+
     public function test_is_retryable_matches_only_the_lock_conflict_driver_codes(): void
     {
         $this->assertTrue(TransactionRetry::isRetryable($this->queryException(1213, '40001')));
