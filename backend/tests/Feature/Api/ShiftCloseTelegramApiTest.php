@@ -6,8 +6,10 @@ namespace Tests\Feature\Api;
 
 use App\Jobs\SendShiftDiscrepancyAlertJob;
 use App\Models\CashShift;
+use App\Models\Setting;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Settings\SettingSecrets;
 use App\Services\TelegramService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
@@ -87,10 +89,16 @@ final class ShiftCloseTelegramApiTest extends TenantTestCase
     public function test_the_job_sends_the_discrepancy_alert_and_swallows_a_telegram_error(): void
     {
         Http::fake(['*' => Http::response(['ok' => true], 200)]);
+        // OPS-24: shop alerts go only through the shop's own bot and chat.
+        $this->inTenant($this->tenant, function (): void {
+            Setting::set('telegram_bot_token', SettingSecrets::encrypt('shop-token-perf'));
+            Setting::set('telegram_chat_id', '-100444');
+        });
         $shiftId = $this->openShift('SHF-PERF-04', '100.000');
         $this->closeShift($shiftId, '90.000')->assertOk();
 
-        Http::assertSent(fn (Request $request): bool => str_contains((string) $request['text'], 'SHF-PERF-04'));
+        Http::assertSent(fn (Request $request): bool => str_contains((string) $request['text'], 'SHF-PERF-04')
+            && str_contains($request->url(), '/botshop-token-perf/'));
 
         Http::fake(fn () => throw new ConnectionException('down'));
         $this->inTenant($this->tenant, fn () => (new SendShiftDiscrepancyAlertJob($shiftId))->handle(app(TelegramService::class)));

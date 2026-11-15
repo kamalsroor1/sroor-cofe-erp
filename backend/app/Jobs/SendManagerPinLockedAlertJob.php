@@ -21,7 +21,7 @@ use Throwable;
  * repeated wrong PINs (ManagerPinVerifier). Names every user who entered a wrong PIN for that
  * approver that business day. Dispatched after commit from tenant context
  * (QueueTenancyBootstrapper restores the tenant in the worker). Carries ids only: never a PIN.
- * Sent to the shop's own chat only, never to the platform-wide chat.
+ * Sent with the shop's own bot to the shop's own chat only, never through the platform bot/chat.
  */
 final class SendManagerPinLockedAlertJob implements ShouldQueue
 {
@@ -37,7 +37,9 @@ final class SendManagerPinLockedAlertJob implements ShouldQueue
     public function handle(TelegramService $telegram, TenantSettings $settings, TenantClock $clock): void
     {
         try {
-            if (trim((string) Setting::get('telegram_chat_id')) === '') {
+            // OPS-24: the shop's own bot AND chat only, never the platform bot or chat.
+            $telegram = $telegram->forShopOnly();
+            if (! $telegram->hasShopCredentials()) {
                 return;
             }
 

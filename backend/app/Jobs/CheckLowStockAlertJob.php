@@ -12,8 +12,9 @@ class CheckLowStockAlertJob implements ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
+    /** OPS-24: shop stock goes only through the shop's own bot and chat, never the platform's. */
     public function handle(TelegramService $telegramService): void
     {
-        $telegramService->sendLowStockNotification();
+        $telegramService->forShopOnly()->sendLowStockNotification();
     }
 }

@@ -41,7 +41,8 @@ final class SendShiftDiscrepancyAlertJob implements ShouldQueue
                 return;
             }
 
-            $telegram->sendShiftDiscrepancyNotification($shift);
+            // OPS-24: shop data goes only through the shop's own bot and chat, never the platform's.
+            $telegram->forShopOnly()->sendShiftDiscrepancyNotification($shift);
         } catch (Throwable $e) {
             Log::error('Shift discrepancy notification failed: '.$e->getMessage());
         }

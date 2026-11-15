@@ -9,6 +9,7 @@ use App\Models\ActivityLog;
 use App\Models\Setting;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Settings\SettingSecrets;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -180,9 +181,11 @@ final class UserLoginUnlockApiTest extends TenantTestCase
     public function test_job_sends_escaped_text_without_secrets(): void
     {
         Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
-        config(['services.telegram.bot_token' => 'SECRET-BOT-TOKEN', 'services.telegram.enabled' => true]);
+        config(['services.telegram.enabled' => true]);
         $user = $this->createTenantUser($this->tenant, 'cashier', attributes: ['name' => 'Ahmed <b>']);
         $this->inTenant($this->tenant, function (): void {
+            // OPS-24: the shop's own bot and chat (never the platform bot).
+            Setting::set('telegram_bot_token', SettingSecrets::encrypt('SECRET-BOT-TOKEN'));
             Setting::set('telegram_chat_id', '-100');
             Setting::set('company_name', 'Shop <i>1');
         });
@@ -217,8 +220,11 @@ final class UserLoginUnlockApiTest extends TenantTestCase
     public function test_alert_failure_never_breaks_the_login_response(): void
     {
         Http::fake(['api.telegram.org/*' => Http::response('boom', 500)]);
-        config(['services.telegram.bot_token' => 'tok', 'services.telegram.enabled' => true]);
-        $this->inTenant($this->tenant, fn () => Setting::set('telegram_chat_id', '-100'));
+        config(['services.telegram.enabled' => true]);
+        $this->inTenant($this->tenant, function (): void {
+            Setting::set('telegram_bot_token', SettingSecrets::encrypt('tok'));
+            Setting::set('telegram_chat_id', '-100');
+        });
         $this->createTenantUser($this->tenant, 'cashier', attributes: ['email' => 'boom@sec05.test']);
 
         $this->lock($this->tenant, 'boom@sec05.test');

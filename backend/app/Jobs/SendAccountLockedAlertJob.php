@@ -33,9 +33,11 @@ final class SendAccountLockedAlertJob implements ShouldQueue
     public function handle(TelegramService $telegram, TenantSettings $settings, TenantClock $clock): void
     {
         try {
-            // Only the shop's own chat: never fall back to the platform-wide config chat id,
-            // which would leak this shop's user name, login and IP to the platform operators.
-            if (trim((string) Setting::get('telegram_chat_id')) === '') {
+            // Only the shop's own bot AND chat (OPS-24): never fall back to the platform-wide
+            // config bot or chat, which would leak this shop's user name, login and IP to the
+            // platform operators.
+            $telegram = $telegram->forShopOnly();
+            if (! $telegram->hasShopCredentials()) {
                 return;
             }
 
