@@ -23,8 +23,9 @@ class CheckOverdueShiftsJob implements ShouldQueue
         public readonly ?array $shiftIds = null,
     ) {}
 
+    /** OPS-24: per-shop alert, sent only with the shop's own bot and chat (never the platform bot). */
     public function handle(TelegramService $telegramService): void
     {
-        $telegramService->sendOverdueShiftNotification(false, $this->hours, $this->shiftIds);
+        $telegramService->forShopOnly()->sendOverdueShiftNotification(false, $this->hours, $this->shiftIds);
     }
 }

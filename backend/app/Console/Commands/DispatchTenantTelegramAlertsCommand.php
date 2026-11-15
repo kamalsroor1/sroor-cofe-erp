@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Enums\TenantStatus;
 use App\Jobs\CheckOverdueShiftsJob;
 use App\Jobs\SendDailySummaryReportJob;
 use App\Models\CashShift;
 use App\Models\Setting;
 use App\Models\Tenant;
-use App\Services\Settings\SettingSecrets;
 use App\Services\Settings\TenantSettings;
+use App\Services\TelegramService;
 use App\Support\TenantClock;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
@@ -32,7 +33,8 @@ use Throwable;
  *  - overdue shifts: shifts open longer than `overdue_shift_alert_hours` (default 24), each
  *    alerted ONCE (ids remembered in `telegram_overdue_alerted_shift_ids`).
  *
- * A tenant without Telegram configured is skipped. One tenant failing is logged and counted but
+ * A tenant without its OWN bot token + chat id is skipped (never the platform bot), and so are
+ * suspended / archived tenants. One tenant failing is logged and counted but
  * never stops the others; the command then exits non-zero so the scheduler's onFailure hook
  * (routes/console.php) reports it.
  */
@@ -57,7 +59,10 @@ final class DispatchTenantTelegramAlertsCommand extends Command
             tenancy()->end();
         }
 
-        $query = Tenant::query()->provisioned()->orderBy('id');
+        // Suspended / archived shops get no alerts (provisioned() still includes them).
+        $query = Tenant::query()->provisioned()
+            ->whereNotIn('status', [TenantStatus::Suspended->value, TenantStatus::Archived->value])
+            ->orderBy('id');
         $only = array_filter((array) $this->option('tenants'), static fn (mixed $id): bool => is_scalar($id) && (string) $id !== '');
         if ($only !== []) {
             $query->whereIn('id', $only);
@@ -95,10 +100,9 @@ final class DispatchTenantTelegramAlertsCommand extends Command
     /** Runs inside the tenant; returns the number of jobs dispatched. */
     private function dispatchFor(): int
     {
-        // Only a shop that configured its OWN bot, chat and explicit opt-in gets scheduled alerts.
-        // TelegramService falls back to the platform bot/chat, which would post this shop's
-        // sales and staff names into the platform chat (cross-tenant leak), so it is not used here.
-        if (! $this->shopOwnsTelegram()) {
+        // Only the shop's OWN bot token + chat id: the platform config fallback of
+        // getBotToken()/getDefaultChatId() would post this shop's figures into the platform chat.
+        if (! app(TelegramService::class)->hasShopCredentials()) {
             return 0;
         }
 
@@ -154,21 +158,5 @@ final class DispatchTenantTelegramAlertsCommand extends Command
         CheckOverdueShiftsJob::dispatch($hours, $fresh);
 
         return 1;
-    }
-
-    private function shopOwnsTelegram(): bool
-    {
-        if (Setting::get('telegram_notifications_enabled') === null
-            || ! Setting::getBool('telegram_notifications_enabled', false)) {
-            return false;
-        }
-
-        $stored = Setting::get('telegram_bot_token');
-        if ($stored === null || $stored === '' || SettingSecrets::isUnreadable($stored)
-            || (string) SettingSecrets::decrypt($stored) === '') {
-            return false;
-        }
-
-        return trim((string) Setting::get('telegram_chat_id', '')) !== '';
     }
 }

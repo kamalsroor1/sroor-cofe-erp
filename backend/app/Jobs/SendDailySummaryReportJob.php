@@ -19,8 +19,9 @@ class SendDailySummaryReportJob implements ShouldQueue
         $this->date = $date;
     }
 
+    /** OPS-24: per-shop alert, sent only with the shop's own bot and chat (never the platform bot). */
     public function handle(TelegramService $telegramService): void
     {
-        $telegramService->sendDailySummaryNotification($this->date);
+        $telegramService->forShopOnly()->sendDailySummaryNotification($this->date);
     }
 }

@@ -25,6 +25,61 @@ class TelegramService
         private readonly ?TenantSettings $tenantSettings = null,
     ) {}
 
+    /**
+     * OPS-24: when true, every send uses ONLY the shop's own stored bot token and chat id and
+     * the shop's own on/off switch; the PLATFORM config (services.telegram.*) is never used.
+     * Set through forShopOnly() by per-shop scheduled alerts.
+     */
+    private bool $shopOnly = false;
+
+    /**
+     * OPS-24: a copy of this service that sends only with the shop's own bot token and chat id.
+     * Without both (or with the shop's switch off) it sends nothing, never via the platform bot.
+     */
+    public function forShopOnly(): static
+    {
+        $copy = clone $this;
+        $copy->shopOnly = true;
+
+        return $copy;
+    }
+
+    /**
+     * OPS-24: the shop's own bot token (stored encrypted), null when missing or unreadable.
+     * Never falls back to the platform config.
+     */
+    public function shopBotToken(): ?string
+    {
+        $stored = Setting::get('telegram_bot_token');
+        if (SettingSecrets::isUnreadable($stored)) {
+            return null;
+        }
+
+        $token = SettingSecrets::decrypt($stored);
+
+        return is_string($token) && trim($token) !== '' ? trim($token) : null;
+    }
+
+    /** OPS-24: the shop's own chat id setting, null when missing. Never the platform chat. */
+    public function shopChatId(): ?string
+    {
+        $chatId = Setting::get('telegram_chat_id');
+
+        return is_string($chatId) && trim($chatId) !== '' ? trim($chatId) : null;
+    }
+
+    /** OPS-24: the shop's switch (`telegram_notifications_enabled`) is not explicitly off. */
+    public function isShopEnabled(): bool
+    {
+        return Setting::getBool('telegram_notifications_enabled', true);
+    }
+
+    /** OPS-24: the shop can receive alerts through its OWN bot and chat. */
+    public function hasShopCredentials(): bool
+    {
+        return $this->isShopEnabled() && $this->shopBotToken() !== null && $this->shopChatId() !== null;
+    }
+
     private function currency(): string
     {
         return ($this->tenantSettings ?? app(TenantSettings::class))->currencyLabel();
@@ -35,6 +90,10 @@ class TelegramService
      */
     public function getBotToken(): ?string
     {
+        if ($this->shopOnly) {
+            return $this->shopBotToken();
+        }
+
         // SEC-21: the shop's token is stored encrypted (SettingSecrets). A shop token that exists
         // but cannot be decrypted (APP_KEY rotated without APP_PREVIOUS_KEYS) means "no token":
         // never fall back to the PLATFORM bot, which would post this shop's alerts through it.
@@ -52,6 +111,10 @@ class TelegramService
      */
     public function getDefaultChatId(): ?string
     {
+        if ($this->shopOnly) {
+            return $this->shopChatId();
+        }
+
         return Setting::get('telegram_chat_id')
             ?: config('services.telegram.chat_id');
     }
@@ -61,6 +124,10 @@ class TelegramService
      */
     public function isEnabled(): bool
     {
+        if ($this->shopOnly) {
+            return $this->isShopEnabled();
+        }
+
         $settingVal = Setting::get('telegram_notifications_enabled');
         if ($settingVal !== null) {
             return Setting::getBool('telegram_notifications_enabled', true);
