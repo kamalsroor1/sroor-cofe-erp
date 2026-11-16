@@ -15,6 +15,8 @@ export function usePublicPlans() {
     const brand = computed(() => catalog.value?.brand || {});
     const founder = computed(() => catalog.value?.founder || { available: false });
     const currency = computed(() => catalog.value?.currency || '');
+    // Platform VAT percent as a decimal string ('14.000'); '0.000' hides every VAT-inclusive figure.
+    const taxRate = computed(() => catalog.value?.tax_rate ?? '0.000');
     const pricesExcludeVat = computed(() => catalog.value?.prices_exclude_vat === true);
 
     const load = async () => {
@@ -31,5 +33,5 @@ export function usePublicPlans() {
         }
     };
 
-    return { catalog, plans, addons, brand, founder, currency, pricesExcludeVat, isLoading, hasError, load };
+    return { catalog, plans, addons, brand, founder, currency, taxRate, pricesExcludeVat, isLoading, hasError, load };
 }

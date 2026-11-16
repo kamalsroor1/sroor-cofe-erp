@@ -69,10 +69,23 @@ return [
     | plan founder price (plans.founder_price_*) for `months` months from their first payment.
     | Plain values, not env: changing them is a product decision. Lowering `slots` below the
     | slots already handed out never takes a slot back.
+    |
+    | Price schedule of a founder subscription (owner decision 2026-11-15), measured from the
+    | tenant's first verified payment:
+    |   - `months` (12): the year-1 founder price (plans.founder_price_*); its end is stored
+    |     per subscription in subscriptions.founder_price_until;
+    |   - `transition_months` (12) after that: the transition price
+    |     (plans.founder_transition_price_*); its end is DERIVED as founder_price_until +
+    |     transition_months, never stored, so changing this value moves the end for every
+    |     founder (a product decision, like `months`);
+    |   - then the plan's list price.
+    | `notice_days` (30): the tenant billing screen flags the next step this many days ahead.
     */
     'founder' => [
         'slots' => 50,
         'months' => 12,
+        'transition_months' => 12,
+        'notice_days' => 30,
     ],
 
 ];

@@ -5,11 +5,13 @@ import LandingFaq from '../../Components/Landing/LandingFaq.vue';
 import LandingFinalCta from '../../Components/Landing/LandingFinalCta.vue';
 import PricingAddons from '../../Components/Landing/Pricing/PricingAddons.vue';
 import PricingCompare from '../../Components/Landing/Pricing/PricingCompare.vue';
+import PricingFounderSchedule from '../../Components/Landing/Pricing/PricingFounderSchedule.vue';
 import PricingHeader from '../../Components/Landing/Pricing/PricingHeader.vue';
 import PricingPlans from '../../Components/Landing/Pricing/PricingPlans.vue';
 import { usePublicPlans } from '../../Composables/usePublicPlans';
 
-const { plans, addons, brand, founder, currency, pricesExcludeVat, isLoading, hasError, load } = usePublicPlans();
+const { plans, addons, brand, founder, currency, taxRate, pricesExcludeVat, isLoading, hasError, load } =
+  usePublicPlans();
 const billing = ref('monthly');
 
 onMounted(load);
@@ -25,10 +27,12 @@ onMounted(load);
       :has-error="hasError"
       :currency="currency"
       :founder="founder"
+      :tax-rate="taxRate"
       :prices-exclude-vat="pricesExcludeVat"
       @retry="load"
     />
     <template v-if="!hasError">
+      <PricingFounderSchedule :plans="plans" :billing="billing" :founder="founder" :currency="currency" />
       <PricingCompare
         :plans="plans"
         :billing="billing"

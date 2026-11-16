@@ -12,7 +12,8 @@ use Throwable;
  *
  * Central scope (TenantCache::central*): bumping the version drops every locale at once.
  * The short TTL also covers writes that fire no model events (the catalog seeders use the
- * query builder) and the founder-slot counter.
+ * query builder) and the founder-slot counter. Time-bound data (plan promotions) must never be
+ * decided inside the cached payload: GetPublicPlansAction stores the window and decides per request.
  */
 final class PublicCatalogCache
 {

@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Billing;
 
+use App\Actions\Billing\ActivateSubscriptionAction;
+use App\Enums\Billing\BillingPaymentMethod;
+use App\Enums\Billing\BillingPaymentStatus;
 use App\Enums\Billing\SubscriptionStatus;
 use App\Enums\CentralAuditEvent;
 use App\Models\BillingInvoice;
+use App\Models\BillingPayment;
+use App\Models\BillingSequence;
 use App\Models\CentralAuditLog;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\Tenant;
+use App\Services\Billing\FounderPricingService;
 use Carbon\CarbonInterface;
 use Database\Seeders\PlansAndFeaturesSeeder;
 use Illuminate\Console\Scheduling\Schedule;
@@ -60,9 +66,13 @@ final class IssueTrialEndInvoicesCommandTest extends BillingTestCase
         $this->assertSame('pending', $invoice->status->value);
         $this->assertSame('monthly', $invoice->billing_cycle?->value);
         $this->assertSame($trialEnd->toIso8601String(), $invoice->period_start?->toIso8601String());
-        $this->assertSame('449.000', $invoice->subtotal);
-        $this->assertSame('449.000', $invoice->total);
+        // PRICE-2026-11: a founder slot is free, so the trial converts at the year-1 founder price.
+        $this->assertSame('349.000', $invoice->subtotal);
+        $this->assertSame('349.000', $invoice->total);
         $this->assertSame((int) $this->basic->id, (int) $invoice->lines[0]['plan_id']);
+        $this->assertSame('founder', $invoice->lines[0]['price_step']);
+        $this->assertTrue($invoice->lines[0]['founder']);
+        $this->assertSame(0, app(FounderPricingService::class)->claimedSlots(), 'Issuing never takes a slot.');
         $this->assertNull($invoice->issued_by);
         $this->assertSame(1, CentralAuditLog::query()->where('event', CentralAuditEvent::BillingInvoiceIssued->value)->count());
 
@@ -173,6 +183,64 @@ final class IssueTrialEndInvoicesCommandTest extends BillingTestCase
      *
      * @param  array<string, mixed>  $attributes
      */
+    public function test_without_a_free_founder_slot_the_trial_invoice_is_at_list_price(): void
+    {
+        $this->takeAllFounderSlots();
+        $tenant = $this->trialTenant($this->basic, now()->addDays(3));
+
+        $this->artisan(self::COMMAND)->assertSuccessful();
+
+        $invoice = BillingInvoice::query()->where('tenant_id', $tenant->id)->sole();
+        $this->assertSame('499.000', $invoice->subtotal);
+        $this->assertSame('list', $invoice->lines[0]['price_step']);
+        $this->assertFalse($invoice->lines[0]['founder']);
+    }
+
+    public function test_a_plan_without_a_founder_price_for_the_cycle_is_invoiced_at_list_price(): void
+    {
+        $this->basic->forceFill(['founder_price_monthly' => null])->save();
+        $tenant = $this->trialTenant($this->basic, now()->addDays(3));
+
+        $this->artisan(self::COMMAND)->assertSuccessful();
+
+        $invoice = BillingInvoice::query()->where('tenant_id', $tenant->id)->sole();
+        $this->assertSame('499.000', $invoice->subtotal);
+        $this->assertSame('list', $invoice->lines[0]['price_step']);
+    }
+
+    public function test_a_founder_invoice_paid_after_the_slots_ran_out_is_honoured_without_making_a_founder(): void
+    {
+        $tenant = $this->trialTenant($this->basic, now()->addDays(3));
+        $this->artisan(self::COMMAND)->assertSuccessful();
+        $invoice = BillingInvoice::query()->where('tenant_id', $tenant->id)->sole();
+        $this->assertSame('349.000', $invoice->total);
+
+        // The last slot goes to someone else before this shop pays.
+        $this->takeAllFounderSlots();
+
+        $payment = BillingPayment::query()->create([
+            'billing_invoice_id' => $invoice->id, 'tenant_id' => $tenant->id, 'amount' => $invoice->total,
+            'method' => BillingPaymentMethod::Instapay, 'status' => BillingPaymentStatus::Verified,
+            'verified_at' => now(), 'paid_at' => now(),
+        ]);
+        $subscription = DB::connection($this->centralConnectionName())->transaction(
+            fn (): Subscription => app(ActivateSubscriptionAction::class)->execute($invoice, $payment),
+        );
+
+        $this->assertSame('349.000', $subscription->amount, 'The issued price is honoured for the paid term.');
+        $this->assertFalse($subscription->refresh()->is_founder, 'No slot left: the shop is not a founder.');
+        $this->assertSame(app(FounderPricingService::class)->totalSlots(), app(FounderPricingService::class)->claimedSlots(), 'The cap is never exceeded.');
+        $this->assertSame('499.000', app(FounderPricingService::class)->planPrice($subscription), 'Later cycles are at list price.');
+    }
+
+    private function takeAllFounderSlots(): void
+    {
+        BillingSequence::query()->updateOrCreate(
+            ['key' => FounderPricingService::SLOT_SEQUENCE, 'period' => ''],
+            ['last_value' => app(FounderPricingService::class)->totalSlots()],
+        );
+    }
+
     private function trialTenant(?Plan $plan, CarbonInterface $trialEndsAt, array $attributes = []): Tenant
     {
         $id = 'trial-'.Str::lower(Str::random(10));

@@ -7,14 +7,13 @@ namespace App\Services\Entitlements;
 use App\Contracts\TenantFeatureManagerInterface;
 use App\Enums\LimitResource;
 use App\Exceptions\Entitlements\FeatureUnavailableException;
+use App\Exceptions\Entitlements\PlanLimitBusyException;
 use App\Exceptions\Entitlements\PlanLimitExceededException;
 use App\Models\Tenant;
 use Closure;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
  * SEC-06 / BE-12 / PRD-01: the server-side enforcement point for plan features and limits.
@@ -22,11 +21,17 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * for the tenant of the current request.
  *
  *  - assertFeature(): used by the `feature:<key>` route middleware (default deny).
- *  - assertWithinLimit(): used by the Create* Actions INSIDE their DB::transaction().
+ *  - withinStorageLimit(): wraps the tenant upload paths (storage_mb), see the method.
+ *  - assertWithinLimit(): used by the Create* Actions INSIDE their DB::transaction()
+ *    (and by InvoiceService for invoices_month).
  *    It first takes a row lock on the tenant's oldest store row (a per-tenant mutex),
  *    so two concurrent creations are counted one after the other and cannot both slip
  *    under the limit. Existing data is never touched: a tenant already above a limit
  *    (downgrade) only loses the ability to create more.
+ *    Throughput note (invoices_month): on a plan WITH a monthly invoice cap the lock is held
+ *    to the end of every sale's transaction, so that tenant's sales are serialised one after
+ *    the other. Accepted for the trial tier (low volume, 300/month); an unlimited plan returns
+ *    before the lock and its sales run concurrently as before.
  *
  * Nothing is enforced when no tenant is initialised (console, central code), and for a
  * legacy tenant with NO plan unless config('entitlements.enforce_planless') is on: such a
@@ -103,6 +108,65 @@ final class PlanEnforcer
     }
 
     /**
+     * PLAN-ENF: run $write (which stores a file) only when the tenant's storage after it stays
+     * within the effective `storage_mb` limit: used bytes + delta <= limit x 1 MiB, else
+     * PlanLimitExceededException (403, limit = storage_mb). The delta is the net growth of the
+     * write: the incoming size minus what it replaces (a logo that replaces the previous one).
+     * A write that does not grow the usage (delta <= 0) is always allowed, even above the limit
+     * after a downgrade.
+     *
+     * File writes never run inside a DB transaction, so the check and the write are serialised
+     * per tenant by a cache lock instead of the stores-row mutex (two concurrent uploads cannot
+     * both fit in the last free megabyte). $deltaBytes is a closure so that whatever it reads
+     * (e.g. the media a logo replaces) is read under that lock: it runs exactly once, before
+     * $write, on every path. Nothing is locked when the limit is not enforced (no tenant,
+     * planless tenant, unlimited plan).
+     *
+     * @template TResult
+     *
+     * @param  Closure(): int  $deltaBytes  net growth in bytes, evaluated once, under the lock when enforced
+     * @param  Closure(): int  $usedBytes  current usage in bytes, evaluated under the lock
+     * @param  Closure(): TResult  $write
+     * @return TResult
+     *
+     * @throws PlanLimitExceededException
+     * @throws PlanLimitBusyException
+     */
+    public function withinStorageLimit(Closure $deltaBytes, Closure $usedBytes, Closure $write): mixed
+    {
+        $tenant = $this->currentTenant();
+        $max = $tenant === null || ! $this->isEnforced($tenant)
+            ? null
+            : $this->features->limit($tenant, LimitResource::StorageMb);
+
+        if ($tenant === null || $max === null) {
+            $deltaBytes();
+
+            return $write();
+        }
+
+        $lock = Cache::lock('plan-storage-mutex:'.$tenant->getTenantKey(), 30);
+
+        try {
+            $lock->block(10);
+        } catch (LockTimeoutException) {
+            throw new PlanLimitBusyException;
+        }
+
+        try {
+            $delta = $deltaBytes();
+
+            if ($delta > 0 && $usedBytes() + $delta > $max * TenantStorageUsage::BYTES_PER_MB) {
+                throw PlanLimitExceededException::for(LimitResource::StorageMb->value, $max);
+            }
+
+            return $write();
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
      * Is plan gating in force for the current request's tenant? Same rule assertFeature()
      * applies (false outside tenancy; false for a grandfathered planless tenant). The SPA
      * mirrors it through GET /system/context.
@@ -153,7 +217,7 @@ final class PlanEnforcer
         try {
             $lock->block(5);
         } catch (LockTimeoutException) {
-            throw new HttpException(Response::HTTP_CONFLICT, (string) __('common.operation_failed'));
+            throw new PlanLimitBusyException;
         }
 
         app()->terminating(static fn () => $lock->release());

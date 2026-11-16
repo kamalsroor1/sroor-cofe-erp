@@ -25,6 +25,7 @@ return [
         'tenant_deleted' => 'حذف محل',
         'subscription_activated' => 'تفعيل اشتراك',
         'plan_updated' => 'تعديل باقة',
+        'plan_created' => 'إنشاء باقة',
         'two_factor_confirmed' => 'تأكيد التحقق بخطوتين',
         'two_factor_challenge_failed' => 'فشل رمز التحقق بخطوتين',
         'recovery_code_used' => 'استخدام رمز استرداد',

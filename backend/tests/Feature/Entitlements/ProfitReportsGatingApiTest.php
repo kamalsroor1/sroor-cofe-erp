@@ -10,6 +10,7 @@ use App\Http\Resources\Api\DashboardOverviewResource;
 use App\Models\Addon;
 use App\Models\Item;
 use App\Models\Plan;
+use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\Subscription;
 use App\Models\SubscriptionAddon;
@@ -25,13 +26,21 @@ use Tests\TenantTestCase;
  * BILL-03 / PLAN-01: profit figures need `reports.advanced`; the "control" bundle add-on turns on
  * reports.advanced + audit.logs + purchases.reorder; the Starter plan has transfers and no limits
  * on items / monthly invoices.
+ *
+ * Owner decision 2026-11-15: without reports.advanced the shop still sees ONE figure, the total
+ * gross profit (reports summary + dashboard); item profitability and the branch comparison are
+ * reports.advanced reports (403 on their own routes, emptied in the comprehensive bundle).
  */
 #[Group('entitlements')]
 final class ProfitReportsGatingApiTest extends TenantTestCase
 {
-    private const PROFIT_KEYS = ['net_profit', 'gross_profit', 'total_cogs'];
+    /** Stripped without reports.advanced. */
+    private const PROFIT_KEYS = ['net_profit', 'total_cogs', 'margin_percentage', 'gross_cogs', 'expected_stock_profit'];
 
-    public function test_a_shop_without_reports_advanced_gets_no_profit_fields(): void
+    /** Every profit key, present with reports.advanced. */
+    private const ADVANCED_KEYS = ['net_profit', 'gross_profit', 'total_cogs', 'margin_percentage'];
+
+    public function test_a_shop_without_reports_advanced_keeps_only_the_total_gross_profit(): void
     {
         $tenant = $this->tenantOn($this->plan(['reports.advanced' => false]));
 
@@ -40,13 +49,17 @@ final class ProfitReportsGatingApiTest extends TenantTestCase
             $this->assertArrayNotHasKey($key, $summary, $key);
         }
         $this->assertArrayHasKey('total_sales', $summary);
+        $this->assertArrayHasKey('gross_profit', $summary);
 
         $bundle = $this->getJson('/api/v1/reports/comprehensive', $this->tenantHeaders($tenant))->assertOk()->json();
         foreach (self::PROFIT_KEYS as $key) {
             $this->assertArrayNotHasKey($key, $bundle['summary'], $key);
         }
-        $this->assertArrayNotHasKey('profit', $bundle['item_profits_totals']);
-        $this->assertArrayHasKey('total_revenue', $bundle['item_profits_totals']);
+        $this->assertArrayHasKey('gross_profit', $bundle['summary']);
+        $this->assertSame([], $bundle['item_profits']);
+        $this->assertSame([], $bundle['item_profits_totals']);
+        $this->assertSame([], $bundle['store_breakdown']);
+        $this->assertSame(['item_profits', 'store_breakdown'], $bundle['meta']['locked_sections']);
 
         $this->getJson('/api/v1/reports/top-items', $this->tenantHeaders($tenant))->assertOk();
     }
@@ -138,12 +151,117 @@ final class ProfitReportsGatingApiTest extends TenantTestCase
         });
     }
 
+    public function test_item_profitability_and_branch_comparison_are_advanced_reports(): void
+    {
+        $basic = $this->tenantOn($this->plan(['reports.advanced' => false]));
+        $this->getJson('/api/v1/reports/items', $this->tenantHeaders($basic))->assertStatus(403);
+        $this->getJson('/api/v1/reports/stores', $this->tenantHeaders($basic))->assertStatus(403);
+
+        $pro = $this->tenantOn($this->plan(['reports.advanced' => true]));
+        $this->getJson('/api/v1/reports/items', $this->tenantHeaders($pro))->assertOk();
+        $this->getJson('/api/v1/reports/stores', $this->tenantHeaders($pro))->assertOk();
+        $bundle = $this->getJson('/api/v1/reports/comprehensive', $this->tenantHeaders($pro))->assertOk()->json();
+        $this->assertSame([], $bundle['meta']['locked_sections']);
+        $this->assertArrayHasKey('profit', $bundle['item_profits_totals']);
+    }
+
+    public function test_a_plan_change_never_serves_the_dashboard_copy_cached_for_the_other_plan_state(): void
+    {
+        $plan = $this->plan(['reports.advanced' => true]);
+        $tenant = $this->tenantOn($plan);
+
+        $this->getJson('/api/v1/dashboard', $this->tenantHeaders($tenant))->assertOk()
+            ->assertJsonPath('data.metrics.monthly_margin', '0.00');
+
+        // The plan loses reports.advanced inside the dashboard cache TTL.
+        $plan->update(['features' => array_merge($plan->features ?? [], ['reports.advanced' => false])]);
+
+        $this->getJson('/api/v1/dashboard', $this->tenantHeaders($tenant))->assertOk()
+            ->assertJsonPath('data.metrics.monthly_margin', null);
+    }
+
+    public function test_the_inventory_report_drops_cost_and_profit_without_reports_advanced(): void
+    {
+        $basic = $this->tenantOn($this->plan(['reports.advanced' => false]));
+        $this->stockedItemInEveryStore($basic);
+
+        $inventory = $this->getJson('/api/v1/reports/inventory', $this->tenantHeaders($basic))->assertOk()->json('data');
+        $bundle = $this->getJson('/api/v1/reports/comprehensive', $this->tenantHeaders($basic))->assertOk()->json('inventory_data');
+
+        foreach (['inventory' => $inventory, 'comprehensive' => $bundle] as $source => $data) {
+            $this->assertArrayNotHasKey('stock_cost_valuation', $data, $source);
+            $this->assertArrayNotHasKey('expected_stock_profit', $data, $source);
+            $this->assertArrayHasKey('stock_selling_valuation', $data, $source);
+            $this->assertNotEmpty($data['items'], $source);
+            foreach ($data['items'] as $row) {
+                $this->assertArrayNotHasKey('cost_val', $row, $source);
+                $this->assertArrayNotHasKey('profit', $row, $source);
+                $this->assertArrayHasKey('sell_val', $row, $source);
+            }
+            $abc = $data['abc_data'];
+            $this->assertArrayNotHasKey('total_profit', $abc, $source);
+            foreach (['class_a', 'class_b', 'class_c'] as $class) {
+                $this->assertArrayNotHasKey('profit', $abc[$class], $source);
+                $this->assertArrayNotHasKey('share', $abc[$class], $source);
+                $this->assertArrayHasKey('count', $abc[$class], $source);
+            }
+            $this->assertNotEmpty($abc['dead_stock'], $source);
+            foreach ([...$abc['items'], ...$abc['dead_stock']] as $row) {
+                foreach (['cogs', 'gross_profit', 'profit_margin', 'profit_share', 'cum_profit_share', 'stock_value'] as $key) {
+                    $this->assertArrayNotHasKey($key, $row, "{$source}: {$key}");
+                }
+            }
+        }
+    }
+
+    public function test_the_inventory_report_keeps_cost_and_profit_with_reports_advanced(): void
+    {
+        $pro = $this->tenantOn($this->plan(['reports.advanced' => true]));
+        $this->stockedItemInEveryStore($pro);
+
+        $data = $this->getJson('/api/v1/reports/inventory', $this->tenantHeaders($pro))->assertOk()->json('data');
+
+        $this->assertSame('100.000', $data['stock_cost_valuation']);
+        $this->assertSame('100.000', $data['expected_stock_profit']);
+        $this->assertSame('100.000', $data['items'][0]['profit']);
+        $this->assertArrayHasKey('total_profit', $data['abc_data']);
+        $this->assertArrayHasKey('profit', $data['abc_data']['class_a']);
+        $this->assertArrayHasKey('stock_value', $data['abc_data']['dead_stock'][0]);
+    }
+
+    private function stockedItemInEveryStore(Tenant $tenant): void
+    {
+        $this->inTenant($tenant, function (): void {
+            $item = Item::query()->create([
+                'code' => 'INV-1', 'name' => 'صنف مخزن', 'unit' => 'piece', 'is_weighted' => false,
+                'cost_price' => '10.000', 'selling_price' => '20.000', 'current_stock' => '10.000', 'is_active' => true,
+            ]);
+            foreach (Store::query()->get() as $store) {
+                StoreStock::query()->updateOrCreate(['store_id' => $store->id, 'item_id' => $item->id], ['quantity' => '10.000']);
+            }
+        });
+    }
+
+    public function test_the_dashboard_keeps_only_the_gross_profit_without_reports_advanced(): void
+    {
+        $basic = $this->tenantOn($this->plan(['reports.advanced' => false]));
+        $this->getJson('/api/v1/dashboard', $this->tenantHeaders($basic))->assertOk()
+            ->assertJsonPath('data.can_view_financials', true)
+            ->assertJsonPath('data.metrics.monthly_gross_profit', '0.000')
+            ->assertJsonPath('data.metrics.monthly_margin', null);
+
+        $pro = $this->tenantOn($this->plan(['reports.advanced' => true]));
+        $metrics = $this->getJson('/api/v1/dashboard', $this->tenantHeaders($pro))->assertOk()->json('data.metrics');
+        $this->assertNotNull($metrics['monthly_gross_profit']);
+        $this->assertNotNull($metrics['monthly_margin']);
+    }
+
     public function test_a_shop_with_reports_advanced_keeps_the_profit_fields(): void
     {
         $tenant = $this->tenantOn($this->plan(['reports.advanced' => true]));
 
         $summary = $this->getJson('/api/v1/reports/summary', $this->tenantHeaders($tenant))->assertOk()->json('summary');
-        foreach (self::PROFIT_KEYS as $key) {
+        foreach (self::ADVANCED_KEYS as $key) {
             $this->assertArrayHasKey($key, $summary, $key);
         }
     }
@@ -181,12 +299,15 @@ final class ProfitReportsGatingApiTest extends TenantTestCase
 
         $this->getJson('/api/v1/purchases/smart-reorder', $this->tenantHeaders($tenant))->assertOk();
         $this->getJson('/api/v1/reports/summary', $this->tenantHeaders($tenant))->assertJsonStructure(['summary' => ['net_profit']]);
+        $this->getJson('/api/v1/reports/items', $this->tenantHeaders($tenant))->assertOk();
+        $this->getJson('/api/v1/reports/stores', $this->tenantHeaders($tenant))->assertOk();
 
         // Cancelling the bundle locks all three again.
         $line->update(['status' => SubscriptionAddonStatus::Cancelled, 'ends_at' => now()->subMinute()]);
         app(TenantEntitlementService::class)->forget((string) $tenant->getKey());
 
         $this->getJson('/api/v1/purchases/smart-reorder', $this->tenantHeaders($tenant))->assertStatus(403);
+        $this->getJson('/api/v1/reports/items', $this->tenantHeaders($tenant))->assertStatus(403);
     }
 
     public function test_the_catalog_matches_the_new_structure(): void
@@ -199,6 +320,7 @@ final class ProfitReportsGatingApiTest extends TenantTestCase
         $this->assertTrue(PlanCatalog::features('basic')['transfers.manage']);
         $this->assertFalse(PlanCatalog::features('basic')['reports.advanced']);
         $this->assertTrue(PlanCatalog::features('pro')['mixes.manage']);
+        $this->assertFalse(PlanCatalog::features('enterprise')['api.access'], 'api.access is hidden and does nothing.');
         $this->assertContains('reports.advanced', array_diff(FeatureCatalog::keys(), FeatureCatalog::hiddenKeys()));
     }
 

@@ -8,6 +8,7 @@ use App\Actions\Plans\UpdatePlanAction;
 use App\Actions\Tenants\GetTenantsIndexDataAction;
 use App\Actions\Tenants\OverrideTenantFeatureAction;
 use App\Actions\Tenants\ToggleTenantStatusAction;
+use App\DTOs\Plans\PlanDTO;
 use App\Enums\TenantLifecycleActor;
 use App\Enums\TenantStatus;
 use App\Exceptions\TenantLifecycleException;
@@ -179,7 +180,7 @@ class SuperAdminSolidTest extends TenantTestCase
     public function test_update_plan_action(): void
     {
         $action = app(UpdatePlanAction::class);
-        $action->execute($this->basicPlan, [
+        $action->execute((int) $this->basicPlan->id, PlanDTO::fromArray([
             'name' => 'الباقة الأساسية بلس',
             'price_monthly' => '599.000',
             'price_yearly' => '5990.000',
@@ -190,7 +191,7 @@ class SuperAdminSolidTest extends TenantTestCase
             'is_active' => true,
             'is_popular' => true,
             'features' => ['pos.access' => true, 'mixes.manage' => true],
-        ]);
+        ]));
 
         $this->basicPlan->refresh();
         $this->assertEquals('الباقة الأساسية بلس', $this->basicPlan->name);
@@ -203,13 +204,13 @@ class SuperAdminSolidTest extends TenantTestCase
     {
         // ENTI-1.8: the seeder runs on every deploy; it may add missing feature keys but
         // must never overwrite what the super-admin edited.
-        app(UpdatePlanAction::class)->execute($this->basicPlan, [
+        app(UpdatePlanAction::class)->execute((int) $this->basicPlan->id, PlanDTO::fromArray([
             'name' => 'الباقة الأساسية المعدلة',
             'price_monthly' => '525.000',
             'max_users' => 7,
             'max_items' => null,
             'features' => ['pos.access' => true, 'mixes.manage' => true, 'reports.advanced' => true],
-        ]);
+        ]));
 
         $this->seed(PlansAndFeaturesSeeder::class);
         $this->seed(PlansAndFeaturesSeeder::class);

@@ -54,6 +54,8 @@ final class TenantSubscriptionSummaryResource extends JsonResource
             // (read_only, suspended, cancelled, archived) or the end has passed.
             'days_left' => $this->daysLeft($effective, $endsAt, $now),
             'is_founder' => $subscription !== null && $subscription->is_founder,
+            // PRICE-2026-11: founder schedule step, current / next price and the notice flag.
+            'price_schedule' => PriceScheduleResource::for($subscription),
         ];
     }
 

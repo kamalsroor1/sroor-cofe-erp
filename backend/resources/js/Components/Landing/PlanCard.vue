@@ -2,12 +2,13 @@
 import { computed } from 'vue';
 import CheckItem from './CheckItem.vue';
 import MarketingButton from './MarketingButton.vue';
+import PlanIncludedAddons from './PlanIncludedAddons.vue';
+import PlanPrice from './PlanPrice.vue';
 import { trans } from '../../helpers/trans';
 import {
   LIMIT_KEYS,
   catalogCurrencyLabel,
   formatCatalogCount,
-  formatCatalogPrice,
   yearlySavingPercent,
 } from '../../helpers/landingPricing';
 import { planDisplayPrice } from '../../helpers/landingCatalog';
@@ -18,6 +19,7 @@ const props = defineProps({
   billing: { type: String, default: 'monthly' },
   currency: { type: String, default: '' },
   founder: { type: Object, default: () => ({ available: false }) },
+  taxRate: { type: String, default: '0.000' },
   pricesExcludeVat: { type: Boolean, default: false },
   /** Description + limits block (pricing page). */
   showDetails: { type: Boolean, default: true },
@@ -82,40 +84,19 @@ const features = computed(() => {
       </p>
     </header>
 
-    <div class="flex flex-col gap-1.5">
-      <p v-if="price.hasFounder" class="text-sm font-bold text-mk-faint line-through">
-        <span dir="ltr">{{ formatCatalogPrice(price.regular) }}</span> {{ currencyLabel }}
-      </p>
-      <p class="flex flex-wrap items-baseline gap-x-1.5">
-        <span class="font-bold text-mk-ink" :class="compact ? 'text-[34px]' : 'text-[44px]'" dir="ltr">
-          {{ formatCatalogPrice(price.shown) }}
-        </span>
-        <span class="font-medium text-mk-muted" :class="compact ? 'text-[13px]' : 'text-[15px]'">
-          {{ currencyLabel }} / {{ $t(isYearly ? 'landing.per_year' : 'landing.per_month') }}
-        </span>
-      </p>
-      <p v-if="plan.trial_days" class="font-medium text-mk-primary" :class="compact ? 'text-[13px]' : 'text-sm'">
-        {{ $t('landing.trial_days', { count: plan.trial_days }) }}
-      </p>
-      <div v-if="saving > 0 || price.hasFounder" class="flex flex-wrap gap-1.5 pt-0.5">
-        <span v-if="saving > 0" class="rounded-full bg-mk-soft px-2.5 py-1 text-[11px] font-bold text-mk-soft-ink">
-          {{ $t('landing.pricing.save_percent', { percent: saving }) }}
-        </span>
-        <span
-          v-if="price.hasFounder"
-          class="rounded-full bg-mk-accent-soft px-2.5 py-1 text-[11px] font-bold text-mk-warn-ink"
-        >
-          <template v-if="founder.slots_left !== null && founder.slots_left !== undefined">
-            {{ $t('landing.founder_slots_left', { count: founder.slots_left }) }}
-          </template>
-          <template v-else>{{ $t('landing.founder_badge') }}</template>
-        </span>
-      </div>
-      <p v-if="price.hasFounder && founder.months" class="text-xs font-medium text-mk-muted">
-        {{ $t('landing.pricing.founder_price_months', { count: founder.months }) }}
-      </p>
-      <p v-if="pricesExcludeVat" class="text-xs text-mk-faint">{{ $t('landing.prices_exclude_vat') }}</p>
-    </div>
+    <PlanPrice
+      :price="price"
+      :currency-label="currencyLabel"
+      :yearly="isYearly"
+      :compact="compact"
+      :saving="saving"
+      :founder="founder"
+      :trial-days="plan.trial_days || 0"
+      :tax-rate="taxRate"
+      :prices-exclude-vat="pricesExcludeVat"
+    />
+
+    <PlanIncludedAddons :addons="plan.included_addons || []" :compact="compact" />
 
     <hr class="border-mk-line" />
 

@@ -17,7 +17,8 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @property int $plan_id
  * @property int $addon_id
  * @property bool $is_available
- * @property int $included_quantity
+ * @property int $included_quantity > 0 = the plan INCLUDES this (service) add-on
+ * @property BillingCycle|null $included_billing_cycle the inclusion holds only on this cycle; NULL = any
  * @property string|null $unit_price_override flat monthly/one-time price on this plan, NULL = catalog
  * @property string|null $yearly_price_override flat yearly price on this plan, NULL = catalog
  * @property-read Plan $plan
@@ -32,6 +33,7 @@ class PlanAddon extends Pivot
         'id',
         'is_available',
         'included_quantity',
+        'included_billing_cycle',
         'unit_price_override',
         'yearly_price_override',
     ];
@@ -45,6 +47,7 @@ class PlanAddon extends Pivot
         'addon_id',
         'is_available',
         'included_quantity',
+        'included_billing_cycle',
         'unit_price_override',
         'yearly_price_override',
     ];
@@ -61,6 +64,7 @@ class PlanAddon extends Pivot
             'addon_id' => 'integer',
             'is_available' => 'boolean',
             'included_quantity' => 'integer',
+            'included_billing_cycle' => BillingCycle::class,
             'unit_price_override' => 'decimal:3',
             'yearly_price_override' => 'decimal:3',
         ];
@@ -80,6 +84,11 @@ class PlanAddon extends Pivot
     public function addon(): BelongsTo
     {
         return $this->belongsTo(Addon::class);
+    }
+
+    public function isIncluded(): bool
+    {
+        return $this->included_quantity > 0;
     }
 
     /**

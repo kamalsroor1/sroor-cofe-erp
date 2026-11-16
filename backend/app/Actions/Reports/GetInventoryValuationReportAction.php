@@ -13,8 +13,8 @@ final class GetInventoryValuationReportAction
     /** Per-unit cost keys of a valued row, null without items.view_cost. */
     private const ROW_UNIT_COST_KEYS = ['average_cost', 'last_purchase_price', 'cost_price'];
 
-    /** Per-unit cost key of an ABC row, null without items.view_cost. */
-    private const ABC_UNIT_COST_KEYS = ['unit_cost'];
+    /** Cost keys of an ABC row, null without items.view_cost (cogs = sold quantity x unit cost). */
+    private const ABC_UNIT_COST_KEYS = ['unit_cost', 'cogs'];
 
     public function __construct(
         private readonly InventoryAnalyticsService $inventoryAnalyticsService,
@@ -33,8 +33,9 @@ final class GetInventoryValuationReportAction
      *                                                                                  sales per item, when the caller already has them (comprehensive bundle)
      * @param  bool  $showUnitCost  BUG-02 review: whether the caller holds items.view_cost (CostVisibility).
      *                              Without it the PER-UNIT costs of the rows (average_cost,
-     *                              last_purchase_price, cost_price, ABC unit_cost) are null; the
-     *                              totals and per-row values (cost_val) stay as before.
+     *                              last_purchase_price, cost_price, ABC unit_cost and cogs) are null;
+     *                              the totals and per-row values (cost_val) stay as before. Plan-level
+     *                              stripping of cost / profit is ProfitVisibility::inventory()'s job.
      * @return array<string, mixed>
      */
     public function execute(ReportFilterDTO $dto, ?array $salesByItem = null, bool $showUnitCost = false): array

@@ -1,6 +1,7 @@
 <script setup>
 import { ArrowDown } from 'lucide-vue-next';
 import PlansShowcase from '../PlansShowcase.vue';
+import { hasVat } from '../../../helpers/landingCatalog';
 
 defineProps({
   plans: { type: Array, default: () => [] },
@@ -9,6 +10,7 @@ defineProps({
   hasError: { type: Boolean, default: false },
   currency: { type: String, default: '' },
   founder: { type: Object, default: () => ({ available: false }) },
+  taxRate: { type: String, default: '0.000' },
   pricesExcludeVat: { type: Boolean, default: false },
 });
 
@@ -35,6 +37,7 @@ const goToCompare = () => {
           :has-error="hasError"
           :currency="currency"
           :founder="founder"
+          :tax-rate="taxRate"
           :max-features="5"
           :max-limits="3"
           show-details
@@ -42,7 +45,10 @@ const goToCompare = () => {
           @retry="$emit('retry')"
         />
       </div>
-      <p v-if="pricesExcludeVat && plans.length" class="text-center text-[13px] leading-[1.5] text-mk-faint">
+      <p
+        v-if="pricesExcludeVat && hasVat(taxRate) && plans.length"
+        class="text-center text-[13px] leading-[1.5] text-mk-faint"
+      >
         {{ $t('landing.prices_exclude_vat') }}
       </p>
       <button

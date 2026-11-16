@@ -20,6 +20,15 @@ return [
         'yearly' => 'Yearly',
         'biennial' => 'Every two years',
     ],
+    'plan_editor' => [
+        'addon_inactive' => 'The add-on :addon is retired: it cannot be offered or included on a plan, only marked unavailable.',
+        'founder_above_list' => 'The founder price cannot be above the regular plan price for the same billing cycle.',
+    ],
+    'price_step' => [
+        'founder' => 'Founder price',
+        'transition' => 'Founder transition price',
+        'list' => 'Regular price',
+    ],
     'addon_type' => [
         'recurring' => 'Recurring add-on',
         'service' => 'Service',

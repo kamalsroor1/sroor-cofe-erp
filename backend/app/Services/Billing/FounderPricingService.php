@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace App\Services\Billing;
 
 use App\Enums\Billing\BillingCycle;
+use App\Enums\Billing\BillingInvoiceStatus;
+use App\Enums\Billing\BillingInvoiceType;
 use App\Enums\Billing\BillingPaymentStatus;
+use App\Enums\Billing\FounderPriceStep;
 use App\Exceptions\Billing\FounderPricingException;
+use App\Models\BillingInvoice;
 use App\Models\BillingPayment;
 use App\Models\BillingSequence;
 use App\Models\Plan;
@@ -16,7 +20,17 @@ use Illuminate\Support\Carbon;
 
 /**
  * Founder pricing (ENTI-1.7): the first N paying customers (config billing.founder.slots,
- * 50) keep the plan's founder price for M months (billing.founder.months, 12).
+ * 50) get a price schedule measured from their first verified payment (PRICE-2026-11, owner
+ * decision 2026-11-15):
+ *  - FounderPriceStep::Founder for billing.founder.months (12): plans.founder_price_*; its end
+ *    is subscriptions.founder_price_until;
+ *  - FounderPriceStep::Transition for billing.founder.transition_months (12) more:
+ *    plans.founder_transition_price_*; its end is derived (transitionUntil()), never stored;
+ *  - FounderPriceStep::List afterwards (and for every non-founder): the plan list price.
+ * A step whose price is missing on the plan for the cycle falls through to the list price. A
+ * step needs both its calendar window AND its count of billed months (stepFor(), review M2).
+ * This class is the single source of truth for the step and its price (stepFor(), stepPrice(),
+ * planPrice(), nextStepChange()); invoices price a cycle by the step at the cycle START.
  *
  * Q-E4 [CTO-2026-10-08]:
  * - a slot is taken at the tenant's FIRST verified payment, not at signup or trial;
@@ -68,6 +82,30 @@ final class FounderPricingService
         return $months;
     }
 
+    /** Months of the transition step after the year-1 founder price (0 = no transition step). */
+    public function transitionMonths(): int
+    {
+        $months = config('billing.founder.transition_months');
+
+        if (! is_int($months) || $months < 0) {
+            throw FounderPricingException::invalidConfiguration('billing.founder.transition_months');
+        }
+
+        return $months;
+    }
+
+    /** Days ahead of a step change that the tenant billing screen flags it. */
+    public function noticeDays(): int
+    {
+        $days = config('billing.founder.notice_days');
+
+        if (! is_int($days) || $days < 0) {
+            throw FounderPricingException::invalidConfiguration('billing.founder.notice_days');
+        }
+
+        return $days;
+    }
+
     /** Slots handed out so far (a plain read for display; claim() re-reads under lock). */
     public function claimedSlots(): int
     {
@@ -89,8 +127,9 @@ final class FounderPricingService
 
     /**
      * The plan has a positive founder price for this cycle. A NULL founder price means
-     * "no founder price" for that cycle (the approved catalog sets yearly = 10 x monthly,
-     * 2990 / 5990 / 9990, CTO W1 Q4), and biennial is never sold in Phase 1 (Q-E6).
+     * "no founder price" for that cycle (the catalog sets yearly = 10 x monthly, 3,490 / 6,990 /
+     * 10,990 since PRICE-2026-11), and biennial is never sold in Phase 1 (Q-E6). This is about
+     * the year-1 founder price; the transition step is decided by stepFor().
      */
     public function isEligiblePlan(Plan $plan, BillingCycle $cycle): bool
     {
@@ -107,8 +146,9 @@ final class FounderPricingService
      *
      * - Same subscription again (a retried activation): no second slot, returns true.
      * - The tenant already holds a slot on another subscription (renewal / plan change):
-     *   no new slot; the subscription inherits the ORIGINAL founder_price_until while it is
-     *   still in the future (the 12 months run from the first payment, not per renewal).
+     *   no new slot; the subscription inherits the ORIGINAL founder_price_until while the
+     *   schedule (year-1 founder price + transition) is not over (it runs from the first
+     *   payment, not per renewal).
      *
      * Must run inside an open transaction on the central connection.
      *
@@ -147,7 +187,9 @@ final class FounderPricingService
 
         $held = $this->heldFounderWindow($locked);
         if ($held !== null) {
-            if ($held->lessThanOrEqualTo($now)) {
+            // The schedule (founder, then transition) runs from the FIRST payment: a new
+            // subscription inherits it while any discounted step is still ahead.
+            if ($held->copy()->addMonthsNoOverflow($this->transitionMonths())->lessThanOrEqualTo($now)) {
                 return false;
             }
 
@@ -175,27 +217,131 @@ final class FounderPricingService
         return $this->markFounder($subscription, $locked, Carbon::instance($start)->addMonthsNoOverflow($months));
     }
 
-    /** The founder price applies to this subscription at $at (default now). */
+    /** The year-1 founder price applies to this subscription at $at (default now). */
     public function isFounderPriceActive(Subscription $subscription, ?CarbonInterface $at = null): bool
     {
-        if (! $subscription->is_founder || $subscription->founder_price_until === null) {
-            return false;
-        }
-
-        $at ??= Carbon::now();
-        if (! $subscription->founder_price_until->greaterThan($at)) {
-            return false;
-        }
-
-        $plan = $subscription->plan;
-
-        return $plan instanceof Plan && $this->isEligiblePlan($plan, $subscription->billing_cycle);
+        return $this->priceStep($subscription, $at) === FounderPriceStep::Founder;
     }
 
     /**
-     * Plan price for one cycle of $subscription at $at (DECIMAL(12,3) string): the founder
-     * price inside the founder window, the regular plan price after it. Plan line only;
-     * add-ons are always full price (Q-E4).
+     * End of the transition step (founder_price_until + transition_months), or null for a
+     * subscription that never held a founder slot. Derived, so it follows the config.
+     */
+    public function transitionUntil(Subscription $subscription): ?Carbon
+    {
+        if (! $subscription->is_founder || $subscription->founder_price_until === null) {
+            return null;
+        }
+
+        return $subscription->founder_price_until->copy()->addMonthsNoOverflow($this->transitionMonths());
+    }
+
+    /** Step of $subscription at $at (default now) on its own plan and cycle. */
+    public function priceStep(Subscription $subscription, ?CarbonInterface $at = null): FounderPriceStep
+    {
+        $plan = $subscription->plan;
+
+        if (! $plan instanceof Plan) {
+            return FounderPriceStep::List;
+        }
+
+        return $this->stepFor($subscription, $plan, $subscription->billing_cycle, $at);
+    }
+
+    /**
+     * Step of $subscription's founder schedule for a billing cycle STARTING at $at (default now),
+     * billed on $plan at $cycle (a plan change keeps the schedule, it only changes which prices
+     * apply). A step the plan has no positive price for, at that cycle, falls through to List.
+     *
+     * Review M2: a step needs BOTH conditions, so a monthly term chain that drifts (paid Jan 31,
+     * renewals on the 28th because addMonthNoOverflow clamps) still gets exactly 12 founder and 12
+     * transition cycles:
+     *  - calendar: $at is before the end of the step (founder_price_until / transitionUntil), so a
+     *    shop that stops paying cannot "save" founder months for later;
+     *  - billed months: fewer than `months` (resp. `months + transition_months`) schedule months
+     *    were billed before $at (billedScheduleMonths(), monthly = 1, yearly = 12).
+     * $billedMonths lets a caller that simulates future cycles pass the count it already knows.
+     */
+    public function stepFor(Subscription $subscription, Plan $plan, BillingCycle $cycle, ?CarbonInterface $at = null, ?int $billedMonths = null): FounderPriceStep
+    {
+        if (! $subscription->is_founder || $subscription->founder_price_until === null) {
+            return FounderPriceStep::List;
+        }
+
+        $at ??= Carbon::now();
+        $billedMonths ??= $this->billedScheduleMonths($subscription, $at);
+        $founderMonths = $this->durationMonths();
+
+        if ($subscription->founder_price_until->greaterThan($at) && $billedMonths < $founderMonths) {
+            return $this->isEligiblePlan($plan, $cycle) ? FounderPriceStep::Founder : FounderPriceStep::List;
+        }
+
+        $transitionUntil = $this->transitionUntil($subscription);
+        if ($transitionUntil !== null
+            && $transitionUntil->greaterThan($at)
+            && $billedMonths < $founderMonths + $this->transitionMonths()
+            && $this->hasTransitionPrice($plan, $cycle)) {
+            return FounderPriceStep::Transition;
+        }
+
+        return FounderPriceStep::List;
+    }
+
+    /**
+     * Schedule months already billed to the tenant before $before: every plan / renewal / upgrade
+     * invoice that is not void or refunded, whose period starts before $before (monthly = 1 month,
+     * yearly = 12). A support "difference" invoice keeps the term, so it bills no month. The
+     * schedule starts at the first verified payment, so every such invoice belongs to it.
+     */
+    public function billedScheduleMonths(Subscription $subscription, CarbonInterface $before): int
+    {
+        $invoices = BillingInvoice::query()
+            ->where('tenant_id', $subscription->tenant_id)
+            ->whereIn('type', [BillingInvoiceType::Plan->value, BillingInvoiceType::Renewal->value, BillingInvoiceType::Upgrade->value])
+            ->whereIn('status', [BillingInvoiceStatus::Draft->value, BillingInvoiceStatus::Pending->value, BillingInvoiceStatus::Paid->value])
+            ->whereNotNull('period_start')
+            ->where('period_start', '<', $before)
+            ->get(['id', 'billing_cycle', 'lines']);
+
+        $months = 0;
+        foreach ($invoices as $invoice) {
+            if ($this->isDifferenceInvoice($invoice)) {
+                continue;
+            }
+            $months += $invoice->billing_cycle === BillingCycle::Yearly ? 12 : 1;
+        }
+
+        return $months;
+    }
+
+    /**
+     * Price of one $cycle of $plan at $step (DECIMAL(12,3) string). A step without a
+     * positive price on the plan gives the list price.
+     *
+     * @throws FounderPricingException for a cycle that is not sold (biennial, Q-E6)
+     */
+    public function stepPrice(Plan $plan, BillingCycle $cycle, FounderPriceStep $step): string
+    {
+        if (! $cycle->isSellable()) {
+            throw FounderPricingException::cycleNotSellable($cycle);
+        }
+
+        $price = match ($step) {
+            FounderPriceStep::Founder => $this->founderPrice($plan, $cycle),
+            FounderPriceStep::Transition => $this->transitionPrice($plan, $cycle),
+            FounderPriceStep::List => null,
+        };
+
+        if ($price === null || bccomp($price, '0', 3) <= 0) {
+            $price = $cycle === BillingCycle::Yearly ? $plan->price_yearly : $plan->price_monthly;
+        }
+
+        return bcadd($price, '0', 3);
+    }
+
+    /**
+     * Plan price for one cycle of $subscription at $at (DECIMAL(12,3) string): the price of
+     * the step in force at $at. Plan line only; add-ons are always full price (Q-E4).
      *
      * @throws FounderPricingException for a cycle that is not sold (biennial, Q-E6)
      */
@@ -209,11 +355,81 @@ final class FounderPricingService
         /** @var Plan $plan */
         $plan = $subscription->plan()->firstOrFail();
 
-        if ($this->isFounderPriceActive($subscription, $at)) {
-            return bcadd((string) $this->founderPrice($plan, $cycle), '0', 3);
+        return $this->stepPrice($plan, $cycle, $this->stepFor($subscription, $plan, $cycle, $at));
+    }
+
+    /**
+     * Step of the cycle running at $at (default now): the step of the latest billed cycle that
+     * started at or before $at, else the step of a cycle starting at $at.
+     */
+    public function currentStep(Subscription $subscription, ?CarbonInterface $at = null): FounderPriceStep
+    {
+        $plan = $subscription->plan;
+        if (! $plan instanceof Plan) {
+            return FounderPriceStep::List;
         }
 
-        return bcadd($cycle === BillingCycle::Yearly ? $plan->price_yearly : $plan->price_monthly, '0', 3);
+        $at ??= Carbon::now();
+        $start = BillingInvoice::query()
+            ->where('tenant_id', $subscription->tenant_id)
+            ->whereIn('type', [BillingInvoiceType::Plan->value, BillingInvoiceType::Renewal->value, BillingInvoiceType::Upgrade->value])
+            ->where('status', BillingInvoiceStatus::Paid->value)
+            ->whereNotNull('period_start')
+            ->where('period_start', '<=', $at)
+            ->max('period_start');
+
+        return $this->stepFor($subscription, $plan, $subscription->billing_cycle, $start === null ? $at : Carbon::parse((string) $start));
+    }
+
+    /**
+     * The first FUTURE billing cycle priced at another step than the current one, and when it
+     * starts (= the date the invoice price actually changes): simulated on the same term chain as
+     * ActivateSubscriptionAction (from the paid end, addMonthNoOverflow / addYearNoOverflow), on
+     * the subscription's own plan and cycle. Null when nothing changes any more.
+     *
+     * @return array{step: FounderPriceStep, at: Carbon}|null
+     */
+    public function nextStepChange(Subscription $subscription, ?CarbonInterface $at = null): ?array
+    {
+        $plan = $subscription->plan;
+        $cycle = $subscription->billing_cycle;
+        if (! $subscription->is_founder || $subscription->founder_price_until === null || ! $plan instanceof Plan || ! $cycle->isSellable()) {
+            return null;
+        }
+
+        $at ??= Carbon::now();
+        $current = $this->currentStep($subscription, $at);
+        $paidEnd = $subscription->tenant?->subscription_ends_at;
+        $start = $paidEnd !== null && $paidEnd->greaterThan($at) ? Carbon::instance($paidEnd) : Carbon::instance($at);
+        $billed = $this->billedScheduleMonths($subscription, $start);
+        $cycleMonths = $cycle === BillingCycle::Yearly ? 12 : 1;
+        $horizon = $this->durationMonths() + $this->transitionMonths() + 12;
+
+        for ($i = 0; $i <= $horizon; $i++) {
+            $step = $this->stepFor($subscription, $plan, $cycle, $start, $billed);
+            if ($step !== $current) {
+                return ['step' => $step, 'at' => $start->copy()];
+            }
+            if ($step === FounderPriceStep::List) {
+                return null;
+            }
+            $billed += $cycleMonths;
+            $start = $cycle === BillingCycle::Yearly ? $start->copy()->addYearNoOverflow() : $start->copy()->addMonthNoOverflow();
+        }
+
+        return null;
+    }
+
+    /** @param  BillingInvoice  $invoice  with `lines` */
+    private function isDifferenceInvoice(BillingInvoice $invoice): bool
+    {
+        foreach ($invoice->lines as $line) {
+            if (($line['type'] ?? null) === 'plan' && ($line['difference'] ?? false) === true) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function founderPrice(Plan $plan, BillingCycle $cycle): ?string
@@ -225,6 +441,22 @@ final class FounderPricingService
         };
 
         return $price;
+    }
+
+    private function transitionPrice(Plan $plan, BillingCycle $cycle): ?string
+    {
+        return match ($cycle) {
+            BillingCycle::Monthly => $plan->founder_transition_price_monthly,
+            BillingCycle::Yearly => $plan->founder_transition_price_yearly,
+            BillingCycle::Biennial => null,
+        };
+    }
+
+    private function hasTransitionPrice(Plan $plan, BillingCycle $cycle): bool
+    {
+        $price = $this->transitionPrice($plan, $cycle);
+
+        return $price !== null && bccomp($price, '0', 3) > 0;
     }
 
     private function lockCounter(): BillingSequence

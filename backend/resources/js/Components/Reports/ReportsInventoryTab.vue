@@ -5,9 +5,9 @@
       <StatCardSkeleton v-for="i in 3" :key="i" />
     </div>
 
-    <div v-else class="grid grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(14rem,1fr))] gap-4">
+    <div v-else class="grid grid-cols-1 gap-4" :class="summaryGridClass">
       <div
-        v-if="hasKey(inventoryData, 'stock_cost_valuation')"
+        v-if="hasCostValuation"
         class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1"
       >
         <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{
@@ -32,7 +32,7 @@
       </div>
 
       <div
-        v-if="hasKey(inventoryData, 'expected_stock_profit')"
+        v-if="hasExpectedProfit"
         class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-slate-900/90 border border-emerald-200 dark:border-emerald-500/30 shadow-sm dark:shadow-md space-y-1"
       >
         <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">{{
@@ -107,13 +107,13 @@
                   {{ formatMoney(itm.selling_price) }}
                 </td>
                 <td v-if="showCostVal" class="p-3 text-end font-mono text-rose-500 dark:text-rose-400">
-                  {{ formatMoney(itm.cost_val) }}
+                  <template v-if="itm.cost_val != null">{{ formatMoney(itm.cost_val) }}</template>
                 </td>
                 <td class="p-3 text-end font-mono font-bold text-slate-900 dark:text-white">
                   {{ formatMoney(itm.sell_val) }}
                 </td>
                 <td v-if="showProfit" class="p-3 text-end font-mono font-black text-emerald-500 dark:text-emerald-400">
-                  {{ formatMoney(itm.profit) }}
+                  <template v-if="itm.profit != null">{{ formatMoney(itm.profit) }}</template>
                 </td>
               </tr>
             </tbody>
@@ -136,7 +136,7 @@
                 <span class="text-xs font-mono font-bold text-cyan-500"
                   >{{ formatQty(itm.current_stock) }} {{ itm.unit }}</span
                 >
-                <span v-if="hasKey(itm, 'profit')" class="text-sm font-black font-mono text-emerald-500 block"
+                <span v-if="itm.profit != null" class="text-sm font-black font-mono text-emerald-500 block"
                   >+{{ formatMoney(itm.profit) }}</span
                 >
               </div>
@@ -144,7 +144,7 @@
             <div
               class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs font-mono"
             >
-              <span v-if="hasKey(itm, 'cost_val')" class="text-slate-500"
+              <span v-if="itm.cost_val != null" class="text-slate-500"
                 >{{ $t('reports.cost_valuation') }}: {{ formatMoney(itm.cost_val) }}</span
               >
               <span class="text-slate-900 dark:text-white font-bold"
@@ -197,8 +197,14 @@ const props = defineProps({
 
 defineEmits(['page-change', 'retry']);
 
-// The plan may strip cost/profit keys from the payload: a missing key hides the column or card.
+// Plans without reports.advanced get no cost/profit keys at all: show a column or card only when the key exists.
 const hasKey = (obj, key) => obj != null && Object.prototype.hasOwnProperty.call(obj, key);
+const hasCostValuation = computed(() => hasKey(props.inventoryData, 'stock_cost_valuation'));
+const hasExpectedProfit = computed(() => hasKey(props.inventoryData, 'expected_stock_profit'));
 const showCostVal = computed(() => props.items.some((itm) => hasKey(itm, 'cost_val')));
 const showProfit = computed(() => props.items.some((itm) => hasKey(itm, 'profit')));
+const summaryGridClass = computed(() => {
+  const cards = 1 + (hasCostValuation.value ? 1 : 0) + (hasExpectedProfit.value ? 1 : 0);
+  return cards >= 3 ? 'sm:grid-cols-3' : cards === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-1';
+});
 </script>

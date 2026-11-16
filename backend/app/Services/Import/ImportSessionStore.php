@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Services\Import;
 
 use App\Enums\ImportType;
+use App\Services\Entitlements\PlanEnforcer;
+use App\Services\Entitlements\TenantStorageUsage;
 use App\Support\TenantCache;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
@@ -19,10 +21,16 @@ final class ImportSessionStore
 {
     public const TTL_SECONDS = 3600;
 
-    private const DIRECTORY = 'imports';
+    /** Where the uploads wait for the commit; TenantStorageUsage counts this directory. */
+    public const DIRECTORY = 'imports';
 
     /** Files abandoned after a preview are swept after this long. */
     private const STALE_FILE_SECONDS = 86400;
+
+    public function __construct(
+        private readonly PlanEnforcer $planEnforcer,
+        private readonly TenantStorageUsage $storageUsage,
+    ) {}
 
     public function create(UploadedFile $file, ImportType $type, int $userId): string
     {
@@ -32,7 +40,13 @@ final class ImportSessionStore
         $extension = strtolower($file->getClientOriginalExtension()) === 'xlsx' ? 'xlsx' : 'csv';
         $path = self::DIRECTORY.'/'.$token.'.'.$extension;
 
-        Storage::disk('local')->putFileAs(self::DIRECTORY, $file, $token.'.'.$extension);
+        // PLAN-ENF: the stored upload counts against storage_mb until the commit deletes it (forget())
+        // or the stale-file sweep does.
+        $this->planEnforcer->withinStorageLimit(
+            fn (): int => (int) $file->getSize(),
+            fn (): int => $this->storageUsage->usedBytes(),
+            fn () => Storage::disk('local')->putFileAs(self::DIRECTORY, $file, $token.'.'.$extension),
+        );
 
         Cache::put(TenantCache::key('import:'.$token), [
             'user_id' => $userId,

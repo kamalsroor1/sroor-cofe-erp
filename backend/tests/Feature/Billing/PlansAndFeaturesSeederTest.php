@@ -23,19 +23,20 @@ use Tests\TenantTestCase;
  * idempotent, and never overwrites what a super-admin edited.
  *
  * Approved values: pricing-model-recommendation-2026-10 §4/§5/§7, Q-E2/Q-E3/Q-E8/Q-E9 and
- * CTO W1 Q3/Q4 [2026-10-09] (yearly = 10 months, founder 299/599/999 and 2,990/5,990/9,990,
- * premium_support recurring; 17 core features, quotations.manage is not core). VAT excluded.
+ * CTO W1 Q3/Q4 [2026-10-09] (yearly = 10 months, premium_support recurring; 17 core features,
+ * quotations.manage is not core), re-priced by PRICE-2026-11 (owner decision 2026-11-15: list
+ * 499 / 999 / 1,499, founder 349 / 699 / 1,099, transition 429 / 849 / 1,299). VAT excluded.
  */
 #[Group('billing')]
 #[Group('mysql')]
 final class PlansAndFeaturesSeederTest extends TenantTestCase
 {
-    /** slug => [monthly, yearly, founder monthly, founder yearly] */
+    /** slug => [monthly, yearly, founder monthly, founder yearly, transition monthly, transition yearly] */
     private const PRICES = [
-        'free' => ['0.000', '0.000', null, null],
-        'basic' => ['449.000', '4490.000', '299.000', '2990.000'],
-        'pro' => ['899.000', '8990.000', '599.000', '5990.000'],
-        'enterprise' => ['1799.000', '17990.000', '999.000', '9990.000'],
+        'free' => ['0.000', '0.000', null, null, null, null],
+        'basic' => ['499.000', '4990.000', '349.000', '3490.000', '429.000', '4290.000'],
+        'pro' => ['999.000', '9990.000', '699.000', '6990.000', '849.000', '8490.000'],
+        'enterprise' => ['1499.000', '14990.000', '1099.000', '10990.000', '1299.000', '12990.000'],
     ];
 
     /** slug => [stores, warehouses, vans, users, items, invoices/month, storage MB, trial days] */
@@ -58,7 +59,8 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
         'free' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs'],
         'basic' => ['transfers.manage'],
         'pro' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs'],
-        'enterprise' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs', 'api.access'],
+        // Owner decision 2026-11-15: api.access (hidden, does nothing) is no longer on Enterprise.
+        'enterprise' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs'],
     ];
 
     /** key => [type, monthly/one-time, yearly, tiers [min_qty, unit, yearly], public] */
@@ -85,8 +87,20 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
 
         $this->assertSame(PlanCatalog::SLUGS, Plan::query()->orderBy('sort_order')->pluck('slug')->all());
 
-        foreach (self::PRICES as $slug => [$monthly, $yearly, $founderMonthly, $founderYearly]) {
+        foreach (self::PRICES as $slug => [$monthly, $yearly, $founderMonthly, $founderYearly, $transitionMonthly, $transitionYearly]) {
             $plan = $this->plan($slug);
+            $this->assertSame($transitionMonthly, $plan->founder_transition_price_monthly, "{$slug} transition monthly");
+            $this->assertSame($transitionYearly, $plan->founder_transition_price_yearly, "{$slug} transition yearly");
+            // The catalog ships without a promotion.
+            $this->assertNull($plan->compare_at_price_monthly, "{$slug} compare-at monthly");
+            $this->assertNull($plan->compare_at_price_yearly, "{$slug} compare-at yearly");
+            $this->assertNull($plan->promo_ends_at, "{$slug} promo end");
+            $this->assertNull($plan->activePromotion());
+            if ($transitionMonthly !== null) {
+                $this->assertSame(0, bccomp(bcmul($transitionMonthly, '10', 3), (string) $transitionYearly, 3), "{$slug}: transition yearly must be 10 months.");
+                $this->assertSame(1, bccomp($transitionMonthly, (string) $founderMonthly, 3), "{$slug}: transition above founder.");
+                $this->assertSame(-1, bccomp($transitionMonthly, $monthly, 3), "{$slug}: transition below list.");
+            }
             $this->assertSame($monthly, $plan->price_monthly, "{$slug} monthly");
             $this->assertSame($yearly, $plan->price_yearly, "{$slug} yearly");
             $this->assertSame($founderMonthly, $plan->founder_price_monthly, "{$slug} founder monthly");
@@ -271,7 +285,20 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
         $domain = Addon::query()->where('key', 'custom.domain')->firstOrFail();
         $this->assertFalse($domain->is_public);
         $this->assertFalse(PlanAddon::query()->where('addon_id', $domain->id)->where('is_available', true)->exists());
-        $this->assertSame(0, (int) PlanAddon::query()->sum('included_quantity'));
+        // Owner decision 2026-11-15: Enterprise is the service plan. Premium support is included (not
+        // sold there), onboarding is included with a yearly subscription (still sold to a monthly one).
+        $included = PlanAddon::query()
+            ->join('addons', 'addons.id', '=', 'plan_addon.addon_id')
+            ->join('plans', 'plans.id', '=', 'plan_addon.plan_id')
+            ->where('plan_addon.included_quantity', '>', 0)
+            ->orderBy('addons.key')
+            ->get(['plans.slug', 'addons.key', 'plan_addon.included_quantity', 'plan_addon.included_billing_cycle', 'plan_addon.is_available'])
+            ->map(fn (PlanAddon $row): array => [$row->getAttribute('slug'), $row->getAttribute('key'), $row->included_quantity, $row->included_billing_cycle?->value, $row->is_available])
+            ->all();
+        $this->assertSame([
+            ['enterprise', 'addon.premium_support', 1, null, false],
+            ['enterprise', 'service.onboarding', 1, 'yearly', true],
+        ], $included);
         $this->assertFalse(PlanAddon::query()->whereNotNull('unit_price_override')->orWhereNotNull('yearly_price_override')->exists());
     }
 

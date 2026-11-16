@@ -13,7 +13,7 @@ import HomeShowcase from '../../Components/Landing/Home/HomeShowcase.vue';
 import { usePublicPlans } from '../../Composables/usePublicPlans';
 import { useLandingAnchors } from '../../Composables/useLandingAnchors';
 
-const { plans, brand, founder, currency, pricesExcludeVat, isLoading, hasError, load } = usePublicPlans();
+const { plans, brand, founder, currency, taxRate, pricesExcludeVat, isLoading, hasError, load } = usePublicPlans();
 const { scrollToRouteHash } = useLandingAnchors();
 const billing = ref('monthly');
 
@@ -38,6 +38,7 @@ onMounted(() => {
       :has-error="hasError"
       :currency="currency"
       :founder="founder"
+      :tax-rate="taxRate"
       :prices-exclude-vat="pricesExcludeVat"
       @retry="load"
     />

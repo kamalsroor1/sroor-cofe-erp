@@ -11,14 +11,22 @@ use App\Services\Entitlements\PlanEnforcer;
  * plan feature. A shop without it still gets sales, expenses and every other basic report, but
  * the profit fields are removed from the payload (not nulled in some places and present in
  * others): one rule, one place. Cost visibility per user stays CostVisibility's job.
+ *
+ * Owner decision 2026-11-15: a shop without reports.advanced keeps ONE figure, the total gross
+ * profit of the period (reports summary `gross_profit` and the dashboard
+ * `monthly_gross_profit`). The other keys stay stripped (COGS, margins, net profit, stock
+ * profit, per-item and per-store profit), but the owner accepted (2026-11-16) that the period
+ * totals COGS / margin / net profit can be derived from gross profit + sales + expenses; what
+ * Pro keeps exclusive is the per-item and per-store detail. The per-item profitability and
+ * branch comparison reports are routed behind feature:reports.advanced (routes/api.php).
  */
 final class ProfitVisibility
 {
     public const FEATURE = 'reports.advanced';
 
-    /** Keys of the P&L summary that reveal cost or profit. */
+    /** Keys of the P&L summary that reveal cost or profit (the total gross_profit is NOT one). */
     private const SUMMARY_KEYS = [
-        'gross_cogs', 'total_cogs', 'gross_profit', 'margin_percentage', 'net_profit',
+        'gross_cogs', 'total_cogs', 'margin_percentage', 'net_profit',
         'returns_cost', 'stock_cost_valuation', 'expected_stock_profit',
     ];
 

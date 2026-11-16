@@ -217,21 +217,26 @@ final class ReportController extends Controller
         $inventory = ProfitVisibility::inventory($this->getInventoryValuationReportAction->execute($dto, $items['sold_by_item'], CostVisibility::allows($request->user())));
         $treasury = $this->getTreasuryReportAction->execute($dto, self::COMPREHENSIVE_LIST_LIMIT, 1);
         $treasury['meta'] = $this->pageMeta(1, self::COMPREHENSIVE_LIST_LIMIT, $treasury['ledger_total']);
+        // Owner decision 2026-11-15: item profitability and the branch comparison are reports.advanced
+        // reports (their own routes 403); this bundle serves the basic tabs too, so it empties them.
+        $advanced = ProfitVisibility::allows();
 
         return response()->json([
             'success' => true,
             'period' => $summary['period'],
             'summary' => ProfitVisibility::summary($summary['summary']),
-            'item_profits' => ProfitVisibility::itemRows($items['rows']),
-            'item_profits_totals' => ProfitVisibility::itemRow($items['totals']),
-            'store_breakdown' => $stores,
+            'item_profits' => $advanced ? $items['rows'] : [],
+            'item_profits_totals' => $advanced ? $items['totals'] : [],
+            'store_breakdown' => $advanced ? $stores : [],
             'customer_sales' => $customers,
             'expenses_breakdown' => $expenses,
             'inventory_data' => $inventory,
             'treasury_data' => $treasury,
             'meta' => [
                 'list_limit' => self::COMPREHENSIVE_LIST_LIMIT,
-                'item_profits' => ['total' => $items['total'], 'shown' => count($items['rows'])],
+                // Sections emptied because the plan lacks reports.advanced (the UI shows an upgrade hint).
+                'locked_sections' => $advanced ? [] : ['item_profits', 'store_breakdown'],
+                'item_profits' => ['total' => $advanced ? $items['total'] : 0, 'shown' => $advanced ? count($items['rows']) : 0],
                 'inventory_items' => ['total' => $inventory['meta']['total'], 'shown' => count($inventory['items'])],
                 'treasury_ledger' => ['total' => $treasury['ledger_total'], 'shown' => count($treasury['ledger_entries'])],
             ],

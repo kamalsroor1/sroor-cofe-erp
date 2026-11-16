@@ -4,14 +4,21 @@ declare(strict_types=1);
 
 namespace Database\Seeders\Catalog;
 
+use App\Models\Plan;
+
 /**
  * ENTI-1.8: the approved plan ladder (central `plans`).
  *
  * Source: docs/03-architecture/pricing-model-recommendation-2026-10.md §4 (prices, limits),
  * §5 (feature matrix) and CTO W1 Q4 [2026-10-09]:
- * - monthly 449 / 899 / 1,799 and yearly = 10 months 4,490 / 8,990 / 17,990;
- * - founder prices (first 50 paying customers, 12 months, ENTI-1.7) 299 / 599 / 999 monthly
- *   and 2,990 / 5,990 / 9,990 yearly;
+ * - PRICE-2026-11 (owner decision 2026-11-15, supersedes 449 / 899 / 1,799 and founder
+ *   299 / 599 / 999): monthly 499 / 999 / 1,499 and yearly = 10 months 4,990 / 9,990 / 14,990;
+ * - founder schedule (first 50 paying customers, ENTI-1.7, config billing.founder), from the
+ *   first verified payment: months 1-12 founder 349 / 699 / 1,099 (yearly 3,490 / 6,990 /
+ *   10,990), months 13-24 transition 429 / 849 / 1,299 (yearly 4,290 / 8,490 / 12,990), then
+ *   the list price;
+ * - no promotion ships with the catalog (compare_at_* NULL): the owner switches one on from the
+ *   console with an end date (App\Support\Billing\PlanPromotion);
  * - every price EXCLUDES VAT (14% is added on the SaaS invoice, ENTI-3.2);
  * - NULL limit = unlimited (never a 999… sentinel);
  * - only the trial plan has trial days; paid plans have trial_days = 0, so a tenant an operator
@@ -23,7 +30,7 @@ namespace Database\Seeders\Catalog;
 final class PlanCatalog
 {
     /** Slugs owned by the catalog; any other plan is a super-admin custom plan and is never touched. */
-    public const SLUGS = ['free', 'basic', 'pro', 'enterprise'];
+    public const SLUGS = Plan::CATALOG_SLUGS;
 
     /**
      * Non-core features per plan (core features are on in every plan).
@@ -38,8 +45,10 @@ final class PlanCatalog
         'basic' => ['transfers.manage'],
         'pro' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs'],
         // custom.domain stays off until Phase 3 (Q-E9: automatic TLS per domain); pos.offline is
-        // off everywhere until its routes exist (end of Phase 2).
-        'enterprise' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs', 'api.access'],
+        // off everywhere until its routes exist (end of Phase 2). api.access is hidden and does
+        // nothing, so Enterprise no longer lists it (owner decision 2026-11-15); Enterprise is the
+        // service plan: premium support and (yearly) onboarding are included (AddonCatalog).
+        'enterprise' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs'],
     ];
 
     /**
@@ -51,6 +60,12 @@ final class PlanCatalog
             'price_yearly' => '0.000',
             'founder_price_monthly' => null,
             'founder_price_yearly' => null,
+            'founder_transition_price_monthly' => null,
+            'founder_transition_price_yearly' => null,
+            'compare_at_price_monthly' => null,
+            'compare_at_price_yearly' => null,
+            'promo_starts_at' => null,
+            'promo_ends_at' => null,
             'max_stores' => 1,
             'max_warehouses' => 1,
             'max_vans' => 0,
@@ -65,10 +80,16 @@ final class PlanCatalog
             'sort_order' => 1,
         ],
         'basic' => [
-            'price_monthly' => '449.000',
-            'price_yearly' => '4490.000',
-            'founder_price_monthly' => '299.000',
-            'founder_price_yearly' => '2990.000',
+            'price_monthly' => '499.000',
+            'price_yearly' => '4990.000',
+            'founder_price_monthly' => '349.000',
+            'founder_price_yearly' => '3490.000',
+            'founder_transition_price_monthly' => '429.000',
+            'founder_transition_price_yearly' => '4290.000',
+            'compare_at_price_monthly' => null,
+            'compare_at_price_yearly' => null,
+            'promo_starts_at' => null,
+            'promo_ends_at' => null,
             'max_stores' => 1,
             'max_warehouses' => 1,
             'max_vans' => 0,
@@ -83,10 +104,16 @@ final class PlanCatalog
             'sort_order' => 2,
         ],
         'pro' => [
-            'price_monthly' => '899.000',
-            'price_yearly' => '8990.000',
-            'founder_price_monthly' => '599.000',
-            'founder_price_yearly' => '5990.000',
+            'price_monthly' => '999.000',
+            'price_yearly' => '9990.000',
+            'founder_price_monthly' => '699.000',
+            'founder_price_yearly' => '6990.000',
+            'founder_transition_price_monthly' => '849.000',
+            'founder_transition_price_yearly' => '8490.000',
+            'compare_at_price_monthly' => null,
+            'compare_at_price_yearly' => null,
+            'promo_starts_at' => null,
+            'promo_ends_at' => null,
             'max_stores' => 3,
             'max_warehouses' => 2,
             'max_vans' => 1,
@@ -101,10 +128,16 @@ final class PlanCatalog
             'sort_order' => 3,
         ],
         'enterprise' => [
-            'price_monthly' => '1799.000',
-            'price_yearly' => '17990.000',
-            'founder_price_monthly' => '999.000',
-            'founder_price_yearly' => '9990.000',
+            'price_monthly' => '1499.000',
+            'price_yearly' => '14990.000',
+            'founder_price_monthly' => '1099.000',
+            'founder_price_yearly' => '10990.000',
+            'founder_transition_price_monthly' => '1299.000',
+            'founder_transition_price_yearly' => '12990.000',
+            'compare_at_price_monthly' => null,
+            'compare_at_price_yearly' => null,
+            'promo_starts_at' => null,
+            'promo_ends_at' => null,
             'max_stores' => 10,
             'max_warehouses' => 5,
             'max_vans' => 5,

@@ -218,4 +218,6 @@ return [
     'treasury_col_in' => 'داخل',
     'treasury_col_out' => 'خارج',
     'treasury_col_balance' => 'الرصيد الجاري',
+    'locked_title' => 'متاح في باقة Pro',
+    'locked_desc' => 'هذا التقرير ضمن التقارير المتقدمة. رقّ باقتك لتشاهد ربحية الأصناف والمقارنة بين الفروع.',
 ];

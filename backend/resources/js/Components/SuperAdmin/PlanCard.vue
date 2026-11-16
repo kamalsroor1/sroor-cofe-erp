@@ -21,16 +21,30 @@
             $t('super.plan_slug_label', { slug: plan.slug })
           }}</span>
         </div>
-        <span
-          class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border"
-          :class="
-            plan.is_active
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
-              : 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
-          "
-        >
-          {{ plan.is_active ? $t('super.plan_enabled') : $t('super.plan_disabled') }}
-        </span>
+        <div class="flex flex-col items-end gap-1">
+          <span
+            class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border"
+            :class="
+              plan.is_active
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                : 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
+            "
+          >
+            {{ plan.is_active ? $t('super.plan_enabled') : $t('super.plan_disabled') }}
+          </span>
+          <span
+            v-if="!plan.is_public"
+            class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border bg-slate-500/10 border-slate-500/30 text-slate-500 dark:text-slate-400"
+          >
+            {{ $t('super.plan_hidden_badge') }}
+          </span>
+          <span
+            v-if="plan.promotion"
+            class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400"
+          >
+            {{ $t('super.plan_promo_status_active') }}
+          </span>
+        </div>
       </div>
 
       <!-- Pricing Box -->
@@ -69,13 +83,14 @@
 
     <!-- Edit Button -->
     <BaseButton
+      v-if="canManage"
       type="button"
       variant="secondary"
       size="md"
       class="w-full font-bold shadow-xs"
       @click="$emit('edit', plan)"
     >
-      {{ $t('super.edit_prices_and_limits_btn') }}
+      {{ $t('super.edit_plan_btn') }}
     </BaseButton>
   </div>
 </template>
@@ -91,6 +106,7 @@ const { formatMoney, formatQty } = useFormatters();
 
 const props = defineProps({
   plan: { type: Object, required: true },
+  canManage: { type: Boolean, default: false },
 });
 
 const limitFields = computed(() => presentLimitFields(props.plan));

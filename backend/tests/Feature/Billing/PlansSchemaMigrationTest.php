@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\Concerns\SeedsCentralPlatformRoles;
+use Tests\Concerns\SeedsFeatureRegistry;
 use Tests\TenantTestCase;
 
 /**
@@ -24,6 +25,7 @@ use Tests\TenantTestCase;
 final class PlansSchemaMigrationTest extends TenantTestCase
 {
     use SeedsCentralPlatformRoles;
+    use SeedsFeatureRegistry;
 
     private const MIGRATION = 'migrations/2026_10_10_200100_update_plans_table_for_billing.php';
 
@@ -253,6 +255,7 @@ final class PlansSchemaMigrationTest extends TenantTestCase
 
     public function test_super_admin_can_set_limits_to_null_and_new_fields(): void
     {
+        $this->seedFeatureRegistry();
         $plan = Plan::query()->create($this->planAttributes(['slug' => 'editable']));
         $storedInvoices = $plan->max_invoices_per_month;
         $storedStorage = $plan->max_storage_mb;
@@ -283,9 +286,9 @@ final class PlansSchemaMigrationTest extends TenantTestCase
         $this->assertNull($fresh->max_users);
         $this->assertNull($fresh->max_stores);
         $this->assertNull($fresh->max_items);
-        // Owner decision: not-enforced limits are not editable from the console; stored values stay.
-        $this->assertSame($storedInvoices, $fresh->max_invoices_per_month);
-        $this->assertSame($storedStorage, $fresh->max_storage_mb);
+        // PLAN-ENF: the invoice and storage limits are enforced now, so the console writes them too.
+        $this->assertNull($fresh->max_invoices_per_month);
+        $this->assertNull($fresh->max_storage_mb);
         $this->assertNull($fresh->max_warehouses);
         $this->assertSame(5, $fresh->max_vans);
         $this->assertSame(14, $fresh->trial_days);
@@ -302,8 +305,9 @@ final class PlansSchemaMigrationTest extends TenantTestCase
         $this->assertIsArray($listed);
         $this->assertNull($listed['max_users'], 'PlanResource must not turn "unlimited" into 0.');
         $this->assertNull($listed['max_warehouses']);
-        $this->assertArrayNotHasKey('max_invoices_per_month', $listed, 'Not-enforced limits are hidden from the console.');
-        $this->assertArrayNotHasKey('max_storage_mb', $listed);
+        $this->assertArrayHasKey('max_invoices_per_month', $listed, 'Enforced limits are listed (PLAN-ENF).');
+        $this->assertNull($listed['max_invoices_per_month']);
+        $this->assertNull($listed['max_storage_mb']);
         $this->assertSame(5, $listed['max_vans']);
         $this->assertSame('1799.000', $listed['price_monthly']);
         $this->assertSame('999.000', $listed['founder_price_monthly']);
@@ -313,6 +317,7 @@ final class PlansSchemaMigrationTest extends TenantTestCase
 
     public function test_update_keeps_working_for_the_legacy_payload(): void
     {
+        $this->seedFeatureRegistry();
         $plan = Plan::query()->create($this->planAttributes(['slug' => 'legacy-payload']));
 
         $this->putJson("/api/v1/super-admin/plans/{$plan->id}", $this->updatePayload(), $this->superAdminHeaders())

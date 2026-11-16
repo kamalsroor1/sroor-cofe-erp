@@ -55,10 +55,11 @@ final class ApprovedPlanCatalogMigrationTest extends TenantTestCase
         $this->runMigration('up');
 
         $basic = Plan::query()->where('slug', 'basic')->firstOrFail();
-        $this->assertSame('449.000', $basic->price_monthly);
-        $this->assertSame('4490.000', $basic->price_yearly);
-        $this->assertSame('299.000', $basic->founder_price_monthly);
-        $this->assertSame('2990.000', $basic->founder_price_yearly);
+        // The migration writes the LIVE catalog (PlanCatalog): PRICE-2026-11 numbers.
+        $this->assertSame('499.000', $basic->price_monthly);
+        $this->assertSame('4990.000', $basic->price_yearly);
+        $this->assertSame('349.000', $basic->founder_price_monthly);
+        $this->assertSame('3490.000', $basic->founder_price_yearly);
         // PLAN-01 (applied by this migration through the live catalog): paid plans have no item cap.
         $this->assertNull($basic->max_items);
         $this->assertSame(1, $basic->max_warehouses);
@@ -66,14 +67,14 @@ final class ApprovedPlanCatalogMigrationTest extends TenantTestCase
         $this->assertSame('plans.plans.basic.name', $basic->name_key);
 
         $enterprise = Plan::query()->where('slug', 'enterprise')->firstOrFail();
-        $this->assertSame('1799.000', $enterprise->price_monthly);
-        $this->assertSame('9990.000', $enterprise->founder_price_yearly);
+        $this->assertSame('1499.000', $enterprise->price_monthly);
+        $this->assertSame('10990.000', $enterprise->founder_price_yearly);
         $this->assertSame(25, $enterprise->max_users);
         $this->assertSame(10, $enterprise->max_stores);
         $this->assertNull($enterprise->max_items);
 
         $pro = Plan::query()->where('slug', 'pro')->firstOrFail();
-        $this->assertSame('899.000', $pro->price_monthly);
+        $this->assertSame('999.000', $pro->price_monthly);
         $expected = PlanCatalog::features('pro') + ['custom.legacy' => true];
         $actual = $pro->features ?? [];
         ksort($expected);
@@ -154,7 +155,7 @@ final class ApprovedPlanCatalogMigrationTest extends TenantTestCase
         }
         $this->assertArrayHasKey('blender.access', Plan::query()->where('slug', 'enterprise')->firstOrFail()->features ?? []);
         $this->assertSame(['pos.access', 'blender.access'], $this->overrides('legacy-tenant'));
-        $this->assertSame('449.000', Plan::query()->where('slug', 'basic')->value('price_monthly'), 'A rollback never silently reprices plans.');
+        $this->assertSame('499.000', Plan::query()->where('slug', 'basic')->value('price_monthly'), 'A rollback never silently reprices plans.');
 
         // And up() again restores the approved state.
         $this->runMigration('up');

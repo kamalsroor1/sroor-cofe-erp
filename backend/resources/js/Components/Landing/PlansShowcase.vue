@@ -15,6 +15,7 @@ const props = defineProps({
   hasError: { type: Boolean, default: false },
   currency: { type: String, default: '' },
   founder: { type: Object, default: () => ({ available: false }) },
+  taxRate: { type: String, default: '0.000' },
   /** Feature bullets per card (0 = all). */
   maxFeatures: { type: Number, default: 3 },
   showDetails: { type: Boolean, default: false },
@@ -106,6 +107,7 @@ const featureLists = computed(() =>
         :billing="billing"
         :currency="currency"
         :founder="founder"
+        :tax-rate="taxRate"
         :show-details="showDetails"
         :max-features="maxFeatures"
         :max-limits="maxLimits"
@@ -121,6 +123,7 @@ const featureLists = computed(() =>
         :billing="billing"
         :currency="currency"
         :founder="founder"
+        :tax-rate="taxRate"
         :show-details="showDetails"
         :compact="isCompact"
         :max-features="maxFeatures"

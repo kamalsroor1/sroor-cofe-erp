@@ -1,109 +1,42 @@
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import api from '../Services/centralApi';
-import { useTrans } from './useTrans';
-import DarkSwal from '../helpers/alert';
-import { pickPlanLimits, preparePlanLimits } from '../helpers/planLimits';
+import { useCentralAuthStore } from '../stores/centralAuth';
+import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
+import { usePlanEditor } from './usePlanEditor';
 
 export function useSuperAdminPlans() {
-    const { t } = useTrans();
+    const centralAuth = useCentralAuthStore();
 
     const plans = ref([]);
-    const isLoading = ref(false);
-    const isSubmitting = ref(false);
-    const showEditModal = ref(false);
-    const selectedPlan = ref(null);
-    const editErrors = ref({});
+    const featuresRegistry = ref([]);
+    const addonsCatalog = ref([]);
+    // Platform VAT percent ('14.000'); '0.000' hides the VAT-inclusive hints in the plan editor.
+    const taxRate = ref('0.000');
+    const isLoading = ref(true);
+    const hasError = ref(false);
 
-    const editForm = ref({
-        name: '',
-        price_monthly: 0,
-        price_yearly: 0,
-        is_active: true,
-        is_popular: false,
-        features: {},
-    });
+    const canManage = computed(() => centralAuth.can(CENTRAL_PERMISSIONS.plansManage));
 
     const fetchPlans = async () => {
         isLoading.value = true;
+        hasError.value = false;
         try {
             const res = await api.get('/super-admin/plans');
-            plans.value = res.data?.data?.plans || res.data?.plans || [];
-        } catch (e) {
-            console.error('Failed to load plans:', e);
+            const data = res.data?.data || {};
+            plans.value = data.plans || [];
+            featuresRegistry.value = data.features_registry || [];
+            addonsCatalog.value = data.addons_catalog || [];
+            taxRate.value = data.tax_rate ?? '0.000';
+        } catch {
+            hasError.value = true;
         } finally {
             isLoading.value = false;
         }
     };
 
-    const openEditModal = (plan) => {
-        selectedPlan.value = plan;
-        editForm.value = {
-            name: plan.name,
-            price_monthly: plan.price_monthly,
-            price_yearly: plan.price_yearly,
-            // null = unlimited; never default it to 0.
-            ...pickPlanLimits(plan),
-            is_active: !!plan.is_active,
-            is_popular: !!plan.is_popular,
-            features: plan.features || {},
-        };
-        editErrors.value = {};
-        showEditModal.value = true;
-    };
+    const editor = usePlanEditor({ registry: featuresRegistry, catalog: addonsCatalog, taxRate, onSaved: fetchPlans });
 
-    const updateEditField = (field, val) => {
-        editForm.value[field] = val;
-        if (editErrors.value[field]) {
-            const { [field]: _removed, ...rest } = editErrors.value;
-            editErrors.value = rest;
-        }
-    };
+    onMounted(fetchPlans);
 
-    const submitEditPlan = async () => {
-        if (!selectedPlan.value) return;
-        const { values: limits, errors } = preparePlanLimits(editForm.value);
-        editErrors.value = errors;
-        if (Object.keys(errors).length) return;
-
-        isSubmitting.value = true;
-        try {
-            await api.put(`/super-admin/plans/${selectedPlan.value.id}`, { ...editForm.value, ...limits });
-            DarkSwal.fire({
-                icon: 'success',
-                title: t('common.success'),
-                text: t('super.plan_updated_success', { name: selectedPlan.value.name }),
-                timer: 1500,
-                showConfirmButton: false,
-            });
-            showEditModal.value = false;
-            fetchPlans();
-        } catch (e) {
-            editErrors.value = e.response?.data?.errors || {};
-            DarkSwal.fire({
-                icon: 'error',
-                title: t('common.error'),
-                text: e.response?.data?.message || t('common.error'),
-            });
-        } finally {
-            isSubmitting.value = false;
-        }
-    };
-
-    onMounted(() => {
-        fetchPlans();
-    });
-
-    return {
-        plans,
-        isLoading,
-        isSubmitting,
-        showEditModal,
-        selectedPlan,
-        editForm,
-        editErrors,
-        fetchPlans,
-        openEditModal,
-        updateEditField,
-        submitEditPlan,
-    };
+    return { plans, isLoading, hasError, canManage, fetchPlans, editor };
 }

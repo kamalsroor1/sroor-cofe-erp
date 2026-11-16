@@ -1,6 +1,7 @@
 import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { TrendingUp, Coffee, Store, Users, Receipt, Package, Building2, Scale } from 'lucide-vue-next';
 import api from '../Services/api';
+import { useAppConfigStore } from '../stores/appConfig';
 import { useTrans } from './useTrans';
 import { usePagedReport } from './usePagedReport';
 import { rangeIsReversed } from '../helpers/customerStatement';
@@ -15,6 +16,7 @@ import { addDays, businessToday, startOfMonth, startOfWeek, startOfYear } from '
 
 export function useReports() {
     const { t } = useTrans();
+    const appConfig = useAppConfigStore();
 
     const activeTab = ref('sales');
     const isLoading = ref(false);
@@ -31,10 +33,16 @@ export function useReports() {
         stock_filter: 'all',
     });
 
+    // Sections the server emptied because the plan lacks reports.advanced (item profits, store comparison).
+    const lockedSections = ref([]);
+    const advancedLocked = computed(() => !appConfig.hasFeature('reports.advanced'));
+    const itemsLocked = computed(() => advancedLocked.value || lockedSections.value.includes('item_profits'));
+    const storesLocked = computed(() => advancedLocked.value || lockedSections.value.includes('store_breakdown'));
+
     const tabs = computed(() => [
         { key: 'sales', label: t('reports.tab_sales'), icon: TrendingUp },
-        { key: 'items', label: t('reports.tab_items'), icon: Coffee },
-        { key: 'stores', label: t('reports.tab_stores'), icon: Store },
+        { key: 'items', label: t('reports.tab_items'), icon: Coffee, locked: itemsLocked.value },
+        { key: 'stores', label: t('reports.tab_stores'), icon: Store, locked: storesLocked.value },
         { key: 'customers', label: t('reports.tab_customers'), icon: Users },
         { key: 'expenses', label: t('reports.tab_expenses'), icon: Receipt },
         { key: 'inventory', label: t('reports.tab_inventory'), icon: Package },
@@ -68,10 +76,9 @@ export function useReports() {
     const storeBreakdown = ref([]);
     const customerSales = ref([]);
     const expensesBreakdown = ref([]);
+    // Cost/profit keys are absent (not zero) on plans without reports.advanced: the UI follows key presence.
     const inventoryData = ref({
-        stock_cost_valuation: 0,
         stock_selling_valuation: 0,
-        expected_stock_profit: 0,
         items: [],
         abc_data: null,
     });
@@ -116,7 +123,13 @@ export function useReports() {
         reportTotal(treasuryReport.meta.value, treasuryReport.loaded.value, listMeta.value.treasury_ledger?.total)
     );
 
-    watch(activeTab, (tab) => pagedByTab[tab]?.ensureLoaded());
+    // A locked tab never calls its endpoint (the server answers 403 and the global alert would fire).
+    const ensureTabLoaded = (tab) => {
+        if (tab === 'items' && itemsLocked.value) return;
+        pagedByTab[tab]?.ensureLoaded();
+    };
+
+    watch(activeTab, ensureTabLoaded);
 
     const setPeriod = (period) => {
         filters.period = period;
@@ -182,9 +195,10 @@ export function useReports() {
             inventoryData.value = d.inventory_data || {};
             treasuryData.value = d.treasury_data || {};
             listMeta.value = d.meta || {};
+            lockedSections.value = Array.isArray(d.meta?.locked_sections) ? d.meta.locked_sections : [];
 
             Object.values(pagedByTab).forEach((report) => report.invalidate());
-            pagedByTab[activeTab.value]?.ensureLoaded();
+            ensureTabLoaded(activeTab.value);
         } catch (e) {
             const message = e.userMessage || e.message || t('common.error_occurred');
             if (e?.response?.status === 422) {
@@ -234,6 +248,8 @@ export function useReports() {
         expensesBreakdown,
         inventoryData,
         treasuryData,
+        itemsLocked,
+        storesLocked,
         setPeriod,
         customDateChanged,
         fetchReportsData,

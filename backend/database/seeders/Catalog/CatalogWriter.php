@@ -249,7 +249,8 @@ final class CatalogWriter
             $keys = ['plan_id' => (int) $planId, 'addon_id' => (int) $addonId];
             $values = [
                 'is_available' => $row['is_available'],
-                'included_quantity' => 0,
+                'included_quantity' => $row['included_quantity'],
+                'included_billing_cycle' => $row['included_billing_cycle'],
                 'unit_price_override' => null,
                 'yearly_price_override' => null,
             ];

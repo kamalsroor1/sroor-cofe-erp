@@ -32,6 +32,17 @@ use Throwable;
  * period (ANY status: an operator who voided it decided), or another unpaid plan / renewal /
  * upgrade invoice (an operator already billed the shop by hand).
  *
+ * Price (PRICE-2026-11): the year-1 founder price when the plan has one for the cycle and a founder
+ * slot is free at issue time (FounderPricingService::hasAvailableSlot, an unlocked eligibility
+ * read), else the list price; the line records `price_step`. The slot itself is only claimed under
+ * lock when the first payment is verified (FounderPricingService::claim), exactly as for any other
+ * first invoice. If the slots run out between issue and payment, the invoice is still honoured at
+ * the founder price it was issued with (an issued invoice is never repriced, and the shop pays what
+ * it was told), the claim finds no slot, so the shop is NOT a founder: the subscription amount for
+ * that one paid term is the invoiced founder price and every later invoice is at list price. The
+ * exposure is bounded: at most (list - founder) for one cycle per invoice issued while the last
+ * slots were still free.
+ *
  * Idempotency: the invoice is a `plan` invoice whose period starts at the trial end, so
  * IssueSubscriptionInvoiceAction's own (tenant, type, period_start) check under the tenant row
  * lock refuses a second one even if two runs overlap, and `refuseWhenOpenPlanInvoice` re-checks
@@ -103,6 +114,9 @@ final class IssueTrialEndInvoicesAction
                 periodStart: $trialEndsAt,
                 issuedBy: null,
                 refuseWhenOpenPlanInvoice: true,
+                // A trial converting is the typical first payment: bill the founder price while a
+                // slot is free (an eligibility read; the slot is claimed only at the verified payment).
+                founderPriceIfAvailable: true,
             );
 
             try {

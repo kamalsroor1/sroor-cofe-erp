@@ -56,8 +56,14 @@ final class DashboardCache
 
     private const VIEWER_PATTERN = '/^[A-Za-z0-9_.-]{1,64}$/';
 
-    public static function key(?int $storeId, bool $canViewFinancials, bool $canViewCost, string $businessDate, string $locale, ?string $viewer = null): string
+    /**
+     * $canViewProfit (default: ProfitVisibility::allows() in the current tenant context) keeps a
+     * copy built while the plan had reports.advanced from being served after it lost it (and back).
+     */
+    public static function key(?int $storeId, bool $canViewFinancials, bool $canViewCost, string $businessDate, string $locale, ?string $viewer = null, ?bool $canViewProfit = null): string
     {
+        $canViewProfit ??= ProfitVisibility::allows();
+
         if ($viewer !== null && preg_match(self::VIEWER_PATTERN, $viewer) !== 1) {
             throw new InvalidArgumentException('DashboardCache viewer scope must match '.self::VIEWER_PATTERN.'.');
         }
@@ -68,6 +74,7 @@ final class DashboardCache
             's'.($storeId ?? 'all'),
             'f'.($canViewFinancials ? '1' : '0'),
             'c'.($canViewCost ? '1' : '0'),
+            'p'.($canViewProfit ? '1' : '0'),
             // '*' is outside VIEWER_PATTERN: no viewer token can ever equal the shared scope.
             'w'.($viewer ?? '*'),
             $businessDate,

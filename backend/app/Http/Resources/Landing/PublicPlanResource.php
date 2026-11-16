@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources\Landing;
 
+use App\Http\Resources\PlanResource;
 use App\Models\Plan;
 use App\Models\PlanFeature;
 use Illuminate\Http\Request;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Lang;
 /**
  * PRD-07: one plan of the public pricing page. Allowlist only (no ids, no is_active, no
  * tenant counts). Money is a "0.000" string; every limit is int|null where null = unlimited.
+ * Founder and transition prices are null once no founder slot is left. The `promotion` key is
+ * NOT produced here: GetPublicPlansAction adds it at response time (never from the cache).
  *
  * @property Plan $resource
  */
@@ -49,6 +52,9 @@ final class PublicPlanResource extends JsonResource
             'price_yearly' => $plan->price_yearly,
             'founder_price_monthly' => $this->founderPrice($plan->founder_price_monthly),
             'founder_price_yearly' => $this->founderPrice($plan->founder_price_yearly),
+            // PRICE-2026-11: founder months 13-24, shown with the founder price (same rule).
+            'founder_transition_price_monthly' => $this->founderPrice($plan->founder_transition_price_monthly),
+            'founder_transition_price_yearly' => $this->founderPrice($plan->founder_transition_price_yearly),
             'limits' => [
                 'users' => $plan->max_users,
                 'stores' => $plan->max_stores,
@@ -59,6 +65,9 @@ final class PublicPlanResource extends JsonResource
                 'storage_mb' => $plan->max_storage_mb,
             ],
             'features' => $this->features($plan),
+            // PLAN-EDIT: services the plan includes (e.g. Enterprise: premium support; onboarding
+            // with billing_cycle 'yearly' = only with a yearly subscription).
+            'included_addons' => PlanResource::includedAddons($plan, publicOnly: true),
         ];
     }
 

@@ -8,6 +8,7 @@ use App\Enums\Billing\BillingCycle;
 use App\Enums\Billing\BillingInvoiceType;
 use App\Enums\Billing\BillingPaymentMethod;
 use App\Enums\Billing\BillingPaymentStatus;
+use App\Enums\Billing\FounderPriceStep;
 use App\Enums\Billing\SubscriptionStatus;
 use App\Exceptions\Billing\FounderPricingException;
 use App\Models\BillingInvoice;
@@ -141,10 +142,11 @@ final class FounderPricingServiceTest extends TenantTestCase
         $this->assertSame(1, $this->service()->claimedSlots());
     }
 
-    public function test_a_renewal_after_the_window_gets_the_regular_price(): void
+    public function test_a_renewal_after_the_whole_schedule_gets_the_regular_price(): void
     {
-        $verifiedAt = Carbon::now()->startOfSecond()->subMonths(13);
-        [$tenant, $first, $firstPayment] = $this->paidTenant(verifiedAt: $verifiedAt);
+        // PRICE-2026-11: 12 founder months + 12 transition months, then the list price.
+        $verifiedAt = Carbon::now()->startOfSecond()->subMonths(25);
+        [$tenant, $first, $firstPayment] = $this->paidTenant(verifiedAt: $verifiedAt, planAttributes: ['founder_transition_price_monthly' => '379.000']);
         $this->assertTrue($this->inCentralTransaction(fn (): bool => $this->service()->claim($first, $firstPayment)));
 
         [$renewal, $renewalPayment] = $this->renewal($tenant, $first->plan_id);
@@ -153,6 +155,24 @@ final class FounderPricingServiceTest extends TenantTestCase
         $this->assertFalse($renewal->refresh()->is_founder);
         $this->assertSame(1, $this->service()->claimedSlots());
         $this->assertSame('449.000', $this->service()->planPrice($renewal));
+    }
+
+    public function test_a_renewal_in_the_transition_year_keeps_the_schedule_at_the_transition_price(): void
+    {
+        $verifiedAt = Carbon::now()->startOfSecond()->subMonths(13);
+        [$tenant, $first, $firstPayment] = $this->paidTenant(verifiedAt: $verifiedAt, planAttributes: ['founder_transition_price_monthly' => '379.000']);
+        $this->assertTrue($this->inCentralTransaction(fn (): bool => $this->service()->claim($first, $firstPayment)));
+
+        [$renewal, $renewalPayment] = $this->renewal($tenant, $first->plan_id);
+
+        $this->assertTrue($this->inCentralTransaction(fn (): bool => $this->service()->claim($renewal, $renewalPayment)));
+        $renewal->refresh();
+        $this->assertTrue($renewal->is_founder);
+        $this->assertTrue($renewal->founder_price_until?->equalTo($verifiedAt->copy()->addMonthsNoOverflow(12)), 'The schedule runs from the first payment.');
+        $this->assertSame(1, $this->service()->claimedSlots());
+        $this->assertSame(FounderPriceStep::Transition, $this->service()->priceStep($renewal));
+        $this->assertFalse($this->service()->isFounderPriceActive($renewal));
+        $this->assertSame('379.000', $this->service()->planPrice($renewal));
     }
 
     public function test_only_the_first_payment_can_claim_a_slot(): void

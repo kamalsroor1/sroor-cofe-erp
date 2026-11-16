@@ -80,7 +80,10 @@ const logo = computed(() => appConfig.branding?.logo_light || appConfig.branding
       </thead>
       <tbody>
         <tr v-for="(line, index) in invoice.lines" :key="index" class="border-b border-slate-200">
-          <td class="p-2 font-bold">{{ line.description }}</td>
+          <td class="p-2 font-bold">
+            {{ line.description }}
+            <span v-if="line.price_step">({{ line.price_step.label }})</span>
+          </td>
           <td class="p-2">{{ line.quantity }}</td>
           <td class="p-2">{{ formatMoney(line.unit_price) }}</td>
           <td class="p-2 font-black">{{ formatMoney(line.amount) }}</td>

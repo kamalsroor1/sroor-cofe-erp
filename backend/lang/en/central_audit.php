@@ -25,6 +25,7 @@ return [
         'tenant_deleted' => 'Shop deleted',
         'subscription_activated' => 'Subscription activated',
         'plan_updated' => 'Plan updated',
+        'plan_created' => 'Plan created',
         'two_factor_confirmed' => 'Two-factor confirmed',
         'two_factor_challenge_failed' => 'Two-factor challenge failed',
         'recovery_code_used' => 'Recovery code used',

@@ -4,6 +4,7 @@ import DashboardSectionCard from '../../Common/DashboardSectionCard.vue';
 import ErrorState from '../../Common/ErrorState.vue';
 import EmptyState from '../../Common/EmptyState.vue';
 import Skeleton from '../../Common/Skeletons/Skeleton.vue';
+import SubscriptionPriceSchedule from '../../Billing/SubscriptionPriceSchedule.vue';
 import TenantSubscriptionSummary from './TenantSubscriptionSummary.vue';
 import TenantInvoicesTable from './TenantInvoicesTable.vue';
 import IssueInvoiceModal from './IssueInvoiceModal.vue';
@@ -66,6 +67,7 @@ const record = useRecordPayment(fetchBilling);
 
     <div v-else class="space-y-5">
       <TenantSubscriptionSummary :subscription="subscription" :days-left="daysLeft" />
+      <SubscriptionPriceSchedule :schedule="subscription?.price_schedule" />
 
       <div class="flex items-center justify-between gap-3">
         <h3 class="text-sm font-black text-slate-900 dark:text-white">

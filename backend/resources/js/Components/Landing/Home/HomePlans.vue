@@ -3,6 +3,7 @@ import { ArrowLeft } from 'lucide-vue-next';
 import BillingToggle from '../BillingToggle.vue';
 import PlansShowcase from '../PlansShowcase.vue';
 import SectionTitle from '../SectionTitle.vue';
+import { hasVat } from '../../../helpers/landingCatalog';
 
 defineProps({
   plans: { type: Array, default: () => [] },
@@ -11,6 +12,7 @@ defineProps({
   hasError: { type: Boolean, default: false },
   currency: { type: String, default: '' },
   founder: { type: Object, default: () => ({ available: false }) },
+  taxRate: { type: String, default: '0.000' },
   pricesExcludeVat: { type: Boolean, default: false },
 });
 
@@ -46,12 +48,13 @@ defineEmits(['update:billing', 'retry']);
           :has-error="hasError"
           :currency="currency"
           :founder="founder"
+          :tax-rate="taxRate"
           @retry="$emit('retry')"
         />
       </div>
 
       <div class="flex flex-col items-center gap-2 text-center">
-        <p v-if="pricesExcludeVat && plans.length" class="text-sm text-mk-faint">
+        <p v-if="pricesExcludeVat && hasVat(taxRate) && plans.length" class="text-sm text-mk-faint">
           {{ $t('landing.prices_exclude_vat') }}
         </p>
         <router-link

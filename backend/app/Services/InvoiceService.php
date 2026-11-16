@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Actions\Customers\ResolveWalkInCustomerAction;
 use App\Actions\Invoices\ReverseInvoicePaymentsAction;
+use App\Enums\LimitResource;
 use App\Enums\PaymentMethod;
 use App\Exceptions\BusinessRuleException;
 use App\Models\Customer;
@@ -14,6 +15,8 @@ use App\Models\Payment;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\Entitlements\MonthlyInvoiceCounter;
+use App\Services\Entitlements\PlanEnforcer;
 use App\Services\Invoices\InvoiceCancelGuard;
 use App\Services\Pos\SaleShiftGuard;
 use App\Services\Pricing\SaleDiscountGuard;
@@ -34,6 +37,8 @@ class InvoiceService
         protected AuditLogService $auditLogService,
         protected ActivityLogService $activityLogService,
         protected TenantClock $tenantClock,
+        protected PlanEnforcer $planEnforcer,
+        protected MonthlyInvoiceCounter $monthlyInvoiceCounter,
     ) {}
 
     /**
@@ -184,6 +189,18 @@ class InvoiceService
 
             // POS-02: after the idempotency replay, so an offline retry of a saved invoice replays.
             $this->assertWalkInPaidInFull($customer, (string) ($data['payment_type'] ?? 'cash'));
+
+            // PLAN-ENF: the monthly sales-invoice cap (max_invoices_per_month). Every creator of a sales
+            // invoice (POST /invoices, POS checkout, mixes invoice) ends here. After the replay above, so
+            // an offline retry of a saved invoice still replays at the cap. The tenant mutex is the
+            // oldest `stores` row: lock-order step 4 (branch rows, lowest id first), after the
+            // customer and the stock rows and before any number is allocated. On a capped plan this
+            // serialises the tenant's sales on that row until commit (accepted for the trial tier);
+            // unlimited plans return before taking the lock and keep selling concurrently.
+            $this->planEnforcer->assertWithinLimit(
+                LimitResource::InvoicesMonth,
+                fn (): int => $this->monthlyInvoiceCounter->count(),
+            );
 
             $invoiceNumber = $data['invoice_number'] ?? $this->generateUniqueNumber($storeId);
 

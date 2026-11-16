@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\Concerns\SeedsCentralPlatformRoles;
+use Tests\Concerns\SeedsFeatureRegistry;
 use Tests\Support\FakeReleaseBinaries;
 use Tests\TenantTestCase;
 
@@ -25,6 +26,7 @@ use Tests\TenantTestCase;
 final class SuperAdminControlPlaneAuditTest extends TenantTestCase
 {
     use SeedsCentralPlatformRoles;
+    use SeedsFeatureRegistry;
 
     private const DB_PASSWORD = 'fixture-db-password-not-a-secret';
 
@@ -132,6 +134,9 @@ final class SuperAdminControlPlaneAuditTest extends TenantTestCase
             'features' => [],
         ]);
 
+        // PLAN-EDIT: feature keys are validated against the registry.
+        $this->seedFeatureRegistry();
+
         $this->putJson('/api/v1/super-admin/plans/'.$plan->id, [
             'name' => 'باقة التجربة المعدلة',
             'price_monthly' => '120.000',
@@ -142,7 +147,7 @@ final class SuperAdminControlPlaneAuditTest extends TenantTestCase
             'max_invoices_per_month' => 100,
             'is_active' => true,
             'is_popular' => false,
-            'features' => ['pos_offline' => true],
+            'features' => ['transfers.manage' => true],
         ], $this->headers)->assertOk();
 
         $log = $this->auditRow(CentralAuditEvent::PlanUpdated);

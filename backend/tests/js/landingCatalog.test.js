@@ -9,7 +9,11 @@ import {
     distinctFirstFeatures,
     groupCatalogFeatures,
     mergeCatalogFeatures,
+    founderSchedule,
     planDisplayPrice,
+    priceWithVat,
+    hasVat,
+    vatRateLabel,
     yearlySavingPercent,
 } from '../../resources/js/helpers/landingCatalog.js';
 
@@ -91,4 +95,46 @@ test('the mobile comparison starts with the popular plan and its cheaper neighbo
     plans[0].is_popular = true;
     assert.deepEqual(defaultComparePair(plans), ['free', 'basic']);
     assert.deepEqual(defaultComparePair(plans.slice(0, 1)), ['free']);
+});
+
+test('promotion shows a struck compare-at price only when it is really higher', () => {
+    const plan = {
+        price_monthly: '500.000',
+        price_yearly: '5000.000',
+        promotion: { compare_at_monthly: '625.000', compare_at_yearly: '6000.000', ends_at: '2026-12-31T00:00:00Z' },
+    };
+    const monthly = planDisplayPrice(plan, 'monthly');
+    assert.equal(monthly.compareAt, '625.000');
+    assert.equal(monthly.discountPercent, 20);
+    assert.equal(planDisplayPrice(plan, 'yearly').discountPercent, 16);
+    assert.equal(planDisplayPrice({ ...plan, promotion: null }).compareAt, null);
+    const lower = { ...plan, promotion: { ...plan.promotion, compare_at_monthly: '400.000' } };
+    assert.equal(planDisplayPrice(lower, 'monthly').hasPromo, false);
+});
+
+test('VAT is added half-up and the founder schedule lists three steps', () => {
+    assert.equal(priceWithVat('500.000', '14.000'), '570.000');
+    assert.equal(priceWithVat('500.000', '10.500'), '552.500');
+    assert.equal(priceWithVat('500.000', '0.000'), '500.000');
+    assert.equal(hasVat('14.000'), true);
+    assert.equal(hasVat('0.000'), false);
+    assert.equal(hasVat(undefined), false);
+    assert.equal(vatRateLabel('14.000'), '14');
+    assert.equal(vatRateLabel('10.500'), '10.5');
+    assert.equal(vatRateLabel('0.000'), '0');
+    const plan = {
+        price_monthly: '500.000',
+        founder_price_monthly: '300.000',
+        founder_transition_price_monthly: '400.000',
+    };
+    const steps = founderSchedule(plan, 'monthly', { available: true, months: 12, transition_months: 12 });
+    assert.deepEqual(
+        steps.map((s) => [s.step, s.price, s.from, s.to]),
+        [
+            ['founder', '300.000', 1, 12],
+            ['transition', '400.000', 13, 24],
+            ['list', '500.000', 25, null],
+        ]
+    );
+    assert.deepEqual(founderSchedule(plan, 'monthly', { available: false }), []);
 });

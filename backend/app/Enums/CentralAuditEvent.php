@@ -45,6 +45,7 @@ enum CentralAuditEvent: string
     // Billing / plans (ENTI-3.x)
     case SubscriptionActivated = 'subscription_activated';
     case PlanUpdated = 'plan_updated';
+    case PlanCreated = 'plan_created';
 
     // W2 (identity, lifecycle, provisioning, platform settings, backups, entitlements)
     case TwoFactorConfirmed = 'two_factor_confirmed';

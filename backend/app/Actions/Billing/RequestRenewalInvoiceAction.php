@@ -14,8 +14,11 @@ use App\Models\Tenant;
 /**
  * PRD-04: a shop asks for its own renewal invoice (tenant context, `billing.manage`).
  *
- * Always the tenant's CURRENT plan at the chosen cycle (monthly | yearly), no discount, no founder
- * price, issued_by null. Plan changes are not self-service: the shop contacts support.
+ * Always the tenant's CURRENT plan at the chosen cycle (monthly | yearly), no discount, issued_by
+ * null. A founder is billed the step of its schedule in force at the period start (founder,
+ * transition or list, PRICE-2026-11): IssueSubscriptionInvoiceAction applies it on its own; the
+ * shop can never claim a NEW founder slot from here (useFounderPrice false). Plan changes are not
+ * self-service: the shop contacts support.
  * Idempotent per period: when a non-void renewal invoice for this period already exists the
  * underlying IssueSubscriptionInvoiceAction answers BillingException 409 (billing.invoice_duplicate)
  * whose details name the existing invoice. SELL-06: the same 409 code (details.open_invoice = true)

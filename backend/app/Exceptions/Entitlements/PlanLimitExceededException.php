@@ -44,7 +44,11 @@ final class PlanLimitExceededException extends HttpException
             ? $resource
             : (string) __('subscription.limit_resources.other');
 
-        return new self($limit, $max, (string) __('subscription.errors.limit_reached', [
+        // PLAN-ENF: a resource may carry its own wording (storage in MB, the monthly reset).
+        $specificKey = 'subscription.errors.limit_reached_'.$limit;
+        $messageKey = __($specificKey) !== $specificKey ? $specificKey : 'subscription.errors.limit_reached';
+
+        return new self($limit, $max, (string) __($messageKey, [
             'resource' => $label,
             'max' => (string) $max,
         ]));

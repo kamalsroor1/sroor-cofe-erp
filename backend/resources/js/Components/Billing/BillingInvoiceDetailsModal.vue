@@ -47,7 +47,13 @@ const { formatMoney, formatDate, formatDateTime } = useFormatters();
             <tr v-for="(line, index) in invoice.lines" :key="index">
               <td class="p-2.5 font-bold text-slate-800 dark:text-slate-200">
                 {{ line.description }}
-                <span v-if="line.founder" class="ms-1 text-amber-600 dark:text-amber-400"
+                <span
+                  v-if="line.price_step"
+                  class="ms-1 text-amber-600 dark:text-amber-400"
+                  data-testid="line-price-step"
+                  >({{ line.price_step.label }})</span
+                >
+                <span v-else-if="line.founder" class="ms-1 text-amber-600 dark:text-amber-400"
                   >({{ $t('subscription.billing.details.founder') }})</span
                 >
               </td>

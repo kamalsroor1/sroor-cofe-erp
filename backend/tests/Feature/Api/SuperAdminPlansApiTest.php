@@ -6,6 +6,7 @@ namespace Tests\Feature\Api;
 
 use App\Models\Plan;
 use App\Models\PlanFeature;
+use Database\Seeders\PlansAndFeaturesSeeder;
 use Illuminate\Support\Str;
 use Tests\Concerns\SeedsCentralPlatformRoles;
 use Tests\TenantTestCase;
@@ -29,6 +30,8 @@ final class SuperAdminPlansApiTest extends TenantTestCase
         parent::setUp();
 
         $this->seedCentralPlatformRoles();
+        // PLAN-EDIT: feature keys are validated against the registry (plan_features).
+        $this->seed(PlansAndFeaturesSeeder::class);
 
         $this->plan = Plan::query()->create([
             'name' => 'باقة المحامص الاحترافية',
@@ -42,7 +45,7 @@ final class SuperAdminPlansApiTest extends TenantTestCase
             'is_active' => true,
             'is_popular' => true,
             'sort_order' => 1,
-            'features' => ['coffee_blender' => true, 'smart_reorder' => true],
+            'features' => ['mixes.manage' => true, 'purchases.reorder' => true],
         ]);
     }
 
@@ -62,7 +65,7 @@ final class SuperAdminPlansApiTest extends TenantTestCase
             'max_invoices_per_month' => 10000,
             'is_active' => true,
             'is_popular' => true,
-            'features' => ['coffee_blender' => true, 'smart_reorder' => true, 'pos_offline' => true],
+            'features' => ['mixes.manage' => true, 'purchases.reorder' => true, 'transfers.manage' => true],
         ], $overrides);
     }
 
@@ -88,7 +91,7 @@ final class SuperAdminPlansApiTest extends TenantTestCase
         // JSON floats leave the request as exact 3-decimal strings (golden rule 1).
         $this->assertSame('750.000', $fresh->price_monthly);
         $this->assertSame('7500.000', $fresh->price_yearly);
-        $this->assertTrue($fresh->features['pos_offline']);
+        $this->assertTrue($fresh->features['transfers.manage']);
     }
 
     public function test_update_plan_validates_input(): void
@@ -105,31 +108,52 @@ final class SuperAdminPlansApiTest extends TenantTestCase
         $this->assertSame('باقة المحامص الاحترافية', Plan::query()->findOrFail($this->plan->id)->name);
     }
 
-    public function test_not_enforced_limits_are_hidden_from_the_console_and_their_stored_values_kept(): void
+    public function test_the_invoice_and_storage_limits_are_listed_and_editable(): void
     {
+        // PLAN-ENF: max_invoices_per_month / max_storage_mb are enforced now, so the console shows
+        // and writes them like every other limit (null = unlimited).
         $headers = $this->steppedUpCentralHeaders($this->centralSuperAdmin());
         $this->plan->update(['max_storage_mb' => 2048]);
 
         $listed = collect($this->getJson('/api/v1/super-admin/plans', $headers)->assertOk()->json('data.plans'))
             ->firstWhere('id', $this->plan->id);
         $this->assertIsArray($listed);
-        $this->assertArrayNotHasKey('max_invoices_per_month', $listed);
-        $this->assertArrayNotHasKey('max_storage_mb', $listed);
-        $this->assertSame(10, $listed['max_users'], 'Enforced limits are still listed.');
+        $this->assertSame(5000, $listed['max_invoices_per_month']);
+        $this->assertSame(2048, $listed['max_storage_mb']);
 
-        // A client that still sends them (older form) neither fails nor changes the stored value.
         $this->putJson("/api/v1/super-admin/plans/{$this->plan->id}", $this->updatePayload([
             'max_invoices_per_month' => 10000, 'max_storage_mb' => 1,
-        ]), $headers)->assertOk();
+        ]), $headers)
+            ->assertOk()
+            ->assertJsonPath('data.max_invoices_per_month', 10000)
+            ->assertJsonPath('data.max_storage_mb', 1);
         $fresh = Plan::query()->findOrFail($this->plan->id);
-        $this->assertSame(5000, $fresh->max_invoices_per_month);
-        $this->assertSame(2048, $fresh->max_storage_mb);
-        $this->assertSame(20, $fresh->max_users);
+        $this->assertSame(10000, $fresh->max_invoices_per_month);
+        $this->assertSame(1, $fresh->max_storage_mb);
 
-        // The new form no longer sends max_invoices_per_month at all.
+        // null = unlimited.
+        $this->putJson("/api/v1/super-admin/plans/{$this->plan->id}", $this->updatePayload([
+            'max_invoices_per_month' => null, 'max_storage_mb' => null,
+        ]), $headers)->assertOk();
+        $fresh->refresh();
+        $this->assertNull($fresh->max_invoices_per_month);
+        $this->assertNull($fresh->max_storage_mb);
+
+        // An omitted limit is left untouched on update.
+        $this->plan->update(['max_invoices_per_month' => 300, 'max_storage_mb' => 500]);
         $payload = $this->updatePayload();
-        unset($payload['max_invoices_per_month']);
+        unset($payload['max_invoices_per_month'], $payload['max_storage_mb']);
         $this->putJson("/api/v1/super-admin/plans/{$this->plan->id}", $payload, $headers)->assertOk();
+        $fresh->refresh();
+        $this->assertSame(300, $fresh->max_invoices_per_month);
+        $this->assertSame(500, $fresh->max_storage_mb);
+
+        // Integer >= 1 (0 would lock the shop out; use null for unlimited).
+        $this->putJson("/api/v1/super-admin/plans/{$this->plan->id}", $this->updatePayload([
+            'max_invoices_per_month' => 0, 'max_storage_mb' => 'lots',
+        ]), $headers)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['max_invoices_per_month', 'max_storage_mb']);
     }
 
     public function test_hidden_features_are_excluded_from_the_console_catalog_and_kept_on_plans(): void

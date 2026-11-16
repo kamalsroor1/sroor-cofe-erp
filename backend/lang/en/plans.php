@@ -101,11 +101,11 @@ return [
         ],
         'reports_basic' => [
             'name' => 'Basic reports',
-            'description' => 'Daily sales summary and shift reports.',
+            'description' => 'Daily sales summary and shift reports with a single gross-profit figure.',
         ],
         'reports_advanced' => [
-            'name' => 'Profit reports',
-            'description' => 'Net profit, margin, cost of sales and best-selling items.',
+            'name' => 'Detailed profit reports',
+            'description' => 'Detailed profit, branch comparison, item profitability and the profit and loss statement.',
         ],
         'reports_export' => [
             'name' => 'Report export',

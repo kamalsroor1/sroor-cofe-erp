@@ -87,3 +87,13 @@ export const lastRejection = (invoice) => {
     const last = payments[payments.length - 1];
     return last && last.status?.value === 'rejected' ? last.rejection_reason : null;
 };
+
+const MB_PER_GB = 1024;
+
+/** Storage in MB -> { value, unit: 'mb' | 'gb' } (GB from 1024 MB up, at most 2 decimals). */
+export const storageParts = (mb) => {
+    const value = Number(mb);
+    if (!Number.isFinite(value)) return { value: 0, unit: 'mb' };
+    if (value >= MB_PER_GB) return { value: Math.round((value / MB_PER_GB) * 100) / 100, unit: 'gb' };
+    return { value, unit: 'mb' };
+};

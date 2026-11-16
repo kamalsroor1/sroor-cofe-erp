@@ -12,7 +12,9 @@ use App\Models\PlanFeature;
 use App\Models\Subscription;
 use App\Services\Billing\FounderPricingService;
 use App\Services\Branding\PlatformBranding;
+use App\Support\Billing\PlanPromotion;
 use App\Support\PublicCatalogCache;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Throwable;
@@ -23,9 +25,17 @@ use Throwable;
  * brand all come from the database / platform settings. Hidden features and hidden
  * add-ons (is_public = false) never appear. Cached for a few minutes per locale and
  * invalidated by PublicCatalogObserver.
+ *
+ * PRICE-2026-11: each plan carries `promotion` ({compare_at_monthly, compare_at_yearly, ends_at}
+ * or null). The cache stores only the promotion WINDOW of each plan (internal key, stripped
+ * before the response); whether it runs is decided at response time on every request, so a
+ * cached payload can never show an offer before its start or after its end.
  */
 final class GetPublicPlansAction
 {
+    /** Internal payload key holding the promotion windows (code => PlanPromotion::toCacheArray()). */
+    private const PROMOTIONS_KEY = '_promotions';
+
     public function __construct(
         private readonly FounderPricingService $founderPricing,
         private readonly PlatformBranding $branding,
@@ -36,7 +46,35 @@ final class GetPublicPlansAction
      */
     public function execute(string $locale): array
     {
-        return PublicCatalogCache::remember($locale, fn (): array => $this->build());
+        $payload = PublicCatalogCache::remember($locale, fn (): array => $this->build());
+
+        // Review M4: the VAT rate the SaaS invoices really use (platform setting billing_tax_rate,
+        // percent string), read per request so a settings change shows at once.
+        $payload['tax_rate'] = $this->branding->get()->billingTaxRate;
+
+        return $this->withPromotions($payload, CarbonImmutable::now());
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function withPromotions(array $payload, CarbonImmutable $now): array
+    {
+        $windows = is_array($payload[self::PROMOTIONS_KEY] ?? null) ? $payload[self::PROMOTIONS_KEY] : [];
+        unset($payload[self::PROMOTIONS_KEY]);
+
+        $plans = [];
+        foreach ((array) ($payload['plans'] ?? []) as $plan) {
+            $window = is_array($plan) ? ($windows[$plan['code'] ?? ''] ?? null) : null;
+            $promotion = is_array($window) ? PlanPromotion::fromCacheArray($window) : null;
+
+            $plan['promotion'] = $promotion !== null && $promotion->isActiveAt($now) ? $promotion->toArray() : null;
+            $plans[] = $plan;
+        }
+        $payload['plans'] = $plans;
+
+        return $payload;
     }
 
     /**
@@ -51,6 +89,7 @@ final class GetPublicPlansAction
         $hiddenKeys = PlanFeature::query()->where('is_public', false)->pluck('key')->all();
 
         $plans = Plan::query()
+            ->with('addons')
             ->where('is_active', true)
             ->where('is_public', true)
             ->orderBy('sort_order')
@@ -83,11 +122,17 @@ final class GetPublicPlansAction
                 ->map(fn (Addon $addon): array => (new PublicAddonResource($addon, $this->addonPlans($addon, $publicCodes)))->resolve(new Request))
                 ->values()
                 ->all(),
+            self::PROMOTIONS_KEY => $plans
+                ->mapWithKeys(fn (Plan $plan): array => [$plan->slug => PlanPromotion::fromPlan($plan)?->toCacheArray()])
+                ->filter()
+                ->all(),
         ];
     }
 
     /**
-     * @return array{available: bool, slots_left: int|null, months: int|null}
+     * Founder offer counters only (never anything about tenants).
+     *
+     * @return array{available: bool, slots_total: int|null, slots_left: int|null, months: int|null, transition_months: int|null}
      */
     private function founderState(): array
     {
@@ -96,12 +141,14 @@ final class GetPublicPlansAction
 
             return [
                 'available' => $left > 0,
+                'slots_total' => $this->founderPricing->totalSlots(),
                 'slots_left' => $left,
                 'months' => $this->founderPricing->durationMonths(),
+                'transition_months' => $this->founderPricing->transitionMonths(),
             ];
         } catch (Throwable) {
             // Misconfigured slots or no counter table: show no founder offer rather than fail the page.
-            return ['available' => false, 'slots_left' => null, 'months' => null];
+            return ['available' => false, 'slots_total' => null, 'slots_left' => null, 'months' => null, 'transition_months' => null];
         }
     }
 

@@ -16,11 +16,13 @@
     >
       <DynamicIcon :name="t.icon" class="w-4 h-4 shrink-0" />
       <span>{{ t.label }}</span>
+      <Lock v-if="t.locked" class="w-3.5 h-3.5 shrink-0 opacity-70" aria-hidden="true" />
     </button>
   </div>
 </template>
 
 <script setup>
+import { Lock } from 'lucide-vue-next';
 import DynamicIcon from '../Common/DynamicIcon.vue';
 
 defineProps({

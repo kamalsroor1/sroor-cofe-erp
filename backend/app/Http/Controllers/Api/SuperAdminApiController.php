@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Actions\Plans\GetSuperAdminPlansDataAction;
-use App\Actions\Plans\UpdatePlanAction;
 use App\Actions\Tenants\GetTenantDetailsAction;
 use App\Actions\Tenants\GetTenantsIndexDataAction;
 use App\Actions\Tenants\OverrideTenantFeatureAction;
@@ -21,7 +19,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\OverrideTenantFeatureRequest;
 use App\Http\Requests\StoreTenantRequest;
 use App\Http\Requests\ToggleTenantStatusRequest;
-use App\Http\Requests\UpdatePlanRequest;
 use App\Http\Requests\UpdateTenantDatabaseConfigRequest;
 use App\Http\Resources\PlanResource;
 use App\Http\Resources\TenantResource;
@@ -53,8 +50,6 @@ final class SuperAdminApiController extends Controller
         private readonly ProvisionTenantAction $provisionTenantAction,
         private readonly ToggleTenantStatusAction $toggleStatusAction,
         private readonly OverrideTenantFeatureAction $overrideFeatureAction,
-        private readonly GetSuperAdminPlansDataAction $getPlansDataAction,
-        private readonly UpdatePlanAction $updatePlanAction,
         private readonly CentralAuditLogger $auditLogger,
     ) {}
 
@@ -236,43 +231,6 @@ final class SuperAdminApiController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('super.db_config_updated_success'),
-        ]);
-    }
-
-    /**
-     * Plans and Pricing Management
-     */
-    public function plans(): JsonResponse
-    {
-        $data = $this->getPlansDataAction->execute();
-
-        return response()->json([
-            'success' => true,
-            'data' => $data,
-        ]);
-    }
-
-    /**
-     * Update Plan Details & Features
-     */
-    public function updatePlan(UpdatePlanRequest $request, int $id): JsonResponse
-    {
-        $plan = Plan::query()->find($id);
-        abort_unless($plan instanceof Plan, 404, __('super.plan_not_found'));
-
-        $validated = $request->validated();
-        $this->updatePlanAction->execute($plan, $validated);
-
-        $this->auditLogger->record(
-            CentralAuditEvent::PlanUpdated,
-            ['changed' => array_keys($validated), 'values' => $validated],
-            actor: $this->operator($request),
-            subject: $plan,
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => __('super.plan_updated_success', ['name' => $plan->name]),
         ]);
     }
 

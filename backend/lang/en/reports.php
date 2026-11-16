@@ -218,4 +218,6 @@ return [
     'treasury_col_in' => 'Money in',
     'treasury_col_out' => 'Money out',
     'treasury_col_balance' => 'Running balance',
+    'locked_title' => 'Available on the Pro plan',
+    'locked_desc' => 'This report is part of advanced reports. Upgrade your plan to see item profitability and the branch comparison.',
 ];

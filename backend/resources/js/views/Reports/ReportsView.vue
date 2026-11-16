@@ -42,6 +42,8 @@
     <Transition v-else name="report-tab-fade" mode="out-in">
       <ReportsSalesTab v-if="activeTab === 'sales'" :key="'sales'" :summary="summary" :loading="isLoading" />
 
+      <ReportsLockedSection v-else-if="activeTab === 'items' && itemsLocked" :key="'items-locked'" />
+
       <ReportsItemsTab
         v-else-if="activeTab === 'items'"
         :key="'items'"
@@ -55,6 +57,8 @@
         @page-change="itemsReport.goToPage"
         @retry="itemsReport.reload"
       />
+
+      <ReportsLockedSection v-else-if="activeTab === 'stores' && storesLocked" :key="'stores-locked'" />
 
       <ReportsStoresTab
         v-else-if="activeTab === 'stores'"
@@ -119,6 +123,7 @@ import PageHeader from '../../Components/Common/PageHeader.vue';
 import ReportsFilterBar from '../../Components/Reports/ReportsFilterBar.vue';
 import ReportsNavigationTabs from '../../Components/Reports/ReportsNavigationTabs.vue';
 import ReportsSalesTab from '../../Components/Reports/ReportsSalesTab.vue';
+import ReportsLockedSection from '../../Components/Reports/ReportsLockedSection.vue';
 import ReportsItemsTab from '../../Components/Reports/ReportsItemsTab.vue';
 import ReportsStoresTab from '../../Components/Reports/ReportsStoresTab.vue';
 import ReportsCustomersTab from '../../Components/Reports/ReportsCustomersTab.vue';
@@ -150,6 +155,8 @@ const {
   expensesBreakdown,
   inventoryData,
   treasuryData,
+  itemsLocked,
+  storesLocked,
   setPeriod,
   customDateChanged,
   fetchReportsData,

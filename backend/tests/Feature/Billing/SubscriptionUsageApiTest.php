@@ -37,14 +37,15 @@ final class SubscriptionUsageApiTest extends BillingTestCase
                 'plan' => ['id', 'name', 'code'],
                 'subscription' => ['status', 'billing_cycle', 'starts_at', 'ends_at', 'trial_ends_at', 'days_left', 'is_founder'],
                 'tenant_status' => ['value', 'label', 'access'],
-                'usage' => [['resource', 'label', 'used', 'limit', 'percent']],
+                'usage' => [['resource', 'label', 'unit', 'used', 'limit', 'percent', 'over_limit', 'resets_at']],
                 'addons',
                 'open_invoices_count',
                 'payment_instructions' => ['instapay_address', 'vodafone_cash_number', 'account_name', 'payment_note', 'tax_rate'],
                 'support' => ['phone', 'email'],
             ]])
-            ->assertJsonMissing(['resource' => LimitResource::InvoicesMonth->value])
-            ->assertJsonMissing(['resource' => LimitResource::StorageMb->value]);
+            // PLAN-ENF: the monthly-invoice and storage limits are enforced, so they are shown.
+            ->assertJsonFragment(['resource' => LimitResource::InvoicesMonth->value])
+            ->assertJsonFragment(['resource' => LimitResource::StorageMb->value]);
 
         $days = $this->getJson('/api/v1/billing/subscription', $this->tenantHeaders($tenant))->json('data.subscription.days_left');
         $this->assertContains($days, [10, 11]);
@@ -66,10 +67,19 @@ final class SubscriptionUsageApiTest extends BillingTestCase
         $this->assertSame(1, $usage['stores']['limit']);
         $this->assertSame(100, $usage['stores']['percent']);
 
-        // PLAN-01: an unlimited resource has no usage row; the unenforced limits are never shown.
+        // PLAN-01: an unlimited resource has no usage row.
         $this->assertArrayNotHasKey('items', $usage->all());
-        $this->assertArrayNotHasKey('invoices_month', $usage->all());
-        $this->assertArrayNotHasKey('storage_mb', $usage->all());
+        $this->assertSame('count', $usage['users']['unit']);
+        $this->assertNull($usage['users']['resets_at']);
+
+        // PLAN-ENF: the plans column defaults (100 invoices / 500 MB) are enforced and shown.
+        $this->assertSame(0, $usage['invoices_month']['used']);
+        $this->assertSame(100, $usage['invoices_month']['limit']);
+        $this->assertSame('count', $usage['invoices_month']['unit']);
+        $this->assertNotNull($usage['invoices_month']['resets_at']);
+        $this->assertSame(0, $usage['storage_mb']['used']);
+        $this->assertSame(500, $usage['storage_mb']['limit']);
+        $this->assertSame('mb', $usage['storage_mb']['unit']);
     }
 
     public function test_active_addons_extend_the_limit_and_are_listed(): void

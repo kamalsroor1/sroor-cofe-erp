@@ -90,14 +90,14 @@ final class GetDashboardOverviewAction
         // reports.view only (there is no dashboard.* permission). ROLE-01: a user without it
         // never reaches this point, so every entry of the store cache is a reports.view one.
         $showFinancials = $user->can('reports.view');
-        // BILL-03: profit figures additionally need the reports.advanced plan feature. The
-        // aggregate cache is per tenant, so the plan state needs no extra cache-key part.
+        // BILL-03: profit figures additionally need the reports.advanced plan feature; the plan
+        // state is part of the cache key, so a plan change never serves the other copy.
         $showProfit = ProfitVisibility::allows();
 
         // PERF-01: the aggregate blocks are cached for a few seconds per tenant, store scope,
         // permission set, business day and locale (see DashboardCache). The live blocks below
         // (active shift, recent invoices) are always fresh.
-        $cacheKey = DashboardCache::key($storeFilter, $showFinancials, CostVisibility::allows($user), $today, app()->getLocale());
+        $cacheKey = DashboardCache::key($storeFilter, $showFinancials, CostVisibility::allows($user), $today, app()->getLocale(), canViewProfit: ProfitVisibility::allows());
         $aggregates = DashboardCache::remember(
             $cacheKey,
             fn (): array => $this->aggregates($storeFilter, $today, $showFinancials, $showProfit),
@@ -275,7 +275,8 @@ final class GetDashboardOverviewAction
                 'monthly_sales' => Decimal::normalize((string) $periodic['total_sales']),
                 'monthly_gross_sales' => Decimal::normalize((string) $periodic['gross_sales']),
                 'monthly_returns' => Decimal::normalize((string) $periodic['total_returns']),
-                'monthly_gross_profit' => $showProfit ? Decimal::normalize((string) $periodic['gross_profit']) : null,
+                // Owner decision 2026-11-15: the total gross profit is the one profit figure every plan sees.
+                'monthly_gross_profit' => $showFinancials ? Decimal::normalize((string) $periodic['gross_profit']) : null,
                 'monthly_margin' => $showProfit ? Decimal::normalize((string) $periodic['margin_percentage'], 2) : null,
                 'customers_count' => $customersCount,
                 'suppliers_count' => $suppliersCount,

@@ -9,6 +9,7 @@ use App\Models\BillingSequence;
 use App\Models\Plan;
 use App\Models\PlanFeature;
 use App\Services\Billing\FounderPricingService;
+use App\Services\Branding\PlatformBranding;
 use App\Support\PublicCatalogCache;
 use Database\Seeders\PlansAndFeaturesSeeder;
 use Tests\TenantTestCase;
@@ -49,10 +50,11 @@ final class PublicPlansApiTest extends TenantTestCase
             ->assertJsonPath('data.prices_exclude_vat', true)
             ->assertJsonStructure(['data' => [
                 'currency', 'prices_exclude_vat',
-                'founder' => ['available', 'slots_left', 'months'],
+                'founder' => ['available', 'slots_total', 'slots_left', 'months', 'transition_months'],
                 'brand' => ['name', 'subtitle', 'support_phone', 'support_email', 'website_url'],
                 'plans' => [['code', 'name', 'description', 'is_popular', 'sort_order', 'trial_days', 'price_monthly', 'price_yearly',
                     'founder_price_monthly', 'founder_price_yearly',
+                    'founder_transition_price_monthly', 'founder_transition_price_yearly', 'promotion', 'included_addons',
                     'limits' => ['users', 'stores', 'warehouses', 'vans', 'items', 'invoices_per_month', 'storage_mb'],
                     'features' => [['key', 'name', 'description', 'module']]]],
                 'addons',
@@ -80,6 +82,16 @@ final class PublicPlansApiTest extends TenantTestCase
         $basic->forceFill(['price_monthly' => '123.500'])->save();
 
         $this->assertSame('123.500', collect($this->plans())->firstWhere('code', 'basic')['price_monthly']);
+    }
+
+    public function test_the_effective_vat_rate_is_exposed_and_follows_the_platform_setting(): void
+    {
+        $this->getJson(self::URL)->assertOk()->assertJsonPath('data.tax_rate', '0.000');
+
+        app(PlatformBranding::class)->update(['billing_tax_rate' => '14']);
+
+        // Read per request: no cache flush needed.
+        $this->getJson(self::URL)->assertOk()->assertJsonPath('data.tax_rate', '14.000');
     }
 
     public function test_null_limit_means_unlimited(): void

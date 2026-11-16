@@ -8,6 +8,8 @@ use App\Actions\Branding\GetBrandingAction;
 use App\Actions\Settings\SendTestTelegramAction;
 use App\Actions\Settings\UpdateSettingsAction;
 use App\DTOs\Settings\TelegramTestDTO;
+use App\Exceptions\Entitlements\PlanLimitBusyException;
+use App\Exceptions\Entitlements\PlanLimitExceededException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\SendTestTelegramRequest;
 use App\Http\Requests\UpdateSettingsRequest;
@@ -108,6 +110,9 @@ final class SettingController extends Controller
     {
         try {
             $updated = $this->updateSettingsAction->execute($request->validated(), $request->sanitizedLogos());
+        } catch (PlanLimitExceededException|PlanLimitBusyException $e) {
+            // PLAN-ENF: the storage limit (403) and the enforcer's busy answer (409) keep their status and body.
+            throw $e;
         } catch (Throwable $e) {
             // SETG-7: log the cause server-side; never return the exception text (SQL, paths, secrets).
             report($e);

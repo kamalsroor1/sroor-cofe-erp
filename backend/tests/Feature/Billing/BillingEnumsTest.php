@@ -12,6 +12,7 @@ use App\Enums\Billing\BillingInvoiceType;
 use App\Enums\Billing\BillingPaymentMethod;
 use App\Enums\Billing\BillingPaymentStatus;
 use App\Enums\Billing\Concerns\BillingEnum;
+use App\Enums\Billing\FounderPriceStep;
 use App\Enums\Billing\PlanChangeRequestKind;
 use App\Enums\Billing\PlanChangeRequestStatus;
 use App\Enums\Billing\SubscriptionAddonStatus;
@@ -51,6 +52,7 @@ class BillingEnumsTest extends TestCase
             'BillingGateway' => [BillingGateway::class, ['manual', 'paymob', 'fawry']],
             'PlanChangeRequestKind' => [PlanChangeRequestKind::class, ['plan_change', 'addon']],
             'PlanChangeRequestStatus' => [PlanChangeRequestStatus::class, ['pending', 'invoiced', 'completed', 'rejected', 'cancelled']],
+            'FounderPriceStep' => [FounderPriceStep::class, ['founder', 'transition', 'list']],
         ];
     }
 

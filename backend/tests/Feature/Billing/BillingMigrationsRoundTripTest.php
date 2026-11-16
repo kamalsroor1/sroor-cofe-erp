@@ -46,8 +46,10 @@ final class BillingMigrationsRoundTripTest extends TenantTestCase
      */
     private const DEPENDENT_MIGRATIONS = [
         '2026_11_10_130000_create_plan_change_requests_table',
-        // PLAN-01: adds addons.feature_keys; the chain drops and recreates `addons`, so it must be undone/re-applied around it.
+        // Columns added to tables the chain drops and recreates (addons, plan_addon): they must be
+        // rolled back first and re-applied after it, or the recreated tables lose them.
         '2026_11_14_100000_add_feature_keys_to_addons_table',
+        '2026_11_15_100200_add_included_billing_cycle_to_plan_addon_table',
     ];
 
     private const TABLES = [

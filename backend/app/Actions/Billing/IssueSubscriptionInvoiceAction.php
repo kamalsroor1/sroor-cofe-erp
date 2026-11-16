@@ -9,6 +9,7 @@ use App\Enums\Billing\BillingCycle;
 use App\Enums\Billing\BillingInvoiceStatus;
 use App\Enums\Billing\BillingInvoiceType;
 use App\Enums\Billing\BillingPaymentStatus;
+use App\Enums\Billing\FounderPriceStep;
 use App\Enums\Billing\SubscriptionAddonStatus;
 use App\Enums\CentralAuditEvent;
 use App\Exceptions\Billing\BillingException;
@@ -36,6 +37,15 @@ use Illuminate\Support\Facades\DB;
  * addon (add-on lines priced from the tenant's plan catalog, only from a support request).
  * An upgrade can instead carry ONE "difference" line with the amount the admin decided (no
  * proration). Plan-type invoices may carry extra service lines. Everything is snapshotted into `lines`.
+ *
+ * Plan line price (PRICE-2026-11): FounderPricingService decides the step of the tenant's founder
+ * schedule at the PERIOD START of the billed cycle, and a cycle is priced entirely by that step
+ * (a monthly cycle starting one day before the year-1 end pays the founder price for the whole
+ * month; the next one pays the transition price). A tenant on a discounted step (founder or
+ * transition) gets it automatically on every plan / renewal / upgrade invoice, whoever issues it;
+ * `useFounderPrice` is only needed for a FIRST payment that should claim a free slot
+ * (`founderPriceIfAvailable` asks for the same price without refusing when none is free). A
+ * difference line is never founder-priced (it is the amount the admin decided).
  *
  * Money: bcmath strings at scale 3. VAT = platform setting billing_tax_rate, computed ONCE on the
  * net (subtotal - discount) and rounded half-up with App\Support\Money\Decimal (the SETG-13 rule).
@@ -103,7 +113,7 @@ final class IssueSubscriptionInvoiceAction
             if ($plan instanceof Plan && $cycle instanceof BillingCycle) {
                 $lines[] = $dto->differenceLine !== null
                     ? $this->differenceLine($dto->differenceLine, $plan, $cycle)
-                    : $this->planLine($dto, $plan, $cycle, $tenant, $subscription);
+                    : $this->planLine($dto, $plan, $cycle, $tenant, $subscription, $periodStart);
             }
             if ($dto->type === BillingInvoiceType::Renewal && $cycle instanceof BillingCycle && $subscription instanceof Subscription) {
                 foreach ($this->renewalAddonLines($subscription, $tenant, $periodStart, $this->periodEnd($periodStart, $cycle), $cycle) as $renewalLine) {
@@ -367,21 +377,22 @@ final class IssueSubscriptionInvoiceAction
     /**
      * @return array<string, mixed>
      */
-    private function planLine(IssueSubscriptionInvoiceDTO $dto, Plan $plan, BillingCycle $cycle, Tenant $tenant, ?Subscription $subscription): array
+    private function planLine(IssueSubscriptionInvoiceDTO $dto, Plan $plan, BillingCycle $cycle, Tenant $tenant, ?Subscription $subscription, CarbonImmutable $periodStart): array
     {
-        $price = $cycle === BillingCycle::Yearly ? $plan->price_yearly : $plan->price_monthly;
-        $founder = false;
+        $step = $subscription instanceof Subscription
+            ? $this->founder->stepFor($subscription, $plan, $cycle, $periodStart)
+            : FounderPriceStep::List;
 
-        if ($dto->useFounderPrice) {
-            $founderPrice = $this->founderPrice($plan, $cycle, $tenant, $subscription);
-            if ($founderPrice === null) {
+        if (! $step->isDiscounted() && $dto->useFounderPrice) {
+            if (! $this->canClaimFounderPrice($plan, $cycle, $tenant, $subscription)) {
                 throw BillingException::founderPriceUnavailable();
             }
-            $price = $founderPrice;
-            $founder = true;
+            $step = FounderPriceStep::Founder;
+        } elseif (! $step->isDiscounted() && $dto->founderPriceIfAvailable && $this->canClaimFounderPrice($plan, $cycle, $tenant, $subscription)) {
+            $step = FounderPriceStep::Founder;
         }
 
-        $price = Decimal::normalize($price);
+        $price = Decimal::normalize($this->founder->stepPrice($plan, $cycle, $step));
 
         return [
             'type' => 'plan',
@@ -391,7 +402,8 @@ final class IssueSubscriptionInvoiceAction
             'quantity' => 1,
             'unit_price' => $price,
             'amount' => $price,
-            'founder' => $founder,
+            'founder' => $step->isDiscounted(),
+            'price_step' => $step->value,
         ];
     }
 
@@ -466,30 +478,28 @@ final class IssueSubscriptionInvoiceAction
         ];
     }
 
-    /** The founder price when FounderPricingService allows it for this tenant, else null. */
-    private function founderPrice(Plan $plan, BillingCycle $cycle, Tenant $tenant, ?Subscription $subscription): ?string
+    /**
+     * A tenant not (or no longer) on a discounted step may take the year-1 founder price only
+     * with its first-ever payment, while a slot is free (FounderPricingService::claim takes
+     * the slot when that payment is verified).
+     */
+    private function canClaimFounderPrice(Plan $plan, BillingCycle $cycle, Tenant $tenant, ?Subscription $subscription): bool
     {
-        $price = $cycle === BillingCycle::Yearly ? $plan->founder_price_yearly : $plan->founder_price_monthly;
-
-        if ($price === null || ! $this->founder->isEligiblePlan($plan, $cycle)) {
-            return null;
+        if (! $this->founder->isEligiblePlan($plan, $cycle)) {
+            return false;
         }
 
-        // A founder who still holds the window keeps the price on renewals.
-        if ($subscription instanceof Subscription
-            && $subscription->is_founder
-            && $subscription->founder_price_until !== null
-            && $subscription->founder_price_until->isFuture()) {
-            return $price;
+        // A founder whose schedule has ended never starts it again.
+        if ($subscription instanceof Subscription && $subscription->is_founder) {
+            return false;
         }
 
-        // Otherwise only a first-ever payment can claim a free slot.
         $paidBefore = BillingPayment::query()
             ->where('tenant_id', $tenant->getKey())
             ->whereIn('status', [BillingPaymentStatus::Verified->value, BillingPaymentStatus::Refunded->value])
             ->exists();
 
-        return ! $paidBefore && $this->founder->hasAvailableSlot() ? $price : null;
+        return ! $paidBefore && $this->founder->hasAvailableSlot();
     }
 
     private function periodStart(IssueSubscriptionInvoiceDTO $dto, Tenant $tenant, ?Subscription $subscription): CarbonImmutable

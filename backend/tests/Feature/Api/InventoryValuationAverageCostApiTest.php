@@ -286,6 +286,9 @@ final class InventoryValuationAverageCostApiTest extends TenantTestCase
             foreach ($inventory['abc_data'][$list] as $abcRow) {
                 $this->assertArrayHasKey('unit_cost', $abcRow);
                 $this->assertNull($abcRow['unit_cost'], "abc_data.{$list}.unit_cost");
+                // cogs = sold quantity x unit cost: masked the same way.
+                $this->assertArrayHasKey('cogs', $abcRow);
+                $this->assertNull($abcRow['cogs'], "abc_data.{$list}.cogs");
             }
         }
     }

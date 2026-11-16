@@ -24,6 +24,8 @@ use Carbon\CarbonImmutable;
  * `fromRequest` skips the one-per-period duplicate check: the request row is the idempotency key.
  * `refuseWhenOpenPlanInvoice` (SELL-06: shop renewal requests, the trial-end command) refuses, under
  * the tenant row lock, while ANY pending/draft plan, renewal or upgrade invoice exists for the tenant.
+ * `founderPriceIfAvailable` (the trial-end invoice): bill the year-1 founder price when the tenant
+ * could claim a slot right now, else the list price; unlike `useFounderPrice` it never refuses.
  */
 final readonly class IssueSubscriptionInvoiceDTO
 {
@@ -47,6 +49,7 @@ final readonly class IssueSubscriptionInvoiceDTO
         public array $addonLines = [],
         public bool $fromRequest = false,
         public bool $refuseWhenOpenPlanInvoice = false,
+        public bool $founderPriceIfAvailable = false,
     ) {}
 
     /**

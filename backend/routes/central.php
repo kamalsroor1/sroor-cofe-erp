@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Central\CentralAuthController;
 use App\Http\Controllers\Api\Central\CentralPasswordResetController;
 use App\Http\Controllers\Api\Central\CentralTwoFactorController;
 use App\Http\Controllers\Api\Central\PlanChangeRequestReviewController;
+use App\Http\Controllers\Api\Central\PlanController;
 use App\Http\Controllers\Api\Central\PlatformSettingsController;
 use App\Http\Controllers\Api\Central\PlatformUnitsController;
 use App\Http\Controllers\Api\Central\SignupRequestController;
@@ -216,9 +217,12 @@ Route::prefix('v1/super-admin')
             ->middleware([$can(CentralPermission::TenantsManage), 'throttle:20,1'])->name('signup_requests.reject');
 
         // Plans
-        Route::get('/plans', [SuperAdminApiController::class, 'plans'])
+        Route::get('/plans', [PlanController::class, 'index'])
             ->middleware($can(CentralPermission::PlansView))->name('plans');
-        Route::put('/plans/{id}', [SuperAdminApiController::class, 'updatePlan'])
+        Route::post('/plans', [PlanController::class, 'store'])
+            ->middleware([$can(CentralPermission::PlansManage), RequireRecentTwoFactor::class])->name('plans.store');
+        Route::put('/plans/{id}', [PlanController::class, 'update'])
+            ->whereNumber('id')
             ->middleware([$can(CentralPermission::PlansManage), RequireRecentTwoFactor::class])->name('plans.update');
 
         // Telescope: short-lived single-use signed link (IDEN-1.7 moves the web bridge to central_web).

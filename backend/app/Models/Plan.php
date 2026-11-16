@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Concerns\UsesCentralConnection;
+use App\Support\Billing\PlanPromotion;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -25,6 +28,12 @@ use Illuminate\Validation\ValidationException;
  * @property string $price_yearly
  * @property string|null $founder_price_monthly
  * @property string|null $founder_price_yearly
+ * @property string|null $founder_transition_price_monthly founder price of months 13-24 (NULL = none)
+ * @property string|null $founder_transition_price_yearly
+ * @property string|null $compare_at_price_monthly promotion "was" price (see PlanPromotion)
+ * @property string|null $compare_at_price_yearly
+ * @property Carbon|null $promo_starts_at NULL = the promotion is already running
+ * @property Carbon|null $promo_ends_at a promotion without an end is never shown
  * @property int|null $max_users
  * @property int|null $max_stores retail branches only (warehouses and vans have their own limits)
  * @property int|null $max_warehouses
@@ -44,6 +53,12 @@ class Plan extends Model
     use HasFactory;
     use UsesCentralConnection;
 
+    /**
+     * Slugs owned by the catalog seeder / data migrations (Database\Seeders\Catalog\PlanCatalog).
+     * A plan created from the console never takes one of them, so the catalog never touches it.
+     */
+    public const CATALOG_SLUGS = ['free', 'basic', 'pro', 'enterprise'];
+
     /** Limit columns; NULL in any of them = unlimited. */
     public const LIMIT_COLUMNS = [
         'max_users',
@@ -51,16 +66,6 @@ class Plan extends Model
         'max_warehouses',
         'max_vans',
         'max_items',
-        'max_invoices_per_month',
-        'max_storage_mb',
-    ];
-
-    /**
-     * Owner decision (SEC-06 follow-up): limits that nothing enforces yet. They stay stored on
-     * every plan but are neither shown (PlanResource) nor editable from the console
-     * (UpdatePlanAction) until enforcement ships.
-     */
-    public const HIDDEN_LIMIT_COLUMNS = [
         'max_invoices_per_month',
         'max_storage_mb',
     ];
@@ -74,6 +79,12 @@ class Plan extends Model
         'price_yearly',
         'founder_price_monthly',
         'founder_price_yearly',
+        'founder_transition_price_monthly',
+        'founder_transition_price_yearly',
+        'compare_at_price_monthly',
+        'compare_at_price_yearly',
+        'promo_starts_at',
+        'promo_ends_at',
         'max_users',
         'max_stores',
         'max_warehouses',
@@ -94,6 +105,12 @@ class Plan extends Model
         'price_yearly' => 'decimal:3',
         'founder_price_monthly' => 'decimal:3',
         'founder_price_yearly' => 'decimal:3',
+        'founder_transition_price_monthly' => 'decimal:3',
+        'founder_transition_price_yearly' => 'decimal:3',
+        'compare_at_price_monthly' => 'decimal:3',
+        'compare_at_price_yearly' => 'decimal:3',
+        'promo_starts_at' => 'datetime',
+        'promo_ends_at' => 'datetime',
         'max_users' => 'integer',
         'max_stores' => 'integer',
         'max_warehouses' => 'integer',
@@ -147,6 +164,16 @@ class Plan extends Model
             ->using(PlanAddon::class)
             ->withPivot(PlanAddon::PIVOT_COLUMNS)
             ->withTimestamps();
+    }
+
+    /**
+     * The promotion ("was" price) shown at $at (default now), or null when none is running.
+     */
+    public function activePromotion(?CarbonInterface $at = null): ?PlanPromotion
+    {
+        $promotion = PlanPromotion::fromPlan($this);
+
+        return $promotion !== null && $promotion->isActiveAt($at ?? Carbon::now()) ? $promotion : null;
     }
 
     /**

@@ -9,6 +9,7 @@ import BillingPaymentModal from '@/Components/Billing/BillingPaymentModal.vue';
 import PlanChangeSection from '@/Components/Billing/PlanChangeSection.vue';
 import BillingSkeleton from '@/Components/Billing/BillingSkeleton.vue';
 import SubscriptionAddonsList from '@/Components/Billing/SubscriptionAddonsList.vue';
+import SubscriptionPriceSchedule from '@/Components/Billing/SubscriptionPriceSchedule.vue';
 import SubscriptionPlanCard from '@/Components/Billing/SubscriptionPlanCard.vue';
 import SubscriptionUsageList from '@/Components/Billing/SubscriptionUsageList.vue';
 import { useFormatters } from '@/Composables/useFormatters';
@@ -77,6 +78,7 @@ onMounted(load);
         }}
       </div>
       <SubscriptionPlanCard :data="subscription" :busy="renewing" @renew="onRenew" @change-plan="requestOpen = true" />
+      <SubscriptionPriceSchedule :schedule="subscription.subscription?.price_schedule" />
       <PlanChangeSection
         v-model:open="requestOpen"
         :subscription="subscription"

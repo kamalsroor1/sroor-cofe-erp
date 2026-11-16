@@ -82,6 +82,16 @@ class Addon extends Model
     }
 
     /**
+     * PLAN-EDIT: a plan may INCLUDE only a service-like add-on (no feature, no bundled limits):
+     * the entitlement engine does not read plan_addon.included_quantity, so an included store or
+     * feature add-on would promise something nothing grants.
+     */
+    public function isIncludable(): bool
+    {
+        return $this->allFeatureKeys() === [] && ($this->bundled_limits ?? []) === [];
+    }
+
+    /**
      * Every feature this add-on switches on: feature_key plus the bundle's feature_keys.
      *
      * @return list<string>

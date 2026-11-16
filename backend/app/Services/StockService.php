@@ -60,7 +60,8 @@ class StockService
      *   1. the existing document being changed (invoice / purchase / transfer / return / shift);
      *   2. the party: customer or supplier (the balance recompute re-locks it later, harmless);
      *   3. items by id, then store_stocks by (item_id, store_id)   <- this method;
-     *   4. branch rows of the treasury scope (`stores`, TreasuryService::lockTreasuryScope);
+     *   4. branch rows of the treasury scope (`stores`, TreasuryService::lockTreasuryScope), and the
+     *      plan-limit mutex (the oldest `stores` row, PlanEnforcer; the monthly invoice cap);
      *   5. document_sequences: the document number first, then payment / expense numbers.
      * Document before party is the order the existing customer flows already used (update and
      * cancel invoice, sales return, receipts); the create flows have no existing document and

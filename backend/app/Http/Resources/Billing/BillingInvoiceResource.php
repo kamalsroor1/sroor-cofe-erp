@@ -6,6 +6,7 @@ namespace App\Http\Resources\Billing;
 
 use App\Enums\Billing\BillingCycle;
 use App\Enums\Billing\BillingPaymentStatus;
+use App\Enums\Billing\FounderPriceStep;
 use App\Models\BillingInvoice;
 use App\Models\BillingPayment;
 use Illuminate\Http\Request;
@@ -100,9 +101,23 @@ final class BillingInvoiceResource extends JsonResource
                 'unit_price' => (string) ($line['unit_price'] ?? '0.000'),
                 'amount' => (string) ($line['amount'] ?? '0.000'),
                 'founder' => (bool) ($line['founder'] ?? false),
+                // PRICE-2026-11: founder | transition | list; null on non-plan lines and on plan
+                // lines issued before the price schedule (their `founder` flag still tells).
+                'price_step' => $this->priceStep($line, $isPlan),
             ];
         }
 
         return $lines;
+    }
+
+    /**
+     * @param  array<string, mixed>  $line
+     * @return array{value: string, label: string}|null
+     */
+    private function priceStep(array $line, bool $isPlan): ?array
+    {
+        $step = $isPlan ? FounderPriceStep::tryFrom((string) ($line['price_step'] ?? '')) : null;
+
+        return $step === null ? null : ['value' => $step->value, 'label' => $step->label()];
     }
 }

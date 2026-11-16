@@ -1,31 +1,49 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions\Plans;
 
+use App\DTOs\Plans\PlanDTO;
+use App\DTOs\Plans\PlanWriteResult;
+use App\Enums\CentralAuditEvent;
+use App\Models\CentralUser;
 use App\Models\Plan;
-use App\Models\PlanFeature;
+use App\Services\CentralAuditLogger;
+use App\Services\Plans\PlanSettingsWriter;
+use Illuminate\Support\Facades\DB;
 
-class UpdatePlanAction
+/**
+ * Console: edit every setting of a plan (PLAN-EDIT). The slug never changes. Hidden features are
+ * never written (PlanSettingsWriter); the writable columns are PlanDTO::COLUMNS (every limit).
+ * One central transaction with the plan row locked; entitlement and public catalog caches follow
+ * through the model observers.
+ */
+final class UpdatePlanAction
 {
-    public function execute(Plan $plan, array $data): Plan
+    public function __construct(
+        private readonly PlanSettingsWriter $writer,
+        private readonly CentralAuditLogger $audit,
+    ) {}
+
+    public function execute(int $planId, PlanDTO $dto, ?CentralUser $operator = null): PlanWriteResult
     {
-        if (isset($data['features']) && is_array($data['features'])) {
-            // Hidden features (PRD-10) cannot be sold or edited from the console: keep
-            // whatever the plan already stores for them.
-            $stored = is_array($plan->features) ? $plan->features : [];
-            foreach (PlanFeature::hiddenKeys() as $key) {
-                unset($data['features'][$key]);
-                if (array_key_exists($key, $stored)) {
-                    $data['features'][$key] = $stored[$key];
-                }
-            }
-        }
+        $connection = DB::connection((string) (new Plan)->getConnectionName());
 
-        // Not-yet-enforced limits cannot be sold or edited from the console: keep what is stored.
-        $data = array_diff_key($data, array_flip(Plan::HIDDEN_LIMIT_COLUMNS));
+        return $connection->transaction(function () use ($planId, $dto, $operator): PlanWriteResult {
+            /** @var Plan $plan */
+            $plan = Plan::query()->whereKey($planId)->lockForUpdate()->firstOrFail();
 
-        $plan->update($data);
+            $ignored = $this->writer->write($plan, $dto);
 
-        return $plan;
+            $this->audit->record(
+                CentralAuditEvent::PlanUpdated,
+                ['changed' => array_keys($dto->attributes), 'values' => $dto->toArray(), 'ignored_features' => $ignored],
+                $operator,
+                $plan,
+            );
+
+            return new PlanWriteResult($plan->load('addons'), $ignored);
+        });
     }
 }

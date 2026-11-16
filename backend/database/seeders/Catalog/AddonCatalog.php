@@ -43,7 +43,7 @@ final class AddonCatalog
     public const RETIRED_KEYS = ['addon.items_5k', 'reports.advanced', 'audit.logs'];
 
     /**
-     * @var list<array{key: string, lang: string, type: AddonType, feature_key: string|null, feature_keys?: list<string>, bundled_limits: array<string, int>|null, unit_price: string, yearly_price: string|null, price_tiers: list<array{min_qty: int, unit_price: string, yearly_price: string}>|null, is_public: bool, plans: list<string>, unavailable_on: list<string>}>
+     * @var list<array{key: string, lang: string, type: AddonType, feature_key: string|null, feature_keys?: list<string>, bundled_limits: array<string, int>|null, unit_price: string, yearly_price: string|null, price_tiers: list<array{min_qty: int, unit_price: string, yearly_price: string}>|null, is_public: bool, plans: list<string>, unavailable_on: list<string>, included_on?: array<string, string|null>}>
      */
     private const ADDONS = [
         [
@@ -134,13 +134,19 @@ final class AddonCatalog
             'key' => 'addon.premium_support', 'lang' => 'premium_support', 'type' => AddonType::Recurring, 'feature_key' => null,
             'bundled_limits' => null,
             'unit_price' => '299.000', 'yearly_price' => '2990.000', 'price_tiers' => null,
-            'is_public' => true, 'plans' => ['basic', 'pro'], 'unavailable_on' => [],
+            // Owner decision 2026-11-15: Enterprise is a service plan, premium support is INCLUDED
+            // (known to the plan, not sold there, included quantity 1).
+            'is_public' => true, 'plans' => ['basic', 'pro'], 'unavailable_on' => ['enterprise'],
+            'included_on' => ['enterprise' => null],
         ],
         [
             'key' => 'service.onboarding', 'lang' => 'onboarding', 'type' => AddonType::Service, 'feature_key' => null,
             'bundled_limits' => null,
             'unit_price' => '1500.000', 'yearly_price' => null, 'price_tiers' => null,
+            // Owner decision 2026-11-15: free with a YEARLY Enterprise subscription (still sold to a
+            // monthly one). Display / support only: no 0-amount invoice line is issued for it.
             'is_public' => true, 'plans' => self::ALL_PAID, 'unavailable_on' => [],
+            'included_on' => ['enterprise' => 'yearly'],
         ],
     ];
 
@@ -176,21 +182,32 @@ final class AddonCatalog
     /**
      * `plan_addon` rows: which add-on is offered on which catalog plan. An add-on listed in
      * `unavailable_on` gets a row with is_available = false (known to the plan, not sold).
-     * No included quantities: an add-on that a plan includes is simply on in the plan's
-     * features (e.g. mixes.manage on Enterprise), and no per-plan price overrides.
+     * A FEATURE add-on that a plan includes is simply on in the plan's features (e.g. mixes.manage
+     * on Pro). A SERVICE add-on a plan includes (no feature, no limits) is `included_on`:
+     * included_quantity 1 and included_billing_cycle (null = any cycle, 'yearly' = only with a
+     * yearly subscription). No per-plan price overrides.
      *
-     * @return list<array{plan: string, addon: string, is_available: bool}>
+     * @return list<array{plan: string, addon: string, is_available: bool, included_quantity: int, included_billing_cycle: string|null}>
      */
     public static function availability(): array
     {
         $rows = [];
 
         foreach (self::ADDONS as $addon) {
-            foreach ($addon['plans'] as $slug) {
-                $rows[] = ['plan' => $slug, 'addon' => $addon['key'], 'is_available' => true];
-            }
-            foreach ($addon['unavailable_on'] as $slug) {
-                $rows[] = ['plan' => $slug, 'addon' => $addon['key'], 'is_available' => false];
+            $included = $addon['included_on'] ?? [];
+            $plans = array_merge(
+                array_fill_keys($addon['plans'], true),
+                array_fill_keys($addon['unavailable_on'], false),
+            );
+
+            foreach ($plans as $slug => $available) {
+                $rows[] = [
+                    'plan' => $slug,
+                    'addon' => $addon['key'],
+                    'is_available' => $available,
+                    'included_quantity' => array_key_exists($slug, $included) ? 1 : 0,
+                    'included_billing_cycle' => $included[$slug] ?? null,
+                ];
             }
         }
 

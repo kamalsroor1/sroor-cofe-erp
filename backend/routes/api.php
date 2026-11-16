@@ -232,8 +232,10 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         // Profit & Loss Reports & Business Analytics
         Route::get('/reports/summary', [ReportController::class, 'summary'])->name('api.reports.summary')->middleware('store.active')->middleware('feature:reports.basic');
         Route::get('/reports/comprehensive', [ReportController::class, 'comprehensive'])->name('api.reports.comprehensive')->middleware('store.active')->middleware('feature:reports.basic');
-        Route::get('/reports/items', [ReportController::class, 'items'])->name('api.reports.items')->middleware('store.active')->middleware('feature:reports.basic');
-        Route::get('/reports/stores', [ReportController::class, 'stores'])->name('api.reports.stores')->middleware('store.active')->middleware('feature:reports.basic');
+        // Owner decision 2026-11-15: item profitability and the branch comparison are Pro reports
+        // (reports.advanced: Pro / Enterprise plans or the control bundle add-on).
+        Route::get('/reports/items', [ReportController::class, 'items'])->name('api.reports.items')->middleware('store.active')->middleware('feature:reports.basic')->middleware('feature:reports.advanced');
+        Route::get('/reports/stores', [ReportController::class, 'stores'])->name('api.reports.stores')->middleware('store.active')->middleware('feature:reports.basic')->middleware('feature:reports.advanced');
         Route::get('/reports/customers', [ReportController::class, 'customers'])->name('api.reports.customers')->middleware('store.active')->middleware('feature:reports.basic');
         Route::get('/reports/expenses', [ReportController::class, 'expenses'])->name('api.reports.expenses')->middleware('store.active')->middleware('feature:reports.basic');
         Route::get('/reports/inventory', [ReportController::class, 'inventory'])->name('api.reports.inventory')->middleware('store.active')->middleware('feature:reports.basic');

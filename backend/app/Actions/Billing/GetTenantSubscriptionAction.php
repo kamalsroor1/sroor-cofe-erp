@@ -13,8 +13,8 @@ use App\Enums\Billing\PlanChangeRequestKind;
 use App\Enums\LimitResource;
 use App\Exceptions\Billing\AddonPricingException;
 use App\Http\Resources\Billing\PlanChangeRequestResource;
+use App\Http\Resources\Billing\PriceScheduleResource;
 use App\Models\BillingInvoice;
-use App\Models\Invoice;
 use App\Models\Item;
 use App\Models\Plan;
 use App\Models\PlanAddon;
@@ -24,13 +24,12 @@ use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Branding\PlatformBranding;
+use App\Services\Entitlements\MonthlyInvoiceCounter;
+use App\Services\Entitlements\TenantStorageUsage;
 use App\Support\StoreLimitBucket;
 use App\Support\Tenancy\TenantLifecyclePolicy;
-use App\Support\TenantClock;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 /**
  * PRD-04: the "subscription & usage" payload of the shop's billing screen (tenant context).
@@ -46,8 +45,9 @@ final class GetTenantSubscriptionAction
     public function __construct(
         private readonly TenantFeatureManagerInterface $features,
         private readonly PlatformBranding $platform,
-        private readonly TenantClock $clock,
         private readonly TenantLifecyclePolicy $policy,
+        private readonly MonthlyInvoiceCounter $invoiceCounter,
+        private readonly TenantStorageUsage $storageUsage,
     ) {}
 
     /**
@@ -80,6 +80,8 @@ final class GetTenantSubscriptionAction
                 'trial_ends_at' => $tenant->trial_ends_at?->toIso8601String(),
                 'days_left' => $this->daysLeft($end, $now),
                 'is_founder' => $subscription !== null && $subscription->is_founder,
+                // PRICE-2026-11: founder schedule step, current / next price and the notice flag.
+                'price_schedule' => PriceScheduleResource::for($subscription),
             ],
             'tenant_status' => [
                 'value' => $decision->effectiveStatus->value,
@@ -159,7 +161,13 @@ final class GetTenantSubscriptionAction
     }
 
     /**
-     * @return list<array{resource: string, label: string, used: int, limit: int|null, percent: int|null, over_limit: bool}>
+     * One row per LIMITED resource (an unlimited one has no row). `used` and `limit` share the
+     * row's `unit`: `count` for records, `mb` for storage_mb (used = whole MB rounded up).
+     * invoices_month counts the sales invoices created this business month (MonthlyInvoiceCounter)
+     * and carries `resets_at` (ISO 8601, start of the next business month); every other row has
+     * `resets_at` null.
+     *
+     * @return list<array{resource: string, label: string, unit: string, used: int, limit: int, percent: int, over_limit: bool, resets_at: string|null}>
      */
     private function usage(Tenant $tenant): array
     {
@@ -167,12 +175,6 @@ final class GetTenantSubscriptionAction
         $rows = [];
 
         foreach (LimitResource::cases() as $resource) {
-            // PLAN-01 / BILL-03: the monthly-invoice and storage limits are not enforced (and are
-            // not sold), so they are never shown.
-            if (in_array($resource, [LimitResource::InvoicesMonth, LimitResource::StorageMb], true)) {
-                continue;
-            }
-
             $limit = $enforced ? $this->features->limit($tenant, $resource) : null;
 
             // An unlimited resource (NULL, e.g. items) has no usage row at all.
@@ -185,10 +187,12 @@ final class GetTenantSubscriptionAction
             $rows[] = [
                 'resource' => $resource->value,
                 'label' => (string) __('billing.limit_resources.'.$resource->value),
+                'unit' => $resource === LimitResource::StorageMb ? 'mb' : 'count',
                 'used' => $used,
                 'limit' => $limit,
                 'percent' => $limit === 0 ? ($used > 0 ? 100 : 0) : intdiv($used * 100 + $limit - 1, $limit),
                 'over_limit' => $used > $limit,
+                'resets_at' => $resource === LimitResource::InvoicesMonth ? $this->invoiceCounter->resetsAt()->toIso8601String() : null,
             ];
         }
 
@@ -201,21 +205,9 @@ final class GetTenantSubscriptionAction
             LimitResource::Users => User::query()->count(),
             LimitResource::Items => Item::query()->count(),
             LimitResource::Stores, LimitResource::Warehouses, LimitResource::Vans => StoreLimitBucket::count($resource),
-            LimitResource::InvoicesMonth => Invoice::query()->where('created_at', '>=', $this->clock->now()->startOfMonth())->count(),
-            LimitResource::StorageMb => $this->storageMb(),
+            LimitResource::InvoicesMonth => $this->invoiceCounter->count(),
+            LimitResource::StorageMb => $this->storageUsage->usedMb(),
         };
-    }
-
-    /** Whole megabytes (rounded up) held by the shop's media library; 0 when the table is absent. */
-    private function storageMb(): int
-    {
-        if (! Schema::hasTable('media')) {
-            return 0;
-        }
-
-        $bytes = (int) DB::table('media')->sum('size');
-
-        return intdiv($bytes + 1048575, 1048576);
     }
 
     /**

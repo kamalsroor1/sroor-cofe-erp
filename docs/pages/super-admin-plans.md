@@ -28,9 +28,12 @@ resources/js/
 ├── Components/SuperAdmin/
 │   ├── PlansGrid.vue                          <-- شبكة بطاقات الباقات وهياكل التحميل
 │   ├── PlanCard.vue                           <-- بطاقة الباقة الفردية مع الأسعار والحدود
-│   └── EditPlanModal.vue                      <-- نافذة AppModal لتعديل الباقة والأسعار والحدود
+│   └── PlanEditor/                            <-- (2026-11-16) يحل محل EditPlanModal.vue (محذوف)
+│       ├── PlanEditorModal.vue                    <-- نافذة بتبويبات: الأساسيات، الأسعار، العرض الترويجي، الحدود، الميزات، الإضافات
+│       └── Plan{Basics,Prices,Promotion,Limits,Features,Addons}Section.vue + PlanPriceInput.vue
 └── Composables/
-    └── useSuperAdminPlans.js                  <-- كبسولة المنطق وإدارة البيانات والعمليات
+    ├── useSuperAdminPlans.js                  <-- كبسولة المنطق وإدارة البيانات والعمليات
+    └── usePlanEditor.js                       <-- حالة المحرر (helpers/planEditor.js)
 ```
 
 ---
@@ -52,6 +55,9 @@ resources/js/
 | :--- | :--- | :--- | :--- |
 | **جلب سجل الباقات** | `GET /api/v1/super-admin/plans` | - | قائمة الباقات مع الأسعار والحدود |
 | **تحديث باقة محددة** | `PUT /api/v1/super-admin/plans/{id}` | `name`, `price_monthly`, `price_yearly`, `max_users`, `max_stores`, `max_items`, `max_invoices_per_month`, `is_active`, `is_popular` | تحديث بيانات الباقة |
+| **إنشاء باقة** (2026-11-16) | `POST /api/v1/super-admin/plans` | نفس إعدادات التعديل الكاملة (أسعار، founder/transition، عرض ترويجي، حدود، ميزات، إضافات) | الباقة الجديدة تُنشأ **مخفية** افتراضياً (`CreatePlanAction`) |
+
+> التحقق مشترك عبر `ValidatesPlanPayload` والكتابة عبر `PlanSettingsWriter`. التفاصيل: [سجل 2026-11-16](../history/2026-11-16/01-saas-repricing-founder-schedule.md). المحرر الجديد لم يُفحص بصرياً في المتصفح (يحتاج دخول مركزي بـ 2FA).
 
 ---
 
