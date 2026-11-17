@@ -14,7 +14,7 @@ namespace App\DTOs\Plans;
  */
 final readonly class PlanDTO
 {
-    /** Plan columns the console may write (PLAN-ENF: every limit, max_invoices_per_month / max_storage_mb included; PLAN-10: is_free). */
+    /** Plan columns the console may write (PLAN-ENF: every limit, max_invoices_per_month / max_storage_mb included; PLAN-10: is_free; PLAN-11: max_customers / max_suppliers). */
     public const COLUMNS = [
         'name', 'name_key', 'description',
         'price_monthly', 'price_yearly',
@@ -22,7 +22,7 @@ final readonly class PlanDTO
         'founder_transition_price_monthly', 'founder_transition_price_yearly',
         'compare_at_price_monthly', 'compare_at_price_yearly', 'promo_starts_at', 'promo_ends_at',
         'max_users', 'max_stores', 'max_warehouses', 'max_vans', 'max_items',
-        'max_invoices_per_month', 'max_storage_mb',
+        'max_invoices_per_month', 'max_storage_mb', 'max_customers', 'max_suppliers',
         'trial_days', 'is_free', 'is_active', 'is_public', 'is_popular', 'sort_order',
     ];
 

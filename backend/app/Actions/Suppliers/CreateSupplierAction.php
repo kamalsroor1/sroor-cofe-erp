@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Actions\Suppliers;
 
 use App\DTOs\Suppliers\SupplierDTO;
+use App\Enums\LimitResource;
 use App\Models\OpeningBalance;
 use App\Models\Supplier;
+use App\Services\Entitlements\PlanEnforcer;
 use App\Services\SupplierBalanceService;
+use App\Support\PartyLimitCounter;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +21,7 @@ final class CreateSupplierAction
     public function __construct(
         private readonly SupplierBalanceService $balances,
         private readonly TenantClock $clock,
+        private readonly PlanEnforcer $planEnforcer,
     ) {}
 
     /**
@@ -28,6 +32,9 @@ final class CreateSupplierAction
     public function execute(SupplierDTO $dto): Supplier
     {
         return DB::transaction(function () use ($dto) {
+            // PLAN-11: plan suppliers limit, counted under the tenant lock.
+            $this->planEnforcer->assertWithinLimit(LimitResource::Suppliers, fn (): int => PartyLimitCounter::suppliers());
+
             $supplier = Supplier::create([
                 'name' => $dto->name,
                 'company_name' => $dto->company_name,

@@ -14,7 +14,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * Money is a "0.000" string (nullable founder / transition / compare-at prices = none); `promotion`
  * is the offer running right now ({compare_at_monthly, compare_at_yearly, ends_at}) or null.
  * `addons` / `included_addons` are present only when the `addons` relation is loaded. Every limit is int|null where null = unlimited
- * (PLAN-ENF: max_invoices_per_month and max_storage_mb included).
+ * (PLAN-ENF: max_invoices_per_month and max_storage_mb included; PLAN-11: max_customers, max_suppliers).
  *
  * @mixin Plan
  */
@@ -51,6 +51,8 @@ class PlanResource extends JsonResource
             'max_items' => $this->max_items,
             'max_invoices_per_month' => $this->max_invoices_per_month,
             'max_storage_mb' => $this->max_storage_mb,
+            'max_customers' => $this->max_customers,
+            'max_suppliers' => $this->max_suppliers,
             'trial_days' => $this->trial_days,
             // PLAN-10: permanent free plan (never billed, no trial; its tenants are always active).
             'is_free' => (bool) $this->is_free,

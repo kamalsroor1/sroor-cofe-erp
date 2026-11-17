@@ -172,6 +172,8 @@ return [
         'items' => 'الأصناف',
         'invoices_month' => 'فواتير هذا الشهر',
         'storage_mb' => 'المساحة (ميجابايت)',
+        'customers' => 'العملاء',
+        'suppliers' => 'الموردين',
     ],
     'console' => [
         'nav' => 'مراجعة المدفوعات',

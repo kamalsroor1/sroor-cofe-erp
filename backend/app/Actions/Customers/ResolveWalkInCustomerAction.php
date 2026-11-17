@@ -29,8 +29,13 @@ final class ResolveWalkInCustomerAction
             || in_array((string) $customer->name, self::walkInNames(), true);
     }
 
-    /** @return list<string> */
-    private static function walkInNames(): array
+    /**
+     * Names a walk-in customer row may carry (legacy + the current locale labels). Public for
+     * App\Support\PartyLimitCounter (PLAN-11: the walk-in customer takes no plan slot).
+     *
+     * @return list<string>
+     */
+    public static function walkInNames(): array
     {
         return [
             ...self::LEGACY_NAMES,

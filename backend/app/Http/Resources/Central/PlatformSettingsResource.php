@@ -6,6 +6,7 @@ namespace App\Http\Resources\Central;
 
 use App\DTOs\Branding\PlatformBrandingDTO;
 use App\Enums\PlatformAssetSlot;
+use App\Services\Signup\TrialFallbackPlan;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -46,6 +47,8 @@ final class PlatformSettingsResource extends JsonResource
             // PLAN-10: signup / free plan settings (null plan id = not set).
             'default_signup_plan_id' => $branding->defaultSignupPlanId,
             'trial_fallback_plan_id' => $branding->trialFallbackPlanId,
+            // PLAN-11: the plan that actually applies (the setting, else the catalog free plan; null = none).
+            'effective_trial_fallback_plan_id' => app(TrialFallbackPlan::class)->planId(),
             'self_signup_enabled' => $branding->selfSignupEnabled,
             'signup_daily_cap' => $branding->signupDailyCap,
             'assets' => [

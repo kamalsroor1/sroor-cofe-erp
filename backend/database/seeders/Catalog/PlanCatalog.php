@@ -28,7 +28,9 @@ use App\Models\Plan;
  *   PERMANENT free plan (is_free): never billed, no trial, its tenants are always active. Limits are
  *   on the volume of work (2 users, 100 items, 150 sales invoices a month, 200 MB, 1 branch, no
  *   extra warehouse or van); it has every core feature except report export and Telegram
- *   notifications, and no extra.
+ *   notifications, and no extra;
+ * - PLAN-11: `free` also caps customers (50, the walk-in customer not counted) and suppliers (20);
+ *   every paid plan is unlimited (NULL) on both.
  *
  * Money is a DECIMAL(12,3) string. Names/descriptions are keys in lang/{ar,en}/plans.php.
  */
@@ -87,6 +89,8 @@ final class PlanCatalog
             'max_items' => 100,
             'max_invoices_per_month' => 150,
             'max_storage_mb' => 200,
+            'max_customers' => 50,
+            'max_suppliers' => 20,
             'trial_days' => 0,
             'is_free' => true,
             'is_active' => true,
@@ -112,6 +116,8 @@ final class PlanCatalog
             'max_items' => null,
             'max_invoices_per_month' => null,
             'max_storage_mb' => 2048,
+            'max_customers' => null,
+            'max_suppliers' => null,
             'trial_days' => 0,
             'is_free' => false,
             'is_active' => true,
@@ -137,6 +143,8 @@ final class PlanCatalog
             'max_items' => null,
             'max_invoices_per_month' => null,
             'max_storage_mb' => 10240,
+            'max_customers' => null,
+            'max_suppliers' => null,
             'trial_days' => 0,
             'is_free' => false,
             'is_active' => true,
@@ -162,6 +170,8 @@ final class PlanCatalog
             'max_items' => null,
             'max_invoices_per_month' => null,
             'max_storage_mb' => 51200,
+            'max_customers' => null,
+            'max_suppliers' => null,
             'trial_days' => 0,
             'is_free' => false,
             'is_active' => true,

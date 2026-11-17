@@ -7,7 +7,7 @@ use App\Enums\TenantArchiveState;
 use App\Enums\TenantProvisioningStatus;
 use App\Enums\TenantSignupSource;
 use App\Enums\TenantStatus;
-use App\Services\Branding\PlatformBranding;
+use App\Services\Signup\TrialFallbackPlan;
 use App\Support\Tenancy\TenantLifecyclePolicy;
 use App\Support\Tenancy\TenantLifecycleSnapshot;
 use App\Support\Tenancy\TenantSuspensionReason;
@@ -465,6 +465,8 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'items' => $plan->max_items,
             'invoices_month' => $plan->max_invoices_per_month,
             'storage_mb' => $plan->max_storage_mb,
+            'customers' => $plan->max_customers,
+            'suppliers' => $plan->max_suppliers,
         ];
     }
 
@@ -494,8 +496,9 @@ class Tenant extends BaseTenant implements TenantWithDatabase
      *  - onFreePlan is read only when the `plan` relation is already loaded (the daily sweep
      *    eager-loads it), so no request pays a hidden query; a free tenant is born `active` with
      *    no deadline, so the policy never moves it anyway;
-     *  - trialFallsBackToFreePlan: a self-signup trial when the platform names a fallback plan
-     *    (`trial_fallback_plan_id`, cached platform setting): its trial ends in `active` (on the
+     *  - trialFallsBackToFreePlan: a self-signup trial when the platform has a fallback plan
+     *    (PLAN-11: App\Services\Signup\TrialFallbackPlan, the `trial_fallback_plan_id` setting,
+     *    else the active catalog `free` plan; both cached): its trial ends in `active` (on the
      *    free plan, applied by the sweep), never in read-only.
      */
     public function lifecycleSnapshot(bool $hasEverPaid = false): TenantLifecycleSnapshot
@@ -503,7 +506,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         $onFreePlan = $this->relationLoaded('plan') && $this->plan instanceof Plan && $this->plan->is_free;
         $fallsBack = $this->status === TenantStatus::Trial->value
             && $this->isSelfSignup()
-            && app(PlatformBranding::class)->get()->trialFallbackPlanId !== null;
+            && app(TrialFallbackPlan::class)->planId() !== null;
 
         return new TenantLifecycleSnapshot(
             status: $this->lifecycleStatus() ?? TenantStatus::Suspended,

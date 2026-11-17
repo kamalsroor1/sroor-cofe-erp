@@ -14,6 +14,7 @@ use App\Services\Import\ImportContext;
 use App\Services\Import\ImportHandlerFactory;
 use App\Services\Import\ImportRow;
 use App\Services\Import\ImportSessionStore;
+use App\Support\PartyLimitCounter;
 use App\Support\TenantCache;
 use App\Support\TenantClock;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -62,6 +63,23 @@ final class CommitImportAction
     }
 
     /**
+     * Plan limit for the whole batch (items; PLAN-11 customers / suppliers), counted under the
+     * tenant lock inside the import transaction, before anything is written: an import that would
+     * pass the limit is refused as a whole (403 subscription.limit_reached), never cut in half.
+     * Every valid row is counted as a new record (an imported row that looks like the walk-in
+     * customer is not special-cased: the check stays conservative).
+     */
+    private function assertWithinPlanLimit(ImportType $type, int $adding): void
+    {
+        match ($type) {
+            ImportType::Items => $this->planEnforcer->assertWithinLimit(LimitResource::Items, fn (): int => Item::query()->count(), $adding),
+            ImportType::Customers => $this->planEnforcer->assertWithinLimit(LimitResource::Customers, fn (): int => PartyLimitCounter::customers(), $adding),
+            ImportType::Suppliers => $this->planEnforcer->assertWithinLimit(LimitResource::Suppliers, fn (): int => PartyLimitCounter::suppliers(), $adding),
+            ImportType::Categories => null,
+        };
+    }
+
+    /**
      * @return array{created: int, skipped: int, duplicates: int, errors: list<array{row_number: int, errors: list<string>}>}
      */
     private function commit(CommitImportDTO $dto): array
@@ -91,9 +109,8 @@ final class CommitImportAction
 
         try {
             $created = DB::transaction(function () use ($dto, $valid, $handler, $context): int {
-                if ($dto->type === ImportType::Items && $valid !== []) {
-                    // Plan item limit for the whole batch, counted under the tenant lock, before anything is written.
-                    $this->planEnforcer->assertWithinLimit(LimitResource::Items, fn (): int => Item::query()->count(), count($valid));
+                if ($valid !== []) {
+                    $this->assertWithinPlanLimit($dto->type, count($valid));
                 }
 
                 return $handler->write($valid, $context);

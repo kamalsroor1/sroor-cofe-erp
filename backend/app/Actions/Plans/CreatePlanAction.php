@@ -50,7 +50,8 @@ final class CreatePlanAction
             }
             // PLAN-ENF: these limits are enforced now; an omitted one is unlimited, never the legacy
             // column default (100 invoices / 500 MB) that would silently cap a new plan.
-            foreach (['max_invoices_per_month', 'max_storage_mb'] as $column) {
+            // PLAN-11: same for max_customers / max_suppliers (their columns default to NULL anyway).
+            foreach (['max_invoices_per_month', 'max_storage_mb', 'max_customers', 'max_suppliers'] as $column) {
                 if (! array_key_exists($column, $dto->attributes)) {
                     $plan->setAttribute($column, null);
                 }

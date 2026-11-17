@@ -41,6 +41,8 @@ use Illuminate\Validation\ValidationException;
  * @property int|null $max_items
  * @property int|null $max_invoices_per_month
  * @property int|null $max_storage_mb
+ * @property int|null $max_customers PLAN-11 (the walk-in customer is not counted)
+ * @property int|null $max_suppliers PLAN-11
  * @property int $trial_days
  * @property bool $is_free PLAN-10: permanent free plan (never billed, no trial, tenant always active)
  * @property array<string, mixed>|null $features
@@ -69,6 +71,8 @@ class Plan extends Model
         'max_items',
         'max_invoices_per_month',
         'max_storage_mb',
+        'max_customers',
+        'max_suppliers',
     ];
 
     protected $fillable = [
@@ -93,6 +97,8 @@ class Plan extends Model
         'max_items',
         'max_invoices_per_month',
         'max_storage_mb',
+        'max_customers',
+        'max_suppliers',
         'trial_days',
         'is_free',
         'features',
@@ -120,6 +126,8 @@ class Plan extends Model
         'max_items' => 'integer',
         'max_invoices_per_month' => 'integer',
         'max_storage_mb' => 'integer',
+        'max_customers' => 'integer',
+        'max_suppliers' => 'integer',
         'trial_days' => 'integer',
         'is_free' => 'boolean',
         'features' => 'array',

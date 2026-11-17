@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Actions\Customers;
 
 use App\DTOs\Customers\CustomerDTO;
+use App\Enums\LimitResource;
 use App\Models\Customer;
 use App\Models\OpeningBalance;
 use App\Services\CustomerBalanceService;
+use App\Services\Entitlements\PlanEnforcer;
+use App\Support\PartyLimitCounter;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +21,7 @@ final class CreateCustomerAction
     public function __construct(
         private readonly CustomerBalanceService $balances,
         private readonly TenantClock $clock,
+        private readonly PlanEnforcer $planEnforcer,
     ) {}
 
     /**
@@ -28,6 +32,9 @@ final class CreateCustomerAction
     public function execute(CustomerDTO $dto): Customer
     {
         return DB::transaction(function () use ($dto) {
+            // PLAN-11: plan customers limit, counted under the tenant lock (walk-in not counted).
+            $this->planEnforcer->assertWithinLimit(LimitResource::Customers, fn (): int => PartyLimitCounter::customers());
+
             $customer = Customer::create([
                 'name' => $dto->name,
                 'phone' => $dto->phone,

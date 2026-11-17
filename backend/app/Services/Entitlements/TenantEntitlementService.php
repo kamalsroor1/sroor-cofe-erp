@@ -52,14 +52,37 @@ final class TenantEntitlementService implements TenantFeatureManagerInterface
         $tenantId = $this->tenantId($tenant);
         $key = TenantCache::keyFor($tenantId, self::CACHE_NAMESPACE.':'.TenantCache::versionFor($tenantId, self::CACHE_NAMESPACE));
 
-        /** @var array{tenant_id: string, plan_id: int|null, features: list<string>, limits: array<string, int|null>, addons: list<array{key: string, quantity: int}>} $cached */
-        $cached = Cache::remember(
-            $key,
-            max(1, (int) config('entitlements.cache_ttl', 3600)),
-            fn (): array => $this->resolve($tenantId)->toArray(),
-        );
+        $cached = Cache::get($key);
 
+        // PLAN-11: an entry written before a LimitResource case existed (or by a not yet restarted
+        // worker running older code) lacks that limit key, which EntitlementsDTO would read as 0
+        // and refuse every creation of the resource. Such an entry is stale: resolve it again.
+        if (! is_array($cached) || ! $this->hasEveryLimit($cached)) {
+            $cached = $this->resolve($tenantId)->toArray();
+            Cache::put($key, $cached, max(1, (int) config('entitlements.cache_ttl', 3600)));
+        }
+
+        /** @var array{tenant_id: string, plan_id: int|null, features: list<string>, limits: array<string, int|null>, addons: list<array{key: string, quantity: int}>} $cached */
         return EntitlementsDTO::fromArray($cached);
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $cached
+     */
+    private function hasEveryLimit(array $cached): bool
+    {
+        $limits = $cached['limits'] ?? null;
+        if (! is_array($limits)) {
+            return false;
+        }
+
+        foreach (LimitResource::values() as $resource) {
+            if (! array_key_exists($resource, $limits)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

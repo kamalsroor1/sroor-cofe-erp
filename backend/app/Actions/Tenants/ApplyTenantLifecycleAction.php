@@ -8,7 +8,7 @@ use App\Enums\TenantLifecycleActor;
 use App\Enums\TenantStatus;
 use App\Models\Plan;
 use App\Models\Tenant;
-use App\Services\Branding\PlatformBranding;
+use App\Services\Signup\TrialFallbackPlan;
 use App\Support\Tenancy\LifecycleSweepResult;
 use App\Support\Tenancy\LifecycleTransitionStep;
 use App\Support\Tenancy\TenantLifecyclePolicy;
@@ -34,7 +34,8 @@ use Throwable;
  * - a tenant whose plan is a permanent free plan (`plans.is_free`) but whose stored status is
  *   trial / past_due (a row from before PLAN-10) is put back to `active` on that plan;
  * - a SELF-SIGNUP trial that ended unpaid (policy move trial → active, see
- *   TenantLifecyclePolicy) is moved to the platform's `trial_fallback_plan_id` as `active`.
+ *   TenantLifecyclePolicy) is moved to the platform's fallback plan as `active` (PLAN-11:
+ *   TrialFallbackPlan, the `trial_fallback_plan_id` setting, else the catalog `free` plan).
  *   Both go through MoveTenantToFreePlanAction (lifecycle event, audit, entitlements flush).
  *   When the fallback plan is no longer an active free plan the trial takes the normal
  *   read_only move instead (logged), so a tenant is never left without a valid plan.
@@ -48,7 +49,7 @@ final class ApplyTenantLifecycleAction
         private readonly TenantLifecyclePolicy $policy,
         private readonly TransitionTenantStatusAction $transition,
         private readonly MoveTenantToFreePlanAction $moveToFreePlan,
-        private readonly PlatformBranding $platform,
+        private readonly TrialFallbackPlan $trialFallback,
     ) {}
 
     /** The fallback plan of this run (resolved once): false = not resolved yet. */
@@ -196,17 +197,11 @@ final class ApplyTenantLifecycleAction
         return true;
     }
 
-    /** PLAN-10: `trial_fallback_plan_id` when it still names an active permanent free plan. */
+    /** PLAN-10/11: the effective trial fallback plan while it is an active permanent free plan. */
     private function fallbackPlan(): ?Plan
     {
         if ($this->fallbackPlan === false) {
-            $id = $this->platform->get()->trialFallbackPlanId;
-
-            $this->fallbackPlan = $id === null ? null : Plan::query()
-                ->whereKey($id)
-                ->where('is_active', true)
-                ->where('is_free', true)
-                ->first();
+            $this->fallbackPlan = $this->trialFallback->plan();
         }
 
         return $this->fallbackPlan;

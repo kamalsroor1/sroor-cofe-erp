@@ -26,6 +26,7 @@ use App\Models\User;
 use App\Services\Branding\PlatformBranding;
 use App\Services\Entitlements\MonthlyInvoiceCounter;
 use App\Services\Entitlements\TenantStorageUsage;
+use App\Support\PartyLimitCounter;
 use App\Support\StoreLimitBucket;
 use App\Support\Tenancy\TenantLifecyclePolicy;
 use Carbon\CarbonImmutable;
@@ -207,6 +208,8 @@ final class GetTenantSubscriptionAction
             LimitResource::Stores, LimitResource::Warehouses, LimitResource::Vans => StoreLimitBucket::count($resource),
             LimitResource::InvoicesMonth => $this->invoiceCounter->count(),
             LimitResource::StorageMb => $this->storageUsage->usedMb(),
+            // PLAN-11: the walk-in customer is not counted (same count PlanEnforcer checks).
+            LimitResource::Customers, LimitResource::Suppliers => PartyLimitCounter::count($resource),
         };
     }
 

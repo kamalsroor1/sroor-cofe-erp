@@ -159,6 +159,9 @@ final class SignupTrialLifecycleTest extends BillingTestCase
 
     public function test_trial_expiry_goes_read_only_after_the_grace_and_a_paid_invoice_makes_it_active(): void
     {
+        // PLAN-11: an unpaid self-signup trial falls back to the active catalog free plan by default
+        // (PermanentFreePlanTest). Retire that plan so this trial takes the read-only path.
+        Plan::query()->where('slug', 'free')->sole()->forceFill(['is_active' => false])->save();
         [$slug, $email] = $this->approve('basic');
         $trialEnd = CarbonImmutable::instance(Tenant::query()->findOrFail($slug)->trial_ends_at);
         $this->changeOwnerPassword($slug, $email);

@@ -29,6 +29,8 @@ return [
         'items' => 'الأصناف',
         'invoices_per_month' => 'الفواتير شهريًا',
         'storage_mb' => 'المساحة (ميجابايت)',
+        'customers' => 'العملاء',
+        'suppliers' => 'الموردين',
     ],
 
     'errors' => [

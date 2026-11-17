@@ -86,6 +86,9 @@ trait ValidatesPlanPayload
             'max_storage_mb' => ['sometimes', 'nullable', 'integer', 'min:1', self::MAX_LIMIT],
             'max_warehouses' => ['sometimes', 'nullable', 'integer', 'min:0', self::MAX_LIMIT],
             'max_vans' => ['sometimes', 'nullable', 'integer', 'min:0', self::MAX_LIMIT],
+            // PLAN-11: optional like the other newer limits (omitted on create = unlimited).
+            'max_customers' => ['sometimes', 'nullable', 'integer', 'min:1', self::MAX_LIMIT],
+            'max_suppliers' => ['sometimes', 'nullable', 'integer', 'min:1', self::MAX_LIMIT],
             'trial_days' => ['sometimes', 'integer', 'min:0', 'max:365'],
             // PLAN-10: permanent free plan; every price must then be 0 (validateFreePlan()).
             'is_free' => ['sometimes', 'boolean'],

@@ -65,6 +65,8 @@ final class PublicPlanResource extends JsonResource
                 'items' => $plan->max_items,
                 'invoices_per_month' => $plan->max_invoices_per_month,
                 'storage_mb' => $plan->max_storage_mb,
+                'customers' => $plan->max_customers,
+                'suppliers' => $plan->max_suppliers,
             ],
             'features' => $this->features($plan),
             // PLAN-EDIT: services the plan includes (e.g. Enterprise: premium support; onboarding

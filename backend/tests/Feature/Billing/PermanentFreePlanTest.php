@@ -19,6 +19,7 @@ use App\Models\Tenant;
 use App\Models\TenantLifecycleEvent;
 use App\Services\Branding\PlatformBranding;
 use App\Services\Signup\SignupTrialTerms;
+use App\Services\Signup\TrialFallbackPlan;
 use Carbon\CarbonImmutable;
 use Database\Seeders\Catalog\PlanCatalog;
 use Database\Seeders\PlansAndFeaturesSeeder;
@@ -385,8 +386,58 @@ final class PermanentFreePlanTest extends BillingTestCase
         $this->assertSame(0, CentralAuditLog::query()->where('event', CentralAuditEvent::TenantMovedToFreePlan->value)->count());
     }
 
+    public function test_without_the_setting_a_self_signup_trial_falls_back_to_the_catalog_free_plan(): void
+    {
+        // PLAN-11: trial_fallback_plan_id is unset by default; the active catalog `free` plan applies.
+        $this->assertNull(app(PlatformBranding::class)->get()->trialFallbackPlanId);
+        $this->assertSame((int) $this->free->id, app(TrialFallbackPlan::class)->planId());
+
+        $trialEnd = CarbonImmutable::now()->addDays(2);
+        $tenant = $this->selfSignupTrial($trialEnd);
+
+        $this->travelTo($trialEnd->addDays(10));
+        $this->postJson('/api/v1/customers', ['name' => 'قبل الكنس'], $this->tenantHeaders($tenant))->assertCreated();
+        $this->artisan('tenants:apply-lifecycle')->assertSuccessful();
+
+        $fresh = $tenant->fresh();
+        $this->assertSame(TenantStatus::Active->value, $fresh?->status);
+        $this->assertSame((int) $this->free->id, (int) $fresh?->plan_id);
+        $event = TenantLifecycleEvent::query()->where('tenant_id', $tenant->id)->sole();
+        $this->assertSame('trial_fallback', $event->properties['source'] ?? null);
+
+        // The console sees what applies even though nothing is stored.
+        $this->getJson(self::SETTINGS, $this->steppedUpCentralHeaders($this->centralSuperAdmin()))
+            ->assertOk()
+            ->assertJsonPath('data.trial_fallback_plan_id', null)
+            ->assertJsonPath('data.effective_trial_fallback_plan_id', (int) $this->free->id);
+    }
+
+    public function test_the_setting_overrides_the_catalog_default_fallback(): void
+    {
+        $custom = Plan::query()->create([
+            'name' => 'Free Custom', 'slug' => 'free-custom', 'price_monthly' => '0.000', 'price_yearly' => '0.000',
+            'trial_days' => 0, 'is_free' => true, 'is_active' => true, 'is_public' => false, 'is_popular' => false,
+            'features' => $this->free->features, 'max_users' => 1, 'max_stores' => 1, 'max_items' => 10,
+        ]);
+        app(PlatformBranding::class)->update(['trial_fallback_plan_id' => (string) $custom->id]);
+        $this->assertSame((int) $custom->id, app(TrialFallbackPlan::class)->planId());
+
+        $trialEnd = CarbonImmutable::now()->addDays(2);
+        $tenant = $this->selfSignupTrial($trialEnd);
+
+        $this->travelTo($trialEnd->addDays(10));
+        $this->artisan('tenants:apply-lifecycle')->assertSuccessful();
+
+        $fresh = $tenant->fresh();
+        $this->assertSame(TenantStatus::Active->value, $fresh?->status);
+        $this->assertSame((int) $custom->id, (int) $fresh?->plan_id);
+    }
+
     public function test_without_a_valid_fallback_plan_a_self_signup_trial_goes_read_only(): void
     {
+        // No setting and no active catalog free plan: no fallback.
+        $this->free->forceFill(['is_active' => false])->save();
+        $this->assertNull(app(TrialFallbackPlan::class)->planId());
         $trialEnd = CarbonImmutable::now()->addDays(2);
         $noSetting = $this->selfSignupTrial($trialEnd);
 
@@ -394,10 +445,9 @@ final class PermanentFreePlanTest extends BillingTestCase
         $this->artisan('tenants:apply-lifecycle')->assertSuccessful();
         $this->assertSame(TenantStatus::ReadOnly->value, $noSetting->fresh()?->status);
 
-        // A fallback that stopped being an active free plan is never applied.
+        // A fallback setting that stopped being an active free plan is never applied.
         Carbon::setTestNow(Carbon::now());
         app(PlatformBranding::class)->update(['trial_fallback_plan_id' => (string) $this->free->id]);
-        $this->free->forceFill(['is_active' => false])->save();
         $stale = $this->selfSignupTrial(CarbonImmutable::now()->addDays(2));
 
         $this->travel(12)->days();

@@ -62,6 +62,8 @@ return [
         'items' => 'items',
         'invoices_month' => 'monthly invoices',
         'storage_mb' => 'storage',
+        'customers' => 'customers',
+        'suppliers' => 'suppliers',
         'other' => 'this resource',
     ],
 

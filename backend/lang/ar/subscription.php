@@ -62,6 +62,8 @@ return [
         'items' => 'الأصناف',
         'invoices_month' => 'الفواتير الشهرية',
         'storage_mb' => 'مساحة التخزين',
+        'customers' => 'العملاء',
+        'suppliers' => 'الموردين',
         'other' => 'هذا المورد',
     ],
 

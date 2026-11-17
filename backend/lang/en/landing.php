@@ -29,6 +29,8 @@ return [
         'items' => 'Items',
         'invoices_per_month' => 'Invoices per month',
         'storage_mb' => 'Storage (MB)',
+        'customers' => 'Customers',
+        'suppliers' => 'Suppliers',
     ],
 
     'errors' => [

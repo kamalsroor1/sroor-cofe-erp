@@ -172,6 +172,8 @@ return [
         'items' => 'Items',
         'invoices_month' => 'Invoices this month',
         'storage_mb' => 'Storage (MB)',
+        'customers' => 'Customers',
+        'suppliers' => 'Suppliers',
     ],
     'console' => [
         'nav' => 'Payments review',

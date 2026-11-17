@@ -21,7 +21,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  *     "details": { "limit": "stores", "max": 3 }
  *   }
  * `limit` is one of the plan limit keys (users, stores, warehouses, vans, items,
- * invoices_month, storage_mb); `max` is the tenant's effective limit (never null here:
+ * invoices_month, storage_mb, customers, suppliers); `max` is the tenant's effective limit (never null here:
  * null means unlimited and can't be exceeded).
  */
 final class PlanLimitExceededException extends HttpException

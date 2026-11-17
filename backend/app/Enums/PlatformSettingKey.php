@@ -40,7 +40,7 @@ enum PlatformSettingKey: string
     // Plan a signup without a chosen plan gets (an active plan id; blank = the catalog fallback).
     case DefaultSignupPlanId = 'default_signup_plan_id';
     // Plan a SELF-SIGNUP trial falls back to when it ends unpaid (an active is_free plan id;
-    // blank = the trial goes read-only like a console-created one).
+    // PLAN-11: blank = the active catalog `free` plan, see App\Services\Signup\TrialFallbackPlan).
     case TrialFallbackPlanId = 'trial_fallback_plan_id';
     // Public self-signup on/off (default on, config signup.self_signup_enabled).
     case SelfSignupEnabled = 'self_signup_enabled';

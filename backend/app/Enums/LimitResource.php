@@ -25,6 +25,9 @@ enum LimitResource: string
     case Items = 'items';
     case InvoicesMonth = 'invoices_month';
     case StorageMb = 'storage_mb';
+    // PLAN-11: customers (the walk-in customer is not counted) and suppliers.
+    case Customers = 'customers';
+    case Suppliers = 'suppliers';
 
     /** The `plans` column holding this limit (one of Plan::LIMIT_COLUMNS). */
     public function planColumn(): string
@@ -37,6 +40,8 @@ enum LimitResource: string
             self::Items => 'max_items',
             self::InvoicesMonth => 'max_invoices_per_month',
             self::StorageMb => 'max_storage_mb',
+            self::Customers => 'max_customers',
+            self::Suppliers => 'max_suppliers',
         };
     }
 
