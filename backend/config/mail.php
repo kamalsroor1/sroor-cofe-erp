@@ -115,4 +115,20 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Global "Reply-To" Address (SIGN-10)
+    |--------------------------------------------------------------------------
+    |
+    | Optional. When MAIL_REPLY_TO_ADDRESS is set, the mailer adds it to every
+    | outgoing message (e.g. the support inbox, since the from-address is a
+    | no-reply box). Empty = no Reply-To header (MailManager skips a null address).
+    |
+    */
+
+    'reply_to' => [
+        'address' => env('MAIL_REPLY_TO_ADDRESS') ?: null,
+        'name' => env('MAIL_REPLY_TO_NAME') ?: null,
+    ],
+
 ];
