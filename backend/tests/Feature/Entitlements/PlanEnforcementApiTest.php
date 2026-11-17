@@ -10,6 +10,7 @@ use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Entitlements\PlanEnforcer;
+use App\Support\StoreLimitBucket;
 use Database\Seeders\Catalog\FeatureCatalog;
 use Database\Seeders\Catalog\PlanCatalog;
 use Illuminate\Routing\Route as LaravelRoute;
@@ -97,11 +98,18 @@ final class PlanEnforcementApiTest extends TenantTestCase
 
         $this->assertNotEmpty($gated);
 
-        // A CORE feature is on in every seeded plan, so gating it can never lock a plan out.
+        // A CORE feature is on in every seeded plan, so gating it can never lock a plan out, except
+        // the core features a plan explicitly removes (PLAN-10: the free plan has no report export
+        // and no Telegram notifications), which stay on in every paid plan.
         foreach (FeatureCatalog::coreKeys() as $core) {
             foreach (PlanCatalog::SLUGS as $slug) {
-                $this->assertTrue(PlanCatalog::features($slug)[$core], "{$slug} must include core feature {$core}.");
+                $expected = ! in_array($core, PlanCatalog::removedCoreFeatures($slug), true);
+                $this->assertSame($expected, PlanCatalog::features($slug)[$core], "{$slug} core feature {$core}.");
             }
+        }
+        $this->assertSame(['reports.export', 'telegram.notifications'], PlanCatalog::removedCoreFeatures('free'));
+        foreach (['basic', 'pro', 'enterprise'] as $paid) {
+            $this->assertSame([], PlanCatalog::removedCoreFeatures($paid));
         }
 
         // Every non-core gated feature is on in at least one seeded plan (it is sellable).
@@ -209,23 +217,29 @@ final class PlanEnforcementApiTest extends TenantTestCase
         $this->assertSame(2, $this->inTenant($tenant, fn (): int => User::query()->count()));
     }
 
-    public function test_a_trial_tenant_gets_the_trial_plans_limits(): void
+    public function test_a_free_plan_tenant_gets_the_free_plans_limits(): void
     {
         $free = collect(PlanCatalog::all())->firstWhere('slug', 'free');
         $plan = $this->plan(array_intersect_key($free, array_flip([
-            'max_users', 'max_stores', 'max_warehouses', 'max_vans', 'max_items', 'max_invoices_per_month', 'max_storage_mb', 'features',
+            'max_users', 'max_stores', 'max_warehouses', 'max_vans', 'max_items', 'max_invoices_per_month', 'max_storage_mb', 'features', 'is_free',
         ])));
-        $tenant = $this->tenantOn($plan, ['status' => 'trial']);
+        $tenant = $this->tenantOn($plan, ['status' => 'active']);
         $headers = $this->tenantHeaders($tenant);
 
-        // free: 3 users, admin is #1.
+        // PLAN-10 free: 2 users (owner + cashier), admin is #1.
         $this->postJson('/api/v1/users', $this->userPayload('01000000641', $tenant), $headers)->assertStatus(201);
-        $this->postJson('/api/v1/users', $this->userPayload('01000000642', $tenant), $headers)->assertStatus(201);
-        $this->postJson('/api/v1/users', $this->userPayload('01000000643', $tenant), $headers)
+        $this->postJson('/api/v1/users', $this->userPayload('01000000642', $tenant), $headers)
             ->assertStatus(403)
-            ->assertJsonPath('details.max', 3);
-        // free: 1 store, the main store already uses it.
+            ->assertJsonPath('details.max', 2);
+        // free: 1 branch, the main (retail) store already uses it.
         $this->postJson('/api/v1/stores', ['name' => 'Branch', 'type' => 'retail_shop'], $headers)->assertStatus(403);
+        // free: 0 extra warehouses and 0 vans.
+        $this->postJson('/api/v1/stores', ['name' => 'Depot', 'type' => 'main_warehouse'], $headers)
+            ->assertStatus(403)
+            ->assertJsonPath('details.max', 0);
+        $this->postJson('/api/v1/stores', ['name' => 'Van', 'type' => 'wholesale_van'], $headers)->assertStatus(403);
+        // The main store the tenant was born with is a retail store: it never counts as a warehouse.
+        $this->assertSame(0, $this->inTenant($tenant, fn (): int => StoreLimitBucket::count(LimitResource::Warehouses)));
     }
 
     public function test_restoring_a_trashed_store_cannot_bypass_the_stores_limit(): void

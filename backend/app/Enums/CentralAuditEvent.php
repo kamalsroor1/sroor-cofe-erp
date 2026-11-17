@@ -112,6 +112,8 @@ enum CentralAuditEvent: string
     // OPS-20: an operator recorded an out-of-system payment; an operator's 2FA was reset from the CLI
     case BillingPaymentRecorded = 'billing_payment_recorded';
     case TwoFactorReset = 'two_factor_reset';
+    // PLAN-10: a tenant was put on a permanent free plan (self-signup trial fallback, legacy free trial)
+    case TenantMovedToFreePlan = 'tenant_moved_to_free_plan';
 
     public function translationKey(): string
     {

@@ -42,6 +42,7 @@ use Illuminate\Validation\ValidationException;
  * @property int|null $max_invoices_per_month
  * @property int|null $max_storage_mb
  * @property int $trial_days
+ * @property bool $is_free PLAN-10: permanent free plan (never billed, no trial, tenant always active)
  * @property array<string, mixed>|null $features
  * @property bool $is_active
  * @property bool $is_public
@@ -93,6 +94,7 @@ class Plan extends Model
         'max_invoices_per_month',
         'max_storage_mb',
         'trial_days',
+        'is_free',
         'features',
         'is_active',
         'is_public',
@@ -119,6 +121,7 @@ class Plan extends Model
         'max_invoices_per_month' => 'integer',
         'max_storage_mb' => 'integer',
         'trial_days' => 'integer',
+        'is_free' => 'boolean',
         'features' => 'array',
         'is_active' => 'boolean',
         'is_public' => 'boolean',

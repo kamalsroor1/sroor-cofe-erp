@@ -2,6 +2,8 @@
 
 namespace App\DTOs;
 
+use App\Enums\TenantSignupSource;
+
 class CreateTenantDTO
 {
     public function __construct(
@@ -16,6 +18,8 @@ class CreateTenantDTO
         public readonly ?string $tenancyDbName = null,
         public readonly ?string $tenancyDbUsername = null,
         public readonly ?string $tenancyDbPassword = null,
+        // PLAN-10: how the tenant was created (console by default; the signup flow passes self_signup).
+        public readonly TenantSignupSource $signupSource = TenantSignupSource::Console,
     ) {}
 
     public static function fromArray(array $data): self
@@ -32,6 +36,9 @@ class CreateTenantDTO
             tenancyDbName: ! empty($data['tenancy_db_name']) ? trim((string) $data['tenancy_db_name']) : null,
             tenancyDbUsername: ! empty($data['tenancy_db_username']) ? trim((string) $data['tenancy_db_username']) : null,
             tenancyDbPassword: ! empty($data['tenancy_db_password']) ? trim((string) $data['tenancy_db_password']) : null,
+            signupSource: ($data['signup_source'] ?? null) instanceof TenantSignupSource
+                ? $data['signup_source']
+                : (TenantSignupSource::tryFrom((string) ($data['signup_source'] ?? '')) ?? TenantSignupSource::Console),
         );
     }
 }

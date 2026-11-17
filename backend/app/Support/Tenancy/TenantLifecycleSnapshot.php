@@ -24,6 +24,10 @@ use Carbon\CarbonImmutable;
  *    trial extension.
  *  - suspensionReason: why the tenant was suspended/cancelled (`tenants.suspension_reason`,
  *    CTO W1 Q2). A `violation` suspension is never archived automatically.
+ *  - onFreePlan (PLAN-10): the tenant's plan is a permanent free plan (`plans.is_free`): no
+ *    time-driven move out of trial / active / past_due (a free tenant is always active).
+ *  - trialFallsBackToFreePlan (PLAN-10): a self-signup trial with a platform fallback plan: the
+ *    trial deadline leads to `active` (on the free plan) instead of `read_only`.
  *
  * Build it from a central row with App\Models\Tenant::lifecycleSnapshot() (IDEN-3.2).
  */
@@ -38,5 +42,7 @@ final readonly class TenantLifecycleSnapshot
         public ?CarbonImmutable $trialExtendedAt = null,
         public bool $hasEverPaid = false,
         public ?TenantSuspensionReason $suspensionReason = null,
+        public bool $onFreePlan = false,
+        public bool $trialFallsBackToFreePlan = false,
     ) {}
 }

@@ -36,6 +36,11 @@ final class PlatformSettingsDTO
         'billing_payment_note',
         'billing_tax_rate',
         'signup_trial_days',
+        // PLAN-10
+        'default_signup_plan_id',
+        'trial_fallback_plan_id',
+        'self_signup_enabled',
+        'signup_daily_cap',
     ];
 
     /**
@@ -57,7 +62,7 @@ final class PlatformSettingsDTO
 
             $value = $data[$key];
 
-            if ($key === PlatformSettingKey::PoweredByEnabled->value) {
+            if ($key === PlatformSettingKey::PoweredByEnabled->value || $key === PlatformSettingKey::SelfSignupEnabled->value) {
                 $changes[$key] = filter_var($value, FILTER_VALIDATE_BOOL);
 
                 continue;
@@ -65,7 +70,14 @@ final class PlatformSettingsDTO
 
             $value = $value === null ? null : trim((string) $value);
 
-            if ($key === PlatformSettingKey::SignupTrialDays->value && $value !== null && $value !== '') {
+            $wholeNumbers = [
+                PlatformSettingKey::SignupTrialDays->value,
+                PlatformSettingKey::DefaultSignupPlanId->value,
+                PlatformSettingKey::TrialFallbackPlanId->value,
+                PlatformSettingKey::SignupDailyCap->value,
+            ];
+
+            if (in_array($key, $wholeNumbers, true) && $value !== null && $value !== '') {
                 // Stored as a plain whole number ("07" -> "7").
                 $value = (string) (int) $value;
             }

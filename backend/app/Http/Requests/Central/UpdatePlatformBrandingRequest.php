@@ -6,6 +6,7 @@ namespace App\Http\Requests\Central;
 
 use App\DTOs\Central\PlatformSettingsDTO;
 use App\Enums\CentralPermission;
+use App\Models\Plan;
 use App\Services\Branding\PlatformBranding;
 use App\Support\PlatformSuperAdmin;
 use Illuminate\Foundation\Http\FormRequest;
@@ -51,6 +52,12 @@ final class UpdatePlatformBrandingRequest extends FormRequest
             'billing_tax_rate' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:100', 'regex:/^\d{1,3}(\.\d{1,3})?$/'],
             // SELL-06: trial days of an approved signup whose plan has none (null = config default).
             'signup_trial_days' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:'.PlatformBranding::MAX_SIGNUP_TRIAL_DAYS],
+            // PLAN-10: signup / free plan settings. Plan ids are checked against the central
+            // `plans` table in after() (active; the fallback must also be a permanent free plan).
+            'default_signup_plan_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'trial_fallback_plan_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'self_signup_enabled' => ['sometimes', 'required', 'boolean'],
+            'signup_daily_cap' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:'.PlatformBranding::MAX_SIGNUP_DAILY_CAP],
         ];
     }
 
@@ -71,6 +78,40 @@ final class UpdatePlatformBrandingRequest extends FormRequest
                     $validator->errors()->add('settings', __('super.platform_branding.nothing_to_update'));
                 }
             },
+            fn (Validator $validator) => $this->validateSignupPlans($validator),
         ];
+    }
+
+    /**
+     * PLAN-10: the default signup plan must be an active plan; the trial fallback plan an active
+     * permanent free plan (plans.is_free). Plan is pinned to the central connection.
+     */
+    private function validateSignupPlans(Validator $validator): void
+    {
+        $checks = [
+            'default_signup_plan_id' => ['default_plan_invalid', false],
+            'trial_fallback_plan_id' => ['fallback_plan_invalid', true],
+        ];
+
+        foreach ($checks as $field => [$message, $mustBeFree]) {
+            if ($validator->errors()->has($field)) {
+                continue;
+            }
+
+            $value = $this->input($field);
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            $valid = Plan::query()
+                ->whereKey((int) $value)
+                ->where('is_active', true)
+                ->when($mustBeFree, fn ($query) => $query->where('is_free', true))
+                ->exists();
+
+            if (! $valid) {
+                $validator->errors()->add($field, (string) __('billing.signup_settings.'.$message));
+            }
+        }
     }
 }

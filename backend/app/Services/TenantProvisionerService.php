@@ -174,8 +174,21 @@ class TenantProvisionerService implements TenantProvisionerInterface
         // (subscription_ends_at = null). trial_days = 0 means "pending payment": the tenant
         // starts read-only and its subscription pending_payment until a verified payment
         // makes it active (ENTI-3.4, actor Billing; a super-admin activation goes through it too).
-        $startsAsTrial = $dto->trialDays > 0;
+        // PLAN-10: a permanent free plan (is_free) is born `active` with no trial and no end
+        // date, whatever trial days were asked for; its subscription is `active` at 0.000.
+        $isFree = (bool) $plan->is_free;
+        $startsAsTrial = ! $isFree && $dto->trialDays > 0;
         $now = now();
+        $status = match (true) {
+            $isFree => TenantStatus::Active,
+            $startsAsTrial => TenantStatus::Trial,
+            default => TenantStatus::ReadOnly,
+        };
+        $subscriptionStatus = match (true) {
+            $isFree => SubscriptionStatus::Active,
+            $startsAsTrial => SubscriptionStatus::Trialing,
+            default => SubscriptionStatus::PendingPayment,
+        };
 
         $tenantData = [
             'id' => $dto->slug,
@@ -184,11 +197,12 @@ class TenantProvisionerService implements TenantProvisionerInterface
             'email' => $dto->email,
             'phone' => $dto->phone,
             'plan_id' => $plan->id,
-            'status' => $startsAsTrial ? TenantStatus::Trial->value : TenantStatus::ReadOnly->value,
+            'status' => $status->value,
             'status_changed_at' => $now,
-            'read_only_since' => $startsAsTrial ? null : $now,
+            'read_only_since' => $status === TenantStatus::ReadOnly ? $now : null,
             'trial_ends_at' => $startsAsTrial ? $now->copy()->addDays($dto->trialDays) : null,
             'subscription_ends_at' => null,
+            'signup_source' => $dto->signupSource->value,
             'settings' => [
                 'theme_preference' => 'dark',
                 'currency' => config('app.currency', 'EGP'),
@@ -230,14 +244,19 @@ class TenantProvisionerService implements TenantProvisionerInterface
             'tenant_id' => $tenant->id,
             'plan_id' => $plan->id,
             'billing_cycle' => BillingCycle::Monthly,
-            'status' => $startsAsTrial ? SubscriptionStatus::Trialing : SubscriptionStatus::PendingPayment,
-            'amount' => $plan->price_monthly,
+            'status' => $subscriptionStatus,
+            'amount' => $isFree ? '0.000' : $plan->price_monthly,
             'currency' => Subscription::DEFAULT_CURRENCY,
             'price_locked' => false,
             'is_founder' => false,
             'founder_price_until' => null,
             'starts_at' => $now,
-            'ends_at' => $startsAsTrial ? $now->copy()->addDays($dto->trialDays) : $now->copy()->addMonth(),
+            // A free plan has no paid term: ends_at (a required column) equals starts_at.
+            'ends_at' => match (true) {
+                $isFree => $now,
+                $startsAsTrial => $now->copy()->addDays($dto->trialDays),
+                default => $now->copy()->addMonth(),
+            },
             'payment_method' => 'manual',
             'notes' => __('super.auto_provision_note'),
         ]);
@@ -245,7 +264,7 @@ class TenantProvisionerService implements TenantProvisionerInterface
         // Joins this central transaction: rolls back with the tenant row.
         app(CentralAuditLogger::class)->record(
             CentralAuditEvent::TenantProvisioningStarted,
-            ['slug' => $dto->slug, 'plan_id' => $plan->id, 'explicit_database' => ! empty($dto->tenancyDbName), 'retry' => false],
+            ['slug' => $dto->slug, 'plan_id' => $plan->id, 'explicit_database' => ! empty($dto->tenancyDbName), 'retry' => false, 'signup_source' => $dto->signupSource->value],
             subject: $tenant,
         );
 

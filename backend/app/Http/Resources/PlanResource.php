@@ -52,6 +52,8 @@ class PlanResource extends JsonResource
             'max_invoices_per_month' => $this->max_invoices_per_month,
             'max_storage_mb' => $this->max_storage_mb,
             'trial_days' => $this->trial_days,
+            // PLAN-10: permanent free plan (never billed, no trial; its tenants are always active).
+            'is_free' => (bool) $this->is_free,
             'is_active' => $this->is_active,
             'is_public' => $this->is_public,
             'is_popular' => $this->is_popular,

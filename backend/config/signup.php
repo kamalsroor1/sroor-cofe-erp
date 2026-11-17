@@ -28,6 +28,13 @@ return [
     'max_pending' => (int) (env('SIGNUP_MAX_PENDING') ?: 500),
 
     /*
+    | PLAN-10 defaults of the platform settings `self_signup_enabled` and `signup_daily_cap`
+    | (the super-admin console overrides them in `platform_settings`).
+    */
+    'self_signup_enabled' => (bool) env('SIGNUP_SELF_SIGNUP_ENABLED', true),
+    'daily_cap' => (int) (env('SIGNUP_DAILY_CAP') ?: 100),
+
+    /*
     | From this many pending requests on, the per-request Telegram message is replaced by at
     | most one backlog summary per hour.
     */

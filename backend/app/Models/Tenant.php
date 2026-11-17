@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Enums\TenantAccessLevel;
 use App\Enums\TenantArchiveState;
 use App\Enums\TenantProvisioningStatus;
+use App\Enums\TenantSignupSource;
 use App\Enums\TenantStatus;
+use App\Services\Branding\PlatformBranding;
 use App\Support\Tenancy\TenantLifecyclePolicy;
 use App\Support\Tenancy\TenantLifecycleSnapshot;
 use App\Support\Tenancy\TenantSuspensionReason;
@@ -63,6 +65,7 @@ use Throwable;
  * @property Carbon|null $purge_started_at OPS-9: `tenants:purge` started (the workspace is going)
  * @property Carbon|null $purged_at OPS-9: purge finished; the row is a tombstone
  * @property string|null $purged_by `central_user:<id>` or `cli:<os user>`
+ * @property TenantSignupSource|null $signup_source PLAN-10: self_signup | console (column default console)
  * @property array|null $enabled_features
  * @property array|null $settings
  * @property Carbon|null $created_at
@@ -102,6 +105,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'final_backup_id' => 'integer',
         'purge_started_at' => 'datetime',
         'purged_at' => 'datetime',
+        'signup_source' => TenantSignupSource::class,
     ];
 
     public static function getCustomColumns(): array
@@ -139,6 +143,8 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'purge_started_at',
             'purged_at',
             'purged_by',
+            // PLAN-10: how the tenant was created.
+            'signup_source',
             // Every other real column of `tenants`: anything missing here is copied into `data`
             // on save and the copy overrides the column on hydration (stale updated_at, and an
             // array-cast `settings` re-encoded into ever-growing nested JSON on each save).
@@ -472,14 +478,33 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         return TenantStatus::tryFrom((string) $this->status);
     }
 
+    /** PLAN-10: created from the public signup form (NULL = an unrefreshed row = console). */
+    public function isSelfSignup(): bool
+    {
+        return $this->signup_source === TenantSignupSource::SelfSignup;
+    }
+
     /**
      * The stored lifecycle facts for App\Support\Tenancy\TenantLifecyclePolicy.
      *
      * An unknown stored status is read as `suspended` (never grants access by accident).
      * $hasEverPaid is supplied by the caller (billing knows it, ENTI-3.x).
+     *
+     * PLAN-10:
+     *  - onFreePlan is read only when the `plan` relation is already loaded (the daily sweep
+     *    eager-loads it), so no request pays a hidden query; a free tenant is born `active` with
+     *    no deadline, so the policy never moves it anyway;
+     *  - trialFallsBackToFreePlan: a self-signup trial when the platform names a fallback plan
+     *    (`trial_fallback_plan_id`, cached platform setting): its trial ends in `active` (on the
+     *    free plan, applied by the sweep), never in read-only.
      */
     public function lifecycleSnapshot(bool $hasEverPaid = false): TenantLifecycleSnapshot
     {
+        $onFreePlan = $this->relationLoaded('plan') && $this->plan instanceof Plan && $this->plan->is_free;
+        $fallsBack = $this->status === TenantStatus::Trial->value
+            && $this->isSelfSignup()
+            && app(PlatformBranding::class)->get()->trialFallbackPlanId !== null;
+
         return new TenantLifecycleSnapshot(
             status: $this->lifecycleStatus() ?? TenantStatus::Suspended,
             statusChangedAt: self::immutable($this->status_changed_at),
@@ -489,6 +514,8 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             trialExtendedAt: self::immutable($this->trial_extended_at),
             hasEverPaid: $hasEverPaid,
             suspensionReason: $this->suspension_reason,
+            onFreePlan: $onFreePlan,
+            trialFallsBackToFreePlan: $fallsBack,
         );
     }
 

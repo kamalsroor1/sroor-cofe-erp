@@ -40,6 +40,9 @@ final class PlatformBranding
     /** SELL-06: upper bound of the platform signup trial length (UpdatePlatformBrandingRequest). */
     public const MAX_SIGNUP_TRIAL_DAYS = 90;
 
+    /** PLAN-10: upper bound of the daily automatic signup cap (UpdatePlatformBrandingRequest). */
+    public const MAX_SIGNUP_DAILY_CAP = 100000;
+
     public function get(): PlatformBrandingDTO
     {
         $stored = $this->storedValues();
@@ -64,6 +67,10 @@ final class PlatformBranding
             'billing_payment_note' => $this->billingString(PlatformSettingKey::BillingPaymentNote, $stored),
             'billing_tax_rate' => $this->taxRate($stored),
             'signup_trial_days' => $this->signupTrialDays($stored),
+            'default_signup_plan_id' => $this->planId(PlatformSettingKey::DefaultSignupPlanId, $stored),
+            'trial_fallback_plan_id' => $this->planId(PlatformSettingKey::TrialFallbackPlanId, $stored),
+            'self_signup_enabled' => $this->selfSignupEnabled($stored),
+            'signup_daily_cap' => $this->signupDailyCap($stored),
         ]);
     }
 
@@ -234,6 +241,49 @@ final class PlatformBranding
         }
 
         return max(1, min(self::MAX_SIGNUP_TRIAL_DAYS, (int) config('tenant_lifecycle.trial_days', 14)));
+    }
+
+    /**
+     * PLAN-10: a stored plan id (positive whole number), else null. Whether the plan still exists,
+     * is active (and free, for the fallback) is checked by the reader at use time.
+     *
+     * @param  array<string, string|null>  $stored
+     */
+    private function planId(PlatformSettingKey $key, array $stored): ?int
+    {
+        $value = trim((string) ($stored[$key->value] ?? ''));
+
+        return preg_match('/^[1-9]\d{0,18}$/', $value) === 1 ? (int) $value : null;
+    }
+
+    /**
+     * PLAN-10: public self-signup switch; stored '1'/'0', else config signup.self_signup_enabled (on).
+     *
+     * @param  array<string, string|null>  $stored
+     */
+    private function selfSignupEnabled(array $stored): bool
+    {
+        $value = $stored[PlatformSettingKey::SelfSignupEnabled->value] ?? null;
+        $parsed = $value === null ? null : filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
+
+        return $parsed ?? filter_var(config('signup.self_signup_enabled', true), FILTER_VALIDATE_BOOL);
+    }
+
+    /**
+     * PLAN-10: shops created automatically per day; a stored whole number 1..MAX, else
+     * config signup.daily_cap (100), clamped to the same range.
+     *
+     * @param  array<string, string|null>  $stored
+     */
+    private function signupDailyCap(array $stored): int
+    {
+        $value = trim((string) ($stored[PlatformSettingKey::SignupDailyCap->value] ?? ''));
+
+        if (preg_match('/^\d{1,6}$/', $value) === 1 && (int) $value >= 1 && (int) $value <= self::MAX_SIGNUP_DAILY_CAP) {
+            return (int) $value;
+        }
+
+        return max(1, min(self::MAX_SIGNUP_DAILY_CAP, (int) config('signup.daily_cap', 100)));
     }
 
     /**

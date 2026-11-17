@@ -21,9 +21,14 @@ use App\Models\Plan;
  *   console with an end date (App\Support\Billing\PlanPromotion);
  * - every price EXCLUDES VAT (14% is added on the SaaS invoice, ENTI-3.2);
  * - NULL limit = unlimited (never a 999… sentinel);
- * - only the trial plan has trial days; paid plans have trial_days = 0, so a tenant an operator
+ * - no plan has trial days of its own; paid plans have trial_days = 0, so a tenant an operator
  *   creates on them waits in pending_payment until paid (CTO W1 Q4). An approved SIGNUP on a paid
- *   plan gets the platform default trial instead (SELL-06, App\Services\Signup\SignupTrialTerms).
+ *   plan gets the platform default trial instead (SELL-06, App\Services\Signup\SignupTrialTerms);
+ * - PLAN-10 (docs/03-architecture/free-plan-and-self-signup-2026-11-18.md 3): `free` is the
+ *   PERMANENT free plan (is_free): never billed, no trial, its tenants are always active. Limits are
+ *   on the volume of work (2 users, 100 items, 150 sales invoices a month, 200 MB, 1 branch, no
+ *   extra warehouse or van); it has every core feature except report export and Telegram
+ *   notifications, and no extra.
  *
  * Money is a DECIMAL(12,3) string. Names/descriptions are keys in lang/{ar,en}/plans.php.
  */
@@ -38,8 +43,8 @@ final class PlanCatalog
      * @var array<string, list<string>>
      */
     private const EXTRA_FEATURES = [
-        // The trial shows the Growth plan in full (without the API/domain), §5.
-        'free' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs'],
+        // PLAN-10: the permanent free plan has no extra.
+        'free' => [],
         // PLAN-01: Starter has transfers; reorder / profit reports / activity log come with the
         // control bundle and mixes as an add-on. Growth includes mixes.
         'basic' => ['transfers.manage'],
@@ -49,6 +54,15 @@ final class PlanCatalog
         // nothing, so Enterprise no longer lists it (owner decision 2026-11-15); Enterprise is the
         // service plan: premium support and (yearly) onboarding are included (AddonCatalog).
         'enterprise' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs'],
+    ];
+
+    /**
+     * Core features a plan does NOT get (PLAN-10). Every other core feature is on in every plan.
+     *
+     * @var array<string, list<string>>
+     */
+    private const REMOVED_CORE_FEATURES = [
+        'free' => ['reports.export', 'telegram.notifications'],
     ];
 
     /**
@@ -67,13 +81,14 @@ final class PlanCatalog
             'promo_starts_at' => null,
             'promo_ends_at' => null,
             'max_stores' => 1,
-            'max_warehouses' => 1,
+            'max_warehouses' => 0,
             'max_vans' => 0,
-            'max_users' => 3,
-            'max_items' => 200,
-            'max_invoices_per_month' => 300,
-            'max_storage_mb' => 500,
-            'trial_days' => 14,
+            'max_users' => 2,
+            'max_items' => 100,
+            'max_invoices_per_month' => 150,
+            'max_storage_mb' => 200,
+            'trial_days' => 0,
+            'is_free' => true,
             'is_active' => true,
             'is_public' => true,
             'is_popular' => false,
@@ -98,6 +113,7 @@ final class PlanCatalog
             'max_invoices_per_month' => null,
             'max_storage_mb' => 2048,
             'trial_days' => 0,
+            'is_free' => false,
             'is_active' => true,
             'is_public' => true,
             'is_popular' => false,
@@ -122,6 +138,7 @@ final class PlanCatalog
             'max_invoices_per_month' => null,
             'max_storage_mb' => 10240,
             'trial_days' => 0,
+            'is_free' => false,
             'is_active' => true,
             'is_public' => true,
             'is_popular' => true,
@@ -146,6 +163,7 @@ final class PlanCatalog
             'max_invoices_per_month' => null,
             'max_storage_mb' => 51200,
             'trial_days' => 0,
+            'is_free' => false,
             'is_active' => true,
             'is_public' => true,
             'is_popular' => false,
@@ -173,13 +191,15 @@ final class PlanCatalog
     }
 
     /**
-     * Every catalog feature key => on/off for $slug (core on, listed extras on, rest off).
+     * Every catalog feature key => on/off for $slug (core on unless the plan removes it, listed
+     * extras on, rest off).
      *
      * @return array<string, bool>
      */
     public static function features(string $slug): array
     {
-        $on = array_merge(FeatureCatalog::coreKeys(), self::EXTRA_FEATURES[$slug] ?? []);
+        $core = array_diff(FeatureCatalog::coreKeys(), self::removedCoreFeatures($slug));
+        $on = array_merge($core, self::EXTRA_FEATURES[$slug] ?? []);
         $features = [];
 
         foreach (FeatureCatalog::keys() as $key) {
@@ -187,6 +207,16 @@ final class PlanCatalog
         }
 
         return $features;
+    }
+
+    /**
+     * PLAN-10: core features $slug does NOT get (every other core feature is on).
+     *
+     * @return list<string>
+     */
+    public static function removedCoreFeatures(string $slug): array
+    {
+        return self::REMOVED_CORE_FEATURES[$slug] ?? [];
     }
 
     public static function nameKey(string $slug): string

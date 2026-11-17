@@ -23,6 +23,12 @@ return [
     'plan_editor' => [
         'addon_inactive' => 'The add-on :addon is retired: it cannot be offered or included on a plan, only marked unavailable.',
         'founder_above_list' => 'The founder price cannot be above the regular plan price for the same billing cycle.',
+        'free_plan_price_must_be_zero' => 'A permanent free plan must have a price of 0.',
+        'free_plan_no_special_price' => 'A permanent free plan cannot have a founder or promotion price.',
+    ],
+    'signup_settings' => [
+        'default_plan_invalid' => 'The default signup plan must be an active plan.',
+        'fallback_plan_invalid' => 'The plan shops fall back to after their trial must be an active permanent free plan.',
     ],
     'price_step' => [
         'founder' => 'Founder price',
@@ -119,6 +125,7 @@ return [
         'payment_already_pending' => 'A payment for this invoice is already waiting for review.',
         'amount_out_of_range' => 'The amount must be greater than zero and not more than the remaining due (:remaining).',
         'no_plan' => 'No valid plan or billing cycle was given for this invoice.',
+        'free_plan_not_billable' => 'This plan is permanently free and cannot be invoiced.',
         'founder_unavailable' => 'The founder price is not available for this account.',
         'receipt_invalid' => 'The receipt must be a JPG, PNG, WEBP or PDF file.',
         'discount_too_high' => 'The discount must be lower than the invoice subtotal.',

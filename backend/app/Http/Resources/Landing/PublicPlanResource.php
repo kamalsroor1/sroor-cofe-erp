@@ -48,6 +48,8 @@ final class PublicPlanResource extends JsonResource
             'is_popular' => $plan->is_popular,
             'sort_order' => $plan->sort_order,
             'trial_days' => $plan->trial_days,
+            // PLAN-10: a permanent free plan (no trial, never billed).
+            'is_free' => (bool) $plan->is_free,
             'price_monthly' => $plan->price_monthly,
             'price_yearly' => $plan->price_yearly,
             'founder_price_monthly' => $this->founderPrice($plan->founder_price_monthly),

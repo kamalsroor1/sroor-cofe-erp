@@ -87,6 +87,8 @@ trait ValidatesPlanPayload
             'max_warehouses' => ['sometimes', 'nullable', 'integer', 'min:0', self::MAX_LIMIT],
             'max_vans' => ['sometimes', 'nullable', 'integer', 'min:0', self::MAX_LIMIT],
             'trial_days' => ['sometimes', 'integer', 'min:0', 'max:365'],
+            // PLAN-10: permanent free plan; every price must then be 0 (validateFreePlan()).
+            'is_free' => ['sometimes', 'boolean'],
             'is_active' => ['required', 'boolean'],
             'is_public' => ['sometimes', 'boolean'],
             'is_popular' => ['required', 'boolean'],
@@ -111,6 +113,7 @@ trait ValidatesPlanPayload
             fn (Validator $validator) => $this->validateFeatures($validator),
             fn (Validator $validator) => $this->validateAddons($validator),
             fn (Validator $validator) => $this->validatePricing($validator),
+            fn (Validator $validator) => $this->validateFreePlan($validator),
         ];
     }
 
@@ -277,6 +280,36 @@ trait ValidatesPlanPayload
             $validator->errors()->add('promo_ends_at', (string) __('super.plan_promo_end_required'));
         } elseif ($this->changesPromotion($plan) && ! $endsAt->isFuture()) {
             $validator->errors()->add('promo_ends_at', (string) __('super.plan_promo_end_past'));
+        }
+    }
+
+    /**
+     * PLAN-10, checked on the plan after the write: a permanent free plan (is_free) is never
+     * billed, so its monthly and yearly prices are 0 and it has no founder, transition or
+     * compare-at ("was") price.
+     */
+    private function validateFreePlan(Validator $validator): void
+    {
+        $plan = $this->storedPlan();
+        $isFree = $this->has('is_free')
+            ? filter_var($this->input('is_free'), FILTER_VALIDATE_BOOLEAN)
+            : (bool) $plan?->is_free;
+
+        if (! $isFree) {
+            return;
+        }
+
+        foreach (self::CYCLES as $cycle) {
+            $price = $this->moneyAfter($plan, 'price_'.$cycle);
+            if ($price !== null && bccomp($price, '0', 3) !== 0) {
+                $validator->errors()->add('price_'.$cycle, (string) __('billing.plan_editor.free_plan_price_must_be_zero'));
+            }
+
+            foreach (['founder_price_', 'founder_transition_price_', 'compare_at_price_'] as $prefix) {
+                if ($this->moneyAfter($plan, $prefix.$cycle) !== null) {
+                    $validator->errors()->add($prefix.$cycle, (string) __('billing.plan_editor.free_plan_no_special_price'));
+                }
+            }
         }
     }
 

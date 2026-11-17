@@ -93,16 +93,41 @@ final class SignupTrialLifecycleTest extends BillingTestCase
     public function test_a_plan_with_its_own_trial_keeps_it_whatever_the_platform_default(): void
     {
         $this->setSignupTrialDays('21');
-        $free = Plan::query()->where('slug', 'free')->sole();
+        $pro = Plan::query()->where('slug', 'pro')->sole();
+        $pro->forceFill(['trial_days' => 10])->save();
         $now = CarbonImmutable::now();
 
-        [$slug] = $this->approve('free');
+        [$slug] = $this->approve('pro');
 
         $tenant = Tenant::query()->findOrFail($slug);
         $this->assertSame(TenantStatus::Trial->value, $tenant->status);
-        $this->assertSame((int) $free->id, (int) $tenant->plan_id);
-        $this->assertSame($now->addDays($free->trial_days)->toIso8601String(), $tenant->trial_ends_at?->toIso8601String());
+        $this->assertSame((int) $pro->id, (int) $tenant->plan_id);
+        $this->assertSame($now->addDays(10)->toIso8601String(), $tenant->trial_ends_at?->toIso8601String());
         $this->assertSame(SubscriptionStatus::Trialing, Subscription::query()->where('tenant_id', $slug)->sole()->status);
+    }
+
+    public function test_a_free_plan_signup_is_active_at_once_with_no_trial_whatever_the_platform_default(): void
+    {
+        // PLAN-10: the permanent free plan has no trial and no end date.
+        $this->setSignupTrialDays('21');
+        $free = Plan::query()->where('slug', 'free')->sole();
+        $this->assertTrue($free->is_free);
+
+        [$slug, $email] = $this->approve('free');
+
+        $tenant = Tenant::query()->findOrFail($slug);
+        $this->assertSame(TenantStatus::Active->value, $tenant->status);
+        $this->assertSame((int) $free->id, (int) $tenant->plan_id);
+        $this->assertNull($tenant->trial_ends_at);
+        $this->assertNull($tenant->subscription_ends_at);
+        $this->assertNull($tenant->read_only_since);
+        $this->assertSame('self_signup', $tenant->signup_source?->value);
+        $subscription = Subscription::query()->where('tenant_id', $slug)->sole();
+        $this->assertSame(SubscriptionStatus::Active, $subscription->status);
+        $this->assertSame('0.000', $subscription->amount);
+
+        // The owner works at once.
+        $this->postJson('/api/v1/customers', ['name' => 'عميل مجاني'], $this->ownerHeaders($slug, $email))->assertCreated();
     }
 
     public function test_the_platform_setting_sets_the_trial_of_plans_without_one(): void
@@ -208,7 +233,13 @@ final class SignupTrialLifecycleTest extends BillingTestCase
         $this->assertSame('trialing', $preview['subscription_status']['value']);
         $this->assertSame($now->addDays(21)->toIso8601String(), $preview['trial_ends_at']);
 
-        $this->assertSame(14, $rows[$free->id]['approval_preview']['trial_days']);
+        // PLAN-10: the permanent free plan previews active, no trial, no end date.
+        $freePreview = $rows[$free->id]['approval_preview'];
+        $this->assertSame(0, $freePreview['trial_days']);
+        $this->assertTrue($freePreview['plan']['is_free']);
+        $this->assertSame('active', $freePreview['tenant_status']['value']);
+        $this->assertSame('active', $freePreview['subscription_status']['value']);
+        $this->assertNull($freePreview['trial_ends_at']);
         $this->assertSame('free', $rows[$default->id]['approval_preview']['plan']['code']);
         $this->assertNull($rows[$unknown->id]['approval_preview']);
         $this->assertNull($rows[$rejected->id]['approval_preview']);

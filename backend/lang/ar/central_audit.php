@@ -26,6 +26,7 @@ return [
         'subscription_activated' => 'تفعيل اشتراك',
         'plan_updated' => 'تعديل باقة',
         'plan_created' => 'إنشاء باقة',
+        'tenant_moved_to_free_plan' => 'نقل المحل للباقة المجانية',
         'two_factor_confirmed' => 'تأكيد التحقق بخطوتين',
         'two_factor_challenge_failed' => 'فشل رمز التحقق بخطوتين',
         'recovery_code_used' => 'استخدام رمز استرداد',

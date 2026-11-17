@@ -36,6 +36,17 @@ enum PlatformSettingKey: string
     // trial_days = 0. Blank = config('tenant_lifecycle.trial_days').
     case SignupTrialDays = 'signup_trial_days';
 
+    // PLAN-10: self-signup and free plan (docs/03-architecture/free-plan-and-self-signup-2026-11-18.md 5).
+    // Plan a signup without a chosen plan gets (an active plan id; blank = the catalog fallback).
+    case DefaultSignupPlanId = 'default_signup_plan_id';
+    // Plan a SELF-SIGNUP trial falls back to when it ends unpaid (an active is_free plan id;
+    // blank = the trial goes read-only like a console-created one).
+    case TrialFallbackPlanId = 'trial_fallback_plan_id';
+    // Public self-signup on/off (default on, config signup.self_signup_enabled).
+    case SelfSignupEnabled = 'self_signup_enabled';
+    // Shops created automatically per day before new signups wait for a manual review (SIGN-12).
+    case SignupDailyCap = 'signup_daily_cap';
+
     /**
      * Storage type of the value: string | bool ('1'/'0') | color (#rrggbb) | asset
      * (path on the central public disk, managed by BRND-2).
@@ -43,7 +54,7 @@ enum PlatformSettingKey: string
     public function type(): string
     {
         return match ($this) {
-            self::PoweredByEnabled => 'bool',
+            self::PoweredByEnabled, self::SelfSignupEnabled => 'bool',
             self::PrimaryColor => 'color',
             self::LogoLight, self::LogoDark, self::Favicon, self::AppIcon => 'asset',
             default => 'string',

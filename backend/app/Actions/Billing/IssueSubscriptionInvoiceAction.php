@@ -371,6 +371,11 @@ final class IssueSubscriptionInvoiceAction
             throw BillingException::noPlan();
         }
 
+        // PLAN-10: a permanent free plan has no invoice (trial-end, renewal, console or upgrade).
+        if ($plan->is_free) {
+            throw BillingException::freePlanNotBillable();
+        }
+
         return $plan;
     }
 

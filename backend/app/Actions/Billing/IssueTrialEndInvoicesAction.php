@@ -28,7 +28,7 @@ use Throwable;
  *
  * Candidates: stored status `trial` (so suspended / cancelled / archived tenants are never
  * billed), a trial end at most lead days away, not purged. Skipped: no plan, a plan priced 0
- * (monthly price at the subscription's cycle), an invoice already issued for the trial-end
+ * (monthly price at the subscription's cycle) or a permanent free plan (PLAN-10), an invoice already issued for the trial-end
  * period (ANY status: an operator who voided it decided), or another unpaid plan / renewal /
  * upgrade invoice (an operator already billed the shop by hand).
  *
@@ -152,8 +152,9 @@ final class IssueTrialEndInvoicesAction
     /** A console.trial_invoices.reasons.* key, or null when the invoice should be issued. */
     private function skipReason(string $tenantId, Plan $plan, BillingCycle $cycle, CarbonImmutable $periodStart): ?string
     {
+        // PLAN-10: a permanent free plan is never billed, whatever its stored price.
         $price = Decimal::normalize($cycle === BillingCycle::Yearly ? $plan->price_yearly : $plan->price_monthly);
-        if (bccomp($price, '0', 3) <= 0) {
+        if ($plan->is_free || bccomp($price, '0', 3) <= 0) {
             return 'free_plan';
         }
 

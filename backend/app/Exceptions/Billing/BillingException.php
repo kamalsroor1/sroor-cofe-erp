@@ -27,6 +27,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * | paymentAlreadyPending()  | 422  | billing.payment_already_pending  |
  * | amountOutOfRange()       | 422  | billing.amount_out_of_range      |
  * | noPlan()                 | 422  | billing.no_plan                  |
+ * | freePlanNotBillable() PLAN-10 | 422 | billing.free_plan_not_billable |
  * | founderPriceUnavailable()| 422  | billing.founder_unavailable      |
  * | discountTooHigh()        | 422  | billing.discount_too_high        |
  * | requestNotPending()      | 409  | billing.request_not_pending      |
@@ -125,6 +126,12 @@ final class BillingException extends HttpException
     public static function noPlan(): self
     {
         return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'no_plan');
+    }
+
+    /** PLAN-10: a permanent free plan (plans.is_free) is never invoiced (plan / renewal / upgrade). */
+    public static function freePlanNotBillable(): self
+    {
+        return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'free_plan_not_billable');
     }
 
     public static function founderPriceUnavailable(): self

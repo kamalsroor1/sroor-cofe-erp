@@ -196,10 +196,12 @@ final class SignupRequestConsoleApiTest extends TenantTestCase
             ->assertJsonPath('data.tenant_id', $slug)
             ->assertJsonPath('data.reviewed_by', $this->operator->getKey());
 
-        // Same provisioning path as POST /tenants: tenant row, trial plan, subscription, default domain.
-        $trial = Plan::query()->where('is_active', true)->where('trial_days', '>', 0)->orderBy('sort_order')->firstOrFail();
-        $this->assertDatabaseHas('tenants', ['id' => $slug, 'name' => 'محمصة الموافقة', 'plan_id' => $trial->id, 'status' => TenantStatus::Trial->value]);
-        $this->assertDatabaseHas('subscriptions', ['tenant_id' => $slug, 'plan_id' => $trial->id]);
+        // Same provisioning path as POST /tenants: tenant row, default plan, subscription, default domain.
+        // PLAN-10: without a chosen plan (and no default_signup_plan_id) that is the permanent free
+        // plan, provisioned active with no trial, and the tenant is marked self_signup.
+        $free = Plan::query()->where('is_active', true)->where('is_free', true)->orderBy('sort_order')->firstOrFail();
+        $this->assertDatabaseHas('tenants', ['id' => $slug, 'name' => 'محمصة الموافقة', 'plan_id' => $free->id, 'status' => TenantStatus::Active->value, 'trial_ends_at' => null, 'signup_source' => 'self_signup']);
+        $this->assertDatabaseHas('subscriptions', ['tenant_id' => $slug, 'plan_id' => $free->id]);
 
         $fresh = $request->fresh();
         $this->assertSame(SignupRequestStatus::Approved, $fresh?->status);

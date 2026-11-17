@@ -26,6 +26,12 @@ use InvalidArgumentException;
  *   suspended  → archived   at suspension start + retention days (90), never for a
  *                           `violation` suspension (CTO W1 Q2)
  *   cancelled  → archived   at cancellation start + retention days (90)
+ * PLAN-10:
+ *   - a tenant on a permanent free plan (snapshot onFreePlan) never leaves trial / active /
+ *     past_due by time;
+ *   - a self-signup trial with a platform fallback plan (snapshot trialFallsBackToFreePlan)
+ *     goes trial → active (the free plan) at the same deadline instead of read_only, and
+ *     nothing follows that move. The sweep applies it through MoveTenantToFreePlanAction.
  * Leaving `archived` (unarchive) is a manual super-admin move only (TenantStatus).
  * A tenant that was never swept is caught up in at most MAX_CATCH_UP_STEPS moves, each
  * one starting when the previous deadline passed (not "now").
@@ -154,6 +160,15 @@ final class TenantLifecyclePolicy
      */
     private function nextAutomaticMove(TenantStatus $status, ?CarbonImmutable $since, TenantLifecycleSnapshot $snapshot): ?array
     {
+        if ($snapshot->onFreePlan && in_array($status, [TenantStatus::Trial, TenantStatus::Active, TenantStatus::PastDue], true)) {
+            return null;
+        }
+
+        // The trial already fell back to the free plan: a free tenant has no deadline.
+        if ($status === TenantStatus::Active && $snapshot->status === TenantStatus::Trial && $snapshot->trialFallsBackToFreePlan) {
+            return null;
+        }
+
         $deadline = match ($status) {
             TenantStatus::Trial => $snapshot->trialEndsAt?->addDays($this->trialGraceDays),
             TenantStatus::Active => $snapshot->subscriptionEndsAt,
@@ -168,7 +183,8 @@ final class TenantLifecyclePolicy
         }
 
         $target = match ($status) {
-            TenantStatus::Trial, TenantStatus::PastDue => TenantStatus::ReadOnly,
+            TenantStatus::Trial => $snapshot->trialFallsBackToFreePlan ? TenantStatus::Active : TenantStatus::ReadOnly,
+            TenantStatus::PastDue => TenantStatus::ReadOnly,
             TenantStatus::Active => TenantStatus::PastDue,
             TenantStatus::ReadOnly => TenantStatus::Suspended,
             default => TenantStatus::Archived,

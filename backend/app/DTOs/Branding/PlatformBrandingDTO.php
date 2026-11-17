@@ -33,6 +33,10 @@ final class PlatformBrandingDTO
         public readonly string $billingPaymentNote = '',
         public readonly string $billingTaxRate = '0.000',
         public readonly int $signupTrialDays = 14,
+        public readonly ?int $defaultSignupPlanId = null,
+        public readonly ?int $trialFallbackPlanId = null,
+        public readonly bool $selfSignupEnabled = true,
+        public readonly int $signupDailyCap = 100,
     ) {}
 
     /**
@@ -43,7 +47,8 @@ final class PlatformBrandingDTO
      *     website_url: string, powered_by_enabled: bool,
      *     billing_instapay_address?: string, billing_vodafone_cash_number?: string,
      *     billing_account_name?: string, billing_payment_note?: string, billing_tax_rate?: string,
-     *     signup_trial_days?: int
+     *     signup_trial_days?: int, default_signup_plan_id?: int|null, trial_fallback_plan_id?: int|null,
+     *     self_signup_enabled?: bool, signup_daily_cap?: int
      * }  $data
      */
     public static function fromArray(array $data): self
@@ -68,6 +73,10 @@ final class PlatformBrandingDTO
             billingPaymentNote: $data['billing_payment_note'] ?? '',
             billingTaxRate: $data['billing_tax_rate'] ?? '0.000',
             signupTrialDays: $data['signup_trial_days'] ?? 14,
+            defaultSignupPlanId: $data['default_signup_plan_id'] ?? null,
+            trialFallbackPlanId: $data['trial_fallback_plan_id'] ?? null,
+            selfSignupEnabled: $data['self_signup_enabled'] ?? true,
+            signupDailyCap: $data['signup_daily_cap'] ?? 100,
         );
     }
 
@@ -79,7 +88,8 @@ final class PlatformBrandingDTO
      *     website_url: string, powered_by_enabled: bool,
      *     billing_instapay_address?: string, billing_vodafone_cash_number?: string,
      *     billing_account_name?: string, billing_payment_note?: string, billing_tax_rate?: string,
-     *     signup_trial_days?: int
+     *     signup_trial_days?: int, default_signup_plan_id?: int|null, trial_fallback_plan_id?: int|null,
+     *     self_signup_enabled?: bool, signup_daily_cap?: int
      * }
      */
     public function toArray(): array
@@ -104,6 +114,10 @@ final class PlatformBrandingDTO
             'billing_payment_note' => $this->billingPaymentNote,
             'billing_tax_rate' => $this->billingTaxRate,
             'signup_trial_days' => $this->signupTrialDays,
+            'default_signup_plan_id' => $this->defaultSignupPlanId,
+            'trial_fallback_plan_id' => $this->trialFallbackPlanId,
+            'self_signup_enabled' => $this->selfSignupEnabled,
+            'signup_daily_cap' => $this->signupDailyCap,
         ];
     }
 }

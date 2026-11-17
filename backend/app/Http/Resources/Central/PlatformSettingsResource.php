@@ -43,6 +43,11 @@ final class PlatformSettingsResource extends JsonResource
             'billing_payment_note' => $branding->billingPaymentNote,
             'billing_tax_rate' => $branding->billingTaxRate,
             'signup_trial_days' => $branding->signupTrialDays,
+            // PLAN-10: signup / free plan settings (null plan id = not set).
+            'default_signup_plan_id' => $branding->defaultSignupPlanId,
+            'trial_fallback_plan_id' => $branding->trialFallbackPlanId,
+            'self_signup_enabled' => $branding->selfSignupEnabled,
+            'signup_daily_cap' => $branding->signupDailyCap,
             'assets' => [
                 PlatformAssetSlot::LogoLight->value => $this->asset($branding->logoLight),
                 PlatformAssetSlot::LogoDark->value => $this->asset($branding->logoDark),

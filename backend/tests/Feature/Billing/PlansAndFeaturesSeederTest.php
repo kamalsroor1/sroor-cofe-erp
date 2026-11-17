@@ -41,7 +41,8 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
 
     /** slug => [stores, warehouses, vans, users, items, invoices/month, storage MB, trial days] */
     private const LIMITS = [
-        'free' => [1, 1, 0, 3, 200, 300, 500, 14],
+        // PLAN-10: the permanent free plan (no trial, no extra warehouse).
+        'free' => [1, 0, 0, 2, 100, 150, 200, 0],
         'basic' => [1, 1, 0, 3, null, null, 2048, 0],
         'pro' => [3, 2, 1, 8, null, null, 10240, 0],
         'enterprise' => [10, 5, 5, 25, null, null, 51200, 0],
@@ -56,11 +57,16 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
 
     /** Non-core features switched on per plan (§5); everything else is off. */
     private const EXTRAS = [
-        'free' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs'],
+        'free' => [],
         'basic' => ['transfers.manage'],
         'pro' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs'],
         // Owner decision 2026-11-15: api.access (hidden, does nothing) is no longer on Enterprise.
         'enterprise' => ['transfers.manage', 'mixes.manage', 'purchases.reorder', 'reports.advanced', 'audit.logs'],
+    ];
+
+    /** PLAN-10: core features a plan does not get. */
+    private const REMOVED_CORE = [
+        'free' => ['reports.export', 'telegram.notifications'],
     ];
 
     /** key => [type, monthly/one-time, yearly, tiers [min_qty, unit, yearly], public] */
@@ -124,6 +130,11 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
 
         $this->assertTrue($this->plan('pro')->is_popular);
         $this->assertSame('plans.plans.basic.name', $this->plan('basic')->name_key);
+
+        // PLAN-10: only `free` is the permanent free plan.
+        foreach (PlanCatalog::SLUGS as $slug) {
+            $this->assertSame($slug === 'free', $this->plan($slug)->is_free, "{$slug} is_free");
+        }
     }
 
     public function test_no_limit_is_an_all_nines_or_negative_sentinel(): void
@@ -183,7 +194,8 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
             $this->assertEqualsCanonicalizing(FeatureCatalog::keys(), array_keys($features), "{$slug} must list every catalog key.");
 
             foreach ($features as $key => $enabled) {
-                $expected = in_array($key, self::CORE, true) || in_array($key, $extras, true);
+                $core = in_array($key, self::CORE, true) && ! in_array($key, self::REMOVED_CORE[$slug] ?? [], true);
+                $expected = $core || in_array($key, $extras, true);
                 $this->assertSame($expected, $enabled, "{$slug}.{$key}");
             }
         }

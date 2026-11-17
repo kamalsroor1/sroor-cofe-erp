@@ -10,6 +10,7 @@ use App\DTOs\Signup\ApprovedSignupResult;
 use App\DTOs\Signup\ApproveSignupRequestDTO;
 use App\Enums\CentralAuditEvent;
 use App\Enums\SignupRequestStatus;
+use App\Enums\TenantSignupSource;
 use App\Models\CentralUser;
 use App\Models\Plan;
 use App\Models\SignupRequest;
@@ -109,8 +110,11 @@ final class ApproveSignupRequestAction
             'plan_id' => $plan->id,
             'password' => $ownerPassword,
             // SELL-06: always a trial on the chosen plan; a plan without its own trial days
-            // gets the platform default, so the shop is never born read-only.
+            // gets the platform default, so the shop is never born read-only. PLAN-10: a
+            // permanent free plan gets 0 and is provisioned active.
             'trial_days' => $this->trialTerms->trialDaysFor($plan),
+            // PLAN-10: a signup trial that ends unpaid falls back to the platform's free plan.
+            'signup_source' => TenantSignupSource::SelfSignup,
         ]);
 
         try {

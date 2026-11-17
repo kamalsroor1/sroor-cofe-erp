@@ -26,6 +26,7 @@ return [
         'subscription_activated' => 'Subscription activated',
         'plan_updated' => 'Plan updated',
         'plan_created' => 'Plan created',
+        'tenant_moved_to_free_plan' => 'Shop moved to the free plan',
         'two_factor_confirmed' => 'Two-factor confirmed',
         'two_factor_challenge_failed' => 'Two-factor challenge failed',
         'recovery_code_used' => 'Recovery code used',
