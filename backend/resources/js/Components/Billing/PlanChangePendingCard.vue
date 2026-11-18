@@ -1,16 +1,22 @@
 <script setup>
-import { Hourglass, X } from 'lucide-vue-next';
+import { computed } from 'vue';
+import { Hourglass, CalendarClock, X } from 'lucide-vue-next';
 import BaseButton from '@/Components/Common/BaseButton.vue';
 import { useFormatters } from '@/Composables/useFormatters';
 
-defineProps({
+const props = defineProps({
   request: { type: Object, required: true },
   busy: { type: Boolean, default: false },
+  // End of the paid term: when a scheduled downgrade to the free plan takes effect.
+  endsAt: { type: String, default: null },
 });
 
 defineEmits(['cancel']);
 
 const { formatDate } = useFormatters();
+
+// PLAN-13: a downgrade to the free plan waits for the end of the term instead of an invoice from support.
+const isScheduled = computed(() => props.request.status?.value === 'scheduled');
 </script>
 
 <template>
@@ -19,13 +25,30 @@ const { formatDate } = useFormatters();
     :data-testid="`pending-request-${request.kind.value}`"
   >
     <div class="flex items-start gap-2.5 min-w-0">
-      <Hourglass class="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+      <component
+        :is="isScheduled ? CalendarClock : Hourglass"
+        class="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400"
+      />
       <div class="min-w-0 space-y-0.5">
         <p class="text-xs font-black text-amber-700 dark:text-amber-300">
-          {{ $t('subscription.billing.requests.pending.title') }} - {{ request.kind.label }}
+          {{
+            isScheduled
+              ? $t('subscription.downgrade.scheduled_title')
+              : `${$t('subscription.billing.requests.pending.title')} - ${request.kind.label}`
+          }}
         </p>
         <p class="text-sm font-black text-slate-900 dark:text-white">
-          <template v-if="request.kind.value === 'addon'">
+          <template v-if="isScheduled">
+            {{
+              endsAt
+                ? $t('subscription.downgrade.scheduled_text', {
+                    plan: request.requested_plan?.name || '',
+                    date: formatDate(endsAt),
+                  })
+                : $t('subscription.downgrade.scheduled_text_no_date', { plan: request.requested_plan?.name || '' })
+            }}
+          </template>
+          <template v-else-if="request.kind.value === 'addon'">
             {{
               $t('subscription.billing.requests.pending.addon', {
                 addon: request.addon?.name || '',
@@ -44,7 +67,10 @@ const { formatDate } = useFormatters();
           </template>
         </p>
         <p class="text-[11px] font-bold text-slate-600 dark:text-slate-400">
-          {{ $t('subscription.billing.requests.pending.hint') }} ({{ formatDate(request.created_at) }})
+          <template v-if="isScheduled">{{ $t('subscription.downgrade.scheduled_hint') }}</template>
+          <template v-else>
+            {{ $t('subscription.billing.requests.pending.hint') }} ({{ formatDate(request.created_at) }})
+          </template>
         </p>
       </div>
     </div>

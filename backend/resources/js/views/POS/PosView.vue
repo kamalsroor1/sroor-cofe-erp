@@ -6,6 +6,7 @@ defineOptions({
 import POSHeader from '../../Components/POS/POSHeader.vue';
 import POSCartSection from '../../Components/POS/POSCartSection.vue';
 import POSCatalogSection from '../../Components/POS/POSCatalogSection.vue';
+import POSInvoiceLimitBanner from '../../Components/POS/POSInvoiceLimitBanner.vue';
 import POSCustomerModal from '../../Components/POS/POSCustomerModal.vue';
 import POSSuccessModal from '../../Components/POS/POSSuccessModal.vue';
 import ErrorState from '../../Components/Common/ErrorState.vue';
@@ -64,6 +65,7 @@ const {
   canReturn,
   canOverrideDiscount,
   shift,
+  invoiceLimit,
 } = usePosTerminal();
 </script>
 
@@ -110,6 +112,12 @@ const {
       />
 
       <template v-else>
+        <POSInvoiceLimitBanner
+          :status="invoiceLimit.status.value"
+          :reached="invoiceLimit.reached.value"
+          :near-limit="invoiceLimit.nearLimit.value"
+          :can-upgrade="invoiceLimit.canUpgrade.value"
+        />
         <div v-if="catalog.partialErrors.value.length" class="px-3 pt-3 shrink-0">
           <InlineErrorBar
             v-for="key in catalog.partialErrors.value"

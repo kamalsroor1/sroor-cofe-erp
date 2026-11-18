@@ -14,6 +14,7 @@ import { usePosPayment } from './usePosPayment';
 import { usePosCart } from './usePosCart';
 import { usePosReceipt } from './usePosReceipt';
 import { usePosSubmit } from './usePosSubmit';
+import { usePosInvoiceLimit } from './usePosInvoiceLimit';
 import { usePosKeyboard } from './usePosKeyboard';
 import { hasPlanFeature } from '../../helpers/planFeatures';
 import { usePosRecentSales } from './usePosRecentSales';
@@ -86,6 +87,7 @@ export function usePosTerminal() {
         formatDate,
         formatDateTime,
     });
+    const invoiceLimit = usePosInvoiceLimit();
     const { isSubmitting, showSuccessModal, lastChangeAmount, submitInvoice } = usePosSubmit({
         fields,
         activeOrder,
@@ -100,6 +102,7 @@ export function usePosTerminal() {
         lastCreatedInvoice,
         sounds,
         onShiftRequired: catalog.reloadShift,
+        invoiceLimit,
     });
 
     const recentSales = usePosRecentSales();
@@ -204,5 +207,6 @@ export function usePosTerminal() {
         canReturn,
         canOverrideDiscount,
         shift,
+        invoiceLimit,
     };
 }

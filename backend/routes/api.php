@@ -212,6 +212,7 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
 
         // POS Fast Operations
         Route::get('/pos/bootstrap', [PosController::class, 'bootstrap'])->name('api.pos.bootstrap')->middleware('store.active')->middleware('feature:pos.access');
+        Route::get('/pos/invoice-limit', [PosController::class, 'invoiceLimit'])->name('api.pos.invoice_limit')->middleware('feature:pos.access');
         Route::get('/pos/items', [PosController::class, 'items'])->name('api.pos.items')->middleware('store.active')->middleware('feature:pos.access');
         Route::get('/pos/lookup', [PosController::class, 'lookup'])->name('api.pos.lookup')->middleware('store.active')->middleware('feature:pos.access');
         Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('api.pos.checkout')->middleware('store.active:concrete')->middleware('feature:pos.access');

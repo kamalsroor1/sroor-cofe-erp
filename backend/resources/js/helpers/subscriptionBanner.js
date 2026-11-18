@@ -1,7 +1,18 @@
 // SELL-02: turns the `subscription_banner` payload of /system/context into what the strip renders.
 import { safeActionPath } from './readOnlyNotice.js';
 
-const TONES = Object.freeze({ trial: 'info', expiring: 'warning', grace: 'warning', read_only: 'danger' });
+const TONES = Object.freeze({
+    trial: 'info',
+    trial_fallback: 'info',
+    expiring: 'warning',
+    grace: 'warning',
+    read_only: 'danger',
+});
+
+// PLAN-10 review: a self-signup trial that ends on the free plan (`falls_back_to_free`) is still sent as
+// state `trial`; it gets its own state here because its wording promises the free plan, not a view-only stop.
+const bannerState = (banner) =>
+    banner?.state === 'trial' && banner.falls_back_to_free === true ? 'trial_fallback' : banner?.state;
 
 function countdownKey(prefix, daysLeft) {
     if (daysLeft === 0) return `${prefix}.today`;
@@ -14,7 +25,8 @@ function countdownKey(prefix, daysLeft) {
  * @returns {{state:string, tone:'info'|'warning'|'danger', textKey:string, params:object, actionPath:string|null}|null}
  */
 export function describeSubscriptionBanner(banner) {
-    const tone = TONES[banner?.state];
+    const state = bannerState(banner);
+    const tone = TONES[state];
     if (!tone) return null;
 
     const days = Number.isFinite(Number(banner.days_left)) ? Math.max(0, Math.trunc(Number(banner.days_left))) : 0;
@@ -24,11 +36,11 @@ export function describeSubscriptionBanner(banner) {
     } else if (banner.state === 'grace') {
         textKey = `subscription.banner.grace.${banner.kind === 'trial' ? 'trial' : 'subscription'}`;
     } else {
-        textKey = countdownKey(`subscription.banner.${banner.state}`, days);
+        textKey = countdownKey(`subscription.banner.${state}`, days);
     }
 
     return {
-        state: banner.state,
+        state,
         tone,
         textKey,
         params: { days },

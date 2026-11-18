@@ -1,3 +1,5 @@
+import { usageLevel } from './planLimit';
+
 export const RECEIPT_MAX_BYTES = 5 * 1024 * 1024;
 export const RECEIPT_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
 export const RECEIPT_ACCEPT = RECEIPT_EXTENSIONS.map((ext) => `.${ext}`).join(',');
@@ -35,11 +37,12 @@ export const subscriptionTone = (status) => SUBSCRIPTION_TONES[status] || 'neutr
 export const invoiceTone = (status) => INVOICE_TONES[status] || 'neutral';
 export const paymentTone = (status) => PAYMENT_TONES[status] || 'neutral';
 
-/** Usage bar color: green under 70, amber 70-90, red from 90. */
+/** Usage bar color: green under 80, amber from 80, red at 100 (PLAN-13 thresholds). */
 export const usageBarClass = (percent) => {
-    if (percent === null || percent === undefined) return 'bg-slate-300 dark:bg-slate-600';
-    if (percent >= 90) return 'bg-rose-500';
-    if (percent >= 70) return 'bg-amber-500';
+    const level = usageLevel(percent);
+    if (level === 'none') return 'bg-slate-300 dark:bg-slate-600';
+    if (level === 'full') return 'bg-rose-500';
+    if (level === 'warn') return 'bg-amber-500';
     return 'bg-emerald-500';
 };
 

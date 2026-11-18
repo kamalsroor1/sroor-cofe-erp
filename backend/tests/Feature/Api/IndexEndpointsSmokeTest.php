@@ -124,6 +124,7 @@ final class IndexEndpointsSmokeTest extends TenantTestCase
         'central/tenants/resolve' => 'public resolver, needs a workspace parameter',
         'invoices/export' => 'file export',
         'ping' => 'health probe, no query',
+        'pos/invoice-limit' => 'single status object, not a list; covered by PosInvoiceLimitApiTest',
         'pos/last-price' => 'lookup, needs item and customer parameters',
         'pos/lookup' => 'lookup, needs a barcode parameter',
         'public/plans' => 'public marketing endpoint',

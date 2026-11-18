@@ -5,6 +5,7 @@ import { isNetworkError, reportRequestFailure, reportServerReachable } from '../
 import { storeAccessRetryConfig } from '../helpers/storeAccessRecovery';
 import { isCentralAppContext } from './centralApi';
 import { writeStarted, writeFinished } from '../helpers/pendingWrites';
+import { showUpgradeAlert } from '../helpers/planLimitAlert';
 import { contactSupportHtml, describeReadOnly, supportFooter } from '../helpers/readOnlyNotice';
 import { storeNoticeFromError } from '../helpers/storeNotice';
 import { PASSWORD_CHANGE_ROUTE, isPasswordChangeRequired, safeInternalRedirect } from '../helpers/passwordChange';
@@ -187,10 +188,14 @@ apiClient.interceptors.response.use(
             'subscription.limit_reached': 'subscription.alerts.limit_reached_title',
         };
         if (isLifecycleError && !isCentralMode && !Swal.isVisible()) {
-            const titleKey =
-                lifecycleTitleKeys[code] ||
-                (status === 423 ? 'subscription.alerts.read_only_title' : 'subscription.alerts.blocked_title');
-            showLifecycleAlert({ titleKey, message, offerPayment: status === 423, data });
+            if (lifecycleTitleKeys[code]) {
+                // PLAN-13: a plan limit / locked feature names what was hit and offers "Upgrade".
+                showUpgradeAlert({ titleKey: lifecycleTitleKeys[code], message });
+            } else {
+                const titleKey =
+                    status === 423 ? 'subscription.alerts.read_only_title' : 'subscription.alerts.blocked_title';
+                showLifecycleAlert({ titleKey, message, offerPayment: status === 423, data });
+            }
         }
 
         const passwordChangeRequired = !isCentralMode && isPasswordChangeRequired(error);

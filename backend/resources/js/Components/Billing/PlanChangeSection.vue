@@ -3,6 +3,7 @@ import { onMounted, toRef } from 'vue';
 import PlanChangePendingCard from './PlanChangePendingCard.vue';
 import PlanChangeRequestModal from './PlanChangeRequestModal.vue';
 import PlanChangeRequestsList from './PlanChangeRequestsList.vue';
+import SubscriptionDowngradeCard from './SubscriptionDowngradeCard.vue';
 import { usePlanChangeRequests } from '@/Composables/usePlanChangeRequests';
 
 const props = defineProps({
@@ -32,6 +33,12 @@ const onSubmit = async (payload) => {
   if (await submit(payload)) emit('update:open', false);
 };
 
+// PLAN-13: the downgrade request lands in the history list too, so re-read it together with the summary.
+const onDowngraded = async () => {
+  emit('changed');
+  await loadRequests();
+};
+
 onMounted(loadRequests);
 </script>
 
@@ -41,6 +48,7 @@ onMounted(loadRequests);
       v-if="pendingPlanChange"
       :request="pendingPlanChange"
       :busy="cancellingId === pendingPlanChange.id"
+      :ends-at="subscription.subscription?.ends_at || null"
       @cancel="cancel"
     />
     <PlanChangePendingCard
@@ -49,6 +57,8 @@ onMounted(loadRequests);
       :busy="cancellingId === pendingAddon.id"
       @cancel="cancel"
     />
+
+    <SubscriptionDowngradeCard :subscription="subscription" @changed="onDowngraded" />
 
     <PlanChangeRequestsList
       :requests="requests"

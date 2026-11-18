@@ -9,17 +9,21 @@ use App\Actions\Customers\QuickCreateCustomerAction;
 use App\Actions\Invoices\GetInvoiceDetailsAction;
 use App\Actions\Invoices\ProcessPOSInvoiceAction;
 use App\Actions\POS\GetPOSBootstrapDataAction;
+use App\Actions\POS\GetPosInvoiceLimitStatusAction;
 use App\Actions\POS\GetPosItemsAction;
 use App\Actions\POS\LookupPosBarcodeAction;
 use App\DTOs\POSInvoiceDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Pos\ListPosItemsRequest;
 use App\Http\Requests\Pos\LookupPosBarcodeRequest;
+use App\Http\Requests\Pos\ShowPosInvoiceLimitRequest;
 use App\Http\Requests\StorePOSInvoiceRequest;
 use App\Http\Requests\StoreQuickCustomerRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Http\Resources\PosGridItemResource;
+use App\Http\Resources\PosInvoiceLimitResource;
 use App\Http\Resources\PosLookupItemResource;
+use App\Models\Tenant;
 use App\Services\Pos\InvalidScaleBarcodeException;
 use App\Support\ActiveStore;
 use Illuminate\Http\JsonResponse;
@@ -35,6 +39,7 @@ final class PosController extends Controller
         private readonly GetInvoiceDetailsAction $getInvoiceDetailsAction,
         private readonly LookupPosBarcodeAction $lookupPosBarcodeAction,
         private readonly GetPosItemsAction $getPosItemsAction,
+        private readonly GetPosInvoiceLimitStatusAction $getPosInvoiceLimitStatusAction,
     ) {}
 
     /**
@@ -58,6 +63,19 @@ final class PosController extends Controller
             'success' => true,
             'data' => $data,
         ], 200);
+    }
+
+    /**
+     * PLAN-13: the monthly sales-invoice cap status, so the cashier is told before the sale.
+     */
+    public function invoiceLimit(ShowPosInvoiceLimitRequest $request): JsonResponse
+    {
+        $tenant = tenant();
+        abort_unless($tenant instanceof Tenant, 404);
+
+        return PosInvoiceLimitResource::make($this->getPosInvoiceLimitStatusAction->execute($tenant))
+            ->additional(['success' => true])
+            ->response();
     }
 
     /**

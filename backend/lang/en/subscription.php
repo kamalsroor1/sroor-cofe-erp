@@ -147,6 +147,8 @@ return [
         'limit_reached_title' => 'Plan limit reached',
         'request_invoice' => 'Request invoice',
         'support_contact' => 'Support:',
+        'upgrade_plan' => 'Upgrade your plan',
+        'ask_owner_to_upgrade' => 'Ask the shop owner or the subscription manager to upgrade the plan.',
     ],
 
     // PRD-04: tenant subscription & billing page (/billing).
@@ -370,6 +372,40 @@ return [
             'description' => 'Renew from the Subscription & billing page to keep selling without interruption.',
         ],
         'action' => 'Open Subscription & billing',
+    ],
+
+    // PLAN-13: plan-limit UX. Dashboard usage widget, POS monthly-invoice banner, switch to the free plan.
+    'usage_widget' => [
+        'title' => 'Your plan usage',
+        'upgrade' => 'Upgrade your plan',
+        'hint_warn' => 'You are close to your plan limit on some items. Upgrade before adding new records stops.',
+        'hint_full' => 'You reached your plan limit on some items: nothing new can be added there, everything else keeps working.',
+        'load_failed' => 'Could not load your plan usage.',
+    ],
+
+    'pos_limit' => [
+        'reached_title' => 'You reached your plan\'s invoice limit for this month (:max invoices)',
+        'reached_hint' => 'New sales invoices are paused until the count starts again on :date, or until you upgrade. Returns, debt collection and shift close keep working.',
+        'near_title' => 'You used :used of your plan\'s :max invoices this month',
+        'near_hint' => ':remaining invoices left before new sales stop.',
+        'blocked_text' => 'You reached your plan\'s invoice limit for this month (:max invoices). New invoices are paused until :date or until you upgrade. Returns, debt collection and shift close keep working.',
+    ],
+
+    'downgrade' => [
+        'title' => 'Move to the :plan plan',
+        'description' => 'Nothing is deleted: all your data stays, and the free plan limits only apply to adding new records.',
+        'action' => 'Switch to the free plan at the end of my term',
+        'action_now' => 'Switch to the free plan now',
+        'confirm_title' => 'Switch to the free plan?',
+        'confirm_text_scheduled' => 'Your shop moves to the :plan plan when your current term ends on :date, and your current plan keeps all its features until then. Nothing is deleted. The free plan limits apply after the move: anything above them stays visible, but you cannot add new records until you are back under the limit or upgrade. You can cancel before that date.',
+        'confirm_text_now' => 'Your shop moves to the :plan plan right away. Nothing is deleted. The free plan limits apply: anything above them stays visible, but you cannot add new records until you are back under the limit or upgrade.',
+        'confirm_button' => 'Yes, switch',
+        'keep_plan' => 'Keep my plan',
+        'requested' => 'Your request to move to the free plan was recorded.',
+        'scheduled_title' => 'Scheduled move to the free plan',
+        'scheduled_text' => 'Your shop moves to the :plan plan on :date',
+        'scheduled_text_no_date' => 'Your shop moves to the :plan plan when the subscription term ends',
+        'scheduled_hint' => 'Nothing is deleted. The free plan limits apply after the move. You can cancel before then.',
     ],
 
     // SELL-02: permanent banner from /system/context `subscription_banner` (state + kind).

@@ -28,6 +28,13 @@
       <template v-else>
         <DashboardKpiGrid :metrics="metrics" />
         <DashboardQuickActions :actions="quickActions" />
+        <DashboardPlanUsage
+          :rows="planUsage.rows.value"
+          :level="planUsage.level.value"
+          :is-loading="planUsage.isLoading.value"
+          :error="planUsage.error.value"
+          @retry="planUsage.load"
+        />
 
         <DashboardSetupChecklist
           v-if="isChecklistVisible"
@@ -67,6 +74,7 @@ import { useRouter } from 'vue-router';
 import { useAppConfigStore } from '../stores/appConfig';
 import { useDashboard } from '../Composables/useDashboard';
 import { useDashboardQuickActions } from '../Composables/useDashboardQuickActions';
+import { usePlanUsage } from '../Composables/usePlanUsage';
 import { useSetupChecklist } from '../Composables/useSetupChecklist';
 import { isEmptyShop } from '../helpers/dashboardMetrics';
 
@@ -75,6 +83,7 @@ import InlineErrorBar from '../Components/Common/InlineErrorBar.vue';
 import DashboardWelcomeBanner from '../Components/Dashboard/DashboardWelcomeBanner.vue';
 import DashboardOwnShift from '../Components/Dashboard/DashboardOwnShift.vue';
 import DashboardKpiGrid from '../Components/Dashboard/DashboardKpiGrid.vue';
+import DashboardPlanUsage from '../Components/Dashboard/DashboardPlanUsage.vue';
 import DashboardQuickActions from '../Components/Dashboard/DashboardQuickActions.vue';
 import DashboardSetupChecklist from '../Components/Dashboard/DashboardSetupChecklist.vue';
 import DashboardFirstSale from '../Components/Dashboard/DashboardFirstSale.vue';
@@ -105,6 +114,7 @@ const {
   activeShift,
 } = useDashboard();
 
+const planUsage = usePlanUsage();
 const { actions: quickActions, canSell } = useDashboardQuickActions();
 
 const {

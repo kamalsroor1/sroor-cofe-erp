@@ -5,6 +5,7 @@ import { trans } from '../../helpers/trans';
 import { newUuid } from '../../helpers/uuid';
 import { normalize, isPositive } from '../../helpers/decimal';
 import { usePosSaleSettings, receiptCopiesToPrint } from './usePosSaleSettings';
+import { isLimitReachedError } from '../../helpers/planLimit';
 import { needsManagerOverride, overrideReasons, requestManagerOverride } from './usePosOverride';
 
 /**
@@ -24,6 +25,7 @@ export function usePosSubmit({
     lastCreatedInvoice,
     sounds,
     onShiftRequired = null,
+    invoiceLimit = null,
 }) {
     const { saleSettings } = usePosSaleSettings();
     const { cart, selectedCustomerId, paymentType, paymentMethod, discountType } = fields;
@@ -66,6 +68,11 @@ export function usePosSubmit({
         let askOverride = null;
         isSubmitting.value = true;
         try {
+            // PLAN-13: the monthly invoice cap is reached - say so (with the upgrade hint) instead of a doomed request.
+            if (invoiceLimit && !(await invoiceLimit.allowCheckout())) {
+                sounds.playErrorTone();
+                return;
+            }
             const payload = {
                 client_uuid: checkoutUuid,
                 store_id: activeStore.value?.id || 1,
@@ -95,6 +102,8 @@ export function usePosSubmit({
                 showSuccessModal.value = true;
             }
 
+            invoiceLimit?.refresh();
+
             // Clear completed order & switch to remaining or fresh order
             if (activeOrder.value) activeOrder.value.checkoutUuid = null;
             clearActiveOrder();
@@ -104,6 +113,8 @@ export function usePosSubmit({
             // POS-10: the branch needs an open shift (closed meanwhile, or never opened) - show the gate.
             const shiftRefused = !!(e.response?.data?.errors?.shift && onShiftRequired);
             if (shiftRefused) onShiftRequired();
+            // PLAN-13: the server refused the sale at the cap (the interceptor showed the alert): update the banner.
+            if (isLimitReachedError(e)) invoiceLimit?.refresh();
             // 401 and 403 are already handled (redirect / alert) by the api interceptor.
             const handledByInterceptor = [401, 403].includes(e.response?.status);
             if (shiftRefused) {

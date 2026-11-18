@@ -19,7 +19,14 @@ defineEmits(['retry', 'open-invoice']);
 
 const { formatDate } = useFormatters();
 
-const TONES = { pending: 'warning', invoiced: 'success', rejected: 'danger', cancelled: 'neutral' };
+const TONES = {
+  pending: 'warning',
+  scheduled: 'info',
+  completed: 'success',
+  invoiced: 'success',
+  rejected: 'danger',
+  cancelled: 'neutral',
+};
 </script>
 
 <template>

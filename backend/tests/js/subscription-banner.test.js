@@ -48,3 +48,18 @@ test('only same-app action paths are kept', () => {
         assert.equal(describeSubscriptionBanner(make({ action_path: bad })).actionPath, null);
     }
 });
+
+test('a trial that falls back to the free plan has its own wording, never the view-only one', () => {
+    const at = (d) => describeSubscriptionBanner(make({ state: 'trial', falls_back_to_free: true, days_left: d }));
+    assert.equal(at(5).state, 'trial_fallback');
+    assert.equal(at(5).textKey, 'subscription.banner.trial_fallback.days_left');
+    assert.deepEqual(at(5).params, { days: 5 });
+    assert.equal(at(1).textKey, 'subscription.banner.trial_fallback.tomorrow');
+    assert.equal(at(0).textKey, 'subscription.banner.trial_fallback.today');
+    assert.equal(at(5).tone, 'info');
+    // Without the flag the plain trial wording stays.
+    assert.equal(
+        describeSubscriptionBanner(make({ falls_back_to_free: false })).textKey,
+        'subscription.banner.trial.days_left'
+    );
+});
