@@ -352,20 +352,66 @@ final class DormantFreeShopsTest extends TenantTestCase
         $this->assertSame([TenantStatus::Active->value, TenantStatus::Archived->value], $statuses);
     }
 
-    public function test_unarchive_brings_the_shop_back_and_restarts_its_clock(): void
+    public function test_unarchive_of_a_dormant_archived_free_shop_restores_it_straight_to_active(): void
     {
         $tenant = $this->shop($this->free, now()->subDays(95));
         $this->remindedAt($tenant, now()->subDays(10));
         $this->artisan(self::COMMAND)->assertSuccessful();
         $this->assertSame(TenantStatus::Archived->value, $this->fresh($tenant)->status);
 
-        $restored = app(UnarchiveTenantAction::class)->execute((string) $tenant->getKey(), $this->centralSuperAdmin(), null);
+        $operator = $this->centralSuperAdmin();
+        $restored = app(UnarchiveTenantAction::class)->execute((string) $tenant->getKey(), $operator, null);
 
-        $this->assertSame(TenantStatus::Suspended->value, $restored->status);
+        $this->assertSame(TenantStatus::Active->value, $restored->status);
         $this->assertNull($restored->archived_at);
+        $this->assertNull($restored->suspension_reason);
         $this->assertSame(now()->toDateTimeString(), $restored->last_activity_at?->toDateTimeString());
         $this->assertTrue($this->tenantDatabaseExists($tenant));
         $this->assertSame(0, $restored->dormantDays());
+
+        $events = TenantLifecycleEvent::query()->where('tenant_id', $tenant->getKey())->orderBy('id')->get();
+        $last = $events->slice(-2)->values();
+        $this->assertSame(['suspended', 'active'], $last->map(static fn (TenantLifecycleEvent $e): string => $e->to_status->value)->all());
+        $this->assertSame((int) $operator->getKey(), (int) $last[0]->central_user_id);
+        $this->assertSame((int) $operator->getKey(), (int) $last[1]->central_user_id);
+        $this->assertSame(UnarchiveTenantAction::RESTORE_SOURCE, $last[1]->properties['source'] ?? null);
+
+        // The feature middleware lets the restored shop through (tokens made after the restore).
+        $this->createTenantUser($tenant);
+        $this->getJson('/api/v1/auth/me', $this->tenantHeaders($tenant))->assertOk();
+
+        // Tomorrow's runs and the lifecycle sweep leave it alone.
+        $this->travel(1)->days();
+        $this->artisan(self::COMMAND)->assertSuccessful();
+        $this->artisan('tenants:apply-lifecycle')->assertSuccessful();
+        $this->assertSame(TenantStatus::Active->value, $this->fresh($tenant)->status);
+        $this->assertSame($events->count(), TenantLifecycleEvent::query()->where('tenant_id', $tenant->getKey())->count());
+    }
+
+    public function test_a_free_shop_archived_by_hand_is_still_restored_suspended(): void
+    {
+        $tenant = $this->shop($this->free, now()->subDays(10), TenantStatus::Archived);
+
+        $restored = app(UnarchiveTenantAction::class)->execute((string) $tenant->getKey(), $this->centralSuperAdmin(), null);
+
+        $this->assertSame(TenantStatus::Suspended->value, $restored->status);
+    }
+
+    public function test_a_paid_shop_is_still_restored_suspended(): void
+    {
+        $tenant = $this->shop($this->paid, now()->subDays(10), TenantStatus::Archived);
+        // Even with a dormant-looking archive event, a paid plan never skips billing.
+        TenantLifecycleEvent::query()->create([
+            'tenant_id' => (string) $tenant->getKey(),
+            'from_status' => 'suspended',
+            'to_status' => 'archived',
+            'actor' => 'system',
+            'properties' => ['source' => HandleDormantFreeShopsAction::SOURCE],
+        ]);
+
+        $restored = app(UnarchiveTenantAction::class)->execute((string) $tenant->getKey(), $this->centralSuperAdmin(), null);
+
+        $this->assertSame(TenantStatus::Suspended->value, $restored->status);
     }
 
     // ------------------------------------------------------------ run behaviour
@@ -482,7 +528,7 @@ final class DormantFreeShopsTest extends TenantTestCase
         $tenant = $this->createTenant(['plan_id' => $plan?->id, 'status' => $status->value, 'subscription_ends_at' => null]);
         $update = ['last_activity_at' => $lastActivity];
         if ($status === TenantStatus::Archived) {
-            $update += ['archived_at' => now(), 'status_before_archive' => TenantStatus::Suspended->value];
+            $update += ['archived_at' => now(), 'status_before_archive' => TenantStatus::Suspended->value, 'suspension_reason' => 'other'];
         }
         Tenant::query()->whereKey($tenant->getKey())->update($update);
 
