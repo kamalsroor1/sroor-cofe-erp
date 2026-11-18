@@ -46,7 +46,6 @@ export function useSuperAdminTenantShow() {
     const tenantId = route.params.id;
     const tenant = ref(null);
     const stats = ref({});
-    const allFeatures = ref([]);
     const globalUnitsList = ref([]);
     const tenantAllowedUnits = ref([]);
     const customTenantUnit = ref('');
@@ -115,7 +114,6 @@ export function useSuperAdminTenantShow() {
             if (data) {
                 tenant.value = withArchiveBlock(data);
                 stats.value = data.stats || {};
-                allFeatures.value = data.features || [];
                 // SETG-10: both lists come from the server (it owns the defaults).
                 globalUnitsList.value = Array.isArray(data.global_units) ? data.global_units : [];
                 tenantAllowedUnits.value = Array.isArray(data.allowed_units) ? data.allowed_units : [];
@@ -130,26 +128,6 @@ export function useSuperAdminTenantShow() {
             router.push('/super-admin/tenants');
         } finally {
             isLoading.value = false;
-        }
-    };
-
-    const toggleFeature = async (featureKey) => {
-        try {
-            await api.post(`/super-admin/tenants/${tenantId}/override-feature`, {
-                feature_key: featureKey,
-            });
-            const current = tenant.value.enabled_features || [];
-            if (current.includes(featureKey)) {
-                tenant.value.enabled_features = current.filter((f) => f !== featureKey);
-            } else {
-                tenant.value.enabled_features = [...current, featureKey];
-            }
-        } catch (e) {
-            DarkSwal.fire({
-                icon: 'error',
-                title: t('common.error'),
-                text: t('common.error'),
-            });
         }
     };
 
@@ -271,7 +249,6 @@ export function useSuperAdminTenantShow() {
     return {
         tenant,
         stats,
-        allFeatures,
         globalUnitsList,
         tenantAllowedUnits,
         customTenantUnit,
@@ -283,7 +260,6 @@ export function useSuperAdminTenantShow() {
         isUpdatingStatus,
         statusForm,
         statusErrors,
-        toggleFeature,
         addTenantUnit,
         addCustomUnitDirect,
         removeTenantUnit,

@@ -25,29 +25,19 @@
 
       <TenantStatsGrid :stats="stats" />
 
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div class="lg:col-span-6">
-          <TenantUnitsCard
-            :tenant-name="tenant.name"
-            :tenant-allowed-units="tenantAllowedUnits"
-            :global-units-list="globalUnitsList"
-            v-model:custom-unit="customTenantUnit"
-            :is-saving-units="isSavingUnits"
-            @save-units="saveTenantUnits"
-            @remove-unit="removeTenantUnit"
-            @add-unit="addTenantUnit"
-            @add-custom-unit="addCustomUnitDirect"
-          />
-        </div>
+      <TenantUnitsCard
+        :tenant-name="tenant.name"
+        :tenant-allowed-units="tenantAllowedUnits"
+        :global-units-list="globalUnitsList"
+        v-model:custom-unit="customTenantUnit"
+        :is-saving-units="isSavingUnits"
+        @save-units="saveTenantUnits"
+        @remove-unit="removeTenantUnit"
+        @add-unit="addTenantUnit"
+        @add-custom-unit="addCustomUnitDirect"
+      />
 
-        <div class="lg:col-span-6">
-          <TenantFeaturesMatrixCard
-            :features="allFeatures"
-            :enabled-features="tenant.enabled_features || []"
-            @toggle-feature="toggleFeature"
-          />
-        </div>
-      </div>
+      <TenantOverridesSection :tenant-id="tenant.id" />
 
       <TenantBillingSection :tenant-id="tenant.id" :tenant-name="tenant.name || ''" />
 
@@ -83,7 +73,7 @@ import TenantShowSkeleton from '../../Components/SuperAdmin/TenantShowSkeleton.v
 import TenantArchivePanel from '../../Components/SuperAdmin/TenantArchivePanel.vue';
 import TenantStatsGrid from '../../Components/SuperAdmin/TenantStatsGrid.vue';
 import TenantUnitsCard from '../../Components/SuperAdmin/TenantUnitsCard.vue';
-import TenantFeaturesMatrixCard from '../../Components/SuperAdmin/TenantFeaturesMatrixCard.vue';
+import TenantOverridesSection from '../../Components/SuperAdmin/TenantOverrides/TenantOverridesSection.vue';
 import TenantBillingSection from '../../Components/SuperAdmin/Billing/TenantBillingSection.vue';
 import TenantOwnerPasswordModal from '../../Components/SuperAdmin/TenantOwnerPasswordModal.vue';
 import EditTenantStatusModal from '../../Components/SuperAdmin/EditTenantStatusModal.vue';
@@ -93,7 +83,6 @@ import { useTenantOwnerPasswordReset } from '../../Composables/useTenantOwnerPas
 const {
   tenant,
   stats,
-  allFeatures,
   globalUnitsList,
   tenantAllowedUnits,
   customTenantUnit,
@@ -105,7 +94,6 @@ const {
   isUpdatingStatus,
   statusForm,
   statusErrors,
-  toggleFeature,
   addTenantUnit,
   addCustomUnitDirect,
   removeTenantUnit,
