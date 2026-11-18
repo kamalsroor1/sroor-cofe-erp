@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\Central\SignupRequestController;
 use App\Http\Controllers\Api\Central\SignupRequestProvisioningController;
 use App\Http\Controllers\Api\Central\TenantArchiveController;
 use App\Http\Controllers\Api\Central\TenantBillingInvoiceController;
+use App\Http\Controllers\Api\Central\TenantOverridesController;
 use App\Http\Controllers\Api\Central\TenantOwnerPasswordController;
 use App\Http\Controllers\Api\Central\TenantProvisioningController;
 use App\Http\Controllers\Api\Central\TenantRateLimitController;
@@ -162,6 +163,18 @@ Route::prefix('v1/super-admin')
         // owner must change it at the next sign-in, all owner sessions revoked). Step-up + audited.
         Route::post('/tenants/{id}/reset-owner-password', [TenantOwnerPasswordController::class, 'reset'])
             ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class, 'throttle:6,1'])->name('tenants.reset_owner_password');
+
+        // PLAN-12: per-shop limit overrides and feature grant / revoke (audited). Read-only support may list.
+        Route::get('/tenants/{id}/overrides', [TenantOverridesController::class, 'index'])
+            ->middleware($can(CentralPermission::TenantsView))->name('tenants.overrides.index');
+        Route::put('/tenants/{id}/limit-overrides/{resource}', [TenantOverridesController::class, 'setLimit'])
+            ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class])->name('tenants.limit_overrides.set');
+        Route::delete('/tenants/{id}/limit-overrides/{resource}', [TenantOverridesController::class, 'removeLimit'])
+            ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class])->name('tenants.limit_overrides.remove');
+        Route::put('/tenants/{id}/feature-overrides/{feature}', [TenantOverridesController::class, 'setFeature'])
+            ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class])->name('tenants.feature_overrides.set');
+        Route::delete('/tenants/{id}/feature-overrides/{feature}', [TenantOverridesController::class, 'removeFeature'])
+            ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class])->name('tenants.feature_overrides.remove');
 
         // IDEN-4.6 ext: temporary per-tenant rate-limit raise (expiring, audited).
         Route::get('/tenants/{id}/rate-limits', [TenantRateLimitController::class, 'show'])

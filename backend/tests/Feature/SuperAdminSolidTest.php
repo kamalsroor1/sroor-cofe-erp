@@ -168,13 +168,11 @@ class SuperAdminSolidTest extends TenantTestCase
         $action = app(OverrideTenantFeatureAction::class);
         $action->execute($tenant, 'mixes.manage');
 
-        $tenant->refresh();
-        $this->assertContains('mixes.manage', $tenant->enabled_features);
+        $this->assertDatabaseHas('tenant_feature_overrides', ['tenant_id' => $tenant->id, 'feature_key' => 'mixes.manage', 'mode' => 'grant'], config('tenancy.database.central_connection'));
 
         // Toggle again should remove override
         $action->execute($tenant, 'mixes.manage');
-        $tenant->refresh();
-        $this->assertNotContains('mixes.manage', $tenant->enabled_features);
+        $this->assertDatabaseMissing('tenant_feature_overrides', ['tenant_id' => $tenant->id, 'feature_key' => 'mixes.manage'], config('tenancy.database.central_connection'));
     }
 
     public function test_update_plan_action(): void

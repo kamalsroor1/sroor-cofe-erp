@@ -214,7 +214,9 @@ final class TenantEntitlementServiceTest extends TenantTestCase
 
         $afterOn = $this->service()->toggleFeatureOverride($tenant->fresh() ?? $tenant, 'blender.access');
         $this->assertSame(['audit.logs', 'mixes.manage'], $afterOn);
-        $this->assertSame(['audit.logs', 'mixes.manage'], ($tenant->fresh() ?? $tenant)->enabled_features);
+        // The legacy list only keeps what was never migrated; the new grant lives in tenant_feature_overrides (PLAN-12).
+        $this->assertSame(['audit.logs'], ($tenant->fresh() ?? $tenant)->enabled_features);
+        $this->assertDatabaseHas('tenant_feature_overrides', ['tenant_id' => $tenant->id, 'feature_key' => 'mixes.manage', 'mode' => 'grant'], $this->centralConnectionName());
         $this->assertTrue($this->service()->isFeatureEnabled($tenant->fresh() ?? $tenant, 'mixes.manage'));
     }
 

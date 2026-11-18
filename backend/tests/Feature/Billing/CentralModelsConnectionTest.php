@@ -27,7 +27,9 @@ use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
 use App\Models\TenantBackup;
 use App\Models\TenantCreditLedgerEntry;
+use App\Models\TenantFeatureOverride;
 use App\Models\TenantLifecycleReminder;
+use App\Models\TenantLimitOverride;
 use App\Models\TenantRateLimitOverride;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Model;
@@ -89,6 +91,8 @@ final class CentralModelsConnectionTest extends TenantTestCase
             'BillingPayment' => [BillingPayment::class, self::VIA_TRAIT],
             'TenantCreditLedgerEntry' => [TenantCreditLedgerEntry::class, self::VIA_TRAIT],
             'TenantBackup' => [TenantBackup::class, self::VIA_TRAIT],
+            'TenantLimitOverride' => [TenantLimitOverride::class, self::VIA_TRAIT],
+            'TenantFeatureOverride' => [TenantFeatureOverride::class, self::VIA_TRAIT],
             'TenantRateLimitOverride' => [TenantRateLimitOverride::class, self::VIA_TRAIT],
             'CentralMedia' => [CentralMedia::class, self::VIA_TRAIT],
             'CentralActivity' => [CentralActivity::class, self::VIA_TRAIT],

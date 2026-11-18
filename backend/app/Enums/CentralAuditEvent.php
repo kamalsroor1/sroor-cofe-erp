@@ -114,6 +114,11 @@ enum CentralAuditEvent: string
     case TwoFactorReset = 'two_factor_reset';
     // PLAN-10: a tenant was put on a permanent free plan (self-signup trial fallback, legacy free trial)
     case TenantMovedToFreePlan = 'tenant_moved_to_free_plan';
+    // PLAN-12: per-shop limit override and feature grant / revoke (old and new value + reason in properties)
+    case TenantLimitOverrideSet = 'tenant_limit_override_set';
+    case TenantLimitOverrideRemoved = 'tenant_limit_override_removed';
+    case TenantFeatureOverrideSet = 'tenant_feature_override_set';
+    case TenantFeatureOverrideRemoved = 'tenant_feature_override_removed';
 
     public function translationKey(): string
     {

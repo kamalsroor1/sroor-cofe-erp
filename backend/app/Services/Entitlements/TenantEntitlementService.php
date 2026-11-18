@@ -6,22 +6,32 @@ namespace App\Services\Entitlements;
 
 use App\Contracts\TenantFeatureManagerInterface;
 use App\DTOs\Entitlements\EntitlementsDTO;
+use App\Enums\FeatureOverrideMode;
 use App\Enums\LimitResource;
 use App\Enums\TenantAccessLevel;
 use App\Models\Plan;
 use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
+use App\Models\TenantFeatureOverride;
 use App\Support\TenantCache;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Single source of truth for what a tenant may use (ENTI-2.2). Pennant is only an API
  * layer on top of it (EntitlementFeatures, Q-E1).
  *
- *  features = plan features (value === true) ∪ features of active add-on lines ∪ the
- *             super-admin overrides in tenants.enabled_features;
+ *  features = plan features (value === true) ∪ features of active add-on lines ∪ the legacy
+ *             grant list tenants.enabled_features, then the per-shop overrides LAST (PLAN-12):
+ *             an active `grant` row adds a feature, an active `revoke` row removes it even
+ *             when the plan or an add-on gives it;
  *  limits   = plan limit + Σ (addons.bundled_limits[resource] × line quantity);
- *             a NULL plan limit = unlimited and stays NULL whatever the add-ons say.
+ *             a NULL plan limit = unlimited and stays NULL whatever the add-ons say;
+ *             then an active per-shop limit override REPLACES the figure (NULL = unlimited).
+ *
+ * Overrides are central rows (TenantOverrides) and work whatever the tenant's lifecycle status.
+ * An expired override is ignored when read, and the cached entry never outlives the nearest
+ * expiry (TTL is capped), so no cron is needed for correctness.
  *
  * Reads CENTRAL models only (Tenant, Plan, SubscriptionAddon, Addon all pin the central
  * connection), so it answers the same inside a tenant request and in central code.
@@ -47,6 +57,8 @@ final class TenantEntitlementService implements TenantFeatureManagerInterface
 {
     public const CACHE_NAMESPACE = 'entitlements';
 
+    public function __construct(private readonly TenantOverrides $overrides) {}
+
     public function entitlements(Tenant|string $tenant): EntitlementsDTO
     {
         $tenantId = $this->tenantId($tenant);
@@ -59,11 +71,24 @@ final class TenantEntitlementService implements TenantFeatureManagerInterface
         // and refuse every creation of the resource. Such an entry is stale: resolve it again.
         if (! is_array($cached) || ! $this->hasEveryLimit($cached)) {
             $cached = $this->resolve($tenantId)->toArray();
-            Cache::put($key, $cached, max(1, (int) config('entitlements.cache_ttl', 3600)));
+            Cache::put($key, $cached, $this->cacheTtl($tenantId));
         }
 
         /** @var array{tenant_id: string, plan_id: int|null, features: list<string>, limits: array<string, int|null>, addons: list<array{key: string, quantity: int}>} $cached */
         return EntitlementsDTO::fromArray($cached);
+    }
+
+    /** Configured TTL, capped so the entry dies at the tenant's nearest override expiry. */
+    private function cacheTtl(string $tenantId): int
+    {
+        $ttl = max(1, (int) config('entitlements.cache_ttl', 3600));
+        $expiry = $this->overrides->nextExpiry($tenantId);
+
+        if ($expiry === null) {
+            return $ttl;
+        }
+
+        return max(1, min($ttl, (int) ceil(now()->diffInSeconds($expiry, true))));
     }
 
     /**
@@ -140,6 +165,19 @@ final class TenantEntitlementService implements TenantFeatureManagerInterface
             $addons[] = ['key' => $addon->key, 'quantity' => $quantity];
         }
 
+        // PLAN-12: per-shop overrides are applied last, over plan and add-ons.
+        foreach ($this->overrides->activeLimits($tenantId) as $resource => $override) {
+            $limits[$resource] = $override->value;
+        }
+
+        foreach ($this->overrides->activeFeatures($tenantId) as $key => $override) {
+            if ($override->mode === FeatureOverrideMode::Grant) {
+                $features[$key] = true;
+            } else {
+                unset($features[$key]);
+            }
+        }
+
         $featureKeys = array_keys($features);
         sort($featureKeys);
 
@@ -184,33 +222,60 @@ final class TenantEntitlementService implements TenantFeatureManagerInterface
     }
 
     /**
-     * Same toggle as the legacy TenantFeatureManager, on the canonical key: an override
-     * stored under a legacy alias counts as the canonical one and is removed with it.
+     * Same toggle as the legacy TenantFeatureManager, now backed by `tenant_feature_overrides`:
+     * an existing `grant` row (or a legacy list entry) is removed; otherwise a permanent `grant`
+     * row replaces any `revoke` row. Keys are canonical: a legacy alias counts as the canonical one.
      *
-     * @return list<string>
+     * @return list<string> the shop's granted override keys after the toggle
      */
     public function toggleFeatureOverride(Tenant $tenant, string $featureKey): array
     {
         $canonical = $this->canonicalFeature($featureKey);
-        $current = $this->overrides($tenant);
-        $enabled = in_array($canonical, array_map(fn (string $key): string => $this->canonicalFeature($key), $current), true);
+        $tenantId = (string) $tenant->getKey();
 
-        $next = array_values(array_filter(
-            $current,
-            fn (string $key): bool => $this->canonicalFeature($key) !== $canonical,
-        ));
+        DB::connection((new TenantFeatureOverride)->getConnectionName())->transaction(function () use ($tenant, $tenantId, $canonical): void {
+            $legacy = $this->overrides($tenant);
+            $legacyHas = in_array($canonical, array_map(fn (string $key): string => $this->canonicalFeature($key), $legacy), true);
 
-        if (! $enabled) {
-            $next[] = $canonical;
-        }
+            $row = TenantFeatureOverride::query()
+                ->where('tenant_id', $tenantId)->where('feature_key', $canonical)->lockForUpdate()->first();
+            $enabled = $legacyHas || ($row !== null && $row->mode === FeatureOverrideMode::Grant && ! $row->isExpired());
 
-        $tenant->update(['enabled_features' => $next]);
+            if ($legacyHas) {
+                $tenant->update(['enabled_features' => array_values(array_filter(
+                    $legacy,
+                    fn (string $key): bool => $this->canonicalFeature($key) !== $canonical,
+                ))]);
+            }
 
-        // The Tenant observer bumps too; bumping here keeps the toggle correct even when
+            if ($enabled) {
+                $row?->delete();
+
+                return;
+            }
+
+            TenantFeatureOverride::query()->updateOrCreate(
+                ['tenant_id' => $tenantId, 'feature_key' => $canonical],
+                [
+                    'mode' => FeatureOverrideMode::Grant->value,
+                    'reason' => (string) __('plan_overrides.toggle_reason'),
+                    'expires_at' => null,
+                    'created_by' => null,
+                ],
+            );
+        });
+
+        // The model observer bumps too; bumping here keeps the toggle correct even when
         // observers are muted (Model::withoutEvents) by the caller.
-        $this->forget((string) $tenant->getKey());
+        $this->forget($tenantId);
 
-        return $next;
+        $granted = TenantFeatureOverride::query()
+            ->where('tenant_id', $tenantId)->where('mode', FeatureOverrideMode::Grant->value)->pluck('feature_key')->all();
+        $granted = array_merge($granted, array_map(fn (string $key): string => $this->canonicalFeature($key), $this->overrides($tenant->refresh())));
+        $granted = array_values(array_unique(array_map('strval', $granted)));
+        sort($granted);
+
+        return $granted;
     }
 
     /** Invalidate the tenant's cached entitlements, from any context. */

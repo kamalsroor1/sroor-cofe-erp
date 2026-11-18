@@ -149,6 +149,7 @@ final class ListShopsNearLimitAction
                     'limit' => $row['limit'],
                     'percent' => $row['percent'],
                     'over_limit' => $row['over_limit'],
+                    'overridden' => $row['overridden'] ?? false,
                 ];
             }
         }

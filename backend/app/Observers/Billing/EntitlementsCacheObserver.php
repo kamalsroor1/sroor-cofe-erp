@@ -9,6 +9,8 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
+use App\Models\TenantFeatureOverride;
+use App\Models\TenantLimitOverride;
 use App\Services\Entitlements\EntitlementFeatures;
 use App\Services\Entitlements\TenantEntitlementService;
 use App\Support\TenantCache;
@@ -18,7 +20,8 @@ use Illuminate\Support\Facades\DB;
 /**
  * Invalidates cached tenant entitlements (ENTI-2.2) whenever a CENTRAL row they are
  * derived from changes: Subscription, SubscriptionAddon, Plan, Addon, and the Tenant's
- * own plan_id / status / enabled_features (super-admin overrides).
+ * own plan_id / status / enabled_features (super-admin overrides), and the PLAN-12 per-shop
+ * TenantLimitOverride / TenantFeatureOverride rows.
  *
  * Always the explicit scope TenantCache::bumpFor($tenantId, 'entitlements'): these
  * events fire in central code (super-admin, billing), and the implicit bump() would move
@@ -55,7 +58,7 @@ final class EntitlementsCacheObserver
     {
         $ids = match (true) {
             $model instanceof Tenant => [$model->getKey()],
-            $model instanceof Subscription, $model instanceof SubscriptionAddon => [
+            $model instanceof Subscription, $model instanceof SubscriptionAddon, $model instanceof TenantLimitOverride, $model instanceof TenantFeatureOverride => [
                 $model->getAttribute('tenant_id'),
                 $model->getOriginal('tenant_id'),
             ],

@@ -25,6 +25,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Branding\PlatformBranding;
 use App\Services\Entitlements\MonthlyInvoiceCounter;
+use App\Services\Entitlements\TenantOverrides;
 use App\Services\Entitlements\TenantStorageUsage;
 use App\Support\PartyLimitCounter;
 use App\Support\StoreLimitBucket;
@@ -49,6 +50,7 @@ final class GetTenantSubscriptionAction
         private readonly TenantLifecyclePolicy $policy,
         private readonly MonthlyInvoiceCounter $invoiceCounter,
         private readonly TenantStorageUsage $storageUsage,
+        private readonly TenantOverrides $overrides,
     ) {}
 
     /**
@@ -171,12 +173,17 @@ final class GetTenantSubscriptionAction
      * and carries `resets_at` (ISO 8601, start of the next business month); every other row has
      * `resets_at` null.
      *
-     * @return list<array{resource: string, label: string, unit: string, used: int, limit: int, percent: int, over_limit: bool, resets_at: string|null}>
+     * `limit` is the EFFECTIVE limit (plan + add-ons, replaced by an active per-shop override,
+     * PLAN-12). `overridden` marks a row whose limit comes from such an override and
+     * `override_expires_at` (ISO 8601, null = permanent) says until when.
+     *
+     * @return list<array{resource: string, label: string, unit: string, used: int, limit: int, percent: int, over_limit: bool, resets_at: string|null, overridden: bool, override_expires_at: string|null}>
      */
     private function usage(Tenant $tenant): array
     {
         $enforced = $this->features->entitlements($tenant)->planId !== null || (bool) config('entitlements.enforce_planless', false);
         $rows = [];
+        $overrides = $this->overrides->activeLimits((string) $tenant->getKey());
 
         foreach (LimitResource::cases() as $resource) {
             $limit = $enforced ? $this->features->limit($tenant, $resource) : null;
@@ -197,6 +204,8 @@ final class GetTenantSubscriptionAction
                 'percent' => $limit === 0 ? ($used > 0 ? 100 : 0) : intdiv($used * 100 + $limit - 1, $limit),
                 'over_limit' => $used > $limit,
                 'resets_at' => $resource === LimitResource::InvoicesMonth ? $this->invoiceCounter->resetsAt()->toIso8601String() : null,
+                'overridden' => isset($overrides[$resource->value]),
+                'override_expires_at' => ($overrides[$resource->value] ?? null)?->expires_at?->toIso8601String(),
             ];
         }
 

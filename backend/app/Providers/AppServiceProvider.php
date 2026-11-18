@@ -22,6 +22,8 @@ use App\Models\ReturnDocument;
 use App\Models\Subscription;
 use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
+use App\Models\TenantFeatureOverride;
+use App\Models\TenantLimitOverride;
 use App\Observers\Billing\EntitlementsCacheObserver;
 use App\Observers\CashShiftStampObserver;
 use App\Observers\Landing\PublicCatalogObserver;
@@ -158,7 +160,7 @@ class AppServiceProvider extends ServiceProvider
 
         // ENTI-2.2: any change to the central rows entitlements derive from bumps the
         // affected tenants' entitlement cache (explicit TenantCache::bumpFor scope).
-        foreach ([Tenant::class, Plan::class, Subscription::class, SubscriptionAddon::class, Addon::class] as $model) {
+        foreach ([Tenant::class, Plan::class, Subscription::class, SubscriptionAddon::class, Addon::class, TenantLimitOverride::class, TenantFeatureOverride::class] as $model) {
             $model::observe(EntitlementsCacheObserver::class);
         }
 

@@ -285,7 +285,8 @@ final class SuperAdminTenantsApiTest extends TenantTestCase
             ->assertStatus(200)
             ->assertJson(['success' => true]);
 
-        $this->assertContains('custom_branding', (array) Tenant::query()->findOrFail($id)->enabled_features);
+        // PLAN-12: the toggle now writes an explicit grant row (tenant_feature_overrides).
+        $this->assertDatabaseHas('tenant_feature_overrides', ['tenant_id' => $id, 'feature_key' => 'custom_branding', 'mode' => 'grant'], $this->centralConnectionName());
     }
 
     public function test_suspension_without_reason_is_422_and_changes_nothing(): void

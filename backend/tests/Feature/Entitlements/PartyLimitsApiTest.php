@@ -303,6 +303,7 @@ final class PartyLimitsApiTest extends TenantTestCase
         $this->assertSame([
             'resource' => 'customers', 'label' => __('billing.limit_resources.customers'), 'unit' => 'count',
             'used' => 40, 'limit' => 50, 'percent' => 80, 'over_limit' => false, 'resets_at' => null,
+            'overridden' => false, 'override_expires_at' => null,
         ], $usage['customers']);
         $this->assertSame(5, $usage['suppliers']['used']);
         $this->assertSame(20, $usage['suppliers']['limit']);
