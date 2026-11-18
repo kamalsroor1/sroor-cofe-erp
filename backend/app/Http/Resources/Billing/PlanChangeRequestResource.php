@@ -35,6 +35,8 @@ final class PlanChangeRequestResource extends JsonResource
             ]),
             'current_plan' => $this->whenLoaded('currentPlan', fn () => $this->planSummary($this->currentPlan)),
             'requested_plan' => $this->whenLoaded('requestedPlan', fn () => $this->planSummary($this->requestedPlan)),
+            // PLAN-10 review: a downgrade to a permanent free plan (status `scheduled`, never invoiced).
+            'downgrade_to_free' => $this->whenLoaded('requestedPlan', fn (): bool => $this->requestedPlan !== null && $this->requestedPlan->is_free),
             'addon' => $this->whenLoaded('addon', fn () => $this->addon === null ? null : [
                 'key' => $this->addon->key,
                 'name' => (string) __($this->addon->name_key),

@@ -83,6 +83,7 @@ final class NotifyTenantOfLifecycleReminderAction
             'ends_at' => $reminder->endsAt->toIso8601String(),
             'ends_on' => $reminder->targetDate,
             'grace_ends_at' => $reminder->graceEndsAt?->toIso8601String(),
+            'falls_back_to_free' => $reminder->fallsBackToFreePlan,
             'action_path' => self::ACTION_PATH,
         ], JSON_THROW_ON_ERROR);
 

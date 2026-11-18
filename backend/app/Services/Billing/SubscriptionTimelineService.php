@@ -10,6 +10,7 @@ use App\Enums\TenantStatus;
 use App\Models\Tenant;
 use App\Support\Tenancy\SubscriptionTimeline;
 use App\Support\Tenancy\TenantLifecyclePolicy;
+use App\Support\Tenancy\TenantLifecycleSnapshot;
 use Carbon\CarbonImmutable;
 
 /**
@@ -21,6 +22,9 @@ use Carbon\CarbonImmutable;
  * The grace end is NOT recomputed here: it is the policy's next move (→ read_only) evaluated at
  * the end instant, so TENANT_GRACE_DAYS, an explicit grace_ends_at and a stored past_due start
  * are all honoured exactly as the access middleware honours them.
+ *
+ * PLAN-10 review: a self-signup trial that falls back to the free plan has no read-only step; its
+ * timeline carries fallsBackToFreePlan and graceEndsAt is the moment of the move to the free plan.
  */
 final class SubscriptionTimelineService
 {
@@ -46,12 +50,14 @@ final class SubscriptionTimelineService
             default => $snapshot->subscriptionEndsAt !== null ? SubscriptionPeriodKind::Subscription : SubscriptionPeriodKind::Trial,
         };
         $endsAt = $kind === SubscriptionPeriodKind::Trial ? $snapshot->trialEndsAt : $snapshot->subscriptionEndsAt;
+        // PLAN-10 review: this trial ends on the free plan (active), never in read-only.
+        $fallsBack = $effective === TenantStatus::Trial && $snapshot->trialFallsBackToFreePlan;
 
         $graceEndsAt = null;
         $inGrace = false;
         $graceDaysLeft = null;
         if ($effective !== TenantStatus::ReadOnly && $endsAt !== null) {
-            $graceEndsAt = $this->graceEnd($tenant, $endsAt);
+            $graceEndsAt = $this->graceEnd($snapshot, $endsAt, $fallsBack);
             $inGrace = $now->greaterThanOrEqualTo($endsAt);
             $graceDaysLeft = $inGrace ? max(0, self::calendarDaysBetween($now, $graceEndsAt)) : null;
         }
@@ -64,6 +70,7 @@ final class SubscriptionTimelineService
             inGrace: $inGrace,
             daysLeft: $endsAt === null ? null : self::calendarDaysBetween($now, $endsAt),
             graceDaysLeft: $graceDaysLeft,
+            fallsBackToFreePlan: $fallsBack,
         );
     }
 
@@ -80,17 +87,21 @@ final class SubscriptionTimelineService
         return intdiv($toDay->getTimestamp() - $fromDay->getTimestamp(), self::SECONDS_PER_DAY);
     }
 
-    /** When the full-access grace after $endsAt ends: the policy's move to read_only, seen at $endsAt. */
-    private function graceEnd(Tenant $tenant, CarbonImmutable $endsAt): CarbonImmutable
+    /**
+     * When the full-access grace after $endsAt ends: the policy's next move seen at $endsAt, i.e. the
+     * move to read_only, or (a trial falling back to the free plan) the move to the free plan.
+     */
+    private function graceEnd(TenantLifecycleSnapshot $snapshot, CarbonImmutable $endsAt, bool $fallsBack): CarbonImmutable
     {
-        $atEnd = $this->policy->evaluate($tenant->lifecycleSnapshot(), $endsAt);
+        $atEnd = $this->policy->evaluate($snapshot, $endsAt);
+        $next = $fallsBack ? TenantStatus::Active : TenantStatus::ReadOnly;
 
         $stillFullAccess = in_array($atEnd->effectiveStatus, [TenantStatus::Trial, TenantStatus::PastDue], true);
-        if ($stillFullAccess && $atEnd->nextStatus === TenantStatus::ReadOnly && $atEnd->nextTransitionAt !== null) {
+        if ($stillFullAccess && $atEnd->nextStatus === $next && $atEnd->nextTransitionAt !== null) {
             return $atEnd->nextTransitionAt;
         }
 
-        // No grace days configured: read-only from the end itself.
+        // No grace days configured: the move happens at the end itself.
         return $endsAt;
     }
 }

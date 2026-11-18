@@ -35,6 +35,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * | requestSamePlan()        | 422  | billing.request_same_plan        |
  * | requestPlanUnavailable() | 422  | billing.request_plan_unavailable |
  * | requestAddonUnavailable()| 422  | billing.request_addon_unavailable|
+ * | downgradeUnavailable() PLAN-10 | 422 | billing.downgrade_unavailable |
  * | addonNeedsSubscription() | 422  | billing.addon_needs_subscription |
  * | differenceRequired()     | 422  | billing.difference_required      |
  * | addonNeedsActiveSubscription() | 422 | billing.addon_needs_active_subscription |
@@ -162,6 +163,12 @@ final class BillingException extends HttpException
     public static function requestPlanUnavailable(): self
     {
         return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'request_plan_unavailable');
+    }
+
+    /** PLAN-10 review: the shop cannot be moved to a free plan from its current status (suspended, cancelled...). */
+    public static function downgradeUnavailable(): self
+    {
+        return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'downgrade_unavailable');
     }
 
     public static function requestAddonUnavailable(): self

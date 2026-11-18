@@ -98,6 +98,17 @@ class PlanChangeRequest extends Model
         return $query->where('status', PlanChangeRequestStatus::Pending->value);
     }
 
+    /**
+     * Pending or scheduled (PLAN-10 review: a scheduled downgrade to a free plan).
+     *
+     * @param  Builder<PlanChangeRequest>  $query
+     * @return Builder<PlanChangeRequest>
+     */
+    public function scopeOpen(Builder $query): Builder
+    {
+        return $query->whereIn('status', array_map(static fn (PlanChangeRequestStatus $status): string => $status->value, PlanChangeRequestStatus::open()));
+    }
+
     public function isPending(): bool
     {
         return $this->status === PlanChangeRequestStatus::Pending;

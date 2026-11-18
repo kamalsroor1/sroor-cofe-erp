@@ -31,6 +31,9 @@ use Illuminate\Support\Facades\DB;
  *  - addon: an `addon` invoice with the add-on line(s), priced from the tenant's plan catalog for
  *    the request's cycle unless the admin overrides the unit price. It is a separate invoice.
  *
+ * A request whose target is a permanent free plan is never invoiced: it is stored `scheduled`
+ * (not pending -> 409 here) and an older pending one is refused (422 free_plan_not_billable).
+ *
  * One central transaction: the request row is locked first (409 `billing.request_not_pending`
  * when it is no longer pending, so a double click issues one invoice), then
  * IssueSubscriptionInvoiceAction reuses its numbering / VAT / rounding inside the same transaction.
@@ -141,6 +144,12 @@ final class IssuePlanChangeInvoiceAction
 
         if (! $target instanceof Plan) {
             throw BillingException::requestPlanUnavailable();
+        }
+
+        // PLAN-10 review: a move to a permanent free plan is never invoiced (it is a `scheduled`
+        // downgrade applied by the lifecycle sweep); this guards rows filed before that existed.
+        if ($target->is_free) {
+            throw BillingException::freePlanNotBillable();
         }
 
         if ($tenant->plan_id !== null && (int) $tenant->plan_id === (int) $target->getKey()) {

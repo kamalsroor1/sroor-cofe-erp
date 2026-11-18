@@ -22,6 +22,10 @@ use Carbon\CarbonImmutable;
  *  - daysLeft: CALENDAR days (app timezone) from today to endsAt's date: 0 on the end day,
  *    negative once it passed; null without endsAt.
  *  - graceDaysLeft: calendar days from today to graceEndsAt's date while in grace, else null.
+ *  - fallsBackToFreePlan (PLAN-10 review): a running self-signup trial that moves to the platform's
+ *    free plan (still `active`) when it ends: there is NO read-only step. graceEndsAt is then the
+ *    moment of that move, and every reader must word it as "moves to the free plan", never as a
+ *    read-only countdown.
  */
 final readonly class SubscriptionTimeline
 {
@@ -33,6 +37,7 @@ final readonly class SubscriptionTimeline
         public bool $inGrace,
         public ?int $daysLeft,
         public ?int $graceDaysLeft,
+        public bool $fallsBackToFreePlan = false,
     ) {}
 
     public function isReadOnly(): bool

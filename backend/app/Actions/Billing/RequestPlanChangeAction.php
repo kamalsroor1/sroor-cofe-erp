@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Actions\Billing;
 
+use App\Actions\Tenants\MoveTenantToFreePlanAction;
 use App\DTOs\Billing\RequestPlanChangeDTO;
 use App\Enums\Billing\AddonType;
 use App\Enums\Billing\PlanChangeRequestKind;
 use App\Enums\Billing\PlanChangeRequestStatus;
 use App\Enums\CentralAuditEvent;
+use App\Enums\TenantStatus;
 use App\Exceptions\Billing\BillingException;
 use App\Models\Addon;
 use App\Models\Plan;
@@ -31,10 +33,25 @@ use Illuminate\Support\Facades\DB;
  *  - addon: an active, public, recurring add-on offered on the tenant's plan, and the tenant must
  *    already hold an IN-FORCE subscription (an add-on rides on one; expired -> addon_needs_active_subscription).
  * The requesting user's name is snapshotted (the user lives in the tenant database).
+ *
+ * PLAN-10 review, downgrade to a permanent free plan (`plans.is_free`): it can never be invoiced,
+ * so the request is stored as `scheduled` (no invoice, never reaches IssuePlanChangeInvoiceAction,
+ * which only takes `pending` rows). The daily lifecycle sweep applies it at the end of the paid
+ * term through MoveTenantToFreePlanAction (source `downgrade`), and the shop can cancel it until
+ * then. When NO paid term is running (a trial, or a term that already ended: past_due / read_only /
+ * active without a future end) it is applied at once in this transaction and returned `completed`.
+ * A suspended / cancelled / archived shop is refused (billing.downgrade_unavailable).
+ * "One open request per kind" counts pending AND scheduled rows.
  */
 final class RequestPlanChangeAction
 {
-    public function __construct(private readonly CentralAuditLogger $audit) {}
+    /** Stored statuses a downgrade to a free plan may start from. */
+    private const DOWNGRADABLE = [TenantStatus::Trial, TenantStatus::Active, TenantStatus::PastDue, TenantStatus::ReadOnly];
+
+    public function __construct(
+        private readonly CentralAuditLogger $audit,
+        private readonly MoveTenantToFreePlanAction $moveToFreePlan,
+    ) {}
 
     public function execute(RequestPlanChangeDTO $dto): PlanChangeRequest
     {
@@ -43,17 +60,24 @@ final class RequestPlanChangeAction
         return $connection->transaction(function () use ($dto): PlanChangeRequest {
             $tenant = Tenant::query()->whereKey($dto->tenantId)->lockForUpdate()->firstOrFail();
 
-            $target = $dto->kind === PlanChangeRequestKind::PlanChange
-                ? ['requested_plan_id' => $this->requestedPlan($dto, $tenant)->getKey(), 'addon_id' => null]
+            $plan = $dto->kind === PlanChangeRequestKind::PlanChange ? $this->requestedPlan($dto, $tenant) : null;
+            $target = $plan instanceof Plan
+                ? ['requested_plan_id' => $plan->getKey(), 'addon_id' => null]
                 : ['requested_plan_id' => null, 'addon_id' => $this->requestedAddon($dto, $tenant)->getKey()];
+            $toFreePlan = $plan instanceof Plan && $plan->is_free;
+            $stored = $tenant->lifecycleStatus();
 
-            $pending = PlanChangeRequest::query()
+            if ($toFreePlan && ! in_array($stored, self::DOWNGRADABLE, true)) {
+                throw BillingException::downgradeUnavailable();
+            }
+
+            $open = PlanChangeRequest::query()
                 ->where('tenant_id', $tenant->getKey())
                 ->where('kind', $dto->kind->value)
-                ->where('status', PlanChangeRequestStatus::Pending->value)
+                ->open()
                 ->exists();
 
-            if ($pending) {
+            if ($open) {
                 throw BillingException::requestAlreadyPending();
             }
 
@@ -64,10 +88,11 @@ final class RequestPlanChangeAction
                 'quantity' => $dto->quantity,
                 'billing_cycle' => $dto->cycle,
                 'notes' => $dto->notes,
-                'status' => PlanChangeRequestStatus::Pending,
+                'status' => $toFreePlan ? PlanChangeRequestStatus::Scheduled : PlanChangeRequestStatus::Pending,
                 'requested_by_name' => $dto->requestedByName,
                 'requested_by_user_id' => $dto->requestedByUserId,
             ]);
+            $applyNow = $toFreePlan && ! $this->paidTermRunning($tenant, $stored);
 
             $this->audit->record(
                 CentralAuditEvent::PlanChangeRequested,
@@ -79,14 +104,29 @@ final class RequestPlanChangeAction
                     'addon_id' => $target['addon_id'],
                     'quantity' => $dto->quantity,
                     'billing_cycle' => $dto->cycle->value,
+                    'downgrade_to_free' => $toFreePlan,
+                    'applies_at' => ! $toFreePlan ? null : ($applyNow ? 'now' : $tenant->subscription_ends_at?->toIso8601String()),
                 ],
                 null,
                 $request,
                 (string) $tenant->getKey(),
             );
 
+            if ($applyNow) {
+                $this->moveToFreePlan->execute((string) $tenant->getKey(), $plan, $stored, MoveTenantToFreePlanAction::SOURCE_DOWNGRADE, (int) $request->getKey());
+                $request->refresh();
+            }
+
             return $request;
         });
+    }
+
+    /** A trial has no paid term; otherwise the term runs while subscription_ends_at is in the future. */
+    private function paidTermRunning(Tenant $tenant, ?TenantStatus $stored): bool
+    {
+        return $stored !== TenantStatus::Trial
+            && $tenant->subscription_ends_at !== null
+            && $tenant->subscription_ends_at->isFuture();
     }
 
     private function requestedPlan(RequestPlanChangeDTO $dto, Tenant $tenant): Plan

@@ -81,6 +81,7 @@ final class CollectDueLifecycleRemindersAction
                 endsAt: $timeline->endsAt,
                 graceEndsAt: $timeline->graceEndsAt,
                 targetDate: (string) $timeline->endDate(),
+                fallsBackToFreePlan: $timeline->fallsBackToFreePlan,
             );
         }
 

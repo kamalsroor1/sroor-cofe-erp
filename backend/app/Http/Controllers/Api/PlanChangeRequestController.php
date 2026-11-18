@@ -8,6 +8,7 @@ use App\Actions\Billing\CancelPlanChangeRequestAction;
 use App\Actions\Billing\ListOwnPlanChangeRequestsAction;
 use App\Actions\Billing\RequestPlanChangeAction;
 use App\DTOs\Billing\RequestPlanChangeDTO;
+use App\Enums\Billing\PlanChangeRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Billing\ListOwnPlanChangeRequestsRequest;
 use App\Http\Requests\Billing\RequestPlanChangeRequest;
@@ -20,6 +21,8 @@ use Illuminate\Http\JsonResponse;
  *   GET  /api/v1/billing/plan-change-requests
  *   POST /api/v1/billing/plan-change-requests              (allowed while read-only / past due)
  *   POST /api/v1/billing/plan-change-requests/{id}/cancel  (allowed while read-only / past due)
+ * A request for a permanent free plan is a scheduled downgrade (201, status `scheduled`), or is
+ * applied at once when no paid term is running (201, status `completed`); the message says which.
  * Every lookup is scoped to the tenant resolved for the request, never to an id from the client.
  */
 final class PlanChangeRequestController extends Controller
@@ -49,7 +52,11 @@ final class PlanChangeRequestController extends Controller
         ));
 
         return (new PlanChangeRequestResource($created->load(['currentPlan', 'requestedPlan', 'addon', 'invoice'])))
-            ->additional(['success' => true, 'message' => __('billing.messages.plan_change_requested')])
+            ->additional(['success' => true, 'message' => __(match ($created->status) {
+                PlanChangeRequestStatus::Scheduled => 'billing.messages.downgrade_scheduled',
+                PlanChangeRequestStatus::Completed => 'billing.messages.downgrade_applied',
+                default => 'billing.messages.plan_change_requested',
+            })])
             ->response()
             ->setStatusCode(201);
     }

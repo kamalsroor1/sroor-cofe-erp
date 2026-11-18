@@ -12,6 +12,8 @@ use Carbon\CarbonImmutable;
  *
  * daysLeft is in calendar days (app timezone): N (a configured reminder day), 0 (ends today)
  * or -1 (ended yesterday: the grace period has just started).
+ * fallsBackToFreePlan (PLAN-10 review): the trial ends on the free plan, never in read-only; the
+ * reminder is worded accordingly (subscription.reminders.trial_fallback.*).
  */
 final readonly class DueLifecycleReminder
 {
@@ -29,6 +31,7 @@ final readonly class DueLifecycleReminder
         public CarbonImmutable $endsAt,
         public ?CarbonImmutable $graceEndsAt,
         public string $targetDate,
+        public bool $fallsBackToFreePlan = false,
     ) {}
 
     /** `d7` / `d3` / `d1`, `today` or `grace`. */

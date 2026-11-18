@@ -25,6 +25,8 @@ return [
         'founder_above_list' => 'The founder price cannot be above the regular plan price for the same billing cycle.',
         'free_plan_price_must_be_zero' => 'A permanent free plan must have a price of 0.',
         'free_plan_no_special_price' => 'A permanent free plan cannot have a founder or promotion price.',
+        'free_plan_trial_days' => 'A permanent free plan has no trial: set the trial days to 0.',
+        'free_plan_has_paying_tenants' => 'This plan still has :count shops on a paid subscription, so it cannot be made free. Move them to another plan first.',
     ],
     'signup_settings' => [
         'default_plan_invalid' => 'The default signup plan must be an active plan.',
@@ -85,6 +87,7 @@ return [
         'completed' => 'Completed',
         'rejected' => 'Rejected',
         'cancelled' => 'Cancelled',
+        'scheduled' => 'Scheduled',
     ],
     'addon_pricing' => [
         'cycle_not_sellable' => 'The :cycle billing cycle is not available for purchase.',
@@ -142,6 +145,7 @@ return [
         'difference_term_changed' => 'This upgrade difference was priced for a subscription term that has since changed (a renewal was paid after it). Void it and issue a new difference for the current term.',
         'renewal_in_flight' => 'Renewal invoice :number has a payment under review or partly paid. Settle it first, then issue the upgrade difference.',
         'payment_duplicate' => 'This payment (same amount, method and reference) was recorded on this invoice a few minutes ago. If it is really a second payment, enter a different reference.',
+        'downgrade_unavailable' => 'Your account cannot move to the free plan in its current status. Contact support.',
     ],
     'messages' => [
         'payment_cancelled' => 'The pending payment was cancelled; you can submit a new one.',
@@ -157,6 +161,8 @@ return [
         'plan_change_cancelled' => 'The request was cancelled.',
         'plan_change_invoiced' => 'The invoice was issued for the request.',
         'plan_change_rejected' => 'The request was rejected.',
+        'downgrade_scheduled' => 'Your shop will move to the free plan when the current paid term ends. You can cancel this until then.',
+        'downgrade_applied' => 'Your shop is now on the free plan. All your data is kept.',
     ],
     'invoice' => [
         'plan_line' => 'Subscription: :plan (:cycle)',

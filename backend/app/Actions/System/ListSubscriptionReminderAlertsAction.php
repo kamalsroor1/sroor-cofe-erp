@@ -79,18 +79,22 @@ final class ListSubscriptionReminderAlertsAction
         $kind = (string) $data['kind'];
         $stage = (string) ($data['stage'] ?? '');
         $days = (int) ($data['days_left'] ?? 0);
+        // PLAN-10 review: a trial that falls back to the free plan is never threatened with view-only.
+        $fallsBack = ($data['falls_back_to_free'] ?? false) === true && $kind === 'trial';
+        $group = 'subscription.reminders.'.($fallsBack ? 'trial_fallback' : $kind);
 
         $titleKey = match ($stage) {
-            DueLifecycleReminder::STAGE_TODAY => 'subscription.reminders.'.$kind.'.today',
-            DueLifecycleReminder::STAGE_GRACE => 'subscription.reminders.'.$kind.'.grace',
-            default => $days === 1 ? 'subscription.reminders.'.$kind.'.tomorrow' : 'subscription.reminders.'.$kind.'.days_left',
+            DueLifecycleReminder::STAGE_TODAY => $group.'.today',
+            DueLifecycleReminder::STAGE_GRACE => $group.'.grace',
+            default => $days === 1 ? $group.'.tomorrow' : $group.'.days_left',
         };
+        $urgent = ! $fallsBack && in_array($stage, [DueLifecycleReminder::STAGE_TODAY, DueLifecycleReminder::STAGE_GRACE], true);
 
         return [
-            'type' => in_array($stage, [DueLifecycleReminder::STAGE_TODAY, DueLifecycleReminder::STAGE_GRACE], true) ? 'danger' : 'warning',
+            'type' => $urgent ? 'danger' : 'warning',
             'icon' => 'alert-triangle',
             'title' => (string) __($titleKey, ['days' => $days]),
-            'description' => (string) __('subscription.reminders.'.$kind.'.description'),
+            'description' => (string) __($group.'.description'),
             'link' => NotifyTenantOfLifecycleReminderAction::ACTION_PATH,
             'link_label' => (string) __('subscription.reminders.action'),
         ];

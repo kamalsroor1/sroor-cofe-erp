@@ -7,6 +7,7 @@ use App\Support\PublicCatalogCache;
 use App\Support\TenantCache;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -23,7 +24,10 @@ use Illuminate\Support\Facades\Schema;
  * - The main store a tenant is born with is a `retail` store, which counts against max_stores,
  *   never against max_warehouses, so 0 warehouses does not block provisioning.
  * - Feature keys this migration does not know are kept as they are.
- * - Intentional overwrite of the one catalog row (owner-approved values, like the price list).
+ * - Overwrites the one catalog row (owner-approved values) ONLY while it still holds the catalog's
+ *   free-plan pricing (0 / 0, no founder / transition / compare-at price): a row the owner turned
+ *   into a paid plan is skipped with a warning in the log (PLAN-10 review; edited in place because
+ *   no deployed database had run this migration yet).
  * - Idempotent; tenants on the plan get their entitlements cache flushed.
  * - down() puts back the 14-day trial values, only on a row that still holds the values written
  *   here (a later super-admin edit is never overwritten).
@@ -103,6 +107,12 @@ return new class extends Migration
                 return null;
             }
 
+            if (! $this->holdsCatalogFreePricing($row)) {
+                Log::warning('Migration apply_permanent_free_plan: the `free` plan was edited (it has a price), left untouched.', ['plan_id' => (int) $row->id]);
+
+                return null;
+            }
+
             $features = array_merge($this->decodeMap($row->features ?? null), self::NEW_FEATURES);
 
             DB::table('plans')->where('id', $row->id)->update($this->onlyExisting(self::NEW_VALUES) + [
@@ -144,6 +154,26 @@ return new class extends Migration
     private function ready(): bool
     {
         return Schema::hasTable('plans') && Schema::hasColumn('plans', 'is_free');
+    }
+
+    /** Still the catalog free row: both prices 0 and no founder / transition / compare-at price. */
+    private function holdsCatalogFreePricing(object $row): bool
+    {
+        foreach (['price_monthly', 'price_yearly'] as $column) {
+            if (bccomp((string) ($row->{$column} ?? '0'), '0', 3) !== 0) {
+                return false;
+            }
+        }
+
+        foreach (['founder_price_', 'founder_transition_price_', 'compare_at_price_'] as $prefix) {
+            foreach (['monthly', 'yearly'] as $cycle) {
+                if (($row->{$prefix.$cycle} ?? null) !== null) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     private function holdsNewValues(object $row): bool

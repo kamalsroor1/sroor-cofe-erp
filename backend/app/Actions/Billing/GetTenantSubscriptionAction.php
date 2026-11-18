@@ -72,8 +72,11 @@ final class GetTenantSubscriptionAction
         }
 
         return [
-            'plan' => $plan === null ? null : ['id' => (int) $plan->getKey(), 'name' => $plan->name, 'code' => $plan->slug],
+            'plan' => $plan === null ? null : ['id' => (int) $plan->getKey(), 'name' => $plan->name, 'code' => $plan->slug, 'is_free' => $plan->is_free],
             'subscription' => [
+                // PLAN-10 review: a row on a permanent free plan has no paid term (its stored ends_at
+                // equals starts_at): never show it as expired; ends_at / days_left stay null.
+                'is_free' => $subscription !== null && $subscription->isFreePlanRow(),
                 'status' => $subscriptionStatus,
                 'billing_cycle' => $subscription === null ? null : ['value' => $subscription->billing_cycle->value, 'label' => $subscription->billing_cycle->label()],
                 'starts_at' => $subscription?->starts_at?->toIso8601String(),
@@ -239,7 +242,8 @@ final class GetTenantSubscriptionAction
     }
 
     /**
-     * The shop's pending request of one kind (at most one exists), shaped like the list resource.
+     * The shop's open request of one kind (at most one exists: pending, or a scheduled downgrade to
+     * the free plan, PLAN-10 review), shaped like the list resource.
      *
      * @return array<string, mixed>|null
      */
@@ -249,7 +253,7 @@ final class GetTenantSubscriptionAction
             ->with(['currentPlan', 'requestedPlan', 'addon', 'invoice'])
             ->where('tenant_id', $tenant->getKey())
             ->where('kind', $kind->value)
-            ->pending()
+            ->open()
             ->orderByDesc('id')
             ->first();
 
@@ -259,7 +263,7 @@ final class GetTenantSubscriptionAction
     /**
      * Public, active plans the shop may ask to move to (price list for the request form).
      *
-     * @return list<array{code: string, name: string, price_monthly: string, price_yearly: string, is_current: bool}>
+     * @return list<array{code: string, name: string, price_monthly: string, price_yearly: string, is_free: bool, is_current: bool}>
      */
     private function availablePlans(Tenant $tenant): array
     {
@@ -271,6 +275,8 @@ final class GetTenantSubscriptionAction
                 'name' => $plan->name,
                 'price_monthly' => $plan->price_monthly,
                 'price_yearly' => $plan->price_yearly,
+                // PLAN-10 review: choosing a free plan is a scheduled downgrade, never an invoice.
+                'is_free' => $plan->is_free,
                 'is_current' => $tenant->plan_id !== null && (int) $tenant->plan_id === (int) $plan->getKey(),
             ];
         }

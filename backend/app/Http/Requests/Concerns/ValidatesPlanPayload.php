@@ -289,7 +289,7 @@ trait ValidatesPlanPayload
     /**
      * PLAN-10, checked on the plan after the write: a permanent free plan (is_free) is never
      * billed, so its monthly and yearly prices are 0 and it has no founder, transition or
-     * compare-at ("was") price.
+     * compare-at ("was") price, and no trial days (review).
      */
     private function validateFreePlan(Validator $validator): void
     {
@@ -300,6 +300,12 @@ trait ValidatesPlanPayload
 
         if (! $isFree) {
             return;
+        }
+
+        // A permanent free plan has no trial (the tenant is active from day one).
+        $trialDays = $this->has('trial_days') ? $this->input('trial_days') : $plan?->trial_days;
+        if (is_numeric($trialDays) && (int) $trialDays > 0) {
+            $validator->errors()->add('trial_days', (string) __('billing.plan_editor.free_plan_trial_days'));
         }
 
         foreach (self::CYCLES as $cycle) {

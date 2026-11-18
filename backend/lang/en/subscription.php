@@ -95,6 +95,7 @@ return [
         'activation_requires_payment' => 'An account can only be activated after its payment is confirmed.',
         'invalid_transition' => 'The account status cannot change from ":from" to ":to".',
         'status_conflict' => 'The account status has changed to ":status". Refresh the page and try again.',
+        'free_plan_move_not_due' => 'The move to the free plan is no longer due for this account. Refresh the page and try again.',
         'archive_not_allowed' => 'Only suspended or cancelled accounts can be archived. Current status: ":status".',
         'not_archived' => 'This account is not archived.',
         'suspension_reason_required' => 'Choose a suspension reason.',
@@ -354,6 +355,13 @@ return [
             'grace' => 'Your free trial has ended: pay now before the account becomes view-only',
             'description' => 'Subscribe from the Subscription & billing page to keep selling without interruption.',
         ],
+        'trial_fallback' => [
+            'days_left' => 'Your free trial ends in :days days, then your shop moves to the free plan',
+            'tomorrow' => 'Your free trial ends tomorrow, then your shop moves to the free plan',
+            'today' => 'Your free trial ends today: your shop moves to the free plan',
+            'grace' => 'Your free trial has ended: your shop is moving to the free plan',
+            'description' => 'Your data is kept and you can keep selling within the free plan limits. Subscribe from the Subscription & billing page to keep your current plan.',
+        ],
         'subscription' => [
             'days_left' => 'Your subscription ends in :days days',
             'tomorrow' => 'Your subscription ends tomorrow',
@@ -370,6 +378,12 @@ return [
             'days_left' => 'Free trial: :days days left',
             'tomorrow' => 'Free trial: ends tomorrow',
             'today' => 'Free trial: ends today',
+        ],
+        // PLAN-10 review: `falls_back_to_free` true (the trial ends on the free plan, no view-only step).
+        'trial_fallback' => [
+            'days_left' => 'Free trial: :days days left, then your shop moves to the free plan',
+            'tomorrow' => 'Free trial: ends tomorrow, then your shop moves to the free plan',
+            'today' => 'Free trial: ends today, then your shop moves to the free plan',
         ],
         'expiring' => [
             'days_left' => 'Your subscription ends in :days days',

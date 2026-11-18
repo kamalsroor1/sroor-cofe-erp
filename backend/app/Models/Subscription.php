@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\Billing\BillingCycle;
 use App\Enums\Billing\SubscriptionStatus;
 use App\Models\Concerns\UsesCentralConnection;
+use App\Services\Plans\FreePlanIds;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -109,6 +110,18 @@ class Subscription extends Model
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
+    }
+
+    /**
+     * PLAN-10 review: the 0.000 row of a permanent free plan (MoveTenantToFreePlanAction / the
+     * provisioner). It has no paid term: its ends_at equals starts_at only because the column is
+     * required, so it is never "expired" and a later payment closes it and opens a new paid row.
+     */
+    public function isFreePlanRow(): bool
+    {
+        return $this->status === SubscriptionStatus::Active
+            && bccomp((string) $this->amount, '0', 3) === 0
+            && app(FreePlanIds::class)->contains((int) $this->plan_id);
     }
 
     public function isActive(): bool

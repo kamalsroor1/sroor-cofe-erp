@@ -36,6 +36,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * | tenantPurged()         OPS-9  | 409  | subscription.tenant_purged               |
  * | archiveFailed()        OPS-9  | 409  | subscription.archive_failed              |
  * | purgeRefused()         OPS-9  | 409  | subscription.purge_refused               |
+ * | freePlanMoveNotDue() PLAN-10  | 409  | subscription.free_plan_move_not_due      |
  *
  * It extends HttpException so it is never reported as a server error, and so the status
  * is kept even if something renders it without calling render().
@@ -203,6 +204,15 @@ final class TenantLifecycleException extends HttpException
         return new self(Response::HTTP_CONFLICT, 'subscription.already_archived', (string) __('subscription.archive_errors.already_archived'), [
             'status' => TenantStatus::Archived->value,
         ]);
+    }
+
+    /**
+     * PLAN-10 review: a move to a free plan is no longer due on the locked row (the trial was paid
+     * or extended, the downgrade was cancelled, a paid term is running again...) (HTTP 409).
+     */
+    public static function freePlanMoveNotDue(): self
+    {
+        return new self(Response::HTTP_CONFLICT, 'subscription.free_plan_move_not_due', (string) __('subscription.errors.free_plan_move_not_due'));
     }
 
     /** OPS-9: the tenant was purged (or its purge started); nothing may change it (HTTP 409). */

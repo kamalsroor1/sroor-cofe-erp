@@ -13,8 +13,11 @@ use App\Services\CentralAuditLogger;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Tenant context: the shop withdraws its own PENDING request. Another shop's request is a 404
- * (the lookup is scoped to the resolved tenant); a request that is no longer pending is a 409.
+ * Tenant context: the shop withdraws its own PENDING request, or (PLAN-10 review) its SCHEDULED
+ * downgrade to the free plan before the sweep applies it. Another shop's request is a 404 (the
+ * lookup is scoped to the resolved tenant); a request that is no longer open is a 409. The request
+ * row is locked, and MoveTenantToFreePlanAction locks it too, so a cancel racing the sweep either
+ * wins (the move then finds it not due) or gets the 409.
  */
 final class CancelPlanChangeRequestAction
 {
@@ -31,16 +34,17 @@ final class CancelPlanChangeRequestAction
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if (! $request->isPending()) {
+            if (! $request->status->isCancellable()) {
                 throw BillingException::requestNotPending();
             }
 
+            $previous = $request->status;
             $request->status = PlanChangeRequestStatus::Cancelled;
             $request->save();
 
             $this->audit->record(
                 CentralAuditEvent::PlanChangeCancelled,
-                ['request_id' => (int) $request->getKey(), 'kind' => $request->kind->value],
+                ['request_id' => (int) $request->getKey(), 'kind' => $request->kind->value, 'was' => $previous->value],
                 null,
                 $request,
                 (string) $tenant->getKey(),

@@ -27,6 +27,9 @@ use Carbon\CarbonImmutable;
  *  - `grace`     the trial / paid period ended but the grace days still give full access
  *                (days_left = calendar days to grace_ends_at, when the shop turns view-only);
  *  - `read_only` view-only now (days_left null; `reason` = App\Enums\ReadOnlyReason value).
+ * PLAN-10 review: a self-signup trial that falls back to the free plan when it ends
+ * (`falls_back_to_free` true) has no read-only step: it stays `trial` (days_left counts down to
+ * 0 and stays 0 until the sweep moves it) and grace_ends_at is null, so no "view-only" wording.
  * Blocked tenants (suspended / cancelled / archived) never reach /system/context: null.
  */
 final class GetSubscriptionBannerAction
@@ -42,7 +45,7 @@ final class GetSubscriptionBannerAction
     public function __construct(private readonly SubscriptionTimelineService $timelines) {}
 
     /**
-     * @return array{state: string, kind: string, days_left: int|null, ends_at: string|null, grace_ends_at: string|null, reason: string|null, action_path: string}|null
+     * @return array{state: string, kind: string, days_left: int|null, ends_at: string|null, grace_ends_at: string|null, falls_back_to_free: bool, reason: string|null, action_path: string}|null
      */
     public function execute(User $user, ?Tenant $tenant, ?CarbonImmutable $now = null): ?array
     {
@@ -57,8 +60,11 @@ final class GetSubscriptionBannerAction
             return null;
         }
 
+        $fallsBack = $timeline->fallsBackToFreePlan;
+
         [$state, $daysLeft] = match (true) {
             $timeline->isReadOnly() => [self::STATE_READ_ONLY, null],
+            $fallsBack => [self::STATE_TRIAL, max(0, $timeline->daysLeft ?? 0)],
             $timeline->inGrace => [self::STATE_GRACE, $timeline->graceDaysLeft],
             $timeline->kind === SubscriptionPeriodKind::Trial && $timeline->daysLeft !== null => [self::STATE_TRIAL, max(0, $timeline->daysLeft)],
             $timeline->kind === SubscriptionPeriodKind::Subscription && $timeline->daysLeft !== null
@@ -75,7 +81,8 @@ final class GetSubscriptionBannerAction
             'kind' => $timeline->kind->value,
             'days_left' => $daysLeft,
             'ends_at' => $timeline->endsAt?->toIso8601String(),
-            'grace_ends_at' => $timeline->graceEndsAt?->toIso8601String(),
+            'grace_ends_at' => $fallsBack ? null : $timeline->graceEndsAt?->toIso8601String(),
+            'falls_back_to_free' => $fallsBack,
             'reason' => $state === self::STATE_READ_ONLY ? ReadOnlyReason::forTenant($tenant, $now)->value : null,
             'action_path' => NotifyTenantOfLifecycleReminderAction::ACTION_PATH,
         ];

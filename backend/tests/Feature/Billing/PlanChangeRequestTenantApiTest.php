@@ -219,7 +219,7 @@ final class PlanChangeRequestTenantApiTest extends PlanChangeTestCase
         $codes = array_column($response->json('data.available_plans'), 'code');
         $this->assertContains($big->slug, $codes);
         $this->assertNotContains('hidden', array_map('strtolower', array_column($response->json('data.available_plans'), 'name')));
-        $this->assertSame(['code', 'name', 'price_monthly', 'price_yearly', 'is_current'], array_keys($response->json('data.available_plans.0')));
+        $this->assertSame(['code', 'name', 'price_monthly', 'price_yearly', 'is_free', 'is_current'], array_keys($response->json('data.available_plans.0')));
 
         $this->postJson(self::URL, ['kind' => 'plan_change', 'requested_plan_code' => $big->slug, 'billing_cycle' => 'monthly'], $headers)->assertCreated();
 

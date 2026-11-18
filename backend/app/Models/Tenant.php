@@ -7,6 +7,7 @@ use App\Enums\TenantArchiveState;
 use App\Enums\TenantProvisioningStatus;
 use App\Enums\TenantSignupSource;
 use App\Enums\TenantStatus;
+use App\Services\Plans\FreePlanIds;
 use App\Services\Signup\TrialFallbackPlan;
 use App\Support\Tenancy\TenantLifecyclePolicy;
 use App\Support\Tenancy\TenantLifecycleSnapshot;
@@ -487,15 +488,24 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     }
 
     /**
+     * PLAN-10 review: the tenant's plan is a permanent free plan (`plans.is_free`). One answer for
+     * every caller (App\Services\Plans\FreePlanIds, cached in the central scope and invalidated
+     * when a plan is saved), never "false because the relation was not loaded".
+     */
+    public function isOnFreePlan(): bool
+    {
+        return $this->plan_id !== null && app(FreePlanIds::class)->contains((int) $this->plan_id);
+    }
+
+    /**
      * The stored lifecycle facts for App\Support\Tenancy\TenantLifecyclePolicy.
      *
      * An unknown stored status is read as `suspended` (never grants access by accident).
      * $hasEverPaid is supplied by the caller (billing knows it, ENTI-3.x).
      *
      * PLAN-10:
-     *  - onFreePlan is read only when the `plan` relation is already loaded (the daily sweep
-     *    eager-loads it), so no request pays a hidden query; a free tenant is born `active` with
-     *    no deadline, so the policy never moves it anyway;
+     *  - onFreePlan: isOnFreePlan(), the same cached lookup for every reader (EnsureTenantActive,
+     *    login, /me, billing, the timeline and the daily sweep), whether or not `plan` is loaded;
      *  - trialFallsBackToFreePlan: a self-signup trial when the platform has a fallback plan
      *    (PLAN-11: App\Services\Signup\TrialFallbackPlan, the `trial_fallback_plan_id` setting,
      *    else the active catalog `free` plan; both cached): its trial ends in `active` (on the
@@ -503,7 +513,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
      */
     public function lifecycleSnapshot(bool $hasEverPaid = false): TenantLifecycleSnapshot
     {
-        $onFreePlan = $this->relationLoaded('plan') && $this->plan instanceof Plan && $this->plan->is_free;
+        $onFreePlan = $this->isOnFreePlan();
         $fallsBack = $this->status === TenantStatus::Trial->value
             && $this->isSelfSignup()
             && app(TrialFallbackPlan::class)->planId() !== null;

@@ -65,6 +65,10 @@ use LogicException;
  * BILL-01 review: a difference invoice is refused (409 difference_term_changed) unless its
  * period_end is still the tenant's subscription_ends_at: a renewal paid in between moved the term.
  *
+ * PLAN-10 review: a tenant on a permanent free plan holds an active 0.000 row with no paid term;
+ * paying a plan invoice CLOSES that row (expired, ends_at = now) and creates a new paid row (the
+ * free period stays in the history), and cancels a still-scheduled downgrade to the free plan.
+ *
  * Idempotency lives in the caller (a payment is verified once); the invoice can only settle once.
  */
 final class ActivateSubscriptionAction
@@ -149,6 +153,15 @@ final class ActivateSubscriptionAction
             ->lockForUpdate()
             ->first();
 
+        // PLAN-10 review: the 0.000 row of a permanent free plan is history, never overwritten: close
+        // it at now and start a new paid row, so the free period stays visible.
+        if ($subscription instanceof Subscription && $subscription->isFreePlanRow()) {
+            $subscription->status = SubscriptionStatus::Expired;
+            $subscription->ends_at = Carbon::instance($now);
+            $subscription->save();
+            $subscription = null;
+        }
+
         $wasPaying = $subscription instanceof Subscription && $subscription->status === SubscriptionStatus::Active;
         $subscription ??= new Subscription(['tenant_id' => (string) $tenant->getKey()]);
 
@@ -192,6 +205,7 @@ final class ActivateSubscriptionAction
         }
 
         $this->completePlanChangeRequest($invoice);
+        $this->cancelScheduledDowngrade($tenant, $invoice, $operator);
 
         $statusKept = $this->keepsStatus($tenant);
 
@@ -464,6 +478,34 @@ final class ActivateSubscriptionAction
             ->where('billing_invoice_id', $invoice->getKey())
             ->where('status', PlanChangeRequestStatus::Invoiced->value)
             ->update(['status' => PlanChangeRequestStatus::Completed->value]);
+    }
+
+    /**
+     * PLAN-10 review: paying for a paid plan term means the shop stays on a paid plan, so a downgrade
+     * to the free plan it scheduled earlier is cancelled (else the sweep would move a shop that just
+     * paid to the free plan at the end of the new term). Audited like a shop cancellation.
+     */
+    private function cancelScheduledDowngrade(Tenant $tenant, BillingInvoice $invoice, ?CentralUser $operator): void
+    {
+        $scheduled = PlanChangeRequest::query()
+            ->where('tenant_id', $tenant->getKey())
+            ->where('status', PlanChangeRequestStatus::Scheduled->value)
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($scheduled as $request) {
+            $request->status = PlanChangeRequestStatus::Cancelled;
+            $request->save();
+
+            $this->audit->record(
+                CentralAuditEvent::PlanChangeCancelled,
+                ['request_id' => (int) $request->getKey(), 'kind' => $request->kind->value, 'was' => PlanChangeRequestStatus::Scheduled->value, 'reason' => 'paid_plan_invoice', 'invoice_id' => (int) $invoice->getKey()],
+                $operator,
+                $request,
+                (string) $tenant->getKey(),
+            );
+        }
     }
 
     /**

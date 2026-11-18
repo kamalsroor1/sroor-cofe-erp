@@ -28,7 +28,8 @@ use InvalidArgumentException;
  *   cancelled  → archived   at cancellation start + retention days (90)
  * PLAN-10:
  *   - a tenant on a permanent free plan (snapshot onFreePlan) never leaves trial / active /
- *     past_due by time;
+ *     past_due / read_only by time (review: a legacy read-only free tenant no longer drifts to
+ *     suspended; the sweep puts it back to active unless an operator made it read-only);
  *   - a self-signup trial with a platform fallback plan (snapshot trialFallsBackToFreePlan)
  *     goes trial → active (the free plan) at the same deadline instead of read_only, and
  *     nothing follows that move. The sweep applies it through MoveTenantToFreePlanAction.
@@ -160,7 +161,7 @@ final class TenantLifecyclePolicy
      */
     private function nextAutomaticMove(TenantStatus $status, ?CarbonImmutable $since, TenantLifecycleSnapshot $snapshot): ?array
     {
-        if ($snapshot->onFreePlan && in_array($status, [TenantStatus::Trial, TenantStatus::Active, TenantStatus::PastDue], true)) {
+        if ($snapshot->onFreePlan && in_array($status, [TenantStatus::Trial, TenantStatus::Active, TenantStatus::PastDue, TenantStatus::ReadOnly], true)) {
             return null;
         }
 
