@@ -190,7 +190,7 @@ apiClient.interceptors.response.use(
         if (isLifecycleError && !isCentralMode && !Swal.isVisible()) {
             if (lifecycleTitleKeys[code]) {
                 // PLAN-13: a plan limit / locked feature names what was hit and offers "Upgrade".
-                showUpgradeAlert({ titleKey: lifecycleTitleKeys[code], message });
+                showUpgradeAlert({ titleKey: lifecycleTitleKeys[code], message }).catch(() => {});
             } else {
                 const titleKey =
                     status === 423 ? 'subscription.alerts.read_only_title' : 'subscription.alerts.blocked_title';

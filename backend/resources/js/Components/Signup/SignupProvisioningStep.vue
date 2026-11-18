@@ -91,6 +91,12 @@ onMounted(() => {
     <MarketingButton to="/welcome" variant="outline">{{ $t('self_signup.ui.provisioning.back_home') }}</MarketingButton>
   </SignupStatusCard>
 
+  <SignupStatusCard v-else-if="phase === PHASES.ended" tone="info" :title="$t('self_signup.ui.errors.session_ended')">
+    <MarketingButton variant="primary" @click="emit('start-over')">{{
+      $t('self_signup.ui.otp.start_over')
+    }}</MarketingButton>
+  </SignupStatusCard>
+
   <SignupStatusCard
     v-else-if="phase === PHASES.failed"
     tone="danger"

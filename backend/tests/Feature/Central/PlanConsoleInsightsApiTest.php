@@ -11,6 +11,7 @@ use App\Models\Plan;
 use App\Models\Tenant;
 use Database\Seeders\PlansAndFeaturesSeeder;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\Concerns\SeedsCentralPlatformRoles;
 use Tests\TenantTestCase;
@@ -216,6 +217,59 @@ final class PlanConsoleInsightsApiTest extends TenantTestCase
         $this->getJson(self::BASE.'/near-limit-shops', $headers)->assertJsonPath('meta.total', 1);
         $this->getJson(self::BASE.'/near-limit-shops?refresh=1', $headers)->assertJsonPath('meta.total', 0);
         $this->assertSame(500, ListShopsNearLimitAction::SCAN_CAP);
+    }
+
+    public function test_near_limit_survives_a_shop_whose_usage_cannot_be_read(): void
+    {
+        $bad = $this->createTenant(['id' => 'near-a-broken', 'name' => 'محل معطل', 'plan_id' => $this->plan->id, 'status' => 'active']);
+        $good = $this->createTenant(['id' => 'near-b-fine', 'name' => 'محل سليم', 'plan_id' => $this->plan->id, 'status' => 'active']);
+        $this->inTenant($good, function (): void {
+            for ($i = 1; $i <= 9; $i++) {
+                Customer::query()->create(['name' => 'عميل '.$i, 'current_balance' => '0.000', 'is_active' => true]);
+            }
+        });
+
+        // Reading the usage of the first shop throws; the scan has to go on with the next one.
+        DB::listen(function ($query) use ($bad): void {
+            if (tenant()?->getTenantKey() === $bad->getTenantKey() && str_contains($query->sql, 'customers')) {
+                throw new \RuntimeException('usage read failed');
+            }
+        });
+
+        $this->getJson(self::BASE.'/near-limit-shops', $this->centralHeaders($this->centralSuperAdmin()))
+            ->assertOk()
+            ->assertJsonPath('meta.failed', 1)
+            ->assertJsonPath('meta.scanned', 2)
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.tenant_name', 'محل سليم');
+
+        $this->assertFalse(tenancy()->initialized, 'Tenancy is ended even though a shop failed.');
+    }
+
+    public function test_near_limit_refresh_is_limited_per_operator_and_falls_back_to_plain_reads(): void
+    {
+        $this->shopOnPlan('محل', 8);
+        $headers = $this->centralHeaders($this->centralSuperAdmin());
+
+        $this->getJson(self::BASE.'/near-limit-shops?refresh=1', $headers)->assertOk();
+        $this->getJson(self::BASE.'/near-limit-shops?refresh=1', $headers)->assertOk();
+        $this->getJson(self::BASE.'/near-limit-shops?refresh=1', $headers)->assertStatus(429);
+        $this->getJson(self::BASE.'/near-limit-shops', $headers)->assertOk()->assertJsonPath('meta.total', 1);
+    }
+
+    public function test_near_limit_scan_waits_on_the_lock_and_reuses_the_cached_result(): void
+    {
+        $this->shopOnPlan('محل', 8);
+        $headers = $this->centralHeaders($this->centralSuperAdmin());
+        $this->getJson(self::BASE.'/near-limit-shops', $headers)->assertOk();
+
+        // Another worker is scanning right now and the cache is warm: a plain read must not queue behind it.
+        $lock = Cache::lock('plans:near-limit-shops:80:lock', 30);
+        $this->assertTrue($lock->get());
+
+        $this->getJson(self::BASE.'/near-limit-shops', $headers)->assertOk()->assertJsonPath('meta.total', 1);
+
+        $lock->release();
     }
 
     public function test_near_limit_is_super_admin_only(): void

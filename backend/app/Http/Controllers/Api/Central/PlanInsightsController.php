@@ -13,6 +13,7 @@ use App\Http\Resources\Central\PlanChangeLogResource;
 use App\Models\Plan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\RateLimiter;
 
 /**
  * PLAN-14 read-only insights of the plan console (routes/central.php):
@@ -42,6 +43,15 @@ final class PlanInsightsController extends Controller
         $threshold = (int) $request->integer('threshold', ListShopsNearLimitAction::DEFAULT_THRESHOLD);
         $perPage = (int) $request->integer('per_page', 25);
         $page = (int) $request->integer('page', 1);
+
+        // A refresh rescans every shop database: at most 2 a minute per operator (plain reads keep the route throttle).
+        if ($request->boolean('refresh')) {
+            abort_unless(
+                RateLimiter::attempt('near-limit-refresh:'.$request->user()?->getAuthIdentifier(), 2, static fn (): bool => true, 60),
+                429,
+                (string) __('auth.too_many_requests'),
+            );
+        }
 
         $result = $this->listNearLimit->execute($threshold, $request->boolean('refresh'));
 

@@ -8,6 +8,7 @@ export const PROVISIONING_PHASES = Object.freeze({
     queued: 'queued',
     delayed: 'delayed',
     failed: 'failed',
+    ended: 'ended',
 });
 
 const FIRST_DELAY_MS = 3000;
@@ -87,7 +88,7 @@ export function useSignupProvisioning(getToken, onFinished = () => {}) {
         } catch (e) {
             if (stopped) return;
             if (e.response?.status === 422) {
-                finish(PROVISIONING_PHASES.failed);
+                finish(PROVISIONING_PHASES.ended);
                 return;
             }
             errorsInARow += 1;

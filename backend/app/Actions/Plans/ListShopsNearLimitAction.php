@@ -9,6 +9,7 @@ use App\Enums\TenantStatus;
 use App\Models\Plan;
 use App\Models\Tenant;
 use App\Services\Entitlements\TenantEntitlementService;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Stancl\Tenancy\Contracts\Tenant as TenantContract;
@@ -24,7 +25,8 @@ use Throwable;
  *  - only shops that can still be sold to (trial / active / past_due), provisioned, on a plan
  *    with at least one finite limit (read from the cached entitlements, no tenant query);
  *  - at most SCAN_CAP shops per run, reported back as `capped`;
- *  - the whole result is cached SCAN_TTL seconds per threshold (`$refresh` recomputes it);
+ *  - the whole result is cached SCAN_TTL seconds per threshold (`$refresh` recomputes it) and the
+ *    scan runs under a cache lock, so concurrent callers share one scan instead of each doing their own;
  *  - a shop whose database cannot be read is skipped and counted in `failed`.
  */
 final class ListShopsNearLimitAction
@@ -34,6 +36,10 @@ final class ListShopsNearLimitAction
     public const SCAN_CAP = 500;
 
     public const SCAN_TTL = 600;
+
+    private const LOCK_SECONDS = 300;
+
+    private const LOCK_WAIT = 60;
 
     private const CACHE_KEY = 'plans:near-limit-shops:';
 
@@ -49,12 +55,40 @@ final class ListShopsNearLimitAction
     {
         $key = self::CACHE_KEY.$threshold;
 
-        if ($refresh) {
-            Cache::forget($key);
+        if (! $refresh && ($cached = Cache::get($key)) !== null) {
+            return $cached;
         }
 
-        /** @var array{rows: list<array<string, mixed>>, scanned: int, capped: bool, failed: int, generated_at: string} */
-        return Cache::remember($key, self::SCAN_TTL, fn (): array => $this->scan($threshold));
+        $requestedAt = microtime(true);
+
+        try {
+            // One scan at a time per threshold: concurrent callers wait, then read what the first stored.
+            return Cache::lock($key.':lock', self::LOCK_SECONDS)->block(
+                self::LOCK_WAIT,
+                function () use ($key, $threshold, $refresh, $requestedAt): array {
+                    $cached = Cache::get($key);
+
+                    // A refresh only accepts a result that was computed after it was requested.
+                    if ($cached !== null && (! $refresh || (float) Cache::get($key.':at', 0) >= $requestedAt)) {
+                        return $cached;
+                    }
+
+                    $result = $this->scan($threshold);
+                    Cache::put($key, $result, self::SCAN_TTL);
+                    Cache::put($key.':at', microtime(true), self::SCAN_TTL);
+
+                    return $result;
+                },
+            );
+        } catch (LockTimeoutException) {
+            $cached = Cache::get($key);
+
+            if ($cached === null) {
+                abort(503, (string) __('auth.too_many_requests'));
+            }
+
+            return $cached;
+        }
     }
 
     /**
@@ -87,7 +121,7 @@ final class ListShopsNearLimitAction
                 $usage = $this->usageOf($tenant);
             } catch (Throwable $e) {
                 $failed++;
-                Log::warning('near-limit scan skipped a shop', ['tenant' => $tenant->getKey(), 'error' => $e->getMessage()]);
+                Log::warning('near-limit scan skipped a shop', ['tenant' => $tenant->getKey(), 'exception' => $e::class]);
 
                 continue;
             }

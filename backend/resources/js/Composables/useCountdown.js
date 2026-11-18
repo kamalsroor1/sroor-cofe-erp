@@ -4,6 +4,7 @@ import { ref, computed, onBeforeUnmount } from 'vue';
 export function useCountdown() {
     const remaining = ref(0);
     let timer = null;
+    let deadline = 0;
 
     const stop = () => {
         if (timer) clearInterval(timer);
@@ -14,8 +15,10 @@ export function useCountdown() {
         stop();
         remaining.value = Math.max(0, Math.ceil(Number(seconds) || 0));
         if (remaining.value === 0) return;
+        // Measured against a deadline, not by counting ticks: background tabs throttle timers.
+        deadline = Date.now() + remaining.value * 1000;
         timer = setInterval(() => {
-            remaining.value -= 1;
+            remaining.value = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
             if (remaining.value <= 0) stop();
         }, 1000);
     };

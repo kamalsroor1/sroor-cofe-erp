@@ -11,6 +11,7 @@ export const SIGNUP_BUSINESS_TYPES = Object.freeze(['retail', 'wholesale', 'weig
 export const SIGNUP_STEPS = Object.freeze({
     resuming: 'resuming',
     form: 'form',
+    resumeFailed: 'resume_failed',
     verify: 'verify',
     provisioning: 'provisioning',
 });
@@ -62,6 +63,7 @@ export function useSelfSignup() {
     const isSubmitting = ref(false);
     const codeError = ref('');
     const refusedMessage = ref('');
+    const resumeError = ref('');
     const isVerifying = ref(false);
     const isResending = ref(false);
     const subdomainEdited = ref(false);
@@ -221,6 +223,7 @@ export function useSelfSignup() {
     // Page refresh: ask the server where this signup stands instead of trusting the browser.
     const resume = async () => {
         if (!token.value) return;
+        resumeError.value = '';
         step.value = SIGNUP_STEPS.resuming;
         try {
             const { data } = await api.get('/signup/status', { headers: { 'X-Signup-Token': token.value } });
@@ -228,8 +231,15 @@ export function useSelfSignup() {
             emailMasked.value = state.email_masked || '';
             step.value = state.status === 'awaiting_verification' ? SIGNUP_STEPS.verify : SIGNUP_STEPS.provisioning;
         } catch (e) {
-            if (e.response?.status === 422 || !e.response) clearToken();
-            step.value = SIGNUP_STEPS.form;
+            if (e.response?.status === 422) {
+                // The server no longer knows this signup (expired / unknown): only now is the token useless.
+                clearToken();
+                step.value = SIGNUP_STEPS.form;
+            } else {
+                // Network error, 429 or 5xx: the signup is probably fine, so keep the token and offer a retry.
+                resumeError.value = transportMessage(e);
+                step.value = SIGNUP_STEPS.resumeFailed;
+            }
         }
     };
 
@@ -248,6 +258,7 @@ export function useSelfSignup() {
         isSubmitting,
         codeError,
         refusedMessage,
+        resumeError,
         isVerifying,
         isResending,
         resendTimer,
@@ -261,6 +272,7 @@ export function useSelfSignup() {
         taxRate,
         brand,
         init,
+        resume,
         submit,
         verify,
         resend,

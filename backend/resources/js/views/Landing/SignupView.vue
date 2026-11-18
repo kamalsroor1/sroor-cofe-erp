@@ -5,6 +5,8 @@ import Skeleton from '../../Components/Common/Skeletons/Skeleton.vue';
 import SignupAside from '../../Components/Signup/SignupAside.vue';
 import SignupForm from '../../Components/Signup/SignupForm.vue';
 import SignupOtpStep from '../../Components/Signup/SignupOtpStep.vue';
+import SignupStatusCard from '../../Components/Signup/SignupStatusCard.vue';
+import MarketingButton from '../../Components/Landing/MarketingButton.vue';
 import SignupProvisioningStep from '../../Components/Signup/SignupProvisioningStep.vue';
 import { SIGNUP_STEPS, useSelfSignup } from '../../Composables/useSelfSignup';
 
@@ -18,6 +20,7 @@ const {
   isSubmitting,
   codeError,
   refusedMessage,
+  resumeError,
   isVerifying,
   isResending,
   resendTimer,
@@ -28,8 +31,10 @@ const {
   selectedPlan,
   founder,
   currency,
+  taxRate,
   brand,
   init,
+  resume,
   submit,
   verify,
   resend,
@@ -66,6 +71,7 @@ onMounted(init);
           class="lg:sticky lg:top-[100px]"
           :plan="selectedPlan"
           :founder="founder"
+          :tax-rate="taxRate"
           :currency="currency"
           :brand="brand"
           @change-plan="formRef?.focusPlan()"
@@ -92,6 +98,19 @@ onMounted(init);
         @finished="clearToken"
         @start-over="startOver"
       />
+      <SignupStatusCard
+        v-else-if="step === SIGNUP_STEPS.resumeFailed"
+        tone="danger"
+        :title="$t('self_signup.ui.errors.resume_title')"
+        :body="resumeError"
+      >
+        <MarketingButton variant="primary" @click="resume">{{
+          $t('self_signup.ui.provisioning.check_again')
+        }}</MarketingButton>
+        <MarketingButton variant="outline" @click="startOver">{{
+          $t('self_signup.ui.otp.start_over')
+        }}</MarketingButton>
+      </SignupStatusCard>
       <Skeleton v-else class-name="mx-auto max-w-[520px]" height="h-72" rounded="rounded-3xl" />
     </div>
   </LandingShell>

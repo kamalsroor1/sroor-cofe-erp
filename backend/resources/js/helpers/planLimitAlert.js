@@ -22,7 +22,7 @@ async function canUpgrade() {
  */
 export async function showUpgradeAlert({ titleKey, message }) {
     const upgrade = await canUpgrade();
-    if (Swal.isVisible()) return;
+    // Another dialog may be open: replace it rather than leave the user without the message.
     const isDark = document.documentElement.classList.contains('dark');
     const result = await Swal.fire({
         icon: 'warning',

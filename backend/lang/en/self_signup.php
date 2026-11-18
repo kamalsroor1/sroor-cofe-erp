@@ -124,6 +124,7 @@ return [
             'throttled' => 'Too many attempts. Please try again in :wait.',
             'disabled' => 'Signup is paused for now. Please try again later or contact support.',
             'failed' => 'Something went wrong. Please try again.',
+            'resume_title' => 'We could not check your signup',
             'session_ended' => 'This signup session ended. Please sign up again.',
             'code_required' => 'Enter the 6-digit code.',
         ],
