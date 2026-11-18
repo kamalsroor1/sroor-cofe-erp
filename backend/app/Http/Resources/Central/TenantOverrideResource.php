@@ -51,7 +51,7 @@ final class TenantOverrideResource extends JsonResource
         return [
             'feature' => $row->feature_key,
             'mode' => $row->mode->value,
-            'reason' => $row->reason,
+            'reason' => $row->reason === TenantFeatureOverride::LEGACY_REASON ? (string) __('plan_overrides.legacy_migrated_reason') : $row->reason,
             'expires_at' => $row->expires_at?->toIso8601String(),
             'is_expired' => $row->isExpired(),
             'created_by' => self::creator($row->creator?->getKey(), $row->creator?->name, $row->created_by),

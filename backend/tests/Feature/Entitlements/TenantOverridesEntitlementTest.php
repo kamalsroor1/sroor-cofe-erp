@@ -6,6 +6,7 @@ namespace Tests\Feature\Entitlements;
 
 use App\Actions\Billing\GetTenantSubscriptionAction;
 use App\Enums\LimitResource;
+use App\Http\Resources\TenantResource;
 use App\Models\Customer;
 use App\Models\Plan;
 use App\Models\Tenant;
@@ -127,6 +128,36 @@ final class TenantOverridesEntitlementTest extends TenantTestCase
         $this->assertSame(2, $this->service()->limit($tenant, LimitResource::Customers), 'The cached value expired with the override.');
     }
 
+    public function test_a_just_expired_override_is_never_served_from_cache(): void
+    {
+        $this->travelTo(now()->startOfSecond());
+        $tenant = $this->shop();
+        $this->limitOverride($tenant, 50, ['expires_at' => now()->addSeconds(90)]);
+
+        $this->assertSame(50, $this->service()->limit($tenant, LimitResource::Customers));
+
+        $this->travelTo(now()->addSeconds(89));
+        $this->assertSame(50, $this->service()->limit($tenant, LimitResource::Customers), 'Still active one second before expiry.');
+
+        // Fresh entry written 1s before expiry must live at most 1s.
+        $this->travelTo(now()->addSeconds(1));
+        $this->assertSame(2, $this->service()->limit($tenant, LimitResource::Customers), 'At the expiry instant the override is gone.');
+    }
+
+    public function test_the_resource_lists_active_grants_and_legacy_entries_as_enabled_features(): void
+    {
+        $tenant = $this->shop($this->plan(['audit.logs' => false]));
+        TenantFeatureOverride::query()->create(['tenant_id' => $tenant->id, 'feature_key' => 'audit.logs', 'mode' => 'grant', 'reason' => 'سبب']);
+        TenantFeatureOverride::query()->create(['tenant_id' => $tenant->id, 'feature_key' => 'reports.advanced', 'mode' => 'grant', 'reason' => 'سبب', 'expires_at' => now()->subMinute()]);
+        TenantFeatureOverride::query()->create(['tenant_id' => $tenant->id, 'feature_key' => 'pos.access', 'mode' => 'revoke', 'reason' => 'سبب']);
+        DB::connection($this->centralConnectionName())->table('tenants')->where('id', $tenant->id)
+            ->update(['enabled_features' => json_encode(['blender.access'])]);
+
+        $data = (new TenantResource(Tenant::query()->findOrFail($tenant->id)))->resolve(request());
+
+        $this->assertSame(['audit.logs', 'mixes.manage'], $data['enabled_features']);
+    }
+
     public function test_every_override_change_clears_the_entitlement_cache(): void
     {
         $tenant = $this->shop();
@@ -216,6 +247,7 @@ final class TenantOverridesEntitlementTest extends TenantTestCase
         $this->assertInstanceOf(Migration::class, $migration);
         $migration->up();
         $migration->up(); // idempotent
+        $this->assertSame(['legacy_migration'], TenantFeatureOverride::query()->where('tenant_id', $tenant->id)->pluck('reason')->unique()->values()->all());
 
         $rows = TenantFeatureOverride::query()->where('tenant_id', $tenant->id)->orderBy('feature_key')->get();
         $this->assertSame(['audit.logs', 'mixes.manage'], $rows->pluck('feature_key')->all(), 'Aliases are stored canonical.');
@@ -227,8 +259,10 @@ final class TenantOverridesEntitlementTest extends TenantTestCase
         $this->assertContains('audit.logs', $features);
         $this->assertContains('mixes.manage', $features);
 
+        // down() finds the rows by the constant marker, never by translated text: a manual row survives.
+        TenantFeatureOverride::query()->create(['tenant_id' => $tenant->id, 'feature_key' => 'pos.access', 'mode' => 'grant', 'reason' => 'يدوي']);
         $migration->down();
-        $this->assertSame(0, TenantFeatureOverride::query()->where('tenant_id', $tenant->id)->count());
+        $this->assertSame(['pos.access'], TenantFeatureOverride::query()->where('tenant_id', $tenant->id)->pluck('feature_key')->all());
         $this->assertSame(['audit.logs', 'mixes.manage'], Tenant::query()->findOrFail($tenant->id)->enabled_features);
     }
 }

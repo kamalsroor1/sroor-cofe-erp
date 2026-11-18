@@ -378,6 +378,16 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     }
 
     /**
+     * Per-shop feature grant / revoke overrides (PLAN-12, central).
+     *
+     * @return HasMany<TenantFeatureOverride, $this>
+     */
+    public function featureOverrides(): HasMany
+    {
+        return $this->hasMany(TenantFeatureOverride::class, 'tenant_id');
+    }
+
+    /**
      * @return HasMany<Subscription, $this>
      */
     public function subscriptions(): HasMany

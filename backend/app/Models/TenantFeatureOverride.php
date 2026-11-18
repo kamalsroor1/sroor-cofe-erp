@@ -32,6 +32,9 @@ class TenantFeatureOverride extends Model
 
     public const REASON_MAX = 255;
 
+    /** Reason marker of the rows created by the legacy-list migration (shown translated). */
+    public const LEGACY_REASON = 'legacy_migration';
+
     protected $table = 'tenant_feature_overrides';
 
     /**

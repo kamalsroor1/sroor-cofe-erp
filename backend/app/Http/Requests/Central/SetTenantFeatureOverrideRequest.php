@@ -39,7 +39,7 @@ final class SetTenantFeatureOverrideRequest extends FormRequest
             'feature' => ['required', 'string', 'max:100', self::catalogRule()],
             'mode' => ['required', 'string', Rule::in(FeatureOverrideMode::values())],
             'reason' => ['required', 'string', 'min:3', 'max:'.TenantFeatureOverride::REASON_MAX],
-            'expires_at' => ['nullable', 'date', 'after:now'],
+            'expires_at' => ['nullable', 'date', 'after:now', 'before:'.now()->addYears(10)->toDateTimeString()],
         ];
     }
 

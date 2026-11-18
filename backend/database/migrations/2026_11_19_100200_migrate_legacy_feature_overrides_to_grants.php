@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * PLAN-12 (CENTRAL DB): the grant-only list in `tenants.enabled_features` becomes explicit
- * `grant` rows of `tenant_feature_overrides` (reason = the legacy marker, no expiry, no author),
+ * `grant` rows of `tenant_feature_overrides` (reason = the constant LEGACY_REASON marker, no expiry, no author),
  * and the list is emptied so a grant lives in exactly one place. Keys are stored canonical
  * (config/entitlements.aliases); a key already present as a row is left alone. Idempotent.
  *
@@ -18,7 +18,11 @@ use Illuminate\Support\Facades\Schema;
  */
 return new class extends Migration
 {
-    private const REASON_KEY = 'plan_overrides.legacy_migrated_reason';
+    /** Constant marker stored as the reason; down() finds the migrated rows by it (never by translated text). */
+    private const LEGACY_REASON = 'legacy_migration';
+
+    /** The Arabic text the first version of this migration stored (rows migrated before the constant marker). */
+    private const LEGACY_REASON_V1 = 'منقولة من التفعيل اليدوي القديم للميزات';
 
     public function up(): void
     {
@@ -32,10 +36,10 @@ return new class extends Migration
 
             return is_string($mapped) && $mapped !== '' ? $mapped : $key;
         };
-        $reason = (string) trans(self::REASON_KEY, [], 'ar');
+        $reason = self::LEGACY_REASON;
         $now = now();
 
-        DB::table('tenants')->whereNotNull('enabled_features')->orderBy('id')->get(['id', 'enabled_features'])
+        DB::table('tenants')->whereNotNull('enabled_features')->where('enabled_features', '!=', '[]')->where('enabled_features', '!=', '')->orderBy('id')->get(['id', 'enabled_features'])
             ->each(function (object $tenant) use ($canonical, $reason, $now): void {
                 $raw = $tenant->enabled_features;
                 $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
@@ -47,6 +51,10 @@ return new class extends Migration
                     : array_keys(array_filter($current, static fn (mixed $on): bool => $on === true));
 
                 $keys = array_values(array_unique(array_map($canonical, array_filter($keys, static fn (string $k): bool => $k !== ''))));
+
+                if ($keys === []) {
+                    return; // nothing to move: no pointless writes
+                }
 
                 DB::transaction(function () use ($tenant, $keys, $reason, $now): void {
                     foreach ($keys as $key) {
@@ -80,10 +88,8 @@ return new class extends Migration
             return;
         }
 
-        $reason = (string) trans(self::REASON_KEY, [], 'ar');
-
         DB::table('tenant_feature_overrides')
-            ->where('mode', 'grant')->where('reason', $reason)->whereNull('created_by')
+            ->where('mode', 'grant')->whereIn('reason', [self::LEGACY_REASON, self::LEGACY_REASON_V1])->whereNull('created_by')
             ->orderBy('id')->get()
             ->groupBy('tenant_id')
             ->each(function ($rows, $tenantId): void {

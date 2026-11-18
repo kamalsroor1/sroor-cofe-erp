@@ -10,6 +10,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * DELETE /api/v1/super-admin/tenants/{id}/feature-overrides/{feature} (PLAN-12).
+ * The key is not checked against the catalog: an override for a feature later removed from
+ * the catalog must still be deletable.
  */
 final class RemoveTenantFeatureOverrideRequest extends FormRequest
 {
@@ -28,6 +30,6 @@ final class RemoveTenantFeatureOverrideRequest extends FormRequest
      */
     public function rules(): array
     {
-        return ['feature' => ['required', 'string', 'max:100', SetTenantFeatureOverrideRequest::catalogRule()]];
+        return ['feature' => ['required', 'string', 'max:100']];
     }
 }

@@ -36,7 +36,7 @@ final class SetTenantLimitOverrideRequest extends FormRequest
             'resource' => ['required', 'string', Rule::in(LimitResource::values())],
             'value' => ['present', 'nullable', 'integer', 'min:0', 'max:'.TenantLimitOverride::VALUE_MAX],
             'reason' => ['required', 'string', 'min:3', 'max:'.TenantLimitOverride::REASON_MAX],
-            'expires_at' => ['nullable', 'date', 'after:now'],
+            'expires_at' => ['nullable', 'date', 'after:now', 'before:'.now()->addYears(10)->toDateTimeString()],
         ];
     }
 }

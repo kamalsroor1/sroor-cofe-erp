@@ -20,7 +20,7 @@ class GetTenantsIndexDataAction
     public function execute(Request $request): array
     {
         $tenantsQuery = app(Pipeline::class)
-            ->send(Tenant::query()->with(['plan', 'domains', 'subscriptions' => fn ($q) => $q->latest()->take(1)]))
+            ->send(Tenant::query()->with(['plan', 'domains', 'featureOverrides', 'subscriptions' => fn ($q) => $q->latest()->take(1)]))
             ->through([
                 SearchFilter::class,
                 StatusFilter::class,

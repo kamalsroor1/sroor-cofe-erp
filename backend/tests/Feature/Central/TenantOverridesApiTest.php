@@ -182,6 +182,7 @@ final class TenantOverridesApiTest extends TenantTestCase
             'reason too short' => ['users', ['value' => 3, 'reason' => 'ab'], 'reason'],
             'reason too long' => ['users', ['value' => 3, 'reason' => 'x'.str_repeat('y', 255)], 'reason'],
             'expiry in the past' => ['users', ['value' => 3, 'reason' => 'سبب', 'expires_at' => '2020-01-01'], 'expires_at'],
+            'expiry beyond 10 years' => ['users', ['value' => 3, 'reason' => 'سبب', 'expires_at' => '2099-01-01'], 'expires_at'],
             'unknown resource' => ['gizmos', ['value' => 3, 'reason' => 'سبب'], 'resource'],
         ];
     }
@@ -207,6 +208,7 @@ final class TenantOverridesApiTest extends TenantTestCase
             'mode missing' => ['pos.access', ['reason' => 'سبب'], 'mode'],
             'reason missing' => ['pos.access', ['mode' => 'grant'], 'reason'],
             'expiry in the past' => ['pos.access', ['mode' => 'grant', 'reason' => 'سبب', 'expires_at' => '2020-01-01'], 'expires_at'],
+            'expiry beyond 10 years' => ['pos.access', ['mode' => 'grant', 'reason' => 'سبب', 'expires_at' => '2099-01-01'], 'expires_at'],
         ];
     }
 
@@ -222,13 +224,25 @@ final class TenantOverridesApiTest extends TenantTestCase
         $this->assertSame(0, TenantFeatureOverride::query()->count());
     }
 
-    public function test_delete_with_an_unknown_resource_or_feature_is_422(): void
+    public function test_delete_with_an_unknown_resource_is_422_and_an_unknown_feature_is_404(): void
     {
         $tenant = $this->shop();
         $headers = $this->operatorHeaders();
 
         $this->deleteJson($this->base($tenant).'/limit-overrides/gizmos', [], $headers)->assertStatus(422);
-        $this->deleteJson($this->base($tenant).'/feature-overrides/no.such.feature', [], $headers)->assertStatus(422);
+        $this->deleteJson($this->base($tenant).'/feature-overrides/no.such.feature', [], $headers)->assertNotFound();
+    }
+
+    public function test_an_override_for_a_feature_removed_from_the_catalog_can_still_be_deleted(): void
+    {
+        $tenant = $this->shop();
+        TenantFeatureOverride::query()->create([
+            'tenant_id' => $tenant->id, 'feature_key' => 'retired.feature', 'mode' => 'grant', 'reason' => 'قديمة',
+        ]);
+
+        $this->deleteJson($this->base($tenant).'/feature-overrides/retired.feature', [], $this->operatorHeaders())->assertOk();
+
+        $this->assertSame(0, TenantFeatureOverride::query()->where('feature_key', 'retired.feature')->count());
     }
 
     public function test_unknown_tenant_is_404(): void

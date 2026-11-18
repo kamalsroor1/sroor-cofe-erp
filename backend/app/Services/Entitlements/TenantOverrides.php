@@ -7,7 +7,6 @@ namespace App\Services\Entitlements;
 use App\Enums\LimitResource;
 use App\Models\TenantFeatureOverride;
 use App\Models\TenantLimitOverride;
-use Illuminate\Support\Carbon;
 
 /**
  * PLAN-12: reads the per-shop overrides that TenantEntitlementService applies last. Central
@@ -48,28 +47,5 @@ final class TenantOverrides
         }
 
         return $rows;
-    }
-
-    /** The earliest future expiry among the tenant's overrides; null when none can expire. */
-    public function nextExpiry(string $tenantId): ?Carbon
-    {
-        $candidates = array_filter([
-            TenantLimitOverride::query()->where('tenant_id', $tenantId)->where('expires_at', '>', now())->min('expires_at'),
-            TenantFeatureOverride::query()->where('tenant_id', $tenantId)->where('expires_at', '>', now())->min('expires_at'),
-        ], static fn (mixed $value): bool => $value !== null);
-
-        if ($candidates === []) {
-            return null;
-        }
-
-        $earliest = null;
-        foreach ($candidates as $value) {
-            $at = Carbon::parse((string) $value);
-            if ($earliest === null || $at->lessThan($earliest)) {
-                $earliest = $at;
-            }
-        }
-
-        return $earliest;
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\FeatureOverrideMode;
+use App\Http\Requests\Central\SetTenantFeatureOverrideRequest;
 use App\Models\Tenant;
 use App\Services\Branding\TenantBranding;
 use App\Support\PlatformHosts;
@@ -26,7 +28,7 @@ class TenantResource extends JsonResource
             'status' => $this->status,
             'trial_ends_at' => $this->trial_ends_at?->toDateString(),
             'subscription_ends_at' => $this->subscription_ends_at?->toDateString(),
-            'enabled_features' => $this->enabled_features ?? [],
+            'enabled_features' => $this->grantedFeatureKeys(),
             // OPS-2: queued provisioning state (codes only, never the raw exception).
             'provisioning_status' => $this->resource->provisioningStatus()->value,
             'provisioning_error_code' => $this->provisioning_error_code,
@@ -43,6 +45,34 @@ class TenantResource extends JsonResource
             // lists) never open every tenant DB to fill it.
             'legal' => $this->when($this->isCurrentTenant(), fn (): array => $this->legal()),
         ];
+    }
+
+    /**
+     * Compatibility key: the shop's active GRANT override keys (canonical, non-expired) plus any
+     * remaining legacy list entries. The legacy column alone is empty since PLAN-12.
+     *
+     * @return list<string>
+     */
+    private function grantedFeatureKeys(): array
+    {
+        $keys = [];
+
+        foreach ($this->resource->featureOverrides as $override) {
+            if ($override->mode === FeatureOverrideMode::Grant && ! $override->isExpired()) {
+                $keys[] = $override->feature_key;
+            }
+        }
+
+        foreach ((array) ($this->enabled_features ?? []) as $legacy) {
+            if (is_string($legacy) && $legacy !== '') {
+                $keys[] = SetTenantFeatureOverrideRequest::canonical($legacy);
+            }
+        }
+
+        $keys = array_values(array_unique($keys));
+        sort($keys);
+
+        return $keys;
     }
 
     private function isCurrentTenant(): bool

@@ -14,6 +14,7 @@ use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
 use App\Models\TenantFeatureOverride;
 use App\Support\TenantCache;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -70,25 +71,31 @@ final class TenantEntitlementService implements TenantFeatureManagerInterface
         // worker running older code) lacks that limit key, which EntitlementsDTO would read as 0
         // and refuse every creation of the resource. Such an entry is stale: resolve it again.
         if (! is_array($cached) || ! $this->hasEveryLimit($cached)) {
-            $cached = $this->resolve($tenantId)->toArray();
-            Cache::put($key, $cached, $this->cacheTtl($tenantId));
+            $expiries = [];
+            $cached = $this->resolveWithExpiries($tenantId, $expiries)->toArray();
+            Cache::put($key, $cached, $this->cacheTtl($expiries));
         }
 
         /** @var array{tenant_id: string, plan_id: int|null, features: list<string>, limits: array<string, int|null>, addons: list<array{key: string, quantity: int}>} $cached */
         return EntitlementsDTO::fromArray($cached);
     }
 
-    /** Configured TTL, capped so the entry dies at the tenant's nearest override expiry. */
-    private function cacheTtl(string $tenantId): int
+    /**
+     * Configured TTL, capped so the entry dies at the nearest override expiry of the SAME resolve
+     * pass. Floor with a 1s minimum: the entry never outlives the expiry by a fractional second.
+     *
+     * @param  list<Carbon>  $expiries
+     */
+    private function cacheTtl(array $expiries): int
     {
         $ttl = max(1, (int) config('entitlements.cache_ttl', 3600));
-        $expiry = $this->overrides->nextExpiry($tenantId);
+        $now = now();
 
-        if ($expiry === null) {
-            return $ttl;
+        foreach ($expiries as $expiry) {
+            $ttl = min($ttl, max(1, (int) floor($now->diffInSeconds($expiry, false))));
         }
 
-        return max(1, min($ttl, (int) ceil(now()->diffInSeconds($expiry, true))));
+        return $ttl;
     }
 
     /**
@@ -114,6 +121,16 @@ final class TenantEntitlementService implements TenantFeatureManagerInterface
      * Uncached resolution straight from the central database.
      */
     public function resolve(string $tenantId): EntitlementsDTO
+    {
+        $expiries = [];
+
+        return $this->resolveWithExpiries($tenantId, $expiries);
+    }
+
+    /**
+     * @param  list<Carbon>  $expiries  filled with the expiry of every active override that has one
+     */
+    private function resolveWithExpiries(string $tenantId, array &$expiries): EntitlementsDTO
     {
         $tenant = Tenant::query()->find($tenantId);
 
@@ -168,9 +185,16 @@ final class TenantEntitlementService implements TenantFeatureManagerInterface
         // PLAN-12: per-shop overrides are applied last, over plan and add-ons.
         foreach ($this->overrides->activeLimits($tenantId) as $resource => $override) {
             $limits[$resource] = $override->value;
+            if ($override->expires_at !== null) {
+                $expiries[] = $override->expires_at;
+            }
         }
 
         foreach ($this->overrides->activeFeatures($tenantId) as $key => $override) {
+            if ($override->expires_at !== null) {
+                $expiries[] = $override->expires_at;
+            }
+
             if ($override->mode === FeatureOverrideMode::Grant) {
                 $features[$key] = true;
             } else {
@@ -234,6 +258,9 @@ final class TenantEntitlementService implements TenantFeatureManagerInterface
         $tenantId = (string) $tenant->getKey();
 
         DB::connection((new TenantFeatureOverride)->getConnectionName())->transaction(function () use ($tenant, $tenantId, $canonical): void {
+            // Serialise with the Set/Remove actions (same lock order: tenant row first).
+            $tenant = Tenant::query()->whereKey($tenantId)->lockForUpdate()->first() ?? $tenant;
+
             $legacy = $this->overrides($tenant);
             $legacyHas = in_array($canonical, array_map(fn (string $key): string => $this->canonicalFeature($key), $legacy), true);
 
