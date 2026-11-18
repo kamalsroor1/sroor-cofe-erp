@@ -37,6 +37,16 @@ return [
         'failed' => 'Sending failed (:exception): :reason',
     ],
 
+    // SIGN-11: self-signup email verification code.
+    'signup_code' => [
+        'subject' => ':code is your :app verification code',
+        'heading' => 'Confirm your email',
+        'intro' => 'Thanks for signing up ":business" on :app. Enter this code on the signup page so we can prepare your shop:',
+        'validity' => 'The code is valid for :minutes minutes.',
+        'never_share' => 'Do not share this code with anyone. The :app team will never ask for it.',
+        'not_you' => 'If you did not sign up, ignore this message and nobody can use your email.',
+    ],
+
     'failed' => [
         'telegram' => 'Platform email :mailable failed permanently after all attempts. Recipient domain: :domains. Reason: :exception.',
     ],

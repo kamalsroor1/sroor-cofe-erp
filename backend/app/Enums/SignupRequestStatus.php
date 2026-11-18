@@ -4,12 +4,19 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-/** PRD-05: lifecycle of a public signup request (central `signup_requests.status`). */
+/**
+ * Lifecycle of a signup request (central `signup_requests.status`). Never rename a value: it is stored.
+ *
+ *  PRD-05 assisted flow: pending -> approved | rejected (operator decision).
+ *  SIGN-11 self-signup:  awaiting_verification -> verified (the emailed code matched).
+ */
 enum SignupRequestStatus: string
 {
     case Pending = 'pending';
     case Approved = 'approved';
     case Rejected = 'rejected';
+    case AwaitingVerification = 'awaiting_verification';
+    case Verified = 'verified';
 
     /**
      * @return list<string>

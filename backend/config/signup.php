@@ -35,6 +35,18 @@ return [
     'daily_cap' => (int) (env('SIGNUP_DAILY_CAP') ?: 100),
 
     /*
+    | SIGN-11: self-signup email verification. A 6-digit code, stored as a keyed hash, valid
+    | `code_ttl_minutes`; `max_attempts` wrong tries burn it; a new one may be requested after
+    | `resend_after_seconds`, at most `codes_per_email_per_hour` codes per email address.
+    */
+    'verification' => [
+        'code_ttl_minutes' => (int) (env('SIGNUP_CODE_TTL_MINUTES') ?: 15),
+        'max_attempts' => (int) (env('SIGNUP_CODE_MAX_ATTEMPTS') ?: 5),
+        'resend_after_seconds' => (int) (env('SIGNUP_CODE_RESEND_SECONDS') ?: 60),
+        'codes_per_email_per_hour' => (int) (env('SIGNUP_CODES_PER_EMAIL_HOURLY') ?: 5),
+    ],
+
+    /*
     | From this many pending requests on, the per-request Telegram message is replaced by at
     | most one backlog summary per hour.
     */

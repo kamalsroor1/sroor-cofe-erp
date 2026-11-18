@@ -37,6 +37,16 @@ return [
         'failed' => 'فشل الإرسال (:exception): :reason',
     ],
 
+    // SIGN-11: self-signup email verification code.
+    'signup_code' => [
+        'subject' => ':code هو كود تأكيد حسابك في :app',
+        'heading' => 'أكّد إيميلك',
+        'intro' => 'شكرًا إنك سجّلت ":business" في :app. اكتب الكود ده في صفحة التسجيل علشان نجهّز محلك:',
+        'validity' => 'الكود صالح لمدة :minutes دقيقة.',
+        'never_share' => 'متقولش الكود ده لحد، وفريق :app عمره ما هيطلبه منك.',
+        'not_you' => 'لو مش انت اللي سجّلت، تجاهل الرسالة دي ومحدش هيقدر يستخدم إيميلك.',
+    ],
+
     'failed' => [
         'telegram' => 'فشل إرسال إيميل المنصة :mailable نهائيًا بعد كل المحاولات. دومين المستلم: :domains. السبب: :exception.',
     ],

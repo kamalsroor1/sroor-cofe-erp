@@ -366,6 +366,29 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        // SIGN-11: public self-signup (POST /api/v1/signup), per client network. Accepted signups
+        // spend the strict hourly/daily budgets (a visitor fixing a typo is never locked out);
+        // every attempt spends a looser ceiling; a global hourly ceiling caps botnets.
+        RateLimiter::for('self-signup', function (Request $request): array {
+            $accepted = static fn ($response): bool => $response->getStatusCode() >= 200 && $response->getStatusCode() < 300;
+            $ip = RateLimitKey::clientNetwork((string) $request->ip());
+
+            return [
+                Limit::perHour($this->limit('rate_limits.self_signup.per_hour', 5))->by('self-signup-hour|'.$ip)->after($accepted),
+                Limit::perDay($this->limit('rate_limits.self_signup.per_day', 20))->by('self-signup-day|'.$ip)->after($accepted),
+                Limit::perHour($this->limit('rate_limits.self_signup.global_per_hour', 200))->by('self-signup-global-hour')->after($accepted),
+                Limit::perHour($this->limit('rate_limits.self_signup.attempts_per_hour', 60))->by('self-signup-attempts|'.$ip),
+            ];
+        });
+
+        // SIGN-11: code checks per client network (each code also burns after 5 wrong tries).
+        RateLimiter::for('self-signup-verify', fn (Request $request): Limit => Limit::perMinute($this->limit('rate_limits.self_signup.verify_per_minute', 20))
+            ->by('self-signup-verify|'.RateLimitKey::clientNetwork((string) $request->ip())));
+
+        // SIGN-11: code resends per client network (the per-email budget is SignupVerificationCodeIssuer's).
+        RateLimiter::for('self-signup-resend', fn (Request $request): Limit => Limit::perHour($this->limit('rate_limits.self_signup.resend_per_hour', 20))
+            ->by('self-signup-resend|'.RateLimitKey::clientNetwork((string) $request->ip())));
+
         // Testing-only quick login (AUTH-1a / IDEN-4.1): per tenant + IP.
         RateLimiter::for('quick-login', fn (Request $request): Limit => Limit::perMinute($this->limit('auth.quick_login.per_minute', 5))
             ->by('quick-login|'.RateLimitKey::scope().'|'.$request->ip()));

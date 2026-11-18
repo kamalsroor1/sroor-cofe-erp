@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\Landing\PublicLegalDocumentController;
 use App\Http\Controllers\Api\Landing\PublicPlanController;
 use App\Http\Controllers\Api\Landing\PublicSignupRequestController;
+use App\Http\Controllers\Api\Landing\SelfSignupController;
 use App\Http\Controllers\Api\MixController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PermissionApiController;
@@ -47,6 +48,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Middleware\ApiTokenAuth;
 use App\Http\Middleware\DenyQuickLoginToken;
 use App\Http\Middleware\EnsureQuickLoginAllowed;
+use App\Http\Middleware\EnsureSelfSignupEnabled;
 use App\Http\Middleware\ResolveApiTenancy;
 use App\Http\Middleware\ThrottleTenantMisses;
 use Illuminate\Support\Facades\Route;
@@ -60,6 +62,17 @@ Route::prefix('v1/public')->name('api.public.')->group(function () {
         ->whereIn('document', ['terms', 'privacy', 'dpa'])
         ->name('legal.show');
     Route::post('/signup-requests', [PublicSignupRequestController::class, 'store'])->middleware('throttle:signup-requests')->name('signup_requests.store');
+});
+
+// SIGN-11: public self-signup with an emailed verification code. Central DB only, NO tenancy
+// (outside the ResolveApiTenancy group on purpose, X-Tenant ignored), every route throttled.
+// EnsureSelfSignupEnabled answers 503 while the platform switch is off.
+Route::prefix('v1/signup')->name('api.signup.')->group(function () {
+    Route::middleware(EnsureSelfSignupEnabled::class)->group(function () {
+        Route::post('/', [SelfSignupController::class, 'store'])->middleware('throttle:self-signup')->name('store');
+        Route::post('/verify', [SelfSignupController::class, 'verify'])->middleware('throttle:self-signup-verify')->name('verify');
+        Route::post('/resend', [SelfSignupController::class, 'resend'])->middleware('throttle:self-signup-resend')->name('resend');
+    });
 });
 
 // IDEN-4.6: ThrottleTenantMisses caps unknown-tenant 404s per IP before tenancy resolves.

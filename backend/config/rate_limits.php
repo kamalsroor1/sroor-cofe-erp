@@ -112,4 +112,18 @@ return [
         'global_per_day' => (int) (env('RATE_LIMIT_SIGNUP_GLOBAL_DAILY') ?: 200),
     ],
 
+    // SIGN-11: public self-signup (POST /api/v1/signup), per client network like signup_requests:
+    // accepted signups only for the strict budgets, every attempt for the looser ceiling.
+    'self_signup' => [
+        'per_hour' => (int) (env('RATE_LIMIT_SELF_SIGNUP_HOURLY') ?: 5),
+        'per_day' => (int) (env('RATE_LIMIT_SELF_SIGNUP_DAILY') ?: 20),
+        'attempts_per_hour' => (int) (env('RATE_LIMIT_SELF_SIGNUP_ATTEMPTS_HOURLY') ?: 60),
+        'global_per_hour' => (int) (env('RATE_LIMIT_SELF_SIGNUP_GLOBAL_HOURLY') ?: 200),
+        // POST /api/v1/signup/verify and /resend, per client network (the code itself allows 5 tries).
+        'verify_per_minute' => (int) (env('RATE_LIMIT_SELF_SIGNUP_VERIFY_PER_MINUTE') ?: 20),
+        'resend_per_hour' => (int) (env('RATE_LIMIT_SELF_SIGNUP_RESEND_HOURLY') ?: 20),
+        // GET /api/v1/signup/status (polled by the "preparing your shop" screen).
+        'status_per_minute' => (int) (env('RATE_LIMIT_SELF_SIGNUP_STATUS_PER_MINUTE') ?: 60),
+    ],
+
 ];

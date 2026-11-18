@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\SignupBusinessType;
+use App\Enums\SignupFlow;
 use App\Enums\SignupRequestStatus;
 use App\Models\Concerns\UsesCentralConnection;
 use Illuminate\Database\Eloquent\Builder;
@@ -33,6 +34,15 @@ use Illuminate\Support\Carbon;
  * @property string|null $user_agent
  * @property Carbon|null $terms_accepted_at
  * @property string|null $terms_version
+ * @property SignupFlow $signup_flow SIGN-11
+ * @property string|null $locale SIGN-11: language of the platform emails (ar / en)
+ * @property string|null $password_hash SIGN-11: the owner's chosen password, hashed (never plain)
+ * @property string|null $signup_token_hash SIGN-11: sha256 of the opaque browser token
+ * @property string|null $verification_code_hash SIGN-11: keyed HMAC of the emailed code
+ * @property Carbon|null $verification_code_expires_at
+ * @property int $verification_attempts
+ * @property Carbon|null $verification_sent_at
+ * @property Carbon|null $email_verified_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -59,6 +69,26 @@ class SignupRequest extends Model
         'user_agent',
         'terms_accepted_at',
         'terms_version',
+        'signup_flow',
+        'locale',
+    ];
+
+    /** @var array<string, mixed> column defaults, so an unrefreshed model reads them too */
+    protected $attributes = [
+        'signup_flow' => 'assisted',
+        'verification_attempts' => 0,
+    ];
+
+    /**
+     * SIGN-11: secrets (hashes) never leave the model through toArray()/toJson(). They are
+     * written with forceFill() by the self-signup Actions only, never mass-assigned.
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
+        'password_hash',
+        'signup_token_hash',
+        'verification_code_hash',
     ];
 
     protected function casts(): array
@@ -69,6 +99,11 @@ class SignupRequest extends Model
             'reviewed_at' => 'datetime',
             'reviewed_by' => 'integer',
             'terms_accepted_at' => 'datetime',
+            'signup_flow' => SignupFlow::class,
+            'verification_code_expires_at' => 'datetime',
+            'verification_attempts' => 'integer',
+            'verification_sent_at' => 'datetime',
+            'email_verified_at' => 'datetime',
         ];
     }
 
@@ -79,6 +114,11 @@ class SignupRequest extends Model
     public function scopePending(Builder $query): Builder
     {
         return $query->where('status', SignupRequestStatus::Pending->value);
+    }
+
+    public function isSelfSignup(): bool
+    {
+        return $this->signup_flow === SignupFlow::SelfSignup;
     }
 
     public function isPending(): bool

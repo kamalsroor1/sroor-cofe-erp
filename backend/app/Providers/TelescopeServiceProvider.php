@@ -71,6 +71,8 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
         Telescope::hideResponseParameters([
             'data.temporary_password',
             'owner_credentials.temporary_password',
+            // SIGN-11: the opaque self-signup token, returned once.
+            'data.signup_token',
         ]);
 
         Telescope::hideRequestHeaders([
