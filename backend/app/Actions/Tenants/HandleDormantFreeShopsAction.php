@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Tenants;
 
 use App\DTOs\Tenants\DormantFreeShopsRunResult;
+use App\Enums\CentralAuditEvent;
 use App\Enums\TenantBackupKind;
 use App\Enums\TenantLifecycleActor;
 use App\Enums\TenantStatus;
@@ -13,7 +14,9 @@ use App\Mail\DormantShopReminderMail;
 use App\Mail\PlatformMailable;
 use App\Models\SignupRequest;
 use App\Models\Tenant;
+use App\Models\TenantLifecycleEvent;
 use App\Models\TenantLifecycleReminder;
+use App\Services\CentralAuditLogger;
 use App\Services\Plans\FreePlanIds;
 use App\Support\PlatformHosts;
 use App\Support\Tenancy\TenantStatusTransition;
@@ -49,6 +52,17 @@ use Throwable;
  * Unarchive (super-admin) puts the shop back and restarts its clock. PurgeTenantAction and the
  * tenant database are never touched here.
  *
+ * A shop whose owner has no valid email is NEVER reminded and therefore never archived (the
+ * archive needs a sent reminder): the safe side, since nobody could have been warned. It stays
+ * active and is counted as skipped on every run until an operator fixes the address.
+ *
+ * Stranded shops: the walk to `archived` is several committed steps. If one fails midway (a
+ * transient DB error after `suspended`), the shop would sit `suspended` with its tokens revoked and
+ * never be selected again. So each run also picks free-plan `suspended` shops whose LAST lifecycle
+ * event carries source `dormant_free_shop` and finishes the archive (fresh verified backup, then
+ * suspended -> archived). A mid-walk failure is logged and written to the central audit
+ * (TenantArchiveRefused, reason `dormant_walk_failed`).
+ *
  * Safe to rerun: a cache lock stops overlapping runs, a tenant is re-read (fresh clock and
  * status) before every mail and before the archive, each tenant has its own try/catch (the log
  * carries the exception class and tenant id only) and one run starts at most
@@ -70,6 +84,7 @@ final class HandleDormantFreeShopsAction
         private readonly FreePlanIds $freePlans,
         private readonly TakeTenantBackupAction $takeBackup,
         private readonly TransitionTenantStatusAction $transition,
+        private readonly CentralAuditLogger $audit,
     ) {}
 
     public function execute(bool $dryRun = false, ?CarbonImmutable $now = null): DormantFreeShopsRunResult
@@ -143,6 +158,24 @@ final class HandleDormantFreeShopsAction
                 }
             });
 
+        foreach ($this->strandedCandidates($freePlanIds) as $stranded) {
+            $checked++;
+            $id = (string) $stranded->getKey();
+
+            try {
+                if (count($archived) >= $maxArchives) {
+                    $skipped[] = $id;
+                } elseif ($this->archive($stranded, $now, $dryRun, $stranded->dormantDays($now), true)) {
+                    $archived[] = $id;
+                } else {
+                    $skipped[] = $id;
+                }
+            } catch (Throwable $e) {
+                Log::warning('Dormant free shop stranded-archive recovery failed.', ['exception' => $e::class, 'tenant_id' => $id]);
+                $failed[] = $id;
+            }
+        }
+
         Log::info('Dormant free shops run finished.', [
             'checked' => $checked,
             'reminded' => count($reminded),
@@ -153,6 +186,51 @@ final class HandleDormantFreeShopsAction
         ]);
 
         return new DormantFreeShopsRunResult(DormantFreeShopsRunResult::STATE_RAN, $dryRun, $checked, $reminded, $archived, $postponed, $skipped, $failed);
+    }
+
+    /**
+     * Free-plan shops left `suspended` by an interrupted dormant archive: the latest lifecycle
+     * event is the dormant policy's own move into `suspended`. The (few) suspended free shops are
+     * read, then the event is checked in PHP (no JSON-path SQL, portable across drivers).
+     *
+     * @param  list<int>  $freePlanIds
+     * @return list<Tenant>
+     */
+    private function strandedCandidates(array $freePlanIds): array
+    {
+        $found = [];
+
+        Tenant::query()
+            ->provisioned()
+            ->where('status', TenantStatus::Suspended->value)
+            ->whereIn('plan_id', $freePlanIds)
+            ->orderBy('id')
+            ->chunkById(100, function ($tenants) use (&$found): void {
+                foreach ($tenants as $tenant) {
+                    /** @var Tenant $tenant */
+                    if ($this->isStranded($tenant)) {
+                        $found[] = $tenant;
+                    }
+                }
+            });
+
+        return $found;
+    }
+
+    private function isStranded(Tenant $tenant): bool
+    {
+        if ($tenant->lifecycleStatus() !== TenantStatus::Suspended || ! $tenant->isOnFreePlan()) {
+            return false;
+        }
+
+        $last = TenantLifecycleEvent::query()
+            ->where('tenant_id', (string) $tenant->getKey())
+            ->orderByDesc('id')
+            ->first();
+
+        return $last instanceof TenantLifecycleEvent
+            && $last->to_status === TenantStatus::Suspended
+            && ($last->properties['source'] ?? null) === self::SOURCE;
     }
 
     /**
@@ -229,7 +307,11 @@ final class HandleDormantFreeShopsAction
                 'target_date' => $anchor->toDateString(),
                 'recipients' => 1,
             ]);
-        } catch (QueryException) {
+        } catch (QueryException $e) {
+            if (! $this->isDuplicateKey($e)) {
+                throw $e; // counted as failed by the per-tenant catch
+            }
+
             return false; // the unique key: this dormancy was reminded already (a racing run)
         }
 
@@ -256,7 +338,16 @@ final class HandleDormantFreeShopsAction
         return true;
     }
 
-    private function archive(Tenant $tenant, CarbonImmutable $now, bool $dryRun, int $days): bool
+    /** SQLSTATE 23000 (integrity constraint) covers MySQL 1062 and SQLite; 23505 is PostgreSQL. */
+    private function isDuplicateKey(QueryException $e): bool
+    {
+        $state = (string) ($e->errorInfo[0] ?? $e->getCode());
+
+        return in_array($state, ['23000', '23505'], true)
+            && (str_contains(strtolower($e->getMessage()), 'unique') || str_contains(strtolower($e->getMessage()), 'duplicate'));
+    }
+
+    private function archive(Tenant $tenant, CarbonImmutable $now, bool $dryRun, int $days, bool $stranded = false): bool
     {
         if ($dryRun) {
             return true;
@@ -273,33 +364,53 @@ final class HandleDormantFreeShopsAction
             $backup = $this->takeBackup->execute($tenant, TenantBackupKind::Final);
 
             // The backup took a while: the owner may have come back meanwhile.
-            $current = $this->fresh($tenant, CarbonImmutable::now());
-            if ($current === null || $current->dormantDays(CarbonImmutable::now()) < $this->archiveAfterDays()) {
-                return false;
+            if ($stranded) {
+                $current = Tenant::query()->provisioned()->whereKey($tenant->getKey())->first();
+                if (! $current instanceof Tenant || ! $this->isStranded($current)) {
+                    return false; // an operator moved it meanwhile
+                }
+            } else {
+                $current = $this->fresh($tenant, CarbonImmutable::now());
+                if ($current === null || $current->dormantDays(CarbonImmutable::now()) < $this->archiveAfterDays()) {
+                    return false;
+                }
             }
 
             $context = ['source' => self::SOURCE, 'dormant_days' => $days];
             $from = $current->lifecycleStatus() ?? TenantStatus::Active;
 
-            foreach ($this->pathToSuspended($from) as $step) {
-                $this->transition->execute(TenantStatusTransition::to(
-                    $id,
-                    $step['to'],
-                    TenantLifecycleActor::System,
-                    expectFrom: $step['from'],
-                    reason: $step['to'] === TenantStatus::Suspended ? TenantSuspensionReason::Other : null,
-                    context: $context,
-                ));
-            }
+            try {
+                foreach ($this->pathToSuspended($from) as $step) {
+                    $this->transition->execute(TenantStatusTransition::to(
+                        $id,
+                        $step['to'],
+                        TenantLifecycleActor::System,
+                        expectFrom: $step['from'],
+                        reason: $step['to'] === TenantStatus::Suspended ? TenantSuspensionReason::Other : null,
+                        context: $context,
+                    ));
+                }
 
-            $archivedTenant = $this->transition->execute(TenantStatusTransition::to(
-                $id,
-                TenantStatus::Archived,
-                TenantLifecycleActor::System,
-                expectFrom: TenantStatus::Suspended,
-                context: $context,
-                finalBackupId: (int) $backup->getKey(),
-            ));
+                $archivedTenant = $this->transition->execute(TenantStatusTransition::to(
+                    $id,
+                    TenantStatus::Archived,
+                    TenantLifecycleActor::System,
+                    expectFrom: TenantStatus::Suspended,
+                    context: $context,
+                    finalBackupId: (int) $backup->getKey(),
+                ));
+            } catch (Throwable $e) {
+                // Earlier steps are committed: the shop may now sit suspended. The next run finishes it.
+                Log::warning('Dormant free shop archive walk failed midway.', ['exception' => $e::class, 'tenant_id' => $id]);
+                $this->audit->recordAttempt(
+                    CentralAuditEvent::TenantArchiveRefused,
+                    ['reason' => 'dormant_walk_failed', 'source' => self::SOURCE, 'exception' => $e::class],
+                    null,
+                    $current,
+                );
+
+                throw $e;
+            }
         } finally {
             $lock->release();
         }

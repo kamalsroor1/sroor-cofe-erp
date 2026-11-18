@@ -18,11 +18,15 @@ use App\Models\TenantBackup;
 use App\Models\TenantLifecycleEvent;
 use App\Models\TenantLifecycleReminder;
 use App\Models\User;
+use App\Services\Tenancy\TenantActivityTracker;
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\Events\KeyWritten;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -505,7 +509,112 @@ final class DormantFreeShopsTest extends TenantTestCase
         $this->getJson('/api/v1/super-admin/tenants?dormant_days=30')->assertUnauthorized();
     }
 
+    // ------------------------------------------------------------ review hardening
+
+    public function test_a_request_inside_the_throttle_window_writes_nothing_to_the_cache_or_the_database(): void
+    {
+        $tenant = $this->shop($this->free, null);
+        $headers = $this->tenantHeaders($tenant);
+        $this->getJson('/api/v1/auth/me', $headers)->assertOk();
+
+        $writes = 0;
+        Event::listen(KeyWritten::class, static function () use (&$writes): void {
+            $writes++;
+        });
+        DB::connection((new Tenant)->getConnectionName())->enableQueryLog();
+        DB::connection((new Tenant)->getConnectionName())->flushQueryLog();
+
+        app(TenantActivityTracker::class)->touch($tenant);
+
+        $this->assertSame(0, $writes);
+        $updates = collect(DB::connection((new Tenant)->getConnectionName())->getQueryLog())
+            ->filter(static fn (array $q): bool => str_starts_with(strtolower((string) $q['query']), 'update'));
+        $this->assertCount(0, $updates);
+    }
+
+    public function test_the_last_activity_migration_is_idempotent_and_heals_an_interrupted_run(): void
+    {
+        $tenant = $this->shop($this->free, null);
+        $this->assertNull($this->activity($tenant));
+
+        // The column exists (a first run died after the ALTER): re-running only backfills.
+        $migration = require database_path('migrations/2026_11_19_110000_add_last_activity_at_to_tenants_table.php');
+        $migration->up();
+        $this->assertSame(now()->toDateTimeString(), $this->activity($tenant)?->toDateTimeString());
+
+        // A stamped row is never touched by another run.
+        $this->setActivity($tenant, now()->subDays(5));
+        $migration->up();
+        $this->assertSame(now()->subDays(5)->toDateTimeString(), $this->activity($tenant)?->toDateTimeString());
+    }
+
+    public function test_a_free_shop_stranded_in_suspended_by_the_dormant_walk_is_archived_on_the_next_run(): void
+    {
+        $tenant = $this->shop($this->free, now()->subDays(100), TenantStatus::Suspended);
+        $this->dormantEvent($tenant, TenantStatus::Suspended);
+        $bystander = $this->shop($this->free, now()->subDays(100), TenantStatus::Suspended); // suspended by a human
+
+        $this->artisan(self::COMMAND)->assertSuccessful();
+
+        $archived = $this->fresh($tenant);
+        $this->assertSame(TenantStatus::Archived->value, $archived->status);
+        $this->assertNotNull($archived->final_backup_id);
+        $this->assertSame(TenantStatus::Suspended->value, $this->fresh($bystander)->status);
+        $this->assertSame(1, TenantBackup::query()->count());
+
+        $this->artisan(self::COMMAND)->assertSuccessful();
+        $this->assertSame(1, TenantBackup::query()->count());
+    }
+
+    public function test_a_stranded_shop_an_operator_touched_afterwards_is_left_alone(): void
+    {
+        $tenant = $this->shop($this->free, now()->subDays(100), TenantStatus::Suspended);
+        $this->dormantEvent($tenant, TenantStatus::Suspended);
+        TenantLifecycleEvent::query()->create([
+            'tenant_id' => (string) $tenant->getKey(), 'from_status' => 'suspended', 'to_status' => 'suspended',
+            'actor' => 'super_admin', 'properties' => ['source' => 'manual'],
+        ]);
+
+        $this->artisan(self::COMMAND)->assertSuccessful();
+
+        $this->assertSame(TenantStatus::Suspended->value, $this->fresh($tenant)->status);
+    }
+
+    public function test_a_shop_without_a_valid_owner_email_is_never_reminded_nor_archived(): void
+    {
+        $tenant = $this->shop($this->free, now()->subDays(120));
+        Tenant::query()->whereKey($tenant->getKey())->update(['email' => 'not-an-email']);
+
+        $this->artisan(self::COMMAND)->assertSuccessful();
+        $this->artisan(self::COMMAND)->assertSuccessful();
+
+        $this->assertSame(TenantStatus::Active->value, $this->fresh($tenant)->status);
+        $this->assertSame(0, TenantLifecycleReminder::query()->count());
+        Mail::assertNothingQueued();
+    }
+
+    public function test_the_tenant_list_shows_dormant_days_only_for_free_shops(): void
+    {
+        $paid = $this->shop($this->paid, now()->subDays(40));
+        $headers = $this->centralHeaders($this->centralSuperAdmin());
+
+        $rows = collect($this->getJson('/api/v1/super-admin/tenants', $headers)->assertOk()->json('tenants.data'))->keyBy('id');
+
+        $this->assertNull($rows[(string) $paid->getKey()]['dormant_days']);
+    }
+
     // ------------------------------------------------------------ helpers
+
+    private function dormantEvent(Tenant $tenant, TenantStatus $to): void
+    {
+        TenantLifecycleEvent::query()->create([
+            'tenant_id' => (string) $tenant->getKey(),
+            'from_status' => TenantStatus::ReadOnly->value,
+            'to_status' => $to->value,
+            'actor' => 'system',
+            'properties' => ['source' => HandleDormantFreeShopsAction::SOURCE],
+        ]);
+    }
 
     private function plan(string $prefix, bool $free): Plan
     {

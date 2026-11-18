@@ -38,9 +38,9 @@ class TenantResource extends JsonResource
             'archive_state' => $this->archive_state?->value,
             'archived_at' => $this->archived_at?->toIso8601String(),
             'purged_at' => $this->purged_at?->toIso8601String(),
-            // FREE-15: dormant free shop clock (null = never stamped, dormant_days counts from created_at).
+            // FREE-15: dormant free shop clock (null = never stamped, dormant_days counts from created_at); dormant_days only for free-plan shops.
             'last_activity_at' => $this->last_activity_at?->toIso8601String(),
-            'dormant_days' => $this->resource->dormantDays(),
+            'dormant_days' => $this->resource->isOnFreePlan() ? $this->resource->dormantDays() : null,
             'created_at' => $this->created_at?->toDateString(),
             'created_at_human' => $this->created_at?->diffForHumans(),
             // BRND-5: the shop's legal info (tenant settings), only when this resource is the

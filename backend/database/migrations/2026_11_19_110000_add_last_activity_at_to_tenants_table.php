@@ -23,14 +23,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (! Schema::hasTable('tenants') || Schema::hasColumn('tenants', 'last_activity_at')) {
+        if (! Schema::hasTable('tenants')) {
             return;
         }
 
-        Schema::table('tenants', function (Blueprint $table): void {
-            $table->timestamp('last_activity_at')->nullable()->index();
-        });
+        if (! Schema::hasColumn('tenants', 'last_activity_at')) {
+            Schema::table('tenants', function (Blueprint $table): void {
+                $table->timestamp('last_activity_at')->nullable()->index();
+            });
+        }
 
+        // Outside the guard on purpose: a first run interrupted between the ALTER and this UPDATE
+        // is healed by running the migration again (idempotent; stamped rows are never touched).
         DB::table('tenants')->whereNull('last_activity_at')->update(['last_activity_at' => now()]);
     }
 

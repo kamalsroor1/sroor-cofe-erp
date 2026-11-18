@@ -16,10 +16,11 @@ use Throwable;
  * which shops are alive.
  *
  * Cheap by construction: the central write happens at most once per
- * tenant_lifecycle.dormant.activity_throttle_minutes (15) per shop. The guard is an atomic
- * Cache::add under a CENTRAL key (identical inside and outside tenancy), so concurrent requests
- * of one shop race for a single winner and every other request costs one cache read. A login
- * (`force`) always writes and refreshes the guard.
+ * tenant_lifecycle.dormant.activity_throttle_minutes (15) per shop. The guard lives under a
+ * CENTRAL key (identical inside and outside tenancy). A request inside the window costs exactly
+ * one cache read (Cache::has, no write even on the database store); only on a miss does it
+ * Cache::add (atomic, so concurrent first requests race for a single winner). A login (`force`)
+ * always writes and refreshes the guard.
  *
  * The write is a plain query-builder UPDATE of that one column: it never loads or saves the Tenant
  * model (stancl's `data` column and a concurrent status transition are untouched). It must never
@@ -42,7 +43,7 @@ final class TenantActivityTracker
 
             if ($force) {
                 Cache::put($key, 1, $ttl);
-            } elseif (! Cache::add($key, 1, $ttl)) {
+            } elseif (Cache::has($key) || ! Cache::add($key, 1, $ttl)) {
                 return;
             }
 
