@@ -2,6 +2,7 @@
 
 namespace App\Actions\Tenants;
 
+use App\Filters\Tenants\DormantFilter;
 use App\Filters\Tenants\PlanFilter;
 use App\Filters\Tenants\SearchFilter;
 use App\Filters\Tenants\StatusFilter;
@@ -25,6 +26,7 @@ class GetTenantsIndexDataAction
                 SearchFilter::class,
                 StatusFilter::class,
                 PlanFilter::class,
+                DormantFilter::class,
             ])
             ->thenReturn();
 
@@ -39,6 +41,7 @@ class GetTenantsIndexDataAction
                 'search' => $request->query('search', ''),
                 'status' => $request->query('status', 'all'),
                 'plan_id' => $request->query('plan_id', 'all'),
+                'dormant_days' => $request->query('dormant_days', ''),
             ],
         ];
     }

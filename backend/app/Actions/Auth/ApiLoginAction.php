@@ -9,6 +9,7 @@ use App\Http\Middleware\EnsureTenantActive;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\ActivityLogService;
+use App\Services\Tenancy\TenantActivityTracker;
 use App\Support\Tenancy\TenantLifecyclePolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Hash;
@@ -19,6 +20,7 @@ final class ApiLoginAction
     public function __construct(
         private readonly ActivityLogService $activityLogService,
         private readonly BuildAuthPayload $buildAuthPayload,
+        private readonly TenantActivityTracker $activity,
     ) {}
 
     /**
@@ -97,6 +99,12 @@ final class ApiLoginAction
             'api_token' => null,
             'last_login_at' => now(),
         ]);
+
+        // FREE-15: a successful login always restarts the dormant free shop clock.
+        $tenant = tenant();
+        if ($tenant !== null) {
+            $this->activity->touch((string) $tenant->getTenantKey(), force: true);
+        }
 
         // 6. Log success
         $this->activityLogService->log(

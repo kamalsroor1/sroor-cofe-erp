@@ -256,6 +256,9 @@ final class TransitionTenantStatusAction
             $tenant->final_backup_id = null;
             $tenant->archive_state = null;
             $tenant->archive_error_code = null;
+            // FREE-15: a restored shop starts a fresh dormancy clock, or the next dormant-free run
+            // would archive it again straight away (its old activity date is months back).
+            $tenant->last_activity_at = $now;
         }
 
         $tenant->save();

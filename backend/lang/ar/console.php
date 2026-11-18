@@ -479,4 +479,16 @@ return [
         'tenant_failed' => 'تنبيهات تيليجرام فشلت للمحل :tenant_id (راجع السجل).',
         'summary' => 'تنبيهات تيليجرام: اتفحص :checked محل، اتضاف :dispatched مهمة، فشل :failed.',
     ],
+
+    // FREE-15: tenants:handle-dormant-free.
+    'dormant_free' => [
+        'description' => 'تذكير (60 يوم) وأرشفة (90 يوم) المحلات المجانية الخاملة. البيانات بتفضل محفوظة ومفيش مسح أبدًا.',
+        'disabled' => 'معالجة المحلات المجانية الخاملة متوقفة (tenant_lifecycle.dormant.enabled).',
+        'locked' => 'تشغيل تاني للمحلات الخاملة شغال دلوقتي؛ ماتعملش حاجة.',
+        'no_free_plans' => 'مفيش باقة مجانية؛ مفيش حاجة تتعمل.',
+        'would_remind' => 'هيتبعت تذكير للمحل :tenant_id.',
+        'would_archive' => 'هيتأرشف المحل :tenant_id.',
+        'failed_row' => 'المحل :tenant_id فشل (راجع السجل).',
+        'summary' => 'المحلات المجانية الخاملة: اتفحص :checked، اتبعت تذكير :reminded، اتأرشف :archived، اتأجل :postponed، اتخطى :skipped، فشل :failed.',
+    ],
 ];

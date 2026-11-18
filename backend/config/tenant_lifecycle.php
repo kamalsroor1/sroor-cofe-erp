@@ -89,6 +89,32 @@ return [
     ],
 
     /*
+    | FREE-15 dormant free shops (every shop is its own database): a shop on a permanent free plan
+    | with no activity (`tenants.last_activity_at`, else created_at) gets ONE reminder email at
+    | remind_after_days, and is ARCHIVED at archive_after_days (data kept, restorable by support
+    | through unarchive). Never deleted: nothing here reaches the purge. The archive also needs the
+    | reminder to have been sent at least min_reminder_gap_days earlier (a missed reminder is sent
+    | first and the archive waits). Daily command: tenants:handle-dormant-free.
+    */
+    'dormant' => [
+        'enabled' => (bool) env('DORMANT_FREE_ENABLED', true),
+        'remind_after_days' => max(1, (int) env('DORMANT_FREE_REMIND_AFTER_DAYS', 60)),
+        'archive_after_days' => max(1, (int) env('DORMANT_FREE_ARCHIVE_AFTER_DAYS', 90)),
+        'min_reminder_gap_days' => max(0, (int) env('DORMANT_FREE_MIN_REMINDER_GAP_DAYS', 7)),
+
+        // Most archives (each takes a verified final backup) one run may start; the rest wait for tomorrow.
+        'max_archives_per_run' => max(1, (int) env('DORMANT_FREE_MAX_ARCHIVES_PER_RUN', 25)),
+
+        // authenticated API use stamps last_activity_at at most once per this many minutes per shop.
+        'activity_throttle_minutes' => max(1, (int) env('DORMANT_FREE_ACTIVITY_THROTTLE_MINUTES', 15)),
+
+        'chunk' => 100,
+
+        // Daily run time, platform timezone (after the nightly backups and cache pruning).
+        'at' => '05:00',
+    ],
+
+    /*
     | OPS-9 purge (CTO Q2, Q3, Q4, Q5): `php artisan tenants:purge {tenant}` ONLY, never
     | scheduled, never from the API, no --force. Eligible: archived for archived_min_days, or
     | suspended / cancelled for blocked_min_days; a `violation` suspension never. Before the

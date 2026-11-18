@@ -83,4 +83,23 @@ return [
     'failed' => [
         'telegram' => 'Platform email :mailable failed permanently after all attempts. Recipient domain: :domains. Reason: :exception.',
     ],
+
+    // FREE-15: dormant free shops.
+    'dormant_reminder' => [
+        'subject' => 'Your shop ":business" is waiting for you',
+        'heading' => 'Your shop ":business" is waiting for you',
+        'intro' => 'We noticed nobody has signed in to ":business" for :days days. Sign in to keep it active.',
+        'login_button' => 'Sign in to your shop',
+        'login_url' => 'Sign-in link:',
+        'what_happens' => 'If the shop stays unused, it will be archived on :date (its sign-in will stop working until we restore it).',
+        'data_kept' => 'Your data is never deleted. Even if the shop is archived, we keep everything and can restore it for you on request.',
+    ],
+
+    'dormant_archived' => [
+        'subject' => 'Your shop ":business" was archived',
+        'heading' => 'Your shop ":business" was archived',
+        'intro' => 'Nobody signed in to ":business" for :days days, so we archived it.',
+        'data_kept' => 'Your data is safe: nothing was deleted and we keep it all.',
+        'contact_support' => 'To bring your shop back, contact our support team and we will restore it for you:',
+    ],
 ];

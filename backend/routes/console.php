@@ -157,3 +157,11 @@ Schedule::command('cache:prune-expired')
 Schedule::command('signup:prune-unverified --hours=24')
     ->dailyAt('04:20')
     ->withoutOverlapping(60);
+
+// FREE-15: dormant FREE shops (each one is a database): a reminder email after 60 days without
+// activity, ARCHIVE after 90 (data kept, restorable by support). Never deletes anything.
+// After the nightly backups, the archive takes its own verified final backup first. Idempotent.
+Schedule::command('tenants:handle-dormant-free')
+    ->dailyAt((string) config('tenant_lifecycle.dormant.at', '05:00'))
+    ->withoutOverlapping(120)
+    ->onOneServer();

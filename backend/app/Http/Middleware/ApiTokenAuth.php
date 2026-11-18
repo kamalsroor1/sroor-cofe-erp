@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Services\Tenancy\TenantActivityTracker;
 use App\Support\ActiveStore;
 use Closure;
 use Illuminate\Http\Request;
@@ -71,6 +72,8 @@ final class ApiTokenAuth
         // through AuthenticateCentral; no token of this middleware reaches the control plane.
         if (function_exists('tenant') && tenant()) {
             Auth::guard('tenant')->setUser($user);
+            // FREE-15: dormant free shop clock, throttled (one central write per shop per 15 minutes).
+            app(TenantActivityTracker::class)->touch((string) tenant()->getTenantKey());
         }
         $request->setUserResolver(fn () => $user);
 

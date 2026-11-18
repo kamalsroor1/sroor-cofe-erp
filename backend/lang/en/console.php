@@ -479,4 +479,16 @@ return [
         'tenant_failed' => 'Telegram alerts failed for tenant :tenant_id (see the log).',
         'summary' => 'Telegram alerts: :checked shop(s) checked, :dispatched job(s) queued, :failed failed.',
     ],
+
+    // FREE-15: tenants:handle-dormant-free.
+    'dormant_free' => [
+        'description' => 'Remind (60 days) and archive (90 days) free shops with no activity. Data is kept, nothing is ever deleted.',
+        'disabled' => 'Dormant free shop handling is disabled (tenant_lifecycle.dormant.enabled).',
+        'locked' => 'Another dormant free shops run is in progress; nothing was done.',
+        'no_free_plans' => 'No free plan exists; nothing to do.',
+        'would_remind' => 'Would remind tenant :tenant_id.',
+        'would_archive' => 'Would archive tenant :tenant_id.',
+        'failed_row' => 'Tenant :tenant_id failed (see the log).',
+        'summary' => 'Dormant free shops: :checked checked, :reminded reminded, :archived archived, :postponed postponed, :skipped skipped, :failed failed.',
+    ],
 ];

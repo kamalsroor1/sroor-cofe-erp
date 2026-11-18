@@ -70,6 +70,7 @@ use Throwable;
  * @property TenantSignupSource|null $signup_source PLAN-10: self_signup | console (column default console)
  * @property string|null $canonical_email security review: SignupIdentity::canonicalEmail(email), set on save
  * @property string|null $phone_normalized security review: SignupIdentity::normalizedPhone(phone), set on save
+ * @property Carbon|null $last_activity_at FREE-15: last login / throttled API use; null = never stamped (use created_at)
  * @property array|null $enabled_features
  * @property array|null $settings
  * @property Carbon|null $created_at
@@ -110,6 +111,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'purge_started_at' => 'datetime',
         'purged_at' => 'datetime',
         'signup_source' => TenantSignupSource::class,
+        'last_activity_at' => 'datetime',
     ];
 
     /**
@@ -165,6 +167,8 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'purged_by',
             // PLAN-10: how the tenant was created.
             'signup_source',
+            // FREE-15: dormant free shop clock (stamped by TenantActivityTracker).
+            'last_activity_at',
             // Security review: comparable identity for the one-free-shop guard (set on save).
             'canonical_email',
             'phone_normalized',
@@ -506,6 +510,20 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     // ========================================================================
     // دورة حياة المستأجر (Lifecycle, IDEN-3.2)
     // ========================================================================
+
+    /** FREE-15: the dormancy clock, the last recorded activity or else the creation date. */
+    public function activityAnchor(): ?CarbonImmutable
+    {
+        return self::immutable($this->last_activity_at ?? $this->created_at);
+    }
+
+    /** FREE-15: whole days since the shop was last active (0 when unknown or today). */
+    public function dormantDays(?CarbonImmutable $now = null): int
+    {
+        $anchor = $this->activityAnchor();
+
+        return $anchor === null ? 0 : max(0, (int) $anchor->diffInDays($now ?? CarbonImmutable::now(), true));
+    }
 
     /** The stored status as an enum, or null for a value outside App\Enums\TenantStatus. */
     public function lifecycleStatus(): ?TenantStatus
