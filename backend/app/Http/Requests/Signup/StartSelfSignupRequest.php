@@ -6,6 +6,7 @@ namespace App\Http\Requests\Signup;
 
 use App\Enums\SignupBusinessType;
 use App\Models\Plan;
+use App\Rules\AllowedSignupEmailDomain;
 use App\Rules\AvailableSubdomain;
 use App\Services\Signup\SubdomainSuggester;
 use App\Support\PasswordPolicy;
@@ -20,6 +21,7 @@ use Illuminate\Validation\Rule;
  * phone normalisation, lowercase plan slug). The password follows the tenant-user policy
  * (PasswordPolicy) and must be confirmed. `subdomain` is optional (suggested from the business
  * name when empty); when given it must be free right now. `website` is the honeypot.
+ * SIGN-13: disposable email domains (config signup.blocked_email_domains) are refused.
  */
 final class StartSelfSignupRequest extends FormRequest
 {
@@ -65,7 +67,7 @@ final class StartSelfSignupRequest extends FormRequest
         return [
             'business_name' => ['required', 'string', 'min:2', 'max:150'],
             'owner_name' => ['required', 'string', 'min:2', 'max:120'],
-            'email' => ['required', 'string', 'email:rfc', 'max:255'],
+            'email' => ['required', 'string', 'email:rfc', 'max:255', new AllowedSignupEmailDomain],
             'phone' => ['required', 'string', 'regex:'.StoreSignupRequestRequest::PHONE_PATTERN],
             'password' => ['required', 'string', 'max:255', PasswordPolicy::rule(), 'confirmed'],
             'business_type' => ['required', 'string', Rule::in(SignupBusinessType::values())],

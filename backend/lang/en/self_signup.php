@@ -32,4 +32,14 @@ return [
         'cap_reached' => 'The daily automatic shop creation limit (:cap shops) was reached. New verified signups are waiting for manual approval in the console.',
         'provisioning_failed' => "A self-signup shop could not be prepared (request #:id)\nShop: :business\nPhone: :phone\nReason: :code",
     ],
+
+    'validation' => [
+        'email_not_allowed' => 'This email address cannot be used to sign up. Please use your permanent email.',
+        'free_shop_exists' => 'This email or phone number already has a shop on the free plan. Choose a paid plan or contact support.',
+    ],
+
+    'prune' => [
+        'description' => 'Delete self-signups that were not verified within the given hours.',
+        'done' => 'Deleted :count signups not verified for more than :hours hours.',
+    ],
 ];

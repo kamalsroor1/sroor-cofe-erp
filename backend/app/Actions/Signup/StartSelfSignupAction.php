@@ -11,6 +11,7 @@ use App\Enums\SignupRequestStatus;
 use App\Mail\PlatformMailable;
 use App\Models\Plan;
 use App\Models\SignupRequest;
+use App\Services\Signup\FreeShopGuard;
 use App\Services\Signup\SignupTrialTerms;
 use App\Services\Signup\SignupVerificationCodeIssuer;
 use App\Services\Signup\SubdomainSuggester;
@@ -29,6 +30,9 @@ use Illuminate\Validation\ValidationException;
  * business name); then the first verification code is issued and its mail queued after commit.
  * A refused code (per-email hourly budget, 429) rolls the row back.
  *
+ * SIGN-13: a free-plan signup is refused (422 on `email`) when its email or phone already has a
+ * free shop or a verified free signup on its way (FreeShopGuard); checked again at verification.
+ *
  * A filled honeypot stores and sends nothing but answers the same shape, with a token that matches
  * no row, so a bot cannot tell it was detected.
  */
@@ -38,6 +42,7 @@ final class StartSelfSignupAction
         private readonly SignupTrialTerms $trialTerms,
         private readonly SubdomainSuggester $subdomains,
         private readonly SignupVerificationCodeIssuer $codes,
+        private readonly FreeShopGuard $freeShops,
     ) {}
 
     public function execute(StartSelfSignupDTO $dto): SelfSignupStarted
@@ -51,6 +56,11 @@ final class StartSelfSignupAction
         $plan = $this->trialTerms->resolvePlan($dto->planCode);
         if (! $plan instanceof Plan) {
             throw ValidationException::withMessages(['plan_code' => (string) __('signup.errors.no_trial_plan')]);
+        }
+
+        // SIGN-13: one permanent free shop per verified email and per phone (paid plans are not limited).
+        if ($plan->is_free && $this->freeShops->alreadyHasFreeShop($dto->email, $dto->phone)) {
+            throw ValidationException::withMessages(['email' => (string) __('self_signup.validation.free_shop_exists')]);
         }
 
         $subdomain = $dto->subdomain ?? $this->subdomains->suggest($dto->businessName);

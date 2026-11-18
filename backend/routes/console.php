@@ -151,3 +151,9 @@ Schedule::command('tenants:run sanctum:prune-expired --option="hours=24"')
 Schedule::command('cache:prune-expired')
     ->dailyAt('03:45')
     ->withoutOverlapping();
+
+// SIGN-13: self-signups that never verified their email are deleted after 24 hours (central
+// `signup_requests` rows in awaiting_verification only; never a tenant).
+Schedule::command('signup:prune-unverified --hours=24')
+    ->dailyAt('04:20')
+    ->withoutOverlapping(60);

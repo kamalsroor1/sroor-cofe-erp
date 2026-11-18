@@ -19,6 +19,28 @@ return [
         'central', 'root', 'system', 'sroor', 'null', 'undefined',
         'webmail', 'ns1', 'ns2', 'imap', 'pop', 'autodiscover', 'cpanel', 'secure', 'pay', 'auth',
         'sso', 'oauth', 'telescope', 'pulse', 'horizon', 'monitor', 'm',
+        // SIGN-13: platform brands, operator areas and mail/ops names.
+        'super', 'superadmin', 'super-admin', 'ibraa', 'baraa', 'email', 'beta', 'sandbox', 'preview',
+        'files', 'media', 'img', 'images', 'download', 'downloads', 'update', 'updates', 'health',
+        'account', 'accounts', 'tenant', 'tenants', 'webhook', 'webhooks', 'noreply', 'no-reply',
+        'postmaster', 'hostmaster', 'abuse', 'security', 'legal', 'privacy', 'terms', 'info', 'contact',
+        'sales', 'marketing', 'mobile', 'android', 'ios', 'desktop', 'internal', 'ops', 'backup', 'backups',
+    ],
+
+    /*
+    | SIGN-13: disposable / throw-away email domains refused by the public self-signup (the domain
+    | and any subdomain of it, case-insensitive). Starter list of well-known providers; extend it
+    | here (or override the whole list in a published config) as abuse shows up.
+    */
+    'blocked_email_domains' => [
+        'mailinator.com', 'guerrillamail.com', 'guerrillamail.net', 'guerrillamail.org', 'sharklasers.com',
+        'grr.la', '10minutemail.com', '10minutemail.net', 'tempmail.com', 'temp-mail.org', 'temp-mail.io',
+        'tempmailo.com', 'tempail.com', 'throwawaymail.com', 'yopmail.com', 'yopmail.net', 'yopmail.fr',
+        'getnada.com', 'nada.email', 'maildrop.cc', 'mailnesia.com', 'mintemail.com', 'trashmail.com',
+        'trashmail.net', 'fakeinbox.com', 'dispostable.com', 'mohmal.com', 'emailondeck.com',
+        'mailcatch.com', 'spamgourmet.com', 'mytemp.email', 'tempr.email', 'discard.email',
+        'moakt.com', 'burnermail.io', 'inboxkitten.com', 'mail.tm', 'emailfake.com', 'fakemail.net',
+        'getairmail.com',
     ],
 
     /*

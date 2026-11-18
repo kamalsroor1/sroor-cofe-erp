@@ -9,7 +9,9 @@ use App\Enums\SignupFlow;
 use App\Enums\SignupRequestStatus;
 use App\Jobs\NotifyPlatformOfSignupRequestJob;
 use App\Jobs\ProvisionVerifiedSignupJob;
+use App\Models\Plan;
 use App\Models\SignupRequest;
+use App\Services\Signup\FreeShopGuard;
 use App\Services\Signup\SignupVerificationCodeIssuer;
 use App\Services\TenantProvisionerService;
 use App\Support\Signup\SignupSecrets;
@@ -30,17 +32,23 @@ use Throwable;
  * Success: `verified` + email_verified_at, the code hash removed. A row that is already past
  * verification is returned as is (a double submit is not an error).
  *
+ * SIGN-13: a free-plan signup whose email or phone already has a free shop (FreeShopGuard) is
+ * committed as `rejected` once the code matched, and answered 422 on `email`.
+ *
  * SIGN-12: after the commit, ProvisionVerifiedSignupJob creates the shop and the platform gets a
  * Telegram message per new self-signup (one summary per hour when more than
  * signup.self_signup_quiet_above_per_hour were verified in the last hour).
  */
 final class VerifySelfSignupAction
 {
+    public function __construct(private readonly FreeShopGuard $freeShops) {}
+
     public function execute(SelfSignupTokenDTO $dto): SignupRequest
     {
         $code = (string) $dto->code;
+        $refusedAsDuplicate = false;
 
-        $signup = DB::connection(TenantProvisionerService::centralConnection())->transaction(function () use ($dto, $code): ?SignupRequest {
+        $signup = DB::connection(TenantProvisionerService::centralConnection())->transaction(function () use ($dto, $code, &$refusedAsDuplicate): ?SignupRequest {
             $signup = SignupRequest::query()
                 ->where('signup_token_hash', SignupSecrets::hashToken($dto->token))
                 ->where('signup_flow', SignupFlow::SelfSignup->value)
@@ -71,6 +79,21 @@ final class VerifySelfSignupAction
                 return null;
             }
 
+            // SIGN-13: the email is proven now; re-check "one free shop" (a parallel signup may
+            // have won the race since the form was sent). Committed as rejected, then 422.
+            if ($this->wouldBeASecondFreeShop($signup)) {
+                $signup->forceFill([
+                    'status' => SignupRequestStatus::Rejected->value,
+                    'rejection_reason' => (string) __('self_signup.validation.free_shop_exists'),
+                    'email_verified_at' => now(),
+                    'verification_code_hash' => null,
+                    'verification_code_expires_at' => null,
+                ])->save();
+                $refusedAsDuplicate = true;
+
+                return null;
+            }
+
             $signup->forceFill([
                 'status' => SignupRequestStatus::Verified->value,
                 'email_verified_at' => now(),
@@ -86,11 +109,23 @@ final class VerifySelfSignupAction
             return $signup;
         });
 
+        if ($refusedAsDuplicate) {
+            throw ValidationException::withMessages(['email' => (string) __('self_signup.validation.free_shop_exists')]);
+        }
+
         if (! $signup instanceof SignupRequest) {
             throw ValidationException::withMessages(['code' => (string) __('self_signup.errors.code_invalid')]);
         }
 
         return $signup;
+    }
+
+    private function wouldBeASecondFreeShop(SignupRequest $signup): bool
+    {
+        $isFree = $signup->plan_code !== null
+            && Plan::query()->where('slug', $signup->plan_code)->where('is_free', true)->exists();
+
+        return $isFree && $this->freeShops->alreadyHasFreeShop((string) $signup->email, $signup->phone, (int) $signup->id);
     }
 
     private function notifyPlatform(SignupRequest $signup): void
