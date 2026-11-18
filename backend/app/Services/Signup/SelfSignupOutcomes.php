@@ -24,10 +24,11 @@ use Illuminate\Support\Facades\Mail;
  * ProvisionVerifiedSignupAction (registration refused), the TenantProvisioningFinished listener
  * (job outcome) and GetSelfSignupStatusAction (self-healing when the listener was missed).
  *
- * Each method: one central transaction, the row locked, idempotent:
+ * Each method: one central transaction, the row locked, idempotent; both stamp `terminal_at` (the
+ * browser token dies 1 hour later, SignupRequest::forLiveToken):
  *  - ready(): `provisioning` / `failed` -> `provisioned`; the password hash is dropped (the tenant
  *    has it); "your shop is ready" is queued ONCE (ready_mail_sent_at);
- *  - failed(): -> `failed` with a code; the "we're on it" mail is queued ONCE
+ *  - failed(): -> `failed` with a code, the password hash dropped; the "we're on it" mail is queued ONCE
  *    (failure_mail_sent_at) and the platform is alerted on Telegram. Mails and the alert leave
  *    after the commit.
  */
@@ -60,6 +61,7 @@ final class SelfSignupOutcomes
                 'provisioned_at' => $signup->provisioned_at ?? now(),
                 'failure_code' => null,
                 'password_hash' => null,
+                'terminal_at' => now(),
                 'ready_mail_sent_at' => $signup->ready_mail_sent_at ?? now(),
             ])->save();
 
@@ -102,6 +104,9 @@ final class SelfSignupOutcomes
                 'failed_at' => now(),
                 'failure_code' => $code,
                 'failure_mail_sent_at' => $signup->failure_mail_sent_at ?? now(),
+                // Security review: final state, the chosen password hash is not kept.
+                'password_hash' => null,
+                'terminal_at' => now(),
             ])->save();
 
             if ($sendMail && $signup->email !== null) {

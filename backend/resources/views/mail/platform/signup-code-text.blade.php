@@ -3,7 +3,7 @@
 
 {!! __('mail.signup_code.heading') !!}
 
-{!! __('mail.signup_code.intro', ['business' => $businessName, 'app' => $brand['name']]) !!}
+{!! __('mail.signup_code.intro', ['app' => $brand['name']]) !!}
 
 {!! $code !!}
 

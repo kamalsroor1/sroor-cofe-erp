@@ -73,6 +73,9 @@ final class ApproveSignupRequestAction
                 'tenant_id' => (string) $tenant->getTenantKey(),
                 'reviewed_by' => $operator->getKey(),
                 'reviewed_at' => now(),
+                // Security review: final state; a held self-signup's password hash is not kept.
+                'password_hash' => null,
+                'terminal_at' => now(),
             ])->save();
 
             $this->auditLogger->record(

@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace App\Actions\Signup;
 
 use App\DTOs\Signup\SelfSignupTokenDTO;
-use App\Enums\SignupFlow;
 use App\Enums\SignupRequestStatus;
 use App\Jobs\ProvisionVerifiedSignupJob;
 use App\Models\SignupRequest;
 use App\Models\Tenant;
 use App\Services\Signup\SelfSignupOutcomes;
-use App\Support\Signup\SignupSecrets;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -20,7 +18,8 @@ use Illuminate\Validation\ValidationException;
  * Self-healing, never trusting the client: a `provisioning` row whose tenant is already ready is
  * completed here (SelfSignupOutcomes::ready(), idempotent, the ready mail still goes once) and a
  * row stuck in `verified` for more than STUCK_AFTER_SECONDS gets its provisioning job queued again
- * (unique per signup). Unknown token: generic 422 on `token`.
+ * (unique per signup). Unknown token, or one whose row reached a final state more than
+ * signup.token_ttl_after_final_minutes ago (SignupRequest::forLiveToken): generic 422 on `token`.
  */
 final class GetSelfSignupStatusAction
 {
@@ -34,8 +33,7 @@ final class GetSelfSignupStatusAction
     public function execute(SelfSignupTokenDTO $dto): array
     {
         $signup = SignupRequest::query()
-            ->where('signup_token_hash', SignupSecrets::hashToken($dto->token))
-            ->where('signup_flow', SignupFlow::SelfSignup->value)
+            ->forLiveToken($dto->token)
             ->first();
 
         if (! $signup instanceof SignupRequest) {

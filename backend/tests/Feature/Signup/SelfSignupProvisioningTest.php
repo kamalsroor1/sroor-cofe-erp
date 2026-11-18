@@ -268,10 +268,10 @@ final class SelfSignupProvisioningTest extends TenantTestCase
         $free = Plan::query()->where('is_free', true)->firstOrFail();
 
         try {
-            app(TenantProvisionerService::class)->provision(CreateTenantDTO::fromArray([
-                'name' => 'x', 'slug' => 'plain-hash', 'email' => 'plain@owner.test', 'plan_id' => $free->id,
-                'password' => self::PASSWORD, 'password_is_hashed' => true,
-            ]));
+            app(TenantProvisionerService::class)->provision(CreateTenantDTO::forSelfSignup(
+                name: 'x', slug: 'plain-hash', email: 'plain@owner.test', phone: null, planId: (int) $free->id,
+                passwordHash: self::PASSWORD, trialDays: 0,
+            ));
             $this->fail('A plain password flagged as a hash must be refused.');
         } catch (InvalidArgumentException) {
             $this->assertFalse(Tenant::query()->whereKey('plain-hash')->exists());
@@ -302,7 +302,7 @@ final class SelfSignupProvisioningTest extends TenantTestCase
         }
 
         $this->assertSame(1, $this->telegramMessages((string) __('self_signup.notify.cap_reached', ['cap' => 1], 'ar')) + $this->telegramMessages((string) __('self_signup.notify.cap_reached', ['cap' => 1], 'en')));
-        $this->getJson(self::URL.'/status?token='.$held[0][1])->assertOk()->assertJsonPath('data.status', 'pending')->assertJsonPath('data.ready', false)->assertJsonPath('data.login_url', null);
+        $this->getJson(self::URL.'/status', ['X-Signup-Token' => $held[0][1]])->assertOk()->assertJsonPath('data.status', 'pending')->assertJsonPath('data.ready', false)->assertJsonPath('data.login_url', null);
 
         // The console releases a held signup: same provisioning, the owner's own password.
         [$slug, $heldToken, $signup] = $held[0];
@@ -417,7 +417,7 @@ final class SelfSignupProvisioningTest extends TenantTestCase
         $slug = $this->slug();
         [$token] = $this->start($slug);
 
-        $this->getJson(self::URL.'/status?token='.$token)
+        $this->getJson(self::URL.'/status', ['X-Signup-Token' => $token])
             ->assertOk()
             ->assertJsonPath('data.status', 'awaiting_verification')
             ->assertJsonPath('data.ready', false)
@@ -425,6 +425,8 @@ final class SelfSignupProvisioningTest extends TenantTestCase
             ->assertJsonMissingPath('data.tenant_id');
 
         $this->getJson(self::URL.'/status')->assertStatus(422)->assertJsonValidationErrors(['token']);
+        // Security review: the header only; a token in the query string (access logs) is ignored.
+        $this->getJson(self::URL.'/status?token='.$token)->assertStatus(422)->assertJsonValidationErrors(['token']);
         $this->getJson(self::URL.'/status', ['X-Signup-Token' => str_repeat('x', 64)])
             ->assertStatus(422)->assertJsonPath('errors.token.0', __('self_signup.errors.token_invalid'));
 
@@ -438,9 +440,9 @@ final class SelfSignupProvisioningTest extends TenantTestCase
         config(['rate_limits.self_signup.status_per_minute' => 2]);
         $token = str_repeat('y', 64);
 
-        $this->getJson(self::URL.'/status?token='.$token)->assertStatus(422);
-        $this->getJson(self::URL.'/status?token='.$token)->assertStatus(422);
-        $this->getJson(self::URL.'/status?token='.$token)->assertStatus(429)->assertHeader('Retry-After');
+        $this->getJson(self::URL.'/status', ['X-Signup-Token' => $token])->assertStatus(422);
+        $this->getJson(self::URL.'/status', ['X-Signup-Token' => $token])->assertStatus(422);
+        $this->getJson(self::URL.'/status', ['X-Signup-Token' => $token])->assertStatus(429)->assertHeader('Retry-After');
     }
 
     // ------------------------------------------------------------------ console

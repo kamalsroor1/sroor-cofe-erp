@@ -6,82 +6,124 @@ namespace App\Services\Signup;
 
 use App\Enums\SignupFlow;
 use App\Enums\SignupRequestStatus;
-use App\Models\Plan;
+use App\Enums\TenantSignupSource;
 use App\Models\SignupRequest;
 use App\Models\Tenant;
 use App\Services\Plans\FreePlanIds;
-use App\Support\Signup\EgyptianPhone;
+use App\Support\Signup\SignupIdentity;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * SIGN-13: one permanent free shop per verified email and per (normalised Egyptian) phone.
+ * SIGN-13 + security review: one self-signup shop per identity. Applies to EVERY self-signup,
+ * whatever plan it asked for (a paid self-signup trial ends on the free plan).
  *
+ * An identity is the canonical email (SignupIdentity: gmail dots, +tags, googlemail folded) and
+ * the digits-only phone, compared on the stored `canonical_email` / `phone_normalized` columns.
  * Taken when either matches:
- *  - a tenant on a free plan (FreePlanIds), whatever its status (an archived or suspended free
- *    shop still counts: abuse would otherwise be "suspend, sign up again");
- *  - another self-signup whose email was VERIFIED and that is on its way to a free shop
- *    (verified, held in the manual queue, provisioning, provisioned). Unverified signups never
- *    block anyone (they could be typed by a stranger).
+ *  - a tenant created by self-signup (any plan, any status) or on a free plan (FreePlanIds), unless
+ *    it was purged (its workspace no longer exists);
+ *  - optionally, another self-signup whose email was VERIFIED and that is on its way to a shop
+ *    (verified, held in the manual queue, provisioning). Unverified signups never block anyone.
  *
- * Paid-plan signups are never limited by this. Checked at signup and again at verification.
+ * Callers: VerifySelfSignupAction (once the code proved the email), ProvisionVerifiedSignupAction
+ * (re-check under the provisioning lock, tenants only) and ApplyTenantLifecycleAction (trial
+ * fallback to free). Never called at signup start: the answer there must not depend on it.
  */
 final class FreeShopGuard
 {
     /** @var list<string> */
-    private const COUNTED_STATUSES = [
+    private const IN_FLIGHT = [
         SignupRequestStatus::Verified->value,
         SignupRequestStatus::Pending->value,
         SignupRequestStatus::Provisioning->value,
-        SignupRequestStatus::Provisioned->value,
     ];
 
     public function __construct(private readonly FreePlanIds $freePlans) {}
 
-    public function alreadyHasFreeShop(string $email, string $phone, ?int $exceptSignupId = null): bool
-    {
-        $email = strtolower(trim($email));
-        $phones = EgyptianPhone::variants($phone);
+    public function alreadyHasShop(
+        ?string $email,
+        ?string $phone,
+        ?int $exceptSignupId = null,
+        ?string $exceptTenantId = null,
+        bool $countInFlightSignups = true,
+    ): bool {
+        return $this->match($email, $phone, $exceptSignupId, $exceptTenantId, $countInFlightSignups) instanceof FreeShopMatch;
+    }
 
-        if ($email === '' && $phones === []) {
-            return false;
+    public function match(
+        ?string $email,
+        ?string $phone,
+        ?int $exceptSignupId = null,
+        ?string $exceptTenantId = null,
+        bool $countInFlightSignups = true,
+    ): ?FreeShopMatch {
+        $canonicalEmail = SignupIdentity::canonicalEmail($email);
+        $normalizedPhone = SignupIdentity::normalizedPhone($phone);
+
+        if ($canonicalEmail === null && $normalizedPhone === null) {
+            return null;
         }
 
-        return $this->freeTenantMatches($email, $phones) || $this->freeSignupMatches($email, $phones, $exceptSignupId);
+        $tenant = $this->matchingTenant($canonicalEmail, $normalizedPhone, $exceptTenantId);
+        if ($tenant !== null) {
+            $ownedByEmail = $canonicalEmail !== null && $tenant['canonical_email'] === $canonicalEmail;
+
+            return new FreeShopMatch($ownedByEmail ? $tenant['slug'] : null);
+        }
+
+        if ($countInFlightSignups && $this->inFlightSignupMatches($canonicalEmail, $normalizedPhone, $exceptSignupId, $exceptTenantId)) {
+            return new FreeShopMatch(null);
+        }
+
+        return null;
     }
 
     /**
-     * @param  list<string>  $phones
+     * Plain rows (no model hydration: stancl's virtual `data` column is not needed here).
+     *
+     * @return array{slug: string, canonical_email: string|null}|null
      */
-    private function freeTenantMatches(string $email, array $phones): bool
+    private function matchingTenant(?string $canonicalEmail, ?string $normalizedPhone, ?string $exceptTenantId): ?array
     {
         $freeIds = $this->freePlans->all();
-        if ($freeIds === []) {
-            return false;
-        }
 
-        return Tenant::query()
-            ->whereIn('plan_id', $freeIds)
-            ->where(fn (Builder $query) => $this->matching($query, $email, $phones))
-            ->exists();
+        $tenants = Tenant::query()
+            ->select(['id', 'slug', 'canonical_email', 'phone_normalized'])
+            ->where(static function (Builder $query) use ($freeIds): void {
+                $query->where('signup_source', TenantSignupSource::SelfSignup->value);
+                if ($freeIds !== []) {
+                    $query->orWhereIn('plan_id', $freeIds);
+                }
+            })
+            ->whereNull('purge_started_at')
+            ->whereNull('purged_at')
+            ->when($exceptTenantId !== null, static fn (Builder $query) => $query->whereKeyNot($exceptTenantId))
+            ->where(fn (Builder $query) => $this->identity($query, $canonicalEmail, $normalizedPhone))
+            ->orderByDesc('created_at')
+            ->toBase()
+            ->get()
+            ->map(static fn (object $row): array => [
+                'slug' => (string) ($row->slug ?? ''),
+                'canonical_email' => isset($row->canonical_email) ? (string) $row->canonical_email : null,
+            ]);
+
+        // Prefer the shop owned by the email (its sign-in link may be mailed to that address).
+        $byEmail = $canonicalEmail === null ? null : $tenants->first(static fn (array $row): bool => $row['canonical_email'] === $canonicalEmail);
+
+        return $byEmail ?? $tenants->first();
     }
 
-    /**
-     * @param  list<string>  $phones
-     */
-    private function freeSignupMatches(string $email, array $phones, ?int $exceptSignupId): bool
+    private function inFlightSignupMatches(?string $canonicalEmail, ?string $normalizedPhone, ?int $exceptSignupId, ?string $exceptTenantId): bool
     {
-        $freeSlugs = Plan::query()->whereIn('id', $this->freePlans->all())->pluck('slug')->all();
-        if ($freeSlugs === []) {
-            return false;
-        }
-
         return SignupRequest::query()
             ->where('signup_flow', SignupFlow::SelfSignup->value)
             ->whereNotNull('email_verified_at')
-            ->whereIn('status', self::COUNTED_STATUSES)
-            ->whereIn('plan_code', $freeSlugs)
-            ->when($exceptSignupId !== null, fn (Builder $query) => $query->whereKeyNot($exceptSignupId))
-            ->where(fn (Builder $query) => $this->matching($query, $email, $phones))
+            ->whereIn('status', self::IN_FLIGHT)
+            ->when($exceptSignupId !== null, static fn (Builder $query) => $query->whereKeyNot($exceptSignupId))
+            ->when($exceptTenantId !== null, static fn (Builder $query) => $query->where(
+                static fn (Builder $own) => $own->whereNull('tenant_id')->orWhere('tenant_id', '!=', $exceptTenantId),
+            ))
+            ->where(fn (Builder $query) => $this->identity($query, $canonicalEmail, $normalizedPhone))
             ->exists();
     }
 
@@ -89,16 +131,15 @@ final class FreeShopGuard
      * @template TModel of \Illuminate\Database\Eloquent\Model
      *
      * @param  Builder<TModel>  $query
-     * @param  list<string>  $phones
      */
-    private function matching(Builder $query, string $email, array $phones): void
+    private function identity(Builder $query, ?string $canonicalEmail, ?string $normalizedPhone): void
     {
-        if ($email !== '') {
-            $query->whereRaw('LOWER(email) = ?', [$email]);
+        if ($canonicalEmail !== null) {
+            $query->where('canonical_email', $canonicalEmail);
         }
 
-        if ($phones !== []) {
-            $query->orWhereIn('phone', $phones);
+        if ($normalizedPhone !== null) {
+            $query->orWhere('phone_normalized', $normalizedPhone);
         }
     }
 }

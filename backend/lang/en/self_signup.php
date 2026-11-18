@@ -19,11 +19,14 @@ return [
         'code_throttled' => 'Please wait a little before requesting a new code.',
         'not_provisionable' => 'This request is not a verified self-signup waiting in the review queue.',
         'no_tenant' => 'No shop was created from this request.',
+        'shop_exists_contact_support' => 'We could not create a new shop with these details. Check your email for the next steps, or contact support.',
+        'codes_paused' => 'We cannot send verification codes right now. Please try again later or contact support.',
     ],
 
     'console' => [
         'provisioning_started' => 'The shop is being prepared; its owner will get an email when it is ready.',
         'tenant_suspended' => 'The shop was suspended.',
+        'duplicate_shop_rejected' => 'Refused automatically: this email or phone number already has a shop.',
     ],
 
     'notify' => [
@@ -31,15 +34,18 @@ return [
         'backlog' => ':count self-signups were verified in the last hour. Open the signup log in the console.',
         'cap_reached' => 'The daily automatic shop creation limit (:cap shops) was reached. New verified signups are waiting for manual approval in the console.',
         'provisioning_failed' => "A self-signup shop could not be prepared (request #:id)\nShop: :business\nPhone: :phone\nReason: :code",
+        'codes_ceiling' => 'The daily limit of signup verification emails (:cap) was reached. New signups cannot get a code until midnight (Cairo).',
+        'network_cap' => 'A network reached its daily limit of automatic shop creations (:cap). Its next verified signups wait for manual approval in the console.',
     ],
 
     'validation' => [
         'email_not_allowed' => 'This email address cannot be used to sign up. Please use your permanent email.',
-        'free_shop_exists' => 'This email or phone number already has a shop on the free plan. Choose a paid plan or contact support.',
+        'no_links' => 'Names cannot contain links, email addresses or website names.',
     ],
 
     'prune' => [
         'description' => 'Delete self-signups that were not verified within the given hours.',
         'done' => 'Deleted :count signups not verified for more than :hours hours.',
+        'scrubbed' => 'Revoked :tokens expired signup tokens and cleared the secrets and IP address of :count old finished signups.',
     ],
 ];

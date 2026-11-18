@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Enums\CentralPermission;
+use App\Http\Requests\Signup\StoreSignupRequestRequest;
 use App\Rules\TenantDatabaseName;
 use App\Support\PasswordPolicy;
 use App\Support\PlatformSuperAdmin;
@@ -15,6 +16,18 @@ class StoreTenantRequest extends FormRequest
     public function authorize(): bool
     {
         return PlatformSuperAdmin::can($this->user(), CentralPermission::TenantsManage);
+    }
+
+    /**
+     * Security review (SIGN-13): the owner phone is stored in one spelling (Arabic-Indic digits,
+     * separators and the +20 / 0020 prefixes folded), like the signup forms; the comparable
+     * `phone_normalized` column is derived from it on save (Tenant::booted()).
+     */
+    protected function prepareForValidation(): void
+    {
+        if (is_string($this->input('phone'))) {
+            $this->merge(['phone' => StoreSignupRequestRequest::normalizePhone($this->input('phone'))]);
+        }
     }
 
     public function rules(): array

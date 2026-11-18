@@ -8,6 +8,7 @@ use App\Enums\SignupBusinessType;
 use App\Models\Plan;
 use App\Rules\AllowedSignupEmailDomain;
 use App\Rules\AvailableSubdomain;
+use App\Rules\NoLinksInName;
 use App\Services\Signup\SubdomainSuggester;
 use App\Support\PasswordPolicy;
 use Closure;
@@ -22,6 +23,7 @@ use Illuminate\Validation\Rule;
  * (PasswordPolicy) and must be confirmed. `subdomain` is optional (suggested from the business
  * name when empty); when given it must be free right now. `website` is the honeypot.
  * SIGN-13: disposable email domains (config signup.blocked_email_domains) are refused.
+ * Security review: the business / owner names may not carry a link (NoLinksInName).
  */
 final class StartSelfSignupRequest extends FormRequest
 {
@@ -65,8 +67,8 @@ final class StartSelfSignupRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'business_name' => ['required', 'string', 'min:2', 'max:150'],
-            'owner_name' => ['required', 'string', 'min:2', 'max:120'],
+            'business_name' => ['required', 'string', 'min:2', 'max:150', new NoLinksInName],
+            'owner_name' => ['required', 'string', 'min:2', 'max:120', new NoLinksInName],
             'email' => ['required', 'string', 'email:rfc', 'max:255', new AllowedSignupEmailDomain],
             'phone' => ['required', 'string', 'regex:'.StoreSignupRequestRequest::PHONE_PATTERN],
             'password' => ['required', 'string', 'max:255', PasswordPolicy::rule(), 'confirmed'],

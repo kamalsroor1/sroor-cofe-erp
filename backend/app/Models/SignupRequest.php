@@ -8,6 +8,9 @@ use App\Enums\SignupBusinessType;
 use App\Enums\SignupFlow;
 use App\Enums\SignupRequestStatus;
 use App\Models\Concerns\UsesCentralConnection;
+use App\Support\Signup\SignupIdentity;
+use App\Support\Signup\SignupNetwork;
+use App\Support\Signup\SignupSecrets;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -49,6 +52,10 @@ use Illuminate\Support\Carbon;
  * @property string|null $failure_code
  * @property Carbon|null $ready_mail_sent_at
  * @property Carbon|null $failure_mail_sent_at
+ * @property string|null $canonical_email security review: SignupIdentity::canonicalEmail(email), set on save
+ * @property string|null $phone_normalized security review: SignupIdentity::normalizedPhone(phone), set on save
+ * @property string|null $ip_network security review: SignupNetwork::of(ip), set on save
+ * @property Carbon|null $terminal_at security review: when the row reached a final state
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -115,7 +122,44 @@ class SignupRequest extends Model
             'failed_at' => 'datetime',
             'ready_mail_sent_at' => 'datetime',
             'failure_mail_sent_at' => 'datetime',
+            'terminal_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Security review: the comparable identity (one-free-shop guard) and the client network
+     * (per-network cap) are derived from the raw values on every save, whatever the writer.
+     */
+    protected static function booted(): void
+    {
+        static::saving(static function (SignupRequest $signup): void {
+            if ($signup->isDirty('email') || ($signup->canonical_email === null && $signup->getAttribute('email') !== null)) {
+                $signup->canonical_email = SignupIdentity::canonicalEmail($signup->email);
+            }
+            if ($signup->isDirty('phone') || ($signup->phone_normalized === null && $signup->getAttribute('phone') !== null)) {
+                $signup->phone_normalized = SignupIdentity::normalizedPhone($signup->phone);
+            }
+            if ($signup->isDirty('ip')) {
+                $signup->ip_network = SignupNetwork::of($signup->ip);
+            }
+        });
+    }
+
+    /**
+     * Security review: the self-signup a browser token belongs to, while that token is alive
+     * (until signup.token_ttl_after_final_minutes after the row reached a final state).
+     *
+     * @param  Builder<SignupRequest>  $query
+     * @return Builder<SignupRequest>
+     */
+    public function scopeForLiveToken(Builder $query, string $token): Builder
+    {
+        $deadline = now()->subMinutes(max(1, (int) config('signup.token_ttl_after_final_minutes', 60)));
+
+        return $query
+            ->where('signup_token_hash', SignupSecrets::hashToken($token))
+            ->where('signup_flow', SignupFlow::SelfSignup->value)
+            ->where(static fn (Builder $live) => $live->whereNull('terminal_at')->orWhere('terminal_at', '>', $deadline));
     }
 
     /**

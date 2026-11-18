@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Billing;
 
+use App\Actions\Tenants\ApplyTenantLifecycleAction;
 use App\DTOs\CreateTenantDTO;
 use App\Enums\Billing\SubscriptionStatus;
 use App\Enums\CentralAuditEvent;
@@ -367,6 +368,50 @@ final class PermanentFreePlanTest extends BillingTestCase
         $this->travel(400)->days();
         $this->artisan('tenants:apply-lifecycle')->assertSuccessful();
         $this->assertSame(TenantStatus::Active->value, $tenant->fresh()?->status);
+    }
+
+    public function test_a_trial_whose_owner_has_another_free_shop_goes_read_only_instead_of_free(): void
+    {
+        // Security review: the owner already runs a free shop under a gmail alias of the same mailbox.
+        $this->tenantOn($this->free, ['email' => 'trial.owner@gmail.com', 'status' => 'active', 'subscription_ends_at' => null]);
+        $trialEnd = CarbonImmutable::now()->addDays(2);
+        $tenant = $this->tenantOn($this->basic, [
+            'email' => 'trialowner+second@googlemail.com',
+            'status' => 'trial',
+            'trial_ends_at' => $trialEnd,
+            'subscription_ends_at' => null,
+            'status_changed_at' => now(),
+            'signup_source' => 'self_signup',
+        ]);
+        // Another self-signup trial with a phone shared with a self-signup shop is refused too.
+        $this->tenantOn($this->basic, ['phone' => '+20 100 000 0777', 'signup_source' => 'self_signup', 'status' => 'active']);
+        $byPhone = $this->tenantOn($this->basic, [
+            'phone' => '01000000777',
+            'status' => 'trial',
+            'trial_ends_at' => $trialEnd,
+            'subscription_ends_at' => null,
+            'status_changed_at' => now(),
+            'signup_source' => 'self_signup',
+        ]);
+        // A self-signup trial with its own identity still falls back to free.
+        $clean = $this->selfSignupTrial($trialEnd);
+
+        $this->travelTo($trialEnd->addDays(10));
+        $this->artisan('tenants:apply-lifecycle')->assertSuccessful();
+
+        foreach ([$tenant, $byPhone] as $refused) {
+            $fresh = $refused->fresh();
+            $this->assertSame(TenantStatus::ReadOnly->value, $fresh?->status);
+            $this->assertSame((int) $this->basic->id, (int) $fresh?->plan_id);
+
+            $event = TenantLifecycleEvent::query()->where('tenant_id', $refused->id)->sole();
+            $this->assertSame(['trial', 'read_only'], [$event->from_status?->value, $event->to_status->value]);
+            $this->assertSame(ApplyTenantLifecycleAction::FALLBACK_REFUSED_FREE_SHOP_EXISTS, $event->properties['fallback_refused'] ?? null);
+            $this->assertSame('lifecycle_sweep', $event->properties['source'] ?? null);
+        }
+
+        $this->assertSame(TenantStatus::Active->value, $clean->fresh()?->status);
+        $this->assertSame((int) $this->free->id, (int) $clean->fresh()?->plan_id);
     }
 
     public function test_a_console_trial_end_keeps_the_read_only_path_even_with_a_fallback_plan(): void

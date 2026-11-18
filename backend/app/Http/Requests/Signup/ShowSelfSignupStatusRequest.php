@@ -8,8 +8,9 @@ use App\Support\Signup\SignupSecrets;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * SIGN-12: GET /api/v1/signup/status (public, throttled `self-signup-status`). The token comes
- * from the `X-Signup-Token` header (preferred: kept out of access logs) or the `token` query.
+ * SIGN-12: GET /api/v1/signup/status (public, throttled `self-signup-status`). Security review:
+ * the token comes ONLY from the `X-Signup-Token` header (never the query string, which ends up
+ * in access logs, browser history and Referer headers; Telescope hides the header).
  */
 final class ShowSelfSignupStatusRequest extends FormRequest
 {
@@ -25,7 +26,7 @@ final class ShowSelfSignupStatusRequest extends FormRequest
         $header = $this->header(self::HEADER);
 
         $this->merge([
-            'token' => is_string($header) && $header !== '' ? $header : $this->query('token'),
+            'token' => is_string($header) && $header !== '' ? $header : null,
         ]);
     }
 

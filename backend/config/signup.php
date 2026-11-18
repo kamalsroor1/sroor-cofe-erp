@@ -65,8 +65,39 @@ return [
         'code_ttl_minutes' => (int) (env('SIGNUP_CODE_TTL_MINUTES') ?: 15),
         'max_attempts' => (int) (env('SIGNUP_CODE_MAX_ATTEMPTS') ?: 5),
         'resend_after_seconds' => (int) (env('SIGNUP_CODE_RESEND_SECONDS') ?: 60),
-        'codes_per_email_per_hour' => (int) (env('SIGNUP_CODES_PER_EMAIL_HOURLY') ?: 5),
+        // Security review: code budgets keyed on the CANONICAL email (gmail dots / +tags fold
+        // into one mailbox). Per email + client network (the normal case), plus looser per-email
+        // ceilings so rotating networks cannot bomb one inbox.
+        'codes_per_email_network_per_hour' => (int) (env('SIGNUP_CODES_PER_EMAIL_NETWORK_HOURLY') ?: 5),
+        'codes_per_email_per_hour' => (int) (env('SIGNUP_CODES_PER_EMAIL_HOURLY') ?: 10),
+        'codes_per_email_per_day' => (int) (env('SIGNUP_CODES_PER_EMAIL_DAILY') ?: 15),
     ],
+
+    /*
+    | Security review: platform-wide ceiling of verification-code emails per Cairo day (protects
+    | the sender reputation). When reached, start / resend answer 503 with Retry-After until
+    | Cairo midnight and the platform is alerted on Telegram once that day.
+    */
+    'max_codes_per_day' => (int) (env('SIGNUP_MAX_CODES_PER_DAY') ?: 1000),
+
+    /*
+    | Security review: at most `per_day` AUTOMATIC provisionings per client network per Cairo day
+    | (IPv4 /ipv4_prefix, IPv6 /ipv6_prefix). Over it, a verified signup waits in the manual
+    | `pending` queue (like the global daily cap), it is never refused.
+    */
+    'network_cap' => [
+        'per_day' => (int) (env('SIGNUP_NETWORK_CAP_PER_DAY') ?: 3),
+        'ipv4_prefix' => (int) (env('SIGNUP_NETWORK_IPV4_PREFIX') ?: 24),
+        'ipv6_prefix' => (int) (env('SIGNUP_NETWORK_IPV6_PREFIX') ?: 48),
+    ],
+
+    /*
+    | Security review: the browser token of a self-signup stops working this many minutes after
+    | the row reached a final state (provisioned / approved / rejected / failed); secrets and the
+    | client IP of final rows are scrubbed by `signup:prune-unverified` after `scrub_after_days`.
+    */
+    'token_ttl_after_final_minutes' => (int) (env('SIGNUP_TOKEN_TTL_AFTER_FINAL_MINUTES') ?: 60),
+    'scrub_after_days' => (int) (env('SIGNUP_SCRUB_AFTER_DAYS') ?: 30),
 
     /*
     | From this many pending requests on, the per-request Telegram message is replaced by at

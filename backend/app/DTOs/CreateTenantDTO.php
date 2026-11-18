@@ -44,8 +44,38 @@ class CreateTenantDTO
             signupSource: ($data['signup_source'] ?? null) instanceof TenantSignupSource
                 ? $data['signup_source']
                 : (TenantSignupSource::tryFrom((string) ($data['signup_source'] ?? '')) ?? TenantSignupSource::Console),
-            passwordIsHashed: ($data['password_is_hashed'] ?? false) === true,
+            // Security review: `password` from an array is ALWAYS a plain password (hashed by the
+            // provisioner); a pre-hashed one only enters through forSelfSignup().
+            passwordIsHashed: false,
             ownerMustChangePassword: ($data['owner_must_change_password'] ?? true) !== false,
+        );
+    }
+
+    /**
+     * SIGN-12: the tenant of a verified self-signup. `$passwordHash` is the owner's chosen password,
+     * hashed at signup (the provisioner verifies it is a real hash and never rehashes it); the owner
+     * is not asked to change it.
+     */
+    public static function forSelfSignup(
+        string $name,
+        string $slug,
+        string $email,
+        ?string $phone,
+        int $planId,
+        #[\SensitiveParameter] string $passwordHash,
+        int $trialDays,
+    ): self {
+        return new self(
+            name: $name,
+            slug: $slug,
+            email: $email,
+            phone: $phone,
+            planId: $planId,
+            password: $passwordHash,
+            trialDays: $trialDays,
+            signupSource: TenantSignupSource::SelfSignup,
+            passwordIsHashed: true,
+            ownerMustChangePassword: false,
         );
     }
 }

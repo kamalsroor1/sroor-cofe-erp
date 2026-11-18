@@ -80,6 +80,7 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
             'x-csrf-token',
             'x-xsrf-token',
             'x-api-token',
+            'x-signup-token',
         ]);
     }
 

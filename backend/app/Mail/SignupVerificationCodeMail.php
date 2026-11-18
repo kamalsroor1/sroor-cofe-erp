@@ -12,12 +12,15 @@ use SensitiveParameter;
  *
  * The code is the only secret carried; the queued payload is encrypted (ShouldBeEncrypted, honoured
  * by SendQueuedMailable), so it never sits in plain text in the jobs table.
+ *
+ * Security review: it goes to an address nobody has proven yet, so it carries NO user input (no
+ * business or owner name, which could be used to phish through the platform's own sender): the
+ * code, generic text and the platform branding only.
  */
 final class SignupVerificationCodeMail extends PlatformMailable implements ShouldBeEncrypted
 {
     public function __construct(
         #[SensitiveParameter] public readonly string $code,
-        public readonly string $businessName,
         public readonly int $validMinutes,
         ?string $locale = null,
     ) {
@@ -48,7 +51,6 @@ final class SignupVerificationCodeMail extends PlatformMailable implements Shoul
     {
         return [
             'code' => $this->code,
-            'businessName' => $this->businessName,
             'validMinutes' => $this->validMinutes,
         ];
     }

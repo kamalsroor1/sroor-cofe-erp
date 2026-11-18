@@ -150,12 +150,12 @@ final class SelfSignupApiTest extends TenantTestCase
 
     public function test_the_code_mail_renders_in_both_languages(): void
     {
-        $ar = (new SignupVerificationCodeMail('123456', 'محمصة', 15, 'ar'))->render();
+        $ar = (new SignupVerificationCodeMail('123456', 15, 'ar'))->render();
         $this->assertStringContainsString('123456', $ar);
         $this->assertStringContainsString('dir="rtl"', $ar);
         $this->assertStringContainsString(__('mail.signup_code.heading', [], 'ar'), $ar);
 
-        $en = new SignupVerificationCodeMail('654321', 'Coffee', 15, 'en');
+        $en = new SignupVerificationCodeMail('654321', 15, 'en');
         $this->assertStringContainsString('654321', $en->render());
         $this->assertStringContainsString('dir="ltr"', $en->render());
         $en->assertHasSubject(__('mail.signup_code.subject', ['code' => '654321', 'app' => app(PlatformBranding::class)->get()->name], 'en'));

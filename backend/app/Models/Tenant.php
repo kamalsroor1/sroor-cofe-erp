@@ -9,6 +9,7 @@ use App\Enums\TenantSignupSource;
 use App\Enums\TenantStatus;
 use App\Services\Plans\FreePlanIds;
 use App\Services\Signup\TrialFallbackPlan;
+use App\Support\Signup\SignupIdentity;
 use App\Support\Tenancy\TenantLifecyclePolicy;
 use App\Support\Tenancy\TenantLifecycleSnapshot;
 use App\Support\Tenancy\TenantSuspensionReason;
@@ -67,6 +68,8 @@ use Throwable;
  * @property Carbon|null $purged_at OPS-9: purge finished; the row is a tombstone
  * @property string|null $purged_by `central_user:<id>` or `cli:<os user>`
  * @property TenantSignupSource|null $signup_source PLAN-10: self_signup | console (column default console)
+ * @property string|null $canonical_email security review: SignupIdentity::canonicalEmail(email), set on save
+ * @property string|null $phone_normalized security review: SignupIdentity::normalizedPhone(phone), set on save
  * @property array|null $enabled_features
  * @property array|null $settings
  * @property Carbon|null $created_at
@@ -109,6 +112,22 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'signup_source' => TenantSignupSource::class,
     ];
 
+    /**
+     * Security review: the comparable identity of the owner (one-free-shop guard) is derived from
+     * the raw email / phone on every save, whatever the writer (console, self-signup, edits).
+     */
+    protected static function booted(): void
+    {
+        static::saving(static function (Tenant $tenant): void {
+            if ($tenant->isDirty('email') || ($tenant->canonical_email === null && $tenant->getAttribute('email') !== null)) {
+                $tenant->canonical_email = SignupIdentity::canonicalEmail($tenant->email);
+            }
+            if ($tenant->isDirty('phone') || ($tenant->phone_normalized === null && $tenant->phone !== null)) {
+                $tenant->phone_normalized = SignupIdentity::normalizedPhone($tenant->phone);
+            }
+        });
+    }
+
     public static function getCustomColumns(): array
     {
         return [
@@ -146,6 +165,9 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'purged_by',
             // PLAN-10: how the tenant was created.
             'signup_source',
+            // Security review: comparable identity for the one-free-shop guard (set on save).
+            'canonical_email',
+            'phone_normalized',
             // Every other real column of `tenants`: anything missing here is copied into `data`
             // on save and the copy overrides the column on hydration (stale updated_at, and an
             // array-cast `settings` re-encoded into ever-growing nested JSON on each save).

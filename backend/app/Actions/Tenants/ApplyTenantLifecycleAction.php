@@ -12,6 +12,7 @@ use App\Models\Plan;
 use App\Models\PlanChangeRequest;
 use App\Models\Tenant;
 use App\Models\TenantLifecycleEvent;
+use App\Services\Signup\FreeShopGuard;
 use App\Services\Signup\TrialFallbackPlan;
 use App\Support\Tenancy\LifecycleSweepResult;
 use App\Support\Tenancy\LifecycleTransitionStep;
@@ -52,6 +53,9 @@ use Throwable;
  *   Both go through MoveTenantToFreePlanAction (lifecycle event, audit, entitlements flush).
  *   When the fallback plan is no longer an active free plan the trial takes the normal
  *   read_only move instead (logged), so a tenant is never left without a valid plan.
+ *   Security review: neither when the tenant's owner email (canonical) or phone already belongs to
+ *   ANOTHER free / self-signup shop (FreeShopGuard): the trial takes the normal read_only move and
+ *   the lifecycle event records `fallback_refused: free_shop_exists`.
  *
  * Access enforcement does not depend on this sweep (EnsureTenantActive reads the derived
  * status); the sweep makes the stored status, the audit trail and the console list match.
@@ -63,7 +67,11 @@ final class ApplyTenantLifecycleAction
         private readonly TransitionTenantStatusAction $transition,
         private readonly MoveTenantToFreePlanAction $moveToFreePlan,
         private readonly TrialFallbackPlan $trialFallback,
+        private readonly FreeShopGuard $freeShops,
     ) {}
+
+    /** Lifecycle-event context of a trial that was refused the free fallback (security review). */
+    public const FALLBACK_REFUSED_FREE_SHOP_EXISTS = 'free_shop_exists';
 
     /** The fallback plan of this run (resolved once): false = not resolved yet. */
     private Plan|false|null $fallbackPlan = false;
@@ -166,11 +174,15 @@ final class ApplyTenantLifecycleAction
                 return;
             }
 
+            $context = ['source' => 'lifecycle_sweep', 'due_at' => $step->at->toIso8601String()];
+
             // PLAN-10: the self-signup trial ended unpaid → the platform's free plan, active.
             if ($step->from === TenantStatus::Trial && $step->to === TenantStatus::Active) {
                 $fallback = $this->fallbackPlan();
+                $ownerHasAnotherShop = $fallback instanceof Plan
+                    && $this->freeShops->alreadyHasShop($tenant->email, $tenant->phone, exceptTenantId: $id);
 
-                if ($fallback instanceof Plan) {
+                if ($fallback instanceof Plan && ! $ownerHasAnotherShop) {
                     $this->apply($id, $step->from, $step->to, $step->at, $dryRun, $applied, $failed, function () use ($id, $fallback): void {
                         $this->moveToFreePlan->execute($id, $fallback, TenantStatus::Trial, MoveTenantToFreePlanAction::SOURCE_TRIAL_FALLBACK);
                     });
@@ -178,18 +190,23 @@ final class ApplyTenantLifecycleAction
                     return;
                 }
 
-                Log::warning('Tenant lifecycle sweep: trial fallback plan is not an active free plan, the trial goes read-only', ['tenant_id' => $id]);
+                if ($ownerHasAnotherShop) {
+                    Log::warning('Tenant lifecycle sweep: the owner already has another free / self-signup shop, the trial goes read-only', ['tenant_id' => $id]);
+                    $context['fallback_refused'] = self::FALLBACK_REFUSED_FREE_SHOP_EXISTS;
+                } else {
+                    Log::warning('Tenant lifecycle sweep: trial fallback plan is not an active free plan, the trial goes read-only', ['tenant_id' => $id]);
+                }
                 $step = new LifecycleTransitionStep($step->from, TenantStatus::ReadOnly, $step->at);
             }
 
-            $ok = $this->apply($id, $step->from, $step->to, $step->at, $dryRun, $applied, $failed, function () use ($id, $step): void {
+            $ok = $this->apply($id, $step->from, $step->to, $step->at, $dryRun, $applied, $failed, function () use ($id, $step, $context): void {
                 $this->transition->execute(TenantStatusTransition::to(
                     $id,
                     $step->to,
                     TenantLifecycleActor::System,
                     expectFrom: $step->from,
                     note: null,
-                    context: ['source' => 'lifecycle_sweep', 'due_at' => $step->at->toIso8601String()],
+                    context: $context,
                 ));
             });
 
