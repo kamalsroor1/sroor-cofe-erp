@@ -389,6 +389,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('self-signup-resend', fn (Request $request): Limit => Limit::perHour($this->limit('rate_limits.self_signup.resend_per_hour', 20))
             ->by('self-signup-resend|'.RateLimitKey::clientNetwork((string) $request->ip())));
 
+        // SIGN-12: status polling of the "preparing your shop" screen, per client network.
+        RateLimiter::for('self-signup-status', fn (Request $request): Limit => Limit::perMinute($this->limit('rate_limits.self_signup.status_per_minute', 60))
+            ->by('self-signup-status|'.RateLimitKey::clientNetwork((string) $request->ip())));
+
         // Testing-only quick login (AUTH-1a / IDEN-4.1): per tenant + IP.
         RateLimiter::for('quick-login', fn (Request $request): Limit => Limit::perMinute($this->limit('auth.quick_login.per_minute', 5))
             ->by('quick-login|'.RateLimitKey::scope().'|'.$request->ip()));

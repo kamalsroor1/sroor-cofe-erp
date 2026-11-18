@@ -6,6 +6,8 @@ namespace Tests\Feature\Signup;
 
 use App\Enums\SignupFlow;
 use App\Enums\SignupRequestStatus;
+use App\Jobs\NotifyPlatformOfSignupRequestJob;
+use App\Jobs\ProvisionVerifiedSignupJob;
 use App\Mail\SignupVerificationCodeMail;
 use App\Models\SignupRequest;
 use App\Models\Tenant;
@@ -17,6 +19,7 @@ use Illuminate\Contracts\Queue\ShouldBeEncrypted;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Testing\TestResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TenantTestCase;
@@ -39,6 +42,8 @@ final class SelfSignupApiTest extends TenantTestCase
         $this->endTenancy();
         $this->seed(PlansAndFeaturesSeeder::class);
         Mail::fake();
+        // SIGN-12 (provisioning after verification) is covered by SelfSignupProvisioningTest.
+        Queue::fake([ProvisionVerifiedSignupJob::class, NotifyPlatformOfSignupRequestJob::class]);
     }
 
     /**

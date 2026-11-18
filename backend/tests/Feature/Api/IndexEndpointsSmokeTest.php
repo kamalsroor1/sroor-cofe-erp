@@ -127,6 +127,7 @@ final class IndexEndpointsSmokeTest extends TenantTestCase
         'pos/last-price' => 'lookup, needs item and customer parameters',
         'pos/lookup' => 'lookup, needs a barcode parameter',
         'public/plans' => 'public marketing endpoint',
+        'signup/status' => 'public self-signup progress, needs a signup token (SelfSignupProvisioningTest)',
         'super-admin/auth/me' => 'operator profile, no list query',
         'super-admin/auth/two-factor/recovery-codes' => 'needs an enrolled second factor',
         'system/translations' => 'static translation bundle, no query',

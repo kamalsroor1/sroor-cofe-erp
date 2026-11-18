@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\Central\PlanController;
 use App\Http\Controllers\Api\Central\PlatformSettingsController;
 use App\Http\Controllers\Api\Central\PlatformUnitsController;
 use App\Http\Controllers\Api\Central\SignupRequestController;
+use App\Http\Controllers\Api\Central\SignupRequestProvisioningController;
 use App\Http\Controllers\Api\Central\TenantArchiveController;
 use App\Http\Controllers\Api\Central\TenantBillingInvoiceController;
 use App\Http\Controllers\Api\Central\TenantOwnerPasswordController;
@@ -215,6 +216,13 @@ Route::prefix('v1/super-admin')
         Route::post('/signup-requests/{id}/reject', [SignupRequestController::class, 'reject'])
             ->whereNumber('id')
             ->middleware([$can(CentralPermission::TenantsManage), 'throttle:20,1'])->name('signup_requests.reject');
+        // SIGN-12: release a self-signup held by the daily cap; suspend the shop a signup created.
+        Route::post('/signup-requests/{id}/provision', [SignupRequestProvisioningController::class, 'provision'])
+            ->whereNumber('id')
+            ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class, 'throttle:20,1'])->name('signup_requests.provision');
+        Route::post('/signup-requests/{id}/suspend-tenant', [SignupRequestProvisioningController::class, 'suspendTenant'])
+            ->whereNumber('id')
+            ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class, 'throttle:20,1'])->name('signup_requests.suspend_tenant');
 
         // Plans
         Route::get('/plans', [PlanController::class, 'index'])

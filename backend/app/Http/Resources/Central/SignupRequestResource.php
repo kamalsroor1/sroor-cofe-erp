@@ -13,7 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * PRD-05: a signup request as the platform console sees it. Never user_agent.
+ * PRD-05: a signup request as the platform console sees it. Never user_agent, never the
+ * self-signup secrets (password / token / code hashes, SIGN-11).
  * SELL-06: `approval_preview` (see SignupTrialTerms::preview()) feeds the approve dialog.
  *
  * @mixin SignupRequest
@@ -45,6 +46,13 @@ final class SignupRequestResource extends JsonResource
             'terms_accepted_at' => $this->terms_accepted_at?->toIso8601String(),
             'terms_version' => $this->terms_version,
             'created_at' => $this->created_at?->toIso8601String(),
+            // SIGN-12: the signup log (self-signup lifecycle). Never a hash or the token.
+            'signup_flow' => $this->signup_flow->value,
+            'email_verified_at' => $this->email_verified_at?->toIso8601String(),
+            'provisioning_started_at' => $this->provisioning_started_at?->toIso8601String(),
+            'provisioned_at' => $this->provisioned_at?->toIso8601String(),
+            'failed_at' => $this->failed_at?->toIso8601String(),
+            'failure_code' => $this->failure_code,
             // SELL-06: what approving it now would create (trial on the requested plan until a
             // date); pending requests only, null when the plan cannot be resolved.
             'approval_preview' => $this->status === SignupRequestStatus::Pending ? $this->approvalPreview() : null,

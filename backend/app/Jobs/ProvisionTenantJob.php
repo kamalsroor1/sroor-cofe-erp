@@ -12,6 +12,7 @@ use App\Services\Tenancy\ProvisionerMySQLDatabaseManager;
 use App\Services\TenantProvisionerService;
 use App\Support\Tenancy\ProvisioningErrorCode;
 use App\Support\Tenancy\ProvisioningFailure;
+use App\Support\Tenancy\TenantProvisioningFinished;
 use Illuminate\Bus\Queueable;
 use Illuminate\Bus\UniqueLock;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
@@ -49,12 +50,12 @@ use Throwable;
  *     (tenancy.provisioning.per_tenant_db_user), ours only while it is still the tenant's
  *     current username (a username switched to a shared account is never dropped);
  *  3. tenants:migrate; 4. seed in one tenant transaction (TenantProvisionerService);
- *  5. ready + audit `tenant_provisioning_succeeded`.
+ *  5. ready + audit `tenant_provisioning_succeeded`, then TenantProvisioningFinished (SIGN-12).
  *  Always: tenancy ended and the tenant/provisioner connections purged.
  *
  * failed() (final attempt, timeout or permanent error): status `failed` + error code,
  * drops ONLY what this job created and the tenant still points at (database, per-tenant
- * user), audit `tenant_provisioning_failed`, and force-releases the WithoutOverlapping lock
+ * user), audit `tenant_provisioning_failed`, TenantProvisioningFinished(false) (SIGN-12), and force-releases the WithoutOverlapping lock
  * (a worker killed on timeout never runs the middleware's `finally`, and the lock would
  * silently drop the retried job until it expires). The central row stays (CTO Q1) for a
  * super-admin retry.
@@ -220,6 +221,9 @@ final class ProvisionTenantJob implements ShouldBeEncrypted, ShouldBeUnique, Sho
             ],
             subject: $tenant,
         );
+
+        // SIGN-12: e.g. the self-signup owner gets a "we're on it" email, the platform an alert.
+        event(new TenantProvisioningFinished($this->tenantId, succeeded: false));
     }
 
     /** Lock the row and move it to `running`; null when there is nothing to do. */
@@ -369,10 +373,10 @@ final class ProvisionTenantJob implements ShouldBeEncrypted, ShouldBeUnique, Sho
 
     private function markReady(CentralAuditLogger $audit): void
     {
-        DB::connection(TenantProvisionerService::centralConnection())->transaction(function () use ($audit): void {
+        $marked = DB::connection(TenantProvisionerService::centralConnection())->transaction(function () use ($audit): bool {
             $tenant = $this->lockedTenant();
             if ($tenant === null) {
-                return;
+                return false;
             }
 
             $tenant->forceFill([
@@ -393,7 +397,14 @@ final class ProvisionTenantJob implements ShouldBeEncrypted, ShouldBeUnique, Sho
                 ],
                 subject: $tenant,
             );
+
+            return true;
         });
+
+        if ($marked) {
+            // SIGN-12: e.g. the self-signup "your account is ready" email.
+            event(new TenantProvisioningFinished($this->tenantId, succeeded: true));
+        }
     }
 
     /** Keep the last error code of a failed (retried) attempt visible to operators. */

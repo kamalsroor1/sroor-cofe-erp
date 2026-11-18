@@ -47,6 +47,27 @@ return [
         'not_you' => 'If you did not sign up, ignore this message and nobody can use your email.',
     ],
 
+    // SIGN-12: "your shop is ready" and "we're on it" after a self-signup.
+    'signup_ready' => [
+        'subject' => 'Your shop ":business" is ready on :app',
+        'heading' => 'Your shop ":business" is ready',
+        'intro' => 'Your :app account is set up and you can sign in and start working now.',
+        'login_button' => 'Go to your shop',
+        'login_url' => 'Sign-in link:',
+        'login_email' => 'Sign in with:',
+        'password_hint' => 'Password: the one you chose when you signed up.',
+        'plan' => 'Plan: :plan',
+        'trial_ends' => 'Your trial ends on :date.',
+        'help' => 'Help center:',
+    ],
+
+    'signup_delayed' => [
+        'subject' => 'We are preparing your shop ":business"',
+        'heading' => 'We need a little more time',
+        'body' => 'Your email is confirmed, but preparing ":business" on :app is taking longer than usual. Our team has been alerted and is on it; we will email you as soon as it is ready.',
+        'no_action' => 'There is nothing you need to do right now.',
+    ],
+
     'failed' => [
         'telegram' => 'Platform email :mailable failed permanently after all attempts. Recipient domain: :domains. Reason: :exception.',
     ],

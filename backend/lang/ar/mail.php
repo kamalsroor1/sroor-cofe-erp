@@ -47,6 +47,27 @@ return [
         'not_you' => 'لو مش انت اللي سجّلت، تجاهل الرسالة دي ومحدش هيقدر يستخدم إيميلك.',
     ],
 
+    // SIGN-12: "your shop is ready" and "we're on it" after a self-signup.
+    'signup_ready' => [
+        'subject' => 'محلك ":business" جاهز على :app',
+        'heading' => 'محلك ":business" جاهز',
+        'intro' => 'جهّزنا حسابك على :app وتقدر تدخل وتبدأ شغل دلوقتي.',
+        'login_button' => 'ادخل على محلك',
+        'login_url' => 'لينك الدخول:',
+        'login_email' => 'هتدخل بالإيميل:',
+        'password_hint' => 'كلمة السر: اللي انت اخترتها وقت التسجيل.',
+        'plan' => 'الباقة: :plan',
+        'trial_ends' => 'الفترة التجريبية بتنتهي يوم :date.',
+        'help' => 'مركز المساعدة:',
+    ],
+
+    'signup_delayed' => [
+        'subject' => 'بنجهّز محلك ":business"',
+        'heading' => 'محتاجين شوية وقت زيادة',
+        'body' => 'إيميلك اتأكد، بس تجهيز محل ":business" على :app اتأخر شوية. فريقنا عرف وشغال عليه، وهنبعتلك أول ما يجهز.',
+        'no_action' => 'مش محتاج تعمل أي حاجة دلوقتي.',
+    ],
+
     'failed' => [
         'telegram' => 'فشل إرسال إيميل المنصة :mailable نهائيًا بعد كل المحاولات. دومين المستلم: :domains. السبب: :exception.',
     ],

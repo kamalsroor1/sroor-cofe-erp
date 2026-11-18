@@ -7,12 +7,17 @@ namespace App\Actions\Signup;
 use App\DTOs\Signup\SelfSignupTokenDTO;
 use App\Enums\SignupFlow;
 use App\Enums\SignupRequestStatus;
+use App\Jobs\NotifyPlatformOfSignupRequestJob;
+use App\Jobs\ProvisionVerifiedSignupJob;
 use App\Models\SignupRequest;
 use App\Services\Signup\SignupVerificationCodeIssuer;
 use App\Services\TenantProvisionerService;
 use App\Support\Signup\SignupSecrets;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
  * SIGN-11: check the emailed code of a self-signup.
@@ -24,6 +29,10 @@ use Illuminate\Validation\ValidationException;
  *
  * Success: `verified` + email_verified_at, the code hash removed. A row that is already past
  * verification is returned as is (a double submit is not an error).
+ *
+ * SIGN-12: after the commit, ProvisionVerifiedSignupJob creates the shop and the platform gets a
+ * Telegram message per new self-signup (one summary per hour when more than
+ * signup.self_signup_quiet_above_per_hour were verified in the last hour).
  */
 final class VerifySelfSignupAction
 {
@@ -70,6 +79,10 @@ final class VerifySelfSignupAction
                 'verification_attempts' => 0,
             ])->save();
 
+            // SIGN-12: provisioning and the platform alert leave only once `verified` is committed.
+            ProvisionVerifiedSignupJob::dispatch((int) $signup->id)->afterCommit();
+            $this->notifyPlatform($signup);
+
             return $signup;
         });
 
@@ -78,5 +91,24 @@ final class VerifySelfSignupAction
         }
 
         return $signup;
+    }
+
+    private function notifyPlatform(SignupRequest $signup): void
+    {
+        $lastHour = SignupRequest::query()
+            ->where('signup_flow', SignupFlow::SelfSignup->value)
+            ->where('email_verified_at', '>=', now()->subHour())
+            ->count();
+
+        $summary = $lastHour > max(1, (int) config('signup.self_signup_quiet_above_per_hour', 20));
+        if ($summary && ! Cache::add('self-signup:backlog-alert', true, now()->addHour())) {
+            return;
+        }
+
+        try {
+            NotifyPlatformOfSignupRequestJob::dispatch((int) $signup->id, $summary, true)->afterCommit();
+        } catch (Throwable $e) {
+            Log::warning('Self-signup notification could not be queued', ['exception' => $e::class]);
+        }
     }
 }

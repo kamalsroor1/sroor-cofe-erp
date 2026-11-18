@@ -20,6 +20,11 @@ class CreateTenantDTO
         public readonly ?string $tenancyDbPassword = null,
         // PLAN-10: how the tenant was created (console by default; the signup flow passes self_signup).
         public readonly TenantSignupSource $signupSource = TenantSignupSource::Console,
+        // SIGN-12: `password` is already a hash (a self-signup owner's chosen password, hashed at
+        // signup); the provisioner stores it as is, never rehashes it.
+        public readonly bool $passwordIsHashed = false,
+        // SIGN-12: false when the owner chose the password (self-signup); true when the platform did.
+        public readonly bool $ownerMustChangePassword = true,
     ) {}
 
     public static function fromArray(array $data): self
@@ -39,6 +44,8 @@ class CreateTenantDTO
             signupSource: ($data['signup_source'] ?? null) instanceof TenantSignupSource
                 ? $data['signup_source']
                 : (TenantSignupSource::tryFrom((string) ($data['signup_source'] ?? '')) ?? TenantSignupSource::Console),
+            passwordIsHashed: ($data['password_is_hashed'] ?? false) === true,
+            ownerMustChangePassword: ($data['owner_must_change_password'] ?? true) !== false,
         );
     }
 }

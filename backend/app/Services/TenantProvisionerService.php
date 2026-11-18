@@ -23,6 +23,7 @@ use Database\Seeders\PermissionsSeeder;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use InvalidArgumentException;
 use SensitiveParameter;
 use Spatie\Permission\Models\Role;
 use Throwable;
@@ -69,7 +70,7 @@ class TenantProvisionerService implements TenantProvisionerInterface
     public function provision(CreateTenantDTO $dto): Tenant
     {
         $plan = Plan::findOrFail($dto->planId);
-        $passwordHash = Hash::make($dto->password);
+        $passwordHash = $dto->passwordIsHashed ? self::verifiedHash($dto->password) : Hash::make($dto->password);
 
         $tenant = DB::connection(self::centralConnection())->transaction(
             fn (): Tenant => $this->registerTenant($dto, $plan, $passwordHash),
@@ -89,9 +90,10 @@ class TenantProvisionerService implements TenantProvisionerInterface
         $email = (string) $tenant->email;
         $phone = $tenant->phone !== null && $tenant->phone !== '' ? (string) $tenant->phone : null;
         $slug = (string) $tenant->slug;
+        $mustChangePassword = self::storedMustChangePassword($tenant);
 
-        $tenant->run(function () use ($name, $email, $phone, $slug, $passwordHash): void {
-            DB::transaction(function () use ($name, $email, $phone, $slug, $passwordHash): void {
+        $tenant->run(function () use ($name, $email, $phone, $slug, $passwordHash, $mustChangePassword): void {
+            DB::transaction(function () use ($name, $email, $phone, $slug, $passwordHash, $mustChangePassword): void {
                 // Tenant guard pinned explicitly: provisioning may run from a request
                 // authenticated on `central` (sync queue) or from a worker.
                 (new PermissionsSeeder)->run();
@@ -115,7 +117,8 @@ class TenantProvisionerService implements TenantProvisionerInterface
                     // Already a hash: the `hashed` cast keeps a verified hash as is.
                     'password' => $passwordHash,
                     // SELL-01: the platform chose this password; the owner replaces it at first sign-in.
-                    'must_change_password' => true,
+                    // SIGN-12: not when the owner chose it at self-signup (stored with the seed).
+                    'must_change_password' => $mustChangePassword,
                     'is_active' => true,
                     'default_store_id' => $mainStore->id,
                     'theme_preference' => $user->exists ? $user->theme_preference : 'dark',
@@ -155,6 +158,26 @@ class TenantProvisionerService implements TenantProvisionerInterface
     }
 
     /**
+     * SIGN-12: whether the first admin must replace the password at first sign-in. True unless
+     * the seed says otherwise (a self-signup owner chose it); an unreadable seed is true (safe side).
+     */
+    public static function storedMustChangePassword(Tenant $tenant): bool
+    {
+        $sealed = $tenant->getInternal(self::SEED_KEY);
+        if (! is_string($sealed) || $sealed === '') {
+            return true;
+        }
+
+        try {
+            $seed = json_decode(Crypt::decryptString($sealed), true, 4, JSON_THROW_ON_ERROR);
+        } catch (Throwable) {
+            return true;
+        }
+
+        return ! (is_array($seed) && ($seed['must_change_password'] ?? true) === false);
+    }
+
+    /**
      * Seconds the job's unique lock lives; a pending/running provisioning idle for longer is
      * stale (Tenant::provisioningIsStale()). config tenancy.provisioning.unique_for.
      */
@@ -166,6 +189,19 @@ class TenantProvisionerService implements TenantProvisionerInterface
     public static function centralConnection(): string
     {
         return (string) config('tenancy.database.central_connection', config('database.default'));
+    }
+
+    /**
+     * SIGN-12: a pre-hashed owner password must be a real password hash, never a plain value
+     * passed by mistake (it would be stored as the "hash" and no password would ever match).
+     */
+    private static function verifiedHash(#[SensitiveParameter] string $hash): string
+    {
+        if (! Hash::isHashed($hash)) {
+            throw new InvalidArgumentException('The owner password is not a supported password hash.');
+        }
+
+        return $hash;
     }
 
     private function registerTenant(CreateTenantDTO $dto, Plan $plan, #[SensitiveParameter] string $passwordHash): Tenant
@@ -213,7 +249,10 @@ class TenantProvisionerService implements TenantProvisionerInterface
             'provisioning_status' => TenantProvisioningStatus::Pending,
             'provisioning_attempts' => 0,
             'tenancy_create_database' => false,
-            'tenancy_'.self::SEED_KEY => Crypt::encryptString((string) json_encode(['password_hash' => $passwordHash])),
+            'tenancy_'.self::SEED_KEY => Crypt::encryptString((string) json_encode([
+                'password_hash' => $passwordHash,
+                'must_change_password' => $dto->ownerMustChangePassword,
+            ])),
         ];
 
         if (! empty($dto->tenancyDbName)) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Signup;
 
+use App\Filters\Signup\FlowFilter;
 use App\Filters\Signup\SearchFilter;
 use App\Filters\Signup\StatusFilter;
 use App\Models\SignupRequest;
@@ -31,7 +32,7 @@ final class ListSignupRequestsAction
         /** @var Builder<SignupRequest> $query */
         $query = app(Pipeline::class)
             ->send(SignupRequest::query())
-            ->through([StatusFilter::class, SearchFilter::class])
+            ->through([StatusFilter::class, FlowFilter::class, SearchFilter::class])
             ->thenReturn();
 
         return $query->orderByDesc('created_at')->orderByDesc('id')->paginate($perPage)->withQueryString();

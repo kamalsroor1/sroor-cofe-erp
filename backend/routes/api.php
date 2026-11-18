@@ -73,6 +73,8 @@ Route::prefix('v1/signup')->name('api.signup.')->group(function () {
         Route::post('/verify', [SelfSignupController::class, 'verify'])->middleware('throttle:self-signup-verify')->name('verify');
         Route::post('/resend', [SelfSignupController::class, 'resend'])->middleware('throttle:self-signup-resend')->name('resend');
     });
+    // SIGN-12: progress polling ("preparing your shop"); open even while signup is switched off.
+    Route::get('/status', [SelfSignupController::class, 'status'])->middleware('throttle:self-signup-status')->name('status');
 });
 
 // IDEN-4.6: ThrottleTenantMisses caps unknown-tenant 404s per IP before tenancy resolves.

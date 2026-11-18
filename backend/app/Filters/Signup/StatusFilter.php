@@ -11,7 +11,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 /**
- * PRD-05: `?status=pending|approved|rejected` (anything else, or `all`, = no filter).
+ * PRD-05: `?status=<SignupRequestStatus>` (SIGN-11/12 add awaiting_verification, verified,
+ * provisioning, provisioned, failed); anything else, or `all`, = no filter.
  */
 final class StatusFilter
 {

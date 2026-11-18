@@ -9,6 +9,8 @@ namespace App\Enums;
  *
  *  PRD-05 assisted flow: pending -> approved | rejected (operator decision).
  *  SIGN-11 self-signup:  awaiting_verification -> verified (the emailed code matched).
+ *  SIGN-12:              verified -> provisioning (tenant registered) -> provisioned | failed;
+ *                        verified -> pending (daily cap reached: the manual queue above).
  */
 enum SignupRequestStatus: string
 {
@@ -17,6 +19,9 @@ enum SignupRequestStatus: string
     case Rejected = 'rejected';
     case AwaitingVerification = 'awaiting_verification';
     case Verified = 'verified';
+    case Provisioning = 'provisioning';
+    case Provisioned = 'provisioned';
+    case Failed = 'failed';
 
     /**
      * @return list<string>

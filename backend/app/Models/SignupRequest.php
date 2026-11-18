@@ -43,6 +43,12 @@ use Illuminate\Support\Carbon;
  * @property int $verification_attempts
  * @property Carbon|null $verification_sent_at
  * @property Carbon|null $email_verified_at
+ * @property Carbon|null $provisioning_started_at SIGN-12
+ * @property Carbon|null $provisioned_at
+ * @property Carbon|null $failed_at
+ * @property string|null $failure_code
+ * @property Carbon|null $ready_mail_sent_at
+ * @property Carbon|null $failure_mail_sent_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -104,6 +110,11 @@ class SignupRequest extends Model
             'verification_attempts' => 'integer',
             'verification_sent_at' => 'datetime',
             'email_verified_at' => 'datetime',
+            'provisioning_started_at' => 'datetime',
+            'provisioned_at' => 'datetime',
+            'failed_at' => 'datetime',
+            'ready_mail_sent_at' => 'datetime',
+            'failure_mail_sent_at' => 'datetime',
         ];
     }
 

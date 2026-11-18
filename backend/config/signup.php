@@ -53,6 +53,12 @@ return [
     'quiet_above_pending' => (int) (env('SIGNUP_QUIET_ABOVE_PENDING') ?: 50),
 
     /*
+    | SIGN-12: from this many self-signups verified within the last hour on, the per-signup
+    | Telegram message is replaced by at most one summary per hour.
+    */
+    'self_signup_quiet_above_per_hour' => (int) (env('SIGNUP_SELF_QUIET_ABOVE_HOURLY') ?: 20),
+
+    /*
     | Telegram notification to the platform owner on a new request. Uses the platform bot
     | (services.telegram.bot_token); the chat falls back to services.telegram.chat_id.
     | Empty token/chat = no notification (never an error).
