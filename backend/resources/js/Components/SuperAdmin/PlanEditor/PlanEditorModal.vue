@@ -12,7 +12,7 @@
         role="tablist"
       >
         <button
-          v-for="tab in tabs"
+          v-for="tab in editor.tabs.value"
           :key="tab"
           type="button"
           role="tab"
@@ -25,7 +25,7 @@
           "
           @click="editor.setTab(tab)"
         >
-          {{ $t(`super.plan_tab_${tab}`) }}
+          {{ tabLabel(tab) }}
           <span
             v-if="editor.tabsWithErrors.value.has(tab)"
             class="absolute top-1.5 end-1.5 w-2 h-2 rounded-full bg-rose-500"
@@ -75,6 +75,10 @@
           :catalog="catalog"
           @update:addon="editor.setAddon"
         />
+        <PlanHistorySection
+          v-if="editor.activeTab.value === historyTab && editor.editingPlan.value"
+          :plan-id="editor.editingPlan.value.id"
+        />
       </div>
     </form>
 
@@ -108,7 +112,8 @@ import PlanPromotionSection from './PlanPromotionSection.vue';
 import PlanLimitsSection from './PlanLimitsSection.vue';
 import PlanFeaturesSection from './PlanFeaturesSection.vue';
 import PlanAddonsSection from './PlanAddonsSection.vue';
-import { PLAN_EDITOR_TABS } from '../../../helpers/planEditor';
+import PlanHistorySection from './PlanHistorySection.vue';
+import { PLAN_HISTORY_TAB } from '../../../helpers/planEditor';
 import { useTrans } from '../../../Composables/useTrans';
 
 const props = defineProps({
@@ -119,7 +124,9 @@ const props = defineProps({
 });
 
 const { t } = useTrans();
-const tabs = PLAN_EDITOR_TABS;
+const historyTab = PLAN_HISTORY_TAB;
+
+const tabLabel = (tab) => (tab === historyTab ? t('plan_console.history.tab') : t(`super.plan_tab_${tab}`));
 
 const title = computed(() =>
   props.editor.isEditing.value

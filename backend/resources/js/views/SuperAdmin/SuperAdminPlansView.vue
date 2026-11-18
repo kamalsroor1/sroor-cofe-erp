@@ -44,6 +44,18 @@
       @retry="fetchPlans"
     />
 
+    <NearLimitShopsPanel
+      v-if="nearLimit.canView.value"
+      :rows="nearLimit.rows.value"
+      :meta="nearLimit.meta.value"
+      :is-loading="nearLimit.isLoading.value"
+      :has-error="nearLimit.hasError.value"
+      :threshold="NEAR_LIMIT_THRESHOLD"
+      @refresh="nearLimit.refresh"
+      @retry="nearLimit.fetchRows"
+      @page-change="nearLimit.goToPage"
+    />
+
     <PlanEditorModal :editor="editor" :registry="featuresRegistry" :catalog="addonsCatalog" />
   </div>
 </template>
@@ -54,8 +66,11 @@ import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import PlansGrid from '../../Components/SuperAdmin/PlansGrid.vue';
 import PlanEditorModal from '../../Components/SuperAdmin/PlanEditor/PlanEditorModal.vue';
+import NearLimitShopsPanel from '../../Components/SuperAdmin/NearLimitShops/NearLimitShopsPanel.vue';
 import { useSuperAdminPlans } from '../../Composables/useSuperAdminPlans';
+import { useNearLimitShops, NEAR_LIMIT_THRESHOLD } from '../../Composables/useNearLimitShops';
 
 const { plans, featuresRegistry, addonsCatalog, isLoading, hasError, canManage, fetchPlans, editor } =
   useSuperAdminPlans();
+const nearLimit = useNearLimitShops();
 </script>

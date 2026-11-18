@@ -36,6 +36,15 @@
         @update:model-value="$emit('update:field', 'trial_days', $event)"
       />
     </div>
+    <BaseSwitch
+      :model-value="form.is_free"
+      :label="$t('plan_console.free_plan_label')"
+      :description="$t('plan_console.free_plan_hint')"
+      :error="errors.is_free"
+      wrapper-class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+      data-testid="plan-is-free"
+      @update:model-value="$emit('update:field', 'is_free', $event)"
+    />
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <BaseSwitch
         v-for="flag in flags"

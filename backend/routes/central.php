@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\Central\CentralPasswordResetController;
 use App\Http\Controllers\Api\Central\CentralTwoFactorController;
 use App\Http\Controllers\Api\Central\PlanChangeRequestReviewController;
 use App\Http\Controllers\Api\Central\PlanController;
+use App\Http\Controllers\Api\Central\PlanInsightsController;
 use App\Http\Controllers\Api\Central\PlatformSettingsController;
 use App\Http\Controllers\Api\Central\PlatformUnitsController;
 use App\Http\Controllers\Api\Central\SignupRequestController;
@@ -232,6 +233,12 @@ Route::prefix('v1/super-admin')
         Route::put('/plans/{id}', [PlanController::class, 'update'])
             ->whereNumber('id')
             ->middleware([$can(CentralPermission::PlansManage), RequireRecentTwoFactor::class])->name('plans.update');
+        // PLAN-14: audit trail of one plan and the upsell list of shops near a limit.
+        Route::get('/plans/{id}/changes', [PlanInsightsController::class, 'changes'])
+            ->whereNumber('id')
+            ->middleware($can(CentralPermission::AuditView))->name('plans.changes');
+        Route::get('/near-limit-shops', [PlanInsightsController::class, 'nearLimitShops'])
+            ->middleware([$can(CentralPermission::PlansManage), 'throttle:30,1'])->name('near_limit_shops');
 
         // Telescope: short-lived single-use signed link (IDEN-1.7 moves the web bridge to central_web).
         Route::post('/telescope-link', TelescopeLinkController::class)

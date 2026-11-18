@@ -25,7 +25,12 @@ export const EDITOR_LIMIT_FIELDS = [
     { key: 'max_storage_mb', min: 1, label: 'super.storage_limit_label' },
     { key: 'max_warehouses', min: 0, label: 'super.warehouses_limit_label' },
     { key: 'max_vans', min: 0, label: 'super.vans_limit_label' },
+    { key: 'max_customers', min: 1, label: 'super.customers_limit_label' },
+    { key: 'max_suppliers', min: 1, label: 'super.suppliers_limit_label' },
 ];
+
+/** Edit-only tab listing the audit trail of the plan (lazy loaded, needs the audit permission). */
+export const PLAN_HISTORY_TAB = 'history';
 
 /** Which tab owns a (possibly nested) API error key. */
 export function tabOfErrorKey(key) {
@@ -138,6 +143,7 @@ export function buildPlanForm(plan, registry, catalog) {
         is_active: plan ? !!p.is_active : true,
         is_public: plan ? !!p.is_public : false,
         is_popular: !!p.is_popular,
+        is_free: !!p.is_free,
         promo_starts_at: toDatetimeLocal(p.promo_starts_at),
         promo_ends_at: toDatetimeLocal(p.promo_ends_at),
         max_users: plan ? normalizeLimit(p.max_users) : 3,
@@ -147,6 +153,8 @@ export function buildPlanForm(plan, registry, catalog) {
         max_storage_mb: plan ? normalizeLimit(p.max_storage_mb) : null,
         max_warehouses: plan ? normalizeLimit(p.max_warehouses) : 1,
         max_vans: plan ? normalizeLimit(p.max_vans) : 0,
+        max_customers: plan ? normalizeLimit(p.max_customers) : null,
+        max_suppliers: plan ? normalizeLimit(p.max_suppliers) : null,
         features: featureMap(plan, registry),
         addons: addonRows(plan, catalog),
     };
@@ -165,6 +173,7 @@ export function buildPlanPayload(form) {
         is_active: !!form.is_active,
         is_public: !!form.is_public,
         is_popular: !!form.is_popular,
+        is_free: !!form.is_free,
         promo_starts_at: fromDatetimeLocal(form.promo_starts_at),
         promo_ends_at: fromDatetimeLocal(form.promo_ends_at),
         features: { ...form.features },

@@ -30,6 +30,16 @@
 
       <PlatformBillingSection :form="form" :errors="errors" :readonly="!canManage" @update:field="setField" />
 
+      <PlatformSignupSection
+        :form="form"
+        :errors="errors"
+        :readonly="!canManage"
+        :plans="planOptions"
+        :plans-available="plansAvailable"
+        :effective-fallback-plan-id="effectiveFallbackPlanId"
+        @update:field="setField"
+      />
+
       <PlatformAppearanceSection :form="form" :errors="errors" :readonly="!canManage" @update:field="setField" />
 
       <PlatformAssetsSection
@@ -55,14 +65,17 @@ import PlatformReadOnlyNotice from '../../Components/SuperAdmin/PlatformSettings
 import PlatformIdentitySection from '../../Components/SuperAdmin/PlatformSettings/PlatformIdentitySection.vue';
 import PlatformSupportSection from '../../Components/SuperAdmin/PlatformSettings/PlatformSupportSection.vue';
 import PlatformBillingSection from '../../Components/SuperAdmin/PlatformSettings/PlatformBillingSection.vue';
+import PlatformSignupSection from '../../Components/SuperAdmin/PlatformSettings/PlatformSignupSection.vue';
 import PlatformAppearanceSection from '../../Components/SuperAdmin/PlatformSettings/PlatformAppearanceSection.vue';
 import PlatformAssetsSection from '../../Components/SuperAdmin/PlatformSettings/PlatformAssetsSection.vue';
 import PlatformSettingsSaveBar from '../../Components/SuperAdmin/PlatformSettings/PlatformSettingsSaveBar.vue';
 import { usePlatformSettings } from '../../Composables/usePlatformSettings';
+import { usePlatformPlanOptions } from '../../Composables/usePlatformPlanOptions';
 
 const {
   form,
   assets,
+  effectiveFallbackPlanId,
   errors,
   assetErrors,
   busySlot,
@@ -78,4 +91,5 @@ const {
   uploadAsset,
   removeAsset,
 } = usePlatformSettings();
+const { plans: planOptions, available: plansAvailable } = usePlatformPlanOptions();
 </script>

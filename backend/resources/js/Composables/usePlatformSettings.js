@@ -32,7 +32,15 @@ const TEXT_FIELDS = [
     'billing_payment_note',
     'billing_tax_rate',
     'signup_trial_days',
+    'default_signup_plan_id',
+    'trial_fallback_plan_id',
+    'signup_daily_cap',
 ];
+
+/** Optional whole numbers: emptied = null (back to the default), otherwise a Number. */
+const NUMBER_FIELDS = ['signup_trial_days', 'default_signup_plan_id', 'trial_fallback_plan_id', 'signup_daily_cap'];
+
+const BOOLEAN_FIELDS = ['powered_by_enabled', 'self_signup_enabled'];
 
 /** Never blanked server-side: sent trimmed, never as null. */
 const REQUIRED_FIELDS = ['name', 'short_name'];
@@ -42,7 +50,9 @@ function toForm(data = {}) {
     TEXT_FIELDS.forEach((key) => {
         form[key] = data[key] === null || data[key] === undefined ? '' : String(data[key]);
     });
-    form.powered_by_enabled = data.powered_by_enabled === true;
+    BOOLEAN_FIELDS.forEach((key) => {
+        form[key] = data[key] === true;
+    });
     return form;
 }
 
@@ -60,12 +70,12 @@ function changedPayload(form, baseline) {
     const payload = {};
     Object.keys(form).forEach((key) => {
         if (form[key] === baseline[key]) return;
-        if (key === 'powered_by_enabled') {
+        if (BOOLEAN_FIELDS.includes(key)) {
             payload[key] = form[key];
             return;
         }
         const value = String(form[key] ?? '').trim();
-        if (key === 'signup_trial_days') payload[key] = value === '' ? null : Number(value);
+        if (NUMBER_FIELDS.includes(key)) payload[key] = value === '' ? null : Number(value);
         else payload[key] = value === '' && !REQUIRED_FIELDS.includes(key) ? null : value;
     });
     return payload;
@@ -78,6 +88,8 @@ export function usePlatformSettings() {
     const form = ref(toForm());
     const baseline = ref(toForm());
     const assets = ref(toAssets());
+    // The plan the trial fallback resolves to right now (the setting, else the catalog free plan).
+    const effectiveFallbackPlanId = ref(null);
     const errors = ref({});
     const assetErrors = ref({});
     const busySlot = ref(null);
@@ -92,6 +104,7 @@ export function usePlatformSettings() {
         form.value = toForm(data);
         baseline.value = toForm(data);
         assets.value = toAssets(data?.assets);
+        effectiveFallbackPlanId.value = data?.effective_trial_fallback_plan_id ?? null;
     };
 
     const fetchSettings = async () => {
@@ -225,6 +238,7 @@ export function usePlatformSettings() {
     return {
         form,
         assets,
+        effectiveFallbackPlanId,
         errors,
         assetErrors,
         busySlot,

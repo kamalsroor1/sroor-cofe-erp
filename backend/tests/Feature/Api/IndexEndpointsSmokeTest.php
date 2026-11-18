@@ -102,6 +102,7 @@ final class IndexEndpointsSmokeTest extends TenantTestCase
         'super-admin/billing/plan-change-requests' => [],
         'super-admin/dashboard' => [],
         'super-admin/plans' => [],
+        'super-admin/near-limit-shops' => [],
         'super-admin/platform-settings' => [],
         'super-admin/settings' => [],
         'super-admin/signup-requests' => [],

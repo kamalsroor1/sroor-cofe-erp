@@ -11,4 +11,5 @@ export const CENTRAL_PERMISSIONS = Object.freeze({
     tenantsManage: 'super_admin.tenants.manage',
     plansView: 'super_admin.plans.view',
     plansManage: 'super_admin.plans.manage',
+    auditView: 'super_admin.audit.view',
 });

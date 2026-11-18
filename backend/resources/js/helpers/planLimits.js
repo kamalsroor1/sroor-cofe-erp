@@ -24,6 +24,18 @@ export const PLAN_LIMIT_FIELDS = [
         formLabel: 'super.storage_limit_label',
         cardLabel: 'super.max_storage_mb_label',
     },
+    {
+        key: 'max_customers',
+        min: 1,
+        formLabel: 'super.customers_limit_label',
+        cardLabel: 'super.max_customers_label',
+    },
+    {
+        key: 'max_suppliers',
+        min: 1,
+        formLabel: 'super.suppliers_limit_label',
+        cardLabel: 'super.max_suppliers_label',
+    },
 ];
 
 export const PLAN_LIMIT_MAX = 1000000000;

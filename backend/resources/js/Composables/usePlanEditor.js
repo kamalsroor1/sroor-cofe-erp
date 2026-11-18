@@ -1,13 +1,16 @@
 import { ref, computed } from 'vue';
 import api from '../Services/centralApi';
 import { useTrans } from './useTrans';
-import { notifySuccess, notifyError, notifyWarning } from '../helpers/alert';
+import { notifySuccess, notifyError, notifyWarning, confirmDialog } from '../helpers/alert';
+import { useCentralAuthStore } from '../stores/centralAuth';
+import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
 import {
     clearPromotion,
     buildPlanForm,
     buildPlanPayload,
     tabOfErrorKey,
     PLAN_EDITOR_TABS,
+    PLAN_HISTORY_TAB,
 } from '../helpers/planEditor';
 
 /**
@@ -18,6 +21,7 @@ const PROMO_ERROR_KEYS = ['compare_at_price_monthly', 'compare_at_price_yearly',
 
 export function usePlanEditor({ registry, catalog, taxRate, onSaved }) {
     const { t } = useTrans();
+    const centralAuth = useCentralAuthStore();
 
     const show = ref(false);
     const editingPlan = ref(null);
@@ -27,6 +31,13 @@ export function usePlanEditor({ registry, catalog, taxRate, onSaved }) {
     const isSubmitting = ref(false);
 
     const isEditing = computed(() => editingPlan.value !== null);
+
+    // The history tab exists only for an existing plan and an operator who may read the audit log.
+    const tabs = computed(() =>
+        isEditing.value && centralAuth.can(CENTRAL_PERMISSIONS.auditView)
+            ? [...PLAN_EDITOR_TABS, PLAN_HISTORY_TAB]
+            : PLAN_EDITOR_TABS
+    );
 
     const tabsWithErrors = computed(() => {
         const tabs = new Set();
@@ -84,12 +95,25 @@ export function usePlanEditor({ registry, catalog, taxRate, onSaved }) {
         if (first) activeTab.value = first;
     };
 
+    // Editing a plan changes every shop on it at once: ask first when shops are affected.
+    const confirmImpact = async () => {
+        const count = Number(editingPlan.value?.tenants_count || 0);
+        if (!isEditing.value || count === 0) return true;
+        return confirmDialog({
+            title: t('plan_console.impact_title', { count }),
+            text: t('plan_console.impact_text', { count }),
+            confirmButtonText: t('plan_console.impact_confirm'),
+        });
+    };
+
     const submit = async () => {
         const { payload, errors: clientErrors } = buildPlanPayload(form.value);
         if (Object.keys(clientErrors).length) {
             showErrors(clientErrors);
             return;
         }
+
+        if (!(await confirmImpact())) return;
 
         isSubmitting.value = true;
         try {
@@ -124,6 +148,7 @@ export function usePlanEditor({ registry, catalog, taxRate, onSaved }) {
         activeTab,
         isSubmitting,
         isEditing,
+        tabs,
         tabsWithErrors,
         open,
         close,
