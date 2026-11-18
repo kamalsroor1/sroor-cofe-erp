@@ -45,6 +45,19 @@ enum LimitResource: string
         };
     }
 
+    /**
+     * A structural allowance (branches, warehouses, vans) is sized by the plan, not consumed by daily
+     * business: a free shop's single branch is "1 of 1" from day one. Allowances never drive the
+     * "limit reached" warning or the near-limit upsell list; consumption limits do.
+     */
+    public function isAllowance(): bool
+    {
+        return match ($this) {
+            self::Stores, self::Warehouses, self::Vans => true,
+            default => false,
+        };
+    }
+
     /** The plan's own value for this limit; null = unlimited. */
     public function fromPlan(Plan $plan): ?int
     {

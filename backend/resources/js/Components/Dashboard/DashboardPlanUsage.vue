@@ -5,7 +5,7 @@ import BaseButton from '@/Components/Common/BaseButton.vue';
 import InlineErrorBar from '@/Components/Common/InlineErrorBar.vue';
 import Skeleton from '@/Components/Common/Skeletons/Skeleton.vue';
 import { useFormatters } from '@/Composables/useFormatters';
-import { storageParts, usageBarClass } from '@/helpers/billing';
+import { storageParts, usageRowBarClass } from '@/helpers/billing';
 import { useTrans } from '@/Composables/useTrans';
 
 const props = defineProps({
@@ -113,7 +113,7 @@ const hint = computed(() => {
           >
             <div
               class="h-full rounded-full transition-all duration-500"
-              :class="usageBarClass(row.percent)"
+              :class="usageRowBarClass(row)"
               :style="{ width: `${Math.min(100, row.percent ?? 0)}%` }"
             />
           </div>

@@ -23,7 +23,8 @@ const {
   resumeError,
   isVerifying,
   isResending,
-  resendTimer,
+  resendLabel,
+  canResend,
   businessTypeOptions,
   planOptions,
   plansFailed,
@@ -83,8 +84,8 @@ onMounted(init);
         :code-error="codeError"
         :is-verifying="isVerifying"
         :is-resending="isResending"
-        :resend-label="resendTimer.label"
-        :can-resend="!resendTimer.isRunning"
+        :resend-label="resendLabel"
+        :can-resend="canResend"
         @verify="verify"
         @resend="resend"
         @start-over="startOver"

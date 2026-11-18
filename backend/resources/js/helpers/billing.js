@@ -1,4 +1,4 @@
-import { usageLevel } from './planLimit';
+import { rowUsageLevel, usageLevel } from './planLimit';
 
 export const RECEIPT_MAX_BYTES = 5 * 1024 * 1024;
 export const RECEIPT_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
@@ -38,13 +38,17 @@ export const invoiceTone = (status) => INVOICE_TONES[status] || 'neutral';
 export const paymentTone = (status) => PAYMENT_TONES[status] || 'neutral';
 
 /** Usage bar color: green under 80, amber from 80, red at 100 (PLAN-13 thresholds). */
-export const usageBarClass = (percent) => {
-    const level = usageLevel(percent);
-    if (level === 'none') return 'bg-slate-300 dark:bg-slate-600';
-    if (level === 'full') return 'bg-rose-500';
-    if (level === 'warn') return 'bg-amber-500';
-    return 'bg-emerald-500';
-};
+const BAR_CLASS_BY_LEVEL = Object.freeze({
+    none: 'bg-slate-300 dark:bg-slate-600',
+    full: 'bg-rose-500',
+    warn: 'bg-amber-500',
+    ok: 'bg-emerald-500',
+});
+
+export const usageBarClass = (percent) => BAR_CLASS_BY_LEVEL[usageLevel(percent)];
+
+/** Bar colour for a usage row: a fully used allowance (the only branch) stays green, not red. */
+export const usageRowBarClass = (row) => BAR_CLASS_BY_LEVEL[rowUsageLevel(row)];
 
 /** Validation messages (translation keys) mirroring the backend receipt rules; null when valid. */
 export const receiptErrorKey = (file) => {

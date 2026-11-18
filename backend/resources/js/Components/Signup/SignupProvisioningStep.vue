@@ -1,4 +1,5 @@
 <script setup>
+import { ltrIsolate } from '@/helpers/bidi';
 import { computed, onMounted } from 'vue';
 import { ArrowLeft, Check, Mail, Phone } from 'lucide-vue-next';
 import Skeleton from '../Common/Skeletons/Skeleton.vue';
@@ -28,7 +29,7 @@ const {
   () => emit('finished')
 );
 
-const email = computed(() => serverEmail.value || props.emailMasked);
+const email = computed(() => ltrIsolate(serverEmail.value || props.emailMasked));
 const isRefused = computed(() => props.refusedMessage !== '');
 const supports = computed(() =>
   [

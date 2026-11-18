@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Plans;
 
 use App\Actions\Billing\GetTenantSubscriptionAction;
+use App\Enums\LimitResource;
 use App\Enums\TenantStatus;
 use App\Models\Plan;
 use App\Models\Tenant;
@@ -127,7 +128,11 @@ final class ListShopsNearLimitAction
             }
 
             foreach ($usage as $row) {
-                if ((int) $row['percent'] < $threshold) {
+                // A structural allowance (the free plan's single branch is 1/1 from day one) or a resource
+                // the plan does not include at all (limit 0) is not an upsell signal.
+                if (LimitResource::tryFrom((string) $row['resource'])?->isAllowance() === true
+                    || (int) ($row['limit'] ?? 0) <= 0
+                    || (int) $row['percent'] < $threshold) {
                     continue;
                 }
 

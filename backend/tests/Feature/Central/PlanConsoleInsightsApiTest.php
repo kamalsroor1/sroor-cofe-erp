@@ -8,6 +8,7 @@ use App\Actions\Plans\ListShopsNearLimitAction;
 use App\Enums\CentralAuditEvent;
 use App\Models\Customer;
 use App\Models\Plan;
+use App\Models\Store;
 use App\Models\Tenant;
 use Database\Seeders\PlansAndFeaturesSeeder;
 use Illuminate\Support\Facades\Cache;
@@ -186,6 +187,23 @@ final class PlanConsoleInsightsApiTest extends TenantTestCase
             ->assertOk()
             ->assertJsonPath('meta.total', 0)
             ->assertJsonPath('meta.scanned', 0);
+    }
+
+    public function test_near_limit_ignores_a_fully_used_branch_allowance_and_resources_the_plan_excludes(): void
+    {
+        // The free-plan shape: one branch (1/1 from day one), no warehouses or vans (limit 0).
+        $this->plan->forceFill(['max_stores' => 1, 'max_warehouses' => 0, 'max_vans' => 0])->save();
+        $tenant = $this->shopOnPlan('محل جديد', 1);
+        $this->inTenant($tenant, function (): void {
+            if (Store::query()->count() === 0) {
+                Store::query()->create(['name' => 'الفرع الرئيسي', 'code' => 'MAIN', 'type' => 'retail_shop', 'is_active' => true]);
+            }
+        });
+
+        $this->getJson(self::BASE.'/near-limit-shops', $this->centralHeaders($this->centralSuperAdmin()))
+            ->assertOk()
+            ->assertJsonPath('meta.scanned', 1)
+            ->assertJsonPath('meta.total', 0);
     }
 
     public function test_near_limit_threshold_and_pagination_are_validated_and_applied(): void

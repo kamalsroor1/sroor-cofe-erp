@@ -1,4 +1,5 @@
 <script setup>
+import { ltrIsolate } from '@/helpers/bidi';
 import { ref } from 'vue';
 import { MailCheck } from 'lucide-vue-next';
 import MarketingButton from '../Landing/MarketingButton.vue';
@@ -33,7 +34,7 @@ const code = ref('');
     <header class="flex flex-col gap-2">
       <h1 class="text-2xl font-bold text-mk-ink sm:text-[28px]">{{ $t('self_signup.ui.otp.title') }}</h1>
       <p class="text-base leading-[1.6] text-mk-muted">
-        {{ $t('self_signup.ui.otp.subtitle', { email: emailMasked }) }}
+        {{ $t('self_signup.ui.otp.subtitle', { email: ltrIsolate(emailMasked) }) }}
       </p>
     </header>
 

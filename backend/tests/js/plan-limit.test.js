@@ -6,6 +6,7 @@ import {
     isLimitReachedError,
     limitResourceOf,
     limitedRows,
+    rowUsageLevel,
     usageLevel,
     worstUsageLevel,
 } from '../../resources/js/helpers/planLimit.js';
@@ -49,4 +50,19 @@ test('unlimited resources are dropped and the worst level wins', () => {
     assert.equal(worstUsageLevel(rows), 'warn');
     assert.equal(worstUsageLevel([]), 'none');
     assert.deepEqual(limitedRows(undefined), []);
+});
+
+test('a fully used allowance and a resource the plan excludes do not raise the warning', () => {
+    const rows = limitedRows([
+        { resource: 'stores', limit: 1, used: 1, percent: 100 },
+        { resource: 'vans', limit: 0, used: 0, percent: 100 },
+        { resource: 'invoices_month', limit: 150, used: 10, percent: 6 },
+    ]);
+    assert.deepEqual(
+        rows.map((r) => r.resource),
+        ['stores', 'invoices_month']
+    );
+    assert.equal(worstUsageLevel(rows), 'ok');
+    assert.equal(rowUsageLevel(rows[0]), 'ok');
+    assert.equal(rowUsageLevel({ resource: 'items', percent: 100 }), 'full');
 });

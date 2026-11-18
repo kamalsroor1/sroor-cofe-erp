@@ -26,13 +26,34 @@ export function usageLevel(percent) {
 
 /** Usage rows of limited resources only: an unlimited resource (NULL limit) is never shown. */
 export function limitedRows(usage) {
-    return (Array.isArray(usage) ? usage : []).filter((row) => row && row.limit !== null && row.limit !== undefined);
+    // limit 0 = the plan does not include this resource at all (e.g. vans on the free plan): no bar for it.
+    return (Array.isArray(usage) ? usage : []).filter(
+        (row) => row && row.limit !== null && row.limit !== undefined && Number(row.limit) > 0
+    );
+}
+
+/**
+ * Structural allowances (branches, warehouses, vans) are sized by the plan, not consumed by daily work:
+ * a free shop's only branch is 1 of 1 from day one. They never raise the "limit reached" warning.
+ * Mirrors LimitResource::isAllowance() on the server.
+ */
+export const ALLOWANCE_RESOURCES = Object.freeze(['stores', 'warehouses', 'vans']);
+
+export function isAllowanceRow(row) {
+    return ALLOWANCE_RESOURCES.includes(row?.resource);
+}
+
+/** The level a single row shows: an allowance that is fully used is normal, not a warning. */
+export function rowUsageLevel(row) {
+    const level = usageLevel(row?.percent);
+    return isAllowanceRow(row) && level !== 'none' ? 'ok' : level;
 }
 
 /** The highest level among the rows: drives the tone of the whole widget and the upgrade button. */
 export function worstUsageLevel(rows) {
     const order = ['none', 'ok', 'warn', 'full'];
     return rows.reduce((worst, row) => {
+        if (isAllowanceRow(row)) return worst;
         const level = usageLevel(row.percent);
         return order.indexOf(level) > order.indexOf(worst) ? level : worst;
     }, 'none');

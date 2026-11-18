@@ -2,7 +2,7 @@
 import { Gauge } from 'lucide-vue-next';
 import EmptyState from '@/Components/Common/EmptyState.vue';
 import { useFormatters } from '@/Composables/useFormatters';
-import { usageBarClass, storageParts } from '@/helpers/billing';
+import { usageRowBarClass, storageParts } from '@/helpers/billing';
 import { useTrans } from '@/Composables/useTrans';
 
 defineProps({
@@ -64,7 +64,7 @@ const formatAmount = (row, value) => {
         >
           <div
             class="h-full rounded-full transition-all duration-500"
-            :class="usageBarClass(row.percent)"
+            :class="usageRowBarClass(row)"
             :style="{ width: `${Math.min(100, row.percent ?? 0)}%` }"
           />
         </div>
