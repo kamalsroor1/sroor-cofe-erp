@@ -2,8 +2,9 @@
 import { nextTick } from 'vue';
 import { AlertTriangle, ArrowLeft } from 'lucide-vue-next';
 import BaseInput from '../Form/BaseInput.vue';
+import BasePasswordInput from '../Form/BasePasswordInput.vue';
 import BaseSelect from '../Form/BaseSelect.vue';
-import BaseTextarea from '../Form/BaseTextarea.vue';
+import Skeleton from '../Common/Skeletons/Skeleton.vue';
 import MarketingButton from '../Landing/MarketingButton.vue';
 
 defineProps({
@@ -11,11 +12,12 @@ defineProps({
   formError: { type: String, default: '' },
   businessTypeOptions: { type: Array, default: () => [] },
   planOptions: { type: Array, default: () => [] },
+  plansLoading: { type: Boolean, default: false },
   plansFailed: { type: Boolean, default: false },
   isSubmitting: { type: Boolean, default: false },
 });
 
-defineEmits(['submit']);
+defineEmits(['submit', 'subdomain-input']);
 
 const form = defineModel('form', { type: Object, required: true });
 
@@ -41,8 +43,8 @@ defineExpose({ focusPlan });
     @submit.prevent="$emit('submit')"
   >
     <header class="flex flex-col gap-1.5">
-      <h1 class="text-2xl font-bold text-mk-ink sm:text-[30px]">{{ $t('signup.form.title') }}</h1>
-      <p class="text-base leading-[1.6] text-mk-muted">{{ $t('signup.form.subtitle') }}</p>
+      <h1 class="text-2xl font-bold text-mk-ink sm:text-[30px]">{{ $t('self_signup.ui.form.title') }}</h1>
+      <p class="text-base leading-[1.6] text-mk-muted">{{ $t('self_signup.ui.form.subtitle') }}</p>
     </header>
 
     <div
@@ -58,88 +60,99 @@ defineExpose({ focusPlan });
     <div class="signup-fields grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
       <BaseInput
         v-model="form.business_name"
-        :label="$t('signup.form.business_name')"
+        :label="$t('self_signup.ui.form.business_name')"
         :error="errors.business_name"
         autocomplete="organization"
         required
       />
       <BaseInput
-        v-model="form.contact_name"
-        :label="$t('signup.form.contact_name')"
-        :placeholder="$t('signup.form.contact_name_placeholder')"
-        :error="errors.contact_name"
+        v-model="form.owner_name"
+        :label="$t('self_signup.ui.form.owner_name')"
+        :placeholder="$t('self_signup.ui.form.owner_name_placeholder')"
+        :error="errors.owner_name"
         autocomplete="name"
-        required
-      />
-      <BaseInput
-        v-model="form.phone"
-        type="tel"
-        inputmode="tel"
-        :label="$t('signup.form.phone')"
-        :placeholder="$t('signup.form.phone_placeholder')"
-        :error="errors.phone"
-        autocomplete="tel"
-        input-class="text-start"
-        dir="ltr"
         required
       />
       <BaseInput
         v-model="form.email"
         type="email"
         inputmode="email"
-        :label="$t('signup.form.email')"
-        :placeholder="$t('signup.form.email_placeholder')"
+        :label="$t('self_signup.ui.form.email')"
+        :hint="$t('self_signup.ui.form.email_hint')"
         :error="errors.email"
         autocomplete="email"
         dir="ltr"
+        required
+      />
+      <BaseInput
+        v-model="form.phone"
+        type="tel"
+        inputmode="tel"
+        :label="$t('self_signup.ui.form.phone')"
+        :placeholder="$t('self_signup.ui.form.phone_placeholder')"
+        :error="errors.phone"
+        autocomplete="tel"
+        input-class="text-start"
+        dir="ltr"
+        required
+      />
+      <BasePasswordInput
+        v-model="form.password"
+        :label="$t('self_signup.ui.form.password')"
+        :hint="$t('self_signup.ui.form.password_hint')"
+        :error="errors.password"
+        autocomplete="new-password"
+        required
+      />
+      <BasePasswordInput
+        v-model="form.password_confirmation"
+        :label="$t('self_signup.ui.form.password_confirmation')"
+        :error="errors.password_confirmation"
+        autocomplete="new-password"
+        required
       />
       <BaseSelect
         v-model="form.business_type"
         :options="businessTypeOptions"
-        :label="$t('signup.form.business_type')"
-        :placeholder="$t('signup.form.business_type')"
+        :label="$t('self_signup.ui.form.business_type')"
+        :placeholder="$t('self_signup.ui.form.business_type_placeholder')"
         :error="errors.business_type"
         :searchable="false"
         required
       />
       <BaseInput
         v-model="form.city"
-        :label="$t('signup.form.city')"
-        :placeholder="$t('signup.form.city_placeholder')"
+        :label="$t('self_signup.ui.form.city')"
+        :placeholder="$t('self_signup.ui.form.city_placeholder')"
         :error="errors.city"
         autocomplete="address-level2"
       />
+      <Skeleton v-if="plansLoading" height="h-[74px]" rounded="rounded-xl" />
       <BaseSelect
+        v-else-if="planOptions.length"
         :id="PLAN_FIELD_ID"
         v-model="form.plan_code"
         :options="planOptions"
-        :label="$t('signup.form.plan')"
-        :placeholder="$t('signup.form.plan_none')"
-        :hint="plansFailed ? $t('signup.form.plans_failed') : ''"
+        :label="$t('self_signup.ui.form.plan')"
+        :hint="plansFailed ? $t('self_signup.ui.form.plans_failed') : ''"
         :error="errors.plan_code"
         :searchable="false"
       />
+      <p v-else-if="plansFailed" class="self-center text-xs font-medium text-mk-faint">
+        {{ $t('self_signup.ui.form.plans_failed') }}
+      </p>
       <BaseInput
-        v-model="form.preferred_subdomain"
-        :label="$t('signup.form.subdomain')"
-        :hint="$t('signup.form.subdomain_hint')"
-        :error="errors.preferred_subdomain"
+        :model-value="form.subdomain"
+        :label="$t('self_signup.ui.form.subdomain')"
+        :hint="$t('self_signup.ui.form.subdomain_hint')"
+        :error="errors.subdomain"
         autocapitalize="off"
         spellcheck="false"
         dir="ltr"
-      />
-      <BaseTextarea
-        v-model="form.notes"
-        wrapper-class="sm:col-span-2"
-        :label="$t('signup.form.notes')"
-        :placeholder="$t('signup.form.notes_placeholder')"
-        :error="errors.notes"
-        :rows="3"
-        :maxlength="500"
+        @update:model-value="$emit('subdomain-input', $event)"
       />
     </div>
 
-    <!-- PRD-08: Explicit consent to Terms of Service, Privacy Policy and DPA -->
     <div class="flex flex-col gap-1.5">
       <label
         for="signup-terms-accepted"
@@ -155,17 +168,17 @@ defineExpose({ focusPlan });
           class="mt-0.5 size-[22px] shrink-0 cursor-pointer rounded-md accent-mk-primary scheme-light dark:scheme-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mk-primary"
         />
         <span>
-          {{ $t('signup.form.terms_prefix') }}
+          {{ $t('self_signup.ui.form.terms_prefix') }}
           <RouterLink :to="{ name: 'landing.terms' }" target="_blank" :class="LEGAL_LINK">
-            {{ $t('signup.form.terms_link') }}
+            {{ $t('self_signup.ui.form.terms_link') }}
           </RouterLink>
-          {{ $t('signup.form.terms_and') }}
+          {{ $t('self_signup.ui.form.terms_and') }}
           <RouterLink :to="{ name: 'landing.privacy' }" target="_blank" :class="LEGAL_LINK">
-            {{ $t('signup.form.privacy_link') }}
+            {{ $t('self_signup.ui.form.privacy_link') }}
           </RouterLink>
-          {{ $t('signup.form.terms_and') }}
+          {{ $t('self_signup.ui.form.terms_and') }}
           <RouterLink :to="{ name: 'landing.dpa' }" target="_blank" :class="LEGAL_LINK">
-            {{ $t('signup.form.dpa_link') }}
+            {{ $t('self_signup.ui.form.dpa_link') }}
           </RouterLink>
         </span>
       </label>
@@ -192,7 +205,7 @@ defineExpose({ focusPlan });
       :aria-busy="isSubmitting"
       class="disabled:cursor-wait disabled:opacity-70"
     >
-      {{ isSubmitting ? $t('signup.form.submitting') : $t('signup.form.submit') }}
+      {{ isSubmitting ? $t('self_signup.ui.form.submitting') : $t('self_signup.ui.form.submit') }}
     </MarketingButton>
   </form>
 </template>
@@ -214,9 +227,6 @@ defineExpose({ focusPlan });
   color: var(--mk-ink);
   font-size: 15px;
   font-weight: 500;
-}
-.signup-fields :deep(textarea) {
-  min-height: 96px;
 }
 .signup-fields :deep(:is(input, textarea)::placeholder) {
   color: var(--mk-faint);

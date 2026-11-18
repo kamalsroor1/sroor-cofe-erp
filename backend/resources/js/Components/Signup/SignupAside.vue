@@ -21,7 +21,7 @@ const currencyLabel = computed(() => catalogCurrencyLabel(props.currency));
 
 // "What happens next": the first step is signup-specific, the other two reuse the homepage steps.
 const STEPS = [
-  { key: 'review', title: 'signup.aside.review_title', body: 'signup.aside.review_body' },
+  { key: 'verify', title: 'self_signup.ui.aside.verify_title', body: 'self_signup.ui.aside.verify_body' },
   { key: 'setup', title: 'landing.home.steps.items.setup.title', body: 'landing.home.steps.items.setup.short' },
   { key: 'start', title: 'landing.home.steps.items.start.title', body: 'landing.home.steps.items.start.short' },
 ];
@@ -46,7 +46,7 @@ const contacts = computed(() =>
 
 <template>
   <aside
-    :aria-label="$t('signup.aside.label')"
+    :aria-label="$t('self_signup.ui.aside.label')"
     class="relative flex flex-col gap-[22px] overflow-hidden rounded-3xl bg-mk-hero p-6 text-mk-hero-ink lg:p-9"
   >
     <MarketingMotif class="absolute -start-[140px] top-[300px] size-[420px]" />

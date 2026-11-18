@@ -76,7 +76,7 @@ watch(isDesktop, (desktop) => {
           <LandingLocaleToggle />
         </div>
         <div class="hidden sm:block">
-          <MarketingButton to="/signup" variant="primary" size="md">{{ $t('landing.request_trial') }}</MarketingButton>
+          <MarketingButton to="/signup" variant="primary" size="md">{{ $t('landing.start_free') }}</MarketingButton>
         </div>
         <button
           ref="menuButton"

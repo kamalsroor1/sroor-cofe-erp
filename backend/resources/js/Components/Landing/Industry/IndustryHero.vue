@@ -35,7 +35,7 @@ const base = computed(() => industryCopyKey(props.industry));
         </h1>
         <p class="text-[17px] leading-[1.65] text-mk-hero-muted lg:text-xl">{{ $t(`${base}.subtitle`) }}</p>
         <div class="flex flex-col gap-3 sm:flex-row sm:gap-3.5">
-          <MarketingButton to="/signup" size="lg" :icon="ArrowLeft">{{ $t('landing.request_trial') }}</MarketingButton>
+          <MarketingButton to="/signup" size="lg" :icon="ArrowLeft">{{ $t('landing.start_free') }}</MarketingButton>
           <MarketingButton :to="{ name: 'landing.pricing' }" variant="ghost-dark" size="lg">
             {{ $t('marketing.features.see_pricing') }}
           </MarketingButton>

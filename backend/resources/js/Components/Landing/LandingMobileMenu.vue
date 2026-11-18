@@ -139,7 +139,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));
         <LandingThemeToggle variant="pill" />
       </div>
       <MarketingButton to="/signup" size="lg" :icon="ArrowLeft" block class="mt-2">
-        {{ $t('landing.request_trial') }}
+        {{ $t('landing.start_free') }}
       </MarketingButton>
       <MarketingButton :to="{ name: 'login' }" variant="outline" size="lg" block>
         {{ $t('landing.nav.login') }}

@@ -37,6 +37,8 @@ return [
         'plans_unavailable' => 'Pricing is not available right now. Please try again shortly.',
     ],
 
+    'start_free' => 'Start free',
+    'start_with_plan' => 'Start with this plan',
     'request_trial' => 'Request a trial account',
     'currencies' => [
         'egp' => 'EGP',
@@ -44,7 +46,7 @@ return [
     'page_titles' => [
         'home' => 'Sales and inventory management system',
         'pricing' => 'Pricing and plans',
-        'signup' => 'Request a trial account',
+        'signup' => 'Start free',
         'terms' => 'Terms of Service',
         'privacy' => 'Privacy Policy',
         'dpa' => 'Data Processing Agreement (DPA)',
@@ -54,7 +56,7 @@ return [
     ],
     'nav' => [
         'pricing' => 'Pricing',
-        'signup' => 'Request a trial account',
+        'signup' => 'Start free',
         'discover' => 'Discover the system and its pricing',
         'terms' => 'Terms of Service',
         'privacy' => 'Privacy Policy',

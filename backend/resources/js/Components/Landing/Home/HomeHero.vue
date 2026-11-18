@@ -36,7 +36,7 @@ const { sectionHref, goToSection } = useLandingAnchors();
           {{ $t('landing.home.hero.subtitle') }}
         </p>
         <div class="flex flex-col gap-3 sm:flex-row sm:gap-3.5">
-          <MarketingButton to="/signup" size="lg" :icon="ArrowLeft">{{ $t('landing.request_trial') }}</MarketingButton>
+          <MarketingButton to="/signup" size="lg" :icon="ArrowLeft">{{ $t('landing.start_free') }}</MarketingButton>
           <MarketingButton
             :href="sectionHref('plans')"
             variant="ghost-dark"

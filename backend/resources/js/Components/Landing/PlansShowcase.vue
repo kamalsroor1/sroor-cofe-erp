@@ -97,7 +97,7 @@ const featureLists = computed(() =>
     <MarketingIconBadge :icon="Sparkles" :size="56" />
     <h3 class="text-[22px] font-bold text-mk-ink">{{ $t('landing.home.plans_empty.title') }}</h3>
     <p class="max-w-md text-base leading-[1.6] text-mk-muted">{{ $t('landing.home.plans_empty.body') }}</p>
-    <MarketingButton to="/signup" :icon="ArrowLeft">{{ $t('landing.request_trial') }}</MarketingButton>
+    <MarketingButton to="/signup" :icon="ArrowLeft">{{ $t('landing.start_free') }}</MarketingButton>
   </div>
 
   <div v-else-if="isSingle" class="flex justify-center pt-2 pb-8">

@@ -31,7 +31,7 @@ onMounted(load);
       :subtitle="$t('landing.pages.features.subtitle')"
     >
       <div class="hidden gap-3 pt-2 sm:flex">
-        <MarketingButton to="/signup" :icon="ArrowLeft">{{ $t('landing.request_trial') }}</MarketingButton>
+        <MarketingButton to="/signup" :icon="ArrowLeft">{{ $t('landing.start_free') }}</MarketingButton>
         <MarketingButton :to="{ name: 'landing.pricing' }" variant="ghost-dark">
           {{ $t('marketing.features.see_pricing') }}
         </MarketingButton>

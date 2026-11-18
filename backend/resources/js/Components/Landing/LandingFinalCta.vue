@@ -18,7 +18,7 @@ import MarketingMotif from './MarketingMotif.vue';
       </h2>
       <p class="relative text-[17px] text-mk-cta-muted lg:text-[21px]">{{ $t('landing.home.cta_subtitle') }}</p>
       <div class="relative flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:gap-3.5">
-        <MarketingButton to="/signup" size="lg" :icon="ArrowLeft">{{ $t('landing.request_trial') }}</MarketingButton>
+        <MarketingButton to="/signup" size="lg" :icon="ArrowLeft">{{ $t('landing.start_free') }}</MarketingButton>
         <MarketingButton :to="{ name: 'login' }" variant="ghost-dark" size="lg">
           {{ $t('landing.nav.login') }}
         </MarketingButton>

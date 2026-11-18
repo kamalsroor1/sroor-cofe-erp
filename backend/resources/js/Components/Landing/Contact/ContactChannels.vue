@@ -75,7 +75,7 @@ const COLUMNS = { 1: '', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3' };
             :title="$t('marketing.contact.trial.title')"
             :body="$t('marketing.contact.trial.body')"
           >
-            <MarketingButton to="/signup" :icon="ArrowLeft" block>{{ $t('landing.request_trial') }}</MarketingButton>
+            <MarketingButton to="/signup" :icon="ArrowLeft" block>{{ $t('landing.start_free') }}</MarketingButton>
           </ContactCard>
         </li>
       </ul>

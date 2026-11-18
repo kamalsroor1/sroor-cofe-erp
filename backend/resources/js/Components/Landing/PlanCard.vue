@@ -120,7 +120,7 @@ const features = computed(() => {
       block
       class="mt-auto"
     >
-      {{ $t('landing.request_workspace') }}
+      {{ plan.is_free ? $t('landing.start_free') : $t('landing.start_with_plan') }}
     </MarketingButton>
   </article>
 </template>
