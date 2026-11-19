@@ -66,6 +66,9 @@ return [
         'close_shift' => 'Open and close cashier shifts',
         'manage' => 'Manage the treasury and transfers between drawers',
     ],
+    'treasury' => [
+        'transfer' => 'Transfer money between treasury accounts (drawer, InstaPay, wallet, bank)',
+    ],
     'expenses' => [
         'manage' => 'Record, edit and delete expenses',
     ],

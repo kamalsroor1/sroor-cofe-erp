@@ -17,6 +17,7 @@ use App\Support\TenantClock;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
 
 class ShiftService
@@ -61,7 +62,19 @@ class ShiftService
         // BUG-04 / BUG-07: the number used to be allocated with no surrounding transaction (its
         // own short one), so a failed insert left a gap. Now one unit of work, restarted as a
         // whole on a lock conflict; only plain input is captured.
-        return TransactionRetry::run(fn (): CashShift => $this->createShift($targetStoreId, $openingCash, $notes, $actorId));
+        try {
+            return TransactionRetry::run(fn (): CashShift => $this->createShift($targetStoreId, $openingCash, $notes, $actorId));
+        } catch (UniqueConstraintViolationException $e) {
+            // SHOP-06 / BE-19: the database refused a second open shift for this branch
+            // (cash_shifts.open_store_guard). Only reachable when the store-row lock below could
+            // not serialise the two opens; answered like the application check: 409.
+            $existing = str_contains($e->getMessage(), 'open_store_guard') ? $this->getActiveShift(storeId: $targetStoreId) : null;
+            if ($existing === null) {
+                throw $e;
+            }
+
+            throw BusinessRuleException::conflict('treasury.shift_already_open', ['number' => $existing->shift_number]);
+        }
     }
 
     /**
@@ -69,6 +82,15 @@ class ShiftService
      */
     private function createShift(mixed $targetStoreId, string $openingCash, ?string $notes, ?int $actorId): CashShift
     {
+        // SHOP-06 / BE-19: two devices opening a shift for the same branch at the same instant both
+        // passed the "already open?" read and both inserted. The branch's store row is the
+        // serialisation point (the same row treasury transfers lock, taken first, before the
+        // number sequence): the second open waits here and then sees the first one's shift.
+        // cash_shifts.open_store_guard (UNIQUE) is the database backstop behind this lock.
+        if ($targetStoreId !== null) {
+            Store::withTrashed()->whereKey($targetStoreId)->lockForUpdate()->value('id');
+        }
+
         $existing = $this->getActiveShift(storeId: $targetStoreId);
         if ($existing) {
             throw BusinessRuleException::conflict('treasury.shift_already_open', ['number' => $existing->shift_number]);
@@ -82,6 +104,7 @@ class ShiftService
             'store_id' => $targetStoreId,
             'shift_number' => $shiftNumber,
             'status' => 'open',
+            'open_store_guard' => (int) ($targetStoreId ?? 0),
             'opened_at' => now(),
             'opening_cash_balance' => $openingCash,
             'notes' => $notes,
@@ -227,6 +250,13 @@ class ShiftService
             // stamped with this shift (ShiftAttribution reads it under a shared lock), so the sums
             // below see them all, and anything written after the close finds the shift closed.
             $shift = CashShift::query()->whereKey($shiftId)->lockForUpdate()->firstOrFail();
+
+            // SHOP-06 / BE-19: idempotent close. A second close of the same shift (double tap, two
+            // devices) waited on the lock above while the first one closed it: it returns the
+            // closed shift unchanged instead of overwriting the first count and logging twice.
+            if ($shift->status !== 'open') {
+                return $shift;
+            }
 
             // DATE-01: the wall clock can go back (summer time ends, a corrected server clock), and
             // a shift must never be stored as closing before it opened. Its figures do not depend on

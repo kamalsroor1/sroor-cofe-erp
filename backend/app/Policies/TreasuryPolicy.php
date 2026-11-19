@@ -24,7 +24,8 @@ final class TreasuryPolicy
 
     public function transfer(User $user): bool
     {
+        // SHOP-06: its own permission (backfilled to every role that held daily_journal.manage).
         return $user->hasRole('admin')
-            || $user->can('daily_journal.manage');
+            || $user->can('treasury.transfer');
     }
 }

@@ -47,6 +47,7 @@ use App\Http\Controllers\Api\TenantBrandAssetController;
 use App\Http\Controllers\Api\TenantLogoController;
 use App\Http\Controllers\Api\TrashController;
 use App\Http\Controllers\Api\TreasuryController;
+use App\Http\Controllers\Api\TreasuryTransferController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Middleware\ApiTokenAuth;
 use App\Http\Middleware\DenyQuickLoginToken;
@@ -248,6 +249,9 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
 
         // Treasury & Quick Financial Stats
         Route::get('/treasury/summary', [TreasuryController::class, 'summary'])->name('api.treasury.summary')->middleware('store.active')->middleware('feature:treasury.view');
+        // SHOP-06: transfers between treasury accounts (TreasuryService::transfer; permission treasury.transfer).
+        Route::get('/treasury/transfers', [TreasuryTransferController::class, 'index'])->name('api.treasury.transfers.index')->middleware('store.active')->middleware('feature:treasury.view');
+        Route::post('/treasury/transfers', [TreasuryTransferController::class, 'store'])->name('api.treasury.transfers.store')->middleware('store.active:concrete')->middleware('feature:treasury.view');
 
         // Profit & Loss Reports & Business Analytics
         Route::get('/reports/summary', [ReportController::class, 'summary'])->name('api.reports.summary')->middleware('store.active')->middleware('feature:reports.basic');

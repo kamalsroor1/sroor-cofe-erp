@@ -5,7 +5,7 @@
       <template #actions>
         <div class="flex items-center gap-2 flex-wrap">
           <div class="w-44">
-            <BaseDatePicker v-model="selectedDate" @change="fetchDailyJournal" :clearable="false" />
+            <BaseDatePicker v-model="selectedDate" @change="reloadJournal" :clearable="false" />
           </div>
 
           <!-- Shift status pill: the banner below already says it on phones -->
@@ -54,6 +54,17 @@
 
       <!-- Journal Tabs (Invoices vs Expenses) -->
       <DailyJournalTabs v-model:active-tab="activeTab" :invoices="invoices" :expenses="expenses" :loading="isLoading" />
+
+      <!-- SHOP-06: transfers between treasury accounts on the selected day -->
+      <TreasuryTransfersList
+        v-if="treasury.canViewTransfers.value"
+        :transfers="treasury.transfers.value"
+        :loading="treasury.isLoading.value"
+        :failed="treasury.loadFailed.value"
+        :can-transfer="treasury.canTransfer.value"
+        @new="treasury.openModal"
+        @retry="treasury.fetchTransfers(selectedDate)"
+      />
     </template>
 
     <!-- Open Shift Modal -->
@@ -95,6 +106,15 @@
 
     <ShiftZReportPrint :report="zReport" />
 
+    <TreasuryTransferModal
+      :show="treasury.showModal.value"
+      :form="treasury.form"
+      :submitting="treasury.isSubmitting.value"
+      @close="treasury.showModal.value = false"
+      @submit="treasury.submitTransfer(selectedDate, fetchDailyJournal)"
+      @update:field="treasury.updateField"
+    />
+
     <!-- Quick Journal Expense Modal -->
     <QuickExpenseModal
       :show="showExpenseModal"
@@ -108,8 +128,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { MinusCircle, Lock } from 'lucide-vue-next';
+import { computed, onMounted } from 'vue';
+import { MinusCircle, Lock, ArrowLeftRight } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import PageActions from '../../Components/Common/PageActions.vue';
 import ErrorState from '../../Components/Common/ErrorState.vue';
@@ -122,7 +142,10 @@ import ShiftZReportPrint from '../../Components/DailyJournal/ShiftZReportPrint.v
 import ShiftClosedResultModal from '../../Components/DailyJournal/ShiftClosedResultModal.vue';
 import CloseShiftModal from '../../Components/DailyJournal/CloseShiftModal.vue';
 import QuickExpenseModal from '../../Components/DailyJournal/QuickExpenseModal.vue';
+import TreasuryTransfersList from '../../Components/DailyJournal/TreasuryTransfersList.vue';
+import TreasuryTransferModal from '../../Components/DailyJournal/TreasuryTransferModal.vue';
 import { useDailyJournal } from '../../Composables/useDailyJournal';
+import { useTreasuryTransfers } from '../../Composables/useTreasuryTransfers';
 import { useTrans } from '../../Composables/useTrans';
 import { useRoutePermission } from '../../Composables/useRoutePermission';
 
@@ -162,6 +185,10 @@ const {
   mayCloseShift,
 } = useDailyJournal();
 
+const treasury = useTreasuryTransfers();
+const reloadJournal = () => Promise.all([fetchDailyJournal(), treasury.fetchTransfers(selectedDate.value)]);
+onMounted(() => treasury.fetchTransfers(selectedDate.value));
+
 const { t } = useTrans();
 const { canAccessPath } = useRoutePermission();
 // Creating an expense needs expenses.manage (and the plan feature): same rule as opening the Expenses screen.
@@ -178,6 +205,14 @@ const headerActions = computed(() => [
     show: canRecordExpense.value,
     iconClass: 'text-rose-500',
     onClick: () => (showExpenseModal.value = true),
+  },
+  {
+    key: 'transfer',
+    label: t('treasury.transfer_action'),
+    icon: ArrowLeftRight,
+    show: !hasError.value && treasury.canTransfer.value,
+    iconClass: 'text-theme-primary',
+    onClick: treasury.openModal,
   },
   {
     key: 'close-shift',
