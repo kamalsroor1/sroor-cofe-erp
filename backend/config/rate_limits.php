@@ -53,6 +53,13 @@ return [
         'per_user_per_minute' => (int) env('RATE_LIMIT_TENANT_UNLOCK_SCREEN_PER_USER', 10),
     ],
 
+    // PRD-17: POST /api/v1/settings/data-export (a full shop export is heavy) and its download.
+    'tenant_data_export' => [
+        'per_user_per_hour' => (int) env('RATE_LIMIT_TENANT_DATA_EXPORT_PER_USER_HOURLY', 5),
+        'per_ip_per_minute' => (int) env('RATE_LIMIT_TENANT_DATA_EXPORT_PER_IP', 10),
+        'downloads_per_user_per_minute' => (int) env('RATE_LIMIT_TENANT_DATA_EXPORT_DOWNLOADS_PER_USER', 10),
+    ],
+
     // Central (platform operator) login, used by IDEN-1.3.
     'central_login' => [
         'per_ip_per_minute' => (int) env('RATE_LIMIT_CENTRAL_LOGIN_PER_IP', 10),

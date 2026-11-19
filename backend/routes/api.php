@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\CentralTenantResolverController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DailyJournalController;
 use App\Http\Controllers\Api\DashboardApiController;
+use App\Http\Controllers\Api\DataExportController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\InvoiceController;
@@ -351,6 +352,17 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
                 ->whereIn('variant', TenantLogoVariant::values())
                 ->middleware('can:settings.manage')
                 ->name('api.settings.branding.logo.destroy');
+
+            // PRD-17: "Export my data" (admin + settings.manage via DataExportRequest). The POST queues a
+            // ZIP of CSVs on the tenant's private disk; the download needs a short-lived relative signed link.
+            Route::get('/settings/data-export', [DataExportController::class, 'show'])->name('api.settings.data_export.show');
+            Route::post('/settings/data-export', [DataExportController::class, 'store'])
+                ->middleware('throttle:tenant-data-export')
+                ->name('api.settings.data_export.store');
+            Route::get('/settings/data-export/{dataExport}/download', [DataExportController::class, 'download'])
+                ->whereNumber('dataExport')
+                ->middleware(['signed:relative', 'throttle:tenant-data-export-download'])
+                ->name('api.settings.data_export.download');
 
             // Trash Bin (Soft-deleted records recovery)
             Route::get('/trash', [TrashController::class, 'index'])->name('api.trash.index');

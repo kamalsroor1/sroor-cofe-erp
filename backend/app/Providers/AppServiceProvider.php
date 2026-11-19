@@ -283,6 +283,16 @@ class AppServiceProvider extends ServiceProvider
                 ->by('tenant-unlock-screen-user|'.RateLimitKey::scope().'|'.$this->tokenOwnerKey($request)),
         ]);
 
+        // PRD-17: the shop data export (request + download), per tenant + user.
+        RateLimiter::for('tenant-data-export', fn (Request $request): array => [
+            Limit::perMinute($this->limit('rate_limits.tenant_data_export.per_ip_per_minute', 10))
+                ->by('tenant-data-export-ip|'.$request->ip()),
+            Limit::perHour($this->limit('rate_limits.tenant_data_export.per_user_per_hour', 5))
+                ->by('tenant-data-export-user|'.RateLimitKey::scope().'|'.$this->tokenOwnerKey($request)),
+        ]);
+        RateLimiter::for('tenant-data-export-download', fn (Request $request): Limit => Limit::perMinute($this->limit('rate_limits.tenant_data_export.downloads_per_user_per_minute', 10))
+            ->by('tenant-data-export-download|'.RateLimitKey::scope().'|'.$this->tokenOwnerKey($request)));
+
         // Central (platform operator) login, consumed by IDEN-1.3. Security audit (W2 lane 3I):
         // the tight hourly cap is per email AND IP, so one attacker can no longer lock an
         // operator out from everywhere; a looser hourly cap per email that ignores the IP still

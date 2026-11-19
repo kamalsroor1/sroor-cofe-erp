@@ -78,6 +78,7 @@ final class IndexEndpointsSmokeTest extends TenantTestCase
         'returns' => [],
         'roles' => [],
         'settings' => [],
+        'settings/data-export' => [],
         'shifts' => [],
         'shifts/current' => [],
         'stores' => [],
