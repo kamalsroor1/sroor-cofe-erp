@@ -259,6 +259,8 @@ return [
     'share' => [
         'copy_text' => "🧾 فاتورة رقم: #:number\n🏢 المؤسسة: :company\n👤 العميل: :customer\n📅 التاريخ: :date\n💰 الصافي المطلوب: :net :currency\n💵 المدفوع: :paid :currency\n📝 المتبقي: :remaining :currency",
         'whatsapp_text' => "مرحباً بك :customer،\nمرفق تفاصيل فاتورتك رقم #:number من :company:\nالإجمالي الصافي: :net :currency\nالمدفوع: :paid :currency\nالمتبقي: :remaining :currency\nشكراً لتعاملكم معنا!",
+        'pos_whatsapp_text' => "شكراً لشرائك!\nفاتورة رقم #:number\nالإجمالي الصافي: :net :currency",
+        'receipt_link_line' => '🧾 شوف إيصالك: :url',
     ],
 
     // BE-07: business-rule refusals (BusinessRuleException)

@@ -91,6 +91,7 @@ return [
     'save_and_select' => 'Save & Select',
     'invoice_success_title' => 'Invoice Confirmed Successfully 🎉',
     'send_whatsapp' => 'Send via WhatsApp 📱',
+    'share_receipt_whatsapp' => 'Share on WhatsApp',
     'print_receipt' => 'Print Receipt 🖨️',
     'checkout_failed' => 'Checkout Failed',
     'checkout_failed_desc' => 'Could not save and confirm sales invoice',

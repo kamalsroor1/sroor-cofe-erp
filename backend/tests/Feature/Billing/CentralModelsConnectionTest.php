@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Billing;
 
+use App\Models\AccountDeletionRequest;
 use App\Models\Addon;
 use App\Models\AppVersion;
 use App\Models\BillingInvoice;
@@ -102,6 +103,7 @@ final class CentralModelsConnectionTest extends TenantTestCase
             'PlatformSetting' => [PlatformSetting::class, self::VIA_OWN_METHOD],
             'AppVersion' => [AppVersion::class, self::VIA_OWN_METHOD],
             'SignupRequest' => [SignupRequest::class, self::VIA_TRAIT],
+            'AccountDeletionRequest' => [AccountDeletionRequest::class, self::VIA_TRAIT],
             'TenantLifecycleReminder' => [TenantLifecycleReminder::class, self::VIA_TRAIT],
             'Tenant' => [Tenant::class, self::VIA_STANCL],
             'Domain' => [Domain::class, self::VIA_STANCL],

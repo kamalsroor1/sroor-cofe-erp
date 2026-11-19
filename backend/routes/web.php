@@ -125,8 +125,9 @@ Route::get('/sw.js', function () {
 
 // 🌐 Pure Vue 3 SPA Catch-All Entry Point
 // Never serve the SPA shell for unknown /api/* paths (must 404), nor for the tenant print/export pages
-// registered in routes/tenant.php (loaded after this file, so the catch-all would shadow them).
+// registered in routes/tenant.php (loaded after this file, so the catch-all would shadow them), nor for
+// the PRD-22 public signed receipt page (/r/{invoice}).
 Route::get('/{any?}', $spaShell)
-    ->where('any', '(?!api(?:/|$)|reports/print$|items/[^/]+/movements/print$|activity-logs/export-csv$).*')
+    ->where('any', '(?!api(?:/|$)|reports/print$|items/[^/]+/movements/print$|activity-logs/export-csv$|r/[0-9]+$).*')
     ->name('app')
     ->middleware('spa.headers');

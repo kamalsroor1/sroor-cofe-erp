@@ -3,6 +3,7 @@ import { computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import LandingShell from '../../Components/Landing/LandingShell.vue';
 import LegalDocumentContent from '../../Components/Landing/LegalDocumentContent.vue';
+import AccountDeletionLinkCard from '../../Components/Landing/AccountDeletion/AccountDeletionLinkCard.vue';
 import { useLegalDocument } from '../../Composables/useLegalDocument';
 
 const route = useRoute();
@@ -26,6 +27,8 @@ watch(documentKey, refresh, { immediate: true });
         :has-error="hasError"
         @retry="refresh"
       />
+      <!-- MOB-05: the privacy policy points to the account & data deletion page. -->
+      <AccountDeletionLinkCard v-if="documentKey === 'privacy'" />
     </div>
   </LandingShell>
 </template>

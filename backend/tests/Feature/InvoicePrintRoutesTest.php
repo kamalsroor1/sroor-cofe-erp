@@ -727,6 +727,7 @@ class InvoicePrintRoutesTest extends TenantTestCase
             'login',               // guest auth
             'logout',              // ends session only
             'up',                  // health check
+            'r/{invoice}',         // PRD-22 public receipt: signed:relative + tenant tag (Receipts\InvoiceReceiptLinkTest)
         ];
 
         $unguarded = [];

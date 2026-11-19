@@ -31,6 +31,7 @@ return [
         'tenant_limit_override_removed' => 'إزالة حد خاص بمحل',
         'tenant_feature_override_set' => 'حفظ فتح/قفل ميزة لمحل',
         'tenant_feature_override_removed' => 'إزالة فتح/قفل ميزة لمحل',
+        'account_deletion_request_handled' => 'تعليم طلب حذف حساب كمُنفّذ',
         'two_factor_confirmed' => 'تأكيد التحقق بخطوتين',
         'two_factor_challenge_failed' => 'فشل رمز التحقق بخطوتين',
         'recovery_code_used' => 'استخدام رمز استرداد',

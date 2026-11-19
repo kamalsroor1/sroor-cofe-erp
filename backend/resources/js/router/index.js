@@ -89,6 +89,13 @@ const tenantRoutes = [
         meta: { titleKey: 'landing.page_titles.dpa', layout: 'blank', legalDocument: 'dpa' },
     },
     {
+        // MOB-05: account & data deletion (Play Store requirement): explanation + public request form.
+        path: '/account-deletion',
+        name: 'landing.account_deletion',
+        component: () => import('../views/Landing/AccountDeletionView.vue'),
+        meta: { titleKey: 'landing.page_titles.account_deletion', layout: 'blank', legalDocument: 'account-deletion' },
+    },
+    {
         path: '/login',
         name: 'login',
         component: () => import('../views/Auth/LoginView.vue'),
@@ -605,6 +612,13 @@ const centralRoutes = [
         'super_admin.signup_requests',
         'signup.console.page_title',
         () => import('../views/SuperAdmin/SuperAdminSignupRequestsView.vue'),
+        CENTRAL_PERMISSIONS.tenantsView
+    ),
+    centralPage(
+        '/super-admin/account-deletion-requests',
+        'super_admin.account_deletion_requests',
+        'account_deletion.console.page_title',
+        () => import('../views/SuperAdmin/SuperAdminAccountDeletionRequestsView.vue'),
         CENTRAL_PERMISSIONS.tenantsView
     ),
     centralPage(

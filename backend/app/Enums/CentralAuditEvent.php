@@ -119,6 +119,8 @@ enum CentralAuditEvent: string
     case TenantLimitOverrideRemoved = 'tenant_limit_override_removed';
     case TenantFeatureOverrideSet = 'tenant_feature_override_set';
     case TenantFeatureOverrideRemoved = 'tenant_feature_override_removed';
+    // MOB-05: an operator closed a public account-deletion request (the deletion itself is manual)
+    case AccountDeletionRequestHandled = 'account_deletion_request_handled';
 
     public function translationKey(): string
     {

@@ -27,7 +27,7 @@
           {{ formatMoney(changeAmount) }} <span class="text-xs font-bold">{{ currencyLabel }}</span>
         </span>
       </div>
-      <div class="flex gap-2">
+      <div class="flex flex-wrap gap-2">
         <button
           type="button"
           @click="$emit('print')"
@@ -35,6 +35,17 @@
         >
           <Printer class="w-4 h-4" />
           <span>{{ $t('pos.print_receipt') }}</span>
+        </button>
+        <button
+          v-if="invoice?.id"
+          type="button"
+          data-testid="pos-success-whatsapp"
+          :disabled="isSharing"
+          @click="share"
+          class="min-h-[44px] flex-1 py-3 bg-emerald-600 text-white rounded-xl text-xs font-black transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+        >
+          <MessageCircle class="w-4 h-4" />
+          <span>{{ $t('pos.share_receipt_whatsapp') }}</span>
         </button>
         <button
           type="button"
@@ -49,11 +60,13 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { Printer, CheckCircle2 } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
+import { Printer, CheckCircle2, MessageCircle } from 'lucide-vue-next';
 import AppModal from '../Common/AppModal.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { isPositive } from '../../helpers/decimal';
+import { useReceiptShare } from '../../Composables/useReceiptShare';
+import { useTrans } from '../../Composables/useTrans';
 
 const { formatMoney, currencyLabel } = useFormatters();
 
@@ -65,6 +78,28 @@ const props = defineProps({
 });
 
 const hasChange = computed(() => isPositive(props.changeAmount));
+
+// PRD-22: WhatsApp share right after the sale, with the signed receipt link.
+const { t } = useTrans();
+const { shareOnWhatsApp } = useReceiptShare();
+const isSharing = ref(false);
+const share = async () => {
+  if (!props.invoice?.id || isSharing.value) return;
+  isSharing.value = true;
+  try {
+    await shareOnWhatsApp({
+      invoiceId: props.invoice.id,
+      phone: props.invoice.customer_phone || '',
+      text: t('invoices.share.pos_whatsapp_text', {
+        number: props.invoice.invoice_number,
+        net: formatMoney(props.invoice.net_amount),
+        currency: currencyLabel.value,
+      }),
+    });
+  } finally {
+    isSharing.value = false;
+  }
+};
 
 defineEmits(['close', 'print']);
 </script>

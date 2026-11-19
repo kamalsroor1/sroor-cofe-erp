@@ -40,4 +40,12 @@ return [
         'SUPPORT_EMAIL' => (string) env('LEGAL_SUPPORT_EMAIL', ''),
         'SUPPORT_PHONE' => (string) env('LEGAL_SUPPORT_PHONE', ''),
     ],
+
+    /*
+    | MOB-05: public account-deletion requests. Alerts go to the platform Telegram bot; this chat
+    | overrides services.telegram.chat_id when set.
+    */
+    'account_deletion' => [
+        'telegram_chat_id' => (string) env('ACCOUNT_DELETION_TELEGRAM_CHAT_ID', ''),
+    ],
 ];

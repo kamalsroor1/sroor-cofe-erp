@@ -8,6 +8,7 @@ use App\Http\Controllers\DailyJournalPrintController;
 use App\Http\Controllers\InvoicePrintController;
 use App\Http\Controllers\ItemMovementsPrintController;
 use App\Http\Controllers\POSController;
+use App\Http\Controllers\PublicReceiptController;
 use App\Http\Middleware\EnsurePasswordChanged;
 use App\Http\Middleware\EnsureTenantActive;
 use App\Models\Store;
@@ -45,6 +46,14 @@ Route::middleware([
     Route::middleware('guest')->group(function () {
         Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login')->middleware('spa.headers');
     });
+
+    // PRD-22: public receipt shared with the customer (WhatsApp). No session: the signed, expiring
+    // link is the only credential (signed:relative = 403 when tampered/expired); the controller
+    // also checks the link's tenant tag. Throttled per IP. The SPA catch-all excludes /r/{n}.
+    Route::get('/r/{invoice}', PublicReceiptController::class)
+        ->whereNumber('invoice')
+        ->middleware(['throttle:public-api', 'signed:relative'])
+        ->name('receipts.public');
 
     // 🌐 Pure Vue 3 SPA Host Route (Dual-Engine Mode)
     Route::get('/spa/{any?}', function () {

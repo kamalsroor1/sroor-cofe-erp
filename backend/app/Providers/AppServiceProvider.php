@@ -378,6 +378,20 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        // MOB-05: the public account-deletion request form, per client network. Same shape as
+        // signup-requests: accepted submissions spend the strict budgets, every attempt the ceiling.
+        RateLimiter::for('account-deletion-requests', function (Request $request): array {
+            $accepted = static fn ($response): bool => $response->getStatusCode() >= 200 && $response->getStatusCode() < 300;
+            $ip = RateLimitKey::clientNetwork((string) $request->ip());
+
+            return [
+                Limit::perHour($this->limit('rate_limits.account_deletion_requests.per_hour', 3))->by('account-deletion-hour|'.$ip)->after($accepted),
+                Limit::perDay($this->limit('rate_limits.account_deletion_requests.per_day', 10))->by('account-deletion-day|'.$ip)->after($accepted),
+                Limit::perHour($this->limit('rate_limits.account_deletion_requests.global_per_hour', 30))->by('account-deletion-global-hour')->after($accepted),
+                Limit::perHour($this->limit('rate_limits.account_deletion_requests.attempts_per_hour', 30))->by('account-deletion-attempts|'.$ip),
+            ];
+        });
+
         // SIGN-11: public self-signup (POST /api/v1/signup), per client network. Accepted signups
         // spend the strict hourly/daily budgets (a visitor fixing a typo is never locked out);
         // every attempt spends a looser ceiling; a global hourly ceiling caps botnets.

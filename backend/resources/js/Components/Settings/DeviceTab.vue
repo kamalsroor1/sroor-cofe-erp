@@ -6,11 +6,14 @@
       :can-manage="canManage"
       @set-theme="appConfigStore.setTheme"
     />
+
+    <SettingsLegalLinksSection />
   </div>
 </template>
 
 <script setup>
 import SettingsAppearanceSection from './SettingsAppearanceSection.vue';
+import SettingsLegalLinksSection from './SettingsLegalLinksSection.vue';
 import { useAppConfigStore } from '../../stores/appConfig';
 
 defineProps({
