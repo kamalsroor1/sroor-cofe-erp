@@ -133,6 +133,7 @@ return [
         'suppliers_statement' => 'كشف حساب مورد',
         'expenses_index' => 'المصروفات والعهد',
         'items_index' => 'الأصناف والمخزون',
+        'items_labels_print' => 'طباعة ملصقات الأصناف',
         'categories_index' => 'فئات الأصناف',
         'items_movements' => 'حركات مخزون الصنف',
         'daily_journal_index' => 'دفتر اليومية والخزينة',

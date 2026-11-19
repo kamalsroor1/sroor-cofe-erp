@@ -211,6 +211,18 @@ const tenantRoutes = [
         },
     },
     {
+        path: '/items/labels/print',
+        name: 'items.labels.print',
+        component: () => import('../views/Items/ItemLabelsPrintView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.items_labels_print',
+            requiresAuth: true,
+            layout: 'blank',
+            isPrintView: true,
+            permission: 'items.view',
+        },
+    },
+    {
         path: '/categories',
         name: 'categories.index',
         component: () => import('../views/Items/CategoriesView.vue'),

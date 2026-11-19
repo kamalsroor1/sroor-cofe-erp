@@ -133,6 +133,7 @@ return [
         'suppliers_statement' => 'Supplier statement',
         'expenses_index' => 'Expenses & petty cash',
         'items_index' => 'Items & inventory',
+        'items_labels_print' => 'Print item labels',
         'categories_index' => 'Item categories',
         'items_movements' => 'Item stock movements',
         'daily_journal_index' => 'Daily journal & treasury',
