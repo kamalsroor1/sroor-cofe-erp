@@ -1,5 +1,5 @@
 import { ref, computed, watch } from 'vue';
-import { normalize, dSum, dCmp } from '../../helpers/decimal';
+import { normalize, dSum, dCmp, dMax0 } from '../../helpers/decimal';
 import { usePosCheckout } from '../usePosCheckout';
 import { summarizeDiscounts } from '../../helpers/posDiscount';
 
@@ -45,12 +45,17 @@ export function usePosPayment({ fields, activeOrder, activeOrderId, isWalkInCust
         })
     );
     const cartSubtotal = computed(() => Number(discountSummary.value.gross));
-    const cartTotalQuantity = computed(() => cart.value.reduce((sum, item) => sum + parseFloat(item.quantity || 0), 0));
+    // SHOP-01: exact scale-3 sums (helpers/decimal), never float accumulation; Number() only for the display props.
+    const cartTotalQuantity = computed(() => Number(dSum(cart.value.map((item) => item.quantity))));
     const discountAmount = computed(() => Number(discountSummary.value.totalDiscount));
     const customerExpensesTotal = computed(() =>
-        additionalExpenses.value
-            .filter((exp) => (exp.paid_by || 'customer_account') === 'customer_account')
-            .reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0)
+        Number(
+            dSum(
+                additionalExpenses.value
+                    .filter((exp) => (exp.paid_by || 'customer_account') === 'customer_account')
+                    .map((exp) => dMax0(exp.amount))
+            )
+        )
     );
     const cartNetTotal = computed(() => Number(checkoutNet.value));
     const changeDue = computed(() => Number(changePreview.value));

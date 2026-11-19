@@ -328,6 +328,7 @@
         <!-- Clear Cart -->
         <button
           type="button"
+          data-testid="pos-clear-cart"
           @click="$emit('clear-cart')"
           :disabled="cartEmpty"
           class="hidden lg:flex min-h-[44px] min-w-[44px] p-2.5 bg-slate-100 hover:bg-rose-500/20 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-500/20 dark:hover:text-rose-400 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700 rounded-xl transition disabled:opacity-30 cursor-pointer items-center justify-center"

@@ -468,4 +468,8 @@ return [
     'stock_low_short' => 'قليل',
     'confirm_and_approve' => 'حفظ واعتماد الفاتورة',
     'line_more_actions' => 'خيارات الصنف',
+
+    // SHOP-01: stock check when an item is added to the cart
+    'stock_insufficient_blocked' => 'الكمية المتاحة من :name غير كافية (المتاح: :qty :unit). البيع بالسالب غير مسموح.',
+    'stock_insufficient_warning' => 'رصيد :name منخفض (المتاح: :qty :unit). هذا البيع سيجعل الرصيد بالسالب.',
 ];

@@ -76,7 +76,9 @@ final class StorePOSInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_uuid' => ['nullable', 'uuid'],
+            // SHOP-01: the POS sends one key per payment attempt (reused on a retry of that attempt), so a
+            // double tap or a network retry replays the saved invoice instead of selling twice.
+            'client_uuid' => ['required', 'uuid'],
             'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
             'store_id' => ['required', 'exists:stores,id'],
             'invoice_date' => ['required', 'date'],

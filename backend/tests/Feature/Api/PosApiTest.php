@@ -7,6 +7,7 @@ namespace Tests\Feature\Api;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Item;
+use App\Models\Setting;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\Tenant;
@@ -130,6 +131,21 @@ class PosApiTest extends TenantTestCase
                 ],
             ])
             ->assertJson(['success' => true]);
+    }
+
+    public function test_bootstrap_exposes_the_negative_stock_policy_for_the_cart(): void
+    {
+        $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/pos/bootstrap?include_items=0&include_customers=0')
+            ->assertStatus(200)
+            ->assertJsonPath('data.allow_negative_stock', false);
+
+        Setting::set('allow_negative_stock', '1');
+
+        $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/pos/bootstrap?include_items=0&include_customers=0')
+            ->assertStatus(200)
+            ->assertJsonPath('data.allow_negative_stock', true);
     }
 
     public function test_can_checkout_fast_pos_invoice_atomically(): void

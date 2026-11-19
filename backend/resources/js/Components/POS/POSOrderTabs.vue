@@ -57,6 +57,8 @@
 <script setup>
 import { Receipt, Clock, Plus, X } from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
+import { dSum } from '../../helpers/decimal';
+import { lineGross } from '../../helpers/posDiscount';
 
 defineProps({
   orders: {
@@ -73,12 +75,9 @@ defineEmits(['switch-order', 'create-order', 'close-order']);
 
 const { formatMoney } = useFormatters();
 
+// SHOP-01: exact scale-3 sum of the line totals (no float math).
 const getOrderSubtotal = (order) => {
-  if (!order || !Array.isArray(order.cart)) return 0;
-  return order.cart.reduce((sum, item) => {
-    const qty = parseFloat(item.quantity) || 0;
-    const price = parseFloat(item.unit_price) || 0;
-    return sum + qty * price;
-  }, 0);
+  if (!order || !Array.isArray(order.cart)) return '0.000';
+  return dSum(order.cart.map(lineGross));
 };
 </script>

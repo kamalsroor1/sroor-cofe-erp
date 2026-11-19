@@ -11,6 +11,9 @@ export const DEFAULT_SALE_SETTINGS = Object.freeze({
 
 const saleSettings = ref({ ...DEFAULT_SALE_SETTINGS });
 
+// SHOP-01: tenant `allow_negative_stock` from /pos/bootstrap; null until loaded (the cart then only warns).
+const allowNegativeStock = ref(null);
+
 /** Pure: how many receipts to print for a finished sale (0 = none). `manual` = the cashier chose "save and print". */
 export function receiptCopiesToPrint(settings, manual) {
     const auto = settings?.auto_print === 'thermal';
@@ -44,6 +47,9 @@ export function usePosSaleSettings() {
     const applySaleSettings = (payload) => {
         saleSettings.value = { ...DEFAULT_SALE_SETTINGS, ...(payload && typeof payload === 'object' ? payload : {}) };
     };
+    const applyStockPolicy = (allow) => {
+        allowNegativeStock.value = typeof allow === 'boolean' ? allow : null;
+    };
 
     const enabledMethods = computed(() => saleSettings.value.payment_methods || DEFAULT_SALE_SETTINGS.payment_methods);
     const isMethodEnabled = (key) => enabledMethods.value.includes(key === 'smart_wallet' ? 'e_wallet' : key);
@@ -51,5 +57,13 @@ export function usePosSaleSettings() {
         (saleSettings.value.cash_denominations || DEFAULT_SALE_SETTINGS.cash_denominations).map((d) => Number(d))
     );
 
-    return { saleSettings, applySaleSettings, enabledMethods, isMethodEnabled, cashDenominations };
+    return {
+        saleSettings,
+        applySaleSettings,
+        allowNegativeStock,
+        applyStockPolicy,
+        enabledMethods,
+        isMethodEnabled,
+        cashDenominations,
+    };
 }

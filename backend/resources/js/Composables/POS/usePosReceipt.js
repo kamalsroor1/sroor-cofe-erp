@@ -1,14 +1,13 @@
 import api from '../../Services/api';
 import { trans } from '../../helpers/trans';
-import { buildThermalHtml as buildReceiptHtml } from '../../helpers/posReceiptHtml';
-import { currentCurrencyLabel } from '../useFormatters';
+import { buildThermalHtml as buildReceiptHtml, saleIncludesCash } from '../../helpers/posReceiptHtml';
+import { currentCurrencyLabel, readDisplayContext } from '../useFormatters';
 
 /**
  * Prints the last created invoice: silent thermal print on desktop, browser print page otherwise.
  */
 export function usePosReceipt({
     lastCreatedInvoice,
-    paymentType,
     isDesktop,
     printThermalReceipt,
     openCashDrawer,
@@ -21,6 +20,7 @@ export function usePosReceipt({
         buildReceiptHtml(inv, {
             companyName: appConfigStore.companyName || appConfigStore.platformName,
             currencyLabel: currentCurrencyLabel(),
+            currencyDecimals: readDisplayContext().currencyDecimals,
             t: trans,
             formatDate,
             formatDateTime,
@@ -38,7 +38,8 @@ export function usePosReceipt({
 
                 const html = buildThermalHtml(inv);
                 for (let i = 0; i < count; i++) await printThermalReceipt(html);
-                if (inv.payment_type === 'cash' || paymentType.value === 'cash') {
+                // SHOP-01: the drawer opens only when the saved sale took cash (not card / wallet / credit).
+                if (saleIncludesCash(inv)) {
                     playDrawerSound();
                     await openCashDrawer();
                 }

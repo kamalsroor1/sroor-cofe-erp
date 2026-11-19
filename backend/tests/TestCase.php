@@ -3,9 +3,12 @@
 namespace Tests;
 
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Tests\Concerns\SendsCheckoutIdempotencyKey;
 
 abstract class TestCase extends BaseTestCase
 {
+    use SendsCheckoutIdempotencyKey;
+
     /**
      * Obvious dummy phone for the primary test user. Never put a real number in a
      * fixture: Tests\Unit\NoHardcodedRealPhonesTest fails on real-looking literals.
