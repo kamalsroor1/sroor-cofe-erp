@@ -43,6 +43,13 @@ return [
         'per_user_per_minute' => (int) env('RATE_LIMIT_TENANT_PASSWORD_CHANGE_PER_USER', 10),
     ],
 
+    // SIGN-15: POST /api/v1/auth/forgot-password and /auth/reset-password (public, shop host).
+    // Per client IP, plus an hourly cap per tenant + email that ignores the IP (mail bombing).
+    'tenant_password_reset' => [
+        'per_ip_per_minute' => (int) env('RATE_LIMIT_TENANT_PASSWORD_RESET_PER_IP', 5),
+        'per_email_per_hour' => (int) env('RATE_LIMIT_TENANT_PASSWORD_RESET_PER_EMAIL_HOURLY', 5),
+    ],
+
     // SET-02 / SEC-21 review: POST /api/v1/auth/unlock-screen. Its own named limiter (was the
     // anonymous throttle:10,1, shared with every throttle:N,1 route and, on a shared cache store,
     // with the same user id in other tenants). Wrong secrets also spend the password lockout or

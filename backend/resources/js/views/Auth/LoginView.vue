@@ -145,8 +145,17 @@
 
         <!-- Options: Remember Me & Biometric Setup -->
         <div class="space-y-2 pt-1">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between gap-2">
             <BaseCheckbox v-model="form.remember" :label="$t('auth.remember_me')" />
+            <!-- SIGN-15: shop users only (the platform console has its own reset under /super-admin). -->
+            <router-link
+              v-if="!isExplicitCentralAdmin"
+              :to="{ name: 'auth.forgot_password', query: forgotPasswordQuery }"
+              data-testid="forgot-password-link"
+              class="inline-flex min-h-[44px] items-center px-1 text-xs font-bold text-theme-primary hover:underline font-tajawal"
+            >
+              {{ $t('auth.password_reset.forgot_link') }}
+            </router-link>
           </div>
 
           <div
@@ -313,6 +322,9 @@ const form = reactive({
   password: '',
   remember: true,
 });
+
+// SIGN-15: carry a typed email over to the forgot-password page (never a phone number).
+const forgotPasswordQuery = computed(() => (form.login.includes('@') ? { email: form.login.trim() } : undefined));
 
 const isLoading = ref(false);
 const errorMessage = ref('');

@@ -105,6 +105,21 @@ const tenantRoutes = [
         },
     },
     {
+        // SIGN-15: a shop user's own "forgot password" by email (public, guest only).
+        path: '/forgot-password',
+        name: 'auth.forgot_password',
+        component: () => import('../views/Auth/ForgotPasswordView.vue'),
+        meta: { titleKey: 'auth.password_reset.forgot_page_title', guestOnly: true, layout: 'blank' },
+    },
+    {
+        // SIGN-15: opened from the emailed link (?token=…&email=…). Not guest-only: the link may be opened
+        // on a device where someone else is signed in, and must not bounce to that person's dashboard.
+        path: '/reset-password',
+        name: 'auth.reset_password',
+        component: () => import('../views/Auth/ResetPasswordView.vue'),
+        meta: { titleKey: 'auth.password_reset.reset_page_title', layout: 'blank' },
+    },
+    {
         // SELL-01: full-screen forced change (flagged accounts); the guard keeps every other route closed.
         path: '/change-password',
         name: PASSWORD_CHANGE_ROUTE,

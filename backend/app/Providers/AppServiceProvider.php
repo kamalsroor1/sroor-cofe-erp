@@ -273,6 +273,15 @@ class AppServiceProvider extends ServiceProvider
                 ->by('tenant-password-change-user|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->user()?->getAuthIdentifier()).'|'.$request->ip()),
         ]);
 
+        // SIGN-15: public forgot / reset password on a shop host. Per client IP, plus an hourly cap per
+        // tenant + email that ignores the IP, so one mailbox cannot be flooded with reset mails.
+        RateLimiter::for('tenant-password-reset', fn (Request $request): array => [
+            Limit::perMinute($this->limit('rate_limits.tenant_password_reset.per_ip_per_minute', 5))
+                ->by('tenant-pwreset-ip|'.$request->ip()),
+            Limit::perHour($this->limit('rate_limits.tenant_password_reset.per_email_per_hour', 5))
+                ->by('tenant-pwreset-email|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->input('email'))),
+        ]);
+
         // SET-02 / SEC-21 review: the idle screen unlock, per tenant + user (the old anonymous
         // throttle:10,1 bucket was shared with every other throttle:N,1 route). Route throttles run
         // BEFORE ApiTokenAuth (middleware priority), so the user comes from the bearer token here.
