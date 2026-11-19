@@ -53,3 +53,18 @@ test('MOB-03: play and direct flavors exist and only direct can self-update', ()
     assert.ok(existsSync(path.join(javaDir('play'), 'FlavorPlugins.java')));
     assert.match(read('android/app/src/main/java/com/ibraa/app/MainActivity.java'), /FlavorPlugins\.all\(\)/);
 });
+
+test('MOB-01: Android 12+ splash theme items and no dead splash config', () => {
+    const styles = read('android', 'app', 'src', 'main', 'res', 'values', 'styles.xml');
+    const launch = /<style name="AppTheme\.NoActionBarLaunch"[\s\S]*?<\/style>/.exec(styles)?.[0] ?? '';
+
+    assert.match(launch, /parent="Theme\.SplashScreen"/);
+    assert.match(launch, /name="windowSplashScreenBackground">@color\/splash_background</);
+    assert.match(launch, /name="windowSplashScreenAnimatedIcon">@mipmap\/ic_launcher_foreground</);
+    assert.match(launch, /name="postSplashScreenTheme">@style\/AppTheme\.NoActionBar</);
+    assert.match(read('android/app/src/main/res/values/splash_colors.xml'), /name="splash_background">#13201C</);
+
+    // @capacitor/splash-screen is not installed: its config block was dead.
+    assert.equal(capConfig.plugins?.SplashScreen, undefined);
+    assert.equal(capConfig.plugins?.StatusBar?.backgroundColor, '#13201C');
+});

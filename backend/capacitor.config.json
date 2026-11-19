@@ -13,15 +13,9 @@
     ]
   },
   "plugins": {
-    "SplashScreen": {
-      "launchShowDuration": 2000,
-      "backgroundColor": "#13201C",
-      "showSpinner": false,
-      "androidScaleType": "CENTER_CROP"
-    },
     "StatusBar": {
       "style": "DARK",
-      "backgroundColor": "#020617"
+      "backgroundColor": "#13201C"
     }
   }
 }
