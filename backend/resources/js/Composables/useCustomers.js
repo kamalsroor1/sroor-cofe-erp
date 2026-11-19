@@ -3,11 +3,13 @@ import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 import { useAuthStore } from '../stores/auth';
+import { useAppConfigStore } from '../stores/appConfig';
 import { businessToday } from './useBusinessDate';
 
 export function useCustomers() {
     const { t } = useTrans();
     const authStore = useAuthStore();
+    const appConfigStore = useAppConfigStore();
 
     // ROLE-01: deleting a customer is its own permission (the server enforces it too).
     const canDeleteCustomer = computed(() => authStore.hasPermission('customers.delete'));
@@ -40,8 +42,14 @@ export function useCustomers() {
         address: '',
         tax_number: '',
         opening_balance: '0.000',
+        // SHOP-03: empty = no limit.
+        credit_limit: '',
         notes: '',
     });
+    const formErrors = ref({});
+
+    /** SHOP-03: a stored / default limit as the input shows it ('' = no limit). */
+    const creditLimitInput = (value) => (value === null || value === undefined ? '' : String(value));
 
     // Payment Modal
     const showPaymentModal = ref(false);
@@ -105,8 +113,11 @@ export function useCustomers() {
             address: '',
             tax_number: '',
             opening_balance: '0.000',
+            // SHOP-03: pre-filled with the shop default (settings); the user may change or clear it.
+            credit_limit: creditLimitInput(appConfigStore.system?.customers_default_credit_limit),
             notes: '',
         });
+        formErrors.value = {};
         showCustomerModal.value = true;
     };
 
@@ -118,8 +129,10 @@ export function useCustomers() {
             address: customer.address || '',
             tax_number: customer.tax_number || '',
             opening_balance: '0.000',
+            credit_limit: creditLimitInput(customer.credit_limit),
             notes: customer.notes || '',
         });
+        formErrors.value = {};
         showCustomerModal.value = true;
     };
 
@@ -133,6 +146,7 @@ export function useCustomers() {
 
     const saveCustomer = async () => {
         isSubmitting.value = true;
+        formErrors.value = {};
         try {
             if (editingCustomer.value) {
                 await api.put(`/customers/${editingCustomer.value.id}`, form);
@@ -156,6 +170,7 @@ export function useCustomers() {
             showCustomerModal.value = false;
             await fetchCustomers(pagination.value.current_page);
         } catch (err) {
+            formErrors.value = err.response?.status === 422 ? (err.response.data?.errors ?? {}) : {};
             Swal.fire({ icon: 'error', title: t('common.error'), text: err.userMessage || t('common.error') });
         } finally {
             isSubmitting.value = false;
@@ -247,6 +262,7 @@ export function useCustomers() {
         showCustomerModal,
         editingCustomer,
         form,
+        formErrors,
         showPaymentModal,
         targetCustomer,
         paymentForm,
