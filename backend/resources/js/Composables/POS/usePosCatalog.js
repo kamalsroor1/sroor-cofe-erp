@@ -2,6 +2,7 @@ import { ref, computed, onBeforeUnmount } from 'vue';
 import api from '../../Services/api';
 import { usePosSaleSettings } from './usePosSaleSettings';
 import { catalogParams, FAVORITES_LIMIT, mergePage } from '../../helpers/posCatalog';
+import { dSub, normalize } from '../../helpers/decimal';
 
 const PAGE_SIZE = 60;
 const SEARCH_DEBOUNCE_MS = 250;
@@ -15,7 +16,7 @@ const isCancel = (err) => err?.name === 'CanceledError' || err?.code === 'ERR_CA
  * POS-04/05: the grid is a server-paged GET /pos/items (filters, search, sort, per-category counts in meta.counts).
  */
 export function usePosCatalog({ authStore, customers }) {
-    const { applySaleSettings } = usePosSaleSettings();
+    const { applySaleSettings, applyStockPolicy } = usePosSaleSettings();
     const items = ref([]);
     const categories = ref([]);
     // meta.counts of the last items page: counters honour every filter but the category.
@@ -147,12 +148,14 @@ export function usePosCatalog({ authStore, customers }) {
         discountPolicy: async () => {
             let cap = null;
             let saleSettings = null;
+            let allowNegativeStock = null;
             let display = { cardsPerRow: DEFAULT_CARDS_PER_ROW, showImages: false };
             try {
                 const res = await api.get('/pos/bootstrap', { params: { include_items: 0, include_customers: 0 } });
                 const posSettings = res.data?.data?.pos_settings;
                 cap = posSettings?.effective_max_discount_percent ?? null;
                 saleSettings = res.data?.data?.sale_settings ?? null;
+                allowNegativeStock = res.data?.data?.allow_negative_stock ?? null;
                 display = {
                     cardsPerRow: posSettings?.catalog_cards_per_row || DEFAULT_CARDS_PER_ROW,
                     showImages: !!posSettings?.show_item_images,
@@ -163,6 +166,7 @@ export function usePosCatalog({ authStore, customers }) {
             return () => {
                 maxDiscountPercent.value = cap;
                 applySaleSettings(saleSettings);
+                applyStockPolicy(allowNegativeStock);
                 cardsPerRow.value = display.cardsPerRow;
                 showItemImages.value = display.showImages;
             };
@@ -336,8 +340,20 @@ export function usePosCatalog({ authStore, customers }) {
         await loadParts(['shift'], { silent: true });
     };
 
+    // SHOP-01: after a sale the cached grid stock is lowered by what was sold (exact, scale 3), so the cart's
+    // stock check does not pass on figures the sale already used up. The next page load replaces them anyway.
+    const applySoldQuantities = (lines = []) => {
+        const sold = new Map();
+        lines.forEach((l) => sold.set(l.id, l.quantity));
+        items.value.forEach((item) => {
+            if (!sold.has(item.id) || item.current_stock === null || item.current_stock === undefined) return;
+            item.current_stock = dSub(normalize(item.current_stock), normalize(sold.get(item.id)));
+        });
+    };
+
     return {
         items,
+        applySoldQuantities,
         categories: categoriesWithCounts,
         totalItemsCount,
         visibleCount,

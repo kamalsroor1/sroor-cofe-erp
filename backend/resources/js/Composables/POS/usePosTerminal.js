@@ -30,7 +30,7 @@ export function usePosTerminal() {
     const appConfigStore = useAppConfigStore();
     const hardware = useDesktopHardware();
     const sounds = useAudioFeedback();
-    const { formatMoney, formatDate, formatDateTime } = useFormatters();
+    const { formatMoney, formatQty, formatDate, formatDateTime } = useFormatters();
     // OFFL-1: no offline queue yet (end of Phase 2) — every server write is blocked while offline.
     const { isOnline } = useConnectivity();
 
@@ -65,6 +65,7 @@ export function usePosTerminal() {
         focusSearch,
         playScanBeep: sounds.playScanBeep,
         formatMoney,
+        formatQty,
     });
     const search = usePosItemSearch({
         items: catalog.items,
@@ -78,7 +79,6 @@ export function usePosTerminal() {
     watch(search.searchTerm, (term) => catalog.setSearch(term));
     const { printLastInvoice, reprintInvoice } = usePosReceipt({
         lastCreatedInvoice,
-        paymentType: fields.paymentType,
         isDesktop: hardware.isDesktop,
         printThermalReceipt: hardware.printThermalReceipt,
         openCashDrawer: hardware.openCashDrawer,
@@ -103,6 +103,7 @@ export function usePosTerminal() {
         sounds,
         onShiftRequired: catalog.reloadShift,
         invoiceLimit,
+        onSaleCompleted: catalog.applySoldQuantities,
     });
 
     const recentSales = usePosRecentSales();

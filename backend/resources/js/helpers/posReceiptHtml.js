@@ -1,24 +1,48 @@
 import { escapeHtml } from './escapeHtml.js';
+import { isPositive } from './decimal.js';
+import { formatMoneyAmount, resolveCurrencyDecimals } from './formatters.js';
+
+const QTY_DECIMALS = 3;
+
+/**
+ * SHOP-01: true when cash physically changed hands in this sale, so the cash drawer may open.
+ * Uses the saved payments when the invoice carries them (split sales), else the header method.
+ */
+export function saleIncludesCash(inv) {
+    if (!inv || inv.payment_type === 'credit') return false;
+    // Change handed back means the drawer opens, even when the server dropped a cash line equal to the change.
+    if (isPositive(inv.change_amount)) return true;
+    const payments = Array.isArray(inv.payments) ? inv.payments : [];
+    if (payments.length > 0) {
+        return payments.some((p) => (p.payment_method || p.method) === 'cash' && isPositive(p.amount));
+    }
+    return inv.payment_method === 'cash' && isPositive(inv.paid_amount);
+}
 
 /**
  * Thermal receipt markup. Every interpolated value is escaped: item names, company name and
  * invoice numbers are user-controlled and the string is rendered as HTML by the printer bridge.
+ * Amounts are the server's decimal strings formatted exactly (half-up, no float math).
  */
-export function buildThermalHtml(inv, { companyName, currencyLabel, t, formatDate, formatDateTime }) {
+export function buildThermalHtml(inv, { companyName, currencyLabel, currencyDecimals, t, formatDate, formatDateTime }) {
+    const decimals = resolveCurrencyDecimals(currencyDecimals);
+    const money = (value) => formatMoneyAmount(value ?? '0', { decimals, fixed: true });
+    const qty = (value) => formatMoneyAmount(value ?? '0', { decimals: QTY_DECIMALS });
+
     const itemsRows = (inv.items || [])
         .map(
             (item) => `
         <tr>
           <td style="text-align: right; padding: 2px 0;">${escapeHtml(item.item_name || item.name)}</td>
-          <td style="text-align: center; padding: 2px 0;">${escapeHtml(parseFloat(item.quantity))}</td>
-          <td style="text-align: left; padding: 2px 0;">${escapeHtml(parseFloat(item.total_price || 0).toFixed(2))}</td>
+          <td style="text-align: center; padding: 2px 0;">${escapeHtml(qty(item.quantity))}</td>
+          <td style="text-align: left; padding: 2px 0;">${escapeHtml(money(item.total_price))}</td>
         </tr>
       `
         )
         .join('');
 
     const dateText = inv.invoice_date ? formatDate(inv.invoice_date) : formatDateTime(new Date());
-    const netTotal = parseFloat(inv.net_total || inv.net_amount || 0).toFixed(2);
+    const netTotal = money(inv.net_total ?? inv.net_amount);
 
     return `
         <div style="font-family: sans-serif; font-size: 11px; text-align: center;">

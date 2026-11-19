@@ -26,6 +26,7 @@ export function usePosSubmit({
     sounds,
     onShiftRequired = null,
     invoiceLimit = null,
+    onSaleCompleted = null,
 }) {
     const { saleSettings } = usePosSaleSettings();
     const { cart, selectedCustomerId, paymentType, paymentMethod, discountType } = fields;
@@ -103,6 +104,8 @@ export function usePosSubmit({
             }
 
             invoiceLimit?.refresh();
+            // SHOP-01: the grid's cached stock follows the sale, so the next cart is checked against fresh figures.
+            onSaleCompleted?.(cart.value.map((line) => ({ id: line.id, quantity: line.quantity })));
 
             // Clear completed order & switch to remaining or fresh order
             if (activeOrder.value) activeOrder.value.checkoutUuid = null;

@@ -255,6 +255,7 @@ import BaseInput from '../Form/BaseInput.vue';
 import BaseSelect from '../Form/BaseSelect.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
+import { dMax0, dSum } from '../../helpers/decimal';
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -307,16 +308,17 @@ const removeExpense = (index) => {
   localExpenses.value.splice(index, 1);
 };
 
+// SHOP-01: exact scale-3 sums (no float math).
 const totalCustomer = computed(() => {
-  return localExpenses.value
-    .filter((e) => e.paid_by === 'customer_account')
-    .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  const amounts = localExpenses.value.filter((e) => e.paid_by === 'customer_account').map((e) => dMax0(e.amount));
+  return dSum(amounts);
 });
 
 const totalTreasury = computed(() => {
-  return localExpenses.value
+  const amounts = localExpenses.value
     .filter((e) => (e.paid_by || '').startsWith('treasury_'))
-    .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    .map((e) => dMax0(e.amount));
+  return dSum(amounts);
 });
 
 const save = () => {
