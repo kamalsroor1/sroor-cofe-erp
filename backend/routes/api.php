@@ -42,6 +42,7 @@ use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\SystemContextApiController;
 use App\Http\Controllers\Api\TenantBrandAssetController;
 use App\Http\Controllers\Api\TenantLogoController;
+use App\Http\Controllers\Api\TenantPasswordResetController;
 use App\Http\Controllers\Api\TrashController;
 use App\Http\Controllers\Api\TreasuryController;
 use App\Http\Controllers\Api\UserController;
@@ -89,6 +90,9 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
     Route::get('/app/download-latest-apk', [AppUpdateController::class, 'downloadApk'])->middleware(['throttle:public-api', 'throttle:app-download'])->name('api.app.download_latest_apk');
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:tenant-login')->name('api.auth.login');
     Route::get('/auth/options', [AuthController::class, 'authOptions'])->middleware('throttle:public-api')->name('api.auth.options');
+    // SIGN-15: a shop user's own "forgot password" by email (public; the emailed token is the credential).
+    Route::post('/auth/forgot-password', [TenantPasswordResetController::class, 'forgot'])->middleware('throttle:tenant-password-reset')->name('api.auth.forgot_password');
+    Route::post('/auth/reset-password', [TenantPasswordResetController::class, 'reset'])->middleware('throttle:tenant-password-reset')->name('api.auth.reset_password');
 
     // Quick login: TESTING ONLY. Registered only when the flag is on outside production;
     // EnsureQuickLoginAllowed re-checks at runtime (stale route cache, central host, prod).

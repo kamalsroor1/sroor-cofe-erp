@@ -102,4 +102,16 @@ return [
         'data_kept' => 'Your data is safe: nothing was deleted and we keep it all.',
         'contact_support' => 'To bring your shop back, contact our support team and we will restore it for you:',
     ],
+
+    // SIGN-15: App\Mail\TenantPasswordResetMail.
+    'tenant_password_reset' => [
+        'subject' => 'Reset your password on :app',
+        'heading' => 'Reset your password',
+        'greeting' => 'Hello :name,',
+        'intro' => 'We received a request to reset the password of your account in ":shop". Use the button below to choose a new one.',
+        'button' => 'Choose a new password',
+        'link_label' => 'Or open this link:',
+        'expiry' => 'This link works once and expires in :minutes minutes.',
+        'not_you' => 'If you did not ask for this, ignore this message: your password stays as it is.',
+    ],
 ];
