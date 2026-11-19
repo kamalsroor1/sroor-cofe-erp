@@ -15,7 +15,8 @@ const LEGACY_DISMISSED_PREFIX = 'app_update_dismissed:';
 /**
  * Platform-agnostic updater state machine (APP-3 / APP-7). All side effects are injected so it can be unit-tested:
  *
- * - platform: 'android' | 'windows' | 'web'
+ * - platform: 'android' | 'android_play' | 'windows' | 'web'
+ *   (android_play = Google Play build, MOB-03: checked, but the API never offers it an APK)
  * - getCurrentVersion(): Promise<{ name, code }> — always the INSTALLED binary, never a stored/spoofed value
  * - fetchUpdate(params): Promise<checkUpdateResponse>
  * - native: { downloadAndInstall(opts), addProgressListener(cb) } (Android AppUpdater plugin) or null
@@ -56,7 +57,7 @@ export function createAppUpdater({
     const stage = ref('idle');
     const errorKey = ref(null);
 
-    const isEligible = computed(() => platform === 'android' || platform === 'windows');
+    const isEligible = computed(() => platform === 'android' || platform === 'android_play' || platform === 'windows');
 
     const downloadProgress = computed(() => {
         if (platform === 'windows') return desktopPercent.value;

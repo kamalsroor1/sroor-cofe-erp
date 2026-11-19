@@ -16,7 +16,18 @@
     </style>
 
 
+    <!--
+      MOB-01: launch theme. Android 12+ draws the system splash from windowSplashScreen* (core-splashscreen
+      maps them to the platform attributes on API 31+): brand dark background + the launcher mark. Older
+      versions show the branded @drawable/splash window background. postSplashScreenTheme is the theme
+      the activity switches to (Capacitor's BridgeActivity also sets AppTheme.NoActionBar itself).
+    -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
         <item name="android:background">@drawable/splash</item>
+        <item name="android:statusBarColor">@color/splash_background</item>
+        <item name="android:navigationBarColor">@color/splash_background</item>
     </style>
 </resources>

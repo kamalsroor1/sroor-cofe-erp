@@ -1,4 +1,4 @@
-package com.sroor.cofe.erp;
+package com.ibraa.app;
 
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;

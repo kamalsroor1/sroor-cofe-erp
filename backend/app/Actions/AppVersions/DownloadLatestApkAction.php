@@ -28,6 +28,11 @@ final class DownloadLatestApkAction
 
     public function execute(CheckUpdateDTO $dto): BinaryFileResponse
     {
+        // MOB-03: never hand an APK to the Play build.
+        if (! $dto->offersBinary()) {
+            throw new NotFoundHttpException(__('app_update.file_not_available'));
+        }
+
         $release = $dto->versionCode === null
             ? $this->checkAppUpdate->execute($dto)['latest']
             : $this->exactRelease($dto);

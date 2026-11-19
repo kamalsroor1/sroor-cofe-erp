@@ -1,4 +1,4 @@
-package com.sroor.cofe.erp;
+package com.ibraa.app;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -10,8 +10,11 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        // APP-3: APK updates go through AppUpdaterPlugin (SHA-256 + signer verification) only.
-        registerPlugin(AppUpdaterPlugin.class);
+        // MOB-03: flavor plugins. direct = AppUpdaterPlugin (APK self-update, SHA-256 + signer verification);
+        // play = PlayStoreBuildPlugin marker only (Play owns updates, no install permission).
+        for (Class<? extends com.getcapacitor.Plugin> plugin : FlavorPlugins.all()) {
+            registerPlugin(plugin);
+        }
         super.onCreate(savedInstanceState);
 
         if (getBridge() != null && getBridge().getWebView() != null) {

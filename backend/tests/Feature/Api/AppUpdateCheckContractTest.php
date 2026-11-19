@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
+use App\Enums\AppPlatform;
 use App\Models\AppVersion;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -255,5 +256,51 @@ final class AppUpdateCheckContractTest extends TenantTestCase
         $this->getJson('/api/v1/app/check-update?platform=ios&version_code=1')
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['platform']);
+    }
+
+    public function test_the_play_build_is_never_offered_an_apk(): void
+    {
+        // MOB-03: newer, forced Android releases exist, but the Play build updates from the store only.
+        $this->release(8);
+        $this->release(10, ['is_force_update' => true, 'min_version_code' => 9]);
+
+        $this->getJson('/api/v1/app/check-update?platform=android_play&version_code=5&version_name=1.0.5')
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('has_update', false)
+            ->assertJsonPath('force_update', false)
+            ->assertJsonPath('store_managed', true)
+            ->assertJsonPath('download_url', null)
+            ->assertJsonPath('manual_download_url', null)
+            ->assertJsonPath('checksum', null)
+            ->assertJsonPath('file_size_bytes', null)
+            ->assertJsonPath('rollback', null)
+            ->assertJsonPath('latest_version_code', 5)
+            ->assertJsonPath('title', __('app_releases.check.title_up_to_date'));
+    }
+
+    public function test_the_direct_build_still_gets_its_apk_and_is_not_store_managed(): void
+    {
+        $this->release(10);
+
+        $this->getJson(self::URL)
+            ->assertOk()
+            ->assertJsonPath('has_update', true)
+            ->assertJsonPath('store_managed', false);
+    }
+
+    public function test_the_play_build_cannot_download_an_apk(): void
+    {
+        $this->release(10);
+
+        $this->get('/api/v1/app/download-apk?platform=android_play')->assertNotFound();
+        $this->get('/api/v1/app/download-apk?platform=android_play&version_code=10')->assertNotFound();
+        $this->get('/api/v1/app/download-apk?platform=android&version_code=10')->assertOk();
+    }
+
+    public function test_android_play_is_not_an_upload_platform(): void
+    {
+        // android_play is a client channel, never a release platform a binary is stored for.
+        $this->assertNotContains('android_play', AppPlatform::values());
     }
 }

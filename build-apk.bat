@@ -28,11 +28,11 @@ echo.
 echo [3/3] Checking Android Studio / Gradle...
 if exist "%~dp0backend\android\gradlew.bat" (
     cd /d "%~dp0backend\android"
-    call gradlew.bat assembleDebug
+    call gradlew.bat assembleDirectDebug
     if %ERRORLEVEL% equ 0 (
         echo.
         echo 🎉 APK Build Complete!
-        echo 📦 APK Location: backend\android\app\build\outputs\apk\debug\app-debug.apk
+        echo 📦 APK Location: backend\android\app\build\outputs\apk\direct\debug\app-direct-debug.apk
     ) else (
         echo ⚠️ Open in Android Studio via: cd backend ^&^& npx cap open android
     )

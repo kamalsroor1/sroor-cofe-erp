@@ -1,23 +1,21 @@
 {
-  "appId": "com.sroor.cofe.erp",
+  "appId": "com.ibraa.app",
   "appName": "إبراء",
   "webDir": "capacitor-www",
   "bundledWebRuntime": false,
   "server": {
-    "url": "https://2m.baraa-solutions.com",
-    "cleartext": true,
-    "androidScheme": "https"
+    "url": "https://ibraa.app",
+    "cleartext": false,
+    "androidScheme": "https",
+    "allowNavigation": [
+      "ibraa.app",
+      "*.ibraa.app"
+    ]
   },
   "plugins": {
-    "SplashScreen": {
-      "launchShowDuration": 2000,
-      "backgroundColor": "#13201C",
-      "showSpinner": false,
-      "androidScaleType": "CENTER_CROP"
-    },
     "StatusBar": {
       "style": "DARK",
-      "backgroundColor": "#020617"
+      "backgroundColor": "#13201C"
     }
   }
 }

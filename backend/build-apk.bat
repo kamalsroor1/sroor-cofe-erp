@@ -37,14 +37,14 @@ if %ERRORLEVEL% NEQ 0 (
 echo.
 echo [3/3] Compiling Android APK with Gradle...
 cd android
-call gradlew.bat assembleDebug
+call gradlew.bat assembleDirectDebug
 cd ..
 
 echo.
-if exist "android\app\build\outputs\apk\debug\app-debug.apk" (
+if exist "android\app\build\outputs\apk\direct\debug\app-direct-debug.apk" (
     if not exist "dist" mkdir dist
-    copy /y "android\app\build\outputs\apk\debug\app-debug.apk" "dist\cloud-erp-pos-debug.apk" >nul
-    copy /y "android\app\build\outputs\apk\debug\app-debug.apk" "cloud-erp-pos-debug.apk" >nul
+    copy /y "android\app\build\outputs\apk\direct\debug\app-direct-debug.apk" "dist\cloud-erp-pos-debug.apk" >nul
+    copy /y "android\app\build\outputs\apk\direct\debug\app-direct-debug.apk" "cloud-erp-pos-debug.apk" >nul
     echo ====================================================
     echo   BUILD SUCCESS! APK ready at:
     echo   - backend\dist\cloud-erp-pos-debug.apk

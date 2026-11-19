@@ -8,7 +8,7 @@ import { normalizeDownloadRelease, semverCode, stageKey } from '../helpers/appUp
 import { createAppUpdater } from './appUpdate/createAppUpdater';
 import versionData from '../version.json';
 
-// Native Android plugin (android/app/src/main/java/.../AppUpdaterPlugin.java):
+// Native Android plugin, direct flavor only (android/app/src/direct/java/.../AppUpdaterPlugin.java):
 // streams the APK, verifies SHA-256 + package name + signing certificate, then opens the system installer.
 const AppUpdaterPlugin = registerPlugin('AppUpdater');
 
@@ -21,9 +21,15 @@ const isDesktopPlatform = () =>
     typeof window !== 'undefined' &&
     (!!window.electronAPI?.isElectron || window.navigator.userAgent.includes('Electron'));
 
+// MOB-03: the Google Play flavor registers the marker plugin "PlayStoreBuild" (no AppUpdater, no install
+// permission). It reports `android_play`: the API never offers it an APK, its updates come from the store.
+const isPlayStoreBuild = () => Capacitor.isPluginAvailable('PlayStoreBuild');
+
 const getClientPlatform = () => {
     if (isDesktopPlatform()) return 'windows';
-    if (isNativePlatform() && Capacitor.getPlatform() === 'android') return 'android';
+    if (isNativePlatform() && Capacitor.getPlatform() === 'android') {
+        return isPlayStoreBuild() ? 'android_play' : 'android';
+    }
     return 'web';
 };
 
@@ -90,7 +96,7 @@ export function useAppUpdate() {
 
     return {
         ...updater,
-        isNative: platform === 'android',
+        isNative: platform === 'android' || platform === 'android_play',
         isDesktop: platform === 'windows',
         platform: computed(() => platform),
         downloadStageText,
@@ -121,7 +127,9 @@ export function useAppDownloads() {
             );
             releases.value = responses
                 .map((res, i) => normalizeDownloadRelease(res.data, DOWNLOAD_PLATFORMS[i]))
-                .filter(Boolean);
+                .filter(Boolean)
+                // MOB-03: the Play build never links to an APK (Play policy: updates come from the store).
+                .filter((release) => platform !== 'android_play' || release.platform !== 'android');
         } catch {
             hasError.value = true;
             releases.value = [];

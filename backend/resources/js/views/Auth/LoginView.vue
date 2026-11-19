@@ -235,6 +235,7 @@ import { AlertTriangle, Phone, Lock, LogIn, Sun, Moon, Fingerprint, RefreshCw } 
 import { trans } from '../../helpers/trans';
 import { landingPathFor } from '../../helpers/landingPath';
 import { isCentralHost } from '../../helpers/platformHosts';
+import { centralConnectUrl } from '../../helpers/workspaceHandoff';
 
 const router = useRouter();
 const route = useRoute();
@@ -313,8 +314,15 @@ const switchWorkspace = async () => {
     });
   }
 
-  // On mobile and web SPA: Stay 100% inside the app, NEVER open external browser window!
-  router.push({ name: 'workspace.connect' });
+  // MOB-06: on a shop subdomain, switching shop happens on the hub (it holds the shop picker and
+  // the remembered last shop). The Android app may navigate there (capacitor allowNavigation).
+  const hubUrl = isCentralHub.value ? null : centralConnectUrl();
+  if (hubUrl) {
+    window.location.href = hubUrl;
+    return;
+  }
+
+  router.push({ name: 'workspace.connect', query: { switch: '1' } });
 };
 
 const form = reactive({
@@ -336,7 +344,8 @@ onMounted(async () => {
   // 0. If on central domain and not explicit central admin, verify active workspace or guide to step 1
   if (isCentralHub.value && route.query.central !== '1') {
     const storedTenant = localStorage.getItem('active_tenant') || localStorage.getItem('tenant_id');
-    if (!storedTenant) {
+    // MOB-06: the Android app always picks the shop on the hub, which hands over to its subdomain.
+    if (!storedTenant || window.Capacitor?.isNativePlatform?.()) {
       router.replace({ name: 'workspace.connect' });
       return;
     }

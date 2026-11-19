@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MOB-03 (direct flavor): the AppUpdater plugin shares only its own cache folder with the installer. -->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <cache-path name="app_updates" path="app-updates/" />
+</paths>
