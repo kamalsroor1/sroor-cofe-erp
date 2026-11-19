@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $user_id
  * @property string $shift_number
  * @property string $status
+ * @property int|null $open_store_guard
  * @property Carbon|null $opened_at
  * @property Carbon|null $closed_at
  * @property string $opening_cash_balance
@@ -44,6 +45,7 @@ class CashShift extends Model
         'store_id',
         'shift_number',
         'status',
+        'open_store_guard',
         'opened_at',
         'closed_at',
         'opening_cash_balance',
@@ -73,6 +75,27 @@ class CashShift extends Model
         'actual_cash_balance' => 'decimal:3',
         'cash_difference' => 'decimal:3',
     ];
+
+    /**
+     * SHOP-06 / BE-19: `open_store_guard` (UNIQUE) is set by ShiftService only while a shift is
+     * open; it is cleared whenever the shift stops being open (closed, or deleted while open),
+     * so a branch can open its next shift.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (CashShift $shift): void {
+            if ($shift->status !== 'open' && $shift->open_store_guard !== null) {
+                $shift->open_store_guard = null;
+            }
+        });
+
+        static::deleting(function (CashShift $shift): void {
+            if ($shift->open_store_guard !== null) {
+                $shift->open_store_guard = null;
+                $shift->saveQuietly();
+            }
+        });
+    }
 
     /**
      * @return BelongsTo<User, $this>
