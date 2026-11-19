@@ -49,6 +49,11 @@ final class FeatureGateMatrixTest extends TenantTestCase
 
     public function test_every_feature_gated_route_refuses_a_plan_without_that_feature(): void
     {
+        // The throttle middleware is sorted ahead of `feature:` (middleware priority), so the
+        // refused export calls still count against the exports limiter: more than its 6/min
+        // report exports share one tenant + user here. Rate limiting is not what this test checks.
+        config(['rate_limits.exports.per_minute' => 1000]);
+
         $byFeature = $this->gatedRoutes();
         $this->assertNotEmpty($byFeature);
         $checked = 0;

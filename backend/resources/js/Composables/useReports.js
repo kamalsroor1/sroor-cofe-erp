@@ -1,9 +1,23 @@
 import { ref, reactive, computed, watch, onMounted } from 'vue';
-import { TrendingUp, Coffee, Store, Users, Receipt, Package, Building2, Scale } from 'lucide-vue-next';
+import {
+    TrendingUp,
+    Coffee,
+    Store,
+    Users,
+    Receipt,
+    Package,
+    Building2,
+    Scale,
+    UserCheck,
+    Tags,
+    Hourglass,
+    Truck,
+} from 'lucide-vue-next';
 import api from '../Services/api';
 import { useAppConfigStore } from '../stores/appConfig';
 import { useTrans } from './useTrans';
 import { usePagedReport } from './usePagedReport';
+import { useReportBreakdowns } from './useReportBreakdowns';
 import { rangeIsReversed } from '../helpers/customerStatement';
 import {
     buildReportParams,
@@ -43,7 +57,11 @@ export function useReports() {
         { key: 'sales', label: t('reports.tab_sales'), icon: TrendingUp },
         { key: 'items', label: t('reports.tab_items'), icon: Coffee, locked: itemsLocked.value },
         { key: 'stores', label: t('reports.tab_stores'), icon: Store, locked: storesLocked.value },
+        { key: 'sales_by_cashier', label: t('reports.tab_sales_by_cashier'), icon: UserCheck },
+        { key: 'sales_by_category', label: t('reports.tab_sales_by_category'), icon: Tags },
         { key: 'customers', label: t('reports.tab_customers'), icon: Users },
+        { key: 'customer_aging', label: t('reports.tab_customer_aging'), icon: Hourglass },
+        { key: 'supplier_payables', label: t('reports.tab_supplier_payables'), icon: Truck },
         { key: 'expenses', label: t('reports.tab_expenses'), icon: Receipt },
         { key: 'inventory', label: t('reports.tab_inventory'), icon: Package },
         { key: 'stock_drift', label: t('reports.tab_stock_drift'), icon: Scale },
@@ -111,7 +129,15 @@ export function useReports() {
         periodError,
     });
 
-    const pagedByTab = { items: itemsReport, inventory: inventoryReport, treasury: treasuryReport };
+    // SHOP-05: sales by cashier / category, customer debt aging, supplier payables (+ CSV export).
+    const breakdowns = useReportBreakdowns(filters, periodError);
+
+    const pagedByTab = {
+        items: itemsReport,
+        inventory: inventoryReport,
+        treasury: treasuryReport,
+        ...breakdowns.reports,
+    };
 
     const itemsTotal = computed(() =>
         reportTotal(itemsReport.meta.value, itemsReport.loaded.value, listMeta.value.item_profits?.total)
@@ -250,6 +276,7 @@ export function useReports() {
         treasuryData,
         itemsLocked,
         storesLocked,
+        breakdowns,
         setPeriod,
         customDateChanged,
         fetchReportsData,

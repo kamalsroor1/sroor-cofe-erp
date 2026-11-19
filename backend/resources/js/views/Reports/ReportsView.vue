@@ -4,6 +4,18 @@
     <PageHeader :title="$t('reports.title')" :subtitle="$t('reports.subtitle')" :icon="BarChart3" help-slug="reports">
       <template #actions>
         <button
+          v-if="canExportTab"
+          type="button"
+          :disabled="breakdowns.exporting.value === activeTab"
+          :data-testid="`export-${activeTab}`"
+          @click="breakdowns.exportReport(activeTab)"
+          class="min-h-[38px] px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 disabled:opacity-60 disabled:cursor-wait"
+        >
+          <Loader2 v-if="breakdowns.exporting.value === activeTab" class="w-4 h-4 animate-spin" aria-hidden="true" />
+          <Download v-else class="w-4 h-4" aria-hidden="true" />
+          <span>{{ $t('reports.export_csv') }}</span>
+        </button>
+        <button
           type="button"
           @click="printReport"
           class="min-h-[38px] px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
@@ -67,6 +79,26 @@
         :loading="isLoading"
       />
 
+      <ReportsBreakdownTab
+        v-else-if="activeBreakdown"
+        :key="activeTab"
+        :report-key="activeTab"
+        :title="activeBreakdown.definition.title"
+        :hint="breakdownHint"
+        :columns="activeBreakdown.definition.columns"
+        :rows="activeBreakdown.report.rows.value"
+        :totals="activeBreakdown.report.totals.value"
+        :meta="activeBreakdown.report.meta.value"
+        :loading="activeBreakdown.report.showSkeleton.value"
+        :error="activeBreakdown.report.error.value"
+        :error-message="activeBreakdown.report.errorMessage.value"
+        :exporting="breakdowns.exporting.value === activeTab"
+        :can-export="breakdowns.canExport.value"
+        @page-change="activeBreakdown.report.goToPage"
+        @retry="activeBreakdown.report.reload"
+        @export="breakdowns.exportReport(activeTab)"
+      />
+
       <ReportsCustomersTab
         v-else-if="activeTab === 'customers'"
         :key="'customers'"
@@ -118,7 +150,7 @@
 
 <script setup>
 import ErrorState from '../../Components/Common/ErrorState.vue';
-import { Printer, BarChart3 } from 'lucide-vue-next';
+import { Printer, BarChart3, Download, Loader2 } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import ReportsFilterBar from '../../Components/Reports/ReportsFilterBar.vue';
 import ReportsNavigationTabs from '../../Components/Reports/ReportsNavigationTabs.vue';
@@ -131,7 +163,10 @@ import ReportsExpensesTab from '../../Components/Reports/ReportsExpensesTab.vue'
 import ReportsInventoryTab from '../../Components/Reports/ReportsInventoryTab.vue';
 import ReportsStockDriftTab from '../../Components/Reports/ReportsStockDriftTab.vue';
 import ReportsTreasuryTab from '../../Components/Reports/ReportsTreasuryTab.vue';
+import ReportsBreakdownTab from '../../Components/Reports/ReportsBreakdownTab.vue';
+import { computed } from 'vue';
 import { useReports } from '../../Composables/useReports';
+import { EXPORTABLE_TABS } from '../../Composables/useReportBreakdowns';
 
 const {
   activeTab,
@@ -157,9 +192,27 @@ const {
   treasuryData,
   itemsLocked,
   storesLocked,
+  breakdowns,
   setPeriod,
   customDateChanged,
   fetchReportsData,
   printReport,
 } = useReports();
+
+// SHOP-05: CSV of the P&L summary (sales tab) and item profitability (items tab, Pro only).
+const canExportTab = computed(
+  () =>
+    breakdowns.canExport.value &&
+    EXPORTABLE_TABS.includes(activeTab.value) &&
+    !(activeTab.value === 'items' && itemsLocked.value)
+);
+// SHOP-05: the four tabular reports share one table component, driven by column definitions.
+const activeBreakdown = computed(() => {
+  const report = breakdowns.reports[activeTab.value];
+  return report ? { report, definition: breakdowns.definitions.value[activeTab.value] } : null;
+});
+const breakdownHint = computed(() => {
+  const hint = activeBreakdown.value?.definition.hint;
+  return typeof hint === 'function' ? hint(activeBreakdown.value.report.extra.value?.as_of) : hint || '';
+});
 </script>

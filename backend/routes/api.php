@@ -28,7 +28,9 @@ use App\Http\Controllers\Api\PosController;
 use App\Http\Controllers\Api\PosQuickKeyController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\PurchaseController;
+use App\Http\Controllers\Api\ReportBreakdownController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\ReportExportController;
 use App\Http\Controllers\Api\ReturnController;
 use App\Http\Controllers\Api\ReturnSourceController;
 use App\Http\Controllers\Api\RoleController;
@@ -259,6 +261,24 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::get('/reports/top-items', [ReportController::class, 'topItems'])->name('api.reports.top_items')->middleware('store.active')->middleware('feature:reports.basic');
         Route::get('/reports/stock-drift', [ReportController::class, 'stockDrift'])->name('api.reports.stock_drift')->middleware('store.active')->middleware('feature:reports.basic');
         Route::get('/reports/items/{id}/card', [ReportController::class, 'itemCard'])->name('api.reports.item_card')->middleware('store.active')->middleware('feature:reports.basic');
+        // SHOP-05: sales by cashier / category, customer debt aging, supplier payables (+ CSV), and
+        // the CSV of the P&L summary, top items and item profitability.
+        Route::middleware(['store.active', 'feature:reports.basic'])->group(function () {
+            Route::get('/reports/sales-by-cashier', [ReportBreakdownController::class, 'salesByCashier'])->name('api.reports.sales_by_cashier');
+            Route::get('/reports/sales-by-category', [ReportBreakdownController::class, 'salesByCategory'])->name('api.reports.sales_by_category');
+            Route::get('/reports/customer-aging', [ReportBreakdownController::class, 'customerAging'])->name('api.reports.customer_aging');
+            Route::get('/reports/supplier-payables', [ReportBreakdownController::class, 'supplierPayables'])->name('api.reports.supplier_payables');
+            // reports.export: the plan feature of every CSV export (the free plan has none), as /invoices/export.
+            Route::middleware(['feature:reports.export', 'throttle:exports'])->group(function () {
+                Route::get('/reports/summary/export', [ReportExportController::class, 'summary'])->name('api.reports.summary.export');
+                Route::get('/reports/top-items/export', [ReportExportController::class, 'topItems'])->name('api.reports.top_items.export');
+                Route::get('/reports/items/export', [ReportExportController::class, 'items'])->name('api.reports.items.export')->middleware('feature:reports.advanced');
+                Route::get('/reports/sales-by-cashier/export', [ReportBreakdownController::class, 'exportSalesByCashier'])->name('api.reports.sales_by_cashier.export');
+                Route::get('/reports/sales-by-category/export', [ReportBreakdownController::class, 'exportSalesByCategory'])->name('api.reports.sales_by_category.export');
+                Route::get('/reports/customer-aging/export', [ReportBreakdownController::class, 'exportCustomerAging'])->name('api.reports.customer_aging.export');
+                Route::get('/reports/supplier-payables/export', [ReportBreakdownController::class, 'exportSupplierPayables'])->name('api.reports.supplier_payables.export');
+            });
+        });
 
         // Returns (Sales & Purchase Returns)
         Route::get('/returns', [ReturnController::class, 'index'])->name('api.returns.index')->middleware('store.active')->middleware('feature:returns.manage');
