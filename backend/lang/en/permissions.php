@@ -58,7 +58,7 @@ return [
         'statement' => 'View and export a supplier statement',
     ],
     'daily_journal' => [
-        'view' => 'View the daily cash journal, drawer movements and shifts',
+        'view' => 'View daily cash journal, treasury, and shifts',
         'close_shift' => 'Open and close cashier shifts',
         'manage' => 'Manage the treasury and transfers between drawers',
     ],

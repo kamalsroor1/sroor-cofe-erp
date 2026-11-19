@@ -107,7 +107,7 @@ return [
     'cancel_confirmed_btn' => 'نعم، قم بالإلغاء',
     'cancel_dismiss_btn' => 'تراجع',
     'invoice_cancelled_success' => 'تم إلغاء الفاتورة وإرجاع الأصناف للمخزن بنجاح',
-    'invoice_cancelled_failed' => 'تعذر إلغاء الفاتورة',
+    'invoice_cancelled_failed' => 'تعذر إلغاء الفاتورة. يرجى التأكد من عدم وجود مرتجعات مرتبطة بها والمحاولة مجدداً.',
     'check' => 'شيك',
     'receipt_title' => 'إيصال - :number',
     'print_receipt' => 'طباعة الإيصال',

@@ -13,6 +13,7 @@ use App\Http\Requests\Signup\ApproveSignupRequestRequest;
 use App\Http\Requests\Signup\RejectSignupRequestRequest;
 use App\Http\Resources\Central\SignupRequestResource;
 use App\Models\CentralUser;
+use App\Services\Branding\PlatformBranding;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -31,6 +32,7 @@ final class SignupRequestController extends Controller
         private readonly ListSignupRequestsAction $listSignupRequests,
         private readonly ApproveSignupRequestAction $approveSignupRequest,
         private readonly RejectSignupRequestAction $rejectSignupRequest,
+        private readonly PlatformBranding $platformBranding,
     ) {}
 
     public function index(Request $request): AnonymousResourceCollection
@@ -58,6 +60,15 @@ final class SignupRequestController extends Controller
                 'login' => $result->ownerEmail,
                 'temporary_password' => $result->temporaryPassword,
                 'must_change_password' => true,
+            ],
+            // SELL-03: non-sensitive context used to render the copyable/WhatsApp welcome message.
+            'welcome_context' => [
+                'business_name' => $result->signup->business_name,
+                'login_url' => $result->loginUrl,
+                'help_url' => $result->helpUrl,
+                'trial_days' => $result->trialDays,
+                'trial_ends_at' => $result->trialEndsAt,
+                'support_phone' => $this->platformBranding->get()->supportPhone,
             ],
         ], 200, ['Cache-Control' => 'no-store']);
     }

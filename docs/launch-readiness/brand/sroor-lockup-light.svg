@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 360" width="1240" height="360">
+  <defs><linearGradient id="sg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbbf24"/><stop offset=".55" stop-color="#f59e0b"/><stop offset="1" stop-color="#d97706"/></linearGradient></defs>
+  <rect width="1240" height="360" rx="40" fill="#ffffff"/>
+  <g transform="translate(60 60) scale(0.46875)">
+    <rect width="512" height="512" rx="116" fill="url(#sg)"/>
+    <path d="M338 176c0-30-36-50-82-50-52 0-86 26-86 64 0 42 40 56 86 64 46 8 88 22 88 66 0 40-36 66-88 66-48 0-84-20-88-54" fill="none" stroke="#fff" stroke-width="54" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="384" cy="128" r="24" fill="#0f172a"/>
+  </g
+  ><text x="350" y="182" font-family="Inter" font-weight="800" font-size="128" fill="#0f172a" letter-spacing="-3">Sroor<tspan fill="#f59e0b" font-weight="700"> ERP</tspan></text>
+  <text x="354" y="262" font-family="Cairo" font-weight="700" font-size="54" fill="#475569" direction="rtl" text-anchor="end">سرور — نظام المبيعات والمخزون</text>
+</svg>

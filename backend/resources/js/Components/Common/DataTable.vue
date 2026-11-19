@@ -395,7 +395,7 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
                   v-for="col in columns"
                   :key="col.key"
                   class="py-3.5 px-3"
-                  :class="[alignClass(col), col.mono ? 'font-mono' : '', col.class || '']"
+                  :class="[alignClass(col), col.mono ? 'num' : '', col.class || '']"
                 >
                   <slot
                     v-if="$slots[`cell-${col.key}`]"
@@ -535,7 +535,7 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
                 <span
                   v-else
                   class="text-xs font-bold text-slate-800 dark:text-slate-200"
-                  :class="col.mono ? 'font-mono' : ''"
+                  :class="col.mono ? 'num' : ''"
                 >
                   {{ getCellValue(row, col.key) ?? '—' }}
                 </span>

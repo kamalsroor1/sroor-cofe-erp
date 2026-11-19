@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'failed' => 'These credentials do not match our records.',
+    'failed' => 'Invalid mobile number or password.',
     'password' => 'The provided password is incorrect.',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
     'account_locked' => 'This account is temporarily locked after too many failed sign-in attempts. Try again in :minutes minute(s).',
@@ -48,7 +48,7 @@ return [
     'account_disabled' => 'This account is disabled, please contact administrator',
     'unauthorized' => 'Unauthorized - Please sign in first',
     'session_expired' => 'Session expired, please sign in again',
-    'tenant_not_found' => 'Tenant or organization not found',
+    'tenant_not_found' => 'Store not found or cancelled.',
     'workspace_selection_title' => 'Connect to Workspace',
     'workspace_selection_subtitle' => 'Enter your organization or store code to directly access your cloud system',
     'workspace_code' => 'Workspace code',

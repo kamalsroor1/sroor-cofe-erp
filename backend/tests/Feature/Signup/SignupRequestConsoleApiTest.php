@@ -248,7 +248,18 @@ final class SignupRequestConsoleApiTest extends TenantTestCase
             ->assertOk()
             ->assertJsonPath('data.status', 'approved')
             ->assertJsonPath('owner_credentials.login', $email)
-            ->assertJsonPath('owner_credentials.must_change_password', true);
+            ->assertJsonPath('owner_credentials.must_change_password', true)
+            ->assertJsonPath('welcome_context.business_name', 'محمصة الاختبار')
+            ->assertJsonStructure([
+                'welcome_context' => ['business_name', 'login_url', 'help_url', 'trial_days', 'trial_ends_at', 'support_phone'],
+            ]);
+        $this->assertStringContainsString($slug.'.', (string) $response->json('welcome_context.login_url'));
+        $this->assertStringEndsWith('/login', (string) $response->json('welcome_context.login_url'));
+        $this->assertStringContainsString($slug.'.', (string) $response->json('welcome_context.help_url'));
+        $this->assertStringEndsWith('/help', (string) $response->json('welcome_context.help_url'));
+        // PLAN-10: the default signup plan is the permanent free plan: no trial, no end date.
+        $this->assertSame(0, $response->json('welcome_context.trial_days'));
+        $this->assertNull($response->json('welcome_context.trial_ends_at'));
         $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
         $temporary = (string) $response->json('owner_credentials.temporary_password');
         $this->assertGreaterThanOrEqual(8, strlen($temporary));

@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>Sroor ERP — تحليل جاهزية الإطلاق</title>
+<style>
+@page{size:A4;margin:14mm 13mm 16mm}
+:root{--p:#f59e0b;--ph:#d97706;--pl:#fef3c7;--ink:#0f172a;--mut:#475569;--line:#e2e8f0;--soft:#f8fafc;--g:#10b981;--r:#e11d48;--b:#2563eb}
+*{box-sizing:border-box}
+body{font-family:Cairo,sans-serif;color:var(--ink);font-size:10.5pt;line-height:1.75;margin:0}
+.num,.n,.id,.ef,code{font-family:Inter,Cairo,sans-serif}
+.ids,.id,.b,code{unicode-bidi:isolate;direction:ltr}
+h1,h2,h3{line-height:1.3;margin:0}
+h2{font-size:19pt;font-weight:800;margin:0 0 10px;display:flex;align-items:center;gap:10px;break-after:avoid}
+h2 .num{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--p);color:#1a1200;font-size:14pt}
+h3{font-size:12.5pt;font-weight:800;margin:16px 0 6px;color:#1e293b;break-after:avoid}
+p{margin:6px 0}
+.page{break-before:page}
+.lead{font-size:11pt;color:#334155;background:var(--soft);border-right:4px solid var(--p);padding:8px 12px;border-radius:6px}
+/* cover */
+@page cover{margin:0}
+.cover{page:cover;height:297mm;display:flex;flex-direction:column;justify-content:space-between;background:#0b1220;color:#fff;padding:24mm 20mm 26mm}
+.cover h1{font-size:34pt;font-weight:800}
+.cover .sub{font-size:14pt;color:#cbd5e1;margin-top:8px}
+.cover .meta{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;font-size:10pt;color:#94a3b8}
+.cover .meta b{color:#fff;display:block;font-size:11pt}
+.cover .verdict{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);border-radius:14px;padding:14px 18px;font-size:12pt}
+.cover .verdict b{color:#fbbf24}
+/* tables */
+table.t{width:100%;border-collapse:collapse;font-size:9pt;margin:4px 0 8px}
+table.t th{background:#0f172a;color:#fff;font-weight:700;padding:5px 6px;text-align:right}
+table.t td{border-bottom:1px solid var(--line);padding:5px 6px;vertical-align:top}
+table.t tr{break-inside:avoid}
+table.t tbody tr:nth-child(even) td{background:#fbfcfe}
+table.t td.id{white-space:nowrap;font-weight:700;color:#334155;font-size:8.5pt}
+table.t td.ef{white-space:nowrap;text-align:center;font-weight:700}
+table.t td.fix{color:#334155}
+table.small{font-size:8.6pt}
+table.sum td.n{text-align:center;font-weight:700} table.sum .tot td{background:#f1f5f9!important;font-weight:800}
+.p0c{color:var(--r)}
+.b{display:inline-block;border-radius:6px;padding:0 7px;font:800 8pt Inter;white-space:nowrap}
+.b.p0{background:#ffe4e6;color:#be123c}.b.p1{background:#fef3c7;color:#b45309}.b.p2{background:#e0f2fe;color:#0369a1}.b.p3{background:#f1f5f9;color:#475569}
+/* cards */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.card{border:1px solid var(--line);border-radius:12px;padding:10px 12px;break-inside:avoid;background:#fff}
+.card h4{margin:0 0 4px;font-size:11pt}
+.card.red{border-color:#fecdd3;background:#fff1f2}.card.amb{border-color:#fde68a;background:#fffbeb}.card.grn{border-color:#a7f3d0;background:#ecfdf5}.card.blu{border-color:#bfdbfe;background:#eff6ff}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.kpi b{display:block;font:800 22pt Inter}.kpi span{font-size:9pt;color:var(--mut)}
+ul{margin:4px 0;padding-right:18px} li{margin:2px 0}
+figure{margin:8px 0 12px;break-inside:avoid}
+figure img{width:100%;border-radius:10px;border:1px solid var(--line);display:block}
+figcaption{font-size:9pt;color:var(--mut);margin-top:4px;text-align:center}
+.kb{display:inline-block;border:1px solid #cbd5e1;border-bottom-width:2px;border-radius:5px;padding:0 6px;font:700 8.5pt Inter;background:#f8fafc;white-space:nowrap}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:9.5pt}
+.flow .s{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:3px 8px}
+.flow .a{color:var(--p);font-weight:800}
+.phase{border-radius:12px;padding:10px 14px;margin:8px 0;break-inside:avoid;border:1px solid var(--line)}
+.phase h4{margin:0 0 4px;font-size:12pt;display:flex;justify-content:space-between}
+.phase h4 small{font:700 9pt Cairo;color:var(--mut)}
+.ph0{background:#fff1f2;border-color:#fecdd3}.ph1{background:#fffbeb;border-color:#fde68a}.ph2{background:#ecfdf5;border-color:#a7f3d0}.ph3{background:#eff6ff;border-color:#bfdbfe}
+.ids{font:700 8.5pt Inter;color:#334155}
+.toc li{font-size:11pt;margin:3px 0}
+.brand img{border:0;border-radius:12px}
+.note{font-size:9pt;color:var(--mut)}
+</style></head><body>
+
+<section class="cover">
+ <div>
+  <img src="{{IMG}}/brand/sroor-lockup-dark.png" style="width:330px">
+  <h1 style="margin-top:26px">تحليل جاهزية الإطلاق</h1>
+  <div class="sub">ناقص إيه عشان Sroor ERP يتباع لعملاء حقيقيين، والعيوب، والحلول، وخطة التنفيذ، مع إعادة تصميم نقطة البيع (ديسكتوب وموبايل)</div>
+ </div>
+ <div class="verdict"><b>الحكم:</b> النواة قوية: الحسابات دقيقة، والاختبارات ناجحة، والمحلات معزولة عن بعض. لكن المنتج <b>غير جاهز لعملاء يدفعون</b>. فيه <bdi>{{P0}}</bdi> بند مانع للإطلاق <bdi>(P0)</bdi>، و<bdi>{{P1}}</bdi> بند لازم يخلص قبل أول عميل <bdi>(P1)</bdi>، من إجمالي <bdi>{{TOTAL}}</bdi> بند. أغلب الموانع في طبقة الـ SaaS والتشغيل، مش في وظائف المحل نفسها.</div>
+ <div class="meta">
+  <div><b>التاريخ</b>9 نوفمبر 2026</div>
+  <div><b>البرنش</b>feature/multi-tenant · 2547eb90</div>
+  <div><b>نطاق التحليل</b>الأمان، الباك اند، الـ POS، الفرونت، الموبايل والديسكتوب، التشغيل، المنتج والسوق</div>
+  <div><b>محل التجربة</b><img src="{{IMG}}/brand/2mpro-lockup-dark.png" style="height:34px;vertical-align:middle;margin-top:4px"></div>
+ </div>
+</section>
+
+<section>
+ <h2>المحتويات</h2>
+ <ol class="toc">
+  <li>الملخص التنفيذي</li><li>خطة الإطلاق على مراحل</li><li>إعادة تصميم نقطة البيع (UI/UX) — ديسكتوب</li><li>نقطة البيع على الموبايل</li>
+  <li>الأمان وعزل المحلات</li><li>الباك اند وصحة الحسابات</li><li>صفحة نقطة البيع: العيوب التفصيلية</li><li>الفرونت اند والموبايل والديسكتوب</li><li>التشغيل والنشر والنسخ الاحتياطي</li><li>المنتج والسوق والجاهزية التجارية</li>
+  <li>الهوية المؤقتة (اللوجوهات)</li><li>التسعير المقترح</li><li>قرارات مطلوبة منك</li><li>منهجية التحليل والملفات</li>
+ </ol>
+ <h2 style="margin-top:22px"><span class="num">1</span>الملخص التنفيذي</h2>
+ <div class="grid3" style="margin:8px 0">
+  <div class="kpi"><b style="color:#e11d48">{{P0}}</b><span>مانع إطلاق (P0)</span></div>
+  <div class="kpi"><b style="color:#b45309">{{P1}}</b><span>قبل أول عميل (P1)</span></div>
+  <div class="kpi"><b>{{TOTAL}}</b><span>إجمالي البنود</span></div>
+ </div>
+ <table class="t sum"><thead><tr><th>المحور</th><th>P0</th><th>P1</th><th>P2</th><th>P3</th><th>الإجمالي</th></tr></thead><tbody>{{AREA_ROWS}}</tbody></table>
+ <p class="note">بعض البنود متكررة بين المحاور (مثال: إنفاذ حالة المحل = SEC-01 = BE-05 = PRD-02). على التريلو اتدمجوا في كارت واحد.</p>
+ <h3>الحاجات الكويسة الموجودة</h3>
+ <div class="card grn"><ul>
+  <li><b>2,920 اختبار PHPUnit ناجح</b>، والحسابات المالية بـ bcmath مع تقريب half-up، وفيه اختبار تزامن على MySQL في الـ CI.</li>
+  <li><b>عزل المحلات سليم:</b> قاعدة بيانات لكل محل، وتوكنات كل محل جوه قاعدته، والموديلات المركزية مثبتة على الاتصال المركزي، ومفيش أي تسرّب بين المحلات.</li>
+  <li><b>الـ checkout ذرّي ولا يتكرر</b> (Idempotency-Key)، والإيصال بيحسب الباقي بدقة مطابقة للسيرفر.</li>
+  <li><b>مزايا المحل قوية لنسخة أولى:</b> فروع ومخازن وعربيات، تحويلات، مشتريات بمتوسط التكلفة (WAC)، ورديات وZ-report، خزينة، 7 عائلات تقارير، كونسول إدارة كامل بـ 2FA ونسخ وأرشفة.</li>
+ </ul></div>
+ <h3>أهم الموانع، بالترتيب</h3>
+ <div class="grid2">
+  <div class="card red"><h4>1. أسرار مكشوفة ونشر غير آمن</h4>بيانات SSH والداتابيز و APP_KEY وتوكن الـ webhook موجودة في ريبو <b>عام</b>. وأي حد يقدر ينشر على المحل الحي بـ <code>reset --hard</code> و migrate من غير نسخة احتياطية. <span class="ids">OPS-01/02 · SEC-02</span></div>
+  <div class="card red"><h4>2. الاشتراكات مش متطبقة</h4>المحل الموقوف أو المنتهي لسه شغال بالكامل، وحدود الباقات (مستخدمين وفروع) في الواجهة بس، ومفيش تحصيل. <span class="ids">SEC-01 · BE-05 · BE-12 · PRD-01..04</span></div>
+  <div class="card red"><h4>3. أخطاء في الفلوس والمخزون</h4>المرتجع مش مربوط بالفاتورة، وأي سعر أو كمية بتتقبل وبتتقيد للعميل. حذف المرتجع مش بيرجّع حاجة. والفروع الجديدة بتبيع من غير فحص مخزون. <span class="ids">BE-01/02/04</span></div>
+  <div class="card red"><h4>4. نقطة البيع</h4>مسح الباركود ممكن يضيف صنف غلط، والآجل مسموح على «نقدي عام»، والوزن مش موصول، وشاشة الموبايل مكسورة. <span class="ids">POS-01/02/06/12</span></div>
+  <div class="card amb"><h4>5. لا نسخ احتياطي مُجرّب ولا VPS مُجرّب</h4>عمرها ما اتعملت بروفة استرجاع. والمحل الحي بيبعت dump غير مشفّر على Telegram. <span class="ids">OPS-03/04</span></div>
+  <div class="card amb"><h4>6. قانوني وضريبي</h4>قانون حماية البيانات 151/2020 بدأ تطبيقه، وإيصال ETA الإلكتروني ملزم لشريحتنا، ومفيش VAT في المستندات. <span class="ids">PRD-08/09/16 · BE-14</span></div>
+ </div>
+</section>
+
+<section class="page">
+ <h2><span class="num">2</span>خطة الإطلاق على مراحل</h2>
+ <p>الجهد بالتقدير: S أقل من يوم، M من يوم لـ 3 أيام، L أكتر من 3 أيام. الأرقام تقديرية لمطوّر واحد مع Claude Code.</p>
+ <div class="phase ph0"><h4>المرحلة 0: النهارده (إجراءات منك أنت) <small>نص يوم</small></h4>
+  <ul><li>تعطيل <code>deploy.yml</code> والـ webhook، وأخذ نسخة احتياطية مشفّرة من المحل الحي.</li>
+  <li>تحويل الريبو لـ Private، وتغيير كل الأسرار (SSH، DB، APP_KEY، توكن webhook، Telegram).</li>
+  <li>حماية فروع <code>main</code> و <code>feature/multi-tenant</code>، وتشغيل Dependabot.</li></ul>
+  <span class="ids">OPS-01 · OPS-02 · SEC-02 · OPS-05 · OPS-19</span></div>
+ <div class="phase ph1"><h4>المرحلة 1: موانع الكود (P0) <small>~ أسبوعين</small></h4>
+  <ul><li>Middleware حالة المحل وجدولة دورة حياة الاشتراك.</li>
+  <li>إصلاح المرتجعات (ربط وعكس) ومخزون الفروع الجديدة.</li>
+  <li>POS: باركود دقيق ومنع الآجل على النقدي العام. وحذف الإشعارات الوهمية.</li>
+  <li>إخفاء المزايا غير المبنية، وإيقاف السكريبت القديم، وبروفة VPS ونسخ واسترجاع.</li></ul>
+  <span class="ids">SEC-01 · BE-05 · BE-01 · BE-02 · BE-04 · BE-06 · POS-01 · POS-02 · FE-01 · PRD-10 · OPS-03 · OPS-04</span></div>
+ <div class="phase ph2"><h4>المرحلة 2: قبل أول عميل يدفع (P1) <small>~ 4–5 أسابيع</small></h4>
+  <ul><li><b>أمان:</b> انتهاء التوكنات، تصعيد الصلاحيات، كلمات المرور، CSP، تحديث الحزم.</li>
+  <li><b>باك اند:</b> أخطاء 422 بدل 500، تحقق السعر والخصم من السيرفر، أرقام مستندات مقفولة، إلغاء الفاتورة، الوردية، الخزينة.</li>
+  <li><b>نقطة البيع الجديدة</b> (الفصل 3 و4): مستويات أسعار، تعديل سعر بالكيبورد، وزن، دفع سريع، وردية، آخر المبيعات، موبايل.</li>
+  <li><b>SaaS:</b> إنفاذ الباقات، فوترة يدوية، صفحة الاشتراك، تسجيل بمساعدة، استيراد Excel، صفحة هبوط، صفحات قانونية، VAT، مركز مساعدة.</li>
+  <li><b>تشغيل:</b> Sentry، مراقبة uptime، إصلاح الـ queue و Pulse.</li></ul></div>
+ <div class="phase ph3"><h4>المرحلة 3: الشهور 2–3 بعد الإطلاق <small>مستمر</small></h4>
+  <ul><li>تطبيق أندرويد على Google Play (أيقونة، targetSdk 35، توقيع AAB، نسخة بدون updater، خصوصية) + طباعة بلوتوث.</li>
+  <li>Paymob للاشتراكات، و ETA e-receipt كـ add-on، و POS بدون إنترنت، ووحدات بتحويل (قطعة/كرتونة)، ومتغيرات الصنف (مهمة لمحلات الموبايلات).</li>
+  <li>Staging للـ SaaS، ونسخ كل ساعة/PITR، وتوقيع الـ EXE، وإيصال واتساب، ونقاط ولاء.</li></ul></div>
+ <h3>تعريف «جاهز للإطلاق»</h3>
+ <div class="card"><ul>
+  <li>صفر بنود P0 مفتوحة، وكل بنود P1 الخاصة بالأمان والفلوس مقفولة ومعاها اختبارات.</li>
+  <li>بروفة نشر واسترجاع ناجحة على الـ VPS، مع مراقبة وتنبيهات شغالة.</li>
+  <li>محل تجريبي (2M Pro) شغال أسبوع كامل على الـ POS الجديد بفواتير حقيقية من غير فروق في الخزينة أو المخزون.</li>
+  <li>صفحات الشروط والخصوصية والأسعار منشورة، ومسار التحصيل اليدوي مُجرّب.</li></ul></div>
+</section>
+
+<section class="page">
+ <h2><span class="num">3</span>إعادة تصميم نقطة البيع: ديسكتوب</h2>
+ <p class="lead">نفس هوية السيستم: Cairo/Tajawal، ثيم داكن وفاتح، ولون الـ tenant الأساسي (هنا emerald #10b981 من باليتات السيستم). الهدف أقل عدد خطوات للكاشير، والشغل كله ممكن من الكيبورد.</p>
+ <h3>الوضع الحالي</h3>
+ <figure><img src="{{IMG}}/images/current/pos-desktop.png"><figcaption>الـ POS الحالي على محل 2M Pro: الأسماء مقطوعة، والأقسام بتاخد عمود كامل، والسلة الفاضية بتاخد نص الشاشة، وفيه زر «قريبًا» معطّل، و«لا توجد وردية مفتوحة» لكن البيع مسموح.</figcaption></figure>
+ <h3>المقترح (أ): كروت 3 في الصف، الوضع الافتراضي من غير صور</h3>
+ <figure><img src="{{IMG}}/images/proposed/pos-desktop-3col.png"><figcaption>كل كارت عليه 3 أسعار في نفس اللحظة (قطاعي، جملة، أقل سعر)، ووحدة البيع، وشارة وزن/IMEI، والمتاح. وخط لون جانبي حسب القسم بدل الصورة.</figcaption></figure>
+</section>
+<section class="page">
+ <h3>المقترح (ب): كروت 2 في الصف (أسماء أطول وأسعار أوضح)</h3>
+ <figure><img src="{{IMG}}/images/proposed/pos-desktop-2col.png"><figcaption>نفس البيانات بعرض أوسع. مناسب للأسماء الطويلة (موبايلات بسعة ولون) ولشاشات اللمس.</figcaption></figure>
+ <div class="grid2">
+  <figure><img src="{{IMG}}/images/proposed/pos-desktop-3col-light.png"><figcaption>الوضع الفاتح</figcaption></figure>
+  <figure><img src="{{IMG}}/images/proposed/pos-desktop-3col-img.png"><figcaption>لو فعّلت «عرض صور الأصناف» من الإعدادات</figcaption></figure>
+ </div>
+ <h3>قواعد التصميم</h3>
+ <div class="grid2">
+  <div class="card"><h4>الكروت: 2 أو 3 في الصف</h4><ul><li>إعداد لكل فرع أو جهاز: «عدد الكروت في الصف» = 2 / 3 / تلقائي.</li><li>تلقائي حسب عرض لوحة الكتالوج: عمودين لو أقل من <bdi>480px</bdi>، و3 أعمدة من <bdi>480</bdi> لحد <bdi>900px</bdi>، و4 اختيارية في وضع الكتالوج الكامل. وعلى الموبايل: عمودين، أو 3 «مكثّف» كخيار.</li><li><b>الافتراضي من غير صور.</b> الصور خيار يتفعّل من الإعدادات، والكارت بيعتمد على الاسم وخط لون القسم.</li><li>الاسم بيظهر على سطرين كاملين من غير قطع في نص الكلمة.</li></ul></div>
+  <div class="card"><h4>عدة أسعار في نفس اللحظة</h4><ul><li>على الكارت: قطاعي (السعر النشط مميّز)، وجملة، وأقل سعر.</li><li>في سطر السلة: قائمة الأسعار (<span class="kb">Alt+P</span> أو ضغطة على السعر) فيها قطاعي، جملة، <b>آخر سعر للعميل ده</b>، أقل سعر مسموح، والتكلفة مخفية إلا بصلاحية.</li><li>تبديل قطاعي/جملة من الهيدر بيغيّر السعر النشط لكل السلة.</li></ul></div>
+  <div class="card"><h4>تعديل السعر بأقل خطوات</h4><ul><li>بعد إضافة الصنف <b>المؤشر بيقف على خانة السعر على طول</b>، فالكاشير يكتب السعر الجديد ويضغط Enter.</li><li>أقل من «أقل سعر» بيطلب PIN المدير وبيتسجل في سجل التدقيق.</li><li>السيرفر بيتحقق من السعر كمان (BE-08)، مش الواجهة بس.</li></ul></div>
+  <div class="card"><h4>وحدات متنوعة</h4><ul><li><b>قطعة:</b> الكمية بأرقام صحيحة.</li><li><b>وزن (كجم/جم):</b> شاشة ميزان، وأزرار ¼ ½ ¾ 1، و«بالمبلغ» (مثلًا بـ 100 ج.م)، وباركود الميزان.</li><li><b>متر:</b> كسور مسموحة (2.5 متر).</li><li><b>كرتونة/دستة/علبة:</b> بتظهر «كرتونة = 50 قطعة»، والتحويل الكامل في PRD-19.</li><li><b>موبايلات:</b> شارة IMEI، والـ IMEI والضمان بيتسجلوا على السطر.</li></ul></div>
+ </div>
+</section>
+<section class="page">
+ <h3>الكيبورد: تسلسل البيع (Enter و Tab)</h3>
+ <div class="card">
+  <p><b>صنف بالقطعة (باركود):</b></p>
+  <div class="flow"><span class="s">امسح الباركود</span><span class="a">←</span><span class="s">الصنف يتضاف والمؤشر على <b>السعر</b></span><span class="a">←</span><span class="s"><span class="kb">Enter</span> (السعر صح) أو اكتب سعر جديد ثم <span class="kb">Enter</span></span><span class="a">←</span><span class="s">رجوع تلقائي للبحث</span></div>
+  <p><b>كمية قبل المسح:</b></p>
+  <div class="flow"><span class="s">اكتب <span class="kb">3*</span></span><span class="a">←</span><span class="s">امسح</span><span class="a">←</span><span class="s">يتضاف بكمية 3</span></div>
+  <p><b>تعديل الكمية:</b></p>
+  <div class="flow"><span class="s">وانت على السعر <span class="kb">Tab</span></span><span class="a">←</span><span class="s">خانة الكمية</span><span class="a">←</span><span class="s">اكتب ثم <span class="kb">Enter</span></span></div>
+  <p><b>صنف بالوزن:</b></p>
+  <div class="flow"><span class="s">اختر الصنف <span class="kb">Enter</span></span><span class="a">←</span><span class="s">شاشة الوزن، اكتب 0.75 أو <span class="kb">3</span> = ¾ كيلو</span><span class="a">←</span><span class="s"><span class="kb">Enter</span> إضافة</span></div>
+  <p><b>سعر من مستوى تاني:</b></p>
+  <div class="flow"><span class="s"><span class="kb">Alt+P</span> أو <span class="kb">/</span> أو ضغطة على السعر</span><span class="a">←</span><span class="s"><span class="kb">↑</span><span class="kb">↓</span> اختيار (جملة / آخر سعر للعميل)</span><span class="a">←</span><span class="s"><span class="kb">Enter</span></span></div>
+  <p><b>الدفع:</b></p>
+  <div class="flow"><span class="s"><span class="kb">F9</span></span><span class="a">←</span><span class="s">المبلغ المستلم (أزرار 50/100/200/500)</span><span class="a">←</span><span class="s"><span class="kb">Enter</span> حفظ وطباعة (أو <span class="kb">F12</span> كاش مظبوط على طول)</span><span class="a">←</span><span class="s">فاتورة جديدة فورًا (من غير مودال)</span></div>
+ </div>
+ <h3>خريطة الاختصارات المقترحة (بعد البحث)</h3>
+ <table class="t"><thead><tr><th>المفتاح</th><th>الوظيفة</th><th>المفتاح</th><th>الوظيفة</th></tr></thead><tbody>
+  <tr><td><span class="kb">F1</span> / <span class="kb">?</span></td><td>قائمة الاختصارات</td><td><span class="kb">F8</span></td><td>مرتجع</td></tr>
+  <tr><td><span class="kb">F2</span></td><td>البحث / الباركود</td><td><span class="kb">F9</span> / <span class="kb">Ctrl+Enter</span></td><td>شاشة الدفع</td></tr>
+  <tr><td><span class="kb">F3</span></td><td>اختيار العميل (بيطبّق مستوى سعره)</td><td><span class="kb">F10</span></td><td>إظهار / إخفاء الكتالوج</td></tr>
+  <tr><td><span class="kb">F4</span></td><td>فاتورة جديدة (تاب)</td><td><span class="kb">F11</span></td><td>إيداع / سحب نقدية</td></tr>
+  <tr><td><span class="kb">F5</span></td><td>تعليق الفاتورة باسم</td><td><span class="kb">F12</span></td><td>كاش مظبوط + طباعة</td></tr>
+  <tr><td><span class="kb">F6</span></td><td>سجل المبيعات / إعادة طباعة</td><td><span class="kb">Ctrl+K</span></td><td>Command palette</td></tr>
+  <tr><td><span class="kb">F7</span></td><td>خصم على الفاتورة</td><td><span class="kb">n*</span> ثم مسح</td><td>كمية n للصنف اللي جاي</td></tr>
+  <tr><td><span class="kb">*</span> (البحث فاضي)</td><td>تعديل كمية السطر النشط</td><td><span class="kb">/</span> (numpad)</td><td>تعديل سعر السطر النشط</td></tr>
+  <tr><td><span class="kb">Alt+Q/P/K</span></td><td>كمية / سعر / خصم السطر</td><td><span class="kb">Alt+W</span></td><td>قطاعي ⇄ جملة + إعادة تسعير</td></tr>
+  <tr><td><span class="kb">Alt+L</span></td><td>تعديل آخر سطر اتضاف</td><td><span class="kb">Alt+I</span></td><td>استعلام سعر من غير بيع</td></tr>
+  <tr><td><span class="kb">Tab</span> / <span class="kb">Shift+Tab</span></td><td>كمية ← سعر ← خصم ← بحث</td><td><span class="kb">↑</span> <span class="kb">↓</span> + <span class="kb">Enter</span></td><td>اختيار سعر مقترح جوه خانة السعر</td></tr>
+  <tr><td><span class="kb">+</span> / <span class="kb">-</span> / <span class="kb">Del</span></td><td>زيادة / نقص / حذف السطر (مع تراجع)</td><td><span class="kb">Esc</span></td><td>يرجّع القيمة القديمة ويرجع للبحث</td></tr>
+ </tbody></table>
+ <p class="note">الخريطة دي متوافقة مع الخريطة المعتمدة في توثيق المشروع، ومضاف عليها اختصارات السطر والسعر. التطبيق بيقرا <code>e.code</code> مش <code>e.key</code> عشان الكيبورد العربي، والأرقام العربية (٠–٩) بتتحول تلقائيًا.</p>
+ {{RESEARCH}}
+ <h3>مقارنة الخطوات</h3>
+ <table class="t"><thead><tr><th>السيناريو</th><th>الحالي</th><th>المقترح</th></tr></thead><tbody>
+  <tr><td>صنف واحد بالباركود ودفع كاش مضبوط</td><td>3–4 خطوات (وأحيانًا Enter تاني + مودال نجاح)</td><td><b>2</b>: مسح ثم F9</td></tr>
+  <tr><td>3 أصناف باللمس والعميل دفع 200</td><td>~9 لمسات + كيبورد الجهاز</td><td><b>5 لمسات</b> من غير كيبورد</td></tr>
+  <tr><td>نص كيلو بالوزن</td><td>غير ممكن من الكارت</td><td><b>2</b>: الكارت ثم «½ كيلو»</td></tr>
+  <tr><td>تغيير سعر صنف</td><td>غير متاح</td><td><b>1</b>: اكتب السعر (المؤشر واقف عليه) ثم Enter</td></tr>
+ </tbody></table>
+</section>
+
+<section class="page">
+ <h2><span class="num">4</span>نقطة البيع على الموبايل</h2>
+ <figure><img src="{{IMG}}/images/current/pos-phone.png" style="width:36%;margin:0 auto"><figcaption>الحالي: الهيدر بياخد ~360px، وكارت واحد في الصف بارتفاع كبير، والأقسام مخفية، والـ bottom nav بيغطي الدفع.</figcaption></figure>
+ <figure><img src="{{IMG}}/images/proposed/pos-phone.png"><figcaption>المقترح: (1) كتالوج 2 في الصف من غير صور ومعاه سعر الجملة، وشريط سلة ثابت · (2) السلة والدفع في bottom sheet · (3) صنف بالوزن بلوحة أرقام وأزرار ¼ ½ ¾ 1</figcaption></figure>
+</section>
+<section class="page">
+ <figure><img src="{{IMG}}/images/proposed/pos-phone-2.png" style="width:82%;margin:0 auto"><figcaption>(4) عرض مكثّف 3 في الصف · (5) تعديل السعر بلمسة: ضغطة على السعر بتفتح قطاعي/جملة/آخر سعر للعميل/سعر يدوي، مع تحذير أقل سعر</figcaption></figure>
+ <figure><img src="{{IMG}}/images/proposed/pos-phone-light.png"><figcaption>الوضع الفاتح</figcaption></figure>
+ <h3>قواعد الموبايل</h3>
+ <ul>
+  <li>إخفاء الـ bottom nav العام جوه <code>/pos</code>، وشريط سلة ثابت 64px (العدد والإجمالي وزر «عرض السلة»).</li>
+  <li>كل التفاعلات الثانوية (السلة، الدفع، الوزن، السعر، العميل) في bottom sheets بأهداف لمس ≥ 44px، ولوحة أرقام داخلية بدل كيبورد الجهاز.</li>
+  <li>ضغطة = إضافة، وضغطة مطوّلة = الأسعار والتفاصيل. والمسح بكاميرا الموبايل (ML Kit) ضمن MOB-09.</li>
+  <li>safe-areas، وزر الرجوع بيقفل الـ sheet الأول، والطباعة عن طريق Plugin بلوتوث (MOB-10، PRD-13).</li>
+ </ul>
+</section>
+
+{{SECTIONS}}
+
+<section class="page brand">
+ <h2><span class="num">11</span>الهوية المؤقتة (اللوجوهات)</h2>
+ <p>لوجوهات مؤقتة بصيغة SVG و PNG في <code>docs/launch-readiness/brand/</code>، بنفس ألوان السيستم وخطوطه (Inter + Cairo).</p>
+ <div class="grid2">
+  <div class="card"><h4>Sroor ERP (المنصة)</h4><img src="{{IMG}}/brand/sroor-lockup-light.png" style="width:100%"><img src="{{IMG}}/brand/sroor-lockup-dark.png" style="width:100%;margin-top:6px"><p class="note">علامة «S» بتدرّج الكهرماني (#fbbf24 ← #f59e0b ← #d97706)، وهو لون السيستم الأساسي الافتراضي، ومعاها نقطة كحلي بترمز للنمو.</p></div>
+  <div class="card"><h4>2M Pro (محل الموبايلات التجريبي)</h4><img src="{{IMG}}/brand/2mpro-lockup-light.png" style="width:100%"><img src="{{IMG}}/brand/2mpro-lockup-dark.png" style="width:100%;margin-top:6px"><p class="note">موبايل بداخله «2M» وشارة PRO سماوي، بالأزرق (#1e3a8a ← #3b82f6) وهو من باليتات السيستم.</p></div>
+ </div>
+ <div class="grid3" style="margin-top:10px;align-items:center">
+  <img src="{{IMG}}/brand/sroor-mark.png" style="width:60%;margin:auto"><img src="{{IMG}}/brand/2mpro-mark.png" style="width:60%;margin:auto"><div class="note">تصلح كأيقونة تطبيق أندرويد و favicon. ده بيحل MOB-01 مؤقتًا لحد ما يتعمل لوجو نهائي.</div>
+ </div>
+</section>
+
+<section class="page">
+ <h2><span class="num">12</span>التسعير المقترح (ج.م، غير شامل 14% ضريبة)</h2>
+ <table class="t"><thead><tr><th></th><th>Basic</th><th>Pro</th><th>Enterprise</th></tr></thead><tbody>
+  <tr><td>شهري</td><td class="n">449</td><td class="n">899</td><td class="n">1,799</td></tr>
+  <tr><td>سنوي (بسعر 10 شهور)</td><td class="n">4,490</td><td class="n">8,990</td><td class="n">17,990</td></tr>
+  <tr><td>سعر المؤسسين (أول 50 عميل)</td><td class="n">299</td><td class="n">599</td><td class="n">999</td></tr>
+ </tbody></table>
+ <ul>
+  <li>تجربة 14 يوم من غير بطاقة. الفرع الإضافي 249. السعر أقل من Daftra بحوالي 27–39%، وأقل بكتير من Foodics مصر (~2,849+).</li>
+  <li><b>إضافات:</b> إيصال ETA 249/شهر (يشمل جهاز، و+79 لكل جهاز إضافي)، الولاء 149 على Basic، باقات رسائل (500 = 99، 2,000 = 349، 10,000 = 1,490).</li>
+  <li><b>خدمات:</b> استيراد البيانات 1,500 (مجاني مع السنوي)، وتصدير البيانات مجاني.</li>
+  <li><b>العرض:</b> السعر السنوي هو الافتراضي، و«+14% ضريبة» جنب كل سعر، ومفيش باقة مجانية للأبد.</li>
+ </ul>
+ <p class="note">الأسعار مقترحة من تحليل المنافسين (Daftra، Foodics، Rewaa، Qoyod، Loyverse). والمصادر في ملف التحليل التفصيلي.</p>
+
+ <h2 style="margin-top:18px"><span class="num">13</span>قرارات مطلوبة منك</h2>
+ <table class="t"><thead><tr><th>#</th><th>القرار</th><th>ليه مهم</th></tr></thead><tbody>
+  <tr><td class="id">Q1</td><td>هل المطاعم والكافيهات (KDS، إضافات، طلبات) ضمن النطاق؟</td><td>قرار 2026-10-08 بيقول إن المنتج «تجزئة وجملة ووزن» مش كافيه.</td></tr>
+  <tr><td class="id">Q2</td><td>مستشار قانوني لقانون حماية البيانات + ترخيص الاستضافة خارج مصر (Hetzner و Google Drive)</td><td>التطبيق بدأ بعد فترة السماح.</td></tr>
+  <tr><td class="id">Q3</td><td>تقديم إيصال ETA الإلكتروني لمرحلة 1–2</td><td>إلزامي لشريحة أقل من 20 مليون.</td></tr>
+  <tr><td class="id">Q4</td><td>تسجيل بمساعدة عند الإطلاق بدل التسجيل الذاتي؟</td><td>أسرع وأأمن في البداية.</td></tr>
+  <tr><td class="id">Q5</td><td>الاسم التجاري والدومين النهائي (Sroor؟) و package id الأندرويد (بدل com.sroor.cofe.erp)</td><td>الـ package id ما ينفعش يتغير بعد أول رفع على Play.</td></tr>
+  <tr><td class="id">Q6</td><td>إخفاء «عروض الأسعار» من الباقات لحد ما تتبني</td><td>معروضة كميزة ومفيش لها routes.</td></tr>
+  <tr><td class="id">Q7</td><td>هل هتبيع باقات أجهزة أندرويد عند الإطلاق؟</td><td>لو أيوه، طباعة البلوتوث تبقى P0.</td></tr>
+  <tr><td class="id">Q8</td><td>Paymob في أول 3 شهور؟</td><td>تحصيل أوتوماتيك بدل اليدوي.</td></tr>
+  <tr><td class="id">Q9</td><td>اعتماد أسعار الإضافات</td><td>القسم 12.</td></tr>
+  <tr><td class="id">Q10</td><td>إيقاف صفحة <code>/brochure</code> فورًا</td><td>بتعلن عن مزايا مش موجودة.</td></tr>
+  <tr><td class="id">Q11</td><td>إلغاء فاتورة مشتريات: هل يعتبر دفعة المورد مستردة؟</td><td>BE-21، وده سلوك الكود الحالي.</td></tr>
+  <tr><td class="id">Q13</td><td>نفصل «سعر الجملة» عن «أقل سعر» دلوقتي (عمود wholesale_price)؟</td><td>حاليًا اختيار «جملة» بيبيع بأقل سعر.</td></tr>
+  <tr><td class="id">Q14</td><td>نسمح بخلط سطور قطاعي وجملة في نفس الفاتورة؟</td><td>Rewaa بيمنع، وفيه محلات محتاجاه.</td></tr>
+  <tr><td class="id">Q15</td><td>الكاشير يشوف رقم أقل سعر، ولا ياخد «مسموح / تحذير / محتاج موافقة» بس؟ ورفع السعر فوق القائمة محتاج صلاحية؟</td><td>حماية الهامش مقابل سرعة الشغل.</td></tr>
+  <tr><td class="id">Q12</td><td>عدد الكروت الافتراضي في الـ POS: 2 أو 3؟ والصور مقفولة افتراضيًا؟</td><td>الفصل 3.</td></tr>
+ </tbody></table>
+</section>
+
+<section class="page">
+ <h2><span class="num">14</span>منهجية التحليل والملفات</h2>
+ <ul>
+  <li>تحليل مقروء فقط للبرنش <code>feature/multi-tenant</code> عند <code>2547eb90</code>، من 7 وكلاء متخصصين: أمان، باك اند، POS، فرونت/موبايل، DevOps، منتج/سوق، وبحث UX للكيبورد.</li>
+  <li><b>اللي اتشغّل فعلًا:</b>
+   <ul>
+    <li><code>php artisan test</code>: 2,920 اختبار، 2,919 ناجح و1 متخطّى (sqlite).</li>
+    <li>ESLint: صفر أخطاء و9 تحذيرات. البناء ناجح.</li>
+    <li>اختبارات ops offline ناجحة.</li>
+    <li><code>composer audit</code> و <code>npm audit</code>.</li>
+    <li>لقطات حقيقية للـ POS على محل تجريبي محلي (2M Pro، 224 صنف بوحدات متنوعة).</li>
+   </ul></li>
+  <li><b>اللي ما اتشغّلش:</b> أي حاجة على الإنتاج أو الـ VPS أو Hostinger (حسب القواعد)، ومراجعة تاريخ git للأسرار، وتوقيع أندرويد الفعلي.</li>
+  <li>التقارير التفصيلية بالإنجليزي (مع file:line لكل بند) و مصادر التصميم موجودة في <code>docs/launch-readiness/</code>.</li>
+  <li>كل بند ليه كارت على بورد <b>Sroor Erp</b> في Trello بنفس الكود (مثلًا SEC-01).</li>
+ </ul>
+ <p class="note">ملاحظة: الأسرار المكشوفة اتذكر مكانها بس (اسم الملف والسطر) من غير ما تتكتب قيمتها في أي مكان.</p>
+</section>
+</body></html>

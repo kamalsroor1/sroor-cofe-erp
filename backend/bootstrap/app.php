@@ -32,6 +32,7 @@ use Spatie\Permission\Exceptions\UnauthorizedException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -169,6 +170,20 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'success' => false,
                     'message' => __('auth.unauthorized'),
+                ], 403);
+            }
+        });
+
+        // TXT-01: policy / authorize() / FormRequest::authorize() denials (AccessDeniedHttpException)
+        // must return a translated 403, never Laravel's default "This action is unauthorized.".
+        $exceptions->render(function (AccessDeniedHttpException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                $message = $e->getMessage();
+                $isFrameworkDefault = $message === '' || $message === 'This action is unauthorized.';
+
+                return response()->json([
+                    'success' => false,
+                    'message' => $isFrameworkDefault ? __('auth.unauthorized') : $message,
                 ], 403);
             }
         });

@@ -4,6 +4,8 @@ import { useTrans } from './useTrans';
 import { notifySuccess, notifyWarning } from '../helpers/alert';
 import { useWhatsAppCredentials } from './useWhatsAppCredentials';
 import { resolveApprovalTerms } from '../helpers/signupApprovalPreview';
+import { buildSignupWelcomeMessage, buildSignupWelcomeWhatsAppUrl } from '../helpers/signupWelcomeMessage';
+import { arabicMessage } from '../helpers/whatsappShare';
 
 const PASSWORD_LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz';
 const PASSWORD_DIGITS = '23456789';
@@ -52,6 +54,8 @@ export function useSignupRequestApproval(onChanged) {
     const form = ref({ subdomain: '', plan_code: '', owner_email: '', owner_password: '', generate_password: true });
     // Owner sign-in details returned once by the approval: { login, password, phone }.
     const credentials = ref(null);
+    // SELL-03: non-sensitive welcome context + in-memory password for the ready-to-send message.
+    const welcomeContext = ref(null);
     const whatsapp = useWhatsAppCredentials();
     const errors = ref({});
     const isSubmitting = ref(false);
@@ -61,6 +65,16 @@ export function useSignupRequestApproval(onChanged) {
     const terms = computed(() =>
         resolveApprovalTerms(request.value?.approval_preview, form.value.plan_code, plans.value)
     );
+
+    const welcomeMessage = computed(() => {
+        if (!welcomeContext.value) return '';
+        const locale = typeof document !== 'undefined' ? document.documentElement?.lang || 'ar' : 'ar';
+        return buildSignupWelcomeMessage({
+            translate: t,
+            ...welcomeContext.value,
+            locale,
+        });
+    });
 
     const loadPlans = async () => {
         if (plans.value.length) return;
@@ -80,6 +94,7 @@ export function useSignupRequestApproval(onChanged) {
         errors.value = {};
         isPreparing.value = false;
         credentials.value = null;
+        welcomeContext.value = null;
         form.value = {
             subdomain: signup.preferred_subdomain || '',
             plan_code: signup.plan_code || '',
@@ -104,6 +119,8 @@ export function useSignupRequestApproval(onChanged) {
         request.value = null;
         isPreparing.value = false;
         credentials.value = null;
+        welcomeContext.value = null;
+        form.value.owner_password = '';
         if (wasPreparing) onChanged();
     };
 
@@ -135,12 +152,29 @@ export function useSignupRequestApproval(onChanged) {
             }
             const response = await api.post(`/super-admin/signup-requests/${request.value.id}/approve`, payload);
             const issued = response.data?.owner_credentials;
+            const ctx = response.data?.welcome_context;
+            const password = issued?.temporary_password || (!automatic ? String(payload.owner_password || '') : '');
             if (issued?.temporary_password) {
                 credentials.value = {
                     login: issued.login || payload.owner_email,
                     password: issued.temporary_password,
                     phone: request.value.phone || '',
                 };
+            }
+            if (ctx) {
+                welcomeContext.value = {
+                    businessName: ctx.business_name || request.value.business_name || '',
+                    loginUrl: ctx.login_url || '',
+                    helpUrl: ctx.help_url || '',
+                    trialDays: ctx.trial_days ?? terms.value?.trialDays ?? 0,
+                    trialEndsAt: ctx.trial_ends_at || terms.value?.endsAt || '',
+                    supportPhone: ctx.support_phone || '',
+                    login: issued?.login || payload.owner_email,
+                    password,
+                    phone: request.value.phone || '',
+                };
+            }
+            if (issued?.temporary_password || ctx) {
                 whatsapp.prepare();
             }
             isPreparing.value = true;
@@ -168,15 +202,32 @@ export function useSignupRequestApproval(onChanged) {
         whatsapp.send({ phone, login, password });
     };
 
+    const sendWelcomeWhatsApp = () => {
+        if (!welcomeContext.value) return;
+        const arabic = buildSignupWelcomeMessage({
+            translate: arabicMessage,
+            ...welcomeContext.value,
+            locale: 'ar',
+        });
+        const text = arabic || welcomeMessage.value;
+        if (!text) return;
+        window.open(buildSignupWelcomeWhatsAppUrl(welcomeContext.value.phone, text), '_blank', 'noopener,noreferrer');
+    };
+
     onBeforeUnmount(() => {
         credentials.value = null;
+        welcomeContext.value = null;
+        form.value.owner_password = '';
     });
 
     return {
         credentials,
+        welcomeContext,
+        welcomeMessage,
         terms,
         canSendWhatsApp: whatsapp.isReady,
         sendWhatsApp,
+        sendWelcomeWhatsApp,
         request,
         plans,
         form,

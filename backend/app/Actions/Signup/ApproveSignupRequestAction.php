@@ -19,6 +19,8 @@ use App\Services\CentralAuditLogger;
 use App\Services\Signup\SignupTrialTerms;
 use App\Services\TenantProvisionerService;
 use App\Support\Auth\TemporaryPassword;
+use App\Support\PlatformHosts;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -58,7 +60,8 @@ final class ApproveSignupRequestAction
         $temporaryPassword = $dto->ownerPassword === null ? TemporaryPassword::generate() : null;
         $ownerPassword = $dto->ownerPassword ?? (string) $temporaryPassword;
 
-        $signup = DB::connection(TenantProvisionerService::centralConnection())->transaction(function () use ($dto, $operator, $ownerPassword): SignupRequest {
+        /** @var array{signup: SignupRequest, tenant: Tenant, plan: Plan} $provisioned */
+        $provisioned = DB::connection(TenantProvisionerService::centralConnection())->transaction(function () use ($dto, $operator, $ownerPassword): array {
             $signup = SignupRequest::query()->whereKey($dto->signupRequestId)->lockForUpdate()->firstOrFail();
 
             if ($signup->status !== SignupRequestStatus::Pending) {
@@ -85,10 +88,25 @@ final class ApproveSignupRequestAction
                 subject: $tenant,
             );
 
-            return $signup;
+            return ['signup' => $signup, 'tenant' => $tenant, 'plan' => $plan];
         });
 
-        return new ApprovedSignupResult($signup, $dto->ownerEmail, $temporaryPassword);
+        $tenant = $provisioned['tenant'];
+        $trialDays = $this->trialTerms->trialDaysFor($provisioned['plan']);
+        // PLAN-10: a permanent free plan has no trial (0 days, no end date).
+        $trialEndsAt = $trialDays === 0 ? null : ($tenant->trial_ends_at?->toIso8601String()
+            ?? CarbonImmutable::now()->addDays($trialDays)->toIso8601String());
+        $tenantHost = PlatformHosts::tenantHost((string) ($tenant->slug ?: $dto->subdomain));
+
+        return new ApprovedSignupResult(
+            signup: $provisioned['signup'],
+            ownerEmail: $dto->ownerEmail,
+            temporaryPassword: $temporaryPassword,
+            loginUrl: PlatformHosts::url($tenantHost, '/login'),
+            helpUrl: PlatformHosts::url($tenantHost, '/help'),
+            trialDays: $trialDays,
+            trialEndsAt: $trialEndsAt,
+        );
     }
 
     /** Requested plan, else the catalog's trial plan (first active plan with trial days). */

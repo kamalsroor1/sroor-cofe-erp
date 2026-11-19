@@ -82,7 +82,7 @@ return [
     'subscribers_count' => ':count subscribers',
     'monthly_rate' => ':amount EGP / month',
     'yearly_rate' => ':amount EGP / year',
-    'view_all_tenants_link' => 'View all tenants ←',
+    'view_all_tenants_link' => 'View all tenants',
     'no_tenants_registered' => 'No tenants registered yet.',
     'status_active_badge' => 'Active ✅',
     'status_trial_badge' => 'Trial ⏳',

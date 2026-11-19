@@ -140,5 +140,18 @@ return [
         'password_mode_manual' => 'هكتب كلمة المرور بنفسي',
         'password_manual_required' => 'اكتب كلمة المرور أو اختار التوليد التلقائي.',
         'credentials_title' => 'بيانات دخول صاحب المتجر',
+        'welcome_title' => 'رسالة الترحيب للعميل',
+        'welcome_copy' => 'نسخ الرسالة',
+        'welcome_whatsapp' => 'فتح واتساب',
+        'welcome_copied' => 'تم نسخ رسالة الترحيب.',
+        'welcome_message' => [
+            'greeting' => 'أهلاً بك في نظام إبراء — حساب محل ":business" جاهز الآن.',
+            'login_url' => 'رابط الدخول: :url',
+            'login' => 'اسم المستخدم: :login',
+            'password' => 'كلمة المرور المؤقتة (تُغيَّر عند أول دخول): :password',
+            'trial' => 'مدة التجربة: :days يوم (تنتهي في :date)',
+            'help' => 'مركز المساعدة: :url',
+            'support' => 'رقم الدعم: :phone',
+        ],
     ],
 ];

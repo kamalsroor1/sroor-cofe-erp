@@ -107,7 +107,7 @@ return [
     'cancel_confirmed_btn' => 'Yes, Cancel',
     'cancel_dismiss_btn' => 'Dismiss',
     'invoice_cancelled_success' => 'Invoice cancelled and stock reversed successfully',
-    'invoice_cancelled_failed' => 'Failed to cancel invoice',
+    'invoice_cancelled_failed' => 'Failed to cancel invoice. Please verify there are no associated returns and try again.',
     'check' => 'Check',
     'receipt_title' => 'Receipt - :number',
     'print_receipt' => 'Print Receipt',

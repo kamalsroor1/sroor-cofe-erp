@@ -140,5 +140,18 @@ return [
         'password_mode_manual' => 'I will type the password myself',
         'password_manual_required' => 'Type a password or choose automatic generation.',
         'credentials_title' => 'Shop owner sign-in details',
+        'welcome_title' => 'Customer welcome message',
+        'welcome_copy' => 'Copy message',
+        'welcome_whatsapp' => 'Open WhatsApp',
+        'welcome_copied' => 'Welcome message copied.',
+        'welcome_message' => [
+            'greeting' => 'Welcome to Ibraa — the account for ":business" is now ready.',
+            'login_url' => 'Sign-in link: :url',
+            'login' => 'Username: :login',
+            'password' => 'Temporary password (must be changed on first sign-in): :password',
+            'trial' => 'Trial period: :days days (ends on :date)',
+            'help' => 'Help center: :url',
+            'support' => 'Support phone: :phone',
+        ],
     ],
 ];

@@ -148,9 +148,9 @@
 
         <NotificationsBell />
 
-        <!-- Store switcher + journal status: full row on lg, compact chip below lg (tablet + mobile) -->
+        <!-- Store switcher + journal status: full row on lg, compact chip on sm & md (tablet) -->
         <StoreShiftSwitcher class="hidden lg:flex" variant="inline" />
-        <StoreShiftSwitcher class="flex lg:hidden" variant="chip" />
+        <StoreShiftSwitcher class="hidden sm:flex lg:hidden" variant="chip" />
       </div>
 
       <!-- Left Side (in RTL): Live Clock & Logout -->
@@ -270,7 +270,7 @@
           </div>
 
           <!-- Store switcher + journal status -->
-          <div class="p-3 border-b border-slate-200 dark:border-slate-800">
+          <div class="p-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40">
             <StoreShiftSwitcher variant="drawer" @navigate="isSidebarOpen = false" />
           </div>
 

@@ -1,0 +1,88 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><link rel="stylesheet" href="common.css"><script src="data.js"></script>
+<style>
+body{width:1440px;height:900px;overflow:hidden;display:grid;grid-template-rows:64px 1fr;grid-template-columns:64px 1fr 430px}
+.rail{grid-row:1/3;grid-column:1;background:var(--bar);border-left:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:10px;order:3}
+.rail div{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:var(--mut)}
+.rail .on{background:var(--pl);color:var(--p);border:1px solid var(--pb)}
+.top{grid-column:2/4;background:var(--bar);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:0 16px}
+.search{flex:1;height:44px;border:2px solid var(--pb);border-radius:14px;display:flex;align-items:center;gap:10px;padding:0 14px;color:var(--mut);font-size:15px;background:var(--card)}
+.main{grid-column:2;display:flex;flex-direction:column;overflow:hidden}
+.chips{display:flex;gap:8px;padding:14px 18px 10px;flex-wrap:nowrap;overflow:hidden}
+.chip{white-space:nowrap;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font-weight:700;font-size:13px;color:var(--mut);display:flex;gap:6px;align-items:center}
+.chip.on{background:var(--p);color:#03231a;border-color:var(--p)}
+.chip b{font-family:Inter;font-size:11px;opacity:.7}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:6px 18px 18px;overflow:hidden}
+.pc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:8px;position:relative}
+.pc .img{height:84px;border-radius:12px;display:grid;place-items:center;font-size:30px;font-weight:800;color:#fff;font-family:Inter}
+.pc h4{font-size:14px;line-height:1.35;font-family:Inter,Cairo;font-weight:700;unicode-bidi:plaintext;text-align:right}
+.pc small{color:var(--mut);font-size:12px;unicode-bidi:plaintext;text-align:right;font-family:Inter,Cairo}
+.pc .row{display:flex;justify-content:space-between;align-items:center}
+.price{font-family:Inter;font-weight:800;font-size:17px;color:var(--p)}
+.price span{font-family:Cairo;font-size:11px;color:var(--mut);font-weight:600;margin-right:3px}
+.stock{font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px}
+.ok{background:var(--pl);color:var(--p)} .low{background:rgba(244,63,94,.15);color:var(--dan)}
+.imei{position:absolute;top:16px;left:16px;font-size:10px;font-weight:800;background:rgba(2,6,24,.6);color:#fff;border-radius:6px;padding:2px 6px;font-family:Inter}
+.cart{grid-column:3;min-height:0;overflow:hidden;background:var(--bar);border-right:1px solid var(--line);display:flex;flex-direction:column}
+.tabs{display:flex;gap:6px;padding:12px 14px 0}
+.tab{padding:7px 12px;border-radius:10px 10px 0 0;font-size:13px;font-weight:700;color:var(--mut);border:1px solid var(--line);border-bottom:0}
+.tab.on{background:var(--card);color:var(--tx);border-color:var(--pb)}
+.cust{margin:0 14px;background:var(--card);border:1px solid var(--line);border-radius:0 12px 12px 12px;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.av{width:36px;height:36px;border-radius:50%;background:var(--pl);color:var(--p);display:grid;place-items:center;font-weight:800}
+.lines{flex:1;min-height:0;overflow:hidden;padding:8px 14px;display:flex;flex-direction:column;gap:6px}
+.ln{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:7px 12px;display:grid;grid-template-columns:1fr auto;gap:4px 10px}
+.ln.sel{border-color:var(--p);box-shadow:0 0 0 3px var(--pl)}
+.ln h5{font-size:13.5px;font-family:Inter,Cairo;unicode-bidi:plaintext;text-align:right}
+.ln .meta{font-size:11.5px;color:var(--mut)}
+.qty{display:flex;align-items:center;gap:6px}
+.qty i{width:26px;height:26px;border-radius:9px;border:1px solid var(--line);display:grid;place-items:center;font-style:normal;font-weight:800;background:var(--card2)}
+.sum{border-top:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:6px;background:var(--bg)}
+.sum .r{display:flex;justify-content:space-between;font-size:13.5px;color:var(--mut)}
+.sum .r b{color:var(--tx);font-family:Inter}
+.total{display:flex;justify-content:space-between;align-items:baseline;padding-top:6px;border-top:1px dashed var(--line)}
+.total b{font-family:Inter;font-size:26px;font-weight:800}
+.pm{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.pm div{border:1px solid var(--line);border-radius:10px;padding:7px 0;text-align:center;font-size:12.5px;font-weight:700;background:var(--card)}
+.pm .on{border-color:var(--p);color:var(--p);background:var(--pl)}
+.pay{height:52px;border-radius:14px;background:linear-gradient(135deg,var(--p),var(--ph));color:#03231a;font-weight:800;font-size:19px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border:0}
+.acts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.acts .btn{height:38px;font-size:12px}
+</style></head><body>
+<nav class="rail">
+ <div style="background:var(--p);color:#03231a;font-family:Inter;font-weight:800">2M</div>
+ <div class="on"><svg class="i" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg></div>
+ <div><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
+ <div><svg class="i" viewBox="0 0 24 24"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></div>
+ <div><svg class="i" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></svg></div>
+</nav>
+<header class="top">
+ <div style="display:flex;flex-direction:column;line-height:1.2"><b style="font-size:16px">نقطة البيع</b><span style="font-size:12px;color:var(--mut)">2M Pro · الفرع الرئيسي</span></div>
+ <span class="pill" style="background:var(--pl);color:var(--p);border:1px solid var(--pb)">● وردية مفتوحة · أحمد · منذ 3س 12د</span>
+ <div class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>ابحث بالاسم أو الكود أو IMEI… أو امسح الباركود<span style="margin-inline-start:auto" class="kbd">F2</span></div>
+ <div class="btn" style="height:44px;padding:0 4px;gap:0"><span style="background:var(--p);color:#03231a;border-radius:9px;padding:6px 14px">قطاعي</span><span style="padding:6px 14px;color:var(--mut)">جملة</span></div>
+ <div class="btn" style="height:44px;padding:0 12px;font-size:13px">⇆ مرتجع <span class="kbd">F8</span></div>
+ <div class="btn" style="height:44px;width:44px">☾</div>
+</header>
+<main class="main">
+ <div class="chips" id="chips"></div>
+ <div class="grid" id="grid"></div>
+</main>
+<aside class="cart">
+ <div class="tabs"><div class="tab on">فاتورة #1042</div><div class="tab">معلّقة · 2</div><div class="tab" style="color:var(--p)">＋ جديدة</div></div>
+ <div class="cust"><div class="av">م</div><div style="flex:1"><b style="font-size:14px">محمد عبد الرحمن</b><div style="font-size:12px;color:var(--mut)" class="num">0100 234 5678 · رصيد مستحق 1,200 ج.م</div></div><span class="kbd">F4</span></div>
+ <div class="lines" id="lines"></div>
+ <div class="sum">
+  <div class="r"><span>المجموع (4 أصناف)</span><b>70,507.50</b></div>
+  <div class="r"><span>خصم <span class="pill" style="padding:1px 8px;background:var(--card);border:1px solid var(--line);font-size:11px">٪ / مبلغ</span></span><b style="color:var(--dan)">− 507.50</b></div>
+  <div class="total"><span style="font-weight:800">الإجمالي</span><b class="num">70,000.00 <span style="font-size:13px;color:var(--mut);font-family:Cairo">ج.م</span></b></div>
+  <div class="pm"><div class="on">نقدي</div><div>فيزا</div><div>InstaPay</div><div>تقسيط/آجل</div></div>
+  <div class="acts"><div class="btn">⏸ تعليق</div><div class="btn">٪ خصم</div><div class="btn">✎ ملاحظة</div><div class="btn" style="color:var(--dan)">✕ إلغاء</div></div>
+  <button class="pay"><span>دفع وطباعة</span><span class="num">70,000 ج.م <span class="kbd" style="color:#03231a;border-color:#03231a55">F9</span></span></button>
+ </div>
+</aside>
+<script>
+const cats=[['الكل',210],['آيفون',20],['سامسونج',17],['شاومي',16],['سماعات',22],['شواحن',20],['باور بانك',15],['جرابات',20],['اسكرينات',15]];
+chips.innerHTML=cats.map((c,i)=>`<div class="chip ${i==0?'on':''}">${c[0]} <b>${c[1]}</b></div>`).join('');
+grid.innerHTML=P.map(p=>`<div class="pc">${['apple','samsung','xiaomi'].includes(p[4])?'<span class="imei">IMEI</span>':''}${p[7]?'<span class="imei" style="background:var(--warn);color:#1a1200">⚖ وزن</span>':''}<div class="img" style="background:linear-gradient(135deg,${p[5]},#1e293b)">${icon(p[4])}</div><h4>${p[0]}</h4><small>${p[1]}</small><div class="row"><div class="price">${p[2].toLocaleString('en')}<span>ج.م / ${p[6]}</span></div><span class="stock ${p[3]<5?'low':'ok'}">${p[3]<5?'آخر '+p[3]:fmtQty(p[3],p[6])+' '+p[6]}</span></div></div>`).join('');
+const L=[['iPhone 16 Pro Max 256GB','IMEI 35 829104 771203 · ضمان سنة',1,66500,0,'قطعة'],['بن تركي محوّج','⚖ من الميزان · 0.750 كجم × 560',0.75,560,1,'كجم'],['كابل AUX مضفر','2.5 متر × 35',2.5,35,0,'متر'],['كرتونة اسكرينات 9D','كرتونة = 50 قطعة',1,3500,0,'كرتونة']];
+lines.innerHTML=L.map(l=>`<div class="ln ${l[4]?'sel':''}"><h5>${l[0]}</h5><b class="num" style="font-size:14px">${(l[2]*l[3]).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})}</b><div class="meta">${l[1]||('سعر الوحدة '+l[3].toLocaleString('en'))}</div><div class="qty"><i>−</i><b class="num">${l[5]==='كجم'?l[2].toFixed(3):l[2]} <small style="font-family:Cairo;color:var(--mut);font-weight:600">${l[5]}</small></b><i style="color:var(--p)">＋</i></div></div>`).join('');
+</script></body></html>

@@ -84,7 +84,7 @@ return [
     'confirm' => 'Confirm',
     'select_placeholder' => 'Select...',
     'search_in_list' => 'Search in list...',
-    'unexpected_error' => 'An unexpected server communication error occurred',
+    'unexpected_error' => 'An unexpected server communication error occurred. Please try again.',
     'permission_alert' => 'Permission Alert',
     'app_title' => 'Ibraa',
     'app_subtitle' => 'Your accounts, settled. Every piece in its place.',
@@ -111,7 +111,7 @@ return [
     'force_delete' => 'Permanent Delete',
 
     'done' => 'Done Successfully ✓',
-    'error_occurred' => 'An unexpected error occurred',
+    'error_occurred' => 'An error occurred while executing the operation. Please try again.',
     'no_notes_available' => 'No notes recorded for this operation.',
     'unit_piece' => 'Piece',
     'unnamed_item' => 'Item',
@@ -126,7 +126,7 @@ return [
     'remind_me_later' => 'Remind Me Later',
     'yes_delete' => 'Yes, Delete',
     'all_items' => 'All Items',
-    'store_access_denied' => 'You are not allowed to access this store\'s data',
+    'store_access_denied' => 'You do not have access to this branch. Please ask the manager to add you.',
     'platform_name' => 'Ibraa ERP',
     'default_company_subtitle' => 'Sales, inventory and branch management',
 
@@ -135,7 +135,7 @@ return [
     'filter_search' => 'Search and filter',
     'save_changes' => 'Save changes',
     'saving' => 'Saving...',
-    'server_error' => 'A server error occurred. Please try again.',
+    'server_error' => 'An unexpected server error occurred. Please try again later or contact technical support.',
 
     'by' => 'By',
 

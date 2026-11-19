@@ -108,10 +108,7 @@ final class UserController extends Controller
             'roles' => $roles->map(fn ($r) => [
                 'id' => $r->name,
                 'name' => match ($r->name) {
-                    'admin' => 'مدير النظام (كامل الصلاحيات) 👑',
-                    'cashier' => 'كاشير مبيعات ونقطة بيع 🛒',
-                    'storekeeper' => 'أمين مخزن وتوريدات 📦',
-                    'accountant' => 'محاسب ومدقق مالي 💼',
+                    'admin', 'cashier', 'storekeeper', 'accountant' => __('users.roles.'.$r->name),
                     default => $r->name,
                 },
             ]),

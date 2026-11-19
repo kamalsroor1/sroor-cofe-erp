@@ -1,0 +1,91 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><link rel="stylesheet" href="common.css"><script src="data.js"></script>
+<style>
+body{width:1320px;height:920px;display:flex;gap:36px;justify-content:center;align-items:center;background:#070d1c}
+body.light{background:#e2e8f0}
+.ph{width:390px;height:844px;border-radius:44px;border:10px solid #1e293b;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column}
+.cap{position:absolute;top:-34px;width:100%;text-align:center;color:#94a3b8;font-weight:700;font-size:14px}
+.wrap{position:relative}
+.sb{height:34px;display:flex;justify-content:space-between;align-items:center;padding:0 22px;font:600 12px Inter;color:var(--tx)}
+.hd{padding:4px 14px 8px;display:flex;align-items:center;gap:8px}
+.hd b{font-size:17px}
+.srch{margin:0 14px;height:46px;border-radius:14px;background:var(--card);border:1.5px solid var(--pb);display:flex;align-items:center;gap:8px;padding:0 12px;color:var(--mut);font-size:13.5px}
+.scan{margin-inline-start:auto;width:34px;height:34px;border-radius:10px;background:var(--p);color:#03231a;display:grid;place-items:center;font-weight:800}
+.chips{display:flex;gap:6px;padding:10px 14px;overflow:hidden}
+.chip{white-space:nowrap;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-weight:700;font-size:12.5px;color:var(--mut)}
+.chip.on{background:var(--p);color:#03231a}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px;overflow:hidden;flex:1}
+.c{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:5px;position:relative;height:186px}
+.c .im{height:74px;border-radius:10px;display:grid;place-items:center;font:800 24px Inter;color:#fff}
+.c h4{font-size:12.5px;line-height:1.3;unicode-bidi:plaintext;text-align:right;font-family:Inter,Cairo;height:33px;overflow:hidden}
+.c .pr{font:800 15px Inter;color:var(--p)} .c .pr span{font:600 10px Cairo;color:var(--mut)}
+.c .add{position:absolute;left:8px;bottom:8px;width:32px;height:32px;border-radius:10px;background:var(--p);color:#03231a;display:grid;place-items:center;font-weight:800;font-size:20px}
+.tg{position:absolute;top:12px;left:12px;font:800 9.5px Inter,Cairo;border-radius:5px;padding:1px 5px;background:var(--warn);color:#1a1200}
+.bar{position:absolute;bottom:14px;left:14px;right:14px;height:62px;border-radius:18px;background:linear-gradient(135deg,var(--p),var(--ph));color:#03231a;display:flex;align-items:center;padding:0 16px;gap:10px;box-shadow:0 10px 30px rgba(16,185,129,.35)}
+.bar .n{width:30px;height:30px;border-radius:50%;background:#03231a;color:var(--p);display:grid;place-items:center;font:800 14px Inter}
+.sheet{position:absolute;inset:auto 0 0 0;top:118px;background:var(--bar);border-radius:24px 24px 0 0;border-top:1px solid var(--line);display:flex;flex-direction:column;padding:8px 14px 14px;gap:8px}
+.dim{position:absolute;inset:0;background:rgba(2,6,24,.55)}
+.grab{width:44px;height:5px;border-radius:9px;background:var(--line);margin:0 auto 4px}
+.li{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.li h5{font-size:12.5px;unicode-bidi:plaintext;text-align:right;font-family:Inter,Cairo}
+.li small{font-size:11px;color:var(--mut)}
+.st{display:flex;align-items:center;gap:6px;margin-inline-start:auto}
+.st i{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center;font-style:normal;font-weight:800;background:var(--card2)}
+.r{display:flex;justify-content:space-between;font-size:13px;color:var(--mut)} .r b{color:var(--tx);font-family:Inter}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.seg div{border:1px solid var(--line);background:var(--card);border-radius:10px;text-align:center;padding:8px 0;font-size:12px;font-weight:700}
+.seg .on{border-color:var(--p);color:var(--p);background:var(--pl)}
+.cta{height:56px;border-radius:16px;background:linear-gradient(135deg,var(--p),var(--ph));color:#03231a;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:space-between;padding:0 16px}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kp div{height:54px;border-radius:14px;background:var(--card);border:1px solid var(--line);display:grid;place-items:center;font:700 22px Inter}
+
+/* default: no product images (setting "show item images" off) */
+body:not(.img) .pc .img, body:not(.img) .c .im, body:not(.img) .c3 .im{display:none}
+body:not(.img) .pc{border-inline-start:4px solid var(--cat,#64748b)}
+body:not(.img) .c, body:not(.img) .c3{border-inline-start:4px solid var(--cat,#64748b);height:auto;min-height:0}
+body:not(.img) .pc .imei, body:not(.img) .c .tg{position:static;align-self:flex-start;margin-bottom:-2px}
+body:not(.img) .pc h4{font-size:15px}
+body:not(.img) .c h4{height:auto;font-size:13px}
+body:not(.img) .c{padding:10px 10px 46px}
+body:not(.img) .c3{padding:8px 8px 8px}
+body:not(.img) .c3 h4{height:auto;min-height:28px}
+.badges{display:flex;gap:4px;flex-wrap:wrap}
+.g,.g3{align-content:start;grid-auto-rows:min-content} body:not(.img) .c3 .q{top:auto;bottom:8px;left:8px}</style><style>body{width:900px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:0 10px;overflow:hidden;flex:1}
+.c3{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:3px;position:relative;height:150px}
+.c3 .im{height:52px;border-radius:9px;display:grid;place-items:center;font:800 18px Inter;color:#fff}
+.c3 h4{font-size:11px;line-height:1.25;unicode-bidi:plaintext;text-align:right;font-family:Inter,Cairo;height:28px;overflow:hidden}
+.c3 .pr{font:800 13px Inter;color:var(--p)}
+.c3 .w{font:600 10px Inter,Cairo;color:var(--mut)}
+.c3 .q{position:absolute;top:8px;left:8px;min-width:20px;height:20px;border-radius:10px;background:var(--p);color:#03231a;font:800 11px Inter;display:grid;place-items:center;padding:0 5px}
+.tier{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 12px;font-size:13px}
+.tier b{font:800 16px Inter}.tier.on{border-color:var(--p);background:var(--pl);color:var(--p)}
+.g,.g3{align-content:start;grid-auto-rows:min-content} body:not(.img) .c3 .q{top:auto;bottom:8px;left:8px}</style></head><body>
+<div class="wrap"><div class="cap">٤ · عرض مكثّف: 3 في الصف + السعرين</div><div class="ph">
+ <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+ <div class="srch" style="margin-top:6px">⌕ اسم، كود، IMEI…<div class="scan">⌗</div></div>
+ <div class="chips" id="ch"></div>
+ <div class="g3" id="g4"></div>
+ <div class="bar"><div class="n">4</div><div style="line-height:1.2"><b style="font-size:15px">عرض السلة</b><div style="font-size:11px;opacity:.75">مطوّلة = الأسعار</div></div><b class="num" style="margin-inline-start:auto;font-size:19px;white-space:nowrap">70,000 ج.م</b></div>
+</div></div>
+<div class="wrap"><div class="cap">٥ · تعديل السعر بلمسة (Tap على السعر)</div><div class="ph">
+ <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+ <div class="g" id="g5" style="filter:blur(1px)"></div><div class="dim"></div>
+ <div class="sheet" style="top:120px"><div class="grab"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px;unicode-bidi:plaintext">iPhone 16 Pro Max 256GB</b><span style="font-size:12px;color:var(--mut)">الكمية 1</span></div>
+  <div class="tier on"><span>قطاعي</span><b>66,500</b></div>
+  <div class="tier"><span>جملة</span><b>64,505</b></div>
+  <div class="tier"><span>آخر سعر لمحمد · 2 نوفمبر</span><b>65,800</b></div>
+  <div style="display:flex;align-items:center;gap:8px;border:2px solid var(--p);border-radius:12px;padding:8px 12px;box-shadow:0 0 0 4px var(--pl)"><span style="font-size:12px;color:var(--mut)">سعر يدوي</span><b class="num" style="margin-inline-start:auto;font-size:26px">65,000<span style="display:inline-block;width:2px;height:22px;background:var(--p);vertical-align:middle;margin-right:3px"></span></b></div>
+  <div style="font-size:11.5px;color:var(--dan)">أقل سعر مسموح 63,175 · أقل من كده يحتاج PIN المدير</div>
+  <div class="kp"><div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>000</div><div>0</div><div style="color:var(--dan)">⌫</div></div>
+  <div class="cta" style="justify-content:center">تأكيد السعر ↵</div>
+ </div>
+</div></div>
+<script>window.CAT={apple:'#94a3b8',samsung:'#3b82f6',xiaomi:'#f97316',audio:'#a855f7',power:'#eab308',coffee:'#b45309',solder:'#14b8a6',cable:'#64748b',seeds:'#d97706',box:'#6366f1',water:'#0ea5e9'};
+const cats=['الكل','آيفون','سامسونج','بالوزن','سماعات','شواحن'];
+ch.innerHTML=cats.map((c,i)=>`<div class="chip ${i==0?'on':''}">${c}</div>`).join('');
+const W=v=>Math.round(v*0.97/5)*5;
+g4.innerHTML=P.concat(P.slice(0,3)).slice(0,15).map((p,i)=>`<div class="c3" style="--cat:${CAT[p[4]]}">${[0,2].includes(i)?'<span class="q">'+(i==2?'0.75':'1')+'</span>':''}<div class="im" style="background:linear-gradient(135deg,${p[5]},#1e293b)">${icon(p[4])}</div><h4>${p[0]}</h4><div class="pr">${p[2].toLocaleString('en')}</div><div class="w">جملة ${W(p[2]).toLocaleString('en')||p[2]} · ${p[6]}</div></div>`).join('');
+const card=p=>`<div class="c" style="--cat:${CAT[p[4]]}"><div class="im" style="background:linear-gradient(135deg,${p[5]},#1e293b)">${icon(p[4])}</div><h4>${p[0]}</h4><div class="pr">${p[2].toLocaleString('en')}</div></div>`;
+g5.innerHTML=P.slice(0,8).map(card).join('');
+</script></body></html>

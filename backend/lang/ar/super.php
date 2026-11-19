@@ -82,7 +82,7 @@ return [
     'subscribers_count' => ':count مشترك',
     'monthly_rate' => ':amount ج.م / شهرياً',
     'yearly_rate' => ':amount ج.م / سنوياً',
-    'view_all_tenants_link' => 'عرض جميع المستأجرين ←',
+    'view_all_tenants_link' => 'عرض جميع المستأجرين',
     'no_tenants_registered' => 'لا يوجد مستأجرون مسجلون بعد.',
     'status_active_badge' => 'نشط ✅',
     'status_trial_badge' => 'تجريبي ⏳',

@@ -1,0 +1,19 @@
+<h3>نتايج بحث الـ UX (13 منافس + إرشادات WCAG و NN/g)</h3>
+<div class="grid2">
+ <div class="card red"><h4>3 ثغرات في الكود الحالي تخص الأسعار</h4><ul>
+  <li><b>السيرفر بيقبل أي سعر ≥ 0:</b> مفيش تحقق من أقل سعر، ولا صلاحية تعديل، ولا بيتسجل السعر الأصلي. <span class="ids">StorePOSInvoiceRequest:88 · InvoiceService:134</span></li>
+  <li><b>«الجملة» هي نفسها min_selling_price:</b> مفيش عمود جملة، فاختيار جملة بيبيع بأقل سعر. <span class="ids">Item:73 · GetPOSBootstrapDataAction:95</span></li>
+  <li><b>تسريب تكلفة:</b> <code>ItemDTO</code> بيخلّي أقل سعر = التكلفة لو المفتاح مش مبعوت (في الاستيراد والـ API)، فالتكلفة بتظهر للكاشير. <span class="ids">ItemDTO:32</span></li></ul></div>
+ <div class="card amb"><h4>موجود في الباك اند ومش مستخدم</h4><ul>
+  <li>آخر سعر للعميل <code>/pos/last-price</code>: الواجهة بتنادي مسار غلط.</li>
+  <li>مستوى سعر العميل <code>customers.price_tier</code> مش بيتطبق لما تختار العميل.</li>
+  <li>سعر الفرع <code>custom_selling_price</code> مش بيوصل للـ POS.</li>
+  <li><code>POSWeightPickerModal</code> و <code>POSNumpad</code> و <code>usePOSCart</code> جاهزين ومش موصولين.</li></ul></div>
+</div>
+<div class="card" style="margin-top:8px"><h4>أهم التوصيات</h4><ul>
+ <li><b>R1:</b> السيرفر هو اللي يحدد السعر، بصلاحية <code>pos.price_override</code> وسياسة أقل سعر (مسموح / تحذير / منع + PIN)، ويسجّل السعر الأصلي ومصدره.</li>
+ <li><b>R2:</b> عمود <code>wholesale_price</code> منفصل عن أقل سعر. <b>R3:</b> إصلاح الـ default في ItemDTO.</li>
+ <li><b>R5:</b> إعداد «تسلسل الإدخال» لكل محل: مسح بس / كمية / كمية ثم سعر / سعر. مثلًا محل الجملة يبدأ بالكمية والسعر، ومحل الموبايلات يبدأ بالسعر.</li>
+ <li><b>R6:</b> خانة السعر تبقى combobox فيها الأسعار المقترحة، وتحت السطر النشط شريط أسعار. <b>R7/R8:</b> مستوى العميل يتطبق تلقائيًا، وآخر سعر ليه يظهر بالتاريخ.</li>
+ <li><b>R12:</b> عدد الكروت يتحدد بعرض لوحة الكتالوج نفسها (container query): 2 لو أقل من ~480px، و3 من ~480 لـ 900px، و4 اختياري في وضع الكتالوج الكامل. الكارت كله زرار، وارتفاعه ≥ 88px، والمسافة بين الكروت ≥ 8px.</li>
+</ul></div>

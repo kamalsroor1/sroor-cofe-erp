@@ -17,12 +17,13 @@
       "
     >
       <div
-        class="text-sm font-bold mb-1"
+        class="flex items-center gap-2 text-sm font-bold mb-1"
         :class="selectedRoleId === r.id ? 'text-theme-primary font-black' : 'text-slate-900 dark:text-white'"
       >
-        {{ r.label }}
+        <component :is="roleIcon(r.name)" class="w-4 h-4 shrink-0" />
+        <span>{{ r.label }}</span>
       </div>
-      <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+      <div class="text-[11px] text-slate-500 dark:text-slate-400 num">
         {{
           r.name === 'admin'
             ? $t('roles.full_permissions_badge')
@@ -34,6 +35,7 @@
 </template>
 
 <script setup>
+import { Briefcase, Crown, Package, Shield, ShoppingCart } from 'lucide-vue-next';
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 
 defineProps({
@@ -43,4 +45,13 @@ defineProps({
 });
 
 defineEmits(['select-role']);
+
+const ROLE_ICONS = {
+  admin: Crown,
+  cashier: ShoppingCart,
+  storekeeper: Package,
+  accountant: Briefcase,
+};
+
+const roleIcon = (name) => ROLE_ICONS[name] || Shield;
 </script>

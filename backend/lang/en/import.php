@@ -74,7 +74,7 @@ return [
             'code' => 'ITM-0001',
             'name' => 'Brazilian coffee beans',
             'category' => 'Coffee',
-            'unit' => 'كجم',
+            'unit' => 'Kg',
             'cost_price' => '250',
             'selling_price' => '320',
             'min_selling_price' => '300',

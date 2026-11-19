@@ -18,5 +18,9 @@ final readonly class ApprovedSignupResult
         public SignupRequest $signup,
         public string $ownerEmail,
         #[SensitiveParameter] public ?string $temporaryPassword,
+        public string $loginUrl = '',
+        public string $helpUrl = '',
+        public int $trialDays = 0,
+        public ?string $trialEndsAt = null,
     ) {}
 }

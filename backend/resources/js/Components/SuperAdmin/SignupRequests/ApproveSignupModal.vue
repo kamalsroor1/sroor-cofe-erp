@@ -8,6 +8,7 @@ import BaseCheckbox from '../../Form/BaseCheckbox.vue';
 import TemporaryPasswordPanel from '../../Common/TemporaryPasswordPanel.vue';
 import SignupApprovalTerms from './SignupApprovalTerms.vue';
 import SignupMatchingTenants from './SignupMatchingTenants.vue';
+import SignupWelcomeMessagePanel from './SignupWelcomeMessagePanel.vue';
 
 defineProps({
   show: { type: Boolean, default: false },
@@ -18,12 +19,14 @@ defineProps({
   isPreparing: { type: Boolean, default: false },
   // Owner sign-in details returned once by the approval: { login, password, phone } or null.
   credentials: { type: Object, default: null },
+  welcomeMessage: { type: String, default: '' },
+  welcomePhone: { type: String, default: '' },
   canWhatsapp: { type: Boolean, default: false },
   // What the shop will be created as (see helpers/signupApprovalPreview.js) or null.
   terms: { type: Object, default: null },
 });
 
-defineEmits(['close', 'submit', 'regenerate', 'copy', 'whatsapp']);
+defineEmits(['close', 'submit', 'regenerate', 'copy', 'whatsapp', 'whatsapp-welcome']);
 
 const form = defineModel('form', { type: Object, required: true });
 </script>
@@ -33,7 +36,7 @@ const form = defineModel('form', { type: Object, required: true });
     :show="show"
     :title="$t('signup.console.approve_title')"
     :subtitle="businessName"
-    :closeable="!credentials"
+    :closeable="!credentials && !welcomeMessage"
     @close="$emit('close')"
   >
     <div v-if="isPreparing" role="status" class="space-y-3 py-6 text-center">
@@ -51,6 +54,13 @@ const form = defineModel('form', { type: Object, required: true });
           @whatsapp="$emit('whatsapp')"
         />
       </div>
+      <SignupWelcomeMessagePanel
+        v-if="welcomeMessage"
+        :message="welcomeMessage"
+        :phone="welcomePhone"
+        :can-whatsapp="canWhatsapp"
+        @whatsapp="$emit('whatsapp-welcome')"
+      />
       <BaseButton variant="secondary" size="md" data-testid="approve-modal-close" @click="$emit('close')">
         {{ $t('common.close') }}
       </BaseButton>

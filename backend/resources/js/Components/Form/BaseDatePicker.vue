@@ -167,7 +167,7 @@ const errorMessage = computed(() => {
 </script>
 
 <style>
-/* 🌟 Universal Flatpickr Calendar Styling - Flawless Light & Dark Mode */
+/* Universal Flatpickr Calendar Styling - Flawless Light & Dark Mode */
 .flatpickr-calendar {
   font-family: 'Tajawal', 'Cairo', sans-serif !important;
   border-radius: 1.25rem !important;

@@ -77,7 +77,7 @@ const valueColorClass = computed(() => {
           {{ title }}
         </div>
         <div
-          class="flex flex-wrap items-baseline gap-x-1 font-black font-mono tracking-tight leading-tight"
+          class="flex flex-wrap items-baseline gap-x-1 font-black num tracking-tight leading-tight"
           :class="valueColorClass"
         >
           <span class="whitespace-nowrap text-[clamp(0.9rem,9cqw,1.125rem)]" data-metric-value="true">{{ value }}</span>
@@ -111,7 +111,7 @@ const valueColorClass = computed(() => {
       </div>
 
       <!-- Main Value -->
-      <div class="flex flex-wrap items-baseline gap-x-1 font-black font-mono tracking-tight" :class="valueColorClass">
+      <div class="flex flex-wrap items-baseline gap-x-1 font-black num tracking-tight" :class="valueColorClass">
         <span
           class="whitespace-nowrap leading-tight"
           :class="compact ? 'text-[clamp(0.9rem,10cqw,1.125rem)]' : 'text-[clamp(1rem,11cqw,1.5rem)]'"
@@ -135,7 +135,7 @@ const valueColorClass = computed(() => {
         :class="compact ? 'text-[9.5px] sm:text-[10px]' : 'text-[10px] sm:text-[11px]'"
       >
         <span class="truncate">{{ footerLeft }}</span>
-        <span v-if="footerRight" class="font-mono font-black shrink-0" :class="footerRightClass">
+        <span v-if="footerRight" class="num font-black shrink-0" :class="footerRightClass">
           {{ footerRight }}
         </span>
       </div>

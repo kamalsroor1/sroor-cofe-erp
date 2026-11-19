@@ -39,13 +39,11 @@
 
 <script setup>
 import { Layers } from 'lucide-vue-next';
+import { formatMoneyAmount } from '../../helpers/formatters';
 
 defineProps({
   planStats: { type: Array, default: () => [] },
 });
 
-const formatMoney = (val) => {
-  const num = parseFloat(val) || 0;
-  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
+const formatMoney = (val) => formatMoneyAmount(val, { decimals: 2, fixed: true });
 </script>

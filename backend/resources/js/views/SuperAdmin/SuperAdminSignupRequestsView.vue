@@ -49,6 +49,8 @@ const {
       :is-submitting="approval.isSubmitting"
       :is-preparing="approval.isPreparing"
       :credentials="approval.credentials"
+      :welcome-message="approval.welcomeMessage"
+      :welcome-phone="approval.welcomeContext?.phone || ''"
       :terms="approval.terms"
       :can-whatsapp="approval.canSendWhatsApp"
       @close="approval.close"
@@ -56,6 +58,7 @@ const {
       @regenerate="approval.regenerate"
       @copy="approval.copyPassword"
       @whatsapp="approval.sendWhatsApp"
+      @whatsapp-welcome="approval.sendWelcomeWhatsApp"
     />
   </div>
 </template>
