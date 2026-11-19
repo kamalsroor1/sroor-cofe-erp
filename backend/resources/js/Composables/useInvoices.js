@@ -149,7 +149,8 @@ export function useInvoices() {
             dateFrom.value = addDays(today, -1);
             dateTo.value = dateFrom.value;
         } else if (presetId === 'week') {
-            dateFrom.value = addDays(today, -7);
+            // DATE-03: "last 7 days" = today and the 6 days before it (inclusive range).
+            dateFrom.value = addDays(today, -6);
             dateTo.value = today;
         } else if (presetId === 'month') {
             dateFrom.value = startOfMonth(today);

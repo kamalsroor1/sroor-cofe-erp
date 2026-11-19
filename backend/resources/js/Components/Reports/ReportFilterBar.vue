@@ -40,6 +40,7 @@ const storeId = computed({
             { id: 'yesterday', label: $t('common.yesterday') },
             { id: 'this_week', label: $t('common.this_week') },
             { id: 'this_month', label: $t('common.this_month') },
+            { id: 'last_month', label: $t('common.last_month') },
             { id: 'this_year', label: $t('common.this_year') },
           ]"
           :key="p.id"

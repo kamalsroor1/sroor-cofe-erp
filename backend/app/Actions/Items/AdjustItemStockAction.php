@@ -10,12 +10,10 @@ use App\Models\StockMovement;
 use App\Models\StoreStock;
 use App\Services\DocumentNumberService;
 use App\Support\Database\TransactionRetry;
-use App\Support\TenantClock;
 
 final class AdjustItemStockAction
 {
     public function __construct(
-        private readonly TenantClock $tenantClock,
         private readonly DocumentNumberService $documentNumbers,
     ) {}
 
@@ -25,13 +23,12 @@ final class AdjustItemStockAction
     public function execute(AdjustStockDTO $dto, int $userId): StockMovement
     {
         // SETG-2 ext: number and daily counter follow the tenant business day.
-        $prefix = 'ADJ-'.substr(str_replace('-', '', $this->tenantClock->businessDate()), 2);
-
+        // DATE-03: ADJ-YYYYMMDD-NNNN, the same format and counter as StockService adjustments.
         // BUG-04: the day's counter row exists before the transaction takes its first read.
-        $this->documentNumbers->prepareFor($prefix, StockMovement::class, 'document_number');
+        $this->documentNumbers->prepareDated('ADJ', StockMovement::class, 'document_number');
 
         // BUG-07: restarted as a whole on a lock conflict; a failed attempt's number rolls back.
-        return TransactionRetry::run(function () use ($dto, $userId, $prefix) {
+        return TransactionRetry::run(function () use ($dto, $userId) {
             $item = Item::where('id', $dto->item_id)->lockForUpdate()->firstOrFail();
             $storeStock = StoreStock::firstOrCreate(
                 ['store_id' => $dto->store_id, 'item_id' => $item->id],
@@ -52,7 +49,7 @@ final class AdjustItemStockAction
                 $newStoreQty = bcsub($currentStoreQty, $adjustQty, 3);
             }
 
-            $docNumber = $this->documentNumbers->nextFor($prefix, 4, StockMovement::class, 'document_number');
+            $docNumber = $this->documentNumbers->nextDated('ADJ', 4, StockMovement::class, 'document_number');
 
             $movement = StockMovement::create([
                 'item_id' => $item->id,

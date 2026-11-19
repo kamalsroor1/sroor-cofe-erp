@@ -487,7 +487,7 @@ final class PerfDatasetBuilder
     private function expenses(int $day): void
     {
         $date = $this->dates[$day];
-        $prefix = 'EXP-'.substr(str_replace('-', '', $date), 2);
+        $prefix = 'EXP-'.str_replace('-', '', $date); // DATE-03: same format as the app
         $categories = ['rent', 'utilities', 'supplies', 'salaries'];
 
         for ($e = 0; $e < 2; $e++) {

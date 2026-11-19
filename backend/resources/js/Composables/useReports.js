@@ -55,6 +55,7 @@ export function useReports() {
         { key: 'yesterday', label: t('common.yesterday') },
         { key: 'this_week', label: t('common.this_week') },
         { key: 'this_month', label: t('common.this_month') },
+        { key: 'last_month', label: t('common.last_month') },
         { key: 'this_year', label: t('common.this_year') },
     ]);
 
@@ -141,9 +142,13 @@ export function useReports() {
             filters.from = addDays(today, -1);
             filters.to = filters.from;
         } else if (period === 'this_week') {
-            filters.from = startOfWeek(today, 1);
+            // DATE-03: weeks start on Saturday (helper default), same as the backend.
+            filters.from = startOfWeek(today);
         } else if (period === 'this_month') {
             filters.from = startOfMonth(today);
+        } else if (period === 'last_month') {
+            filters.to = addDays(startOfMonth(today), -1);
+            filters.from = startOfMonth(filters.to);
         } else if (period === 'this_year') {
             filters.from = startOfYear(today);
         }

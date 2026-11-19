@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\DTOs\Reports\ReportFilterDTO;
 use App\Http\Requests\Concerns\ResolvesReportPeriod;
 use App\Support\TenantClock;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class FilterReportRequest extends FormRequest
@@ -30,8 +32,9 @@ class FilterReportRequest extends FormRequest
         // PERF-01: a reversed range (start after end) is a 422, never an empty or wrong report.
         return $this->withEndNotBeforeStart([
             'tab' => ['nullable', 'string'],
-            'period' => ['nullable', 'string'],
-            'preset' => ['nullable', 'string'],
+            // DATE-03: an unknown preset (e.g. a typo) is a 422, never a silent "this month".
+            'period' => ['nullable', 'string', Rule::in(ReportFilterDTO::PERIODS)],
+            'preset' => ['nullable', 'string', Rule::in(ReportFilterDTO::PERIODS)],
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date'],
             'from_date' => ['nullable', 'date'],

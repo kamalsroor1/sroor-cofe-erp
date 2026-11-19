@@ -60,6 +60,7 @@ return [
     'yesterday' => 'أمس',
     'this_week' => 'هذا الأسبوع',
     'this_month' => 'هذا الشهر',
+    'last_month' => 'الشهر الماضي',
     'this_year' => 'هذا العام',
     'date_from' => 'من تاريخ',
     'date_to' => 'إلى تاريخ',

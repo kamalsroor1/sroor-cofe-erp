@@ -133,7 +133,7 @@ class TreasuryService
         }
 
         // BUG-04: the day's TTRF counter row exists before the transaction takes its first read.
-        $this->documentNumbers->prepareDated('TRF', TreasuryTransfer::class, 'transfer_number', 'TTRF');
+        $this->documentNumbers->prepareDated('TTRF', TreasuryTransfer::class, 'transfer_number');
 
         // BUG-07: restarted as a whole on a lock conflict; only plain input is captured.
         return TransactionRetry::run(function () use ($fromMethod, $toMethod, $amount, $fee, $storeId, $notes, $date, $actorId) {
@@ -154,8 +154,9 @@ class TreasuryService
                 ]);
             }
 
-            // Visible prefix TRF- like stock transfers, but its own counter (TTRF-) because both share the prefix.
-            $transferNumber = $this->documentNumbers->nextDated('TRF', 4, TreasuryTransfer::class, 'transfer_number', 'TTRF');
+            // DATE-03: TTRF-YYYYMMDD-NNNN, its own prefix and counter, so a treasury transfer never shows
+            // the same number as a stock transfer (TRF-YYYYMMDD-NNNN).
+            $transferNumber = $this->documentNumbers->nextDated('TTRF', 4, TreasuryTransfer::class, 'transfer_number');
 
             $transfer = TreasuryTransfer::create([
                 'transfer_number' => $transferNumber,

@@ -226,7 +226,7 @@ final class TreasuryStoreIsolationTest extends TenantTestCase
     public function test_successful_transfer_moves_exact_amounts_including_the_fee(): void
     {
         $transfer = $this->transfer(['from_method' => 'cash', 'to_method' => 'instapay', 'amount' => '20.500', 'transfer_fee' => '1.250', 'store_id' => $this->storeA]);
-        $this->assertStringStartsWith('TRF-', $transfer->transfer_number);
+        $this->assertStringStartsWith('TTRF-', $transfer->transfer_number);
 
         $a = $this->balances($this->storeA);
         $this->assertSame('5.250', $a['cash']['balance']);

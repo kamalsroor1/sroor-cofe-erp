@@ -89,7 +89,7 @@ final class GetDailyJournalAction
         $netCashToday = $cashFlow['net_cash'];
 
         // ROLE-01: the drawer (opening float, expected cash) is store-wide: null in own scope.
-        $openingCashBalance = $activeShift ? Decimal::normalize((string) $activeShift->opening_cash_balance) : '0.000';
+        $openingCashBalance = $this->openingCashBalanceFor($date, $storeId !== null ? (int) $storeId : null, $activeShift);
         $ownScope = $ownerId !== null;
 
         // BUG-03: the drawer holds what the OPEN shift expects (opening + every cash movement since
@@ -170,6 +170,36 @@ final class GetDailyJournalAction
      *
      * @param  Collection<array-key, mixed>  $values
      */
+    /**
+     * DATE-03: the opening float of the SELECTED business date. Today: the open shift's float (as
+     * before). An older date: the float of the first shift opened on that date, else of the shift
+     * that was already open when that day started - never today's open shift for a past day.
+     */
+    private function openingCashBalanceFor(string $date, ?int $storeId, ?CashShift $activeShift): string
+    {
+        if ($date === $this->tenantClock->today()) {
+            return $activeShift ? Decimal::normalize((string) $activeShift->opening_cash_balance) : '0.000';
+        }
+
+        [$start, $end] = $this->tenantClock->businessDayRange($date);
+        $storeShifts = fn () => CashShift::query()->when($storeId, fn ($q) => $q->where('store_id', $storeId));
+
+        $shift = $storeShifts()
+            ->where('opened_at', '>=', $start)
+            ->where('opened_at', '<', $end)
+            ->orderBy('opened_at')
+            ->orderBy('id')
+            ->first()
+            ?? $storeShifts()
+                ->where('opened_at', '<', $start)
+                ->where(fn ($q) => $q->whereNull('closed_at')->orWhere('closed_at', '>=', $start))
+                ->orderByDesc('opened_at')
+                ->orderByDesc('id')
+                ->first();
+
+        return $shift instanceof CashShift ? Decimal::normalize((string) $shift->opening_cash_balance) : '0.000';
+    }
+
     private function sumDecimal(Collection $values): string
     {
         return $values->reduce(

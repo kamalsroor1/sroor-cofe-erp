@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\NormalizesBusinessDates;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,7 +34,7 @@ use Illuminate\Support\Carbon;
  */
 class Purchase extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, NormalizesBusinessDates, SoftDeletes;
 
     protected $fillable = [
         'purchase_number',
@@ -56,7 +57,7 @@ class Purchase extends Model
     protected function casts(): array
     {
         return [
-            'purchase_date' => 'date',
+            'purchase_date' => 'date:Y-m-d', // DATE-03: serialized as the business date, never UTC midnight
             'subtotal' => 'decimal:3',
             'discount_amount' => 'decimal:3',
             'additional_expenses_total' => 'decimal:3',

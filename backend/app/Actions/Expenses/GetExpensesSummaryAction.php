@@ -6,9 +6,12 @@ namespace App\Actions\Expenses;
 
 use App\Models\Expense;
 use App\Support\Money\Decimal;
+use App\Support\TenantClock;
 
 final class GetExpensesSummaryAction
 {
+    public function __construct(private readonly TenantClock $tenantClock) {}
+
     /**
      * Calculate monthly and period expense aggregates
      *
@@ -17,13 +20,16 @@ final class GetExpensesSummaryAction
      */
     public function execute(?int $storeId = null, ?string $fromDate = null, ?string $toDate = null, ?int $recordedBy = null): array
     {
-        $monthStart = now()->startOfMonth()->toDateString();
+        // DATE-03: "this month" is the tenant's business month (cutoff-aware) and ends today, so a
+        // future-dated expense never counts and the month does not roll over before the business day ends.
+        $today = $this->tenantClock->today();
+        $monthStart = $this->tenantClock->businessNow()->startOfMonth()->toDateString();
 
         $monthQuery = Expense::query()
             ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
             ->when($recordedBy !== null, fn ($q) => $q->where('user_id', $recordedBy));
-        $totalMonth = Decimal::normalize((string) (clone $monthQuery)->whereDate('expense_date', '>=', $monthStart)->sum('amount'));
-        $totalCashMonth = Decimal::normalize((string) (clone $monthQuery)->where('payment_method', 'cash')->whereDate('expense_date', '>=', $monthStart)->sum('amount'));
+        $totalMonth = Decimal::normalize((string) (clone $monthQuery)->whereDate('expense_date', '>=', $monthStart)->whereDate('expense_date', '<=', $today)->sum('amount'));
+        $totalCashMonth = Decimal::normalize((string) (clone $monthQuery)->where('payment_method', 'cash')->whereDate('expense_date', '>=', $monthStart)->whereDate('expense_date', '<=', $today)->sum('amount'));
 
         $filteredQuery = Expense::query()
             ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
