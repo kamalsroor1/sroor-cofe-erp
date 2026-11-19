@@ -97,10 +97,18 @@ final class NumberNormalizer
         return strlen(rtrim($fraction, '0'));
     }
 
-    /** Phone: ASCII digits, optional leading +, separators removed; a bare 10-digit Egyptian mobile gets its 0 back. */
+    /**
+     * Phone: ASCII digits, optional leading +, separators removed; a bare 10-digit Egyptian mobile gets
+     * its 0 back. IMP-01: an Egyptian mobile with the country code (`+20 10...`, `0020 10...`, `2010...`)
+     * becomes the local `010...` form, so the same number is one key whichever way it was typed.
+     */
     public static function phone(string $value): string
     {
         $clean = preg_replace('/[^\d+]/', '', self::latinDigits(trim($value))) ?? '';
+
+        if (preg_match('/^(?:\+|00)?20(1\d{9})$/', $clean, $m) === 1) {
+            return '0'.$m[1];
+        }
 
         if (preg_match('/^1\d{9}$/', $clean) === 1) {
             return '0'.$clean;

@@ -93,7 +93,7 @@ class ItemsImportCommitPerformanceTest extends TenantTestCase
         });
 
         $started = microtime(true);
-        $this->postJson('/api/v1/imports/items/commit', ['token' => $token], $this->tenantHeaders($this->tenant))
+        $this->postJson('/api/v1/imports/items/commit', ['token' => $token, 'confirm_new_categories' => true], $this->tenantHeaders($this->tenant))
             ->assertOk()
             ->assertJsonPath('data.created', $expectedCreated);
         $seconds = microtime(true) - $started;
@@ -165,7 +165,7 @@ class ItemsImportCommitPerformanceTest extends TenantTestCase
             }
         });
 
-        $this->postJson('/api/v1/imports/items/commit', ['token' => $token], $this->tenantHeaders($this->tenant))->assertStatus(500);
+        $this->postJson('/api/v1/imports/items/commit', ['token' => $token, 'confirm_new_categories' => true], $this->tenantHeaders($this->tenant))->assertStatus(500);
         Event::forget(QueryExecuted::class);
 
         $this->inTenant($this->tenant, function () use ($before): void {

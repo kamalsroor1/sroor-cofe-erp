@@ -22,14 +22,15 @@ final class PreviewImportAction
     /**
      * Parse + validate the upload without writing anything, and keep the file for the commit step.
      *
-     * @return array{token: string, type: string, summary: array{total: int, valid: int, invalid: int, duplicates: int}, rows: list<array<string, mixed>>, rows_truncated: bool}
+     * @return array{token: string, type: string, summary: array{total: int, valid: int, invalid: int, duplicates: int}, rows: list<array<string, mixed>>, rows_truncated: bool, header_row: int, ignored_columns: list<string>, new_categories: list<string>}
      */
     public function execute(PreviewImportDTO $dto): array
     {
         $extension = strtolower($dto->file->getClientOriginalExtension()) === 'xlsx' ? 'xlsx' : 'csv';
 
         // Parse first: a broken file never leaves a stored copy behind.
-        $rows = $this->analyzer->analyze($dto->type, (string) $dto->file->getRealPath(), $extension);
+        $analysis = $this->analyzer->analyze($dto->type, (string) $dto->file->getRealPath(), $extension);
+        $rows = $analysis->rows;
 
         $token = $this->sessions->create($dto->file, $dto->type, $dto->userId);
 
@@ -53,6 +54,9 @@ final class PreviewImportAction
             'summary' => $summary,
             'rows' => $shown,
             'rows_truncated' => count($shown) < count($rows),
+            'header_row' => $analysis->headerRow,
+            'ignored_columns' => $analysis->ignoredColumns,
+            'new_categories' => $analysis->newCategories,
         ];
     }
 }

@@ -6,10 +6,12 @@ namespace App\Services\Import\Handlers;
 
 use App\Actions\Categories\CreateCategoryAction;
 use App\Models\Category;
+use App\Services\Import\ArabicTextNormalizer;
 use App\Services\Import\ImportContext;
 
 /**
  * PRD-06: categories (unique by name, case-insensitive; an existing name is a duplicate and is skipped).
+ * IMP-01: names are compared after Arabic normalization («مشروبات ساخنه» = «مشروبات ساخنة»).
  */
 final class CategoriesImportHandler extends AbstractImportHandler
 {
@@ -40,14 +42,14 @@ final class CategoriesImportHandler extends AbstractImportHandler
 
     protected function duplicateKey(array $data): string
     {
-        return mb_strtolower((string) $data['name']);
+        return ArabicTextNormalizer::key((string) $data['name']);
     }
 
     protected function existingKeys(array $keys): array
     {
         $existing = [];
         foreach (Category::query()->pluck('name') as $name) {
-            $existing[mb_strtolower((string) $name)] = true;
+            $existing[ArabicTextNormalizer::key((string) $name)] = true;
         }
 
         return $existing;

@@ -201,6 +201,7 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         // preview/commit need one concrete branch (opening stock lands in the X-Store-Id store).
         Route::prefix('imports/{type}')->where(['type' => ImportType::routePattern()])->middleware('throttle:imports')->group(function () {
             Route::get('/template', [ImportController::class, 'template'])->name('api.imports.template');
+            Route::post('/errors', [ImportController::class, 'errors'])->name('api.imports.errors');
             Route::post('/preview', [ImportController::class, 'preview'])->name('api.imports.preview')->middleware('store.active:concrete');
             Route::post('/commit', [ImportController::class, 'commit'])->name('api.imports.commit')->middleware('store.active:concrete');
         });
