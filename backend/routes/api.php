@@ -35,6 +35,7 @@ use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ScreenLockController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\ShiftController;
+use App\Http\Controllers\Api\StockCountController;
 use App\Http\Controllers\Api\StockTransferController;
 use App\Http\Controllers\Api\StoreController;
 use App\Http\Controllers\Api\StorePosSettingsController;
@@ -274,6 +275,15 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::get('/transfers/{id}', [StockTransferController::class, 'show'])->name('api.transfers.show')->middleware('store.active')->middleware('feature:transfers.manage');
         Route::post('/transfers', [StockTransferController::class, 'store'])->name('api.transfers.store')->middleware('store.active:concrete')->middleware('feature:transfers.manage');
         Route::post('/transfers/{id}/cancel', [StockTransferController::class, 'cancel'])->name('api.transfers.cancel')->middleware('store.active')->middleware('feature:transfers.manage');
+
+        // SHOP-02: stocktake sessions. Every plan (no plan feature); permission `stock.count` in the Form Requests.
+        Route::get('/stock-counts', [StockCountController::class, 'index'])->name('api.stock_counts.index')->middleware('store.active');
+        Route::post('/stock-counts', [StockCountController::class, 'store'])->name('api.stock_counts.store')->middleware('store.active:concrete');
+        Route::get('/stock-counts/{id}', [StockCountController::class, 'show'])->whereNumber('id')->name('api.stock_counts.show')->middleware('store.active');
+        Route::get('/stock-counts/{id}/variance', [StockCountController::class, 'variance'])->whereNumber('id')->name('api.stock_counts.variance')->middleware('store.active');
+        Route::put('/stock-counts/{id}/lines', [StockCountController::class, 'saveLines'])->whereNumber('id')->name('api.stock_counts.lines')->middleware('store.active');
+        Route::post('/stock-counts/{id}/post', [StockCountController::class, 'post'])->whereNumber('id')->name('api.stock_counts.post')->middleware('store.active');
+        Route::post('/stock-counts/{id}/cancel', [StockCountController::class, 'cancel'])->whereNumber('id')->name('api.stock_counts.cancel')->middleware('store.active');
 
         // Recipes / product assembly (MIX-01). `/mixes/*` is canonical; `/coffee-blender/*` is a
         // deprecated alias kept for old Android/desktop builds (same controller, same behaviour).

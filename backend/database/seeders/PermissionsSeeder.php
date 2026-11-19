@@ -50,6 +50,8 @@ class PermissionsSeeder extends Seeder
         'items.view_cost',
         // QA-2: stock adjustments (AdjustStockRequest, ItemPolicy::adjustStock).
         'inventory.adjust',
+        // SHOP-02: stocktake sessions (start, count, post, cancel). Every plan; storekeeper too.
+        'stock.count',
 
         // Purchases
         'purchases.view',
@@ -148,6 +150,7 @@ class PermissionsSeeder extends Seeder
             'purchases.create',
             'transfers.view',
             'transfers.create',
+            'stock.count',
             'suppliers.manage',
             'suppliers.statement',
             'returns.manage',

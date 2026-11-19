@@ -15,16 +15,20 @@ final class StockMovementTypes
     public const INBOUND = [
         'purchase_in', 'stock_deposit_in', 'opening_balance_in', 'stock_adjustment_in',
         'cancellation_in', 'transfer_in', 'sales_return_in', 'purchase_restore_in',
+        // SHOP-02: stocktake surplus.
+        'stock_count_in',
     ];
 
     /** @var list<string> */
     public const OUTBOUND = [
         'sales_out', 'waste_out', 'stock_adjustment_out',
         'transfer_out', 'purchase_cancel_out', 'purchase_return_out',
+        // SHOP-02: stocktake shortage.
+        'stock_count_out',
     ];
 
     /** @var list<string> */
-    public const ADJUSTMENTS = ['stock_adjustment_in', 'stock_adjustment_out', 'stock_deposit_in'];
+    public const ADJUSTMENTS = ['stock_adjustment_in', 'stock_adjustment_out', 'stock_deposit_in', 'stock_count_in', 'stock_count_out'];
 
     public static function isInbound(string $type): bool
     {

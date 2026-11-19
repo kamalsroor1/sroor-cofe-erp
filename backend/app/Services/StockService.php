@@ -352,6 +352,74 @@ class StockService
     }
 
     /**
+     * SHOP-02: set one store balance to a physically counted quantity, as part of posting a
+     * stocktake session. Must run inside the caller's transaction, after the caller locked the
+     * session row and called lockStockRows() for every item of the session (the global lock order).
+     *
+     * The difference is computed against the LIVE balance read under lock now, never against the
+     * snapshot taken when the session started: a sale between the snapshot and the posting is
+     * therefore absorbed and the final balance equals the counted quantity.
+     *
+     * Returns the live balance, the signed difference (counted - live) and the movement written
+     * (null when there is no difference). The item's master stock moves by the same difference.
+     *
+     * @return array{system_qty: string, difference: string, unit_cost: string, movement: StockMovement|null}
+     */
+    public function applyCountedQuantity(
+        int $itemId,
+        int $storeId,
+        string $countedQuantity,
+        Model $source,
+        string $documentNumber,
+        string $notes,
+        ?int $actorId = null,
+    ): array {
+        $lockedItem = Item::withTrashed()->where('id', $itemId)->lockForUpdate()->firstOrFail();
+
+        $storeStock = StoreStock::withTrashed()
+            ->where('store_id', $storeId)
+            ->where('item_id', $lockedItem->id)
+            ->lockForUpdate()
+            ->first()
+            ?? $this->createMissingStoreStock($storeId, $lockedItem);
+
+        $liveQty = (string) $storeStock->quantity;
+        $diff = bcsub($countedQuantity, $liveQty, 3);
+        $unitCost = (string) ($lockedItem->cost_price ?? '0.000');
+
+        if (bccomp($diff, '0.000', 3) === 0) {
+            return ['system_qty' => $liveQty, 'difference' => '0.000', 'unit_cost' => $unitCost, 'movement' => null];
+        }
+
+        $storeStock->quantity = $countedQuantity;
+        $storeStock->save();
+
+        $stockBefore = (string) $lockedItem->current_stock;
+        $stockAfter = bcadd($stockBefore, $diff, 3);
+        $lockedItem->current_stock = $stockAfter;
+        $lockedItem->save();
+
+        $isSurplus = bccomp($diff, '0.000', 3) > 0;
+
+        $movement = StockMovement::create([
+            'item_id' => $lockedItem->id,
+            'store_id' => $storeId,
+            'movement_type' => $isSurplus ? 'stock_count_in' : 'stock_count_out',
+            'quantity' => $isSurplus ? $diff : bcmul($diff, '-1', 3),
+            'stock_before' => $stockBefore,
+            'stock_after' => $stockAfter,
+            'unit_cost' => $unitCost,
+            'source_type' => get_class($source),
+            'source_id' => $source->getKey(),
+            'document_number' => $documentNumber,
+            'user_id' => $this->actorId($actorId),
+            'notes' => $notes,
+        ]);
+
+        return ['system_qty' => $liveQty, 'difference' => $diff, 'unit_cost' => $unitCost, 'movement' => $movement];
+    }
+
+    /**
      * Physical Stock Count Adjustment (تسوية جردية وتصحيح رصيد المخزن)
      * Atomically corrects item quantity to match actual physical count and logs a StockMovement.
      */
