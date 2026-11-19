@@ -52,7 +52,7 @@ final class SuppliersImportHandler extends AbstractImportHandler
 
     protected function existingKeys(array $keys): array
     {
-        return $this->existingPhones(Supplier::class, $keys);
+        return $this->existingParties(Supplier::class, $keys);
     }
 
     public function write(array $rows, ImportContext $context): int

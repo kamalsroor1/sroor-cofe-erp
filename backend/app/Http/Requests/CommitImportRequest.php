@@ -11,6 +11,7 @@ final class CommitImportRequest extends ImportTemplateRequest
         return [
             'token' => ['required', 'string', 'max:100'],
             'skip_invalid' => ['sometimes', 'boolean'],
+            'confirm_new_categories' => ['sometimes', 'boolean'],
         ];
     }
 }

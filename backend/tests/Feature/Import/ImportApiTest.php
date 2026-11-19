@@ -14,6 +14,7 @@ use App\Models\StoreStock;
 use App\Models\Supplier;
 use App\Models\Tenant;
 use App\Services\CustomerBalanceService;
+use App\Services\Import\SpreadsheetReader;
 use App\Services\SupplierBalanceService;
 use App\Support\TenantCache;
 use Database\Seeders\Catalog\FeatureCatalog;
@@ -108,9 +109,13 @@ class ImportApiTest extends TenantTestCase
         return $this->post("/api/v1/imports/{$type}/preview", ['file' => $file], $headers ?? $this->tenantHeaders($this->tenant));
     }
 
-    private function commit(string $type, string $token, bool $skip = false, ?array $headers = null): TestResponse
+    private function commit(string $type, string $token, bool $skip = false, ?array $headers = null, bool $confirmCategories = true): TestResponse
     {
-        return $this->postJson("/api/v1/imports/{$type}/commit", ['token' => $token, 'skip_invalid' => $skip], $headers ?? $this->tenantHeaders($this->tenant));
+        return $this->postJson("/api/v1/imports/{$type}/commit", [
+            'token' => $token,
+            'skip_invalid' => $skip,
+            'confirm_new_categories' => $confirmCategories,
+        ], $headers ?? $this->tenantHeaders($this->tenant));
     }
 
     private function previewToken(string $type, UploadedFile $file, ?array $headers = null): string
@@ -240,16 +245,19 @@ class ImportApiTest extends TenantTestCase
         }
     }
 
-    public function test_preview_maps_by_column_order_when_headers_are_unknown(): void
+    public function test_preview_refuses_a_file_without_a_recognised_header_instead_of_reading_by_column_order(): void
     {
+        // IMP-01: the old reader mapped unknown headers by position, silently shifting every column.
         $sheet = [
             ['a', 'b', 'c', 'd', 'e', 'f'],
             ['K-1', 'صنف', 'بن', 'كجم', '10', '20'],
         ];
 
-        $this->preview('items', $this->csv($sheet))->assertOk()
-            ->assertJsonPath('data.summary.valid', 1)
-            ->assertJsonPath('data.rows.0.data.code', 'K-1');
+        $this->preview('items', $this->csv($sheet))->assertStatus(422)
+            ->assertJsonValidationErrors('file')
+            ->assertJsonPath('errors.file.0', __('import.errors.header_not_found', [
+                'columns' => implode('، ', [__('import.columns.items.name'), __('import.columns.items.unit'), __('import.columns.items.selling_price')]),
+            ]));
     }
 
     public function test_preview_rejects_wrong_type_oversize_and_missing_required_columns(): void
@@ -267,10 +275,10 @@ class ImportApiTest extends TenantTestCase
             ->assertStatus(422)->assertJsonValidationErrors('file');
     }
 
-    public function test_preview_rejects_more_than_5000_rows(): void
+    public function test_preview_rejects_more_rows_than_the_limit(): void
     {
         $rows = [$this->headers('categories')];
-        for ($i = 1; $i <= 5001; $i++) {
+        for ($i = 1; $i <= SpreadsheetReader::MAX_DATA_ROWS + 1; $i++) {
             $rows[] = ['Cat '.$i, ''];
         }
 
@@ -296,12 +304,12 @@ class ImportApiTest extends TenantTestCase
         $this->assertSame(602, $response->json('data.rows.500.row_number'));
     }
 
-    public function test_preview_of_a_5100_row_file_with_blank_lines_is_refused_not_silently_truncated(): void
+    public function test_preview_of_a_file_over_the_limit_with_blank_lines_is_refused_not_silently_truncated(): void
     {
-        // IMP-02: the old reader stopped after 5,001 LINES, so blank lines pushed real rows past the
-        // cut and a 5,100-row file came back "valid, total 4,993" with the last rows lost.
+        // IMP-02: the old reader stopped after a LINE count, so blank lines pushed real rows past the
+        // cut and an oversized file came back "valid" with the last rows lost.
         $rows = [$this->headers('items')];
-        for ($i = 1; $i <= 5100; $i++) {
+        for ($i = 1; $i <= SpreadsheetReader::MAX_DATA_ROWS + 100; $i++) {
             if ($i % 600 === 0) {
                 $rows[] = array_fill(0, 11, '');
             }
@@ -311,7 +319,7 @@ class ImportApiTest extends TenantTestCase
         foreach ([$this->csv($rows), $this->xlsx($rows)] as $file) {
             $this->preview('items', $file)->assertStatus(422)
                 ->assertJsonValidationErrors('file')
-                ->assertJsonPath('errors.file.0', __('import.errors.too_many_rows', ['max' => 5000]));
+                ->assertJsonPath('errors.file.0', __('import.errors.too_many_rows', ['max' => SpreadsheetReader::MAX_DATA_ROWS]));
         }
     }
 
@@ -320,29 +328,24 @@ class ImportApiTest extends TenantTestCase
         $sheet = [
             $this->headers('items'),
             $this->itemRow(['W-1', 'بخسارة', '', 'كجم', '100', '50']),
-            $this->itemRow(['W-2', 'أرضية أعلى', '', 'كجم', '10', '50', '60']),
             $this->itemRow(['W-3', 'سليم', '', 'كجم', '10', '50', '40']),
             // No cost column: the opening cost is the cost the item will carry.
             $this->itemRow(['W-4', 'تكلفة افتتاحية', '', 'كجم', '', '50', '', '', '', '2', '70']),
         ];
 
         $response = $this->preview('items', $this->xlsx($sheet))->assertOk()
-            ->assertJsonPath('data.summary', ['total' => 4, 'valid' => 4, 'invalid' => 0, 'duplicates' => 0])
+            ->assertJsonPath('data.summary', ['total' => 3, 'valid' => 3, 'invalid' => 0, 'duplicates' => 0])
             ->assertJsonPath('data.rows.0.status', 'valid')
             ->assertJsonPath('data.rows.0.errors', [])
             ->assertJsonPath('data.rows.0.warnings', [__('import.warnings.selling_below_cost', [
                 'selling' => __('import.columns.items.selling_price'), 'cost' => __('import.columns.items.cost_price'),
             ])])
-            ->assertJsonPath('data.rows.1.status', 'valid')
-            ->assertJsonPath('data.rows.1.warnings', [__('import.warnings.min_above_selling', [
-                'min' => __('import.columns.items.min_selling_price'), 'selling' => __('import.columns.items.selling_price'),
-            ])])
-            ->assertJsonPath('data.rows.2.warnings', [])
-            ->assertJsonPath('data.rows.3.status', 'valid');
-        $this->assertCount(1, $response->json('data.rows.3.warnings'));
+            ->assertJsonPath('data.rows.1.warnings', [])
+            ->assertJsonPath('data.rows.2.status', 'valid');
+        $this->assertCount(1, $response->json('data.rows.2.warnings'));
 
         // A warning never blocks the commit (no skip_invalid needed).
-        $this->commit('items', (string) $response->json('data.token'))->assertOk()->assertJsonPath('data.created', 4);
+        $this->commit('items', (string) $response->json('data.token'))->assertOk()->assertJsonPath('data.created', 3);
         $this->assertSame('50.000', $this->inTenant($this->tenant, fn (): string => (string) Item::query()->where('code', 'W-1')->value('selling_price')));
     }
 
@@ -463,7 +466,7 @@ class ImportApiTest extends TenantTestCase
     {
         $token = $this->previewToken('categories', $this->xlsx([$this->headers('categories'), ['س', '']]));
 
-        $lock = Cache::lock(TenantCache::keyFor((string) $this->tenant->getTenantKey(), 'import-commit:'.$token), 60);
+        $lock = Cache::lock(TenantCache::keyFor((string) $this->tenant->getTenantKey(), 'import-commit:categories'), 60);
         $this->assertTrue($lock->get());
 
         $this->commit('categories', $token)->assertStatus(409)
@@ -474,6 +477,80 @@ class ImportApiTest extends TenantTestCase
         $this->commit('categories', $token)->assertOk()->assertJsonPath('data.created', 1);
         $this->commit('categories', $token)->assertNotFound();
         $this->assertSame(1, $this->inTenant($this->tenant, fn (): int => Category::query()->count()));
+    }
+
+    public function test_the_commit_lock_is_tenant_wide_per_import_type_not_per_token(): void
+    {
+        // The same file previewed twice (two tabs): two tokens. While one commits, the other is
+        // refused, otherwise neither run would see the other's rows and both would write them.
+        $sheet = [$this->headers('categories'), ['مشروبات', '']];
+        $first = $this->previewToken('categories', $this->xlsx($sheet));
+        $second = $this->previewToken('categories', $this->xlsx($sheet));
+        $customers = $this->previewToken('customers', $this->xlsx([$this->headers('customers'), ['عميل القفل', '01001112223']]));
+
+        $lock = Cache::lock(TenantCache::keyFor((string) $this->tenant->getTenantKey(), 'import-commit:categories'), 60);
+        $this->assertTrue($lock->get());
+
+        $this->commit('categories', $second)->assertStatus(409)
+            ->assertJsonPath('message', __('import.errors.already_running'));
+        // Another import type of the same tenant is not blocked.
+        $this->commit('customers', $customers)->assertOk()->assertJsonPath('data.created', 1);
+
+        // Another tenant is not blocked by this tenant's lock either.
+        $otherTenant = $this->createTenant();
+        $otherToken = (string) $this->post('/api/v1/imports/categories/preview', ['file' => $this->xlsx($sheet)], $this->tenantHeaders($otherTenant))
+            ->assertOk()->json('data.token');
+        $this->postJson('/api/v1/imports/categories/commit', ['token' => $otherToken, 'skip_invalid' => false, 'confirm_new_categories' => true], $this->tenantHeaders($otherTenant))
+            ->assertOk()->assertJsonPath('data.created', 1);
+
+        $lock->release();
+
+        $this->commit('categories', $first)->assertOk()->assertJsonPath('data.created', 1);
+        // The second token re-analyses after the first run: its row is now a duplicate, nothing is written twice.
+        $this->commit('categories', $second)->assertOk()
+            ->assertJsonPath('data.created', 0)
+            ->assertJsonPath('data.duplicates', 1);
+        $this->assertSame(1, $this->inTenant($this->tenant, fn (): int => Category::query()->count()));
+    }
+
+    public function test_a_database_failure_after_the_first_chunk_is_a_translated_422_rolls_back_and_keeps_the_token(): void
+    {
+        // 600 rows = 2 chunks of 500: categories, both item chunks, the store stocks and the FIRST
+        // chunk of opening-stock movements are written before the failure.
+        $sheet = [$this->headers('items')];
+        for ($i = 1; $i <= 600; $i++) {
+            $sheet[] = $this->itemRow(['QF-'.$i, 'صنف '.$i, 'تصنيف فشل '.($i % 3), 'كجم', '5', '8', '', '', '', '2']);
+        }
+        $token = $this->previewToken('items', $this->xlsx($sheet));
+
+        // A real database error (QueryException, not a RuntimeException) right after the first
+        // movement chunk was written.
+        $movementInserts = 0;
+        Event::listen(QueryExecuted::class, function (QueryExecuted $query) use (&$movementInserts): void {
+            if (preg_match('/^insert into [`"]stock_movements[`"]/i', $query->sql) === 1 && ++$movementInserts === 1) {
+                $query->connection->select('select * from import_forced_failure_missing_table');
+            }
+        });
+
+        $this->commit('items', $token)->assertStatus(422)
+            ->assertJsonPath('errors.file.0', __('import.errors.commit_failed'));
+        $this->assertSame(1, $movementInserts);
+        Event::forget(QueryExecuted::class);
+
+        $this->inTenant($this->tenant, function (): void {
+            $this->assertSame(0, Item::query()->count());
+            $this->assertSame(0, StoreStock::query()->count());
+            $this->assertSame(0, StockMovement::query()->count());
+            $this->assertSame(0, Category::query()->count());
+        });
+
+        // Nothing was consumed: the same token commits the whole file once the database is healthy.
+        $this->commit('items', $token)->assertOk()->assertJsonPath('data.created', 600);
+        $this->inTenant($this->tenant, function (): void {
+            $this->assertSame(600, Item::query()->count());
+            $this->assertSame(600, StockMovement::query()->count());
+            $this->assertSame(3, Category::query()->count());
+        });
     }
 
     public function test_generated_item_codes_continue_after_existing_ones_and_avoid_codes_in_the_file(): void

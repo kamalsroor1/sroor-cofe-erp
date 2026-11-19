@@ -9,6 +9,7 @@ use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Services\Import\ArabicTextNormalizer;
 use App\Services\Import\ImportContext;
 use App\Services\Import\NumberNormalizer;
 use App\Services\Settings\TenantSettings;
@@ -16,8 +17,9 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * PRD-06: items. An existing code is a duplicate (skipped, never updated). The category is found
- * by name or created. Opening stock goes to the active store as an `opening_balance_in` movement;
+ * PRD-06: items. An existing code is a duplicate (skipped, never updated); IMP-01: so is a code-less
+ * row whose name + unit match a live item. The category is found by normalized name or created
+ * (only after the user confirmed the preview's list of new categories). Opening stock goes to the active store as an `opening_balance_in` movement;
  * the item's weighted average cost starts at the opening cost, exactly what a first purchase of a
  * zero-stock item would set.
  *
@@ -45,6 +47,12 @@ final class ItemsImportHandler extends AbstractImportHandler
     /** @var list<string> */
     private array $units = [];
 
+    /** @var array<string, string> IMP-01: normalized unit => the tenant's own spelling */
+    private array $unitsByKey = [];
+
+    /** @var array<string, string> IMP-01: normalized category name => the existing category's name */
+    private array $categoriesByKey = [];
+
     public function key(): string
     {
         return 'items';
@@ -66,13 +74,27 @@ final class ItemsImportHandler extends AbstractImportHandler
     protected function prepare(): void
     {
         $this->units = $this->settings->inventoryUnits();
+        $this->unitsByKey = [];
+        foreach ($this->units as $unit) {
+            $this->unitsByKey[ArabicTextNormalizer::key($unit)] ??= $unit;
+        }
+
+        $this->categoriesByKey = [];
+        foreach (Category::query()->orderBy('id')->pluck('name') as $name) {
+            // Ascending ids: when two live categories collapse to one key the newest wins, as in write().
+            $this->categoriesByKey[ArabicTextNormalizer::key((string) $name)] = (string) $name;
+        }
     }
 
     protected function normalize(array $raw, array &$errors): array
     {
-        $unit = $this->requireText($raw, 'unit', 50, $errors);
-        if ($unit !== null && ! in_array($unit, $this->units, true)) {
-            $errors[] = (string) __('inventory.unit_not_in_tenant_list', ['unit' => $unit]);
+        $unit = $this->unit($raw, $errors);
+        $code = $this->code($raw, $errors);
+
+        $category = $this->requireText($raw, 'category', 100, $errors, false);
+        if ($category !== null) {
+            // IMP-01: «مشروبات ساخنه» lands in the existing «مشروبات ساخنة» instead of creating a twin.
+            $category = $this->categoriesByKey[ArabicTextNormalizer::key($category)] ?? $category;
         }
 
         $weighted = null;
@@ -86,15 +108,28 @@ final class ItemsImportHandler extends AbstractImportHandler
         $quantity = $this->number($raw, 'opening_quantity', $errors);
         $openingCost = $this->number($raw, 'opening_cost', $errors);
 
+        $selling = $this->number($raw, 'selling_price', $errors, required: true);
+        if ($selling !== null && bccomp($selling, '0.000', 3) <= 0) {
+            $errors[] = (string) __('import.errors.must_be_positive', ['field' => $this->label('selling_price')]);
+        }
+
+        // null = no price floor ('0.000'); never defaulted to the cost.
+        $floor = $this->number($raw, 'min_selling_price', $errors);
+        if ($floor !== null && $selling !== null && bccomp($floor, $selling, 3) > 0) {
+            $errors[] = (string) __('import.errors.min_above_selling', [
+                'min' => $this->label('min_selling_price'),
+                'selling' => $this->label('selling_price'),
+            ]);
+        }
+
         return [
-            'code' => $this->requireText($raw, 'code', self::CODE_MAX, $errors, false),
+            'code' => $code,
             'name' => $this->requireText($raw, 'name', 255, $errors),
-            'category' => $this->requireText($raw, 'category', 100, $errors, false),
+            'category' => $category,
             'unit' => $unit,
             'cost_price' => $this->number($raw, 'cost_price', $errors, default: '0.000'),
-            'selling_price' => $this->number($raw, 'selling_price', $errors, required: true),
-            // null = no price floor ('0.000'); never defaulted to the cost.
-            'min_selling_price' => $this->number($raw, 'min_selling_price', $errors),
+            'selling_price' => $selling,
+            'min_selling_price' => $floor,
             'min_stock_level' => $this->number($raw, 'min_stock_level', $errors, default: '0.000'),
             'is_weighted' => $weighted ?? false,
             'opening_quantity' => $quantity ?? '0.000',
@@ -123,36 +158,129 @@ final class ItemsImportHandler extends AbstractImportHandler
             ]);
         }
 
-        $floor = $data['min_selling_price'] ?? null;
-        if ($floor !== null && bccomp((string) $floor, $selling, 3) > 0) {
-            $warnings[] = (string) __('import.warnings.min_above_selling', [
-                'min' => $this->label('min_selling_price'),
-                'selling' => $this->label('selling_price'),
-            ]);
-        }
-
         return $warnings;
     }
 
-    protected function duplicateKey(array $data): ?string
+    /**
+     * IMP-01: the unit is matched after Arabic normalization («قطعه» = «قطعة») and stored in the
+     * tenant's own spelling; an unknown unit names the closest one from the list.
+     *
+     * @param  array<string, string>  $raw
+     * @param  list<string>  $errors
+     */
+    private function unit(array $raw, array &$errors): ?string
+    {
+        $unit = $this->requireText($raw, 'unit', 50, $errors);
+        if ($unit === null) {
+            return null;
+        }
+
+        $known = $this->unitsByKey[ArabicTextNormalizer::key($unit)] ?? null;
+        if ($known !== null) {
+            return $known;
+        }
+
+        $message = (string) __('inventory.unit_not_in_tenant_list', ['unit' => $unit]);
+        $suggestion = ArabicTextNormalizer::closest($unit, $this->units);
+        if ($suggestion !== null) {
+            $message .= ' '.__('import.errors.did_you_mean', ['value' => $suggestion]);
+        }
+        $errors[] = $message;
+
+        return $unit;
+    }
+
+    /**
+     * IMP-01: a barcode that Excel turned into scientific notation (`1.2E+12`) lost its digits for good;
+     * it is refused with a fix-it message instead of being stored as text. Only Excel's own output is
+     * refused (one-digit mantissa, optional fraction, `E+`, two-digit-or-longer exponent: `1.2E+12`,
+     * `1E+12`): real codes such as `3E4`, `12E05` or `12E+05` are kept.
+     *
+     * @param  array<string, string>  $raw
+     * @param  list<string>  $errors
+     */
+    private function code(array $raw, array &$errors): ?string
+    {
+        $code = $this->requireText($raw, 'code', self::CODE_MAX, $errors, false);
+        if ($code !== null && preg_match('/^\d(?:[.,]\d+)?E\+\d{2,}$/i', NumberNormalizer::latinDigits($code)) === 1) {
+            $errors[] = (string) __('import.errors.scientific_code', ['field' => $this->label('code'), 'value' => $code]);
+
+            return null;
+        }
+
+        return $code;
+    }
+
+    /**
+     * IMP-01: an item is the same item by its code; a row WITHOUT a code is the same item as one with
+     * the same name and unit (after Arabic normalization). Re-uploading a file of code-less items
+     * therefore adds nothing the second time.
+     */
+    protected function duplicateKey(array $data): string
     {
         $code = (string) ($data['code'] ?? '');
+        if ($code !== '') {
+            return 'code:'.mb_strtolower($code);
+        }
 
-        return $code === '' ? null : mb_strtolower($code);
+        return self::nameKey((string) $data['name'], (string) $data['unit']);
+    }
+
+    private static function nameKey(string $name, string $unit): string
+    {
+        return 'name:'.ArabicTextNormalizer::key($name).'|'.ArabicTextNormalizer::key($unit);
     }
 
     protected function existingKeys(array $keys): array
     {
+        $codes = [];
+        $names = [];
+        foreach ($keys as $key) {
+            if (str_starts_with($key, 'code:')) {
+                $codes[] = substr($key, 5);
+            } else {
+                $names[$key] = true;
+            }
+        }
+
         $existing = [];
-        foreach (array_chunk($keys, 500) as $chunk) {
+        foreach (array_chunk($codes, 500) as $chunk) {
             // The column expression is constant; the codes are bound parameters.
-            $codes = Item::withTrashed()->whereIn(DB::raw('LOWER(code)'), $chunk)->pluck('code');
-            foreach ($codes as $code) {
-                $existing[mb_strtolower((string) $code)] = true;
+            $found = Item::withTrashed()->whereIn(DB::raw('LOWER(code)'), $chunk)->pluck('code');
+            foreach ($found as $code) {
+                $existing['code:'.mb_strtolower((string) $code)] = true;
+            }
+        }
+
+        if ($names !== []) {
+            // Live items only: a deleted item with the same name may be imported again (a new code is generated).
+            foreach (Item::query()->select(['id', 'name', 'unit'])->toBase()->lazyById(2000) as $item) {
+                $key = self::nameKey((string) $item->name, (string) $item->unit);
+                if (isset($names[$key])) {
+                    $existing[$key] = true;
+                }
             }
         }
 
         return $existing;
+    }
+
+    /**
+     * IMP-01: categories that do not exist yet (after normalization). The commit refuses to create
+     * them unless the user confirmed this list.
+     */
+    protected function newCategories(array $validRows): array
+    {
+        $new = [];
+        foreach ($validRows as $row) {
+            $name = trim((string) ($row['category'] ?? ''));
+            $key = ArabicTextNormalizer::key($name);
+            if ($name !== '' && ! isset($this->categoriesByKey[$key]) && ! isset($new[$key])) {
+                $new[$key] = $name;
+            }
+        }
+
+        return array_values($new);
     }
 
     public function write(array $rows, ImportContext $context): int
@@ -171,7 +299,7 @@ final class ItemsImportHandler extends AbstractImportHandler
         foreach ($rows as $index => $row) {
             $code = $codes[$index];
             $categoryName = (string) ($row['category'] ?? '');
-            $category = $categoryName === '' ? null : $categories[mb_strtolower($categoryName)];
+            $category = $categoryName === '' ? null : $categories[ArabicTextNormalizer::key($categoryName)];
 
             $costPrice = (string) ($row['cost_price'] ?? '0.000');
             $weightedAvgCost = $costPrice;
@@ -249,7 +377,7 @@ final class ItemsImportHandler extends AbstractImportHandler
         $missing = [];
         foreach ($rows as $row) {
             $name = trim((string) ($row['category'] ?? ''));
-            $key = mb_strtolower($name);
+            $key = ArabicTextNormalizer::key($name);
             if ($name !== '' && ! isset($categories[$key]) && ! isset($missing[$key])) {
                 $missing[$key] = ['name' => $name, 'icon' => 'coffee', 'sort_order' => 0, 'is_active' => true, 'created_at' => $now, 'updated_at' => $now];
             }
@@ -274,7 +402,7 @@ final class ItemsImportHandler extends AbstractImportHandler
         $categories = [];
         // Ascending ids: when two live categories share a name the newest wins, as the old per-row lookup did.
         foreach (Category::query()->orderBy('id')->get(['id', 'name']) as $category) {
-            $categories[mb_strtolower($category->name)] = $category;
+            $categories[ArabicTextNormalizer::key((string) $category->name)] = $category;
         }
 
         return $categories;

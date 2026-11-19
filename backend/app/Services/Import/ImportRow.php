@@ -19,6 +19,8 @@ final readonly class ImportRow
      * @param  array<string, string|bool|null>  $data  normalized values keyed by column key
      * @param  list<string>  $errors  translated messages
      * @param  list<string>  $warnings  IMP-02: translated non-blocking remarks (the row stays valid and importable)
+     * @param  array<string, string>  $raw  IMP-01: the trimmed cell text as typed, by column key (for the error report;
+     *                                      not part of toArray(), the preview shows the normalized data)
      */
     public function __construct(
         public int $rowNumber,
@@ -26,6 +28,7 @@ final readonly class ImportRow
         public string $status,
         public array $errors = [],
         public array $warnings = [],
+        public array $raw = [],
     ) {}
 
     /**

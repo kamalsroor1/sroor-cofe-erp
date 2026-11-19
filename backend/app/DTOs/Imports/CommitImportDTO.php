@@ -14,13 +14,21 @@ final readonly class CommitImportDTO
         public bool $skipInvalid,
         public int $userId,
         public ?int $storeId,
+        public bool $confirmNewCategories = false,
     ) {}
 
     /**
-     * @param  array{type: ImportType, token: string, skip_invalid?: bool|null, user_id: int, store_id: int|null}  $data
+     * @param  array{type: ImportType, token: string, skip_invalid?: bool|null, user_id: int, store_id: int|null, confirm_new_categories?: bool|null}  $data
      */
     public static function fromArray(array $data): self
     {
-        return new self($data['type'], $data['token'], (bool) ($data['skip_invalid'] ?? false), $data['user_id'], $data['store_id']);
+        return new self(
+            $data['type'],
+            $data['token'],
+            (bool) ($data['skip_invalid'] ?? false),
+            $data['user_id'],
+            $data['store_id'],
+            (bool) ($data['confirm_new_categories'] ?? false),
+        );
     }
 }

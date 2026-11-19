@@ -84,42 +84,47 @@ class SpreadsheetReaderTest extends TestCase
     #[DataProvider('formats')]
     public function test_exactly_the_limit_is_read_completely(string $extension): void
     {
-        $result = (new SpreadsheetReader)->read($this->write($extension, $this->sheet(SpreadsheetReader::MAX_DATA_ROWS)), $extension);
+        $max = SpreadsheetReader::MAX_DATA_ROWS;
+        $result = (new SpreadsheetReader)->read($this->write($extension, $this->sheet($max)), $extension);
 
-        $this->assertCount(5000, $result['rows']);
+        $this->assertCount($max, $result['rows']);
         $this->assertSame(['name', 'icon'], $result['headers']);
-        $this->assertSame(['Cat 5000', 'x'], $result['rows'][4999]['cells']);
+        $this->assertSame(['Cat '.$max, 'x'], $result['rows'][$max - 1]['cells']);
     }
 
     #[DataProvider('formats')]
     public function test_one_row_past_the_limit_is_a_too_many_rows_validation_error(string $extension): void
     {
+        $max = SpreadsheetReader::MAX_DATA_ROWS;
+
         try {
-            (new SpreadsheetReader)->read($this->write($extension, $this->sheet(SpreadsheetReader::MAX_DATA_ROWS + 1)), $extension);
-            $this->fail('A file with 5,001 data rows must be refused.');
+            (new SpreadsheetReader)->read($this->write($extension, $this->sheet($max + 1)), $extension);
+            $this->fail('A file with MAX_DATA_ROWS + 1 data rows must be refused.');
         } catch (ValidationException $e) {
-            $this->assertSame([__('import.errors.too_many_rows', ['max' => 5000])], $e->errors()['file']);
+            $this->assertSame([__('import.errors.too_many_rows', ['max' => $max])], $e->errors()['file']);
         }
     }
 
     public function test_blank_lines_in_the_middle_do_not_count_and_do_not_push_rows_out(): void
     {
-        // 5,000 data rows + 9 blank lines in between: the old line cap read only 4,992 of them.
-        $lines = $this->sheet(SpreadsheetReader::MAX_DATA_ROWS, 550);
-        $this->assertGreaterThan(5001, count($lines));
+        // MAX_DATA_ROWS data rows + blank lines in between: a cap on raw lines would cut the tail.
+        $max = SpreadsheetReader::MAX_DATA_ROWS;
+        $lines = $this->sheet($max, 550);
+        $this->assertGreaterThan($max + 1, count($lines));
 
         $result = (new SpreadsheetReader)->read($this->write('csv', $lines), 'csv');
 
-        $this->assertCount(5000, $result['rows']);
-        $this->assertSame(['Cat 5000', 'x'], $result['rows'][4999]['cells']);
+        $this->assertCount($max, $result['rows']);
+        $this->assertSame(['Cat '.$max, 'x'], $result['rows'][$max - 1]['cells']);
         // row_number is the line the user sees (header = 1, blank lines included).
-        $this->assertSame(count($lines), $result['rows'][4999]['row_number']);
+        $this->assertSame(count($lines), $result['rows'][$max - 1]['row_number']);
     }
 
     public function test_blank_lines_never_make_a_short_file_too_long(): void
     {
+        // More blank lines than the data-row limit: only the two real rows count.
         $lines = [['name', 'icon'], ['A', '']];
-        for ($i = 0; $i < 6000; $i++) {
+        for ($i = 0; $i < SpreadsheetReader::MAX_DATA_ROWS + 1000; $i++) {
             $lines[] = ['', ''];
         }
         $lines[] = ['B', ''];
@@ -132,8 +137,13 @@ class SpreadsheetReaderTest extends TestCase
     #[DataProvider('formats')]
     public function test_blank_lines_in_the_middle_of_an_over_limit_file_still_fail(string $extension): void
     {
-        $this->expectException(ValidationException::class);
+        $max = SpreadsheetReader::MAX_DATA_ROWS;
 
-        (new SpreadsheetReader)->read($this->write($extension, $this->sheet(5100, 600)), $extension);
+        try {
+            (new SpreadsheetReader)->read($this->write($extension, $this->sheet($max + 100, 600)), $extension);
+            $this->fail('An over-limit file must be refused even with blank lines in between.');
+        } catch (ValidationException $e) {
+            $this->assertSame([__('import.errors.too_many_rows', ['max' => $max])], $e->errors()['file']);
+        }
     }
 }

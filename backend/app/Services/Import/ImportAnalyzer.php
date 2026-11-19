@@ -18,14 +18,13 @@ final class ImportAnalyzer
     ) {}
 
     /**
-     * @return list<ImportRow>
-     *
      * @throws ValidationException
      */
-    public function analyze(ImportType $type, string $absolutePath, string $extension): array
+    public function analyze(ImportType $type, string $absolutePath, string $extension): ImportAnalysis
     {
-        $sheet = $this->reader->read($absolutePath, $extension);
+        $handler = $this->handlers->make($type);
+        $sheet = $this->reader->read($absolutePath, $extension, $handler->headerScore(...));
 
-        return $this->handlers->make($type)->analyze($sheet['headers'], $sheet['rows']);
+        return $handler->analyze($sheet['headers'], $sheet['rows'], $sheet['header_row']);
     }
 }
