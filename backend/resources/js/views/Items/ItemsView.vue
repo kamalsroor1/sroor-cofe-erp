@@ -42,6 +42,12 @@
     />
 
     <!-- 4. 📦 Items Table (Dual Responsive: Desktop Table + Mobile Cards Stack) -->
+    <ItemsSelectionBar
+      v-if="!hasBlockingError"
+      :count="labelSelection.selectedCount.value"
+      @clear="labelSelection.clearSelection"
+      @print="labelSelection.openForSelection"
+    />
     <InlineErrorBar
       v-if="error && !hasBlockingError"
       :message="errorMessage"
@@ -58,11 +64,15 @@
       :items="items"
       :pagination="pagination"
       :is-loading="isLoading"
+      :selected-ids="labelSelection.selectedIds.value"
       @create="openCreateModal"
       @edit="openEditModal"
       @adjust="openAdjustModal"
       @delete="deleteItem"
       @page-change="fetchItems"
+      @toggle-select="labelSelection.toggleSelect"
+      @toggle-select-page="labelSelection.togglePage"
+      @print-labels="labelSelection.openForItem"
     />
 
     <!-- 5. 📝 Add / Edit Item Modal -->
@@ -88,6 +98,14 @@
       @close="showAdjustModal = false"
       @submit="saveAdjustment"
     />
+
+    <!-- 7. Barcode / price labels (SHOP-04) -->
+    <ItemLabelsModal
+      :show="labelSelection.showLabelsModal.value"
+      :items="labelSelection.modalItems.value"
+      @close="labelSelection.closeLabelsModal"
+      @print="labelSelection.startPrint"
+    />
   </div>
 </template>
 
@@ -106,6 +124,9 @@ import ItemsSearchFilterBar from '../../Components/Items/ItemsSearchFilterBar.vu
 import ItemsTable from '../../Components/Items/ItemsTable.vue';
 import ItemFormModal from '../../Components/Items/ItemFormModal.vue';
 import ItemStockAdjustModal from '../../Components/Items/ItemStockAdjustModal.vue';
+import ItemsSelectionBar from '../../Components/Items/Labels/ItemsSelectionBar.vue';
+import ItemLabelsModal from '../../Components/Items/Labels/ItemLabelsModal.vue';
+import { useItemLabelSelection } from '../../Composables/useItemLabelSelection';
 import api from '../../Services/api';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
@@ -113,6 +134,7 @@ import { useUnits } from '../../Composables/useUnits';
 import { useLoadError } from '../../Composables/useLoadError';
 
 const authStore = useAuthStore();
+const labelSelection = useItemLabelSelection();
 
 const { defaultUnit, unitOptionsFor } = useUnits();
 const { error, errorMessage, clearError, setError } = useLoadError();

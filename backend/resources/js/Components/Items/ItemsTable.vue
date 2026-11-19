@@ -15,6 +15,16 @@
             <tr
               class="bg-slate-100/90 dark:bg-slate-950/80 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800"
             >
+              <th class="py-3 ps-4 pe-1 w-8">
+                <input
+                  type="checkbox"
+                  class="w-4 h-4 cursor-pointer accent-[var(--color-primary)] align-middle"
+                  :checked="allPageSelected"
+                  :aria-label="$t('inventory.labels.select_page')"
+                  data-testid="items-select-page"
+                  @change="$emit('toggle-select-page', items, $event.target.checked)"
+                />
+              </th>
               <th class="hidden xl:table-cell py-3 px-4 text-start font-bold whitespace-nowrap">#</th>
               <th class="py-3 px-4 text-start font-bold whitespace-nowrap">{{ $t('inventory.code') }}</th>
               <th class="py-3 px-4 text-start font-bold whitespace-nowrap">{{ $t('inventory.item_name') }}</th>
@@ -56,6 +66,16 @@
               class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
               :class="item.is_low_stock ? 'bg-rose-500/5' : ''"
             >
+              <td class="py-3.5 ps-4 pe-1">
+                <input
+                  type="checkbox"
+                  class="w-4 h-4 cursor-pointer accent-[var(--color-primary)] align-middle"
+                  :checked="isSelected(item)"
+                  :aria-label="$t('inventory.labels.select_item', { name: item.name })"
+                  data-testid="item-select"
+                  @change="$emit('toggle-select', item)"
+                />
+              </td>
               <td class="hidden xl:table-cell py-3.5 px-4 font-mono text-slate-500">
                 {{ idx + 1 + (pagination.current_page - 1) * pagination.per_page }}
               </td>
@@ -159,9 +179,19 @@
           class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 space-y-3 transition-all"
           :class="item.is_low_stock ? 'border-rose-500/30 bg-rose-500/5' : ''"
         >
-          <!-- Top Row: Name + Category + Status -->
+          <!-- Top Row: Select + Name + Category + Status -->
           <div class="flex items-start justify-between gap-2">
-            <div class="space-y-1 min-w-0">
+            <label class="flex items-center justify-center min-w-[44px] min-h-[44px] -m-2 cursor-pointer shrink-0">
+              <input
+                type="checkbox"
+                class="w-5 h-5 cursor-pointer accent-[var(--color-primary)]"
+                :checked="isSelected(item)"
+                :aria-label="$t('inventory.labels.select_item', { name: item.name })"
+                data-testid="item-select-mobile"
+                @change="$emit('toggle-select', item)"
+              />
+            </label>
+            <div class="space-y-1 min-w-0 flex-1">
               <div class="font-black text-sm text-slate-900 dark:text-white line-clamp-2 break-words">
                 {{ item.name }}
               </div>
@@ -302,7 +332,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Sliders, History, Pencil, Trash2, Plus, AlertTriangle } from 'lucide-vue-next';
+import { Sliders, History, Pencil, Trash2, Plus, AlertTriangle, Tag } from 'lucide-vue-next';
 import EmptyState from '../Common/EmptyState.vue';
 import BaseButton from '../Common/BaseButton.vue';
 import FeatureGate from '../FeatureGate.vue';
@@ -317,8 +347,10 @@ import { useAppConfigStore } from '../../stores/appConfig';
 
 const { formatMoney, formatQty, currencyLabel } = useFormatters();
 
-defineProps({
+const props = defineProps({
   items: { type: Array, default: () => [] },
+  // SHOP-04: ids picked for label printing (kept across pages by the parent).
+  selectedIds: { type: Array, default: () => [] },
   pagination: {
     type: Object,
     default: () => ({ current_page: 1, last_page: 1, per_page: 20, total: 0 }),
@@ -326,10 +358,23 @@ defineProps({
   isLoading: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['create', 'edit', 'adjust', 'delete', 'page-change']);
+const emit = defineEmits([
+  'create',
+  'edit',
+  'adjust',
+  'delete',
+  'page-change',
+  'toggle-select',
+  'toggle-select-page',
+  'print-labels',
+]);
 const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
 const showCost = computed(() => authStore.hasPermission('items.view_cost'));
+
+const selectedSet = computed(() => new Set(props.selectedIds));
+const isSelected = (item) => selectedSet.value.has(item.id);
+const allPageSelected = computed(() => props.items.length > 0 && props.items.every(isSelected));
 
 const getItemActions = (item) => [
   {
@@ -337,6 +382,11 @@ const getItemActions = (item) => [
     icon: Sliders,
     show: authStore.hasPermission('inventory.adjust') && appConfigStore.hasFeature('items.manage'),
     onClick: () => emit('adjust', item),
+  },
+  {
+    label: trans('inventory.labels.print_label'),
+    icon: Tag,
+    onClick: () => emit('print-labels', item),
   },
   {
     label: trans('inventory.movements_log'),
