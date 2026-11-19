@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\NormalizesBusinessDates;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,7 +25,7 @@ use Illuminate\Support\Carbon;
  */
 class StockTransfer extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, NormalizesBusinessDates, SoftDeletes;
 
     protected $fillable = [
         'transfer_number',
@@ -37,7 +38,7 @@ class StockTransfer extends Model
     ];
 
     protected $casts = [
-        'transfer_date' => 'date',
+        'transfer_date' => 'date:Y-m-d', // DATE-03: serialized as the business date, never UTC midnight
     ];
 
     /**

@@ -12,6 +12,7 @@ use Illuminate\Testing\TestResponse;
 use Stancl\Tenancy\Contracts\Tenant;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\Concerns\InteractsWithTenants;
+use Tests\Concerns\SendsCheckoutIdempotencyKey;
 
 /**
  * IDEN-4.8 base class for multi-tenant tests (database-per-tenant).
@@ -36,6 +37,7 @@ abstract class TenantTestCase extends BaseTestCase
 {
     use InteractsWithTenants;
     use RefreshDatabase;
+    use SendsCheckoutIdempotencyKey;
 
     /**
      * Obvious dummy phone for fixtures (see Tests\Unit\NoHardcodedRealPhonesTest).

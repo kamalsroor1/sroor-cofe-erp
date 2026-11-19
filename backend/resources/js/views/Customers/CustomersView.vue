@@ -65,6 +65,7 @@
       :editing-customer="editingCustomer"
       :form="form"
       :saving="isSubmitting"
+      :errors="formErrors"
       @close="showCustomerModal = false"
       @save="saveCustomer"
       @update:field="updateFormField"
@@ -112,6 +113,7 @@ const {
   showCustomerModal,
   editingCustomer,
   form,
+  formErrors,
   showPaymentModal,
   targetCustomer,
   paymentForm,

@@ -51,7 +51,9 @@ class StoreSalesInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_uuid' => ['nullable', 'uuid'],
+            // SHOP-01: the SPA POS checks out through this endpoint with one key per payment attempt
+            // (body or Idempotency-Key header), so a double tap or a retry replays instead of selling twice.
+            'client_uuid' => ['required', 'uuid'],
             'customer_id' => ['required', 'integer', 'exists:customers,id'],
             'store_id' => ['nullable', 'integer', 'exists:stores,id'],
             // BE-08: never in the future (tenant calendar day).

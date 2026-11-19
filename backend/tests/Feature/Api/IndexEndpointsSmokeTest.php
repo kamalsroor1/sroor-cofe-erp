@@ -78,6 +78,7 @@ final class IndexEndpointsSmokeTest extends TenantTestCase
         'returns' => [],
         'roles' => [],
         'settings' => [],
+        'settings/data-export' => [],
         'shifts' => [],
         'shifts/current' => [],
         'stores' => [],
@@ -106,6 +107,7 @@ final class IndexEndpointsSmokeTest extends TenantTestCase
         'super-admin/platform-settings' => [],
         'super-admin/settings' => [],
         'super-admin/signup-requests' => [],
+        'super-admin/account-deletion-requests' => [],
         'super-admin/tenants' => [],
         'super-admin/units' => [],
     ];

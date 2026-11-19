@@ -259,6 +259,8 @@ return [
     'share' => [
         'copy_text' => "🧾 Invoice #:number\n🏢 Business: :company\n👤 Customer: :customer\n📅 Date: :date\n💰 Net due: :net :currency\n💵 Paid: :paid :currency\n📝 Remaining: :remaining :currency",
         'whatsapp_text' => "Hello :customer,\nHere are the details of your invoice #:number from :company:\nNet total: :net :currency\nPaid: :paid :currency\nRemaining: :remaining :currency\nThank you for your business!",
+        'pos_whatsapp_text' => "Thank you for your purchase!\nInvoice #:number\nNet total: :net :currency",
+        'receipt_link_line' => '🧾 View your receipt: :url',
     ],
 
     // BE-07: business-rule refusals (BusinessRuleException)

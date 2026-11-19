@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $tax_number
  * @property string $price_tier
  * @property string $current_balance
+ * @property string|null $credit_limit SHOP-03: NULL = no limit
  * @property bool $is_active
  * @property string|null $notes
  * @property Carbon|null $created_at
@@ -35,6 +36,7 @@ class Customer extends Model
         'tax_number',
         'price_tier',
         'current_balance',
+        'credit_limit',
         'is_active',
         'notes',
     ];
@@ -43,6 +45,7 @@ class Customer extends Model
     {
         return [
             'current_balance' => 'decimal:3',
+            'credit_limit' => 'decimal:3',
             'is_active' => 'boolean',
         ];
     }

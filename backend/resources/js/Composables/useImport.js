@@ -29,6 +29,9 @@ export function useImport() {
     const isPreviewing = ref(false);
     const isCommitting = ref(false);
     const isDownloading = ref(false);
+    const isDownloadingErrors = ref(false);
+    const confirmNewCategories = ref(false);
+    const commitError = ref('');
     const notice = ref('');
 
     const allowedTypes = computed(() =>
@@ -51,8 +54,15 @@ export function useImport() {
     });
 
     const needsSkipConfirmation = computed(() => summary.value.invalid > 0);
+    const newCategories = computed(() => preview.value?.new_categories || []);
+    const needsCategoryConfirmation = computed(() => newCategories.value.length > 0);
+    const hasErrorReport = computed(() => summary.value.invalid > 0 || summary.value.duplicates > 0);
     const canCommit = computed(
-        () => importableCount.value > 0 && (!needsSkipConfirmation.value || skipInvalid.value) && !isCommitting.value
+        () =>
+            importableCount.value > 0 &&
+            (!needsSkipConfirmation.value || skipInvalid.value) &&
+            (!needsCategoryConfirmation.value || confirmNewCategories.value) &&
+            !isCommitting.value
     );
 
     const selectType = (key) => {
@@ -83,6 +93,8 @@ export function useImport() {
         file.value = null;
         preview.value = null;
         skipInvalid.value = false;
+        confirmNewCategories.value = false;
+        commitError.value = '';
         filter.value = 'all';
         notice.value = message;
         step.value = 'upload';
@@ -126,6 +138,8 @@ export function useImport() {
             });
             preview.value = data.data;
             skipInvalid.value = false;
+            confirmNewCategories.value = false;
+            commitError.value = '';
             filter.value = 'all';
             step.value = 'preview';
         } catch (error) {
@@ -133,6 +147,34 @@ export function useImport() {
             notice.value = error.userMessage || t('import.ui.preview_failed');
         } finally {
             isPreviewing.value = false;
+        }
+    };
+
+    const downloadErrors = async () => {
+        if (!preview.value || isDownloadingErrors.value) return;
+        isDownloadingErrors.value = true;
+        try {
+            const response = await api.post(
+                `/imports/${type.value}/errors`,
+                { token: preview.value.token },
+                { responseType: 'blob' }
+            );
+            const url = URL.createObjectURL(response.data);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${type.value}-import-errors.csv`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            if (error.response?.status === 404) {
+                backToUpload(t('import.ui.session_expired'));
+            } else {
+                notifyError(t('import.ui.download_errors_failed'));
+            }
+        } finally {
+            isDownloadingErrors.value = false;
         }
     };
 
@@ -161,10 +203,12 @@ export function useImport() {
         if (!confirmed) return;
 
         isCommitting.value = true;
+        commitError.value = '';
         try {
             const { data } = await api.post(`/imports/${type.value}/commit`, {
                 token: preview.value.token,
                 skip_invalid: skipInvalid.value,
+                confirm_new_categories: confirmNewCategories.value,
             });
             result.value = data.data;
             step.value = 'result';
@@ -172,7 +216,8 @@ export function useImport() {
             if (error.response?.status === 404) {
                 backToUpload(t('import.ui.session_expired'));
             } else if (error.response?.status !== 403) {
-                notifyError(t('common.error'), error.userMessage);
+                // All-or-nothing: the server rolled everything back, so the preview stays usable.
+                commitError.value = error.userMessage || t('import.ui.commit_failed_text');
             }
         } finally {
             isCommitting.value = false;
@@ -195,12 +240,17 @@ export function useImport() {
         isPreviewing,
         isCommitting,
         isDownloading,
+        isDownloadingErrors,
+        confirmNewCategories,
+        commitError,
         notice,
         allowedTypes,
         activeStore,
         summary,
         importableCount,
         visibleRows,
+        newCategories,
+        hasErrorReport,
         needsSkipConfirmation,
         canCommit,
         listPath: computed(() => (type.value ? IMPORT_TYPES[type.value].listPath : '/')),
@@ -210,6 +260,7 @@ export function useImport() {
         backToType,
         backToUpload,
         downloadTemplate,
+        downloadErrors,
         uploadFile,
         commit,
         restart,

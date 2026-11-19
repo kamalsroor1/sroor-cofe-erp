@@ -9,6 +9,7 @@ import { useLoadError } from './useLoadError';
 import DarkSwal from '../helpers/alert';
 import { buildCompanyInfo } from '../helpers/companyInfo';
 import { needsManagerApproval, approvalReasons, requestManagerApproval } from './useManagerApproval';
+import { useReceiptShare } from './useReceiptShare';
 
 export function useInvoiceShow() {
     const route = useRoute();
@@ -17,6 +18,7 @@ export function useInvoiceShow() {
     const authStore = useAuthStore();
     const { formatMoney, formatTime } = useFormatters();
     const { t } = useTrans();
+    const { shareOnWhatsApp } = useReceiptShare();
 
     const invoice = ref(null);
     const isLoading = ref(true);
@@ -140,13 +142,20 @@ export function useInvoiceShow() {
         }
     };
 
-    const openWhatsApp = () => {
-        if (!invoice.value) return;
-        const phone = customerInfo.value.phone?.replace(/[^0-9]/g, '') || '';
-        const text = encodeURIComponent(t('invoices.share.whatsapp_text', shareReplacements()));
-
-        const url = phone ? `https://wa.me/${phone}?text=${text}` : `https://wa.me/?text=${text}`;
-        window.open(url, '_blank');
+    // PRD-22: the message carries a signed public receipt link (text only if the link fails).
+    const isSharing = ref(false);
+    const openWhatsApp = async () => {
+        if (!invoice.value || isSharing.value) return;
+        isSharing.value = true;
+        try {
+            await shareOnWhatsApp({
+                invoiceId: invoice.value.id,
+                phone: customerInfo.value.phone || '',
+                text: t('invoices.share.whatsapp_text', shareReplacements()),
+            });
+        } finally {
+            isSharing.value = false;
+        }
     };
 
     const confirmCancelInvoice = async () => {
@@ -262,6 +271,7 @@ export function useInvoiceShow() {
         triggerPrint,
         copyInvoiceDetails,
         openWhatsApp,
+        isSharing,
         confirmCancelInvoice,
         goBack,
     };

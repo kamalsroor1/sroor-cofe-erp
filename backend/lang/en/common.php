@@ -60,6 +60,7 @@ return [
     'yesterday' => 'Yesterday',
     'this_week' => 'This Week',
     'this_month' => 'This Month',
+    'last_month' => 'Last Month',
     'this_year' => 'This Year',
     'date_from' => 'From Date',
     'date_to' => 'To Date',

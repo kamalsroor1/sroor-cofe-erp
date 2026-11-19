@@ -10,7 +10,7 @@ import ImportResultStep from '../../Components/Imports/ImportResultStep.vue';
 import { useImport } from '../../Composables/useImport';
 
 const imp = useImport();
-const { step, type, filter, skipInvalid } = imp;
+const { step, type, filter, skipInvalid, confirmNewCategories } = imp;
 
 onMounted(imp.initFromRoute);
 </script>
@@ -45,6 +45,7 @@ onMounted(imp.initFromRoute);
         v-else-if="step === 'preview'"
         v-model:filter="filter"
         v-model:skip-invalid="skipInvalid"
+        v-model:confirm-new-categories="confirmNewCategories"
         :type="type"
         :preview="imp.preview.value"
         :summary="imp.summary.value"
@@ -53,6 +54,10 @@ onMounted(imp.initFromRoute);
         :can-commit="imp.canCommit.value"
         :importable-count="imp.importableCount.value"
         :is-committing="imp.isCommitting.value"
+        :commit-error="imp.commitError.value"
+        :has-error-report="imp.hasErrorReport.value"
+        :is-downloading-errors="imp.isDownloadingErrors.value"
+        @download-errors="imp.downloadErrors"
         @commit="imp.commit"
         @back="imp.backToUpload"
       />

@@ -10,11 +10,15 @@ import {
     removeLine,
     priceFor,
     repriceLines,
+    WEIGHT_STEP,
 } from '../../helpers/posCartLines';
 import { focusLineField } from '../../helpers/posFocus';
-import { dAdd, isPositive, normalize } from '../../helpers/decimal';
-import { notifyWarning } from '../../helpers/alert';
+import { dAdd, dSum, isPositive, normalize } from '../../helpers/decimal';
+import { lineGross } from '../../helpers/posDiscount';
+import { stockCheck, STOCK_OK, STOCK_BLOCK, STOCK_WARN } from '../../helpers/posStock';
+import { confirmDialog, notifyError, notifyWarning } from '../../helpers/alert';
 import { currentCurrencyLabel } from '../useFormatters';
+import { usePosSaleSettings } from './usePosSaleSettings';
 
 // Where focus goes after a manually added item (see pos.entry_sequence in the keyboard research):
 // 'scan' stays in search, 'qty' / 'price' jump to that field, 'qty_price' starts at qty then Enter moves to price.
@@ -32,10 +36,12 @@ export function usePosCart({
     focusSearch,
     playScanBeep,
     formatMoney,
+    formatQty = formatMoney,
     entrySequence = ref(DEFAULT_ENTRY_SEQUENCE),
 }) {
     const { cart, discountValue, additionalExpenses, cashReceived } = fields;
     const { createNewOrder, closeOrder, saveOrders, activeOrder } = orderApi;
+    const { allowNegativeStock } = usePosSaleSettings();
     let fallbackEntrySequence = 0;
 
     const nextEntrySequence = () => {
@@ -81,13 +87,35 @@ export function usePosCart({
     let weightPickerScanned = false;
     const weightPickerPrice = computed(() => (weightPickerItem.value ? getItemPrice(weightPickerItem.value) : 0));
 
+    // SHOP-01: zero / short stock is refused when negative stock is off (the server refuses it too), else warned.
+    const passesStockCheck = (item, qty, existing) => {
+        const verdict = stockCheck({
+            currentStock: item.current_stock,
+            inCart: existing ? existing.quantity : '0',
+            adding: qty,
+            allowNegative: allowNegativeStock.value,
+        });
+        if (verdict === STOCK_OK) return true;
+        const params = { name: item.name, qty: formatQty(item.current_stock), unit: item.unit || '' };
+        if (verdict === STOCK_BLOCK) {
+            notifyError(trans('pos.stock_insufficient_blocked', params));
+            return false;
+        }
+        if (verdict === STOCK_WARN) notifyWarning(trans('pos.stock_insufficient_warning', params));
+        return true;
+    };
+
     const addLine = (item, qty, scanned) => {
-        playScanBeep();
         const existing = cart.value.find((c) => c.id === item.id);
+        if (!passesStockCheck(item, qty, existing)) {
+            focusSearch();
+            return;
+        }
+        playScanBeep();
         if (existing) {
             existing.quantity = existing.is_weighted
                 ? dAdd(existing.quantity, qty)
-                : parseFloat(existing.quantity) + parseFloat(qty);
+                : Math.round(Number(existing.quantity) + Number(qty));
             focusAfterAdd(existing, scanned);
             return;
         }
@@ -105,6 +133,8 @@ export function usePosCart({
             price_retail: item.price_retail,
             price_wholesale: item.price_wholesale,
             min_selling_price: item.min_selling_price,
+            // SHOP-01: kept on the line so + / typed quantities are checked against the same stock.
+            current_stock: item.current_stock,
             has_min_price: !!item.has_min_price,
             quantity: weighted ? normalize(qty) : qty,
         };
@@ -134,15 +164,40 @@ export function usePosCart({
         focusSearch();
     };
 
-    const increaseCartItemQty = (idx) => increaseLineQty(cart.value, idx);
+    // SHOP-01: the + button and a typed quantity go through the same stock check as adding the item.
+    const increaseCartItemQty = (idx) => {
+        const line = cart.value[idx];
+        if (!line) return false;
+        const step = line.is_weighted ? String(WEIGHT_STEP) : '1';
+        if (!passesStockCheck(line, step, line)) return false;
+        return increaseLineQty(cart.value, idx);
+    };
     const decreaseCartItemQty = (idx) => decreaseLineQty(cart.value, idx);
-    const onCartQtyUpdate = (change) => updateLineQty(cart.value, change);
+    const onCartQtyUpdate = (change) => {
+        const line = cart.value[change?.index];
+        if (line && isPositive(String(change.value ?? '')) && !passesStockCheck(line, String(change.value), null)) {
+            return false;
+        }
+        return updateLineQty(cart.value, change);
+    };
     const onCartPriceUpdate = (change) => updateLinePrice(cart.value, change);
     const onCartDiscountUpdate = (change) => updateLineDiscount(cart.value, change);
     const removeFromCart = (idx) => removeLine(cart.value, idx);
 
-    const clearCart = () => {
+    // SHOP-01: one tap must not wipe a full cart.
+    const clearCart = async () => {
         if (cart.value.length === 0) return;
+        const confirmed = await confirmDialog({
+            title: trans('pos.clear_cart'),
+            text: trans('pos.clear_cart_confirm'),
+            confirmButtonText: trans('pos.clear_cart'),
+            cancelButtonText: trans('common.cancel'),
+            isDanger: true,
+        });
+        if (!confirmed) {
+            focusSearch();
+            return;
+        }
         cart.value = [];
         if (activeOrder?.value) activeOrder.value.lastEntrySequence = 0;
         discountValue.value = '0';
@@ -160,10 +215,7 @@ export function usePosCart({
 
     const handleCloseOrder = async (order) => {
         if (order.cart && order.cart.length > 0) {
-            const subtotal = order.cart.reduce(
-                (s, i) => s + (parseFloat(i.quantity) || 0) * (parseFloat(i.unit_price) || 0),
-                0
-            );
+            const subtotal = dSum(order.cart.map(lineGross));
             const result = await Swal.fire({
                 title: trans('pos.confirm_close_order_title'),
                 text: trans('pos.confirm_close_order_text', {

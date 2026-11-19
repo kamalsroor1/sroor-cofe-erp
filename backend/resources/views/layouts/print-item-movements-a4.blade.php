@@ -174,6 +174,8 @@
                     'transfer_in'          => '🚚 ' . __('inventory.transfers_title'),
                     'transfer_out'         => '🚚 ' . __('inventory.transfers_title'),
                     'sales_return_in'      => '🔁 ' . __('returns.sales_return'),
+                    'stock_count_in'       => '📋 ' . __('stock_counts.movement_in'),
+                    'stock_count_out'      => '📋 ' . __('stock_counts.movement_out'),
                     default                => $row->movement_type,
                 };
             @endphp

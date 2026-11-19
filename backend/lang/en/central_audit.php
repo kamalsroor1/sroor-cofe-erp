@@ -31,6 +31,7 @@ return [
         'tenant_limit_override_removed' => 'Shop limit override removed',
         'tenant_feature_override_set' => 'Shop feature override saved',
         'tenant_feature_override_removed' => 'Shop feature override removed',
+        'account_deletion_request_handled' => 'Account deletion request marked handled',
         'two_factor_confirmed' => 'Two-factor confirmed',
         'two_factor_challenge_failed' => 'Two-factor challenge failed',
         'recovery_code_used' => 'Recovery code used',

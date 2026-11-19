@@ -25,6 +25,11 @@ return [
     'add_payment' => '+ تسجيل دفعة جديدة',
     'opening_balance' => 'الرصيد الافتتاحي للحساب',
     'credit_limit' => 'الحد الأقصى للآجل (سقف المديونية)',
+    // SHOP-03
+    'credit_limit_placeholder' => 'من غير حد',
+    'credit_limit_hint' => 'أقصى مديونية مسموح بيها للعميل. سيبها فاضية لو مفيش حد.',
+    'credit_limit_available' => 'متاح آجل: :amount',
+    'credit_limit_reached' => 'العميل وصل لحد الائتمان',
     'customer_added' => 'تم إضافة العميل بنجاح',
     'customer_updated' => 'تم تعديل بيانات العميل بنجاح',
     'customer_deleted' => 'تم حذف العميل بنجاح',

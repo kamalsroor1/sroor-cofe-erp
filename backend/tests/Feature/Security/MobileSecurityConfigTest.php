@@ -113,9 +113,17 @@ final class MobileSecurityConfigTest extends TestCase
 
     public function test_file_paths_does_not_expose_root_external_storage(): void
     {
-        $filePathsXmlPath = $this->androidDir.'/app/src/main/res/xml/file_paths.xml';
-        $this->assertFileExists($filePathsXmlPath);
+        // MOB-03: the FileProvider (and its file_paths.xml) lives in the flavor source sets.
+        $files = glob($this->androidDir.'/app/src/*/res/xml/file_paths.xml') ?: [];
+        $this->assertNotEmpty($files, 'at least one flavor must declare file_paths.xml');
 
+        foreach ($files as $filePathsXmlPath) {
+            $this->assertFilePathsAreScoped($filePathsXmlPath);
+        }
+    }
+
+    private function assertFilePathsAreScoped(string $filePathsXmlPath): void
+    {
         $xmlContent = (string) file_get_contents($filePathsXmlPath);
         $xml = new SimpleXMLElement($xmlContent);
 

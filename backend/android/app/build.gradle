@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.sroor.cofe.erp"
+    namespace = "com.ibraa.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.sroor.cofe.erp"
+        applicationId "com.ibraa.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 3
@@ -14,6 +14,19 @@ android {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    // MOB-03: two distribution channels, same package id (one install per device).
+    //   direct = APK we distribute ourselves; self-updates through AppUpdaterPlugin (src/direct).
+    //   play   = Google Play; no AppUpdater, no REQUEST_INSTALL_PACKAGES (src/play). Updates via Play.
+    // Build: ./gradlew assembleDirectRelease / bundlePlayRelease
+    flavorDimensions = ["dist"]
+    productFlavors {
+        direct {
+            dimension "dist"
+        }
+        play {
+            dimension "dist"
         }
     }
     buildTypes {

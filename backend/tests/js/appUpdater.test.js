@@ -384,3 +384,30 @@ describe('desktop', () => {
         assert.equal(updater.stage.value, 'verifying');
     });
 });
+
+describe('MOB-03: Google Play build (android_play)', () => {
+    test('checks with platform android_play and shows nothing when the store owns updates', async () => {
+        const { updater, requests } = makeUpdater({
+            platform: 'android_play',
+            native: null,
+            response: serverUpdate({ has_update: false, download_url: null, checksum: null, store_managed: true }),
+        });
+
+        assert.equal(updater.isEligible.value, true);
+        await updater.checkForUpdates();
+
+        assert.equal(requests.length, 1);
+        assert.equal(requests[0].platform, 'android_play');
+        assert.equal(updater.isModalOpen.value, false);
+        assert.equal(updater.hasUpdate.value, false);
+    });
+
+    test('never downloads an APK even if a server wrongly offers one', async () => {
+        const { updater } = makeUpdater({ platform: 'android_play', native: null });
+        await updater.checkForUpdates();
+        await updater.startDownloadAndInstall();
+
+        assert.equal(updater.stage.value, 'error');
+        assert.equal(updater.errorKey.value, 'app_update.error_updater_unavailable');
+    });
+});

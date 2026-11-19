@@ -91,6 +91,7 @@ return [
     'save_and_select' => 'Save & Select',
     'invoice_success_title' => 'Invoice Confirmed Successfully',
     'send_whatsapp' => 'Send via WhatsApp',
+    'share_receipt_whatsapp' => 'Share on WhatsApp',
     'print_receipt' => 'Print Receipt',
     'checkout_failed' => 'Checkout Failed',
     'checkout_failed_desc' => 'Could not save and confirm sales invoice',
@@ -468,4 +469,8 @@ return [
     'stock_low_short' => 'Low',
     'confirm_and_approve' => 'Save & confirm invoice',
     'line_more_actions' => 'Item options',
+
+    // SHOP-01: stock check when an item is added to the cart
+    'stock_insufficient_blocked' => 'Not enough stock for :name (available: :qty :unit). Negative stock is not allowed.',
+    'stock_insufficient_warning' => 'Low stock for :name (available: :qty :unit). This sale will take the stock below zero.',
 ];

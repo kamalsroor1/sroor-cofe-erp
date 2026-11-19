@@ -115,6 +115,16 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
+        // SIGN-15: shop users' own "forgot password" (POST /api/v1/auth/forgot-password on the shop
+        // host). Tokens live hashed in the TENANT `password_reset_tokens` table; the broker is
+        // built per request on the tenant connection (TenantPasswordBroker), never cached across
+        // tenants. Reset links are built from the shop's own domain, never from the Host header.
+        'tenant_users' => [
+            'provider' => 'users',
+            'table' => 'password_reset_tokens',
+            'expire' => (int) env('TENANT_PASSWORD_RESET_EXPIRE_MINUTES', 30),
+            'throttle' => 60,
+        ],
         // IDEN-1.12: platform operators (CentralUser). Tokens live in the CENTRAL
         // `central_password_reset_tokens`; CentralFortifyServiceProvider pins `connection`
         // to tenancy.database.central_connection at boot (this file loads before tenancy.php).

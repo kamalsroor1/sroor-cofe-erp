@@ -12,10 +12,13 @@ use App\Http\Controllers\Api\CentralTenantResolverController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DailyJournalController;
 use App\Http\Controllers\Api\DashboardApiController;
+use App\Http\Controllers\Api\DataExportController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\InvoiceReceiptLinkController;
 use App\Http\Controllers\Api\ItemController;
+use App\Http\Controllers\Api\Landing\PublicAccountDeletionRequestController;
 use App\Http\Controllers\Api\Landing\PublicLegalDocumentController;
 use App\Http\Controllers\Api\Landing\PublicPlanController;
 use App\Http\Controllers\Api\Landing\PublicSignupRequestController;
@@ -28,13 +31,16 @@ use App\Http\Controllers\Api\PosController;
 use App\Http\Controllers\Api\PosQuickKeyController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\PurchaseController;
+use App\Http\Controllers\Api\ReportBreakdownController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\ReportExportController;
 use App\Http\Controllers\Api\ReturnController;
 use App\Http\Controllers\Api\ReturnSourceController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ScreenLockController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\ShiftController;
+use App\Http\Controllers\Api\StockCountController;
 use App\Http\Controllers\Api\StockTransferController;
 use App\Http\Controllers\Api\StoreController;
 use App\Http\Controllers\Api\StorePosSettingsController;
@@ -42,8 +48,10 @@ use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\SystemContextApiController;
 use App\Http\Controllers\Api\TenantBrandAssetController;
 use App\Http\Controllers\Api\TenantLogoController;
+use App\Http\Controllers\Api\TenantPasswordResetController;
 use App\Http\Controllers\Api\TrashController;
 use App\Http\Controllers\Api\TreasuryController;
+use App\Http\Controllers\Api\TreasuryTransferController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Middleware\ApiTokenAuth;
 use App\Http\Middleware\DenyQuickLoginToken;
@@ -59,9 +67,11 @@ Route::prefix('v1/public')->name('api.public.')->group(function () {
     Route::get('/plans', [PublicPlanController::class, 'index'])->middleware('throttle:public-api')->name('plans');
     Route::get('/legal/{document}', [PublicLegalDocumentController::class, 'show'])
         ->middleware('throttle:public-api')
-        ->whereIn('document', ['terms', 'privacy', 'dpa'])
+        ->whereIn('document', ['terms', 'privacy', 'dpa', 'account-deletion'])
         ->name('legal.show');
     Route::post('/signup-requests', [PublicSignupRequestController::class, 'store'])->middleware('throttle:signup-requests')->name('signup_requests.store');
+    // MOB-05: "delete my account and data" request (Play Store); stored centrally, handled by hand.
+    Route::post('/account-deletion-requests', [PublicAccountDeletionRequestController::class, 'store'])->middleware('throttle:account-deletion-requests')->name('account_deletion_requests.store');
 });
 
 // SIGN-11: public self-signup with an emailed verification code. Central DB only, NO tenancy
@@ -89,6 +99,9 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
     Route::get('/app/download-latest-apk', [AppUpdateController::class, 'downloadApk'])->middleware(['throttle:public-api', 'throttle:app-download'])->name('api.app.download_latest_apk');
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:tenant-login')->name('api.auth.login');
     Route::get('/auth/options', [AuthController::class, 'authOptions'])->middleware('throttle:public-api')->name('api.auth.options');
+    // SIGN-15: a shop user's own "forgot password" by email (public; the emailed token is the credential).
+    Route::post('/auth/forgot-password', [TenantPasswordResetController::class, 'forgot'])->middleware('throttle:tenant-password-reset')->name('api.auth.forgot_password');
+    Route::post('/auth/reset-password', [TenantPasswordResetController::class, 'reset'])->middleware('throttle:tenant-password-reset')->name('api.auth.reset_password');
 
     // Quick login: TESTING ONLY. Registered only when the flag is on outside production;
     // EnsureQuickLoginAllowed re-checks at runtime (stale route cache, central host, prod).
@@ -199,6 +212,7 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         // preview/commit need one concrete branch (opening stock lands in the X-Store-Id store).
         Route::prefix('imports/{type}')->where(['type' => ImportType::routePattern()])->middleware('throttle:imports')->group(function () {
             Route::get('/template', [ImportController::class, 'template'])->name('api.imports.template');
+            Route::post('/errors', [ImportController::class, 'errors'])->name('api.imports.errors');
             Route::post('/preview', [ImportController::class, 'preview'])->name('api.imports.preview')->middleware('store.active:concrete');
             Route::post('/commit', [ImportController::class, 'commit'])->name('api.imports.commit')->middleware('store.active:concrete');
         });
@@ -209,6 +223,8 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('api.invoices.show')->middleware('store.active');
         Route::post('/invoices', [InvoiceController::class, 'store'])->name('api.invoices.store')->middleware('store.active:concrete')->middleware('feature:invoices.create');
         Route::post('/invoices/{id}/cancel', [InvoiceController::class, 'cancel'])->name('api.invoices.cancel')->middleware('store.active');
+        // PRD-22: signed public receipt link (WhatsApp share), valid config('invoices.receipt_links.ttl_days').
+        Route::post('/invoices/{id}/receipt-link', [InvoiceReceiptLinkController::class, 'store'])->whereNumber('id')->name('api.invoices.receipt_link')->middleware(['store.active', 'throttle:60,1']);
 
         // POS Fast Operations
         Route::get('/pos/bootstrap', [PosController::class, 'bootstrap'])->name('api.pos.bootstrap')->middleware('store.active')->middleware('feature:pos.access');
@@ -244,6 +260,9 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
 
         // Treasury & Quick Financial Stats
         Route::get('/treasury/summary', [TreasuryController::class, 'summary'])->name('api.treasury.summary')->middleware('store.active')->middleware('feature:treasury.view');
+        // SHOP-06: transfers between treasury accounts (TreasuryService::transfer; permission treasury.transfer).
+        Route::get('/treasury/transfers', [TreasuryTransferController::class, 'index'])->name('api.treasury.transfers.index')->middleware('store.active')->middleware('feature:treasury.view');
+        Route::post('/treasury/transfers', [TreasuryTransferController::class, 'store'])->name('api.treasury.transfers.store')->middleware('store.active:concrete')->middleware('feature:treasury.view');
 
         // Profit & Loss Reports & Business Analytics
         Route::get('/reports/summary', [ReportController::class, 'summary'])->name('api.reports.summary')->middleware('store.active')->middleware('feature:reports.basic');
@@ -259,6 +278,24 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::get('/reports/top-items', [ReportController::class, 'topItems'])->name('api.reports.top_items')->middleware('store.active')->middleware('feature:reports.basic');
         Route::get('/reports/stock-drift', [ReportController::class, 'stockDrift'])->name('api.reports.stock_drift')->middleware('store.active')->middleware('feature:reports.basic');
         Route::get('/reports/items/{id}/card', [ReportController::class, 'itemCard'])->name('api.reports.item_card')->middleware('store.active')->middleware('feature:reports.basic');
+        // SHOP-05: sales by cashier / category, customer debt aging, supplier payables (+ CSV), and
+        // the CSV of the P&L summary, top items and item profitability.
+        Route::middleware(['store.active', 'feature:reports.basic'])->group(function () {
+            Route::get('/reports/sales-by-cashier', [ReportBreakdownController::class, 'salesByCashier'])->name('api.reports.sales_by_cashier');
+            Route::get('/reports/sales-by-category', [ReportBreakdownController::class, 'salesByCategory'])->name('api.reports.sales_by_category');
+            Route::get('/reports/customer-aging', [ReportBreakdownController::class, 'customerAging'])->name('api.reports.customer_aging');
+            Route::get('/reports/supplier-payables', [ReportBreakdownController::class, 'supplierPayables'])->name('api.reports.supplier_payables');
+            // reports.export: the plan feature of every CSV export (the free plan has none), as /invoices/export.
+            Route::middleware(['feature:reports.export', 'throttle:exports'])->group(function () {
+                Route::get('/reports/summary/export', [ReportExportController::class, 'summary'])->name('api.reports.summary.export');
+                Route::get('/reports/top-items/export', [ReportExportController::class, 'topItems'])->name('api.reports.top_items.export');
+                Route::get('/reports/items/export', [ReportExportController::class, 'items'])->name('api.reports.items.export')->middleware('feature:reports.advanced');
+                Route::get('/reports/sales-by-cashier/export', [ReportBreakdownController::class, 'exportSalesByCashier'])->name('api.reports.sales_by_cashier.export');
+                Route::get('/reports/sales-by-category/export', [ReportBreakdownController::class, 'exportSalesByCategory'])->name('api.reports.sales_by_category.export');
+                Route::get('/reports/customer-aging/export', [ReportBreakdownController::class, 'exportCustomerAging'])->name('api.reports.customer_aging.export');
+                Route::get('/reports/supplier-payables/export', [ReportBreakdownController::class, 'exportSupplierPayables'])->name('api.reports.supplier_payables.export');
+            });
+        });
 
         // Returns (Sales & Purchase Returns)
         Route::get('/returns', [ReturnController::class, 'index'])->name('api.returns.index')->middleware('store.active')->middleware('feature:returns.manage');
@@ -274,6 +311,15 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::get('/transfers/{id}', [StockTransferController::class, 'show'])->name('api.transfers.show')->middleware('store.active')->middleware('feature:transfers.manage');
         Route::post('/transfers', [StockTransferController::class, 'store'])->name('api.transfers.store')->middleware('store.active:concrete')->middleware('feature:transfers.manage');
         Route::post('/transfers/{id}/cancel', [StockTransferController::class, 'cancel'])->name('api.transfers.cancel')->middleware('store.active')->middleware('feature:transfers.manage');
+
+        // SHOP-02: stocktake sessions. Every plan (no plan feature); permission `stock.count` in the Form Requests.
+        Route::get('/stock-counts', [StockCountController::class, 'index'])->name('api.stock_counts.index')->middleware('store.active');
+        Route::post('/stock-counts', [StockCountController::class, 'store'])->name('api.stock_counts.store')->middleware('store.active:concrete');
+        Route::get('/stock-counts/{id}', [StockCountController::class, 'show'])->whereNumber('id')->name('api.stock_counts.show')->middleware('store.active');
+        Route::get('/stock-counts/{id}/variance', [StockCountController::class, 'variance'])->whereNumber('id')->name('api.stock_counts.variance')->middleware('store.active');
+        Route::put('/stock-counts/{id}/lines', [StockCountController::class, 'saveLines'])->whereNumber('id')->name('api.stock_counts.lines')->middleware('store.active');
+        Route::post('/stock-counts/{id}/post', [StockCountController::class, 'post'])->whereNumber('id')->name('api.stock_counts.post')->middleware('store.active');
+        Route::post('/stock-counts/{id}/cancel', [StockCountController::class, 'cancel'])->whereNumber('id')->name('api.stock_counts.cancel')->middleware('store.active');
 
         // Recipes / product assembly (MIX-01). `/mixes/*` is canonical; `/coffee-blender/*` is a
         // deprecated alias kept for old Android/desktop builds (same controller, same behaviour).
@@ -351,6 +397,17 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
                 ->whereIn('variant', TenantLogoVariant::values())
                 ->middleware('can:settings.manage')
                 ->name('api.settings.branding.logo.destroy');
+
+            // PRD-17: "Export my data" (admin + settings.manage via DataExportRequest). The POST queues a
+            // ZIP of CSVs on the tenant's private disk; the download needs a short-lived relative signed link.
+            Route::get('/settings/data-export', [DataExportController::class, 'show'])->name('api.settings.data_export.show');
+            Route::post('/settings/data-export', [DataExportController::class, 'store'])
+                ->middleware('throttle:tenant-data-export')
+                ->name('api.settings.data_export.store');
+            Route::get('/settings/data-export/{dataExport}/download', [DataExportController::class, 'download'])
+                ->whereNumber('dataExport')
+                ->middleware(['signed:relative', 'throttle:tenant-data-export-download'])
+                ->name('api.settings.data_export.download');
 
             // Trash Bin (Soft-deleted records recovery)
             Route::get('/trash', [TrashController::class, 'index'])->name('api.trash.index');

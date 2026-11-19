@@ -43,6 +43,13 @@ return [
         'per_user_per_minute' => (int) env('RATE_LIMIT_TENANT_PASSWORD_CHANGE_PER_USER', 10),
     ],
 
+    // SIGN-15: POST /api/v1/auth/forgot-password and /auth/reset-password (public, shop host).
+    // Per client IP, plus an hourly cap per tenant + email that ignores the IP (mail bombing).
+    'tenant_password_reset' => [
+        'per_ip_per_minute' => (int) env('RATE_LIMIT_TENANT_PASSWORD_RESET_PER_IP', 5),
+        'per_email_per_hour' => (int) env('RATE_LIMIT_TENANT_PASSWORD_RESET_PER_EMAIL_HOURLY', 5),
+    ],
+
     // SET-02 / SEC-21 review: POST /api/v1/auth/unlock-screen. Its own named limiter (was the
     // anonymous throttle:10,1, shared with every throttle:N,1 route and, on a shared cache store,
     // with the same user id in other tenants). Wrong secrets also spend the password lockout or
@@ -51,6 +58,13 @@ return [
         'per_ip_per_minute' => (int) env('RATE_LIMIT_TENANT_UNLOCK_SCREEN_PER_IP', 30),
         // One user in one tenant, whatever the IP.
         'per_user_per_minute' => (int) env('RATE_LIMIT_TENANT_UNLOCK_SCREEN_PER_USER', 10),
+    ],
+
+    // PRD-17: POST /api/v1/settings/data-export (a full shop export is heavy) and its download.
+    'tenant_data_export' => [
+        'per_user_per_hour' => (int) env('RATE_LIMIT_TENANT_DATA_EXPORT_PER_USER_HOURLY', 5),
+        'per_ip_per_minute' => (int) env('RATE_LIMIT_TENANT_DATA_EXPORT_PER_IP', 10),
+        'downloads_per_user_per_minute' => (int) env('RATE_LIMIT_TENANT_DATA_EXPORT_DOWNLOADS_PER_USER', 10),
     ],
 
     // Central (platform operator) login, used by IDEN-1.3.
@@ -110,6 +124,15 @@ return [
         // Accepted submissions across ALL client IPs (one shared bucket); IPv6 clients are keyed by their /64.
         'global_per_hour' => (int) (env('RATE_LIMIT_SIGNUP_GLOBAL_HOURLY') ?: 30),
         'global_per_day' => (int) (env('RATE_LIMIT_SIGNUP_GLOBAL_DAILY') ?: 200),
+    ],
+
+    // MOB-05: public account-deletion request form (POST /api/v1/public/account-deletion-requests),
+    // per client network; the strict budgets count accepted submissions only (see AppServiceProvider).
+    'account_deletion_requests' => [
+        'per_hour' => (int) (env('RATE_LIMIT_ACCOUNT_DELETION_HOURLY') ?: 3),
+        'per_day' => (int) (env('RATE_LIMIT_ACCOUNT_DELETION_DAILY') ?: 10),
+        'attempts_per_hour' => (int) (env('RATE_LIMIT_ACCOUNT_DELETION_ATTEMPTS_HOURLY') ?: 30),
+        'global_per_hour' => (int) (env('RATE_LIMIT_ACCOUNT_DELETION_GLOBAL_HOURLY') ?: 30),
     ],
 
     // SIGN-11: public self-signup (POST /api/v1/signup), per client network like signup_requests:

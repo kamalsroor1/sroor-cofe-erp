@@ -1,6 +1,8 @@
 <?php
 
 return [
+    // IMP-01: joins names in a message (columns, new categories).
+    'list_separator' => '، ',
     'committed' => 'تم استيراد :count سجل بنجاح.',
     'opening_balance_entry' => 'رصيد أول المدة',
     'opening_balance_note' => 'رصيد أول المدة (استيراد)',
@@ -10,17 +12,25 @@ return [
     'errors' => [
         'too_many_rows' => 'الملف فيه صفوف أكتر من الحد المسموح (:max صف).',
         'empty_file' => 'الملف فاضي أو مفيهوش بيانات تحت صف العناوين.',
-        'unreadable_file' => 'تعذر قراءة الملف. يرجى التأكد من أنه ملف Excel (xlsx) أو CSV سليم.',
+        'unreadable_file' => 'مقدرناش نقرأ الملف. اتأكد إنه ملف Excel (xlsx) أو CSV سليم.',
         'missing_columns' => 'أعمدة مطلوبة ناقصة في الملف: :columns',
         'required' => 'الحقل «:field» مطلوب.',
         'too_long' => 'الحقل «:field» أطول من :max حرف.',
-        'invalid_number' => 'القيمة في «:field» ليست رقماً صحيحاً.',
+        'invalid_number' => 'القيمة في «:field» مش رقم صحيح.',
         'too_many_decimals' => 'القيمة في «:field» فيها أكتر من :max أرقام بعد العلامة العشرية.',
         'negative_not_allowed' => 'القيمة في «:field» لازم تكون صفر أو أكبر.',
         'invalid_price_tier' => 'القيمة في «:field» لازم تكون تجزئة أو جملة.',
         'invalid_boolean' => 'القيمة في «:field» لازم تكون نعم أو لا.',
-        'duplicate' => 'هذا السجل موجود مسبقاً (أو مكرر بالملف) وسيتم تخطيه.',
-        'token_not_found' => 'انتهت جلسة الاستيراد أو غير صالحة. يرجى رفع الملف مجدداً.',
+        'duplicate' => 'موجود قبل كده في البرنامج (نفس الكود، أو نفس الاسم والوحدة/التليفون) وهيتم تخطيه.',
+        'duplicate_in_file' => 'متكرر في الملف (نفس صف :row) وهيتم تخطيه.',
+        'header_not_found' => 'ملقيناش صف العناوين في أول 10 صفوف من الملف. لازم يكون فيه صف بأسماء الأعمدة (مثلًا: :columns). نزّل النموذج وانسخ بياناتك فيه.',
+        'did_you_mean' => 'تقصد «:value»؟',
+        'scientific_code' => 'القيمة «:value» في «:field» محفوظة بصيغة علمية من Excel والأرقام ضاعت. خلّي العمود «نص» في Excel واكتب الكود تاني.',
+        'must_be_positive' => 'القيمة في «:field» لازم تكون أكبر من صفر.',
+        'min_above_selling' => '«:min» لازم يكون أقل من أو يساوي «:selling».',
+        'new_categories_unconfirmed' => 'الملف هيعمل :count تصنيف جديد (:names). راجع الأسماء وأكّد إنشاءها الأول.',
+        'commit_failed' => 'حصلت مشكلة أثناء الحفظ ومفيش ولا صف اتحفظ. جرّب تاني، ولو المشكلة فضلت كلم الدعم.',
+        'token_not_found' => 'جلسة الاستيراد انتهت أو مش موجودة. ارفع الملف من جديد.',
         'invalid_rows_present' => 'في :count صف فيه أخطاء. صحح الملف أو أكد تخطي الصفوف الغلط.',
         'already_running' => 'هناك عملية استيراد جارية لنفس الملف. انتظر حتى تنتهي.',
         'conflict' => 'تعارض الاستيراد مع سجل أُنشئ في الأثناء (كود أو اسم مكرر). لم يتم استيراد أي شيء؛ ارفع الملف مرة أخرى.',
@@ -29,7 +39,16 @@ return [
 
     'warnings' => [
         'selling_below_cost' => '«:selling» أقل من «:cost»: الصنف هيتباع بخسارة.',
-        'min_above_selling' => '«:min» أكبر من «:selling».',
+    ],
+
+    'error_report' => [
+        'row_number' => 'رقم الصف',
+        'status' => 'الحالة',
+        'reasons' => 'السبب',
+        'statuses' => [
+            'invalid' => 'خطأ',
+            'duplicate' => 'مكرر - هيتخطى',
+        ],
     ],
 
     'columns' => [
@@ -129,7 +148,7 @@ return [
         'download_template' => 'تحميل النموذج',
         'downloading' => 'جاري التجهيز...',
         'template_hint' => 'ابدأ من النموذج عشان الأعمدة تطابق بالظبط.',
-        'template_failed' => 'تعذر تحميل النموذج. يرجى المحاولة مرة أخرى.',
+        'template_failed' => 'مقدرناش نحمّل النموذج. جرب تاني.',
         'no_store_title' => 'اختار الفرع الأول',
         'no_store_text' => 'الاستيراد بيتحفظ على فرع واحد. غيّر من "كل الفروع" لفرع محدد وارجع تاني.',
         'active_store' => 'الفرع الحالي: :store',
@@ -137,10 +156,23 @@ return [
         'upload_title' => 'ارفع ملف :type',
         'drop_here' => 'اسحب الملف وسيبه هنا',
         'or_browse' => 'أو اضغط واختار ملف من جهازك',
-        'accepted_files' => 'ملف Excel (.xlsx) أو CSV، حتى 5 ميجا و5000 صف.',
+        'accepted_files' => 'ملف Excel (.xlsx) أو CSV، حتى 5 ميجا و20,000 صف.',
+        'header_row_found' => 'صف العناوين اتلقى في الصف :row؛ الصفوف اللي فوقه اتجاهلت.',
+        'ignored_columns_title' => 'أعمدة مش هتتستورد',
+        'ignored_columns_text' => 'الأعمدة دي مش معروفة وبياناتها مش هتدخل: :columns',
+        'new_categories_title' => 'تصنيفات جديدة',
+        'new_categories_text' => 'هيتعمل :count تصنيف جديد: :names',
+        'confirm_new_categories' => 'راجعت الأسماء، اعمل التصنيفات الجديدة دي',
+        'confirm_new_categories_required' => 'أكّد إنشاء التصنيفات الجديدة الأول عشان تكمل.',
+        'download_errors' => 'تحميل ملف الأخطاء',
+        'download_errors_failed' => 'مقدرناش نحمّل ملف الأخطاء. جرب تاني.',
+        'committing_title' => 'بنحفظ بياناتك...',
+        'committing_text' => 'متقفلش الصفحة. كل حاجة بتتحفظ مع بعض أو مفيش حاجة بتتحفظ.',
+        'commit_failed_title' => 'ماتم استيراد أي حاجة',
+        'commit_failed_text' => 'الاستيراد بيتم كله أو مفيش: بسبب المشكلة دي مفيش أي سجل اتحفظ. صلّحها وجرب تاني.',
         'invalid_file_type' => 'بنقبل ملفات .xlsx أو .csv بس.',
         'uploading' => 'بنقرأ الملف ونراجعه...',
-        'preview_failed' => 'تعذر استعراض ومعاينة الملف.',
+        'preview_failed' => 'مقدرناش نراجع الملف.',
         'session_expired' => 'جلسة الاستيراد انتهت. ارفع الملف تاني.',
         'summary' => [
             'total' => 'إجمالي الصفوف',
@@ -158,7 +190,7 @@ return [
         'status' => [
             'valid' => 'سليم',
             'invalid' => 'خطأ',
-            'duplicate' => 'مكرر',
+            'duplicate' => 'موجود - هيتخطى',
         ],
         'warning' => 'تنبيه',
         'row_number' => 'صف :number',

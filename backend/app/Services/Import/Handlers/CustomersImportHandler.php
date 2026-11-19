@@ -61,7 +61,7 @@ final class CustomersImportHandler extends AbstractImportHandler
 
     protected function existingKeys(array $keys): array
     {
-        return $this->existingPhones(Customer::class, $keys);
+        return $this->existingParties(Customer::class, $keys);
     }
 
     public function write(array $rows, ImportContext $context): int

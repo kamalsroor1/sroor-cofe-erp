@@ -17,6 +17,7 @@ use App\Services\Import\ImportSessionStore;
 use App\Support\PartyLimitCounter;
 use App\Support\TenantCache;
 use App\Support\TenantClock;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -47,10 +48,12 @@ final class CommitImportAction
         // A big import can outlive the default 30 s PHP limit (php-fpm/CLI); the transaction is all or nothing.
         set_time_limit(self::TIME_LIMIT_SECONDS);
 
-        // One commit per token at a time: a double click or a retry while the first run is still
-        // writing is refused instead of writing twice. The token is looked up INSIDE the lock, so a
-        // run that waited behind a finished one finds it consumed (404).
-        $lock = Cache::lock(TenantCache::key('import-commit:'.$dto->token), self::TIME_LIMIT_SECONDS + 60);
+        // One commit per tenant and import type at a time: a double click, a retry, or a second
+        // token of the same file (two tabs) while the first run is still writing is refused
+        // instead of writing twice (the duplicate check of each run cannot see the other's
+        // uncommitted rows). The token is looked up INSIDE the lock, so a run that waited behind
+        // a finished one finds it consumed (404) or its rows already present (duplicates).
+        $lock = Cache::lock(TenantCache::key('import-commit:'.$dto->type->value), self::TIME_LIMIT_SECONDS + 60);
         if (! $lock->get()) {
             throw new HttpException(409, (string) __('import.errors.already_running'));
         }
@@ -89,20 +92,29 @@ final class CommitImportAction
             throw new HttpException(404, (string) __('import.errors.token_not_found'));
         }
 
-        $rows = $this->analyzer->analyze($dto->type, $session['absolute_path'], $session['extension']);
+        $analysis = $this->analyzer->analyze($dto->type, $session['absolute_path'], $session['extension']);
 
-        $invalid = array_values(array_filter($rows, static fn (ImportRow $row): bool => $row->status === ImportRow::STATUS_INVALID));
+        $invalid = $analysis->withStatus(ImportRow::STATUS_INVALID);
         if ($invalid !== [] && ! $dto->skipInvalid) {
             throw ValidationException::withMessages([
                 'skip_invalid' => __('import.errors.invalid_rows_present', ['count' => count($invalid)]),
             ]);
         }
 
-        $valid = array_values(array_map(
-            static fn (ImportRow $row): array => $row->data,
-            array_filter($rows, static fn (ImportRow $row): bool => $row->status === ImportRow::STATUS_VALID),
-        ));
-        $duplicates = count(array_filter($rows, static fn (ImportRow $row): bool => $row->status === ImportRow::STATUS_DUPLICATE));
+        // IMP-01: a typo in a category name must not silently become a new category.
+        if ($analysis->newCategories !== [] && ! $dto->confirmNewCategories) {
+            $separator = (string) __('import.list_separator');
+
+            throw ValidationException::withMessages([
+                'confirm_new_categories' => __('import.errors.new_categories_unconfirmed', [
+                    'count' => count($analysis->newCategories),
+                    'names' => implode($separator, array_slice($analysis->newCategories, 0, 10)).(count($analysis->newCategories) > 10 ? $separator.'…' : ''),
+                ]),
+            ]);
+        }
+
+        $valid = array_map(static fn (ImportRow $row): array => $row->data, $analysis->withStatus(ImportRow::STATUS_VALID));
+        $duplicates = count($analysis->withStatus(ImportRow::STATUS_DUPLICATE));
 
         $context = new ImportContext($dto->userId, $dto->storeId, $this->clock->businessDate());
         $handler = $this->handlers->make($dto->type);
@@ -118,6 +130,12 @@ final class CommitImportAction
         } catch (UniqueConstraintViolationException) {
             // A record created concurrently took a code/name the preview saw as free: whole import rolled back.
             throw ValidationException::withMessages(['file' => __('import.errors.conflict')]);
+        } catch (QueryException $exception) {
+            // IMP-01: all or nothing. Any database failure mid-write rolled every chunk back; say so
+            // clearly (the details go to the log, never to the response).
+            report($exception);
+
+            throw ValidationException::withMessages(['file' => __('import.errors.commit_failed')]);
         }
 
         $this->sessions->forget($dto->token, $session['path']);

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Import\Handlers;
 
+use App\Services\Import\ArabicTextNormalizer;
+use App\Services\Import\ImportAnalysis;
 use App\Services\Import\ImportContext;
 use App\Services\Import\ImportRow;
 use App\Services\Import\NumberNormalizer;
@@ -16,6 +18,9 @@ use Illuminate\Validation\ValidationException;
  */
 abstract class AbstractImportHandler
 {
+    /** @var array<string, string>|null */
+    private ?array $aliases = null;
+
     /** Lang section: `import.columns.<key>.*` and `import.examples.<key>.*`. */
     abstract public function key(): string;
 
@@ -103,13 +108,12 @@ abstract class AbstractImportHandler
      *
      * @param  list<string>  $headers
      * @param  list<array{row_number: int, cells: list<string>}>  $rows
-     * @return list<ImportRow>
      *
-     * @throws ValidationException when a required column is missing from the header
+     * @throws ValidationException when the header names no known column or misses a required one
      */
-    public function analyze(array $headers, array $rows): array
+    public function analyze(array $headers, array $rows, int $headerRow = 1): ImportAnalysis
     {
-        $map = $this->mapColumns($headers);
+        [$map, $ignored] = $this->mapColumns($headers);
 
         $this->prepare();
 
@@ -125,7 +129,7 @@ abstract class AbstractImportHandler
             $data = $this->normalize($raw, $errors);
             $key = $errors === [] ? $this->duplicateKey($data) : null;
 
-            $analysed[] = [$row['row_number'], $data, $errors, $key];
+            $analysed[] = [$row['row_number'], $data, $errors, $key, $raw];
             if ($key !== null) {
                 $keys[] = $key;
             }
@@ -135,39 +139,81 @@ abstract class AbstractImportHandler
 
         $seen = [];
         $result = [];
-        foreach ($analysed as [$number, $data, $errors, $key]) {
+        foreach ($analysed as [$number, $data, $errors, $key, $raw]) {
             if ($errors !== []) {
-                $result[] = new ImportRow($number, $data, ImportRow::STATUS_INVALID, $errors);
+                $result[] = new ImportRow($number, $data, ImportRow::STATUS_INVALID, $errors, raw: $raw);
 
                 continue;
             }
 
-            if ($key !== null && (isset($existing[$key]) || isset($seen[$key]))) {
-                $result[] = new ImportRow($number, $data, ImportRow::STATUS_DUPLICATE, [__('import.errors.duplicate')]);
+            if ($key !== null && isset($existing[$key])) {
+                $result[] = new ImportRow($number, $data, ImportRow::STATUS_DUPLICATE, [__('import.errors.duplicate')], raw: $raw);
+
+                continue;
+            }
+
+            if ($key !== null && isset($seen[$key])) {
+                $result[] = new ImportRow($number, $data, ImportRow::STATUS_DUPLICATE, [__('import.errors.duplicate_in_file', ['row' => $seen[$key]])], raw: $raw);
 
                 continue;
             }
 
             if ($key !== null) {
-                $seen[$key] = true;
+                $seen[$key] = $number;
             }
-            $result[] = new ImportRow($number, $data, ImportRow::STATUS_VALID, [], $this->warnings($data));
+            $result[] = new ImportRow($number, $data, ImportRow::STATUS_VALID, [], $this->warnings($data), $raw);
         }
 
-        return $result;
+        $valid = array_values(array_map(
+            static fn (ImportRow $row): array => $row->data,
+            array_filter($result, static fn (ImportRow $row): bool => $row->status === ImportRow::STATUS_VALID),
+        ));
+
+        return new ImportAnalysis($result, $headerRow, $ignored, $this->newCategories($valid));
     }
 
     /**
-     * Header cell index => column key. Headers are matched by Arabic label, English label or key;
-     * a header row that matches nothing is read by column order.
+     * IMP-01: categories the write would create, by the spelling of their first row. Items only.
      *
-     * @param  list<string>  $headers
-     * @return array<int, string>
-     *
-     * @throws ValidationException
+     * @param  list<array<string, string|bool|null>>  $validRows
+     * @return list<string>
      */
-    private function mapColumns(array $headers): array
+    protected function newCategories(array $validRows): array
     {
+        return [];
+    }
+
+    /**
+     * IMP-01: how many known columns a sheet line names. The reader picks the best line among the
+     * first ones as the header, so a title above it is skipped.
+     *
+     * @param  list<string>  $cells
+     */
+    public function headerScore(array $cells): int
+    {
+        $aliases = $this->aliases();
+        $matched = [];
+        foreach ($cells as $cell) {
+            $column = $aliases[$this->normalizeHeader($cell)] ?? null;
+            if ($column !== null) {
+                $matched[$column] = true;
+            }
+        }
+
+        return count($matched);
+    }
+
+    /**
+     * Normalized Arabic label, English label and key => column key.
+     *
+     * @return array<string, string>
+     */
+    private function aliases(): array
+    {
+        if ($this->aliases !== null) {
+            return $this->aliases;
+        }
+
         $aliases = [];
         foreach ($this->columns() as $column) {
             foreach (['ar', 'en'] as $locale) {
@@ -176,40 +222,58 @@ abstract class AbstractImportHandler
             $aliases[$this->normalizeHeader($column)] = $column;
         }
 
+        return $this->aliases = $aliases;
+    }
+
+    /**
+     * Header cell index => column key, plus the header cells that match nothing (reported, not imported).
+     * IMP-01: a header naming no known column is refused instead of being read by column order.
+     *
+     * @param  list<string>  $headers
+     * @return array{0: array<int, string>, 1: list<string>}
+     *
+     * @throws ValidationException
+     */
+    private function mapColumns(array $headers): array
+    {
+        $aliases = $this->aliases();
+
         $map = [];
+        $ignored = [];
         foreach ($headers as $index => $header) {
             $column = $aliases[$this->normalizeHeader($header)] ?? null;
             if ($column !== null && ! in_array($column, $map, true)) {
                 $map[$index] = $column;
+            } elseif (trim($header) !== '') {
+                $ignored[] = trim($header);
             }
         }
 
         if ($map === []) {
-            foreach ($this->columns() as $index => $column) {
-                if ($index < count($headers)) {
-                    $map[$index] = $column;
-                }
-            }
+            throw ValidationException::withMessages([
+                'file' => __('import.errors.header_not_found', [
+                    'columns' => implode((string) __('import.list_separator'), array_map($this->label(...), $this->requiredColumns())),
+                ]),
+            ]);
         }
 
         $missing = array_diff($this->requiredColumns(), $map);
         if ($missing !== []) {
             throw ValidationException::withMessages([
                 'file' => __('import.errors.missing_columns', [
-                    'columns' => implode('، ', array_map($this->label(...), $missing)),
+                    'columns' => implode((string) __('import.list_separator'), array_map($this->label(...), $missing)),
                 ]),
             ]);
         }
 
-        return $map;
+        return [$map, $ignored];
     }
 
     private function normalizeHeader(string $header): string
     {
-        $header = mb_strtolower(trim($header));
         $header = str_replace(['*', ':', '_', '-'], ' ', $header);
 
-        return (string) preg_replace('/\s+/u', ' ', trim($header));
+        return ArabicTextNormalizer::key($header);
     }
 
     /**

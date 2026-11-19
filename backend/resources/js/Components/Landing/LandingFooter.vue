@@ -45,6 +45,7 @@ const columns = computed(() => [
       { key: 'terms', label: t('landing.nav.terms'), to: { name: 'landing.terms' } },
       { key: 'privacy', label: t('landing.nav.privacy'), to: { name: 'landing.privacy' } },
       { key: 'dpa', label: t('landing.nav.dpa'), to: { name: 'landing.dpa' } },
+      { key: 'account_deletion', label: t('landing.nav.account_deletion'), to: { name: 'landing.account_deletion' } },
     ],
   },
 ]);

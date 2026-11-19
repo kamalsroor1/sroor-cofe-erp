@@ -35,6 +35,9 @@ return [
     'inventory' => [
         'adjust' => 'Adjust stock balances manually (counts and deposits)',
     ],
+    'stock' => [
+        'count' => 'Run stocktakes: count stock, review differences and post them',
+    ],
     'purchases' => [
         'view' => 'View the purchase invoice history',
         'create' => 'Record new purchases into stock',
@@ -52,6 +55,7 @@ return [
         'manage' => 'Manage the customer directory',
         'statement' => 'View and export a customer statement',
         'delete' => 'Delete customers',
+        'override_credit_limit' => 'Sell on credit above a customer\'s credit limit',
     ],
     'suppliers' => [
         'manage' => 'Manage suppliers and their accounts',
@@ -61,6 +65,9 @@ return [
         'view' => 'View daily cash journal, treasury, and shifts',
         'close_shift' => 'Open and close cashier shifts',
         'manage' => 'Manage the treasury and transfers between drawers',
+    ],
+    'treasury' => [
+        'transfer' => 'Transfer money between treasury accounts (drawer, InstaPay, wallet, bank)',
     ],
     'expenses' => [
         'manage' => 'Record, edit and delete expenses',

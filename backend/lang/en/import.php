@@ -1,6 +1,8 @@
 <?php
 
 return [
+    // IMP-01: joins names in a message (columns, new categories).
+    'list_separator' => ', ',
     'committed' => ':count records imported successfully.',
     'opening_balance_entry' => 'Opening balance',
     'opening_balance_note' => 'Opening balance (import)',
@@ -19,7 +21,15 @@ return [
         'negative_not_allowed' => 'The value in ":field" must be zero or greater.',
         'invalid_price_tier' => 'The value in ":field" must be retail or wholesale.',
         'invalid_boolean' => 'The value in ":field" must be yes or no.',
-        'duplicate' => 'This record already exists (or is repeated in the file) and will be skipped.',
+        'duplicate' => 'Already exists (same code, or same name and unit/phone) and will be skipped.',
+        'duplicate_in_file' => 'Repeated in the file (same as row :row) and will be skipped.',
+        'header_not_found' => 'No header row was found in the first 10 rows of the file. It needs a row with the column names (for example: :columns). Download the template and copy your data into it.',
+        'did_you_mean' => 'Did you mean ":value"?',
+        'scientific_code' => 'The value ":value" in ":field" was saved by Excel in scientific notation and its digits are lost. Format the column as Text in Excel and type the code again.',
+        'must_be_positive' => 'The value in ":field" must be greater than zero.',
+        'min_above_selling' => '":min" must be less than or equal to ":selling".',
+        'new_categories_unconfirmed' => 'The file would create :count new categories (:names). Review the names and confirm creating them first.',
+        'commit_failed' => 'Something went wrong while saving and no row was saved. Try again, and contact support if it keeps happening.',
         'token_not_found' => 'The import session expired or does not exist. Upload the file again.',
         'invalid_rows_present' => ':count rows have errors. Fix the file or confirm skipping the invalid rows.',
         'already_running' => 'An import with this file is already running. Wait for it to finish.',
@@ -29,7 +39,16 @@ return [
 
     'warnings' => [
         'selling_below_cost' => '":selling" is below ":cost": the item would sell at a loss.',
-        'min_above_selling' => '":min" is above ":selling".',
+    ],
+
+    'error_report' => [
+        'row_number' => 'Row number',
+        'status' => 'Status',
+        'reasons' => 'Reason',
+        'statuses' => [
+            'invalid' => 'Error',
+            'duplicate' => 'Duplicate - skipped',
+        ],
     ],
 
     'columns' => [
@@ -137,7 +156,20 @@ return [
         'upload_title' => 'Upload your :type file',
         'drop_here' => 'Drop the file here',
         'or_browse' => 'or tap to choose a file from your device',
-        'accepted_files' => 'Excel (.xlsx) or CSV, up to 5 MB and 5,000 rows.',
+        'accepted_files' => 'Excel (.xlsx) or CSV, up to 5 MB and 20,000 rows.',
+        'header_row_found' => 'The header row was found on row :row; the rows above it were ignored.',
+        'ignored_columns_title' => 'Columns that will not be imported',
+        'ignored_columns_text' => 'These columns are not recognised and their data will not be imported: :columns',
+        'new_categories_title' => 'New categories',
+        'new_categories_text' => ':count new categories will be created: :names',
+        'confirm_new_categories' => 'I reviewed the names, create these new categories',
+        'confirm_new_categories_required' => 'Confirm creating the new categories first to continue.',
+        'download_errors' => 'Download errors file',
+        'download_errors_failed' => 'We could not download the errors file. Try again.',
+        'committing_title' => 'Saving your data...',
+        'committing_text' => 'Do not close this page. Everything is saved together, or nothing is.',
+        'commit_failed_title' => 'Nothing was imported',
+        'commit_failed_text' => 'The import is all-or-nothing: because of this problem no record was saved. Fix it and try again.',
         'invalid_file_type' => 'Only .xlsx or .csv files are accepted.',
         'uploading' => 'Reading and checking your file...',
         'preview_failed' => 'We could not check the file.',
@@ -158,7 +190,7 @@ return [
         'status' => [
             'valid' => 'Valid',
             'invalid' => 'Error',
-            'duplicate' => 'Duplicate',
+            'duplicate' => 'Exists - skipped',
         ],
         'warning' => 'Warning',
         'row_number' => 'Row :number',

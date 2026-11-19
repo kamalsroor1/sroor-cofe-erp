@@ -273,6 +273,15 @@ class AppServiceProvider extends ServiceProvider
                 ->by('tenant-password-change-user|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->user()?->getAuthIdentifier()).'|'.$request->ip()),
         ]);
 
+        // SIGN-15: public forgot / reset password on a shop host. Per client IP, plus an hourly cap per
+        // tenant + email that ignores the IP, so one mailbox cannot be flooded with reset mails.
+        RateLimiter::for('tenant-password-reset', fn (Request $request): array => [
+            Limit::perMinute($this->limit('rate_limits.tenant_password_reset.per_ip_per_minute', 5))
+                ->by('tenant-pwreset-ip|'.$request->ip()),
+            Limit::perHour($this->limit('rate_limits.tenant_password_reset.per_email_per_hour', 5))
+                ->by('tenant-pwreset-email|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->input('email'))),
+        ]);
+
         // SET-02 / SEC-21 review: the idle screen unlock, per tenant + user (the old anonymous
         // throttle:10,1 bucket was shared with every other throttle:N,1 route). Route throttles run
         // BEFORE ApiTokenAuth (middleware priority), so the user comes from the bearer token here.
@@ -282,6 +291,16 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute($this->limit('rate_limits.tenant_unlock_screen.per_user_per_minute', 10))
                 ->by('tenant-unlock-screen-user|'.RateLimitKey::scope().'|'.$this->tokenOwnerKey($request)),
         ]);
+
+        // PRD-17: the shop data export (request + download), per tenant + user.
+        RateLimiter::for('tenant-data-export', fn (Request $request): array => [
+            Limit::perMinute($this->limit('rate_limits.tenant_data_export.per_ip_per_minute', 10))
+                ->by('tenant-data-export-ip|'.$request->ip()),
+            Limit::perHour($this->limit('rate_limits.tenant_data_export.per_user_per_hour', 5))
+                ->by('tenant-data-export-user|'.RateLimitKey::scope().'|'.$this->tokenOwnerKey($request)),
+        ]);
+        RateLimiter::for('tenant-data-export-download', fn (Request $request): Limit => Limit::perMinute($this->limit('rate_limits.tenant_data_export.downloads_per_user_per_minute', 10))
+            ->by('tenant-data-export-download|'.RateLimitKey::scope().'|'.$this->tokenOwnerKey($request)));
 
         // Central (platform operator) login, consumed by IDEN-1.3. Security audit (W2 lane 3I):
         // the tight hourly cap is per email AND IP, so one attacker can no longer lock an
@@ -365,6 +384,20 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perHour($this->limit('rate_limits.signup_requests.global_per_hour', 30))->by('signup-requests-global-hour')->after($accepted),
                 Limit::perDay($this->limit('rate_limits.signup_requests.global_per_day', 200))->by('signup-requests-global-day')->after($accepted),
                 Limit::perHour($this->limit('rate_limits.signup_requests.attempts_per_hour', 30))->by('signup-requests-attempts|'.$ip),
+            ];
+        });
+
+        // MOB-05: the public account-deletion request form, per client network. Same shape as
+        // signup-requests: accepted submissions spend the strict budgets, every attempt the ceiling.
+        RateLimiter::for('account-deletion-requests', function (Request $request): array {
+            $accepted = static fn ($response): bool => $response->getStatusCode() >= 200 && $response->getStatusCode() < 300;
+            $ip = RateLimitKey::clientNetwork((string) $request->ip());
+
+            return [
+                Limit::perHour($this->limit('rate_limits.account_deletion_requests.per_hour', 3))->by('account-deletion-hour|'.$ip)->after($accepted),
+                Limit::perDay($this->limit('rate_limits.account_deletion_requests.per_day', 10))->by('account-deletion-day|'.$ip)->after($accepted),
+                Limit::perHour($this->limit('rate_limits.account_deletion_requests.global_per_hour', 30))->by('account-deletion-global-hour')->after($accepted),
+                Limit::perHour($this->limit('rate_limits.account_deletion_requests.attempts_per_hour', 30))->by('account-deletion-attempts|'.$ip),
             ];
         });
 

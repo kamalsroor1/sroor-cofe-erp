@@ -50,6 +50,8 @@ class PermissionsSeeder extends Seeder
         'items.view_cost',
         // QA-2: stock adjustments (AdjustStockRequest, ItemPolicy::adjustStock).
         'inventory.adjust',
+        // SHOP-02: stocktake sessions (start, count, post, cancel). Every plan; storekeeper too.
+        'stock.count',
 
         // Purchases
         'purchases.view',
@@ -68,6 +70,8 @@ class PermissionsSeeder extends Seeder
         'customers.statement',
         // ROLE-01: delete a customer (admin only by default).
         'customers.delete',
+        // SHOP-03: a credit sale above the customer's credit limit without a manager PIN (admin only by default).
+        'customers.override_credit_limit',
         'suppliers.manage',
         'suppliers.statement',
 
@@ -76,6 +80,8 @@ class PermissionsSeeder extends Seeder
         'daily_journal.close_shift',
         // QA-2: treasury transfers between drawers (TreasuryPolicy::transfer).
         'daily_journal.manage',
+        // SHOP-06: move money between treasury accounts (POST /treasury/transfers; admin only by default).
+        'treasury.transfer',
         'expenses.manage',
         'returns.manage',
         // BE-01: book a return with no source invoice/purchase (admin only by default).
@@ -148,6 +154,7 @@ class PermissionsSeeder extends Seeder
             'purchases.create',
             'transfers.view',
             'transfers.create',
+            'stock.count',
             'suppliers.manage',
             'suppliers.statement',
             'returns.manage',

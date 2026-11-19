@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\NormalizesBusinessDates;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -42,7 +43,7 @@ use Illuminate\Support\Carbon;
  */
 class Invoice extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, NormalizesBusinessDates, SoftDeletes;
 
     protected $fillable = [
         'invoice_number',
@@ -72,7 +73,7 @@ class Invoice extends Model
     protected function casts(): array
     {
         return [
-            'invoice_date' => 'date',
+            'invoice_date' => 'date:Y-m-d', // DATE-03: serialized as the business date, never UTC midnight
             'subtotal' => 'decimal:3',
             'discount_value' => 'decimal:3',
             'discount_amount' => 'decimal:3',

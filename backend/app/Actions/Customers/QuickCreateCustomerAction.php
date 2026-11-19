@@ -7,6 +7,7 @@ namespace App\Actions\Customers;
 use App\Enums\LimitResource;
 use App\Models\Customer;
 use App\Services\Entitlements\PlanEnforcer;
+use App\Services\Settings\TenantSettings;
 use App\Support\PartyLimitCounter;
 use Illuminate\Support\Facades\DB;
 
@@ -16,7 +17,10 @@ use Illuminate\Support\Facades\DB;
  */
 class QuickCreateCustomerAction
 {
-    public function __construct(private readonly PlanEnforcer $planEnforcer) {}
+    public function __construct(
+        private readonly PlanEnforcer $planEnforcer,
+        private readonly TenantSettings $settings,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data  validated StoreQuickCustomerRequest data
@@ -33,6 +37,8 @@ class QuickCreateCustomerAction
                 'address' => $data['address'] ?? null,
                 'is_active' => true,
                 'current_balance' => '0.000',
+                // SHOP-03: a POS quick-add customer gets the shop's default credit limit (null = no limit).
+                'credit_limit' => $this->settings->customersDefaultCreditLimit(),
             ]);
         });
     }

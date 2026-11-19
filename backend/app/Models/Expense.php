@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\NormalizesBusinessDates;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -26,7 +27,7 @@ use Illuminate\Support\Carbon;
  */
 class Expense extends Model
 {
-    use SoftDeletes;
+    use NormalizesBusinessDates, SoftDeletes;
 
     protected $fillable = [
         'expense_number',
@@ -43,7 +44,7 @@ class Expense extends Model
 
     protected $casts = [
         'amount' => 'decimal:3',
-        'expense_date' => 'date',
+        'expense_date' => 'date:Y-m-d', // DATE-03: serialized as the business date, never UTC midnight
     ];
 
     /**

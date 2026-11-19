@@ -21,6 +21,15 @@ final class ReportFilterDTO
         public readonly int $per_page = self::DEFAULT_PER_PAGE,
     ) {}
 
+    /**
+     * DATE-03: the presets a report accepts (anything else is a 422 in FilterReportRequest).
+     * `custom` = an explicit from/to range.
+     */
+    public const PERIODS = ['today', 'yesterday', 'this_week', 'this_month', 'last_month', 'this_year', 'custom'];
+
+    /** DATE-03: weeks start on Saturday across the system (backend and frontend). */
+    public const WEEK_STARTS_AT = CarbonInterface::SATURDAY;
+
     /** PERF-01: paged report lists (items, inventory): default and maximum page sizes. */
     public const DEFAULT_PER_PAGE = 100;
 
@@ -65,8 +74,12 @@ final class ReportFilterDTO
                 $fromDate = $now->subDay()->toDateString();
                 $toDate = $now->subDay()->toDateString();
             } elseif ($period === 'this_week') {
-                $fromDate = $now->startOfWeek()->toDateString();
+                $fromDate = $now->startOfWeek(self::WEEK_STARTS_AT)->toDateString();
                 $toDate = $today;
+            } elseif ($period === 'last_month') {
+                $previous = $now->startOfMonth()->subMonthNoOverflow();
+                $fromDate = $previous->toDateString();
+                $toDate = $previous->endOfMonth()->toDateString();
             } elseif ($period === 'this_year') {
                 $fromDate = $now->startOfYear()->toDateString();
                 $toDate = $today;

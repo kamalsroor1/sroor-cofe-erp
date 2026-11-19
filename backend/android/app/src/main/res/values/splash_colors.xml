@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- MOB-01: shell dark (same as <meta name="theme-color"> and the drawable splash background). -->
+    <color name="splash_background">#13201C</color>
+</resources>

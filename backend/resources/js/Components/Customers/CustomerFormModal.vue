@@ -44,11 +44,26 @@
         />
       </div>
 
+      <!-- SHOP-03: credit limit (empty = no limit; a new customer starts with the shop default) -->
+      <BaseInput
+        :model-value="form.credit_limit"
+        @update:model-value="$emit('update:field', 'credit_limit', $event)"
+        :label="$t('contacts.credit_limit')"
+        :placeholder="$t('contacts.credit_limit_placeholder')"
+        :hint="$t('contacts.credit_limit_hint')"
+        :error="errors?.credit_limit?.[0] ?? null"
+        inputmode="decimal"
+        autocomplete="off"
+        dir="ltr"
+        input-class="font-mono"
+        data-testid="customer-credit-limit"
+      />
+
       <!-- Initial Balance (Only for new customers) -->
       <div v-if="!editingCustomer">
         <BaseNumberInput
-          :model-value="form.initial_balance"
-          @update:model-value="$emit('update:field', 'initial_balance', Number($event))"
+          :model-value="form.opening_balance"
+          @update:model-value="$emit('update:field', 'opening_balance', $event)"
           :label="$t('contacts.initial_balance')"
           :hint="$t('contacts.customer_initial_balance_hint')"
           :decimals="3"
@@ -96,6 +111,7 @@ defineProps({
   editingCustomer: { type: Object, default: null },
   form: { type: Object, default: () => ({}) },
   saving: { type: Boolean, default: false },
+  errors: { type: Object, default: () => ({}) },
 });
 
 defineEmits(['close', 'save', 'update:field']);

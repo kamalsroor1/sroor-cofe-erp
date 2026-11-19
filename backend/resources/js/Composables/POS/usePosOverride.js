@@ -15,7 +15,14 @@ export function overrideReasons(error) {
     const errors = error?.response?.data?.errors ?? {};
     const lineKey = /^items\.\d+\.(unit_price|discount|discount_amount|discount_percent)$/;
     return Object.entries(errors)
-        .filter(([key]) => key === 'discount' || key === 'override' || key === 'override.pin' || lineKey.test(key))
+        .filter(
+            ([key]) =>
+                key === 'discount' ||
+                key === 'customer_id' || // SHOP-03: credit limit exceeded
+                key === 'override' ||
+                key === 'override.pin' ||
+                lineKey.test(key)
+        )
         .flatMap(([, messages]) => messages);
 }
 

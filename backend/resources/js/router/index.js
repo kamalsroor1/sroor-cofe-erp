@@ -89,6 +89,13 @@ const tenantRoutes = [
         meta: { titleKey: 'landing.page_titles.dpa', layout: 'blank', legalDocument: 'dpa' },
     },
     {
+        // MOB-05: account & data deletion (Play Store requirement): explanation + public request form.
+        path: '/account-deletion',
+        name: 'landing.account_deletion',
+        component: () => import('../views/Landing/AccountDeletionView.vue'),
+        meta: { titleKey: 'landing.page_titles.account_deletion', layout: 'blank', legalDocument: 'account-deletion' },
+    },
+    {
         path: '/login',
         name: 'login',
         component: () => import('../views/Auth/LoginView.vue'),
@@ -96,6 +103,21 @@ const tenantRoutes = [
             titleKey: 'nav.page_titles.login',
             guestOnly: true,
         },
+    },
+    {
+        // SIGN-15: a shop user's own "forgot password" by email (public, guest only).
+        path: '/forgot-password',
+        name: 'auth.forgot_password',
+        component: () => import('../views/Auth/ForgotPasswordView.vue'),
+        meta: { titleKey: 'auth.password_reset.forgot_page_title', guestOnly: true, layout: 'blank' },
+    },
+    {
+        // SIGN-15: opened from the emailed link (?token=…&email=…). Not guest-only: the link may be opened
+        // on a device where someone else is signed in, and must not bounce to that person's dashboard.
+        path: '/reset-password',
+        name: 'auth.reset_password',
+        component: () => import('../views/Auth/ResetPasswordView.vue'),
+        meta: { titleKey: 'auth.password_reset.reset_page_title', layout: 'blank' },
     },
     {
         // SELL-01: full-screen forced change (flagged accounts); the guard keeps every other route closed.
@@ -207,6 +229,18 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.items_index',
             requiresAuth: true,
+            permission: 'items.view',
+        },
+    },
+    {
+        path: '/items/labels/print',
+        name: 'items.labels.print',
+        component: () => import('../views/Items/ItemLabelsPrintView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.items_labels_print',
+            requiresAuth: true,
+            layout: 'blank',
+            isPrintView: true,
             permission: 'items.view',
         },
     },
@@ -340,6 +374,39 @@ const tenantRoutes = [
             requiresAuth: true,
             feature: 'returns.manage',
             permission: 'returns.manage',
+        },
+    },
+    // SHOP-02: stocktake. Every plan (no `feature`), permission stock.count only.
+    {
+        path: '/stock-counts',
+        name: 'stock_counts.index',
+        component: () => import('../views/StockCounts/StockCountsView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.stock_counts_index',
+            requiresAuth: true,
+            permission: 'stock.count',
+        },
+    },
+    {
+        path: '/stock-counts/:id(\\d+)',
+        name: 'stock_counts.show',
+        component: () => import('../views/StockCounts/StockCountSheetView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.stock_counts_show',
+            requiresAuth: true,
+            permission: 'stock.count',
+        },
+    },
+    {
+        path: '/stock-counts/:id(\\d+)/print',
+        name: 'stock_counts.print',
+        component: () => import('../views/StockCounts/StockCountPrintView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.stock_counts_print',
+            requiresAuth: true,
+            layout: 'blank',
+            isPrintView: true,
+            permission: 'stock.count',
         },
     },
     {
@@ -560,6 +627,13 @@ const centralRoutes = [
         'super_admin.signup_requests',
         'signup.console.page_title',
         () => import('../views/SuperAdmin/SuperAdminSignupRequestsView.vue'),
+        CENTRAL_PERMISSIONS.tenantsView
+    ),
+    centralPage(
+        '/super-admin/account-deletion-requests',
+        'super_admin.account_deletion_requests',
+        'account_deletion.console.page_title',
+        () => import('../views/SuperAdmin/SuperAdminAccountDeletionRequestsView.vue'),
         CENTRAL_PERMISSIONS.tenantsView
     ),
     centralPage(

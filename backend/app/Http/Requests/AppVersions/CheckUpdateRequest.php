@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\AppVersions;
 
-use App\Enums\AppPlatform;
+use App\Enums\UpdateClientPlatform;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -12,7 +12,8 @@ use Illuminate\Validation\Rule;
  * GET /api/v1/app/check-update (+ /app/version alias) and GET /api/v1/app/download-apk
  * (+ /app/download-latest-apk alias). Public, rate-limited (throttle:public-api).
  *
- *   platform      android|windows (default android). iOS is not a platform (CTO Q7): 422.
+ *   platform      android|android_play|windows (default android). iOS is not a platform (CTO Q7): 422.
+ *                 android_play (MOB-03) = the Google Play build: never offered a binary.
  *   version_code  check-update: the INSTALLED build's code; download-apk: the release to
  *                 download (omitted = the latest advertised release).
  *   version_name / current_version  the installed build's name (echoed back only).
@@ -30,7 +31,7 @@ final class CheckUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'platform' => ['sometimes', 'string', Rule::enum(AppPlatform::class)],
+            'platform' => ['sometimes', 'string', Rule::enum(UpdateClientPlatform::class)],
             // 0 is accepted: desktop builds before APP-7 send version_code=0 ("unknown"); they
             // must still be offered the update instead of getting a 422 forever.
             'version_code' => ['sometimes', 'integer', 'min:0', 'max:'.StoreAppVersionRequest::MAX_VERSION_CODE],

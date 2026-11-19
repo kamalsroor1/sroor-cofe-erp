@@ -20,12 +20,14 @@ declare(strict_types=1);
 
 use App\Actions\Expenses\CreateExpenseAction;
 use App\DTOs\Expenses\ExpenseDTO;
+use App\Models\User;
 use App\Services\InvoiceService;
 use App\Services\PaymentService;
 use App\Services\PurchaseService;
 use App\Services\ReturnService;
 use App\Services\StockTransferService;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 require __DIR__.'/../../vendor/autoload.php';
@@ -74,6 +76,12 @@ foreach ($payload['ops'] as $op) {
     try {
         $results[] = ['op' => $name, 'ok' => true, 'tag' => $op['tag'] ?? null] + match ($name) {
             'checkout' => (static function () use ($data): array {
+                // SHOP-03: `acting_user_id` signs the sale in as that user, so the guards that only apply to
+                // an authenticated seller (price floor, discount cap, credit limit) run as in a real checkout.
+                if (isset($data['acting_user_id'])) {
+                    Auth::setUser(User::query()->findOrFail((int) $data['acting_user_id']));
+                    unset($data['acting_user_id']);
+                }
                 $invoice = app(InvoiceService::class)->confirmInvoice($data);
 
                 return ['id' => (int) $invoice->getKey(), 'number' => (string) $invoice->invoice_number, 'net' => (string) $invoice->net_total];

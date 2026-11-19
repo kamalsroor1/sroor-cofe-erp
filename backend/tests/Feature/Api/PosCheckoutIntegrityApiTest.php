@@ -11,10 +11,12 @@ use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Item;
 use App\Models\Payment;
+use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Schema;
@@ -150,10 +152,14 @@ class PosCheckoutIntegrityApiTest extends TenantTestCase
     // Helpers
     // ------------------------------------------------------------------
 
-    /** Net total of this payload = 2.000 kg * 550.000 = 1100.000 */
+    /**
+     * Net total of this payload = 2.000 kg * 550.000 = 1100.000.
+     * SHOP-01: every checkout carries its own idempotency key unless the test overrides it.
+     */
     private function payload(array $overrides = []): array
     {
         return array_merge([
+            'client_uuid' => (string) Str::uuid(),
             'customer_id' => $this->customer->id,
             'store_id' => $this->store->id,
             'invoice_date' => now()->toDateString(),
@@ -663,10 +669,12 @@ class PosCheckoutIntegrityApiTest extends TenantTestCase
         $uuid = (string) Str::uuid();
         $headers = ['Idempotency-Key' => $uuid];
 
-        $first = $this->postAs(self::INVOICES_URL, $this->payload(), null, $headers);
+        $payload = Arr::except($this->payload(), ['client_uuid']);
+
+        $first = $this->postAs(self::INVOICES_URL, $payload, null, $headers);
         $first->assertStatus(201);
 
-        $second = $this->postAs(self::INVOICES_URL, $this->payload(), null, $headers);
+        $second = $this->postAs(self::INVOICES_URL, $payload, null, $headers);
         $second->assertStatus(200)->assertHeader('Idempotent-Replayed');
 
         $this->assertSame($first->json('data.id'), $second->json('data.id'));
@@ -731,7 +739,7 @@ class PosCheckoutIntegrityApiTest extends TenantTestCase
         $this->assertSame('48.000', $this->storeStockQty());
     }
 
-    public function test_requests_without_client_uuid_still_create_separate_invoices(): void
+    public function test_requests_with_different_client_uuids_create_separate_invoices(): void
     {
         $first = $this->postAs(self::INVOICES_URL, $this->payload());
         $second = $this->postAs(self::INVOICES_URL, $this->payload());
@@ -741,6 +749,61 @@ class PosCheckoutIntegrityApiTest extends TenantTestCase
         $this->assertNotSame($first->json('data.id'), $second->json('data.id'));
         $this->assertSame(2, Invoice::count());
         $this->assertSame('46.000', $this->storeStockQty());
+    }
+
+    // ------------------------------------------------------------------
+    // SHOP-01: the idempotency key is mandatory on every POS checkout
+    // ------------------------------------------------------------------
+
+    // Uses checkoutUrlProvider() (both checkout endpoints), declared with the split-payment tests below.
+
+    #[DataProvider('checkoutUrlProvider')]
+    public function test_checkout_without_client_uuid_is_rejected_and_persists_nothing(string $url): void
+    {
+        $this->withoutCheckoutKey()
+            ->postAs($url, Arr::except($this->payload(), ['client_uuid']))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['client_uuid']);
+
+        $this->assertNothingPersisted();
+    }
+
+    #[DataProvider('checkoutUrlProvider')]
+    public function test_double_submit_with_the_same_client_uuid_sells_once(string $url): void
+    {
+        $payload = $this->payload();
+
+        $first = $this->postAs($url, $payload);
+        $first->assertStatus(201);
+        $second = $this->postAs($url, $payload);
+        $second->assertStatus(200)->assertHeader('Idempotent-Replayed', 'true');
+
+        $this->assertSame($first->json('data.id'), $second->json('data.id'));
+        $this->assertSame(1, Invoice::count());
+        $this->assertSame(1, Payment::count());
+        $this->assertSame('48.000', $this->storeStockQty(), 'store stock deducted once');
+        $this->assertSame('48.000', $this->itemStock(), 'item stock deducted once');
+        $this->assertSame(1, StockMovement::where('item_id', $this->item->id)->count(), 'one stock movement');
+    }
+
+    public function test_checkout_without_client_uuid_is_unauthenticated_without_token(): void
+    {
+        $this->resetClient();
+        $this->withoutCheckoutKey()
+            ->withHeaders(['Accept' => 'application/json'])
+            ->postJson(self::POS_URL, Arr::except($this->payload(), ['client_uuid']))
+            ->assertStatus(401);
+
+        $this->assertSame(0, Invoice::count());
+    }
+
+    public function test_checkout_without_client_uuid_is_forbidden_without_permission(): void
+    {
+        $this->withoutCheckoutKey()
+            ->postAs(self::POS_URL, Arr::except($this->payload(), ['client_uuid']), $this->unprivilegedToken)
+            ->assertStatus(403);
+
+        $this->assertSame(0, Invoice::count());
     }
 
     public function test_replay_by_user_without_permission_is_forbidden_and_leaks_nothing(): void

@@ -23,6 +23,7 @@ final class GetPublicLegalDocumentAction
         'terms' => 'terms-of-service',
         'privacy' => 'privacy-policy',
         'dpa' => 'data-processing-agreement',
+        'account-deletion' => 'account-deletion',
     ];
 
     /** Company identity that must be filled before a document may stop being a draft. */

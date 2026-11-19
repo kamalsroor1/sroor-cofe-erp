@@ -172,6 +172,22 @@
             >
               {{ $t('pos.balance_label') }} {{ formatMoney(cust.current_balance || 0) }} {{ currencyLabel }}
             </span>
+            <!-- SHOP-03: balance against the credit limit -->
+            <div
+              v-if="cust.credit_limit !== null && cust.credit_limit !== undefined && !cust.is_walk_in"
+              class="mt-1 text-[10px] font-mono font-bold"
+              :class="isPositive(creditAvailable(cust)) ? 'text-slate-500 dark:text-slate-400' : 'text-rose-500'"
+              data-testid="pos-customer-credit-limit"
+            >
+              {{
+                isPositive(creditAvailable(cust))
+                  ? $t('contacts.credit_limit_available', { amount: formatMoney(creditAvailable(cust)) })
+                  : $t('contacts.credit_limit_reached')
+              }}
+              <span class="text-slate-400 dark:text-slate-500">
+                ({{ $t('contacts.credit_limit') }}: {{ formatMoney(cust.credit_limit) }})
+              </span>
+            </div>
           </div>
         </button>
       </div>
@@ -184,8 +200,12 @@ import { ref, watch, nextTick } from 'vue';
 import { Search, Sparkles, User, Plus, Banknote } from 'lucide-vue-next';
 import AppModal from '../Common/AppModal.vue';
 import { useFormatters } from '../../Composables/useFormatters';
+import { dSub, isPositive } from '../../helpers/decimal';
 
 const { formatMoney, currencyLabel } = useFormatters();
+
+/** SHOP-03: what the customer may still buy on credit (display only; the server enforces the limit). */
+const creditAvailable = (cust) => dSub(cust.credit_limit ?? '0', cust.current_balance ?? '0');
 
 const props = defineProps({
   show: { type: Boolean, default: false },

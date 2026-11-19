@@ -15,14 +15,18 @@ declare(strict_types=1);
  * Usage (by the test only): php concurrency-worker.php <scenario> <tenant-db> <base64-json-payload>
  */
 
+use App\Actions\StockCounts\PostStockCountAction;
+use App\DTOs\StockCounts\PostStockCountDTO;
 use App\Exceptions\DatabaseBusyException;
 use App\Models\Invoice;
 use App\Models\Item;
 use App\Services\InvoiceService;
 use App\Services\PaymentService;
 use App\Services\ReturnService;
+use App\Services\ShiftService;
 use App\Services\StockService;
 use App\Services\StockTransferService;
+use App\Services\TreasuryService;
 use App\Support\Database\TransactionRetry;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Database\Events\TransactionRolledBack;
@@ -141,6 +145,29 @@ try {
             $transfer = app(StockTransferService::class)->createTransfer($payload);
 
             return ['transfer_id' => (int) $transfer->getKey(), 'transfer_number' => (string) $transfer->transfer_number];
+        })(),
+        // SHOP-02: post a stocktake session while sales of the same item run.
+        'stock_count_post' => (static function () use ($payload): array {
+            $count = app(PostStockCountAction::class)->execute(new PostStockCountDTO((int) $payload['stock_count_id'], false, (int) $payload['user_id']));
+
+            return ['status' => $count->status->value];
+        })(),
+        // SHOP-06: treasury transfer between two accounts of one branch.
+        'treasury_transfer' => (static function () use ($payload): array {
+            $transfer = app(TreasuryService::class)->transfer($payload);
+
+            return ['transfer_id' => (int) $transfer->getKey(), 'transfer_number' => (string) $transfer->transfer_number];
+        })(),
+        // SHOP-06 / BE-19: open a cashier shift for one branch.
+        'shift_open' => (static function () use ($payload): array {
+            $shift = app(ShiftService::class)->openShift(
+                (string) ($payload['opening_cash'] ?? '0.000'),
+                null,
+                (int) $payload['store_id'],
+                isset($payload['user_id']) ? (int) $payload['user_id'] : null,
+            );
+
+            return ['shift_id' => (int) $shift->getKey(), 'shift_number' => (string) $shift->shift_number];
         })(),
         default => throw new InvalidArgumentException("Unknown scenario [{$scenario}]."),
     };

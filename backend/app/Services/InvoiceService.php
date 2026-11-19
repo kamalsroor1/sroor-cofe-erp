@@ -15,6 +15,7 @@ use App\Models\Payment;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\Customers\CustomerCreditLimitGuard;
 use App\Services\Entitlements\MonthlyInvoiceCounter;
 use App\Services\Entitlements\PlanEnforcer;
 use App\Services\Invoices\InvoiceCancelGuard;
@@ -94,11 +95,18 @@ class InvoiceService
             );
         }
 
+        // SHOP-03: a manager PIN for a credit sale above the customer's limit is verified here too (after the
+        // price / discount approvals, whose verified PIN it reuses), before the transaction.
+        $creditGuard = new CustomerCreditLimitGuard($actor instanceof User ? $actor : null, $priceGuard);
+        if ($priceCustomer instanceof Customer) {
+            $creditGuard->preflight($priceCustomer, $this->resolveInvoiceStoreId($data), $data);
+        }
+
         // BUG-04: the day's counter rows exist before the transaction takes its first read.
         $this->prepareNumberScopes($data);
 
         try {
-            return $this->persistConfirmedInvoice($data, $clientUuid, $priceGuard, $discountGuard, $requireOpenShift);
+            return $this->persistConfirmedInvoice($data, $clientUuid, $priceGuard, $discountGuard, $creditGuard, $requireOpenShift);
         } catch (UniqueConstraintViolationException $e) {
             // Backstop for a concurrent insert of the same client_uuid that slipped past the
             // replay check. Any other unique violation (e.g. invoice_number) is rethrown.
@@ -157,9 +165,9 @@ class InvoiceService
      * memoised (a retry re-reads the same approver, no new PIN/limiter hit); every row is read
      * again inside, and the invoice/payment numbers of a failed attempt roll back with it.
      */
-    private function persistConfirmedInvoice(array $data, ?string $clientUuid, SalePriceGuard $priceGuard, SaleDiscountGuard $discountGuard, bool $requireOpenShift): Invoice
+    private function persistConfirmedInvoice(array $data, ?string $clientUuid, SalePriceGuard $priceGuard, SaleDiscountGuard $discountGuard, CustomerCreditLimitGuard $creditGuard, bool $requireOpenShift): Invoice
     {
-        return TransactionRetry::run(function () use ($data, $clientUuid, $priceGuard, $discountGuard, $requireOpenShift) {
+        return TransactionRetry::run(function () use ($data, $clientUuid, $priceGuard, $discountGuard, $creditGuard, $requireOpenShift) {
             $customer = Customer::where('id', $data['customer_id'])->lockForUpdate()->firstOrFail();
 
             $subtotal = '0.000';
@@ -434,7 +442,12 @@ class InvoiceService
             }
 
             // S6: Update Customer balance
-            $this->customerBalanceService->updateBalance($customer->id);
+            $balanceAfter = $this->customerBalanceService->updateBalance($customer->id);
+
+            // SHOP-03: the credit limit, on the customer row locked above and the exact new balance. This
+            // invoice adds exactly its remaining amount, so the balance before it is after - remaining.
+            // A refusal rolls back the whole sale (stock, payments, numbers).
+            $creditGuard->assertWithinLimit($customer, bcsub($balanceAfter, $remainingAmount, 3), $balanceAfter, $invoice);
 
             // S7: Audit & Activity Log
             $this->auditLogService->log(
@@ -746,6 +759,19 @@ class InvoiceService
             );
         }
 
+        // SHOP-03: the credit-limit manager PIN, before the transaction. The old invoice's debt is already
+        // in the balance when the customer does not change, so it is not counted twice.
+        $creditGuard = new CustomerCreditLimitGuard($actor instanceof User ? $actor : null, $priceGuard);
+        if ($priceCustomer instanceof Customer && $currentInvoice instanceof Invoice && $currentInvoice->status !== 'cancelled') {
+            $oldDebt = (int) $currentInvoice->customer_id === (int) $priceCustomer->id ? Decimal::normalize((string) $currentInvoice->remaining_amount) : '0.000';
+            $creditGuard->preflight(
+                $priceCustomer,
+                $currentInvoice->store_id !== null ? (int) $currentInvoice->store_id : null,
+                $data,
+                $oldDebt,
+            );
+        }
+
         // BUG-04: the day's payment counter row exists before the transaction takes its first read.
         if (($data['payment_type'] ?? 'cash') !== 'credit') {
             app(DocumentNumberService::class)->prepareDated('PAY-INV', Payment::class, 'payment_number');
@@ -754,7 +780,7 @@ class InvoiceService
 
         // BUG-07: restarted as a whole on a lock conflict (1213/1205/1020). Only the id of the
         // passed invoice is used; the row is locked and read again by every attempt.
-        return TransactionRetry::run(function () use ($invoiceId, $data, $priceGuard, $discountGuard) {
+        return TransactionRetry::run(function () use ($invoiceId, $data, $priceGuard, $discountGuard, $creditGuard) {
             $lockedInvoice = Invoice::where('id', $invoiceId)->lockForUpdate()->firstOrFail();
             if ($lockedInvoice->status === 'cancelled') {
                 throw BusinessRuleException::conflict('invoices.cannot_edit_cancelled');
@@ -771,6 +797,10 @@ class InvoiceService
                 ->get();
             $customer = Customer::query()->findOrFail($newCustomerId);
             $this->assertWalkInPaidInFull($customer, (string) ($data['payment_type'] ?? 'cash'));
+            // SHOP-03: the new customer's exact balance before this edit (row locked above), only when a limit applies.
+            $creditBalanceBefore = $customer->credit_limit !== null
+                ? $this->customerBalanceService->updateBalance((int) $customer->id)
+                : null;
             $storeId = $lockedInvoice->store_id !== null ? (int) $lockedInvoice->store_id : null;
 
             // BUG-07: the old and the new lines' stock rows, in the global sorted order.
@@ -1030,6 +1060,12 @@ class InvoiceService
             }
             if ($newCustomerId && $newCustomerId !== $oldCustomerId) {
                 $this->customerBalanceService->updateBalance($newCustomerId);
+            }
+
+            // SHOP-03: refused when the edit raises the customer's balance above their credit limit.
+            if ($creditBalanceBefore !== null) {
+                $customer->refresh();
+                $creditGuard->assertWithinLimit($customer, $creditBalanceBefore, Decimal::normalize((string) $customer->current_balance), $lockedInvoice);
             }
 
             // 8. Audit & Activity log
