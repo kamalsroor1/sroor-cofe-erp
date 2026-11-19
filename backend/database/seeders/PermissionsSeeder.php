@@ -76,6 +76,8 @@ class PermissionsSeeder extends Seeder
         'daily_journal.close_shift',
         // QA-2: treasury transfers between drawers (TreasuryPolicy::transfer).
         'daily_journal.manage',
+        // SHOP-06: move money between treasury accounts (POST /treasury/transfers; admin only by default).
+        'treasury.transfer',
         'expenses.manage',
         'returns.manage',
         // BE-01: book a return with no source invoice/purchase (admin only by default).

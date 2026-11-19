@@ -111,6 +111,7 @@ final class GetPermissionsTreeAction
                     'daily_journal.view',
                     'daily_journal.close_shift',
                     'daily_journal.manage',
+                    'treasury.transfer',
                 ],
             ],
             'administration' => [
