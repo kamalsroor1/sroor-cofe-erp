@@ -15,6 +15,9 @@
     <!-- 3. Legal Information Section -->
     <GeneralLegalSection :form="form" :errors="errors" :can-manage="canManage" @update:field="handleUpdateField" />
 
+    <!-- 4. PRD-17: Export my data (shop admin only; the API enforces it too) -->
+    <DataExportCard v-if="authStore.isAdmin" />
+
     <!-- Section Save Actions Footer -->
     <div
       v-if="canManage"
@@ -54,6 +57,8 @@ import BaseButton from '../../Common/BaseButton.vue';
 import GeneralIdentitySection from './GeneralIdentitySection.vue';
 import GeneralLocalizationSection from './GeneralLocalizationSection.vue';
 import GeneralLegalSection from './GeneralLegalSection.vue';
+import DataExportCard from './DataExportCard.vue';
+import { useAuthStore } from '../../../stores/auth';
 
 const props = defineProps({
   form: { type: Object, required: true },
@@ -64,6 +69,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['save', 'update:field', 'reset-field', 'reset-default']);
+
+const authStore = useAuthStore();
 
 const generalFields = [
   'company_name',
