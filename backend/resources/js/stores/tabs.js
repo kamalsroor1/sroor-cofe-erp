@@ -43,6 +43,7 @@ export const useTabsStore = defineStore('tabs', () => {
         if (path.startsWith('/suppliers')) return 'Building2';
         if (path.startsWith('/stores')) return 'Store';
         if (path.startsWith('/stock-transfers')) return 'ArrowLeftRight';
+        if (path.startsWith('/stock-counts')) return 'ClipboardList';
         if (path.startsWith('/reports')) return 'BarChart3';
         if (path.startsWith('/settings')) return 'Sliders';
         if (path.startsWith('/mixes') || path.startsWith('/coffee-blender')) return 'Layers';

@@ -39,6 +39,8 @@ export function useItemMovements() {
             waste_out: t('inventory.movement_waste'),
             stock_deposit_in: t('inventory.movement_initial'),
             opening_balance_in: t('inventory.movement_opening_balance'),
+            stock_count_in: t('stock_counts.movement_in'),
+            stock_count_out: t('stock_counts.movement_out'),
         };
         return map[type] || type;
     };
@@ -52,6 +54,7 @@ export function useItemMovements() {
             'cancellation_in',
             'transfer_in',
             'sales_return_in',
+            'stock_count_in',
         ];
         return positive.includes(type);
     };

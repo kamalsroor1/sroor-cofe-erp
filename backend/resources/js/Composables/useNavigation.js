@@ -28,6 +28,7 @@ import {
     CreditCard,
     LifeBuoy,
     LayoutGrid,
+    ClipboardList,
 } from 'lucide-vue-next';
 
 export function useNavigation() {
@@ -106,6 +107,11 @@ export function useNavigation() {
                     key: 'stock-transfers',
                     path: '/stock-transfers',
                     icon: ArrowLeftRight,
+                },
+                {
+                    key: 'stock-counts',
+                    path: '/stock-counts',
+                    icon: ClipboardList,
                 },
                 {
                     key: 'smart-reorder',

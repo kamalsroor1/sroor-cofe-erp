@@ -342,6 +342,39 @@ const tenantRoutes = [
             permission: 'returns.manage',
         },
     },
+    // SHOP-02: stocktake. Every plan (no `feature`), permission stock.count only.
+    {
+        path: '/stock-counts',
+        name: 'stock_counts.index',
+        component: () => import('../views/StockCounts/StockCountsView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.stock_counts_index',
+            requiresAuth: true,
+            permission: 'stock.count',
+        },
+    },
+    {
+        path: '/stock-counts/:id(\\d+)',
+        name: 'stock_counts.show',
+        component: () => import('../views/StockCounts/StockCountSheetView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.stock_counts_show',
+            requiresAuth: true,
+            permission: 'stock.count',
+        },
+    },
+    {
+        path: '/stock-counts/:id(\\d+)/print',
+        name: 'stock_counts.print',
+        component: () => import('../views/StockCounts/StockCountPrintView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.stock_counts_print',
+            requiresAuth: true,
+            layout: 'blank',
+            isPrintView: true,
+            permission: 'stock.count',
+        },
+    },
     {
         path: '/stock-transfers',
         name: 'stock_transfers.index',
