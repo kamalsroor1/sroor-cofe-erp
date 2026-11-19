@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\ItemController;
+use App\Http\Controllers\Api\Landing\PublicAccountDeletionRequestController;
 use App\Http\Controllers\Api\Landing\PublicLegalDocumentController;
 use App\Http\Controllers\Api\Landing\PublicPlanController;
 use App\Http\Controllers\Api\Landing\PublicSignupRequestController;
@@ -59,9 +60,11 @@ Route::prefix('v1/public')->name('api.public.')->group(function () {
     Route::get('/plans', [PublicPlanController::class, 'index'])->middleware('throttle:public-api')->name('plans');
     Route::get('/legal/{document}', [PublicLegalDocumentController::class, 'show'])
         ->middleware('throttle:public-api')
-        ->whereIn('document', ['terms', 'privacy', 'dpa'])
+        ->whereIn('document', ['terms', 'privacy', 'dpa', 'account-deletion'])
         ->name('legal.show');
     Route::post('/signup-requests', [PublicSignupRequestController::class, 'store'])->middleware('throttle:signup-requests')->name('signup_requests.store');
+    // MOB-05: "delete my account and data" request (Play Store); stored centrally, handled by hand.
+    Route::post('/account-deletion-requests', [PublicAccountDeletionRequestController::class, 'store'])->middleware('throttle:account-deletion-requests')->name('account_deletion_requests.store');
 });
 
 // SIGN-11: public self-signup with an emailed verification code. Central DB only, NO tenancy

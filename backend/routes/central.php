@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\CentralPermission;
 use App\Enums\PlatformAssetSlot;
+use App\Http\Controllers\Api\Central\AccountDeletionRequestController;
 use App\Http\Controllers\Api\Central\BillingInvoiceController;
 use App\Http\Controllers\Api\Central\BillingReviewController;
 use App\Http\Controllers\Api\Central\CentralAuthController;
@@ -237,6 +238,14 @@ Route::prefix('v1/super-admin')
         Route::post('/signup-requests/{id}/suspend-tenant', [SignupRequestProvisioningController::class, 'suspendTenant'])
             ->whereNumber('id')
             ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class, 'throttle:20,1'])->name('signup_requests.suspend_tenant');
+
+        // MOB-05: public account-deletion requests. The deletion itself is manual; closing the
+        // request only records who handled it.
+        Route::get('/account-deletion-requests', [AccountDeletionRequestController::class, 'index'])
+            ->middleware($can(CentralPermission::TenantsView))->name('account_deletion_requests.index');
+        Route::post('/account-deletion-requests/{id}/handle', [AccountDeletionRequestController::class, 'handle'])
+            ->whereNumber('id')
+            ->middleware([$can(CentralPermission::TenantsManage), 'throttle:20,1'])->name('account_deletion_requests.handle');
 
         // Plans
         Route::get('/plans', [PlanController::class, 'index'])

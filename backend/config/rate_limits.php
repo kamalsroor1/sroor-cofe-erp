@@ -112,6 +112,15 @@ return [
         'global_per_day' => (int) (env('RATE_LIMIT_SIGNUP_GLOBAL_DAILY') ?: 200),
     ],
 
+    // MOB-05: public account-deletion request form (POST /api/v1/public/account-deletion-requests),
+    // per client network; the strict budgets count accepted submissions only (see AppServiceProvider).
+    'account_deletion_requests' => [
+        'per_hour' => (int) (env('RATE_LIMIT_ACCOUNT_DELETION_HOURLY') ?: 3),
+        'per_day' => (int) (env('RATE_LIMIT_ACCOUNT_DELETION_DAILY') ?: 10),
+        'attempts_per_hour' => (int) (env('RATE_LIMIT_ACCOUNT_DELETION_ATTEMPTS_HOURLY') ?: 30),
+        'global_per_hour' => (int) (env('RATE_LIMIT_ACCOUNT_DELETION_GLOBAL_HOURLY') ?: 30),
+    ],
+
     // SIGN-11: public self-signup (POST /api/v1/signup), per client network like signup_requests:
     // accepted signups only for the strict budgets, every attempt for the looser ceiling.
     'self_signup' => [

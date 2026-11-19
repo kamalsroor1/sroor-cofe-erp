@@ -27,6 +27,7 @@ import {
   Receipt,
   Inbox,
   ArrowUpCircle,
+  UserX,
 } from 'lucide-vue-next';
 import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
 import { useBillingPendingCount } from '../Composables/useBillingPendingCount';
@@ -94,6 +95,13 @@ const navItems = computed(() =>
       active: route.path.startsWith('/super-admin/signup-requests'),
       permission: CENTRAL_PERMISSIONS.tenantsView,
       badge: pendingSignupCount.value,
+    },
+    {
+      name: trans('account_deletion.console.nav'),
+      href: '/super-admin/account-deletion-requests',
+      icon: UserX,
+      active: route.path.startsWith('/super-admin/account-deletion-requests'),
+      permission: CENTRAL_PERMISSIONS.tenantsView,
     },
     {
       name: trans('super.plans'),
