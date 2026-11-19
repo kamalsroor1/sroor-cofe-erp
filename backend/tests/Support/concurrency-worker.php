@@ -15,6 +15,8 @@ declare(strict_types=1);
  * Usage (by the test only): php concurrency-worker.php <scenario> <tenant-db> <base64-json-payload>
  */
 
+use App\Actions\StockCounts\PostStockCountAction;
+use App\DTOs\StockCounts\PostStockCountDTO;
 use App\Exceptions\DatabaseBusyException;
 use App\Models\Invoice;
 use App\Models\Item;
@@ -141,6 +143,12 @@ try {
             $transfer = app(StockTransferService::class)->createTransfer($payload);
 
             return ['transfer_id' => (int) $transfer->getKey(), 'transfer_number' => (string) $transfer->transfer_number];
+        })(),
+        // SHOP-02: post a stocktake session while sales of the same item run.
+        'stock_count_post' => (static function () use ($payload): array {
+            $count = app(PostStockCountAction::class)->execute(new PostStockCountDTO((int) $payload['stock_count_id'], false, (int) $payload['user_id']));
+
+            return ['status' => $count->status->value];
         })(),
         default => throw new InvalidArgumentException("Unknown scenario [{$scenario}]."),
     };

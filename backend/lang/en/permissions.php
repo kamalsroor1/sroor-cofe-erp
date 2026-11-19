@@ -35,6 +35,9 @@ return [
     'inventory' => [
         'adjust' => 'Adjust stock balances manually (counts and deposits)',
     ],
+    'stock' => [
+        'count' => 'Run stocktakes: count stock, review differences and post them',
+    ],
     'purchases' => [
         'view' => 'View the purchase invoice history',
         'create' => 'Record new purchases into stock',
