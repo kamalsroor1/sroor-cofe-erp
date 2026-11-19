@@ -71,19 +71,21 @@
       @update:field="(field, val) => $emit('update:field', field, val)"
       @save="$emit('save', 'pos')"
     />
-    <SettingsTelegramSection
-      v-else-if="selectedTab === 'notifications'"
-      :form="form"
-      :errors="errors"
-      :can-manage="canManage"
-      :is-saving="isSaving"
-      :is-testing="isTestingTelegram"
-      :needs-reentry="telegramNeedsReentry"
-      :initial-form="initialForm"
-      @update:field="(field, val) => $emit('update:field', field, val)"
-      @test-telegram="$emit('test-telegram')"
-      @save="$emit('save', 'notifications')"
-    />
+    <!-- PLAN-AUDIT: Telegram alerts are a plan feature (not on the free plan): locked note instead of the form. -->
+    <FeatureGate v-else-if="selectedTab === 'notifications'" feature="telegram.notifications" show-fallback>
+      <SettingsTelegramSection
+        :form="form"
+        :errors="errors"
+        :can-manage="canManage"
+        :is-saving="isSaving"
+        :is-testing="isTestingTelegram"
+        :needs-reentry="telegramNeedsReentry"
+        :initial-form="initialForm"
+        @update:field="(field, val) => $emit('update:field', field, val)"
+        @test-telegram="$emit('test-telegram')"
+        @save="$emit('save', 'notifications')"
+      />
+    </FeatureGate>
     <DeviceTab
       v-else-if="selectedTab === 'device'"
       :form="form"
@@ -103,6 +105,7 @@ import SettingsPrintingSection from '../SettingsPrintingSection.vue';
 import InventoryTab from '../Inventory/InventoryTab.vue';
 import PosPoliciesTab from '../Pos/PosPoliciesTab.vue';
 import SettingsTelegramSection from '../SettingsTelegramSection.vue';
+import FeatureGate from '../../FeatureGate.vue';
 import DeviceTab from '../DeviceTab.vue';
 
 defineProps({

@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\Setting;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Services\Entitlements\PlanEnforcer;
 use App\Services\Settings\SettingSecrets;
 use App\Services\Settings\TenantSettings;
 use App\Support\TenantClock;
@@ -16,6 +17,9 @@ use Illuminate\Support\Facades\Log;
 
 class TelegramService
 {
+    /** The plan feature that allows the shop's own Telegram alerts. */
+    public const FEATURE = 'telegram.notifications';
+
     /**
      * Dates and times in messages are on the tenant's clock (SETG-2). Instant comparisons
      * against stored timestamps (overdue shifts) stay on now(), the storage timezone.
@@ -68,10 +72,25 @@ class TelegramService
         return is_string($chatId) && trim($chatId) !== '' ? trim($chatId) : null;
     }
 
-    /** OPS-24: the shop's switch (`telegram_notifications_enabled`) is not explicitly off. */
+    /**
+     * OPS-24: the shop's switch (`telegram_notifications_enabled`) is not explicitly off.
+     * PLAN-AUDIT: and the shop's plan includes Telegram notifications (the free plan does not), so
+     * every shop-only alert (daily summary, low stock, overdue shift, discrepancy, lock alerts)
+     * stops when the feature is not in the plan.
+     */
     public function isShopEnabled(): bool
     {
-        return Setting::getBool('telegram_notifications_enabled', true);
+        return $this->planAllowsShopTelegram() && Setting::getBool('telegram_notifications_enabled', true);
+    }
+
+    /** Outside a tenant there is no shop plan to check; inside one, PlanEnforcer decides. */
+    private function planAllowsShopTelegram(): bool
+    {
+        if (! function_exists('tenancy') || ! tenancy()->initialized) {
+            return true;
+        }
+
+        return app(PlanEnforcer::class)->hasFeature(self::FEATURE);
     }
 
     /** OPS-24: the shop can receive alerts through its OWN bot and chat. */
