@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\BusinessRuleException;
+use App\Exceptions\CreditLimitExceededException;
 use App\Exceptions\DatabaseBusyException;
 use App\Exceptions\DiscountCapExceededException;
 use App\Http\Middleware\AdminSecurityHeaders;
@@ -195,6 +196,8 @@ return Application::configure(basePath: dirname(__DIR__))
                     'message' => $e->getMessage(),
                     'errors' => $e->errors(),
                     ...($e instanceof DiscountCapExceededException ? ['error_code' => DiscountCapExceededException::ERROR_CODE] : []),
+                    // SHOP-03: a credit sale above the customer's credit limit (the SPA then offers a manager PIN).
+                    ...($e instanceof CreditLimitExceededException ? ['error_code' => CreditLimitExceededException::ERROR_CODE] : []),
                 ], 422);
             }
         });

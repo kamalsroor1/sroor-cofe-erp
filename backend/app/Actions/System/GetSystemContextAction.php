@@ -144,6 +144,8 @@ final class GetSystemContextAction
                 // SET-02: shop policies the SPA applies (idle lock screen; return window hint).
                 'returns_max_days' => $this->tenantSettings->returnsMaxDays(),
                 'pos_idle_lock_minutes' => $this->tenantSettings->posIdleLockMinutes(),
+                // SHOP-03: pre-filled in the new-customer form (null = no limit).
+                'customers_default_credit_limit' => $this->tenantSettings->customersDefaultCreditLimit(),
                 // DATE-02: date-picker limits (max = business_date, min = business_date - this when the user may back-date).
                 'backdate_max_days' => $this->tenantSettings->backdateMaxDays(),
             ],

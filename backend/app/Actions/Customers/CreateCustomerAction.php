@@ -10,6 +10,7 @@ use App\Models\Customer;
 use App\Models\OpeningBalance;
 use App\Services\CustomerBalanceService;
 use App\Services\Entitlements\PlanEnforcer;
+use App\Services\Settings\TenantSettings;
 use App\Support\PartyLimitCounter;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +23,7 @@ final class CreateCustomerAction
         private readonly CustomerBalanceService $balances,
         private readonly TenantClock $clock,
         private readonly PlanEnforcer $planEnforcer,
+        private readonly TenantSettings $settings,
     ) {}
 
     /**
@@ -41,6 +43,8 @@ final class CreateCustomerAction
                 'address' => $dto->address,
                 'tax_number' => $dto->tax_number,
                 'current_balance' => '0.000',
+                // SHOP-03: no credit_limit field in the request = the shop default (null = no limit).
+                'credit_limit' => $dto->credit_limit_provided ? $dto->credit_limit : $this->settings->customersDefaultCreditLimit(),
                 'is_active' => $dto->is_active,
                 'notes' => $dto->notes,
             ]);

@@ -27,14 +27,20 @@ final class UpdateCustomerAction
         }
 
         return DB::transaction(function () use ($customer, $dto) {
-            $customer->update([
+            $attributes = [
                 'name' => $dto->name,
                 'phone' => $dto->phone,
                 'address' => $dto->address,
                 'tax_number' => $dto->tax_number,
                 'notes' => $dto->notes,
                 'is_active' => $dto->is_active,
-            ]);
+            ];
+            // SHOP-03: an omitted credit_limit keeps the stored limit (older clients); null = no limit.
+            if ($dto->credit_limit_provided) {
+                $attributes['credit_limit'] = $dto->credit_limit;
+            }
+
+            $customer->update($attributes);
 
             return $customer->fresh();
         });

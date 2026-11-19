@@ -68,6 +68,8 @@ class PermissionsSeeder extends Seeder
         'customers.statement',
         // ROLE-01: delete a customer (admin only by default).
         'customers.delete',
+        // SHOP-03: a credit sale above the customer's credit limit without a manager PIN (admin only by default).
+        'customers.override_credit_limit',
         'suppliers.manage',
         'suppliers.statement',
 

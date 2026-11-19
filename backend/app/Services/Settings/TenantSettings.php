@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Settings;
 
 use App\Models\Setting;
+use App\Support\Money\Decimal;
 use DateTimeZone;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -126,6 +127,9 @@ final class TenantSettings
     public const RETURNS_MAX_DAYS_MIN = 1;
 
     public const RETURNS_MAX_DAYS_MAX = 3650;
+
+    /** SHOP-03: credit limit given to a new customer created without one (empty = no limit). Never retroactive. */
+    public const KEY_CUSTOMERS_DEFAULT_CREDIT_LIMIT = 'customers_default_credit_limit';
 
     /** DATE-02: how many business days back a document may be dated by a user with documents.backdate. */
     public const KEY_BACKDATE_MAX_DAYS = 'backdate_max_days';
@@ -307,6 +311,21 @@ final class TenantSettings
     }
 
     /**
+     * SHOP-03: the credit limit a new customer gets when none is sent, or null = no limit.
+     * A stored value that is not a plain non-negative decimal (manual edit) falls back to no limit.
+     */
+    public function customersDefaultCreditLimit(): ?string
+    {
+        $value = trim((string) Setting::get(self::KEY_CUSTOMERS_DEFAULT_CREDIT_LIMIT, ''));
+
+        if (preg_match('/^\d{1,9}(\.\d{1,3})?$/', $value) !== 1) {
+            return null;
+        }
+
+        return Decimal::normalize($value);
+    }
+
+    /**
      * DATE-02: the back-dating window in days (0 = today only). Missing or invalid = default.
      */
     public function backdateMaxDays(): int
@@ -354,7 +373,7 @@ final class TenantSettings
     }
 
     /**
-     * @return array{currency: string, currency_decimals: int, timezone: string, default_locale: string, number_digits: string, business_day_cutoff: string, low_stock_default_threshold: string, allow_negative_stock: bool, returns_max_days: int|null, pos_idle_lock_minutes: int}
+     * @return array{currency: string, currency_decimals: int, timezone: string, default_locale: string, number_digits: string, business_day_cutoff: string, low_stock_default_threshold: string, allow_negative_stock: bool, returns_max_days: int|null, pos_idle_lock_minutes: int, customers_default_credit_limit: string|null}
      */
     public function toArray(): array
     {
@@ -369,6 +388,7 @@ final class TenantSettings
             self::KEY_ALLOW_NEGATIVE_STOCK => $this->allowNegativeStock(),
             self::KEY_RETURNS_MAX_DAYS => $this->returnsMaxDays(),
             self::KEY_POS_IDLE_LOCK_MINUTES => $this->posIdleLockMinutes(),
+            self::KEY_CUSTOMERS_DEFAULT_CREDIT_LIMIT => $this->customersDefaultCreditLimit(),
         ];
     }
 

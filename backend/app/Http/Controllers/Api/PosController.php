@@ -26,6 +26,7 @@ use App\Http\Resources\PosLookupItemResource;
 use App\Models\Tenant;
 use App\Services\Pos\InvalidScaleBarcodeException;
 use App\Support\ActiveStore;
+use App\Support\Money\Decimal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -166,6 +167,8 @@ final class PosController extends Controller
                 'phone' => $customer->phone,
                 'price_tier' => $customer->price_tier ?? 'retail',
                 'current_balance' => 0,
+                // SHOP-03: the shop default limit it was created with (null = no limit).
+                'credit_limit' => $customer->credit_limit === null ? null : Decimal::normalize((string) $customer->credit_limit),
             ],
         ], 201);
     }

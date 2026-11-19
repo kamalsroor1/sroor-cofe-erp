@@ -20,6 +20,8 @@ class UpdateCustomerRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:255'],
             'tax_number' => ['nullable', 'string', 'max:50'],
+            // SHOP-03: null / empty = no limit; omitted on create = the shop default (customers_default_credit_limit).
+            'credit_limit' => ['sometimes', 'nullable', 'numeric', 'min:0', 'decimal:0,3', 'max:999999999.999'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }

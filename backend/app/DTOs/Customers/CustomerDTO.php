@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\DTOs\Customers;
 
+use App\Support\Money\Decimal;
+
 final class CustomerDTO
 {
     public function __construct(
@@ -14,6 +16,10 @@ final class CustomerDTO
         public readonly string $opening_balance = '0.000',
         public readonly ?string $notes = null,
         public readonly bool $is_active = true,
+        // SHOP-03: the credit limit (null = no limit). $credit_limit_provided = false when the request did
+        // not send the field: create then uses the shop default and update keeps the stored limit.
+        public readonly ?string $credit_limit = null,
+        public readonly bool $credit_limit_provided = false,
     ) {}
 
     public static function fromArray(array $data): self
@@ -26,6 +32,8 @@ final class CustomerDTO
             opening_balance: isset($data['opening_balance']) && is_numeric($data['opening_balance']) ? (string) $data['opening_balance'] : '0.000',
             notes: isset($data['notes']) && $data['notes'] !== '' ? (string) $data['notes'] : null,
             is_active: ! isset($data['is_active']) || (bool) $data['is_active'],
+            credit_limit: isset($data['credit_limit']) && $data['credit_limit'] !== '' ? Decimal::normalize((string) $data['credit_limit']) : null,
+            credit_limit_provided: array_key_exists('credit_limit', $data),
         );
     }
 
@@ -39,6 +47,7 @@ final class CustomerDTO
             'opening_balance' => $this->opening_balance,
             'notes' => $this->notes,
             'is_active' => $this->is_active,
+            'credit_limit' => $this->credit_limit,
         ];
     }
 }

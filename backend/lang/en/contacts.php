@@ -25,6 +25,11 @@ return [
     'add_payment' => '+ Record New Payment',
     'opening_balance' => 'Opening Balance',
     'credit_limit' => 'Credit Limit',
+    // SHOP-03
+    'credit_limit_placeholder' => 'No limit',
+    'credit_limit_hint' => 'The most this customer may owe. Leave empty for no limit.',
+    'credit_limit_available' => 'Credit available: :amount',
+    'credit_limit_reached' => 'The customer has reached the credit limit',
     'customer_added' => 'Customer added successfully',
     'customer_updated' => 'Customer details updated successfully',
     'customer_deleted' => 'Customer deleted successfully',
