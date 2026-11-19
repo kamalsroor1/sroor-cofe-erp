@@ -62,6 +62,7 @@ final class GetPermissionsTreeAction
                     'customers.manage',
                     'customers.statement',
                     'customers.delete',
+                    'customers.override_credit_limit',
                 ],
             ],
             'suppliers' => [

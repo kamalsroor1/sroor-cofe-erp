@@ -52,6 +52,7 @@ return [
         'manage' => 'Manage the customer directory',
         'statement' => 'View and export a customer statement',
         'delete' => 'Delete customers',
+        'override_credit_limit' => 'Sell on credit above a customer\'s credit limit',
     ],
     'suppliers' => [
         'manage' => 'Manage suppliers and their accounts',

@@ -144,6 +144,7 @@ export function useSettings() {
         receipt_header_lines: '',
         receipt_footer_text: '',
         returns_max_days: '',
+        customers_default_credit_limit: '',
         pos_idle_lock_minutes: '0',
         ...JSON.parse(JSON.stringify(SALE_DEFAULTS)),
     });
@@ -366,6 +367,7 @@ export function useSettings() {
         receipt_header_lines: '',
         receipt_footer_text: '',
         returns_max_days: '',
+        customers_default_credit_limit: '',
         pos_idle_lock_minutes: '0',
     };
 
@@ -420,6 +422,8 @@ export function useSettings() {
                 receipt_header_lines: s.receipt_header_lines || '',
                 receipt_footer_text: s.receipt_footer_text || '',
                 returns_max_days: s.returns_max_days == null ? '' : String(s.returns_max_days),
+                customers_default_credit_limit:
+                    s.customers_default_credit_limit == null ? '' : String(s.customers_default_credit_limit),
                 pos_idle_lock_minutes: String(s.pos_idle_lock_minutes ?? 0),
                 ...saleSettingsFromApi(s),
             };
@@ -448,6 +452,11 @@ export function useSettings() {
         if (days !== '' && !(/^\d+$/.test(days) && Number(days) >= 1 && Number(days) <= 3650)) {
             found.returns_max_days = [t('settings.returns_max_days_invalid')];
         }
+        // SHOP-03: empty = no limit; otherwise a non-negative amount with at most 3 decimals.
+        const creditLimit = policyDigits(form.value.customers_default_credit_limit);
+        if (creditLimit !== '' && !/^\d{1,9}(\.\d{1,3})?$/.test(creditLimit)) {
+            found.customers_default_credit_limit = [t('settings.customers_default_credit_limit_invalid')];
+        }
         const minutes = policyDigits(form.value.pos_idle_lock_minutes);
         if (minutes !== '' && !(/^\d+$/.test(minutes) && Number(minutes) <= 240)) {
             found.pos_idle_lock_minutes = [t('settings.pos_idle_lock_minutes_invalid')];
@@ -462,9 +471,12 @@ export function useSettings() {
     const settingsPayload = () => {
         const days = policyDigits(form.value.returns_max_days);
         const minutes = policyDigits(form.value.pos_idle_lock_minutes);
+        const creditLimit = policyDigits(form.value.customers_default_credit_limit);
         return {
             ...form.value,
             returns_max_days: days === '' ? null : Number(days),
+            // SHOP-03: sent as a string so no decimal is lost; null = no limit.
+            customers_default_credit_limit: creditLimit === '' ? null : creditLimit,
             pos_idle_lock_minutes: minutes === '' ? 0 : Number(minutes),
         };
     };
@@ -488,6 +500,7 @@ export function useSettings() {
             appConfigStore.system = {
                 ...appConfigStore.system,
                 returns_max_days: payload.returns_max_days,
+                customers_default_credit_limit: payload.customers_default_credit_limit,
                 pos_idle_lock_minutes: payload.pos_idle_lock_minutes,
             };
             if (form.value.system_theme_color) {

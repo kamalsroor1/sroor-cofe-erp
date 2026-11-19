@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\Item;
 use App\Models\User;
 use App\Services\Approvals\ManagerPinVerifier;
+use App\Services\Customers\CustomerCreditLimitGuard;
 use App\Support\Money\Decimal;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Validation\ValidationException;
@@ -242,6 +243,36 @@ final class SalePriceGuard
     public function discountApproverId(): ?int
     {
         return $this->discountApproverId;
+    }
+
+    /** True when the request carries a manager approval {user_id, pin}. */
+    public function hasOverride(): bool
+    {
+        return $this->override !== null && isset($this->override['user_id'], $this->override['pin']);
+    }
+
+    /**
+     * SHOP-03: approval of a credit sale above the customer's credit limit by the manager of the request's
+     * `override` (CustomerCreditLimitGuard::preflight(), before the invoice transaction). A manager whose
+     * PIN was already verified for a price / discount approval of this request is reused without a new
+     * check: when they lack the credit permission this returns null (the sale is then refused only if it
+     * really goes over the limit). Null = no override was sent.
+     *
+     * @throws ValidationException
+     * @throws ThrottleRequestsException
+     */
+    public function approveCreditLimit(?int $storeId): ?int
+    {
+        if (! $this->hasOverride()) {
+            return null;
+        }
+
+        $approverId = (int) $this->override['user_id'];
+        if ($this->pinApprover instanceof User && (int) $this->pinApprover->id === $approverId) {
+            return $this->pinApprover->can(CustomerCreditLimitGuard::PERMISSION) ? $approverId : null;
+        }
+
+        return $this->verifyManagerPin($approverId, (string) $this->override['pin'], $storeId, CustomerCreditLimitGuard::PERMISSION);
     }
 
     private function verifyManagerPin(int $approverId, string $pin, ?int $storeId, string $permission): int

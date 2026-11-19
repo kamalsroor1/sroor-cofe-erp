@@ -24,7 +24,8 @@ class CustomerResource extends JsonResource
             'address' => $this->address,
             'tax_number' => $this->tax_number,
             'current_balance' => Decimal::normalize((string) $this->current_balance),
-            'credit_limit' => Decimal::normalize((string) ($this->credit_limit ?? 0)),
+            // SHOP-03: null = no limit.
+            'credit_limit' => $this->credit_limit === null ? null : Decimal::normalize((string) $this->credit_limit),
             'is_active' => (bool) $this->is_active,
             'is_walk_in' => app(ResolveWalkInCustomerAction::class)->isWalkIn($this->resource),
             'price_tier' => $this->price_tier ?? 'retail',

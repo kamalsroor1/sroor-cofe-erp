@@ -182,6 +182,15 @@ export const SETTINGS_REGISTRY = [
         isAdvanced: false,
     },
     {
+        id: 'customers_default_credit_limit',
+        key: 'customers.default_credit_limit',
+        labelKey: 'settings.customers_default_credit_limit',
+        descKey: 'settings.customers_default_credit_limit_desc',
+        tabId: 'pos',
+        keywordsKey: 'settings.search_keywords.customers_default_credit_limit',
+        isAdvanced: false,
+    },
+    {
         id: 'pos_idle_lock_minutes',
         key: 'pos.idle_lock_minutes',
         labelKey: 'settings.pos_idle_lock_minutes',

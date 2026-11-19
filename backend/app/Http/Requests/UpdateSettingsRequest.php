@@ -85,6 +85,8 @@ class UpdateSettingsRequest extends FormRequest
             TenantSettings::KEY_ALLOW_NEGATIVE_STOCK => ['sometimes', 'boolean'],
             // SET-02: sales-return window in whole days; null/empty = no limit (stored '').
             TenantSettings::KEY_RETURNS_MAX_DAYS => ['sometimes', 'nullable', 'integer', 'min:'.TenantSettings::RETURNS_MAX_DAYS_MIN, 'max:'.TenantSettings::RETURNS_MAX_DAYS_MAX],
+            // SHOP-03: default credit limit of a new customer; null/empty = no limit (stored '').
+            TenantSettings::KEY_CUSTOMERS_DEFAULT_CREDIT_LIMIT => ['sometimes', 'nullable', 'numeric', 'min:0', 'decimal:0,3', 'max:999999999.999'],
             // DATE-02: how many days back a document may be dated (needs documents.backdate).
             TenantSettings::KEY_BACKDATE_MAX_DAYS => ['sometimes', 'required', 'integer', 'min:0', 'max:'.TenantSettings::BACKDATE_MAX_DAYS_MAX],
             // SET-02: idle minutes before the SPA lock screen; 0 = off.
@@ -110,6 +112,7 @@ class UpdateSettingsRequest extends FormRequest
             TenantSettings::KEY_ALLOW_NEGATIVE_STOCK => __('settings.allow_negative_stock'),
             TenantSettings::KEY_RETURNS_MAX_DAYS => __('settings.returns_max_days'),
             TenantSettings::KEY_POS_IDLE_LOCK_MINUTES => __('settings.pos_idle_lock_minutes'),
+            TenantSettings::KEY_CUSTOMERS_DEFAULT_CREDIT_LIMIT => __('settings.customers_default_credit_limit'),
             TenantSettings::KEY_BACKDATE_MAX_DAYS => __('settings.backdate_max_days'),
             TenantSettings::KEY_INVENTORY_UNITS => __('settings.inventory_units'),
             TenantSettings::KEY_POS_ENABLED_PAYMENT_METHODS => __('settings.pos_enabled_payment_methods'),

@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { Save } from 'lucide-vue-next';
 import BaseButton from '../../Common/BaseButton.vue';
 import PosReturnWindowSection from './PosReturnWindowSection.vue';
+import PosCreditLimitSection from './PosCreditLimitSection.vue';
 import PosIdleLockSection from './PosIdleLockSection.vue';
 import PosSaleSettingsSection from './PosSaleSettingsSection.vue';
 import PosShiftRuleSection from './PosShiftRuleSection.vue';
@@ -19,6 +20,7 @@ const emit = defineEmits(['save', 'update:field']);
 
 const policyFields = [
   'returns_max_days',
+  'customers_default_credit_limit',
   'pos_idle_lock_minutes',
   'pos_enabled_payment_methods',
   'pos_cash_denominations',
@@ -42,6 +44,12 @@ const isSectionDirty = computed(() => {
       @update:field="(field, val) => emit('update:field', field, val)"
     />
     <PosReturnWindowSection
+      :form="form"
+      :errors="errors"
+      :can-manage="canManage"
+      @update:field="(field, val) => emit('update:field', field, val)"
+    />
+    <PosCreditLimitSection
       :form="form"
       :errors="errors"
       :can-manage="canManage"
