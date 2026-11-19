@@ -91,6 +91,7 @@ return [
     'save_and_select' => 'حفظ وتحديد',
     'invoice_success_title' => 'تم اعتماد الفاتورة بنجاح 🎉',
     'send_whatsapp' => 'إرسال بالواتساب 📱',
+    'share_receipt_whatsapp' => 'مشاركة واتساب',
     'print_receipt' => 'طباعة الإيصال 🖨️',
     'checkout_failed' => 'فشل حفظ الفاتورة',
     'checkout_failed_desc' => 'تعذر حفظ واعتماد فاتورة البيع',

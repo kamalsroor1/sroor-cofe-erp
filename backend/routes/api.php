@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\DashboardApiController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\InvoiceReceiptLinkController;
 use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\Landing\PublicAccountDeletionRequestController;
 use App\Http\Controllers\Api\Landing\PublicLegalDocumentController;
@@ -212,6 +213,8 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('api.invoices.show')->middleware('store.active');
         Route::post('/invoices', [InvoiceController::class, 'store'])->name('api.invoices.store')->middleware('store.active:concrete')->middleware('feature:invoices.create');
         Route::post('/invoices/{id}/cancel', [InvoiceController::class, 'cancel'])->name('api.invoices.cancel')->middleware('store.active');
+        // PRD-22: signed public receipt link (WhatsApp share), valid config('invoices.receipt_links.ttl_days').
+        Route::post('/invoices/{id}/receipt-link', [InvoiceReceiptLinkController::class, 'store'])->whereNumber('id')->name('api.invoices.receipt_link')->middleware(['store.active', 'throttle:60,1']);
 
         // POS Fast Operations
         Route::get('/pos/bootstrap', [PosController::class, 'bootstrap'])->name('api.pos.bootstrap')->middleware('store.active')->middleware('feature:pos.access');
