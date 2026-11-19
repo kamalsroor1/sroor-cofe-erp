@@ -66,8 +66,8 @@ Route::middleware([
         Route::get('/invoices/create', [POSController::class, 'index'])->name('invoices.create')->middleware(['can:pos.access', 'spa.headers']);
 
         // Blade invoice print pages (thermal receipt / A4) — permission + policy + store access enforced
-        Route::get('/invoices/{id}/print/thermal', [InvoicePrintController::class, 'thermal'])->whereNumber('id')->name('invoices.print.thermal')->middleware('can:invoices.view');
-        Route::get('/invoices/{id}/print/a4', [InvoicePrintController::class, 'a4'])->whereNumber('id')->name('invoices.print.a4')->middleware('can:invoices.view');
+        Route::get('/invoices/{id}/print/thermal', [InvoicePrintController::class, 'thermal'])->whereNumber('id')->name('invoices.print.thermal')->middleware('can:invoices.view')->middleware('feature:printing.thermal');
+        Route::get('/invoices/{id}/print/a4', [InvoicePrintController::class, 'a4'])->whereNumber('id')->name('invoices.print.a4')->middleware('can:invoices.view')->middleware('feature:printing.a4');
 
         // Daily Journal A4 Print Route
         // BUG-01: data built by GetDailyJournalPrintDataAction (cash vouchers of the store only).
@@ -76,7 +76,7 @@ Route::middleware([
         // W2 3F: moved from routes/web.php, which never initialised tenancy (500 on tenant hosts).
         // The SPA catch-all in routes/web.php excludes these two print paths so they are reachable.
         // 🖨️ Item Movements Audit Ledger Print
-        Route::get('/items/{id}/movements/print', ItemMovementsPrintController::class)->name('items.movements.print')->middleware(['can:items.view', 'store.access']);
+        Route::get('/items/{id}/movements/print', ItemMovementsPrintController::class)->name('items.movements.print')->middleware(['can:items.view', 'store.access', 'feature:items.movements']);
 
         // 🖨️ General Reports A4 Print
         Route::get('/reports/print', function (Request $request) {
