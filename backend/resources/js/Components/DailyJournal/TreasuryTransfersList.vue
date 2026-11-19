@@ -54,7 +54,11 @@
             >
               <td class="py-3.5 px-4 font-mono font-bold text-theme-primary">{{ tr.transfer_number }}</td>
               <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
-                {{ tr.from_label }} <span class="text-slate-400 mx-1 rtl:rotate-180 inline-block">→</span>
+                {{ tr.from_label }}
+                <ArrowRight
+                  class="w-3.5 h-3.5 text-slate-400 mx-1 rtl:rotate-180 inline-block align-middle"
+                  aria-hidden="true"
+                />
                 {{ tr.to_label }}
               </td>
               <td class="py-3.5 px-4 text-end font-mono font-black text-slate-900 dark:text-slate-100">
@@ -80,7 +84,12 @@
             <div class="min-w-0">
               <span class="text-xs font-mono font-bold text-theme-primary">{{ tr.transfer_number }}</span>
               <h4 class="text-sm font-bold text-slate-900 dark:text-white truncate">
-                {{ tr.from_label }} <span class="text-slate-400 rtl:rotate-180 inline-block">→</span> {{ tr.to_label }}
+                {{ tr.from_label }}
+                <ArrowRight
+                  class="w-3.5 h-3.5 text-slate-400 rtl:rotate-180 inline-block align-middle"
+                  aria-hidden="true"
+                />
+                {{ tr.to_label }}
               </h4>
             </div>
             <span class="text-sm font-black font-mono text-slate-900 dark:text-white whitespace-nowrap">
@@ -110,7 +119,7 @@
 </template>
 
 <script setup>
-import { ArrowLeftRight } from 'lucide-vue-next';
+import { ArrowLeftRight, ArrowRight } from 'lucide-vue-next';
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
 import ErrorState from '../Common/ErrorState.vue';
