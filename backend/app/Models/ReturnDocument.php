@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\NormalizesBusinessDates;
 use App\Policies\ReturnPolicy;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,7 +35,7 @@ use Illuminate\Support\Carbon;
 #[UsePolicy(ReturnPolicy::class)]
 class ReturnDocument extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, NormalizesBusinessDates, SoftDeletes;
 
     public const REFUND_CASH = 'cash';
 
@@ -60,7 +61,7 @@ class ReturnDocument extends Model
     protected function casts(): array
     {
         return [
-            'return_date' => 'date',
+            'return_date' => 'date:Y-m-d', // DATE-03: serialized as the business date, never UTC midnight
             'total_amount' => 'decimal:3',
         ];
     }

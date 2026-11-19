@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\NormalizesBusinessDates;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,7 +24,7 @@ use Illuminate\Support\Carbon;
  */
 class StockDeposit extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, NormalizesBusinessDates, SoftDeletes;
 
     protected $fillable = [
         'item_id',
@@ -38,7 +39,7 @@ class StockDeposit extends Model
     protected function casts(): array
     {
         return [
-            'deposit_date' => 'date',
+            'deposit_date' => 'date:Y-m-d', // DATE-03: serialized as the business date, never UTC midnight
             'quantity' => 'decimal:3',
             'cost_price' => 'decimal:3',
         ];

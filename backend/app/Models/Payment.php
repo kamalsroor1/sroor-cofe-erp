@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\NormalizesBusinessDates;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -31,7 +32,7 @@ use Illuminate\Support\Carbon;
  */
 class Payment extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, NormalizesBusinessDates, SoftDeletes;
 
     /** Number prefix of the vouchers InvoiceService writes when an invoice is issued or edited. */
     public const SALE_NUMBER_PREFIX = 'PAY-INV-';
@@ -58,7 +59,7 @@ class Payment extends Model
     protected function casts(): array
     {
         return [
-            'payment_date' => 'date',
+            'payment_date' => 'date:Y-m-d', // DATE-03: serialized as the business date, never UTC midnight
             'amount' => 'decimal:3',
         ];
     }

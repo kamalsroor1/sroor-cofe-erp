@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\NormalizesBusinessDates;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
@@ -21,6 +22,8 @@ use Illuminate\Support\Carbon;
  */
 class OpeningBalance extends Model
 {
+    use NormalizesBusinessDates;
+
     public const PARTY_CUSTOMER = 'customer';
 
     public const PARTY_SUPPLIER = 'supplier';
@@ -38,7 +41,7 @@ class OpeningBalance extends Model
     {
         return [
             'amount' => 'decimal:3',
-            'balance_date' => 'date',
+            'balance_date' => 'date:Y-m-d', // DATE-03: serialized as the business date, never UTC midnight
         ];
     }
 

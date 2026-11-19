@@ -85,7 +85,7 @@ final class BusinessDayDocumentDefaultsTest extends TenantTestCase
 
             // BE-09: the number is the business date plus a locked per-day sequence (it no
             // longer counts the day's rows), so hand-typed rows never shift it.
-            $this->assertSame('EXP-261008-0001', $expense->expense_number);
+            $this->assertSame('EXP-20261008-0001', $expense->expense_number);
 
             $second = app(CreateExpenseAction::class)->execute(ExpenseDTO::fromArray([
                 'title' => 'مصروف ليلي 2',
@@ -95,7 +95,7 @@ final class BusinessDayDocumentDefaultsTest extends TenantTestCase
                 'store_id' => $storeId,
             ]), $userId);
 
-            $this->assertSame('EXP-261008-0002', $second->expense_number);
+            $this->assertSame('EXP-20261008-0002', $second->expense_number);
         });
     }
 
@@ -122,8 +122,8 @@ final class BusinessDayDocumentDefaultsTest extends TenantTestCase
                 'movement_type' => 'stock_adjustment_in',
             ]), $userId);
 
-            $this->assertSame('ADJ-261008-0001', $movement->document_number);
-            $this->assertSame(1, StockMovement::query()->where('document_number', 'ADJ-261008-0001')->count());
+            $this->assertSame('ADJ-20261008-0001', $movement->document_number);
+            $this->assertSame(1, StockMovement::query()->where('document_number', 'ADJ-20261008-0001')->count());
         });
     }
 
