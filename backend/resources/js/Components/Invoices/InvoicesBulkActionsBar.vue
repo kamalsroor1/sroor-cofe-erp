@@ -28,6 +28,7 @@
 
         <!-- Bulk Export to Excel -->
         <button
+          v-if="canExport"
           type="button"
           @click="$emit('bulk-export')"
           class="flex-1 sm:flex-initial min-h-[40px] px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs active:scale-95 select-none"
@@ -65,6 +66,8 @@ import { Printer, Download, Ban } from 'lucide-vue-next';
 
 defineProps({
   selectedCount: { type: Number, default: 0 },
+  // PLAN-AUDIT: the CSV export needs the reports.export plan feature.
+  canExport: { type: Boolean, default: true },
 });
 
 defineEmits(['bulk-print', 'bulk-export', 'bulk-cancel', 'deselect-all']);

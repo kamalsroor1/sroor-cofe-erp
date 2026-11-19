@@ -27,6 +27,7 @@
         />
         <InvoicesBulkActionsBar
           :selected-count="selectedInvoiceIds.length"
+          :can-export="canExport"
           @bulk-print="bulkPrintReceipts"
           @bulk-export="exportSelected"
           @bulk-cancel="bulkCancelSelected"
@@ -88,6 +89,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { SlidersHorizontal, FileSpreadsheet, Download, Printer, RefreshCw, Zap } from 'lucide-vue-next';
 import { useInvoices } from '../../Composables/useInvoices';
 import { useTrans } from '../../Composables/useTrans';
+import { useAppConfigStore } from '../../stores/appConfig';
 import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import ErrorState from '../../Components/Common/ErrorState.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
@@ -146,6 +148,9 @@ const {
 const printReport = () => window.print();
 
 const { t } = useTrans();
+// PLAN-AUDIT: the CSV export is a plan feature (reports.export, not on the free plan).
+const appConfig = useAppConfigStore();
+const canExport = computed(() => appConfig.hasFeature('reports.export'));
 const headerActions = computed(() => [
   {
     key: 'filter',
@@ -162,7 +167,16 @@ const headerActions = computed(() => [
     icon: FileSpreadsheet,
     iconClass: 'text-emerald-500',
     children: [
-      { label: t('invoices.export_excel_csv'), icon: Download, iconClass: 'text-emerald-500', onClick: exportInvoices },
+      ...(canExport.value
+        ? [
+            {
+              label: t('invoices.export_excel_csv'),
+              icon: Download,
+              iconClass: 'text-emerald-500',
+              onClick: exportInvoices,
+            },
+          ]
+        : []),
       { label: t('invoices.print_filtered_report'), icon: Printer, iconClass: 'text-cyan-500', onClick: printReport },
       {
         label: t('invoices.refresh_now'),
