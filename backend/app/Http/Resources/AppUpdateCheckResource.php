@@ -45,7 +45,9 @@ final class AppUpdateCheckResource extends JsonResource
             'latest_version_code' => $latest instanceof AppVersion ? $latest->version_code : $dto->versionCode,
             'min_supported_version_code' => $latest?->min_version_code,
             'download_url' => $latest?->download_url,
-            'manual_download_url' => rtrim((string) config('app.url'), '/').'/download',
+            // MOB-03: the Play build is pointed at nothing outside the store.
+            'manual_download_url' => $dto->offersBinary() ? rtrim((string) config('app.url'), '/').'/download' : null,
+            'store_managed' => ! $dto->offersBinary(),
             'file_size' => $latest instanceof AppVersion ? self::formatSize($latest->apk_size_bytes) : null,
             'file_size_bytes' => $latest?->apk_size_bytes,
             'checksum' => $latest?->apk_checksum,

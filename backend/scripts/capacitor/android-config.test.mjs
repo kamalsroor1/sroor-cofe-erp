@@ -29,3 +29,27 @@ test('MOB-06: the app opens the https hub and may only navigate inside ibraa.app
     assert.equal(capConfig.server.cleartext, false);
     assert.deepEqual(capConfig.server.allowNavigation, ['ibraa.app', '*.ibraa.app']);
 });
+
+test('MOB-03: play and direct flavors exist and only direct can self-update', () => {
+    assert.match(appGradle, /productFlavors\s*\{[\s\S]*\bdirect\s*\{[\s\S]*\bplay\s*\{/);
+
+    const mainManifest = read('android', 'app', 'src', 'main', 'AndroidManifest.xml');
+    const directManifest = read('android', 'app', 'src', 'direct', 'AndroidManifest.xml');
+    const playManifest = read('android', 'app', 'src', 'play', 'AndroidManifest.xml');
+    const permission = /<uses-permission\s+android:name="android\.permission\.REQUEST_INSTALL_PACKAGES"\s*\/>/;
+
+    assert.doesNotMatch(mainManifest, permission);
+    assert.doesNotMatch(mainManifest, /androidx\.core\.content\.FileProvider/);
+    assert.match(directManifest, permission);
+    assert.match(directManifest, /androidx\.core\.content\.FileProvider/);
+    assert.match(playManifest, /REQUEST_INSTALL_PACKAGES"\s*tools:node="remove"/);
+
+    const javaDir = (flavor) => path.join(backendDir, 'android/app/src', flavor, 'java/com/ibraa/app');
+    assert.ok(existsSync(path.join(javaDir('direct'), 'AppUpdaterPlugin.java')));
+    assert.ok(!existsSync(path.join(javaDir('main'), 'AppUpdaterPlugin.java')));
+    assert.ok(!existsSync(path.join(javaDir('play'), 'AppUpdaterPlugin.java')));
+    assert.ok(existsSync(path.join(javaDir('play'), 'PlayStoreBuildPlugin.java')));
+    assert.ok(existsSync(path.join(javaDir('direct'), 'FlavorPlugins.java')));
+    assert.ok(existsSync(path.join(javaDir('play'), 'FlavorPlugins.java')));
+    assert.match(read('android/app/src/main/java/com/ibraa/app/MainActivity.java'), /FlavorPlugins\.all\(\)/);
+});

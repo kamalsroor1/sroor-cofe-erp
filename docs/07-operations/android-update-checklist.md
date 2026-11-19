@@ -3,10 +3,15 @@
 نفّذ هذه القائمة على **جهاز Android حقيقي** (ليس emulator) قبل كل إصدار APK.
 اختبارات الـ unit (`cd backend && node --test scripts/app-update/appUpdate.test.mjs`) بتغطي منطق الـ JS بس. التنزيل وحساب الـ hash وفحص التوقيع وشاشة التثبيت مفيش طريقة تتأكد منها غير على جهاز.
 
+## نسختين من التطبيق (MOB-03)
+
+- **direct** (`./gradlew assembleDirectRelease`): الـ APK اللي بنوزعه بنفسنا. فيها الـ `AppUpdater` plugin وصلاحية `REQUEST_INSTALL_PACKAGES` والـ FileProvider (`src/direct`). القائمة دي كلها بتتنفذ عليها.
+- **play** (`./gradlew bundlePlayRelease`): نسخة Google Play. مفيهاش `AppUpdater` ولا صلاحية التثبيت (`src/play` بيشيلها بـ `tools:node="remove"`). بتسجّل plugin علامة اسمه `PlayStoreBuild`، فالـ JS بيبعت `platform=android_play` والـ API بيرد دايمًا `has_update=false` و`store_managed=true` من غير رابط APK، و`/app/download-apk?platform=android_play` بيرجع 404. التحديثات بتيجي من Play بس، وصفحة `/download` جوه النسخة دي مش بتعرض الـ APK.
+
 ## طريقة العمل
 
 1. `GET /api/v1/app/check-update?platform=android&version_code=<build المثبّت>` بيرجّع `download_url` و`checksum` (SHA-256 من `app_versions.apk_checksum`) و`file_size_bytes` و`force_update`.
-2. `useAppUpdate` ← `createAppUpdater` بيبعت الرابط والـ checksum لـ Capacitor plugin اسمه `AppUpdater` (`android/app/src/main/java/com/ibraa/app/AppUpdaterPlugin.java`).
+2. `useAppUpdate` ← `createAppUpdater` بيبعت الرابط والـ checksum لـ Capacitor plugin اسمه `AppUpdater` (`android/app/src/direct/java/com/ibraa/app/AppUpdaterPlugin.java`).
    - لو الـ plugin مش موجود (`Capacitor.isPluginAvailable('AppUpdater')` = false، يعني APK قديم بيحمّل الـ JS من السيرفر)، التثبيت **بيترفض**: الـ JS عمره ما بيسلّم رابط الـ APK للـ WebView (تنزيل من غير فحص SHA-256 والتوقيع ممنوع، قرار CTO W1 Q7). بتظهر رسالة `error_updater_unavailable` وزرار «التحميل اليدوي» اللي بيفتح صفحة `/download` (`openManualDownloadPage()`)، وفيها الـ APK وبصمة الـ SHA-256. التفاصيل في [`app-update-checklists.md`](app-update-checklists.md).
 3. الـ plugin بينزّل الـ APK في `cacheDir/app-updates/` ويبعت البايتات الفعلية في event اسمه `downloadProgress`. وبيحسب الـ SHA-256 أثناء التنزيل، فلو مش مطابق بيرفض التثبيت. بعدها بيتأكد إن اسم الـ package وشهادة التوقيع مطابقين للتطبيق المثبّت، وبعدين يفتح شاشة تثبيت النظام عن طريق الـ FileProvider.
 4. أكواد الأخطاء (`CHECKSUM_MISMATCH`، `SIGNATURE_MISMATCH`، `PACKAGE_MISMATCH`، `INSTALL_PERMISSION_REQUIRED`…) بتظهر للمستخدم كرسائل مترجمة (`lang/*/app_update.php`، المفاتيح `error_*`).

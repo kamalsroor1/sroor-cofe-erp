@@ -16,6 +16,19 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // MOB-03: two distribution channels, same package id (one install per device).
+    //   direct = APK we distribute ourselves; self-updates through AppUpdaterPlugin (src/direct).
+    //   play   = Google Play; no AppUpdater, no REQUEST_INSTALL_PACKAGES (src/play). Updates via Play.
+    // Build: ./gradlew assembleDirectRelease / bundlePlayRelease
+    flavorDimensions = ["dist"]
+    productFlavors {
+        direct {
+            dimension "dist"
+        }
+        play {
+            dimension "dist"
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false

@@ -31,6 +31,11 @@ final class CheckAppUpdateAction
      */
     public function execute(CheckUpdateDTO $dto): array
     {
+        // MOB-03: the Play build updates from the store only (Play policy forbids APK self-update).
+        if (! $dto->offersBinary()) {
+            return ['dto' => $dto, 'latest' => null, 'rollback' => null, 'has_update' => false, 'force_update' => false];
+        }
+
         [$latest, $rollback] = $this->latestTwo($dto->platform);
 
         // N1: a missing or 0 version_code is UNKNOWN (desktop builds before APP-7 send '0'): the
