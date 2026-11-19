@@ -21,8 +21,10 @@ use App\Models\Item;
 use App\Services\InvoiceService;
 use App\Services\PaymentService;
 use App\Services\ReturnService;
+use App\Services\ShiftService;
 use App\Services\StockService;
 use App\Services\StockTransferService;
+use App\Services\TreasuryService;
 use App\Support\Database\TransactionRetry;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Database\Events\TransactionRolledBack;
@@ -141,6 +143,23 @@ try {
             $transfer = app(StockTransferService::class)->createTransfer($payload);
 
             return ['transfer_id' => (int) $transfer->getKey(), 'transfer_number' => (string) $transfer->transfer_number];
+        })(),
+        // SHOP-06: treasury transfer between two accounts of one branch.
+        'treasury_transfer' => (static function () use ($payload): array {
+            $transfer = app(TreasuryService::class)->transfer($payload);
+
+            return ['transfer_id' => (int) $transfer->getKey(), 'transfer_number' => (string) $transfer->transfer_number];
+        })(),
+        // SHOP-06 / BE-19: open a cashier shift for one branch.
+        'shift_open' => (static function () use ($payload): array {
+            $shift = app(ShiftService::class)->openShift(
+                (string) ($payload['opening_cash'] ?? '0.000'),
+                null,
+                (int) $payload['store_id'],
+                isset($payload['user_id']) ? (int) $payload['user_id'] : null,
+            );
+
+            return ['shift_id' => (int) $shift->getKey(), 'shift_number' => (string) $shift->shift_number];
         })(),
         default => throw new InvalidArgumentException("Unknown scenario [{$scenario}]."),
     };
