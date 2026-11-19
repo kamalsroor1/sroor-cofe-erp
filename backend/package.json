@@ -31,6 +31,7 @@
         "e2e:module": "npx playwright test --config=../playwright.config.js --grep",
         "e2e:page": "npx playwright test --config=../playwright.config.js -g",
         "e2e:flow": "npx playwright test --config=../playwright.config.js e2e/flows/",
+        "e2e:plans": "npx playwright test --config=../playwright.config.js e2e/flows/plan-limits-flow.spec.js --project=desktop",
         "e2e:report": "npx playwright show-report"
     },
     "devDependencies": {
