@@ -41,6 +41,7 @@ import { useRoute, useRouter } from 'vue-router';
 import api from '../../Services/api';
 import { trans } from '../../helpers/trans';
 import { isCentralHost, isLoopbackHost } from '../../helpers/platformHosts';
+import { forgetShop, readRememberedShop, rememberShop, shopLoginUrl } from '../../helpers/workspaceHandoff';
 import LanguageSwitcher from '../../Components/Common/LanguageSwitcher.vue';
 import WorkspaceStepInput from '../../Components/Auth/WorkspaceStepInput.vue';
 import WorkspaceConnectingState from '../../Components/Auth/WorkspaceConnectingState.vue';
@@ -86,25 +87,26 @@ const resolveWorkspace = async (targetCode) => {
         return;
       }
 
-      // 3. Navigation: On mobile apps / Capacitor, NEVER use external window.location.href
+      // 3. MOB-06: the hub (central host) remembers the shop and hands over to the shop's own
+      // subdomain, in a browser and in the Android app alike (capacitor allowNavigation covers
+      // *.ibraa.app). Elsewhere (shop host, loopback dev) stay in the SPA.
       const host = window.location.hostname;
-      // Server-configured central hub (not a loopback dev host): hand over to the tenant's own host.
       const isPublicCentralHost = isCentralHost(host) && !isLoopbackHost(host);
-      const isNativeMobile =
-        window.Capacitor !== undefined ||
-        window.isNativeMobile === true ||
-        navigator.userAgent.includes('wv') ||
-        navigator.userAgent.includes('Mobile');
+      const handoffUrl = isPublicCentralHost && data.domain !== host ? shopLoginUrl(data.server_url) : null;
+      if (isPublicCentralHost) rememberShop(localStorage, data);
 
       setTimeout(() => {
-        if (!isNativeMobile && isPublicCentralHost && data.domain && !host.startsWith(data.domain)) {
-          window.location.href = `${data.server_url}/login`;
+        if (!resolvedTenant.value) return; // cancelled meanwhile
+        if (handoffUrl) {
+          window.location.href = handoffUrl;
         } else {
           router.push({ name: 'login' });
         }
       }, 600);
     }
   } catch (err) {
+    // A remembered shop that no longer resolves is forgotten, so the next launch asks again.
+    if (isAutoConnecting.value && err.response?.status === 404) forgetShop(localStorage);
     isAutoConnecting.value = false;
     errorMessage.value =
       err.response?.status === 429
@@ -136,6 +138,17 @@ onMounted(() => {
     code.value = String(queryCode).trim();
     isAutoConnecting.value = true;
     resolveWorkspace(code.value);
+    return;
+  }
+
+  // MOB-06: on the hub, go straight back to the last shop unless the user came to switch shop.
+  const remembered = readRememberedShop(localStorage);
+  if (!remembered) return;
+  code.value = remembered.code;
+  const host = window.location.hostname;
+  if (route.query.switch !== '1' && isCentralHost(host) && !isLoopbackHost(host)) {
+    isAutoConnecting.value = true;
+    resolveWorkspace(remembered.code);
   }
 });
 </script>
