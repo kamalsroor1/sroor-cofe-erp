@@ -1,5 +1,5 @@
 <script setup>
-import { Coffee, Plus, ScanBarcode, Search } from 'lucide-vue-next';
+import { Package, Plus, ScanBarcode, Search } from 'lucide-vue-next';
 import BrowserFrame from './BrowserFrame.vue';
 import MockChip from './MockChip.vue';
 import MockSidebar from './MockSidebar.vue';
@@ -10,7 +10,7 @@ defineProps({
   height: { type: Number, default: 470 },
 });
 
-const categories = ['coffee', 'drinks', 'sweets'];
+const categories = ['grocery', 'electronics', 'clothing'];
 </script>
 
 <template>
@@ -42,7 +42,7 @@ const categories = ['coffee', 'drinks', 'sweets'];
               class="flex h-[46px] items-center justify-center rounded-[10px] text-white/80"
               :style="{ backgroundColor: `${product.color}33` }"
             >
-              <Coffee class="size-[22px]" />
+              <Package class="size-[22px]" />
             </span>
             <span class="truncate text-xs font-bold text-mk-app-ink">{{
               $t(`landing.mock.products.${product.key}`)

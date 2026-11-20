@@ -2,12 +2,12 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { Coffee, Download, Layers, MessageCircle, Package, Store, Tags, Truck } from 'lucide-vue-next';
 
-/** Business types with a dedicated marketing page (/for/:industry). Labels reuse the audience copy. */
+/** Business types with a dedicated marketing page (/for/:industry), retail first. Labels reuse the audience copy. */
 export const LANDING_INDUSTRIES = Object.freeze([
-    { key: 'coffee', icon: Coffee },
     { key: 'retail', icon: Store },
     { key: 'wholesale', icon: Package },
     { key: 'vans', icon: Truck },
+    { key: 'coffee', icon: Coffee },
 ]);
 
 /** Top-level marketing navigation, in reading order. `children` marks the industries dropdown. */
