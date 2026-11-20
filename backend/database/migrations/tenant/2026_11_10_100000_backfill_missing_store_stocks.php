@@ -18,8 +18,16 @@ use Illuminate\Support\Facades\Schema;
  * existing rows are never lowered or overwritten with 0.
  *
  * MIG-02: chunked, one transaction per chunk, items then store_stocks locked FOR UPDATE, relative
- * writes only, and each residual moved to the main store is recorded as a stock_adjustment_in
- * movement (note 'store_stocks_backfill'). Concurrent sales therefore cannot be lost.
+ * writes only. Concurrent sales therefore cannot be lost.
+ *
+ * Movements: the backfill never changes items.current_stock, it only places stock that no store
+ * row held (pre-branch movements carry store_id NULL) into the main store. That is a store-level
+ * redistribution, so it is recorded the way StockTransferService records one (the cost-neutral
+ * transfer types, see PurchaseService::COST_NEUTRAL_MOVEMENT_TYPES) with per-store before/after:
+ *   - transfer_out, store_id NULL (the unassigned pool): residual -> 0.000
+ *   - transfer_in,  store_id main: main row quantity -> quantity + residual
+ * The pair nets to zero for the item (current_stock is unchanged), and per store the movements
+ * move exactly as store_stocks did. Note 'store_stocks_backfill' marks both rows.
  */
 return new class extends Migration
 {
@@ -86,7 +94,9 @@ return new class extends Migration
 
                     $residual = bccomp($current, $sum, 3) > 0 ? bcsub($current, $sum, 3) : '0.000';
                     $byStore = $rows->keyBy('store_id');
-                    $moved = false;
+                    $hasResidual = bccomp($residual, '0.000', 3) > 0;
+                    // Main row quantity the residual was added to; null = nothing moved for this item.
+                    $mainBefore = null;
 
                     foreach ($storeIds as $storeId) {
                         $isMain = $storeId === $mainId;
@@ -102,25 +112,24 @@ return new class extends Migration
                                 'created_at' => $now,
                                 'updated_at' => $now,
                             ];
-                            $moved = $moved || ($isMain && bccomp($residual, '0.000', 3) > 0);
-                        } elseif ($isMain && $row->deleted_at === null && bccomp($residual, '0.000', 3) > 0) {
+                            if ($isMain && $hasResidual) {
+                                $mainBefore = '0.000';
+                            }
+                        } elseif ($isMain && $row->deleted_at === null && $hasResidual) {
                             DB::update(
                                 'update store_stocks set quantity = quantity + ?, updated_at = ? where id = ?',
                                 [$residual, $now, $row->id]
                             );
-                            $moved = true;
+                            // Read under this transaction's FOR UPDATE lock: the value the update started from.
+                            $mainBefore = bcadd((string) $row->quantity, '0', 3);
                         }
                     }
 
-                    if ($moved) {
-                        // The difference shows on the item card instead of moving silently.
-                        $movements[] = [
+                    if ($mainBefore !== null) {
+                        // Shown per store on the item card instead of moving silently.
+                        $common = [
                             'item_id' => $item->id,
-                            'store_id' => $mainId,
-                            'movement_type' => 'stock_adjustment_in',
                             'quantity' => $residual,
-                            'stock_before' => $sum,
-                            'stock_after' => $current,
                             'unit_cost' => (string) ($item->cost_price ?? '0.000'),
                             'source_type' => 'App\\Models\\Item',
                             'source_id' => $item->id,
@@ -129,6 +138,18 @@ return new class extends Migration
                             'notes' => 'store_stocks_backfill',
                             'created_at' => $now,
                             'updated_at' => $now,
+                        ];
+                        $movements[] = $common + [
+                            'store_id' => null,
+                            'movement_type' => 'transfer_out',
+                            'stock_before' => $residual,
+                            'stock_after' => '0.000',
+                        ];
+                        $movements[] = $common + [
+                            'store_id' => $mainId,
+                            'movement_type' => 'transfer_in',
+                            'stock_before' => $mainBefore,
+                            'stock_after' => bcadd($mainBefore, $residual, 3),
                         ];
                     }
                 }

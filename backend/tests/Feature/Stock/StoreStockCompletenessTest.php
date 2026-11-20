@@ -16,6 +16,7 @@ use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\Tenant;
 use App\Services\InvoiceService;
+use App\Support\StockMovementTypes;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Tests\TenantTestCase;
@@ -266,6 +267,82 @@ final class StoreStockCompletenessTest extends TenantTestCase
             $this->assertSame('10.000', $this->qty($main, $a));
             $this->assertSame('9.000', $this->qty($branch, $b));
             $this->assertSame('0.000', $this->qty($main, $b));
+        });
+    }
+
+    /**
+     * Signed SUM(quantity) of an item's movements, per store id ('' = the store_id NULL pool), bcmath.
+     *
+     * @return array<int|string, string>
+     */
+    private function movementNetByStore(Item $item): array
+    {
+        $net = [];
+        foreach (StockMovement::where('item_id', $item->id)->orderBy('id')->get() as $movement) {
+            $key = $movement->store_id === null ? '' : (int) $movement->store_id;
+            $qty = (string) $movement->quantity;
+            $signed = StockMovementTypes::isOutbound((string) $movement->movement_type) ? bcmul($qty, '-1', 3) : $qty;
+            $net[$key] = bcadd($net[$key] ?? '0.000', $signed, 3);
+        }
+
+        return $net;
+    }
+
+    private function legacyMovement(Item $item, ?Store $store, string $qty, string $before): void
+    {
+        DB::table('stock_movements')->insert([
+            'item_id' => $item->id, 'store_id' => $store?->id, 'movement_type' => 'purchase_in',
+            'quantity' => $qty, 'stock_before' => $before, 'stock_after' => bcadd($before, $qty, 3),
+            'unit_cost' => '10.000', 'source_type' => Item::class, 'source_id' => $item->id,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+    }
+
+    /** MIG-02: backfill movements reconcile per store with store_stocks and never move the item total. */
+    public function test_backfill_movements_reconcile_per_store_with_store_stocks(): void
+    {
+        $this->inTenant($this->tenant, function (): void {
+            $main = Store::where('is_main', true)->firstOrFail();
+            $branch = $this->makeBranch('BR-MV');
+            // A: no main row; 6.250 bought before branches existed (store NULL), 4.000 bought into the branch.
+            $a = $this->makeItem('MV1', '10.250');
+            // B: existing main row 3.000 bought into main, 7.125 bought before branches existed.
+            $b = $this->makeItem('MV2', '10.125');
+            StoreStock::query()->forceDelete();
+            StockMovement::query()->forceDelete();
+
+            $this->legacyMovement($a, null, '6.250', '0.000');
+            $this->legacyMovement($a, $branch, '4.000', '6.250');
+            StoreStock::create(['store_id' => $branch->id, 'item_id' => $a->id, 'quantity' => '4.000']);
+            $this->legacyMovement($b, null, '7.125', '0.000');
+            $this->legacyMovement($b, $main, '3.000', '7.125');
+            StoreStock::create(['store_id' => $main->id, 'item_id' => $b->id, 'quantity' => '3.000']);
+
+            $this->runBackfill();
+            $countAfterFirst = StockMovement::count();
+            $this->runBackfill();
+            $this->assertSame($countAfterFirst, StockMovement::count(), 'second run must not add movements');
+            $this->assertSame(8, $countAfterFirst);
+
+            foreach ([$a, $b] as $item) {
+                $net = $this->movementNetByStore($item);
+                foreach ([$main, $branch] as $store) {
+                    $this->assertSame($this->qty($store, $item), $net[(int) $store->id] ?? '0.000', "store {$store->id} item {$item->code}");
+                }
+                $this->assertSame('0.000', $net[''], 'the unassigned pool is emptied');
+                $this->assertSame('0.000', bcsub((string) $item->fresh()->current_stock, array_reduce($net, fn (string $c, string $q): string => bcadd($c, $q, 3), '0.000'), 3));
+            }
+
+            $this->assertSame('6.250', $this->qty($main, $a));
+            $this->assertSame('10.125', $this->qty($main, $b));
+            $this->assertSame('10.250', (string) $a->fresh()->current_stock);
+
+            // Per-store before/after chain, as StockTransferService records it.
+            $in = StockMovement::where('item_id', $b->id)->where('notes', 'store_stocks_backfill')->where('movement_type', 'transfer_in')->firstOrFail();
+            $this->assertSame([(int) $main->id, '7.125', '3.000', '10.125'], [(int) $in->store_id, (string) $in->quantity, (string) $in->stock_before, (string) $in->stock_after]);
+            $out = StockMovement::where('item_id', $b->id)->where('notes', 'store_stocks_backfill')->where('movement_type', 'transfer_out')->firstOrFail();
+            $this->assertSame([null, '7.125', '7.125', '0.000'], [$out->store_id, (string) $out->quantity, (string) $out->stock_before, (string) $out->stock_after]);
+            $this->assertSame(0, StockMovement::where('movement_type', 'stock_adjustment_in')->count());
         });
     }
 
