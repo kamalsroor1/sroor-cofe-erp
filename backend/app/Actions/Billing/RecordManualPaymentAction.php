@@ -13,16 +13,19 @@ use App\Exceptions\Billing\BillingException;
 use App\Models\BillingInvoice;
 use App\Models\BillingPayment;
 use App\Models\CentralUser;
+use App\Models\Tenant;
 use App\Services\CentralAuditLogger;
+use App\Support\Database\TransactionRetry;
 use App\Support\Money\Decimal;
-use Illuminate\Support\Facades\DB;
 
 /**
  * OPS-20: an operator records a payment received outside the system (cash, a transfer reported
  * on WhatsApp) against a pending subscription invoice.
  *
- * One CENTRAL transaction. The invoice row is locked first (so two concurrent records cannot both
- * pass the remaining-due check), a `pending` manual payment is created, then it goes through
+ * One CENTRAL transaction through TransactionRetry. Lock order is the billing one (see
+ * VerifyManualPaymentAction): the tenant row first (its id read unlocked from the invoice), then
+ * the invoice row (so two concurrent records cannot both pass the remaining-due check), a
+ * `pending` manual payment is created, then it goes through
  * VerifyManualPaymentAction, the single place that marks the invoice paid and activates the
  * subscription: activation therefore happens exactly once, the same way as for a shop receipt.
  * The new payment row is not visible to anyone else yet, so locking invoice -> (new) payment does
@@ -53,9 +56,12 @@ final class RecordManualPaymentAction
 
     public function execute(RecordManualPaymentDTO $dto, CentralUser $operator): BillingPayment
     {
-        $connection = DB::connection((string) (new BillingPayment)->getConnectionName());
+        $connection = (string) (new BillingPayment)->getConnectionName();
 
-        return $connection->transaction(function () use ($dto, $operator): BillingPayment {
+        return TransactionRetry::run(function () use ($dto, $operator): BillingPayment {
+            $tenantId = BillingInvoice::query()->whereKey($dto->invoiceId)->valueOrFail('tenant_id');
+            Tenant::query()->whereKey($tenantId)->lockForUpdate()->firstOrFail();
+
             $invoice = BillingInvoice::query()->whereKey($dto->invoiceId)->lockForUpdate()->firstOrFail();
 
             // Before the status check: a retry after the payment settled the invoice is a replay, not a 409.
@@ -120,7 +126,7 @@ final class RecordManualPaymentAction
             );
 
             return $this->verify->execute((int) $payment->getKey(), $operator);
-        });
+        }, connectionName: $connection);
     }
 
     /** The payment this invoice already recorded with the same idempotency key, if any. */

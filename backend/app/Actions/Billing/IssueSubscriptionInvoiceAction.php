@@ -26,9 +26,9 @@ use App\Services\Billing\BillingSequenceService;
 use App\Services\Billing\FounderPricingService;
 use App\Services\Branding\PlatformBranding;
 use App\Services\CentralAuditLogger;
+use App\Support\Database\TransactionRetry;
 use App\Support\Money\Decimal;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\DB;
 
 /**
  * PRD-03 / ENTI-3.2 + ENTI-3.10: issue a SaaS subscription invoice (central DB).
@@ -50,8 +50,12 @@ use Illuminate\Support\Facades\DB;
  * Money: bcmath strings at scale 3. VAT = platform setting billing_tax_rate, computed ONCE on the
  * net (subtotal - discount) and rounded half-up with App\Support\Money\Decimal (the SETG-13 rule).
  *
- * One central transaction: the tenant row is locked first, so two issuers for the same tenant
- * are serialised and the duplicate check below cannot race. The gap-free number comes from
+ * One central transaction through TransactionRetry (a deadlock is retried, then 409 busy): the
+ * tenant row is locked first, so two issuers for the same tenant are serialised and the duplicate
+ * check below cannot race. Tenant FIRST is the one billing lock order (tenant -> payment ->
+ * invoice(s) -> subscription, see VerifyManualPaymentAction): settleOpenRenewals() locks the open
+ * renewal invoices only after the tenant row, and verify / record-payment lock the tenant before
+ * their payment / invoice, so the two flows can no longer wait on each other in a cycle. The gap-free number comes from
  * BillingSequenceService inside the same transaction (a failure leaves no number gap).
  * Idempotent per (tenant, type, period_start) while the earlier invoice is not void: BillingException 409.
  *
@@ -72,9 +76,9 @@ final class IssueSubscriptionInvoiceAction
 
     public function execute(IssueSubscriptionInvoiceDTO $dto, ?CentralUser $actor = null): BillingInvoice
     {
-        $connection = DB::connection((string) (new BillingInvoice)->getConnectionName());
+        $connection = (string) (new BillingInvoice)->getConnectionName();
 
-        return $connection->transaction(function () use ($dto, $actor): BillingInvoice {
+        return TransactionRetry::run(function () use ($dto, $actor): BillingInvoice {
             $tenant = Tenant::query()->whereKey($dto->tenantId)->lockForUpdate()->firstOrFail();
             $subscription = Subscription::query()->where('tenant_id', $tenant->getKey())->orderByDesc('id')->first();
 
@@ -198,7 +202,7 @@ final class IssueSubscriptionInvoiceAction
             );
 
             return $invoice;
-        });
+        }, connectionName: $connection);
     }
 
     /** Normal due date, but a difference invoice must be payable only while the term it prices is still running. */

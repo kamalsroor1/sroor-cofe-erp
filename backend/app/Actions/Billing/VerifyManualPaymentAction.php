@@ -12,15 +12,23 @@ use App\Exceptions\Billing\BillingException;
 use App\Models\BillingInvoice;
 use App\Models\BillingPayment;
 use App\Models\CentralUser;
+use App\Models\Tenant;
 use App\Services\CentralAuditLogger;
+use App\Support\Database\TransactionRetry;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 /**
  * PRD-03 / ENTI-3.4: a super-admin verifies a pending manual payment.
  *
- * One CENTRAL transaction. Lock order is always payment -> invoice -> tenant -> subscription
- * (ActivateSubscriptionAction), the same order every other billing Action uses.
+ * One CENTRAL transaction through TransactionRetry (a deadlock is retried, then 409 busy).
+ *
+ * Billing lock order (ONE order for every flow that locks the tenant row): tenant -> payment ->
+ * invoice(s) -> subscription. The tenant row comes first because IssueSubscriptionInvoiceAction
+ * (and ActivateSubscriptionAction::voidStaleRenewals) lock the tenant and THEN the tenant's open
+ * renewal invoices; taking payment -> invoice -> tenant here would invert that and deadlock a
+ * verify against a concurrent difference-invoice issue. The payment's tenant_id is read without
+ * a lock first (it never changes), then the tenant, payment and invoice rows are locked in order.
+ * Actions that never lock the tenant (submit / reject / void / cancel) keep payment -> invoice.
  *
  * Idempotent: verifying an already verified payment returns it untouched, so a double click or a
  * retry can never extend the subscription twice. A rejected payment, or a void/paid invoice, is a 409.
@@ -37,9 +45,12 @@ final class VerifyManualPaymentAction
 
     public function execute(int $paymentId, CentralUser $operator): BillingPayment
     {
-        $connection = DB::connection((string) (new BillingPayment)->getConnectionName());
+        $connection = (string) (new BillingPayment)->getConnectionName();
 
-        return $connection->transaction(function () use ($paymentId, $operator): BillingPayment {
+        return TransactionRetry::run(function () use ($paymentId, $operator): BillingPayment {
+            $tenantId = BillingPayment::query()->whereKey($paymentId)->valueOrFail('tenant_id');
+            Tenant::query()->whereKey($tenantId)->lockForUpdate()->firstOrFail();
+
             $payment = BillingPayment::query()->whereKey($paymentId)->lockForUpdate()->firstOrFail();
 
             if ($payment->status === BillingPaymentStatus::Verified) {
@@ -100,6 +111,6 @@ final class VerifyManualPaymentAction
             }
 
             return $payment;
-        });
+        }, connectionName: $connection);
     }
 }

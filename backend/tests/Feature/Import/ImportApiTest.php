@@ -21,6 +21,7 @@ use Database\Seeders\Catalog\FeatureCatalog;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
@@ -574,16 +575,46 @@ class ImportApiTest extends TenantTestCase
         $this->assertSame('بدون كود 2', $codes['ITM-0010']);
     }
 
+    public function test_a_create_after_an_import_continues_the_shared_item_code_counter(): void
+    {
+        // Review fix B: the import used to derive codes from MAX(code) without advancing the `ITM`
+        // counter CreateItemAction reads, so the next create re-tried every imported code (and a
+        // concurrent create could pick the same code as the import).
+        $headers = $this->tenantHeaders($this->tenant);
+        $first = $this->postJson('/api/v1/items', ['name' => 'قبل الاستيراد', 'unit' => 'كجم', 'cost_price' => '1.000', 'selling_price' => '2.000'], $headers)
+            ->assertCreated()->json('data.code');
+        $this->assertSame('ITM-0001', $first);
+
+        $sheet = [$this->headers('items')];
+        for ($i = 1; $i <= 5; $i++) {
+            $sheet[] = $this->itemRow(['', 'مستورد '.$i, '', 'كجم', '', '10']);
+        }
+        $sheet[] = $this->itemRow(['ITM-0008', 'بكود صريح', '', 'كجم', '', '10']);
+        $this->commit('items', $this->previewToken('items', $this->xlsx($sheet)))->assertOk()->assertJsonPath('data.created', 6);
+
+        $imported = $this->inTenant($this->tenant, fn (): array => Item::query()->where('name', 'like', 'مستورد %')->orderBy('id')->pluck('code')->all());
+        $this->assertSame(['ITM-0002', 'ITM-0003', 'ITM-0004', 'ITM-0005', 'ITM-0006'], $imported);
+        $this->assertSame(6, $this->inTenant($this->tenant, fn (): int => (int) DB::table('document_sequences')->where('scope', 'ITM')->value('last_value')));
+
+        // The next create takes the next free number: no collision with the import, no re-try loop.
+        $next = $this->postJson('/api/v1/items', ['name' => 'بعد الاستيراد', 'unit' => 'كجم', 'cost_price' => '1.000', 'selling_price' => '2.000'], $headers)
+            ->assertCreated()->json('data.code');
+        $this->assertSame('ITM-0007', $next);
+        $this->assertSame('ITM-0009', $this->postJson('/api/v1/items', ['name' => 'بعده', 'unit' => 'كجم', 'cost_price' => '1.000', 'selling_price' => '2.000'], $headers)
+            ->assertCreated()->json('data.code'), 'The code typed in the file (ITM-0008) is skipped.');
+    }
+
     public function test_a_unique_violation_during_commit_is_a_translated_422_and_rolls_back(): void
     {
         $token = $this->previewToken('items', $this->xlsx([$this->headers('items'), $this->itemRow(['RACE-1', 'سباق', '', 'كجم', '', '10'])]));
 
         // Simulate the race: a concurrent request takes the code right before our insert.
         // IMP-02: items are batch-inserted (no per-row Item::creating event any more), so the race is
-        // injected right after the commit's locked ITM-code read, the last query before the insert.
+        // injected inside the write, right after its category read. (A file whose codes are all typed
+        // allocates no ITM block, so the ITM-code read is no longer a query every commit runs.)
         $taken = false;
         Event::listen(QueryExecuted::class, function (QueryExecuted $query) use (&$taken): void {
-            if (! $taken && preg_match('/from [`"]items[`"] where [`"]code[`"] like/i', $query->sql) === 1) {
+            if (! $taken && preg_match('/^select [`"]id[`"], [`"]name[`"] from [`"]categories[`"]/i', $query->sql) === 1) {
                 $taken = true;
                 $query->connection->table('items')->insert(['name' => 'سبق', 'code' => 'RACE-1', 'unit' => 'كجم', 'cost_price' => '1.000', 'selling_price' => '2.000', 'weighted_avg_cost' => '1.000', 'min_stock_level' => '0.000', 'current_stock' => '0.000', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()]);
             }

@@ -6,6 +6,7 @@ namespace Tests\Feature\Console;
 
 use App\Actions\System\GetSetupProgressAction;
 use App\Actions\Tenants\AdvanceDocumentSequencesAction;
+use App\Enums\TenantStatus;
 use App\Models\Setting;
 use App\Models\Tenant;
 use App\Support\DashboardCache;
@@ -20,7 +21,9 @@ use Tests\TenantTestCase;
 
 /**
  * BKP-02: backup:swap-tenant refusals and the document counter jump that stops numbers printed
- * after the backup from being issued again.
+ * after the backup from being issued again. Review fix C: the restored database is migrated, its
+ * tokens deleted and its counters advanced BEFORE the shop points at it; a failure there never
+ * switches the shop.
  */
 final class SwapTenantDatabaseCommandTest extends TenantTestCase
 {
@@ -90,7 +93,7 @@ final class SwapTenantDatabaseCommandTest extends TenantTestCase
 
     public function test_a_swap_forgets_only_this_tenants_cache_and_keeps_central_and_other_tenants_keys(): void
     {
-        $tenant = $this->createTenant();
+        $tenant = $this->createTenant(['status' => TenantStatus::Suspended->value]);
         $other = $this->createTenant();
         $id = (string) $tenant->getTenantKey();
         $otherId = (string) $other->getTenantKey();
@@ -119,9 +122,9 @@ final class SwapTenantDatabaseCommandTest extends TenantTestCase
         }
     }
 
-    public function test_a_failure_after_the_repoint_points_the_shop_back_at_the_previous_database(): void
+    public function test_a_counter_failure_on_the_restored_database_never_switches_the_shop(): void
     {
-        $tenant = $this->createTenant();
+        $tenant = $this->createTenant(['status' => TenantStatus::Suspended->value]);
         $id = (string) $tenant->getTenantKey();
         $previous = (string) $tenant->database()->getName();
         $restored = $this->copyTenantDatabase($tenant);
@@ -137,7 +140,8 @@ final class SwapTenantDatabaseCommandTest extends TenantTestCase
 
         try {
             $this->artisan('backup:swap-tenant', ['tenant' => $id, '--database' => $restored, '--force' => true])
-                ->expectsOutputToContain((string) __('console.swap.rolled_back', ['database' => $previous, 'reason' => RuntimeException::class]))
+                ->expectsOutputToContain((string) __('console.swap.prepare_failed', ['database' => $previous, 'reason' => RuntimeException::class]))
+                ->doesntExpectOutputToContain((string) __('console.swap.pointed', ['database' => $restored]))
                 ->assertExitCode(1);
 
             $this->assertSame($previous, (string) $tenant->fresh()?->database()->getName());
@@ -146,9 +150,89 @@ final class SwapTenantDatabaseCommandTest extends TenantTestCase
         }
     }
 
-    public function test_a_token_revocation_failure_points_the_shop_back_at_the_previous_database(): void
+    public function test_a_shop_that_is_not_suspended_is_refused_unless_live(): void
     {
-        $tenant = $this->createTenant();
+        $tenant = $this->createTenant(['status' => TenantStatus::Active->value]);
+        $id = (string) $tenant->getTenantKey();
+        $previous = (string) $tenant->database()->getName();
+        $restored = $this->copyTenantDatabase($tenant);
+
+        try {
+            $this->artisan('backup:swap-tenant', ['tenant' => $id, '--database' => $restored, '--force' => true])
+                ->expectsOutputToContain((string) __('console.swap.not_suspended', ['status' => TenantStatus::Active->value]))
+                ->assertExitCode(1);
+            $this->assertSame($previous, (string) $tenant->fresh()?->database()->getName());
+
+            $this->artisan('backup:swap-tenant', ['tenant' => $id, '--database' => $restored, '--live' => true, '--force' => true])
+                ->expectsOutputToContain((string) __('console.swap.live_warning', ['status' => TenantStatus::Active->value]))
+                ->assertExitCode(0);
+            $this->assertSame($restored, (string) $tenant->fresh()?->database()->getName());
+        } finally {
+            $this->dropCopiedDatabase($restored);
+        }
+    }
+
+    public function test_the_restored_database_is_migrated_cleaned_and_advanced_before_the_shop_points_at_it(): void
+    {
+        $tenant = $this->createTenant(['status' => TenantStatus::Suspended->value]);
+        $id = (string) $tenant->getTenantKey();
+        $previous = (string) $tenant->database()->getName();
+        $this->inTenant($tenant, function (): void {
+            DB::table('personal_access_tokens')->insert([
+                'tokenable_type' => 'App\\Models\\User', 'tokenable_id' => 1, 'name' => 'pos',
+                'token' => hash('sha256', Str::random(40)), 'abilities' => '["*"]', 'created_at' => now(), 'updated_at' => now(),
+            ]);
+            DB::table('document_sequences')->insert(['scope' => 'SHIFT', 'last_value' => 5, 'created_at' => now(), 'updated_at' => now()]);
+        });
+        $restored = $this->copyTenantDatabase($tenant);
+
+        // While the counters are advanced, the STORED tenant must still point at the old database
+        // and the work must run on the restored one.
+        $seen = [];
+        $real = app(AdvanceDocumentSequencesAction::class);
+        $this->app->instance(AdvanceDocumentSequencesAction::class, new class($real, $id, $seen)
+        {
+            /** @param  array<string, string>  $seen */
+            public function __construct(private readonly AdvanceDocumentSequencesAction $real, private readonly string $id, private array &$seen) {}
+
+            /** @return array{bumped: int, created: int} */
+            public function execute(int $margin): array
+            {
+                $this->seen = [
+                    'stored' => (string) Tenant::query()->findOrFail($this->id)->database()->getName(),
+                    'working_on' => basename((string) DB::connection()->getDatabaseName()),
+                ];
+
+                return $this->real->execute($margin);
+            }
+        });
+
+        try {
+            $this->artisan('backup:swap-tenant', ['tenant' => $id, '--database' => $restored, '--force' => true])
+                ->assertExitCode(0);
+
+            $this->assertSame(['stored' => $previous, 'working_on' => $restored], $seen);
+            $this->assertSame($restored, (string) $tenant->fresh()?->database()->getName());
+
+            $this->inTenant($tenant->fresh() ?? $tenant, function (): void {
+                $this->assertSame(0, DB::table('personal_access_tokens')->count(), 'The backup\'s tokens are gone.');
+                $this->assertSame(1005, (int) DB::table('document_sequences')->where('scope', 'SHIFT')->value('last_value'));
+            });
+            // The previous database was never touched: it is kept as it was.
+            $old = $tenant->fresh() ?? $tenant;
+            $old->setInternal('db_name', $previous);
+            $this->inTenant($old, function (): void {
+                $this->assertSame(1, DB::table('personal_access_tokens')->count());
+                $this->assertSame(5, (int) DB::table('document_sequences')->where('scope', 'SHIFT')->value('last_value'));
+            });
+        } finally {
+            $this->dropCopiedDatabase($restored);
+        }
+    }
+
+    public function test_a_token_revocation_failure_never_switches_the_shop(): void
+    {
+        $tenant = $this->createTenant(['status' => TenantStatus::Suspended->value]);
         $id = (string) $tenant->getTenantKey();
         $previous = (string) $tenant->database()->getName();
         $restored = $this->copyTenantDatabase($tenant);
