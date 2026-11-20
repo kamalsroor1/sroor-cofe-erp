@@ -275,4 +275,90 @@ class ShiftApiTest extends TenantTestCase
             $this->assertSame('0.000', (string) $shift->actual_cash_balance);
         });
     }
+
+    // ------------------------------------------------------------------
+    // SHIFT-01: who may close / print a shift, and what a refusal looks like
+    // ------------------------------------------------------------------
+
+    /** A cashier-role user of the main store (the role holds daily_journal.close_shift and pos.access). */
+    private function cashier(): User
+    {
+        return $this->createTenantUser($this->tenant, 'cashier');
+    }
+
+    /** Opens a 500.000 shift on the main store through the API as $user; returns its id. */
+    private function openShiftAs(User $user): int
+    {
+        return (int) $this->postJson('/api/v1/shifts/open', ['opening_cash_balance' => '500.000'], $this->tenantHeaders($this->tenant, $user))
+            ->assertStatus(201)
+            ->json('data.id');
+    }
+
+    public function test_cashier_gets_the_z_report_of_their_own_closed_shift(): void
+    {
+        $cashier = $this->cashier();
+        $shiftId = $this->openShiftAs($cashier);
+
+        // Open shift (the "print Z" button of the banner).
+        $this->getJson('/api/v1/shifts/'.$shiftId.'/z-report', $this->tenantHeaders($this->tenant, $cashier))
+            ->assertOk()
+            ->assertJsonPath('report.id', $shiftId);
+
+        $this->postJson('/api/v1/shifts/close', ['shift_id' => $shiftId, 'actual_cash_balance' => '500.000'], $this->tenantHeaders($this->tenant, $cashier))
+            ->assertOk();
+
+        $this->getJson('/api/v1/shifts/'.$shiftId.'/z-report', $this->tenantHeaders($this->tenant, $cashier))
+            ->assertOk()
+            ->assertJsonPath('report.status', 'closed')
+            ->assertJsonPath('report.expected_cash_balance', '500.000')
+            ->assertJsonPath('report.cash_difference', '0.000');
+    }
+
+    public function test_user_of_another_store_cannot_close_or_read_the_shift_and_no_class_name_leaks(): void
+    {
+        $shiftId = $this->openShiftAs($this->cashier());
+        $otherStore = Store::create(['name' => 'فرع آخر', 'code' => 'BR-SHIFT01', 'type' => 'retail', 'is_main' => false, 'is_active' => true]);
+        $outsider = $this->createTenantUser($this->tenant, 'cashier', [], ['default_store_id' => $otherStore->id]);
+        $headers = $this->tenantHeaders($this->tenant, $outsider, $otherStore);
+
+        $close = $this->postJson('/api/v1/shifts/close', ['shift_id' => $shiftId, 'actual_cash_balance' => '500.000'], $headers)
+            ->assertStatus(404)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('message', __('common.record_not_found'));
+        $this->assertStringNotContainsString('App\\Models', (string) $close->getContent());
+        $this->assertStringNotContainsString('CashShift', (string) $close->getContent());
+
+        $report = $this->getJson('/api/v1/shifts/'.$shiftId.'/z-report', $headers)
+            ->assertStatus(404)
+            ->assertJsonPath('message', __('common.record_not_found'));
+        $this->assertStringNotContainsString('App\\Models', (string) $report->getContent());
+
+        // Naming the shift's own store instead is refused by the store check (403, translated).
+        $this->postJson('/api/v1/shifts/close', ['shift_id' => $shiftId, 'actual_cash_balance' => '500.000'], $this->tenantHeaders($this->tenant, $outsider))
+            ->assertStatus(403)
+            ->assertJsonPath('message', __('common.store_access_denied'));
+
+        $this->assertSame('open', CashShift::query()->whereKey($shiftId)->value('status'));
+    }
+
+    public function test_model_not_found_404_is_translated_and_never_names_the_model_class(): void
+    {
+        $headers = ['Authorization' => 'Bearer '.$this->adminToken, 'Accept' => 'application/json'];
+
+        // Thrown by a controller/action (findOrFail) and by route-model binding.
+        foreach (['/api/v1/shifts/999999/z-report', '/api/v1/customers/999999'] as $uri) {
+            $response = $this->getJson($uri, $headers)
+                ->assertStatus(404)
+                ->assertJsonPath('success', false)
+                ->assertJsonPath('message', __('common.record_not_found'));
+
+            $this->assertStringNotContainsString('App\\Models', (string) $response->getContent(), $uri);
+            $this->assertStringNotContainsString('No query results', (string) $response->getContent(), $uri);
+        }
+
+        // The request locale decides the language (X-Locale; the fixture admin has no saved one).
+        $this->getJson('/api/v1/shifts/999999/z-report', $headers + ['X-Locale' => 'en'])
+            ->assertStatus(404)
+            ->assertJsonPath('message', 'The requested record was not found.');
+    }
 }
