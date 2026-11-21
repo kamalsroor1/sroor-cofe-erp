@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Builder;
  *  - per_cashier: the open shift THIS user opened in the branch (a null user - a job or a
  *    command - matches the branch's open shift without an opener).
  *
- * Used by ShiftService (open: one per key), ShiftAttribution (stamping), SaleShiftGuard (the POS-10
+ * Used by ShiftService (open: one per key), SaleShiftGuard (the POS-10
  * sale requirement) and the readers that show "the current shift" (/shifts/current, /me, system
  * context, POS bootstrap).
  */
