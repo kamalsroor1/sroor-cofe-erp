@@ -10,7 +10,8 @@ use Carbon\CarbonImmutable;
  * SIGN-12: "your shop is ready", sent once when a self-signup's tenant database is ready.
  *
  * Carries the shop name, sign-in URL and login email, the plan and the trial end (if any), the
- * help URL; the support contact is in the shared layout. NEVER a password: the owner chose it.
+ * help URL and the shop's forgot-password page (SIGN-15); the support contact is in the shared
+ * layout. NEVER a password: the owner chose it.
  */
 final class SignupAccountReadyMail extends PlatformMailable
 {
@@ -21,6 +22,7 @@ final class SignupAccountReadyMail extends PlatformMailable
         public readonly string $planName,
         public readonly ?CarbonImmutable $trialEndsAt,
         public readonly string $helpUrl,
+        public readonly string $forgotPasswordUrl,
         ?string $locale = null,
     ) {
         parent::__construct($locale);
@@ -57,6 +59,7 @@ final class SignupAccountReadyMail extends PlatformMailable
             'planName' => $this->planName,
             'trialEndsOn' => $this->trialEndsAt?->locale($locale)->translatedFormat('j F Y'),
             'helpUrl' => $this->helpUrl,
+            'forgotPasswordUrl' => $this->forgotPasswordUrl,
         ];
     }
 }

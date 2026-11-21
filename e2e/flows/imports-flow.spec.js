@@ -8,8 +8,14 @@
 // POST /api/v1/imports/items/preview and /commit are mocked via page.route so nothing is written
 // to the persistent database and tests run deterministically. Selectors use data-testid, never
 // translated text.
+import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { test, expect } from '@playwright/test';
 import { skipOnPhoneViewport } from '../utils/pos-viewport.js';
+import { REPO_ROOT } from '../utils/local-stack.js';
+import { t } from '../utils/translations.js';
 
 const MOCK_ITEMS_PREVIEW = {
     success: true,
@@ -146,6 +152,121 @@ test.describe('PRD-06: Imports Flow Journey', () => {
         await expect(page.getByTestId('import-result-duplicates')).toHaveText('0');
 
         // The commit body carries the token returned by the preview and the skip flag
-        expect(commitPayload).toEqual({ token: 'mock-import-token-12345', skip_invalid: false });
+        expect(commitPayload).toEqual({
+            token: 'mock-import-token-12345',
+            skip_invalid: false,
+            confirm_new_categories: false,
+        });
+    });
+});
+
+// PRD-06: the same wizard against the REAL API (nothing mocked): a real .xlsx of items and a real .csv of
+// customers, both with Arabic names and Arabic-Indic digits, generated per run so reruns never collide.
+// The opening stock / balance must land in the item's movements and the customer's balance.
+test.describe('PRD-06: Imports with real Arabic files', () => {
+    skipOnPhoneViewport(test);
+
+    const RUN = Date.now().toString(36);
+    const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'e2e-imports-'));
+    test.afterAll(() => fs.rmSync(workDir, { recursive: true, force: true }));
+
+    /** Arabic-Indic digits, as typed on an Arabic keyboard / exported by Arabic Excel. */
+    const arabicDigits = (value) => String(value).replace(/[0-9]/gu, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
+
+    /** Tenant API with the session the SPA stored (token, tenant, store). */
+    const api = (page, url) =>
+        page.evaluate(async (target) => {
+            const headers = { Accept: 'application/json' };
+            const token = localStorage.getItem('auth_token');
+            const tenant = localStorage.getItem('active_tenant');
+            const store = localStorage.getItem('current_store_id');
+            if (token) headers.Authorization = `Bearer ${token}`;
+            if (tenant) headers['X-Tenant'] = tenant;
+            if (store) headers['X-Store-Id'] = store;
+            const res = await fetch(target, { headers });
+            return { status: res.status, body: await res.json().catch(() => null) };
+        }, url);
+
+    const runWizard = async (page, { type, file, expectSummary, skipInvalid = false }) => {
+        await page.goto('/imports', { waitUntil: 'networkidle' });
+        await page.getByTestId(`import-type-${type}`).click();
+        await page.getByTestId('import-type-continue').click();
+
+        const preview = page.waitForResponse((res) => res.url().includes(`/api/v1/imports/${type}/preview`));
+        await page.getByTestId('import-file-input').setInputFiles(file);
+        const previewRes = await preview;
+        expect(previewRes.status(), await previewRes.text()).toBe(200);
+
+        await expect(page.getByTestId('import-preview-step')).toBeVisible({ timeout: 15_000 });
+        for (const [chip, count] of Object.entries(expectSummary)) {
+            await expect(page.getByTestId(`import-summary-${chip}-count`)).toHaveText(String(count));
+        }
+        if (skipInvalid) {
+            await page.getByText(t('import.ui.skip_invalid'), { exact: true }).click();
+        }
+        const confirmCategories = page.getByTestId('import-confirm-categories');
+        if (await confirmCategories.isVisible()) await confirmCategories.check();
+
+        const commit = page.waitForResponse((res) => res.url().includes(`/api/v1/imports/${type}/commit`));
+        await page.getByTestId('import-commit-btn').click();
+        await page.locator('.swal2-confirm').click(); // SweetAlert2 confirmation, as in the mocked journey
+        const commitRes = await commit;
+        expect(commitRes.status(), await commitRes.text()).toBe(200);
+        await expect(page.getByTestId('import-result-step')).toBeVisible({ timeout: 30_000 });
+    };
+
+    test('items .xlsx: Arabic rows import with opening stock, the bad row is skipped', async ({ page }) => {
+        const labels = (keys) => keys.map((key) => t(`import.columns.items.${key}`));
+        const columns = ['code', 'name', 'category', 'unit', 'cost_price', 'selling_price', 'is_weighted', 'opening_quantity', 'opening_cost'];
+        const yes = t('import.examples.items.is_weighted');
+        const rows = [
+            labels(columns),
+            [`YMN-${RUN}`, `بن يمني مطحون ${RUN}`, 'بن', 'كجم', arabicDigits('350'), arabicDigits('450'), yes, '١٢٫٥', arabicDigits('350')],
+            [`HIL-${RUN}`, `حبهان مطحون ${RUN}`, 'توابل', 'كجم', '800', '950', yes, '3.25', '800'],
+            [`BAD-${RUN}`, `صنف بسعر غلط ${RUN}`, 'بن', 'كجم', '10', 'سعر', yes, '', ''],
+        ];
+        const file = path.join(workDir, `items-${RUN}.xlsx`);
+        execFileSync('php', [path.join(REPO_ROOT, 'e2e', 'utils', 'make-xlsx.php'), file], { input: JSON.stringify(rows) });
+
+        await runWizard(page, { type: 'items', file, expectSummary: { valid: 2, invalid: 1 }, skipInvalid: true });
+        await expect(page.getByTestId('import-result-created')).toHaveText('2');
+        await expect(page.getByTestId('import-result-skipped')).toHaveText('1');
+
+        const list = await api(page, `/api/v1/items?search=${encodeURIComponent(`YMN-${RUN}`)}`);
+        expect(list.status).toBe(200);
+        const item = (list.body.data ?? []).find((row) => row.code === `YMN-${RUN}`);
+        expect(item, JSON.stringify(list.body).slice(0, 500)).toBeTruthy();
+        expect(item.name).toBe(`بن يمني مطحون ${RUN}`);
+        expect(item.selling_price).toBe('450.000');
+        expect(item.current_stock).toBe('12.500');
+
+        const movements = await api(page, `/api/v1/items/${item.id}/movements`);
+        expect(movements.status, JSON.stringify(movements.body).slice(0, 500)).toBe(200);
+        expect(JSON.stringify(movements.body)).toContain('12.500');
+
+        const bad = await api(page, `/api/v1/items?search=${encodeURIComponent(`BAD-${RUN}`)}`);
+        expect((bad.body.data ?? []).some((row) => row.code === `BAD-${RUN}`)).toBe(false);
+    });
+
+    test('customers .csv (UTF-8): Arabic names with an opening balance in Arabic digits', async ({ page }) => {
+        const columns = ['name', 'phone', 'address', 'price_tier', 'opening_balance'];
+        const name = `عميل استيراد ${RUN}`;
+        const csv = [
+            columns.map((key) => t(`import.columns.customers.${key}`)),
+            [name, `0100${String(Date.now()).slice(-7)}`, 'المنصورة', t('import.examples.customers.price_tier'), arabicDigits('1500')],
+        ]
+            .map((row) => row.map((cell) => `"${String(cell).replace(/"/gu, '""')}"`).join(','))
+            .join('\r\n');
+        const file = path.join(workDir, `customers-${RUN}.csv`);
+        fs.writeFileSync(file, `\uFEFF${csv}\r\n`, 'utf8');
+
+        await runWizard(page, { type: 'customers', file, expectSummary: { valid: 1, invalid: 0 } });
+        await expect(page.getByTestId('import-result-created')).toHaveText('1');
+
+        const list = await api(page, `/api/v1/customers?search=${encodeURIComponent(name)}`);
+        expect(list.status).toBe(200);
+        const customer = (list.body.data ?? []).find((row) => row.name === name);
+        expect(customer, JSON.stringify(list.body).slice(0, 500)).toBeTruthy();
+        expect(customer.current_balance).toBe('1500.000');
     });
 });

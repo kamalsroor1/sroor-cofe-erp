@@ -66,7 +66,7 @@ export const describePeriod = (filters) => {
 };
 
 /**
- * Loads every page of the statement, sequentially. `fetchPage(page, perPage)` resolves to a
+ * Loads every page of a paged list (the statement, or a paged report tab), sequentially. `fetchPage(page, perPage)` resolves to a
  * normalized statement. Stops before the first extra request when the period is bigger than
  * `maxRows` (status `too_large`) and between pages when `isCancelled()` turns true.
  */
@@ -76,19 +76,21 @@ export const collectAllPages = async ({
     maxRows = PRINT_MAX_ROWS,
     onProgress = () => {},
     isCancelled = () => false,
+    // The rows of one fetched page: `ledger` for the statement, `rows` for the paged reports.
+    rowsOf = (page) => page.ledger,
 }) => {
     const first = await fetchPage(1, perPage);
-    const total = Number(first.meta.total) || first.ledger.length;
+    const total = Number(first.meta.total) || rowsOf(first).length;
     if (total > maxRows) return { status: 'too_large', total };
 
-    const rows = [...first.ledger];
+    const rows = [...rowsOf(first)];
     onProgress(rows.length, total);
 
     const lastPage = Number(first.meta.last_page) || 1;
     for (let page = 2; page <= lastPage; page += 1) {
         if (isCancelled()) return { status: 'cancelled', total };
         const next = await fetchPage(page, perPage);
-        rows.push(...next.ledger);
+        rows.push(...rowsOf(next));
         onProgress(rows.length, total);
     }
     if (isCancelled()) return { status: 'cancelled', total };

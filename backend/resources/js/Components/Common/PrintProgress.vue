@@ -1,13 +1,10 @@
 <template>
   <div
     role="status"
-    data-testid="statement-print-progress"
-    class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col sm:flex-row sm:items-center gap-3 no-print font-tajawal"
+    class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col sm:flex-row sm:items-center gap-3 no-print print:hidden font-tajawal"
   >
     <div class="flex-1 min-w-0 space-y-2">
-      <p class="text-xs font-bold text-slate-700 dark:text-slate-300">
-        {{ $t('contacts.statement_print_progress', { loaded, total }) }}
-      </p>
+      <p class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ label }}</p>
       <div class="h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
         <div class="h-full rounded-full bg-theme-primary transition-all" :style="{ width: `${percent}%` }"></div>
       </div>
@@ -20,9 +17,11 @@
 
 <script setup>
 import { computed } from 'vue';
-import BaseButton from '../Common/BaseButton.vue';
+import BaseButton from './BaseButton.vue';
 
+// "Fetching every page before printing" bar with a cancel button (customer statement, reports).
 const props = defineProps({
+  label: { type: String, required: true },
   loaded: { type: Number, default: 0 },
   total: { type: Number, default: 0 },
 });

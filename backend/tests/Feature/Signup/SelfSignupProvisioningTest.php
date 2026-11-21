@@ -207,10 +207,17 @@ final class SelfSignupProvisioningTest extends TenantTestCase
                 && str_ends_with($mail->helpUrl, '/help')
                 && $mail->trialEndsAt === null
                 && str_contains($html, $mail->loginUrl)
+                // SIGN-15: the shop's own forgot-password page, same host as the sign-in link.
+                && $mail->forgotPasswordUrl === SelfSignupOutcomes::forgotPasswordUrl($slug)
+                && $mail->forgotPasswordUrl === substr($mail->loginUrl, 0, -strlen('/login')).'/forgot-password'
+                && str_contains($html, $mail->forgotPasswordUrl)
                 && ! str_contains($html, self::PASSWORD)
                 && ! str_contains(serialize($mail), self::PASSWORD);
         });
         Mail::assertNotQueued(SignupProvisioningDelayedMail::class);
+        $readyMail = Mail::queued(SignupAccountReadyMail::class)->first();
+        $readyMail->assertSeeInText($readyMail->forgotPasswordUrl);
+        $readyMail->assertSeeInText((string) __('mail.signup_ready.forgot_password', [], 'ar'));
 
         // Platform Telegram: one message for the new self-signup.
         $this->assertSame(1, $this->telegramMessages($slug));

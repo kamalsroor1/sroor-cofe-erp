@@ -8,6 +8,7 @@
 {!! __('mail.signup_ready.login_url') !!} {!! $loginUrl !!}
 {!! __('mail.signup_ready.login_email') !!} {!! $loginEmail !!}
 {!! __('mail.signup_ready.password_hint') !!}
+{!! __('mail.signup_ready.forgot_password') !!} {!! $forgotPasswordUrl !!}
 {!! __('mail.signup_ready.plan', ['plan' => $planName]) !!}
 @if ($trialEndsOn)
 {!! __('mail.signup_ready.trial_ends', ['date' => $trialEndsOn]) !!}

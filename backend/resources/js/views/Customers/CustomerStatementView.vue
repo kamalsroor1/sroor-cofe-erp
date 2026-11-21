@@ -18,8 +18,10 @@
         @preset="applyPreset"
       />
 
-      <CustomerStatementPrintProgress
+      <PrintProgress
         v-if="printing.active"
+        data-testid="statement-print-progress"
+        :label="$t('contacts.statement_print_progress', { loaded: printing.loaded, total: printing.total })"
         :loaded="printing.loaded"
         :total="printing.total"
         @cancel="cancelPrint"
@@ -58,7 +60,7 @@ import CustomerStatementHeader from '../../Components/Customers/CustomerStatemen
 import CustomerStatementSummaryCards from '../../Components/Customers/CustomerStatementSummaryCards.vue';
 import CustomerStatementFilterBar from '../../Components/Customers/CustomerStatementFilterBar.vue';
 import CustomerStatementTable from '../../Components/Customers/CustomerStatementTable.vue';
-import CustomerStatementPrintProgress from '../../Components/Customers/CustomerStatementPrintProgress.vue';
+import PrintProgress from '../../Components/Common/PrintProgress.vue';
 import CustomerStatementPrintSheet from '../../Components/Customers/CustomerStatementPrintSheet.vue';
 import { useCustomerStatement } from '../../Composables/useCustomerStatement';
 

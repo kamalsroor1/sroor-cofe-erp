@@ -35,13 +35,31 @@ for (const mode of ["light", "dark"]) {
       test(`${route.name} has no text below AA`, async ({ page }) => {
         await page.goto(route.path);
         await page.waitForLoadState("networkidle");
+        if (route.tab) {
+          await page
+            .locator(`[data-testid="tab-${route.tab}"]:visible`)
+            .first()
+            .click();
+          await page.waitForLoadState("networkidle");
+        }
         await expect(
           page.locator(
             'div.animate-pulse[class*="bg-slate-200"], [class*="shimmer"], [class*="skeleton"]',
           ),
         ).toHaveCount(0);
 
+        await expect(page.locator("html")).toHaveClass(
+          mode === "dark" ? /\bdark\b/ : /^(?!.*\bdark\b).*$/,
+        );
         const result = await auditPage(page, mode);
+        // A page that rendered nothing (wrong tab, error state) must not pass silently.
+        expect(
+          result.total,
+          `${route.name}: no text was audited`,
+        ).toBeGreaterThan(10);
+        console.log(
+          `[contrast] ${route.name} (${mode}): ${result.total} text nodes, ${result.failing.length} below AA`,
+        );
         const offenders = groupFailures(result.failing).filter(
           (group) => !isAllowed(route.name, group),
         );

@@ -123,6 +123,12 @@ final class SelfSignupOutcomes
         return PlatformHosts::url(PlatformHosts::tenantHost($slug), '/login');
     }
 
+    /** SIGN-15: forgot-password page of a tenant host (built from the shop's own domain, never the request Host). */
+    public static function forgotPasswordUrl(string $slug): string
+    {
+        return PlatformHosts::url(PlatformHosts::tenantHost($slug), '/forgot-password');
+    }
+
     private function queueReadyMail(SignupRequest $signup, Tenant $tenant): void
     {
         if ($signup->email === null) {
@@ -140,6 +146,7 @@ final class SelfSignupOutcomes
             planName: $plan instanceof Plan ? $plan->name : '',
             trialEndsAt: $trialEndsAt,
             helpUrl: PlatformHosts::url(PlatformHosts::tenantHost($slug), '/help'),
+            forgotPasswordUrl: self::forgotPasswordUrl($slug),
             locale: $signup->locale,
         ));
     }

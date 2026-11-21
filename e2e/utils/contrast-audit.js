@@ -239,4 +239,19 @@ export const AUDIT_ROUTES = [
   { name: "profile", path: "/profile" },
   { name: "trash", path: "/trash" },
   { name: "pos", path: "/pos" },
+  { name: "roles", path: "/roles" },
+  // COLOR-01 follow-up: every settings section (`tab` = SettingsTabsNav id, clicked before the audit).
+  ...[
+    "general",
+    "branding",
+    "printing",
+    "inventory",
+    "pos",
+    "notifications",
+    "device",
+  ].map((tab) => ({
+    name: `settings-${tab}`,
+    path: "/settings",
+    tab,
+  })),
 ];

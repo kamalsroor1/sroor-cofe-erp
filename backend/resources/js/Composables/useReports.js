@@ -17,7 +17,8 @@ import api from '../Services/api';
 import { useAppConfigStore } from '../stores/appConfig';
 import { useTrans } from './useTrans';
 import { usePagedReport } from './usePagedReport';
-import { useReportBreakdowns } from './useReportBreakdowns';
+import { useReportBreakdowns, SNAPSHOT_REPORTS } from './useReportBreakdowns';
+import { useReportPrint } from './useReportPrint';
 import { rangeIsReversed } from '../helpers/customerStatement';
 import {
     buildReportParams,
@@ -244,9 +245,30 @@ export function useReports() {
         }
     };
 
-    const printReport = () => {
-        window.print();
-    };
+    // PERF-01: a paged tab prints every row of the filters (print-only sheet), not the visible page.
+    const reportPrint = useReportPrint({
+        pagedByTab,
+        breakdownDefinitions: breakdowns.definitions,
+        tabTitle: (tab) => tabs.value.find((item) => item.key === tab)?.label ?? '',
+    });
+
+    const printReport = () =>
+        reportPrint.printTab(activeTab.value, {
+            locked: (activeTab.value === 'items' && itemsLocked.value) || Boolean(periodError.value),
+        });
+
+    const printPeriodText = computed(() =>
+        SNAPSHOT_REPORTS.includes(reportPrint.sheet.value?.tab)
+            ? ''
+            : t('reports.print_sheet.period_range', {
+                  from: filters.from || t('reports.print_sheet.period_start'),
+                  to: filters.to || businessToday(),
+              })
+    );
+    const printScopeText = computed(() => {
+        if (filters.store_id === 'all') return t('common.all_stores');
+        return stores.value.find((store) => String(store.id) === String(filters.store_id))?.name ?? '';
+    });
 
     onMounted(() => {
         const today = businessToday();
@@ -286,5 +308,10 @@ export function useReports() {
         customDateChanged,
         fetchReportsData,
         printReport,
+        printing: reportPrint.printing,
+        printSheet: reportPrint.sheet,
+        cancelPrint: reportPrint.cancelPrint,
+        printPeriodText,
+        printScopeText,
     };
 }

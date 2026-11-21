@@ -14,6 +14,7 @@
     <p style="margin:0 0 4px 0;">{{ __('mail.signup_ready.login_url') }} <a href="{{ $loginUrl }}" dir="ltr" style="color:{{ $brand['primary_color'] }};">{{ $loginUrl }}</a></p>
     <p style="margin:0 0 4px 0;">{{ __('mail.signup_ready.login_email') }} <span dir="ltr" style="unicode-bidi:embed;">{{ $loginEmail }}</span></p>
     <p style="margin:0 0 4px 0;">{{ __('mail.signup_ready.password_hint') }}</p>
+    <p style="margin:0 0 4px 0;">{{ __('mail.signup_ready.forgot_password') }} <a href="{{ $forgotPasswordUrl }}" dir="ltr" style="color:{{ $brand['primary_color'] }};">{{ $forgotPasswordUrl }}</a></p>
     <p style="margin:0 0 4px 0;">{{ __('mail.signup_ready.plan', ['plan' => $planName]) }}</p>
     @if ($trialEndsOn)
         <p style="margin:0 0 4px 0;">{{ __('mail.signup_ready.trial_ends', ['date' => $trialEndsOn]) }}</p>

@@ -39,11 +39,32 @@ function composeCommand() {
 }
 
 /**
+ * `SROOR_STACK=native`: the app runs on this machine (`php -S` / `artisan serve` with the stack's
+ * environment exported), not in the docker `app` container. Tinker then runs `php backend/artisan`
+ * here with the current environment.
+ */
+export const NATIVE_STACK = process.env.SROOR_STACK === 'native';
+
+/** The client IP the app sees for requests from this machine (rate-limiter keys). */
+export function stackClientIp() {
+    return NATIVE_STACK ? '127.0.0.1' : composeGatewayIp();
+}
+
+/**
  * Runs `php artisan tinker --execute=<php>` in the app container and returns stdout.
  * `env` values are forwarded with `-e NAME` (read in PHP through getenv()), so they never show
  * up in the process list or in this repo.
  */
 export function tinker(php, env = {}) {
+    if (NATIVE_STACK) {
+        return execFileSync('php', [path.join(REPO_ROOT, 'backend', 'artisan'), 'tinker', `--execute=${php}`], {
+            cwd: path.join(REPO_ROOT, 'backend'),
+            env: { ...process.env, ...env },
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'pipe'],
+            timeout: 120_000,
+        });
+    }
     const [bin, ...prefix] = composeCommand();
     const envFlags = Object.keys(env).flatMap((name) => ['-e', name]);
     return execFileSync(
