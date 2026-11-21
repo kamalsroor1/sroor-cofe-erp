@@ -58,6 +58,10 @@ final class RunTenantMigrationsAction
                 $exitCode = null;
             }
         } finally {
+            // stancl's runForMultiple() never ends tenancy when a migration throws; this run is central.
+            if (tenancy()->initialized) {
+                tenancy()->end();
+            }
             $lock->release();
         }
 

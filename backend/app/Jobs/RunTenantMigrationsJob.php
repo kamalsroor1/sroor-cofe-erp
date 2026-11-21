@@ -21,8 +21,8 @@ use Throwable;
  * large shop takes minutes, far past the 120 s HTTP limit that used to kill it mid-ALTER.
  *
  * Central only: it never initialises tenancy itself (`tenants:migrate --tenants=<id>` does,
- * for that tenant alone). Runs on the provisioning queue (retry_after above the 900 s
- * timeout). One attempt: a half-applied migration is never retried blindly; the operator
+ * for that tenant alone). Runs on the archive lane (`long` on the VPS, retry_after above
+ * the 900 s timeout). One attempt: a half-applied migration is never retried blindly; the operator
  * re-queues once the audit line shows the failure. Concurrent runs for the same tenant are
  * refused by RunTenantMigrationsAction's per-tenant lock (audited as `skipped`).
  */
@@ -43,19 +43,32 @@ final class RunTenantMigrationsJob implements ShouldQueue
         public readonly ?int $centralUserId,
         public readonly string $runId,
     ) {
-        $connection = config('tenancy.provisioning.queue_connection');
+        // The `long` lane of ArchiveTenantJob (retry_after 2000 s, Horizon supervisor-long), not
+        // the single provisioning worker: a 15-minute migrate there would hold up self-signups.
+        $connection = config('tenant_lifecycle.archive.queue_connection');
         if (is_string($connection) && $connection !== '') {
             $this->onConnection($connection);
         }
 
-        $this->onQueue((string) config('tenancy.provisioning.queue', 'default'));
+        $queue = config('tenant_lifecycle.archive.queue');
+        if (is_string($queue) && $queue !== '') {
+            $this->onQueue($queue);
+        }
     }
 
     public function handle(RunTenantMigrationsAction $action): void
     {
         $tenant = Tenant::query()->find($this->tenantId);
         if (! $tenant instanceof Tenant) {
-            return; // purged between the request and the run: nothing to migrate
+            // Deleted between the request and the run: nothing to migrate, but the run is closed.
+            app(CentralAuditLogger::class)->recordAttempt(
+                CentralAuditEvent::TenantMigrationsRun,
+                ['status' => 'skipped', 'exit_code' => null, 'run_id' => $this->runId, 'reason' => 'tenant_missing'],
+                actor: $this->operator(),
+                tenantId: $this->tenantId,
+            );
+
+            return;
         }
 
         $action->execute($tenant, $this->operator(), $this->runId);
@@ -65,6 +78,8 @@ final class RunTenantMigrationsJob implements ShouldQueue
     public function failed(?Throwable $exception): void
     {
         try {
+            // A timed-out ALTER may still be running on the MySQL server: check the process
+            // list before re-queueing (the per-tenant lock expires 60 s after the timeout).
             app(CentralAuditLogger::class)->recordAttempt(
                 CentralAuditEvent::TenantMigrationsRun,
                 ['status' => 'failed', 'exit_code' => null, 'run_id' => $this->runId, 'reason' => 'job_failed'],

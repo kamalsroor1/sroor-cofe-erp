@@ -10,6 +10,7 @@ use App\Jobs\RunTenantMigrationsJob;
 use App\Models\CentralAuditLog;
 use App\Models\CentralUser;
 use App\Models\Tenant;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use RuntimeException;
@@ -132,15 +133,52 @@ final class RunTenantMigrationsQueuedTest extends TenantTestCase
         $this->assertSame((string) $this->tenant->getTenantKey(), $log->tenant_id);
     }
 
-    public function test_the_job_runs_once_on_the_provisioning_queue_with_a_long_timeout(): void
+    public function test_the_job_runs_once_on_the_long_lane_not_the_provisioning_worker(): void
     {
-        config(['tenancy.provisioning.queue_connection' => 'provisioning', 'tenancy.provisioning.queue' => 'provisioning']);
+        config(['tenant_lifecycle.archive.queue_connection' => 'long', 'tenant_lifecycle.archive.queue' => 'long']);
         $job = new RunTenantMigrationsJob('t', null, 'r');
 
         $this->assertSame(1, $job->tries);
         $this->assertTrue($job->failOnTimeout);
-        $this->assertSame('provisioning', $job->connection);
-        $this->assertSame('provisioning', $job->queue);
-        $this->assertGreaterThan($job->timeout, (int) config('queue.connections.provisioning.retry_after'));
+        $this->assertSame('long', $job->connection);
+        $this->assertSame('long', $job->queue);
+        $this->assertGreaterThan($job->timeout, (int) config('queue.connections.long.retry_after'));
+        $this->assertGreaterThan($job->timeout, (int) config('horizon.defaults.supervisor-long.timeout'));
+    }
+
+    public function test_a_tenant_deleted_before_the_run_is_audited_as_skipped(): void
+    {
+        (new RunTenantMigrationsJob('qa-missing-tenant', (int) $this->operator->getKey(), 'run-gone'))
+            ->handle(app(RunTenantMigrationsAction::class));
+
+        $log = CentralAuditLog::query()->where('event', CentralAuditEvent::TenantMigrationsRun->value)->sole();
+        $this->assertSame('skipped', $log->properties['status'] ?? null);
+        $this->assertSame('tenant_missing', $log->properties['reason'] ?? null);
+        $this->assertSame('qa-missing-tenant', $log->tenant_id);
+    }
+
+    public function test_a_failing_migration_leaves_no_tenant_initialised(): void
+    {
+        $tenant = $this->tenant;
+        Artisan::shouldReceive('call')->once()->andReturnUsing(function () use ($tenant): never {
+            tenancy()->initialize($tenant); // what stancl's runForMultiple leaves behind on a throw
+            throw new RuntimeException('migration blew up');
+        });
+
+        $ran = app(RunTenantMigrationsAction::class)->execute($this->tenant, $this->operator, 'run-throws');
+
+        $this->assertFalse($ran);
+        $this->assertFalse(tenancy()->initialized);
+        $this->assertSame('failed', CentralAuditLog::query()->where('event', CentralAuditEvent::TenantMigrationsRun->value)->sole()->properties['status'] ?? null);
+    }
+
+    public function test_an_unknown_tenant_is_404_and_queues_nothing(): void
+    {
+        Queue::fake();
+
+        $this->postJson('/api/v1/super-admin/tenants/qa-no-such-tenant/run-migrations', [], $this->steppedUpCentralHeaders($this->operator))
+            ->assertNotFound();
+
+        Queue::assertNothingPushed();
     }
 }
