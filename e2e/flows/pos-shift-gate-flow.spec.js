@@ -118,7 +118,12 @@ test.describe('POS-10: Shift gate, open shift, X-report & close shift', () => {
         await page.getByTestId('pos-shift-badge').click();
         await expect(page.getByTestId('pos-shift-panel')).toBeVisible();
         await expect(page.getByTestId('pos-shift-report')).toBeVisible();
-        await expect(page.getByTestId('pos-shift-report')).toContainText('725');
+        // Blind count (commit 920624bf): the X-report lists the movements but never the expected cash
+        // (725.000) before the close, so the cashier counts the drawer without a target.
+        await expect(page.getByTestId('pos-shift-report')).toContainText('500');
+        await expect(page.getByTestId('pos-shift-report')).toContainText('250');
+        await expect(page.getByTestId('pos-shift-report')).not.toContainText('725');
+        await expect(page.getByTestId('pos-shift-blind-hint')).toBeVisible();
 
         await page.locator('#pos-shift-counted-cash').fill('725');
         await page.getByTestId('pos-shift-close').click();

@@ -43,6 +43,12 @@ async function mockPosData(page, onInvoice) {
     await page.route('**/api/v1/categories*', (route) =>
         route.fulfill({ json: { success: true, data: [], total_items_count: 1 } })
     );
+    // An open shift, so the POS-10 shift gate (on by default for a real tenant) does not cover the POS.
+    await page.route('**/api/v1/shifts/current*', (route) =>
+        route.fulfill({
+            json: { success: true, active_shift: { id: 1, shift_number: 'SH-1' }, requires_shift: false },
+        })
+    );
     await page.route('**/api/v1/invoices', async (route) => {
         if (route.request().method() !== 'POST') return route.fallback();
         const payload = route.request().postDataJSON();
