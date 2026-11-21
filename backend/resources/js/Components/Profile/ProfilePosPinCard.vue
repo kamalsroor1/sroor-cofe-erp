@@ -45,11 +45,8 @@
             :label="$t('profile.pos_pin_input_label')"
             type="password"
             autocomplete="new-password"
-            inputmode="numeric"
-            maxlength="6"
-            minlength="4"
+            v-bind="POS_PIN_INPUT_ATTRS"
             dir="ltr"
-            placeholder="••••"
             class="font-mono"
           />
         </div>
@@ -61,10 +58,8 @@
             :label="$t('profile.pos_pin_confirm_label')"
             type="password"
             autocomplete="new-password"
-            inputmode="numeric"
-            maxlength="6"
+            v-bind="POS_PIN_INPUT_ATTRS"
             dir="ltr"
-            placeholder="••••"
             class="font-mono"
           />
         </div>
@@ -102,6 +97,7 @@
 </template>
 
 <script setup>
+import { POS_PIN_INPUT_ATTRS, posPinError } from '@/helpers/posPin';
 import { ref } from 'vue';
 import { KeyRound } from 'lucide-vue-next';
 import BaseInput from '../Form/BaseInput.vue';
@@ -137,12 +133,13 @@ const handleSubmit = () => {
     return;
   }
 
-  if (!/^\d{6}$/.test(pin)) {
+  const pinProblem = posPinError(pin, confirmation);
+  if (pinProblem === 'format') {
     validationError.value = t('users.pos_pin_format');
     return;
   }
 
-  if (pin !== confirmation) {
+  if (pinProblem === 'mismatch') {
     validationError.value = t('profile.pos_pin_mismatch');
     return;
   }

@@ -1,71 +1,59 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath, URL } from 'node:url';
+import { POS_PIN_INPUT_ATTRS, POS_PIN_LENGTH, posPinError } from '../../resources/js/helpers/posPin.js';
 
-function validatePosPin(pin, confirmation) {
-    const trimmed = (pin || '').trim();
-    const trimmedConfirmation = (confirmation || '').trim();
+// SEC-21: the server accepts exactly 6 digits (UpdateUserPosPinRequest / UpdateProfilePosPinRequest).
+const SERVER_RULE = /^\d{6}$/;
 
-    if (!trimmed) {
-        return { valid: false, error: 'pin_required' };
+const read = (relative) => readFileSync(fileURLToPath(new URL(relative, import.meta.url)), 'utf8');
+
+test('the PIN length matches the server rule', () => {
+    assert.equal(POS_PIN_LENGTH, 6);
+    for (const candidate of ['1234', '12345', '123456', '1234567', '12a456']) {
+        assert.equal(posPinError(candidate, candidate) === null, SERVER_RULE.test(candidate), candidate);
     }
-    if (!/^\d{4,6}$/.test(trimmed)) {
-        return { valid: false, error: 'pos_pin_format' };
+});
+
+test('posPinError accepts a confirmed 6-digit PIN, trimming spaces', () => {
+    assert.equal(posPinError('123456', '123456'), null);
+    assert.equal(posPinError(' 123456 ', '123456'), null);
+});
+
+test('posPinError rejects 4 and 5 digit PINs the old form allowed', () => {
+    assert.equal(posPinError('1234', '1234'), 'format');
+    assert.equal(posPinError('12345', '12345'), 'format');
+});
+
+test('posPinError rejects non-digits, empty and over-long values', () => {
+    for (const bad of ['', null, undefined, '12a456', '12 456', '١٢٣٤٥٦', '1234567']) {
+        assert.equal(posPinError(bad, bad), 'format', String(bad));
     }
-    if (trimmed !== trimmedConfirmation) {
-        return { valid: false, error: 'pos_pin_mismatch' };
-    }
-    return { valid: true, pin: trimmed };
-}
-
-function buildUserPinPayload(pin) {
-    return { pin: pin ? String(pin).trim() : null };
-}
-
-function buildProfilePinPayload(pin, currentPassword) {
-    return {
-        pin: pin ? String(pin).trim() : null,
-        current_password: currentPassword ? String(currentPassword).trim() : '',
-    };
-}
-
-test('validatePosPin accepts valid 4 to 6 digit numeric PINs when confirmed', () => {
-    assert.deepEqual(validatePosPin('1234', '1234'), { valid: true, pin: '1234' });
-    assert.deepEqual(validatePosPin('12345', '12345'), { valid: true, pin: '12345' });
-    assert.deepEqual(validatePosPin('123456', '123456'), { valid: true, pin: '123456' });
 });
 
-test('validatePosPin rejects PINs with fewer than 4 or more than 6 digits', () => {
-    assert.equal(validatePosPin('12', '12').valid, false);
-    assert.equal(validatePosPin('12', '12').error, 'pos_pin_format');
-    assert.equal(validatePosPin('123', '123').valid, false);
-    assert.equal(validatePosPin('1234567', '1234567').valid, false);
+test('posPinError reports a mismatched confirmation after the format check', () => {
+    assert.equal(posPinError('123456', '654321'), 'mismatch');
+    assert.equal(posPinError('123456', ''), 'mismatch');
 });
 
-test('validatePosPin rejects non-digit characters', () => {
-    assert.equal(validatePosPin('12a4', '12a4').valid, false);
-    assert.equal(validatePosPin('abcd', 'abcd').valid, false);
-    assert.equal(validatePosPin('12 45', '12 45').valid, false);
+test('the input attributes constrain the browser to exactly 6 digits', () => {
+    assert.equal(POS_PIN_INPUT_ATTRS.minlength, '6');
+    assert.equal(POS_PIN_INPUT_ATTRS.maxlength, '6');
+    assert.equal(POS_PIN_INPUT_ATTRS.inputmode, 'numeric');
+    assert.equal(POS_PIN_INPUT_ATTRS.placeholder.length, 6);
+    const pattern = new RegExp(`^(?:${POS_PIN_INPUT_ATTRS.pattern})$`);
+    assert.ok(pattern.test('123456'));
+    assert.ok(!pattern.test('1234'));
 });
 
-test('validatePosPin rejects mismatched confirmation', () => {
-    const res = validatePosPin('1234', '5678');
-    assert.equal(res.valid, false);
-    assert.equal(res.error, 'pos_pin_mismatch');
-});
-
-test('buildUserPinPayload formats pin correctly or sends null to clear', () => {
-    assert.deepEqual(buildUserPinPayload('123456'), { pin: '123456' });
-    assert.deepEqual(buildUserPinPayload(null), { pin: null });
-    assert.deepEqual(buildUserPinPayload(''), { pin: null });
-});
-
-test('buildProfilePinPayload includes current_password and formatted pin', () => {
-    assert.deepEqual(buildProfilePinPayload('4321', 'secretPass'), {
-        pin: '4321',
-        current_password: 'secretPass',
+for (const component of ['Users/UserFormModal.vue', 'Profile/ProfilePosPinCard.vue']) {
+    test(`${component} uses the shared 6-digit rule, not a local 4-digit one`, () => {
+        const source = read(`../../resources/js/Components/${component}`);
+        assert.match(source, /from '@\/helpers\/posPin'/);
+        assert.equal((source.match(/v-bind="POS_PIN_INPUT_ATTRS"/g) || []).length, 2);
+        assert.doesNotMatch(source, /minlength="4"/);
+        assert.doesNotMatch(source, /\\d\{4,6\}/);
+        assert.match(source, /posPinError\(pin, confirmation\)/);
     });
-    assert.deepEqual(buildProfilePinPayload(null, 'secretPass'), {
-        pin: null,
-        current_password: 'secretPass',
-    });
-});
+}
