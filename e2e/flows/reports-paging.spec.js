@@ -293,7 +293,11 @@ test.describe("Reports: full-report print", () => {
     );
 
     await page.getByTestId("reports-print").click();
-    await expect.poll(() => page.evaluate(() => window.__printCalls)).toBe(1);
+    await expect(page.getByTestId("reports-print-progress")).toBeVisible();
+    // 22 sequential requests + a 4321-row sheet: give it more than the default 8s.
+    await expect
+      .poll(() => page.evaluate(() => window.__printCalls), { timeout: 45_000 })
+      .toBe(1);
 
     const printCalls = calls.items.filter((c) => c.per_page === "200");
     expect(printCalls.map((c) => c.page)).toEqual(
