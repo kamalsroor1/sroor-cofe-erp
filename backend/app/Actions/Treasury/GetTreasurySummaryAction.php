@@ -11,6 +11,7 @@ use App\Models\Invoice;
 use App\Models\Supplier;
 use App\Services\DailyCashFlowService;
 use App\Services\Reports\ReportDateRange;
+use App\Services\Shifts\BranchDrawers;
 use App\Services\TreasuryService;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
@@ -31,6 +32,7 @@ final class GetTreasurySummaryAction
         private readonly DailyCashFlowService $dailyCashFlow,
         private readonly TreasuryService $treasuryService,
         private readonly TenantClock $tenantClock,
+        private readonly BranchDrawers $drawers,
     ) {}
 
     /**
@@ -57,6 +59,9 @@ final class GetTreasurySummaryAction
         $totalPayable = $this->sum(Supplier::query()->where('current_balance', '>', 0), 'current_balance');
 
         $activeShift = CashShift::query()->where('store_id', $storeId)->where('status', 'open')->latest('id')->first();
+        // SHIFT-02: a per-cashier branch has one open shift (drawer) per cashier: the branch's
+        // opening cash is their sum (one shift in a shared branch: unchanged).
+        $drawers = $this->drawers->summary($storeId);
 
         return [
             'store_id' => $storeId,
@@ -81,9 +86,14 @@ final class GetTreasurySummaryAction
             'active_shift' => $activeShift instanceof CashShift ? [
                 'id' => $activeShift->id,
                 'shift_number' => $activeShift->shift_number ?? $activeShift->id,
-                'opening_cash_balance' => Decimal::normalize((string) $activeShift->opening_cash_balance),
+                // SHIFT-02: the branch total over every open shift (the newest shift's own float
+                // in a shared branch, as before).
+                'opening_cash_balance' => $drawers['opening_cash_balance'],
                 'opened_at' => $activeShift->opened_at,
+                'open_shifts_count' => $drawers['count'],
             ] : null,
+            // SHIFT-02: every open shift of the branch with its float and expected cash, and the totals.
+            'open_shifts' => $drawers,
         ];
     }
 

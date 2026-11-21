@@ -9,7 +9,7 @@ use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Store;
 use App\Services\DailyCashFlowService;
-use App\Services\ShiftService;
+use App\Services\Shifts\BranchDrawers;
 use App\Support\Money\Decimal;
 use Illuminate\Support\Collection;
 
@@ -27,7 +27,7 @@ final class GetDailyJournalPrintDataAction
 {
     public function __construct(
         private readonly DailyCashFlowService $dailyCashFlow,
-        private readonly ShiftService $shiftService,
+        private readonly BranchDrawers $drawers,
     ) {}
 
     /**
@@ -63,9 +63,18 @@ final class GetDailyJournalPrintDataAction
 
         $cashFlow = $this->dailyCashFlow->forDate($date, $storeId);
 
-        // Opening float of the latest shift opened that day (unchanged print semantics).
-        $latestShift = $shiftsOnDate->first();
-        $openingCashBalance = $latestShift instanceof CashShift ? Decimal::normalize((string) $latestShift->opening_cash_balance) : '0.000';
+        // Opening float of the latest shared shift opened that day (unchanged print semantics).
+        // SHIFT-02: plus the floats of the per-cashier drawers of that day, summed exactly like
+        // the on-screen journal (BranchDrawers::openingCashFor()), never one cashier's float.
+        $latestShared = $shiftsOnDate->first(fn (CashShift $shift): bool => ! $shift->isPerCashier());
+        $openingCashBalance = bcadd(
+            $latestShared instanceof CashShift ? Decimal::normalize((string) $latestShared->opening_cash_balance) : '0.000',
+            $this->drawers->openingCashFor($date, $storeId, perCashierOnly: true),
+            3,
+        );
+
+        // SHIFT-02: cash moved that day by writers without an open shift (main treasury).
+        $outside = $this->dailyCashFlow->forDate($date, $storeId, outsideShiftsOnly: true);
 
         return [
             'date' => $date,
@@ -87,35 +96,13 @@ final class GetDailyJournalPrintDataAction
             'netCashToday' => $cashFlow['net_cash'],
             'openingCashBalance' => $openingCashBalance,
             // BUG-03: what the open shift(s) expect in the drawer, as on screen; null = no open shift.
-            'expectedCashInDrawer' => $this->openShiftsExpectedCash($storeId),
+            // SHIFT-02: summed over every open drawer (each cashier's in a per-cashier branch).
+            'expectedCashInDrawer' => $this->drawers->expectedCash($storeId),
+            'outsideShiftsCashIn' => $outside['total_cash_in'],
+            'outsideShiftsCashOut' => $outside['total_cash_out'],
+            'outsideShiftsNetCash' => $outside['net_cash'],
             'shiftsOnDate' => $shiftsOnDate,
         ];
-    }
-
-    /**
-     * Expected drawer cash of the open shift of the store (ShiftService::calculateShiftTotals(),
-     * the figure of GET /shifts/current), or - for every store - the sum over the latest open
-     * shift of each store. Null when no shift is open.
-     */
-    private function openShiftsExpectedCash(?int $storeId): ?string
-    {
-        $shifts = CashShift::query()
-            ->where('status', 'open')
-            ->when($storeId !== null, fn ($q) => $q->where('store_id', $storeId))
-            ->orderBy('id')
-            ->get()
-            ->keyBy(fn (CashShift $shift): string => (string) $shift->store_id); // later (higher id) wins
-
-        if ($shifts->isEmpty()) {
-            return null;
-        }
-
-        $total = '0.000';
-        foreach ($shifts as $shift) {
-            $total = bcadd($total, $this->shiftService->calculateShiftTotals($shift)['expected_cash_balance'], 3);
-        }
-
-        return $total;
     }
 
     /**
