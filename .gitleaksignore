@@ -112,3 +112,22 @@ a6caa9e00dd9fd5df00863cc727f8379861ec7ec:verify_seeded_data.py:sroor-hardcoded-p
 # Not credentials: PHPUnit fixture constants (renamed in the next commit so they no longer match).
 a754f58ef95dcd3cba7deed754c2a4b8c0fb76d9:backend/tests/Feature/Tenancy/ProvisionTenantJobTest.php:sroor-hardcoded-password:62
 a754f58ef95dcd3cba7deed754c2a4b8c0fb76d9:backend/tests/Feature/Tenancy/TenantDatabasePasswordEncryptionTest.php:sroor-hardcoded-password:30
+# Not a credential: generic-api-key matched a report column key name (`bucket_90_plus`,
+# debt-aging bucket) in a Vue composable. False positive in a commit already on
+# feature/multi-tenant (SHOP-05); nothing to rotate.
+506ae81acfedd6ac5b4b48214983f69cde520cd8:backend/resources/js/Composables/useReportBreakdowns.js:generic-api-key:63
+# Not credentials: PHPUnit / Playwright fixture constants (fake passwords and fake Telegram
+# bot tokens for mocked HTTP) and a local-docker doc example, in commits already on
+# feature/multi-tenant. Found by a full-history scan on 2026-11-21; nothing to rotate.
+e2653a51001c2a8738e9da16bf864c0057127d13:backend/tests/Feature/Signup/SelfSignupAbuseProtectionTest.php:sroor-hardcoded-password:35
+f8f422b49b3bbeb5e75769875579a9fb8be4f332:backend/tests/Feature/Signup/SelfSignupProvisioningTest.php:sroor-hardcoded-password:54
+148088b677d4940a6578b7bf4e704a47846e547e:backend/tests/Feature/Signup/SelfSignupApiTest.php:sroor-hardcoded-password:33
+603280c4a7aaa710346c368d8eea552af2f7e890:backend/tests/Feature/Console/DispatchTenantTelegramAlertsCommandTest.php:sroor-hardcoded-password:25
+93fb23753d66990647f6923951b5ff57d5252d86:backend/tests/Feature/Console/ShopTelegramAlertJobsUseShopBotTest.php:sroor-hardcoded-password:29
+93fb23753d66990647f6923951b5ff57d5252d86:backend/tests/Feature/Console/ShopTelegramAlertJobsUseShopBotTest.php:sroor-hardcoded-password:33
+603280c4a7aaa710346c368d8eea552af2f7e890:backend/tests/Feature/Console/DispatchTenantTelegramAlertsCommandTest.php:sroor-hardcoded-password:203
+178a45f715affb6dbdef201d03b42155cf75b2fb:backend/tests/Feature/Billing/RecordManualPaymentApiTest.php:generic-api-key:122
+5d20928f30458913256ace107f2c9e54b88b26ad:e2e/flows/forced-password-change.spec.js:sroor-hardcoded-password:14
+5d20928f30458913256ace107f2c9e54b88b26ad:e2e/flows/forced-password-change.spec.js:sroor-hardcoded-password:15
+dd7d6c8904e0b6be93840b60c5e20c3934c1bdfb:docs/07-operations/local-docker.md:sroor-dotenv-secret:44
+9269f470f5868c23de846a4a6ae47c5072c980ba:backend/tests/Feature/Central/CentralAuthApiTest.php:sroor-hardcoded-password:32
