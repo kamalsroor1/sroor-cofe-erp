@@ -33,7 +33,7 @@ final class CreateStoreAction
                 Store::where('is_main', true)->update(['is_main' => false]);
             }
 
-            $generatedCode = $dto->code ?? (strtoupper(substr($dto->type, 0, 3)).'-'.rand(100, 999));
+            $generatedCode = $dto->code ?? $this->nextFreeCode($dto->type);
 
             $store = Store::create([
                 'name' => $dto->name,
@@ -54,5 +54,23 @@ final class CreateStoreAction
 
             return $store;
         });
+    }
+
+    /**
+     * `RET-004`-style code that no store (trashed ones included: the column is unique) uses yet.
+     * It used to be a random 100-999 suffix, which collided on the unique index now and then
+     * and turned an ordinary "add branch" into a 500.
+     */
+    private function nextFreeCode(string $type): string
+    {
+        $prefix = strtoupper(substr($type, 0, 3)).'-';
+        $next = (int) Store::withTrashed()->max('id') + 1;
+
+        do {
+            $code = $prefix.str_pad((string) $next, 3, '0', STR_PAD_LEFT);
+            $next++;
+        } while (Store::withTrashed()->where('code', $code)->exists());
+
+        return $code;
     }
 }
