@@ -428,7 +428,7 @@ final class ShiftClockChangeApiTest extends TenantTestCase
             ]);
             $purchaseB = Purchase::create([
                 'purchase_number' => 'PUR-DT-B', 'supplier_id' => $this->supplierId, 'store_id' => $this->storeB,
-                'purchase_date' => now()->toDateString(), 'status' => 'received', 'payment_status' => 'unpaid',
+                'purchase_date' => now()->toDateString(), 'status' => 'confirmed', 'payment_status' => 'unpaid',
                 'subtotal' => '80.000', 'discount_amount' => '0.000', 'net_total' => '80.000',
                 'paid_amount' => '0.000', 'remaining_amount' => '80.000',
             ]);

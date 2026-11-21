@@ -18,6 +18,7 @@ declare(strict_types=1);
 use App\Actions\StockCounts\PostStockCountAction;
 use App\DTOs\StockCounts\PostStockCountDTO;
 use App\Exceptions\DatabaseBusyException;
+use App\Models\CashShift;
 use App\Models\Invoice;
 use App\Models\Item;
 use App\Services\InvoiceService;
@@ -100,6 +101,19 @@ try {
             $invoice = app(InvoiceService::class)->confirmInvoice($payload);
 
             return ['invoice_id' => (int) $invoice->getKey(), 'invoice_number' => (string) $invoice->invoice_number, 'created' => $invoice->wasRecentlyCreated];
+        })(),
+        // DATE-01 / DEC-SHIFT: a sale subject to the shift rule, racing a close of that shift.
+        'shift_checkout' => (static function () use ($payload): array {
+            $invoice = app(InvoiceService::class)->confirmInvoice($payload, requireOpenShift: true);
+
+            return ['invoice_id' => (int) $invoice->getKey(), 'invoice_number' => (string) $invoice->invoice_number, 'created' => $invoice->wasRecentlyCreated];
+        })(),
+        'close_shift' => (static function () use ($payload): array {
+            // A cash difference queues a Telegram alert after commit: never reach the network here.
+            config(['queue.default' => 'null']);
+            $shift = app(ShiftService::class)->closeShift(CashShift::query()->findOrFail((int) $payload['shift_id']), (string) $payload['actual_cash']);
+
+            return ['shift_id' => (int) $shift->getKey(), 'status' => (string) $shift->status];
         })(),
         'update' => (static function () use ($payload): array {
             $invoice = app(InvoiceService::class)->updateInvoice(Invoice::query()->findOrFail((int) $payload['invoice_id']), (array) $payload['data']);

@@ -68,7 +68,8 @@ setup('Authenticate & Save Storage State', async ({ page }) => {
 
         // Get storage state and mirror for both 127.0.0.1 and localhost origins
         const storage = await page.context().storageState();
-        if (storage.origins && storage.origins.length > 0) {
+        const primaryHost = storage.origins?.[0] ? new URL(storage.origins[0].origin).hostname : '';
+        if (['localhost', '127.0.0.1'].includes(primaryHost)) {
             const primary = storage.origins[0];
             const isLocalhost = primary.origin.includes('localhost');
             const altOriginUrl = isLocalhost
