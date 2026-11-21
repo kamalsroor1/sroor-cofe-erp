@@ -1,13 +1,15 @@
-// SaaS onboarding journey, end to end, against the LOCAL docker dev stack only
-// (docs/07-operations/local-docker.md). Nothing is mocked: every row is real.
+// SaaS onboarding journey, end to end, against a LOCAL stack only. Nothing is mocked: every row is real.
+// Docker dev stack (docs/07-operations/local-docker.md) by default; `SROOR_STACK=native` for an app
+// served on this machine with its environment exported (tinker then runs `php backend/artisan`).
 //
-//  0. setup     a throwaway platform operator (tinker) + 2FA enrolled through the API (TOTP in memory)
-//  1. guest     sroor.test:8000/ -> /welcome lists the public plans; /pricing renders
-//  2. guest     /signup on the trial plan -> success state
-//  3. console   operator signs in (password + TOTP), approves the request; the 2FA step-up prompt
-//               opens ABOVE the approve modal (commit 6294e099) and is completed with a TOTP code
-//  4. platform  provisioning polled through /central/tenants/resolve until ready; status = trial
-//  5. owner     signs in on <slug>.localhost:8000 -> dashboard
+//  0. setup     a throwaway platform operator (tinker) + 2FA enrolled through the API (TOTP in memory),
+//               used only for the cleanup; this machine's self-signup rate-limit keys are reset
+//  1. guest     sroor.test/ -> /welcome lists the public plans; /pricing renders
+//  2. guest     /signup?plan=<first paid plan> (SIGN-11 self-signup): form -> POST /api/v1/signup
+//  3. guest     the 6-digit code is read from the mail log (MAIL_MAILER=log), typed into the OTP step
+//  4. platform  "preparing your shop" turns into the sign-in link; the tenant resolves with status trial
+//  5. owner     signs in on <slug>.localhost with the password chosen at signup (no forced change);
+//               the subscription is a trial on the CHOSEN paid plan (SELL-06 / SIGN-16)
 //  6. owner     creates a weighted item (UI), stocks it with a purchase (API), opens a shift and
 //               sells 0.250 kg in cash at the POS (UI)
 //  7. checks    exact decimal stock, invoice in the list / show / receipt views, treasury cash
@@ -18,19 +20,22 @@
 //
 // Run (from the repo root, stack up):
 //   npx playwright test e2e/flows/saas-onboarding-flow.spec.js --project=desktop
+import fs from 'node:fs';
+import path from 'node:path';
 import { test, expect } from '@playwright/test';
 import {
     HOST_RESOLVER_ARGS,
     LOCAL_HOSTS,
+    REPO_ROOT,
     assertLocalUrl,
-    composeGatewayIp,
+    stackClientIp,
     tinker,
     tinkerValue,
 } from '../utils/local-stack.js';
 import { createTotpIssuer } from '../utils/totp.js';
 import { t } from '../utils/translations.js';
 
-// A fresh browser (no stored demo session) that resolves the platform apex to the local nginx.
+// A fresh browser (no stored demo session) that resolves the platform apex to the local stack.
 test.use({
     storageState: { cookies: [], origins: [] },
     launchOptions: { args: HOST_RESOLVER_ARGS },
@@ -40,7 +45,7 @@ test.use({
 const RUN_ID = Date.now();
 const SLUG = `e2e${RUN_ID}`;
 const BUSINESS_NAME = `متجر اختبار E2E ${RUN_ID}`;
-const CONTACT_NAME = 'مدير الاختبار';
+const OWNER_NAME = 'مدير الاختبار';
 const PHONE = `0100${String(RUN_ID).slice(-7)}`;
 const OWNER_EMAIL = `owner-${RUN_ID}@e2e.local`;
 // Test-only values, generated per run, never real credentials.
@@ -48,7 +53,8 @@ const OWNER_PASSWORD = `Owner${RUN_ID}x`;
 const OPERATOR_EMAIL = `e2e-operator-${RUN_ID}@e2e.local`;
 const OPERATOR_PASSWORD = `Operator-${RUN_ID}-pw`;
 const ITEM_NAME = `بن محوج E2E ${RUN_ID}`;
-const TRIAL_PLAN_CODE = 'free';
+// The app writes queued mail here with MAIL_MAILER=log (docker: LOG_STACK=single; native: LOG_CHANNEL=single).
+const MAIL_LOG = path.join(REPO_ROOT, 'backend', 'storage', 'logs', 'laravel.log');
 
 const ADMIN = LOCAL_HOSTS.admin;
 const APEX = LOCAL_HOSTS.apex;
@@ -131,9 +137,28 @@ function waitForApi(page, method, pathPattern) {
     );
 }
 
+const mailLogSize = () => (fs.existsSync(MAIL_LOG) ? fs.statSync(MAIL_LOG).size : 0);
+
+/** The 6-digit verification code of the mail sent to `email` after byte `offset` of the mail log. */
+function readSignupCode(email, offset) {
+    if (!fs.existsSync(MAIL_LOG)) return null;
+    const fd = fs.openSync(MAIL_LOG, 'r');
+    try {
+        const size = fs.fstatSync(fd).size;
+        const buffer = Buffer.alloc(Math.max(0, size - offset));
+        fs.readSync(fd, buffer, 0, buffer.length, offset);
+        const text = buffer.toString('utf8');
+        const at = text.lastIndexOf(`To: ${email}`);
+        if (at === -1) return null;
+        return text.slice(at, at + 20_000).match(/^\s*(\d{6})\s*$/mu)?.[1] ?? null;
+    } finally {
+        fs.closeSync(fd);
+    }
+}
+
 test.describe.configure({ mode: 'serial' });
 
-test('SaaS onboarding: landing -> signup -> console approval with step-up -> owner sells and returns', async ({
+test('SaaS onboarding: landing -> OTP self-signup on a paid plan -> trial -> owner sells and returns', async ({
     page,
     context,
     request,
@@ -152,16 +177,16 @@ test('SaaS onboarding: landing -> signup -> console approval with step-up -> own
         }
     );
 
-    const state = { operatorId: null, totp: null, signupId: null, tenantId: null, invoice: null };
+    const state = { operatorId: null, centralToken: null, tenantId: null, invoice: null, plan: null, mailOffset: 0 };
 
     // ---------------------------------------------------------------------------------------------
-    await test.step('0. setup: throwaway operator with confirmed 2FA', async () => {
-        // Each run makes ONE accepted signup, the limiter allows 3 per hour per IP: reset only the
-        // signup keys of this machine's compose gateway so reruns stay possible (local stack only).
-        const ip = composeGatewayIp();
+    await test.step('0. setup: throwaway operator with confirmed 2FA; signup limits of this machine reset', async () => {
+        // Each run makes ONE accepted signup; the limiter allows 5 per hour per IP. Reset only this
+        // machine's self-signup keys so reruns stay possible (local stack only).
+        const ip = stackClientIp();
         if (ip) {
             tinker(
-                `foreach (["signup-requests-hour|".getenv("E2E_IP"), "signup-requests-day|".getenv("E2E_IP"), "signup-requests-global-hour"] as $k) { Illuminate\\Support\\Facades\\RateLimiter::clear(md5("signup-requests".$k)); } echo "OK=1";`,
+                `foreach (["self-signup-hour|".getenv("E2E_IP"), "self-signup-day|".getenv("E2E_IP"), "self-signup-attempts|".getenv("E2E_IP"), "self-signup-global-hour"] as $k) { Illuminate\\Support\\Facades\\RateLimiter::clear(md5("self-signup".$k)); } echo "OK=1";`,
                 { E2E_IP: ip }
             );
         }
@@ -186,15 +211,16 @@ test('SaaS onboarding: landing -> signup -> console approval with step-up -> own
         });
         const enableBody = await json(enable);
         expect(enable.status(), JSON.stringify(enableBody)).toBe(200);
-        state.totp = createTotpIssuer(enableBody.data.secret);
+        const totp = createTotpIssuer(enableBody.data.secret);
 
         const confirm = await request.post(`${ADMIN}/api/v1/super-admin/auth/two-factor/confirm`, {
             headers: { Accept: 'application/json', Authorization: `Bearer ${setupToken}` },
-            data: { code: await state.totp.next() },
+            data: { code: await totp.next() },
         });
         const confirmBody = await json(confirm);
         expect(confirm.status(), JSON.stringify(confirmBody)).toBe(200);
         expect(confirmBody.data.abilities).toEqual(['central:*']);
+        state.centralToken = confirmBody.data.token ?? setupToken;
     });
 
     // ---------------------------------------------------------------------------------------------
@@ -202,7 +228,8 @@ test('SaaS onboarding: landing -> signup -> console approval with step-up -> own
         const plansResponse = await request.get(`${LOCAL_HOSTS.loopback}/api/v1/public/plans`);
         expect(plansResponse.status()).toBe(200);
         const plans = (await plansResponse.json()).data.plans;
-        expect(plans.map((p) => p.code)).toEqual(expect.arrayContaining([TRIAL_PLAN_CODE]));
+        state.plan = plans.find((plan) => !plan.is_free);
+        expect(state.plan, `a paid plan in the public catalog: ${plans.map((p) => p.code).join(', ')}`).toBeTruthy();
 
         await page.goto(`${APEX}/`);
         await page.waitForURL((url) => url.pathname === '/welcome');
@@ -218,130 +245,80 @@ test('SaaS onboarding: landing -> signup -> console approval with step-up -> own
     });
 
     // ---------------------------------------------------------------------------------------------
-    await test.step('2. guest: signup request on the trial plan', async () => {
-        await page.goto(`${APEX}/signup`);
-        await page.getByLabel(t('signup.form.business_name')).fill(BUSINESS_NAME);
-        await page.getByLabel(t('signup.form.contact_name')).fill(CONTACT_NAME);
-        await page.getByLabel(t('signup.form.phone')).fill(PHONE);
-        await page.getByLabel(t('signup.form.email')).fill(OWNER_EMAIL);
+    await test.step('2. guest: self-signup form on the paid plan', async () => {
+        await page.goto(`${APEX}/signup?plan=${encodeURIComponent(state.plan.code)}`);
+        // Labels of required fields end with " *": match the whole label, not the password toggles.
+        const escape = (text) => text.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+        const field = (key) =>
+            page.getByLabel(new RegExp(`^${escape(t(`self_signup.ui.form.${key}`))}\\s*\\*?$`, 'u'));
+        await field('business_name').fill(BUSINESS_NAME);
+        await field('owner_name').fill(OWNER_NAME);
+        await field('email').fill(OWNER_EMAIL);
+        await field('phone').fill(PHONE);
+        await field('password').fill(OWNER_PASSWORD);
+        await field('password_confirmation').fill(OWNER_PASSWORD);
 
-        await page.getByLabel(t('signup.form.business_type')).click();
+        await field('business_type').click();
         await page.getByRole('option', { name: t('signup.business_types.retail'), exact: true }).click();
 
-        const trialName = t('plans.plans.free.name');
-        await page.getByLabel(t('signup.form.plan')).click();
-        await page.getByRole('option', { name: trialName, exact: true }).click();
+        // ?plan= preselects the paid plan.
+        await expect(field('plan')).toContainText(state.plan.name);
 
-        await page.getByLabel(t('signup.form.subdomain')).fill(SLUG);
+        await field('subdomain').fill(SLUG);
         await page.getByTestId('signup-terms-checkbox').check();
 
-        const submitted = waitForApi(page, 'POST', /\/api\/v1\/public\/signup-requests$/u);
-        await page.getByRole('button', { name: t('signup.form.submit') }).click();
+        state.mailOffset = mailLogSize();
+        const submitted = waitForApi(page, 'POST', /\/api\/v1\/signup\/?$/u);
+        await page.getByRole('button', { name: t('self_signup.ui.form.submit') }).click();
         const response = await submitted;
         const body = await json(response);
         expect(response.status(), JSON.stringify(body)).toBe(201);
         expect(response.request().postDataJSON()).toMatchObject({
-            plan_code: TRIAL_PLAN_CODE,
-            preferred_subdomain: SLUG,
-            phone: PHONE,
+            plan_code: state.plan.code,
+            subdomain: SLUG,
+            email: OWNER_EMAIL,
             terms_accepted: true,
         });
-        await expect(page.getByRole('status')).toBeVisible();
+        await expect(page.getByTestId('signup-code-input')).toBeVisible();
     });
 
     // ---------------------------------------------------------------------------------------------
-    await test.step('3. console: operator signs in with password + TOTP', async () => {
-        await page.goto(`${ADMIN}/super-admin/login`);
-        await page.getByLabel(t('super.central_auth.email_label')).fill(OPERATOR_EMAIL);
-        await page.getByLabel(t('super.central_auth.password_label')).fill(OPERATOR_PASSWORD);
-        await page.getByRole('button', { name: t('super.central_auth.sign_in') }).click();
-
-        await page.getByLabel(t('super.central_auth.code_label')).fill(await state.totp.next());
-        const challenge = waitForApi(page, 'POST', /\/super-admin\/auth\/two-factor-challenge$/u);
-        await page.getByRole('button', { name: t('super.central_auth.verify') }).click();
-        expect((await challenge).status()).toBe(200);
-        await page.waitForURL((url) => url.pathname.startsWith('/super-admin') && !url.pathname.endsWith('/login'));
-    });
-
-    await test.step('3b. console: approve on the trial plan through the stacked step-up prompt', async () => {
-        // The sign-in proved 2FA moments ago; age that proof past the 15 min step-up window so the
-        // approve request meets RequireRecentTwoFactor exactly like an operator back from lunch.
-        tinker(
-            'App\\Models\\CentralPersonalAccessToken::query()->where("tokenable_id", (int) getenv("E2E_OP_ID"))->update(["two_factor_verified_at" => now()->subMinutes(16)]); echo "OK=1";',
-            { E2E_OP_ID: state.operatorId }
-        );
-
-        await page.goto(`${ADMIN}/super-admin/signup-requests`);
-        await page.getByPlaceholder(t('signup.console.search_placeholder')).fill(BUSINESS_NAME);
-        const card = page.locator('[data-testid^="signup-request-"]').filter({ hasText: BUSINESS_NAME });
-        await expect(card).toHaveCount(1);
-        state.signupId = (await card.getAttribute('data-testid')).replace('signup-request-', '');
-        await card.getByRole('button', { name: t('signup.console.approve') }).click();
-
-        const subdomain = page.getByLabel(t('signup.console.subdomain_label'));
-        await expect(subdomain).toHaveValue(SLUG);
-        await expect(page.getByLabel(t('signup.console.owner_email'))).toHaveValue(OWNER_EMAIL);
-        await expect(page.getByLabel(t('signup.console.plan_label'))).toContainText(t('plans.plans.free.name'));
-        await page.getByLabel(t('signup.console.owner_password')).fill(OWNER_PASSWORD);
-
-        const firstAttempt = waitForApi(page, 'POST', /\/signup-requests\/\d+\/approve$/u);
-        await page.getByRole('button', { name: t('signup.console.approve_confirm') }).click();
-        const refused = await firstAttempt;
-        expect(refused.status()).toBe(403);
-        expect((await json(refused)).error_code ?? (await json(refused)).code).toBeDefined();
-
-        // The step-up prompt: visible, and the TOP layer (its input is what a click lands on).
-        const code = page.getByLabel(t('super.central_auth.code_label'));
-        await expect(code).toBeVisible();
-        const topmost = await code.evaluate((input) => {
-            const box = input.getBoundingClientRect();
-            const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
-            return hit === input || input.contains(hit);
-        });
-        expect(topmost, 'the step-up prompt must be above the approve modal').toBe(true);
-        await code.click(); // Playwright's actionability check also fails if another layer intercepts.
-        await code.fill(await state.totp.next());
-
-        const stepUp = waitForApi(page, 'POST', /\/super-admin\/auth\/step-up$/u);
-        const retried = waitForApi(page, 'POST', /\/signup-requests\/\d+\/approve$/u);
-        await page.getByRole('button', { name: t('super.central_auth.step_up_confirm') }).click();
-        expect((await stepUp).status()).toBe(200);
-        const approved = await retried;
-        const approvedBody = await json(approved);
-        expect(approved.status(), JSON.stringify(approvedBody)).toBeLessThan(300);
-        await expect(code).toBeHidden();
-        await expect(page.getByText(t('signup.console.preparing_title'))).toBeVisible();
-
-        // The deliberate step-up 403 above is logged by Chromium as a failed resource: exactly one.
-        const stepUpNoise = consoleErrors.filter((e) => /signup-requests :: Failed to load resource: .* 403/u.test(e));
-        expect(stepUpNoise.length, 'only the step-up 403 is logged').toBe(1);
-        consoleErrors.splice(consoleErrors.indexOf(stepUpNoise[0]), 1);
-    });
-
-    // ---------------------------------------------------------------------------------------------
-    await test.step('4. platform: provisioning finishes, tenant status is trial', async () => {
-        let last = null;
+    await test.step('3. guest: the emailed 6-digit code verifies the signup', async () => {
+        let code = null;
         await expect
-            .poll(
-                async () => {
-                    const res = await request.get(
-                        `${LOCAL_HOSTS.loopback}/api/v1/central/tenants/resolve?code=${encodeURIComponent(SLUG)}`,
-                        { headers: { Accept: 'application/json' } }
-                    );
-                    last = { status: res.status(), body: await json(res) };
-                    return last.status;
-                },
-                { timeout: 240_000, intervals: [3_000, 4_000, 5_000] }
-            )
-            .toBe(200);
-        expect(last.body.success).toBe(true);
-        state.tenantId = last.body.data.tenant_id;
-        expect(last.body.data.slug).toBe(SLUG);
-        expect(last.body.data.status, JSON.stringify(last.body.data)).toBe('trial');
+            .poll(() => (code = readSignupCode(OWNER_EMAIL, state.mailOffset)), {
+                message: `verification code for ${OWNER_EMAIL} in ${MAIL_LOG} (MAIL_MAILER=log)`,
+                timeout: 60_000,
+                intervals: [500, 1_000, 2_000],
+            })
+            .toMatch(/^\d{6}$/u);
+
+        const verified = waitForApi(page, 'POST', /\/api\/v1\/signup\/verify$/u);
+        await page.getByTestId('signup-code-input').fill(code);
+        const response = await verified;
+        expect(response.status(), JSON.stringify(await json(response))).toBe(200);
     });
 
     // ---------------------------------------------------------------------------------------------
-    await test.step('5. owner: signs in on the tenant host and lands on the dashboard', async () => {
+    await test.step('4. platform: provisioning ends with the sign-in link; the tenant is on trial', async () => {
+        const openLogin = page.getByRole('link', { name: t('self_signup.ui.provisioning.open_login') });
+        await expect(openLogin).toBeVisible({ timeout: 240_000 });
+        const href = await openLogin.getAttribute('href');
+        expect(href).toMatch(new RegExp(`//${SLUG}\\.[^/]+/login$`, 'u'));
+
+        const res = await request.get(
+            `${LOCAL_HOSTS.loopback}/api/v1/central/tenants/resolve?code=${encodeURIComponent(SLUG)}`,
+            { headers: { Accept: 'application/json' } }
+        );
+        const body = await json(res);
+        expect(res.status(), JSON.stringify(body)).toBe(200);
+        state.tenantId = body.data.tenant_id;
+        expect(body.data.slug).toBe(SLUG);
+        expect(body.data.status, JSON.stringify(body.data)).toBe('trial');
+    });
+
+    // ---------------------------------------------------------------------------------------------
+    await test.step('5. owner: signs in with the chosen password; trial on the chosen paid plan', async () => {
         await page.goto(`${TENANT}/login`);
         await page.locator('#login').fill(OWNER_EMAIL);
         await page.locator('#password').fill(OWNER_PASSWORD);
@@ -350,12 +327,20 @@ test('SaaS onboarding: landing -> signup -> console approval with step-up -> own
         const res = await login;
         const body = await json(res);
         expect(res.status(), JSON.stringify(body)).toBe(200);
+        expect(body.data.must_change_password).toBe(false);
         await page.waitForURL((url) => !url.pathname.startsWith('/login') && !url.pathname.startsWith('/connect'));
         await expect(page.locator('#app > *').first()).toBeVisible();
 
         const me = await tenantApi(page, 'GET', '/api/v1/auth/me');
         expect(me.status).toBe(200);
         expect(JSON.stringify(me.body)).toContain(OWNER_EMAIL);
+
+        // SELL-06 / SIGN-16: a paid-plan signup is a trial ON that plan, not a view-only free shop.
+        const subscription = await tenantApi(page, 'GET', '/api/v1/billing/subscription');
+        expect(subscription.status, JSON.stringify(subscription.body)).toBe(200);
+        expect(subscription.body.data.plan).toMatchObject({ code: state.plan.code, is_free: false });
+        expect(subscription.body.data.tenant_status.value).toBe('trial');
+        expect(subscription.body.data.subscription.trial_ends_at).toBeTruthy();
     });
 
     // ---------------------------------------------------------------------------------------------
@@ -375,7 +360,7 @@ test('SaaS onboarding: landing -> signup -> console approval with step-up -> own
         await page.getByRole('option', { name: weightLabel, exact: true }).click();
         await expect(page.getByTestId('item-is-weighted')).toBeChecked();
 
-        await page.getByLabel(t('inventory.cost_price')).fill('100');
+        await page.getByLabel(t('inventory.last_purchase_price')).fill('100');
         await page.getByLabel(t('inventory.selling_price')).fill('250');
 
         const created = waitForApi(page, 'POST', /\/api\/v1\/items$/u);
@@ -578,12 +563,10 @@ test('SaaS onboarding: landing -> signup -> console approval with step-up -> own
 
     // ---------------------------------------------------------------------------------------------
     await softStep('10. cleanup: cancel + archive the E2E tenant through the console API', async () => {
-        await page.goto(`${ADMIN}/super-admin/dashboard`);
-        const centralToken = await page.evaluate(() => localStorage.getItem('central_auth_token'));
-        expect(centralToken, 'console session still open').toBeTruthy();
-        const headers = { Accept: 'application/json', Authorization: `Bearer ${centralToken}` };
+        expect(state.centralToken, 'operator token from step 0').toBeTruthy();
+        const headers = { Accept: 'application/json', Authorization: `Bearer ${state.centralToken}` };
 
-        // The step-up from step 3b is still fresh on this token (15 min window).
+        // The 2FA confirmed in step 0 is still fresh on this token (15 min step-up window).
         const cancelled = await request.post(`${ADMIN}/api/v1/super-admin/tenants/${state.tenantId}/toggle-status`, {
             headers,
             data: { status: 'cancelled', note: 'E2E run cleanup' },
