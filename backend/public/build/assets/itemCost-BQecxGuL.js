@@ -1,0 +1,1 @@
+var e=e=>e!=null&&e!==``&&Number.isFinite(Number(e));function t(t){return t?e(t.average_cost)&&Number(t.average_cost)!==0?t.average_cost:e(t.cost_price)?t.cost_price:null:null}function n(t){return t?e(t.last_purchase_price)?t.last_purchase_price:e(t.cost_price)?t.cost_price:null:null}export{n,t};

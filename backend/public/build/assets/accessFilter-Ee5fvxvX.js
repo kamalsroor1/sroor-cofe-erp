@@ -1,0 +1,1 @@
+var e=e=>[e.to,...e.also||[]].filter(e=>typeof e==`string`);function t(t,n){return t.filter(t=>e(t).every(e=>n(e)))}export{t};

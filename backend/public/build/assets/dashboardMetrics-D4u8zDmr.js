@@ -1,0 +1,1 @@
+var e=e=>e!=null&&e!==``,t=t=>e(t)&&!/^[-+]?0*\.?0*$/.test(String(t).trim()),n=({metrics:e={},recentInvoices:n=[],period:r={}}={})=>n.length===0&&Number(e.today_invoices_count||0)===0&&!t(e.today_sales)&&!t(e.monthly_sales)&&!t(r.sales);export{n,e as t};

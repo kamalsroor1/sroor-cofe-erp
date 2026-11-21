@@ -1,0 +1,1 @@
+function e(e,t=`20`){let n=String(e??``).replace(/\D/g,``);return n?(n.startsWith(`00`)?n=n.slice(2):n.startsWith(`0`)&&(n=t+n.slice(1)),n):``}function t(t,n){let r=e(t),i=`text=${encodeURIComponent(n)}`;return r?`https://wa.me/${r}?${i}`:`https://wa.me/?${i}`}function n(e,t={}){return Object.keys(t).reduce((e,n)=>e.split(`:${n}`).join(String(t[n])),String(e??``))}export{n,t};
