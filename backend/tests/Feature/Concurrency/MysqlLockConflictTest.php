@@ -470,8 +470,11 @@ final class MysqlLockConflictTest extends TenantTestCase
         });
 
         $this->assertSame(0, $result['rollbacks'], 'A first-of-day follow-up document needed a second attempt (BUG-04): '.json_encode($result, JSON_UNESCAPED_UNICODE));
+        // DATE-03: AdjustItemStockAction and StockService::adjustStock share ONE ADJ-YYYYMMDD
+        // counter, so the stock count is the day's second ADJ document. Each counter still starts
+        // at 1 on the first attempt (no rollback above), which is what BUG-04 is about.
         $this->assertSame(
-            ['refund' => '000001', 'adjust_action' => '0001', 'adjust_count' => '0001', 'treasury' => '0001', 'shift' => '001', 'restored_payment' => '000001'],
+            ['refund' => '000001', 'adjust_action' => '0001', 'adjust_count' => '0002', 'treasury' => '0001', 'shift' => '001', 'restored_payment' => '000001'],
             array_map(fn (string $n): string => substr($n, (int) strrpos($n, '-') + 1), $result['numbers']),
             json_encode($result['numbers'], JSON_UNESCAPED_UNICODE),
         );

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Console;
 
 use App\Actions\Tenants\AdvanceDocumentSequencesAction;
+use App\Enums\TenantStatus;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -20,8 +21,10 @@ use Tests\TenantTestCase;
 /**
  * BKP-02 on a real MySQL / MariaDB server: backup:tenants -> backup:restore-tenant --keep-restored
  * into a second schema -> backup:swap-tenant. The shop must then point at the restored schema with
- * every token revoked and its document counters pushed forward, the previous schema untouched;
- * a failure after the repoint must point the shop back at the previous schema.
+ * every token revoked and its document counters pushed forward, the previous schema untouched.
+ * The restored schema is prepared (migrate, revoke, advance counters) BEFORE the repoint
+ * (22ab9096), so a failure while advancing the counters must leave the shop on its previous schema.
+ * The shop is suspended first: the command refuses a trading shop without --live.
  *
  * `mysql-only`: needs a MySQL server and the mysqldump / mysql clients (phpunit.mysql.xml).
  */
@@ -102,7 +105,7 @@ final class SwapTenantMysqlRoundTripTest extends TenantTestCase
             ->table("{$previous}.document_sequences")->where('scope', self::SCOPE)->value('last_value'));
     }
 
-    public function test_a_failure_after_the_repoint_points_the_shop_back_at_the_previous_database(): void
+    public function test_a_failure_while_preparing_the_restored_database_never_switches_the_shop(): void
     {
         $tenant = $this->tenantWithData();
         $id = (string) $tenant->getTenantKey();
@@ -119,7 +122,7 @@ final class SwapTenantMysqlRoundTripTest extends TenantTestCase
         });
 
         $this->artisan('backup:swap-tenant', ['tenant' => $id, '--database' => $restored, '--force' => true])
-            ->expectsOutputToContain((string) __('console.swap.rolled_back', ['database' => $previous, 'reason' => RuntimeException::class]))
+            ->expectsOutputToContain((string) __('console.swap.prepare_failed', ['database' => $previous, 'reason' => RuntimeException::class]))
             ->assertExitCode(1);
 
         $fresh = Tenant::query()->findOrFail($id);
@@ -141,7 +144,7 @@ final class SwapTenantMysqlRoundTripTest extends TenantTestCase
             }
         }
 
-        $tenant = $this->createTenant();
+        $tenant = $this->createTenant(['status' => TenantStatus::Suspended->value]);
         $this->tenantToken($tenant);
 
         $this->inTenant($tenant, static function (): void {
