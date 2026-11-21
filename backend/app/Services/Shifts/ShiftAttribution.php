@@ -71,27 +71,27 @@ final class ShiftAttribution
             return;
         }
 
-        // SHIFT-02 (owner decision 2026-11-21): a reversal / refund of a document goes back to the
-        // shift holding the original document's money while that shift is still open - an admin
-        // without a drawer cancelling a cashier's cash sale must not leave the refund on no shift
-        // (the cashier's Z would show a false surplus). Closed (or none): the normal rule below.
-        $originalShiftId = $this->originalShiftIdOf($row);
-        if ($originalShiftId !== null) {
-            $open = $this->lockIfOpen($originalShiftId, $storeId);
-            if ($open !== null) {
-                $row->setAttribute(self::COLUMN, $open);
+        // SHIFT-01: in a per-cashier branch the row belongs to the open shift of the user who wrote
+        // it (the seller of an invoice, the writer of a voucher / expense / return): that drawer is
+        // the one the cash physically moved through - a cashier B taking a cash return on cashier
+        // A's sale pays it from B's drawer, so it lands on B's shift.
+        $userId = $row->user_id !== null ? (int) $row->user_id : null;
+        $own = $this->openShiftIdFor($storeId, $userId);
+        if ($own !== null) {
+            $row->setAttribute(self::COLUMN, $own);
 
-                return;
-            }
+            return;
         }
 
-        // SHIFT-01: in a per-cashier branch the row belongs to the open shift of the user who wrote
-        // it (the seller of an invoice, the writer of a voucher / expense / return). SHIFT-02: a
-        // writer without an open shift there (an admin paying an expense) leaves the row unstamped:
-        // it was paid from the main treasury, not from any cashier's drawer.
-        $userId = $row->user_id !== null ? (int) $row->user_id : null;
-
-        $row->setAttribute(self::COLUMN, $this->openShiftIdFor($storeId, $userId));
+        // SHIFT-02: a writer without an open shift (an admin cancelling a cashier's cash sale) sends
+        // a reversal / refund back to the shift holding the original document's money while that
+        // shift is still open, so the cashier's Z shows no false surplus. Any other row written
+        // without a shift stays unstamped: it was paid from the main treasury, not from a drawer.
+        $originalShiftId = $this->originalShiftIdOf($row);
+        $row->setAttribute(
+            self::COLUMN,
+            $originalShiftId !== null ? $this->lockIfOpen($originalShiftId, $storeId) : null,
+        );
     }
 
     /**

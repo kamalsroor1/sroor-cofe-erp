@@ -255,6 +255,34 @@ final class ShiftPerCashierDrawersApiTest extends TenantTestCase
         $this->assertSame('170.000', $totals['expected_cash_balance']);
     }
 
+    public function test_a_cash_return_taken_by_another_cashier_comes_out_of_that_cashiers_drawer(): void
+    {
+        $shiftA = (int) $this->open($this->cashierA, '100')->json('data.id');
+        $shiftB = (int) $this->open($this->cashierB, '50')->json('data.id');
+        $invoiceId = (int) $this->sale($this->cashierA, '5.000')->json('data.id'); // 100
+        $lineId = $this->inTenant($this->tenant, function () use ($invoiceId): int {
+            $this->cashierB->givePermissionTo('returns.manage');
+
+            return (int) InvoiceItem::query()->where('invoice_id', $invoiceId)->value('id');
+        });
+
+        // Cashier B (own open shift) refunds A's customer in cash: B's drawer paid it.
+        $returnId = (int) $this->postJson('/api/v1/returns', [
+            'return_type' => 'sales_return', 'customer_id' => $this->customerId, 'invoice_id' => $invoiceId,
+            'return_date' => now()->toDateString(), 'refund_method' => 'cash',
+            'items' => [['invoice_item_id' => $lineId, 'quantity' => '1.500']],
+        ], $this->tenantHeaders($this->tenant, $this->cashierB))->assertCreated()->json('data.id');
+
+        $this->inTenant($this->tenant, function () use ($shiftB, $returnId): void {
+            $this->assertSame($shiftB, (int) ReturnDocument::query()->findOrFail($returnId)->cash_shift_id);
+            $this->assertSame($shiftB, (int) Payment::query()->where('return_id', $returnId)->sole()->cash_shift_id);
+        });
+        $this->assertSame('0.000', $this->totals($shiftA)['total_refunds']);
+        $this->assertSame('200.000', $this->totals($shiftA)['expected_cash_balance']);
+        $this->assertSame('30.000', $this->totals($shiftB)['total_refunds']);
+        $this->assertSame('20.000', $this->totals($shiftB)['expected_cash_balance']);
+    }
+
     public function test_an_admin_expense_without_a_shift_is_in_the_treasury_but_in_no_shift(): void
     {
         $shiftA = (int) $this->open($this->cashierA, '100')->json('data.id');
