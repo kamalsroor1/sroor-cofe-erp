@@ -207,6 +207,12 @@ return [
     // PERF-01
     'period_too_long' => 'فترة التقرير لا يمكن أن تزيد عن :days يوم. اختار فترة أقصر.',
     'period_reversed' => 'تاريخ البداية لازم يكون قبل تاريخ النهاية.',
+    // PERF-01: full-report A4 print of a paged tab
+    'print_progress' => 'جاري تجهيز التقرير للطباعة: :loaded من :total سطر',
+    'print_too_large' => 'التقرير فيه :total سطر، أكتر من :max اللي ينفع تتطبع مرة واحدة. اختار فترة أقصر أو فرع واحد.',
+    'print_failed' => 'مقدرناش نحمّل التقرير كله للطباعة. جرّب تاني.',
+    'print_cancelled' => 'اتلغت الطباعة.',
+    'print_rows_count' => 'عدد السطور: :count',
     'items_showing_badge' => 'معروض :shown من :total صنف',
     'totals_row_label' => 'إجماليات الفترة كاملة',
     'ledger_showing_badge' => 'معروض :shown من :total حركة',

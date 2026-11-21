@@ -261,3 +261,68 @@ test.describe("Reports: paged tabs", () => {
     await expect(page.getByTestId("error-state")).toHaveCount(0);
   });
 });
+
+// PERF-01: "print A4" on a paged tab prints every row of the filters, fetched 200 at a time into a
+// print-only sheet; the screen keeps its 25-row page. window.print is stubbed to read the sheet.
+test.describe("Reports: full-report print", () => {
+  const stubPrint = (page) =>
+    page.addInitScript(() => {
+      window.__printCalls = 0;
+      window.print = () => {
+        window.__printCalls += 1;
+        const sheet = document.querySelector(
+          '[data-testid="report-print-sheet"]',
+        );
+        window.__printRows = sheet
+          ? sheet.querySelectorAll("tbody tr").length
+          : -1;
+        window.__printHasTotals = Boolean(
+          sheet?.querySelector('[data-testid="report-print-totals"]'),
+        );
+      };
+    });
+
+  test("items: every row of the period is printed, not the visible page", async ({
+    page,
+  }) => {
+    await stubPrint(page);
+    const calls = await mockReports(page);
+    await openTab(page, "items");
+    await expect(page.getByTestId("items-count-badge")).toContainText(
+      digits(ITEMS_TOTAL),
+    );
+
+    await page.getByTestId("reports-print").click();
+    await expect.poll(() => page.evaluate(() => window.__printCalls)).toBe(1);
+
+    const printCalls = calls.items.filter((c) => c.per_page === "200");
+    expect(printCalls.map((c) => c.page)).toEqual(
+      Array.from({ length: Math.ceil(ITEMS_TOTAL / 200) }, (_, i) =>
+        String(i + 1),
+      ),
+    );
+    expect(await page.evaluate(() => window.__printRows)).toBe(ITEMS_TOTAL);
+    expect(await page.evaluate(() => window.__printHasTotals)).toBe(true);
+    // The screen still shows one 25-row page.
+    expect(calls.items.filter((c) => c.per_page === "25")).toHaveLength(1);
+  });
+
+  test("a report above the print ceiling is refused without printing", async ({
+    page,
+  }) => {
+    await stubPrint(page);
+    const calls = await mockReports(page);
+    await openTab(page, "treasury");
+    await expect(page.getByTestId("treasury-ledger-badge")).toContainText(
+      digits(LEDGER_TOTAL),
+    );
+
+    await page.getByTestId("reports-print").click();
+    await expect(
+      page.locator(".swal2-container, .swal2-toast").first(),
+    ).toBeVisible();
+    expect(await page.evaluate(() => window.__printCalls)).toBe(0);
+    // Only the first 200-row page was asked for: it told us the total.
+    expect(calls.treasury.filter((c) => c.per_page === "200")).toHaveLength(1);
+  });
+});

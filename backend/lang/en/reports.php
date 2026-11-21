@@ -207,6 +207,12 @@ return [
     // PERF-01
     'period_too_long' => 'The report period cannot be longer than :days days. Choose a shorter period.',
     'period_reversed' => 'The start date must not be after the end date.',
+    // PERF-01: full-report A4 print of a paged tab
+    'print_progress' => 'Preparing the report for printing: :loaded of :total rows',
+    'print_too_large' => 'The report has :total rows, more than the :max that can be printed at once. Choose a shorter period or a single branch.',
+    'print_failed' => 'The full report could not be loaded for printing. Please try again.',
+    'print_cancelled' => 'Printing was cancelled.',
+    'print_rows_count' => 'Rows: :count',
     'items_showing_badge' => 'Showing :shown of :total items',
     'totals_row_label' => 'Totals for the whole period',
     'ledger_showing_badge' => 'Showing :shown of :total entries',

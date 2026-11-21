@@ -18,6 +18,12 @@ export function usePagedReport({ endpoint, getParams, normalize, periodError, pe
     const { error, errorMessage, clearError, setError } = useLoadError();
     let seq = 0;
 
+    /** One page with the current filters, outside the on-screen state (used by the full-report print). */
+    const fetchPage = async (page, size, signal) => {
+        const res = await api.get(endpoint, { params: getParams(page, size), signal });
+        return normalize(res.data);
+    };
+
     const load = async (page = 1) => {
         const current = ++seq;
         isLoading.value = true;
@@ -72,6 +78,7 @@ export function usePagedReport({ endpoint, getParams, normalize, periodError, pe
         errorMessage,
         showSkeleton,
         load,
+        fetchPage,
         ensureLoaded,
         invalidate,
         goToPage,
