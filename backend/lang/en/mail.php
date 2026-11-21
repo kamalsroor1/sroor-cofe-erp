@@ -56,6 +56,7 @@ return [
         'login_url' => 'Sign-in link:',
         'login_email' => 'Sign in with:',
         'password_hint' => 'Password: the one you chose when you signed up.',
+        'forgot_password' => 'Forgot your password? Reset it here:',
         'plan' => 'Plan: :plan',
         'trial_ends' => 'Your trial ends on :date.',
         'help' => 'Help center:',
