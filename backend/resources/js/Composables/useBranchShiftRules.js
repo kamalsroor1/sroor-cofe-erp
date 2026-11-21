@@ -3,6 +3,10 @@ import api from '../Services/api';
 import { useAuthStore } from '../stores/auth';
 import { useTrans } from './useTrans';
 
+/** SHIFT-01: the branch shift modes the server accepts; per_cashier is the default. */
+const SHIFT_MODES = ['per_cashier', 'shared'];
+const DEFAULT_SHIFT_MODE = 'per_cashier';
+
 /**
  * SET-02: the per-branch "selling needs an open shift" switch, listed in one place in Settings.
  * Same endpoint as the branch form: GET / PUT /stores/{id}/pos-settings/shift-rule. Turning it off while
@@ -25,12 +29,21 @@ export function useBranchShiftRules() {
                 id: store.id,
                 name: store.name,
                 required: res.data?.data?.require_shift_for_sales !== false,
+                mode: res.data?.data?.shift_mode || DEFAULT_SHIFT_MODE,
                 unavailable: false,
                 isSaving: false,
                 error: '',
             };
         } catch {
-            return { id: store.id, name: store.name, required: true, unavailable: true, isSaving: false, error: '' };
+            return {
+                id: store.id,
+                name: store.name,
+                required: true,
+                mode: DEFAULT_SHIFT_MODE,
+                unavailable: true,
+                isSaving: false,
+                error: '',
+            };
         }
     };
 
@@ -65,5 +78,25 @@ export function useBranchShiftRules() {
         }
     };
 
-    return { available, branches, isLoading, loadFailed, load, setRequired };
+    /**
+     * SHIFT-01: per_cashier | shared. Refused by the server (422 settings.shift_mode_open_shift) while the
+     * branch has any open shift; the translated message is shown on the row and the mode stays.
+     */
+    const setMode = async (branch, mode) => {
+        if (branch.isSaving || branch.unavailable || branch.mode === mode || !SHIFT_MODES.includes(mode)) return false;
+        branch.isSaving = true;
+        branch.error = '';
+        try {
+            const res = await api.put(`/stores/${branch.id}/pos-settings/shift-rule`, { shift_mode: mode });
+            branch.mode = res.data?.data?.shift_mode || mode;
+            return true;
+        } catch (error) {
+            branch.error = error.response?.data?.message || error.userMessage || t('settings.shift_rule_save_failed');
+            return false;
+        } finally {
+            branch.isSaving = false;
+        }
+    };
+
+    return { available, branches, isLoading, loadFailed, load, setRequired, setMode, shiftModes: SHIFT_MODES };
 }

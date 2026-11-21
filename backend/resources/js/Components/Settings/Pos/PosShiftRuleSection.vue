@@ -6,7 +6,7 @@ import { useBranchShiftRules } from '../../../Composables/useBranchShiftRules';
 import { useAuthStore } from '../../../stores/auth';
 
 const authStore = useAuthStore();
-const { available, branches, isLoading, loadFailed, load, setRequired } = useBranchShiftRules();
+const { available, branches, isLoading, loadFailed, load, setRequired, setMode, shiftModes } = useBranchShiftRules();
 
 onMounted(load);
 </script>
@@ -85,6 +85,35 @@ onMounted(load);
                 class="block h-5 w-5 rounded-full bg-white shadow-md transition-transform"
                 :class="branch.required ? 'ltr:translate-x-6 rtl:-translate-x-6' : 'translate-x-0'"
               ></span>
+            </span>
+          </button>
+        </div>
+        <div
+          v-if="!branch.unavailable"
+          role="radiogroup"
+          :aria-label="$t('settings.shift_mode_group_label', { name: branch.name })"
+          class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2"
+          :data-testid="`shift-mode-group-${branch.id}`"
+        >
+          <button
+            v-for="mode in shiftModes"
+            :key="mode"
+            type="button"
+            role="radio"
+            :aria-checked="branch.mode === mode"
+            :disabled="branch.isSaving"
+            :data-testid="`shift-mode-${branch.id}-${mode}`"
+            class="flex min-h-[44px] flex-col items-start gap-0.5 rounded-2xl border p-3 text-start transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            :class="
+              branch.mode === mode
+                ? 'border-theme-border bg-theme-light text-theme-primary'
+                : 'border-slate-200 bg-white text-slate-700 dark:border-slate-700/80 dark:bg-slate-900 dark:text-slate-200'
+            "
+            @click="setMode(branch, mode)"
+          >
+            <span class="text-xs font-black">{{ $t(`settings.shift_modes.${mode}`) }}</span>
+            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+              {{ $t(`settings.shift_mode_hints.${mode}`) }}
             </span>
           </button>
         </div>

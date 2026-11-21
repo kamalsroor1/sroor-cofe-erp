@@ -34,6 +34,8 @@ class StorePosSettingResource extends JsonResource
             'require_shift_for_sales' => (bool) $setting->require_shift_for_sales,
             'catalog_cards_per_row' => (string) $setting->catalog_cards_per_row,
             'show_item_images' => (bool) $setting->show_item_images,
+            // SHIFT-01: per_cashier (each cashier opens their own shift) | shared (one per branch).
+            'shift_mode' => $setting->shiftMode()->value,
             'updated_at' => $setting->updated_at?->toIso8601String(),
         ];
     }

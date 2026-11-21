@@ -151,15 +151,16 @@ class BusinessRuleExceptionRenderingTest extends TenantTestCase
         $this->send('POST', '/api/v1/shifts/open', ['opening_cash_balance' => '100.000'], 'en')
             ->assertStatus(201);
 
+        // SHIFT-01: per_cashier by default, so the same user's second open is "you already have one".
         $en = $this->send('POST', '/api/v1/shifts/open', ['opening_cash_balance' => '100.000'], 'en')
             ->assertStatus(409)
             ->assertJsonPath('success', false)
-            ->assertJsonPath('error_code', 'treasury.shift_already_open');
-        $this->assertStringContainsString('is already open', (string) $en->json('message'));
+            ->assertJsonPath('error_code', 'treasury.shift_already_open_own');
+        $this->assertStringContainsString('already have shift', (string) $en->json('message'));
 
         $ar = $this->send('POST', '/api/v1/shifts/open', ['opening_cash_balance' => '100.000'], 'ar')
             ->assertStatus(409)
-            ->assertJsonPath('error_code', 'treasury.shift_already_open');
+            ->assertJsonPath('error_code', 'treasury.shift_already_open_own');
         $this->assertStringContainsString('مفتوحة', (string) $ar->json('message'));
         $this->assertNotSame($en->json('message'), $ar->json('message'));
     }

@@ -34,7 +34,7 @@ final class OwnSalesSummary
     /**
      * The shift whose time window frames the caller's figures.
      *
-     * ShiftService allows ONE open shift per store (a shared drawer): cashier B sells inside the
+     * In a shared branch ShiftService allows ONE open shift per store (a shared drawer): cashier B sells inside the
      * shift cashier A opened. So with a single store the window is the caller's own open shift
      * there if one exists, else the store's open shift (the figures stay filtered by
      * `user_id` = caller in totals() / recentInvoices()). Without a store ($storeId null, a
@@ -50,7 +50,8 @@ final class OwnSalesSummary
             ->latest('id')
             ->first();
 
-        if ($own instanceof CashShift || $storeId === null) {
+        // SHIFT-01: in a per-cashier branch another cashier's shift is never the caller's window.
+        if ($own instanceof CashShift || $storeId === null || app(OpenShiftResolver::class)->modeFor($storeId)->isPerCashier()) {
             return $own;
         }
 

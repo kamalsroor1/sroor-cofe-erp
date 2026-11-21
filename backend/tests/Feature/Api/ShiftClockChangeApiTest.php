@@ -13,6 +13,7 @@ use App\Models\Item;
 use App\Models\Payment;
 use App\Models\Purchase;
 use App\Models\Store;
+use App\Models\StorePosSetting;
 use App\Models\StoreStock;
 use App\Models\Supplier;
 use App\Models\Tenant;
@@ -81,6 +82,8 @@ final class ShiftClockChangeApiTest extends TenantTestCase
             $this->itemId = (int) $item->id;
             foreach ([$this->storeId, $this->storeB] as $store) {
                 StoreStock::create(['store_id' => $store, 'item_id' => $item->id, 'quantity' => '500.000']);
+                // SHIFT-01: DATE-01 scenarios on the branch's one shared shift (the admin opens it, anyone writes in it).
+                StorePosSetting::query()->updateOrCreate(['store_id' => $store], ['shift_mode' => 'shared']);
             }
         });
     }

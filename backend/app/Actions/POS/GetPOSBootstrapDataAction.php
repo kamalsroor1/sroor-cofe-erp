@@ -5,7 +5,6 @@ namespace App\Actions\POS;
 use App\Http\Resources\POSCustomerResource;
 use App\Http\Resources\PosQuickKeyResource;
 use App\Http\Resources\StorePosSettingResource;
-use App\Models\CashShift;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Item;
@@ -13,6 +12,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Services\Settings\PosSaleSettings;
 use App\Services\Settings\TenantSettings;
+use App\Services\Shifts\OpenShiftResolver;
 use App\Support\ActiveStore;
 use App\Support\ItemCostFields;
 use App\Support\Money\Decimal;
@@ -26,6 +26,7 @@ class GetPOSBootstrapDataAction
         private readonly GetPosQuickKeysAction $getPosQuickKeysAction,
         private readonly PosSaleSettings $posSaleSettings,
         private readonly TenantSettings $tenantSettings,
+        private readonly OpenShiftResolver $shiftResolver,
     ) {}
 
     /**
@@ -40,10 +41,8 @@ class GetPOSBootstrapDataAction
         // 2. Active Cashier Shift
         $activeShift = null;
         if ($storeId) {
-            $activeShift = CashShift::where('store_id', $storeId)
-                ->where('status', 'open')
-                ->latest('id')
-                ->first();
+            // SHIFT-01: the branch's shift (shared) or the cashier's own shift there (per_cashier).
+            $activeShift = $this->shiftResolver->currentFor((int) $storeId, $user?->id !== null ? (int) $user->id : null);
         }
 
         // 3. Fast Active Items with Store Stock Left-Join (Ultra-Optimized for 10k+ items)

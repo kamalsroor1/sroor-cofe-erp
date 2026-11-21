@@ -8,6 +8,7 @@ use App\Models\CashShift;
 use App\Models\Customer;
 use App\Models\Item;
 use App\Models\Store;
+use App\Models\StorePosSetting;
 use App\Models\StoreStock;
 use App\Models\Tenant;
 use App\Models\User;
@@ -75,6 +76,9 @@ final class ShiftCloseRulesApiTest extends TenantTestCase
     {
         $opener = $this->createTenantUser($this->tenant, 'cashier');
         $other = $this->createTenantUser($this->tenant, 'cashier');
+        // SHIFT-01: "without id" closes the branch's shift only in a shared branch (per cashier, the
+        // caller's own shift: ShiftModeApiTest).
+        $this->sharedBranch();
         $shiftId = $this->openShiftFor($opener, $this->storeA);
 
         $this->close($other, $shiftId, '100.000')->assertForbidden()
@@ -176,6 +180,9 @@ final class ShiftCloseRulesApiTest extends TenantTestCase
     {
         $opener = $this->createTenantUser($this->tenant, 'cashier');
         $manager = $this->createTenantUser($this->tenant, null, ['daily_journal.view', 'reports.view']);
+        // SHIFT-01: /shifts/current shows the branch's shift to a manager in a shared branch (per
+        // cashier it is the caller's own shift); the z-report by id below works in both modes.
+        $this->sharedBranch();
         $shiftId = $this->openShiftFor($opener, $this->storeA);
         $this->sale($opener, '5.000');
 
@@ -229,6 +236,11 @@ final class ShiftCloseRulesApiTest extends TenantTestCase
 
             return (int) app(ShiftService::class)->openShift('100.000', null, $storeId, (int) $user->id)->id;
         });
+    }
+
+    private function sharedBranch(): void
+    {
+        $this->inTenant($this->tenant, fn () => StorePosSetting::query()->updateOrCreate(['store_id' => $this->storeA], ['shift_mode' => 'shared']));
     }
 
     private function shiftStatus(int $shiftId): string

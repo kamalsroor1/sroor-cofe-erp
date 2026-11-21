@@ -9,6 +9,7 @@ use App\Models\InvoiceItem;
 use App\Models\Item;
 use App\Models\Payment;
 use App\Models\ReturnDocument;
+use App\Models\StorePosSetting;
 use App\Models\StoreStock;
 use App\Models\Supplier;
 use App\Models\Tenant;
@@ -68,6 +69,8 @@ final class ReturnShiftStampApiTest extends TenantTestCase
             ]);
             $this->itemId = (int) $item->id;
             StoreStock::create(['store_id' => $this->storeId, 'item_id' => $item->id, 'quantity' => '500.000']);
+            // SHIFT-01: the admin opens the branch's shift and the cashier sells in it (shared drawer).
+            StorePosSetting::query()->updateOrCreate(['store_id' => $this->storeId], ['shift_mode' => 'shared']);
         });
     }
 

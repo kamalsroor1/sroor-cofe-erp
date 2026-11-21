@@ -24,6 +24,7 @@ final class StorePosSettingsDTO
         'require_shift_for_sales',
         'catalog_cards_per_row',
         'show_item_images',
+        'shift_mode',
     ];
 
     /**
@@ -43,6 +44,7 @@ final class StorePosSettingsDTO
         public readonly ?bool $requireShiftForSales = null,
         public readonly ?string $catalogCardsPerRow = null,
         public readonly ?bool $showItemImages = null,
+        public readonly ?string $shiftMode = null,
         public readonly array $provided = [],
     ) {}
 
@@ -75,6 +77,7 @@ final class StorePosSettingsDTO
             requireShiftForSales: isset($data['require_shift_for_sales']) ? (bool) $data['require_shift_for_sales'] : null,
             catalogCardsPerRow: isset($data['catalog_cards_per_row']) ? (string) $data['catalog_cards_per_row'] : null,
             showItemImages: isset($data['show_item_images']) ? (bool) $data['show_item_images'] : null,
+            shiftMode: isset($data['shift_mode']) ? (string) $data['shift_mode'] : null,
             provided: $provided,
         );
     }
@@ -99,6 +102,7 @@ final class StorePosSettingsDTO
             'require_shift_for_sales' => $this->requireShiftForSales,
             'catalog_cards_per_row' => $this->catalogCardsPerRow,
             'show_item_images' => $this->showItemImages,
+            'shift_mode' => $this->shiftMode,
         ];
 
         return array_intersect_key($all, array_flip($this->provided));

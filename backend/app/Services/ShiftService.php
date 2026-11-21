@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ShiftMode;
 use App\Exceptions\BusinessRuleException;
 use App\Jobs\SendShiftDiscrepancyAlertJob;
 use App\Models\CashShift;
@@ -10,6 +11,7 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Store;
 use App\Services\Settings\TenantSettings;
+use App\Services\Shifts\OpenShiftResolver;
 use App\Services\Shifts\ShiftAttribution;
 use App\Support\Database\TransactionRetry;
 use App\Support\Money\Decimal;
@@ -24,14 +26,18 @@ class ShiftService
 {
     protected DocumentNumberService $documentNumbers;
 
+    protected OpenShiftResolver $resolver;
+
     public function __construct(
         protected ?ActivityLogService $activityLogService = null,
         protected ?TenantClock $tenantClock = null,
         ?DocumentNumberService $documentNumbers = null,
+        ?OpenShiftResolver $resolver = null,
     ) {
         $this->activityLogService = $this->activityLogService ?: app(ActivityLogService::class);
         $this->tenantClock = $this->tenantClock ?: app(TenantClock::class);
         $this->documentNumbers = $documentNumbers ?: app(DocumentNumberService::class);
+        $this->resolver = $resolver ?: app(OpenShiftResolver::class);
     }
 
     /**
@@ -59,52 +65,79 @@ class ShiftService
         // BUG-04: the day's SHIFT counter row exists before the transaction takes its first read.
         $this->documentNumbers->prepareFor($this->shiftNumberPrefix(), CashShift::class, 'shift_number');
 
+        // SHIFT-01: the opener. Per-cashier branches allow one open shift per (branch, opener).
+        $openerId = Auth::id() ?? $actorId;
+        $openerId = $openerId !== null ? (int) $openerId : null;
+
         // BUG-04 / BUG-07: the number used to be allocated with no surrounding transaction (its
         // own short one), so a failed insert left a gap. Now one unit of work, restarted as a
         // whole on a lock conflict; only plain input is captured.
         try {
-            return TransactionRetry::run(fn (): CashShift => $this->createShift($targetStoreId, $openingCash, $notes, $actorId));
+            return TransactionRetry::run(fn (): CashShift => $this->createShift($targetStoreId, $openingCash, $notes, $openerId));
         } catch (UniqueConstraintViolationException $e) {
-            // SHOP-06 / BE-19: the database refused a second open shift for this branch
-            // (cash_shifts.open_store_guard). Only reachable when the store-row lock below could
-            // not serialise the two opens; answered like the application check: 409.
-            $existing = str_contains($e->getMessage(), 'open_store_guard') ? $this->getActiveShift(storeId: $targetStoreId) : null;
+            // SHOP-06 / BE-19 / SHIFT-01: the database refused a second open shift for this branch
+            // (shared) or for this cashier in this branch (per_cashier): cash_shifts.open_guard.
+            // Only reachable when the store-row lock below could not serialise the two opens;
+            // answered like the application check: 409.
+            $existing = null;
+            if (str_contains($e->getMessage(), 'open_guard') && $targetStoreId !== null) {
+                $existing = $this->resolver->currentFor((int) $targetStoreId, $openerId);
+            }
             if ($existing === null) {
                 throw $e;
             }
 
-            throw BusinessRuleException::conflict('treasury.shift_already_open', ['number' => $existing->shift_number]);
+            throw $this->alreadyOpen($existing);
         }
+    }
+
+    /**
+     * 409: a shift is already open under the key the new one needs. A per-cashier one is "yours".
+     */
+    private function alreadyOpen(CashShift $existing): BusinessRuleException
+    {
+        return BusinessRuleException::conflict(
+            $existing->isPerCashier() ? 'treasury.shift_already_open_own' : 'treasury.shift_already_open',
+            ['number' => $existing->shift_number],
+        );
     }
 
     /**
      * The body of openShift(): one attempt of TransactionRetry::run().
      */
-    private function createShift(mixed $targetStoreId, string $openingCash, ?string $notes, ?int $actorId): CashShift
+    private function createShift(mixed $targetStoreId, string $openingCash, ?string $notes, ?int $openerId): CashShift
     {
         // SHOP-06 / BE-19: two devices opening a shift for the same branch at the same instant both
         // passed the "already open?" read and both inserted. The branch's store row is the
         // serialisation point (the same row treasury transfers lock, taken first, before the
         // number sequence): the second open waits here and then sees the first one's shift.
-        // cash_shifts.open_store_guard (UNIQUE) is the database backstop behind this lock.
+        // cash_shifts.open_guard (UNIQUE) is the database backstop behind this lock.
+        // SHIFT-01: the branch's shift mode is read under the same lock. Switching the mode locks the
+        // store row too (UpdateStorePosSettingsAction) and is refused while any shift is open, so an
+        // open and a switch never interleave.
+        $mode = ShiftMode::Shared;
         if ($targetStoreId !== null) {
             Store::withTrashed()->whereKey($targetStoreId)->lockForUpdate()->value('id');
+            $mode = $this->resolver->modeFor((int) $targetStoreId);
+            $existing = $this->resolver->scopeOpen(CashShift::query(), (int) $targetStoreId, $openerId, $mode)->latest('id')->first();
+        } else {
+            $existing = $this->getActiveShift();
         }
 
-        $existing = $this->getActiveShift(storeId: $targetStoreId);
         if ($existing) {
-            throw BusinessRuleException::conflict('treasury.shift_already_open', ['number' => $existing->shift_number]);
+            throw $this->alreadyOpen($existing);
         }
 
         $shiftNumber = $this->nextShiftNumber();
 
         $shift = CashShift::create([
             // Authenticated user, else the explicit actor (job/command), else NULL ("system").
-            'user_id' => Auth::id() ?? $actorId,
+            'user_id' => $openerId,
             'store_id' => $targetStoreId,
             'shift_number' => $shiftNumber,
             'status' => 'open',
-            'open_store_guard' => (int) ($targetStoreId ?? 0),
+            'shift_mode' => $mode->value,
+            'open_guard' => OpenShiftResolver::guardKey($mode, $targetStoreId !== null ? (int) $targetStoreId : null, $openerId),
             'opened_at' => now(),
             'opening_cash_balance' => $openingCash,
             'notes' => $notes,

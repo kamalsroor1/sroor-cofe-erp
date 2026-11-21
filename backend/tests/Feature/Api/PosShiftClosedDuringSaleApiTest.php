@@ -72,26 +72,32 @@ final class PosShiftClosedDuringSaleApiTest extends TenantTestCase
     }
 
     /**
-     * @return array<string, array{string}>
+     * SHIFT-01: per_cashier (default) answers with the "your shift" message, shared with the branch one.
+     *
+     * @return array<string, array{string, string, string}>
      */
     public static function saleEndpoints(): array
     {
         return [
-            'POS checkout' => ['/api/v1/pos/checkout'],
-            'sales invoice' => ['/api/v1/invoices'],
+            'POS checkout' => ['/api/v1/pos/checkout', 'per_cashier', 'pos.shift_closed_during_sale_own'],
+            'sales invoice' => ['/api/v1/invoices', 'per_cashier', 'pos.shift_closed_during_sale_own'],
+            'POS checkout, shared branch' => ['/api/v1/pos/checkout', 'shared', 'pos.shift_closed_during_sale'],
+            'sales invoice, shared branch' => ['/api/v1/invoices', 'shared', 'pos.shift_closed_during_sale'],
         ];
     }
 
     #[DataProvider('saleEndpoints')]
-    public function test_a_shift_closed_after_the_check_refuses_the_sale_with_409_and_rolls_everything_back(string $url): void
+    public function test_a_shift_closed_after_the_check_refuses_the_sale_with_409_and_rolls_everything_back(string $url, string $mode, string $messageKey): void
     {
+        StorePosSetting::query()->updateOrCreate(['store_id' => $this->store->id], ['shift_mode' => $mode]);
         $shift = $this->openShift();
         $this->closeShiftRightAfterThePreCheck($shift);
 
         $this->sell($url, '0.250')
             ->assertStatus(409)
             ->assertJsonPath('success', false)
-            ->assertJsonPath('message', __('pos.shift_closed_during_sale'));
+            ->assertJsonPath('error_code', $messageKey)
+            ->assertJsonPath('message', __($messageKey));
 
         $this->assertSame('closed', (string) CashShift::query()->whereKey($shift->id)->value('status'), 'fixture: the shift was closed mid-sale');
         $this->assertSame(0, Invoice::withTrashed()->count());
@@ -103,6 +109,8 @@ final class PosShiftClosedDuringSaleApiTest extends TenantTestCase
 
     public function test_the_blender_invoice_is_refused_the_same_way(): void
     {
+        // SHIFT-01: the admin sells inside the cashier's shift, so the branch runs one shared shift.
+        StorePosSetting::query()->updateOrCreate(['store_id' => $this->store->id], ['shift_mode' => 'shared']);
         $shift = $this->openShift();
         $this->closeShiftRightAfterThePreCheck($shift);
 
@@ -137,7 +145,8 @@ final class PosShiftClosedDuringSaleApiTest extends TenantTestCase
             $this->fail('A sale without an open shift must be refused inside the transaction.');
         } catch (BusinessRuleException $e) {
             $this->assertSame(409, $e->status());
-            $this->assertSame('pos.shift_closed_during_sale', $e->errorCode());
+            // SHIFT-01: per_cashier by default - the seller has no shift of their own.
+            $this->assertSame('pos.shift_closed_during_sale_own', $e->errorCode());
         }
 
         $this->assertSame(0, Invoice::withTrashed()->count());

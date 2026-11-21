@@ -10,7 +10,6 @@ use App\Enums\LimitResource;
 use App\Http\Resources\BrandingResource;
 use App\Http\Resources\TenantResource;
 use App\Http\Resources\UserResource;
-use App\Models\CashShift;
 use App\Models\Customer;
 use App\Models\Item;
 use App\Models\Setting;
@@ -20,6 +19,7 @@ use App\Models\User;
 use App\Services\Branding\TenantBranding;
 use App\Services\Entitlements\PlanEnforcer;
 use App\Services\Settings\TenantSettings;
+use App\Services\Shifts\OpenShiftResolver;
 use App\Services\TreasuryService;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
@@ -38,6 +38,7 @@ final class GetSystemContextAction
         private readonly GetSetupProgressAction $setupProgressAction,
         private readonly GetSubscriptionBannerAction $subscriptionBannerAction,
         private readonly ListSubscriptionReminderAlertsAction $subscriptionReminderAlertsAction,
+        private readonly OpenShiftResolver $shiftResolver,
     ) {}
 
     /**
@@ -69,10 +70,8 @@ final class GetSystemContextAction
         // 2. Active Cash Shift
         $activeShift = null;
         if ($activeStore && ! $mustChangePassword) {
-            $activeShift = CashShift::where('store_id', $activeStore->id)
-                ->where('status', 'open')
-                ->latest('id')
-                ->first();
+            // SHIFT-01: the branch's shift (shared) or the user's own shift there (per_cashier).
+            $activeShift = $this->shiftResolver->currentFor((int) $activeStore->id, (int) $user->id);
         }
 
         // 3. System Alerts & Telemetry

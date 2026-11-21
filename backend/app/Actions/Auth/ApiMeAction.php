@@ -6,12 +6,12 @@ namespace App\Actions\Auth;
 
 use App\Enums\TenantAccessLevel;
 use App\Http\Resources\UserResource;
-use App\Models\CashShift;
 use App\Models\Setting;
 use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Branding\TenantBranding;
+use App\Services\Shifts\OpenShiftResolver;
 use App\Support\ActiveStore;
 use App\Support\Money\Decimal;
 use App\Support\Tenancy\TenantLifecyclePolicy;
@@ -20,7 +20,10 @@ use Illuminate\Http\Request;
 
 final class ApiMeAction
 {
-    public function __construct(private readonly TenantLifecyclePolicy $lifecycle) {}
+    public function __construct(
+        private readonly TenantLifecyclePolicy $lifecycle,
+        private readonly OpenShiftResolver $shiftResolver,
+    ) {}
 
     /**
      * Retrieve authenticated user data, stores, active shift, and preferences
@@ -71,10 +74,8 @@ final class ApiMeAction
         $activeShift = null;
         // SELL-01 review: a session that must change its password sees no business data.
         if ($activeStore && $user->must_change_password !== true) {
-            $activeShift = CashShift::where('store_id', $activeStore->id)
-                ->where('status', 'open')
-                ->latest('id')
-                ->first();
+            // SHIFT-01: the branch's shift (shared) or the user's own shift there (per_cashier).
+            $activeShift = $this->shiftResolver->currentFor((int) $activeStore->id, (int) $user->id);
         }
 
         return [

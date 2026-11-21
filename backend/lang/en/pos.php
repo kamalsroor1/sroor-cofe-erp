@@ -398,6 +398,8 @@ return [
     'weight_amount_no_price' => 'This item has no price',
     'shift_required' => 'The sale cannot be completed: there is no open shift in this branch. Open a shift first.',
     'shift_closed_during_sale' => 'The shift of this branch was closed while the sale was being saved, so it was not recorded. Open a new shift and try again.',
+    'shift_required_own' => 'The sale cannot be completed: you have no open shift in this branch. Open your shift first.',
+    'shift_closed_during_sale_own' => 'Your shift was closed while the sale was being saved, so it was not recorded. Open a new shift and try again.',
     'shift_gate_title' => 'Shift required to sell',
     'shift_gate_message' => 'This branch requires an open shift before selling. Enter the opening cash to open one.',
     'shift_gate_open' => 'Open shift',

@@ -207,6 +207,7 @@ return [
     'shift_opened_numbered' => 'تم فتح وردية العمل رقم :number بنجاح',
     'shift_closed_numbered' => 'تم إغلاق وتقفيل الوردية رقم :number بنجاح (:status)',
     'shift_already_open' => 'يوجد وردية عمل مفتوحة بالفعل لهذا الفرع برقم :number. يجب إغلاقها أولاً.',
+    'shift_already_open_own' => 'لديك وردية مفتوحة بالفعل في هذا الفرع برقم :number. يجب إغلاقها أولاً.',
     'cash_diff_matched' => 'مطابقة للدرج',
     'cash_diff_surplus' => 'زيادة بمقدار :amount :currency',
     'cash_diff_shortage' => 'عجز بمقدار :amount :currency',

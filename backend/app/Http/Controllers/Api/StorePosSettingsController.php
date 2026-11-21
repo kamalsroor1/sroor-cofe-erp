@@ -12,6 +12,7 @@ use App\Http\Requests\Pos\ShiftRuleRequest;
 use App\Http\Requests\Pos\ShowStorePosSettingsRequest;
 use App\Http\Requests\Pos\UpdateStorePosSettingsRequest;
 use App\Http\Resources\StorePosSettingResource;
+use App\Models\StorePosSetting;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -47,7 +48,8 @@ final class StorePosSettingsController extends Controller
     }
 
     /**
-     * POS-10: only the shift rule (settings.manage or stores.manage).
+     * POS-10 / SHIFT-01: only the shift rules - the requirement and the shift mode (settings.manage
+     * or stores.manage).
      */
     public function showShiftRule(ShiftRuleRequest $request): JsonResponse
     {
@@ -55,20 +57,36 @@ final class StorePosSettingsController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => ['store_id' => (int) $setting->store_id, 'require_shift_for_sales' => (bool) $setting->require_shift_for_sales],
+            'data' => $this->shiftRule($setting),
         ]);
     }
 
     public function updateShiftRule(ShiftRuleRequest $request): JsonResponse
     {
-        // Only this key reaches the DTO, so no other setting can change through this endpoint.
-        $dto = StorePosSettingsDTO::fromArray(['require_shift_for_sales' => (bool) $request->validated('require_shift_for_sales')]);
+        // Only these keys reach the DTO, so no other setting can change through this endpoint.
+        $dto = StorePosSettingsDTO::fromArray(array_intersect_key(
+            $request->validated(),
+            array_flip(['require_shift_for_sales', 'shift_mode']),
+        ));
         $setting = $this->updateStorePosSettingsAction->execute($request->targetStore(), $dto);
 
         return response()->json([
             'success' => true,
             'message' => __('pos.pos_settings_saved'),
-            'data' => ['store_id' => (int) $setting->store_id, 'require_shift_for_sales' => (bool) $setting->require_shift_for_sales],
+            'data' => $this->shiftRule($setting),
         ]);
+    }
+
+    /**
+     * @return array{store_id: int, require_shift_for_sales: bool, shift_mode: string}
+     */
+    private function shiftRule(StorePosSetting $setting): array
+    {
+        return [
+            'store_id' => (int) $setting->store_id,
+            'require_shift_for_sales' => (bool) $setting->require_shift_for_sales,
+            // SHIFT-01: per_cashier | shared.
+            'shift_mode' => $setting->shiftMode()->value,
+        ];
     }
 }
