@@ -4,13 +4,13 @@ namespace App\Services;
 
 use App\Enums\PaymentMethod;
 use App\Exceptions\BusinessRuleException;
-use App\Models\CashShift;
 use App\Models\Expense;
 use App\Models\Payment;
 use App\Models\Store;
 use App\Models\TreasuryTransfer;
 use App\Services\Reports\ReportDateRange;
 use App\Services\Settings\TenantSettings;
+use App\Services\Shifts\BranchDrawers;
 use App\Support\Database\TransactionRetry;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
@@ -700,24 +700,12 @@ class TreasuryService
     /**
      * Opening cash of the open shift(s): the latest open shift of the branch, or - for the
      * all-branches view - the latest open shift of every branch. SHIFT-01: plus every open
-     * per-cashier shift (one drawer each).
+     * per-cashier shift (one drawer each). SHIFT-02: the drawer keying lives in BranchDrawers,
+     * shared with the daily journal and the dashboards.
      */
     private function openShiftsOpeningCash(?int $storeId): string
     {
-        $shifts = CashShift::where('status', 'open')
-            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-            ->orderBy('id')
-            ->get(['id', 'store_id', 'shift_mode', 'opening_cash_balance'])
-            // Shared: the latest (higher id) open shift of the branch wins. SHIFT-01: every open
-            // per-cashier shift is its own drawer, so each one's float counts.
-            ->keyBy(fn (CashShift $s): string => $s->isPerCashier() ? 'shift:'.$s->id : 'store:'.$s->store_id);
-
-        $total = '0.000';
-        foreach ($shifts as $shift) {
-            $total = bcadd($total, (string) $shift->opening_cash_balance, 3);
-        }
-
-        return $total;
+        return BranchDrawers::openingCash($storeId ?: null);
     }
 
     /**

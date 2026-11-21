@@ -19,7 +19,7 @@ use App\Services\ProfitService;
 use App\Services\Reports\InvoiceAggregates;
 use App\Services\Reports\ReportDateRange;
 use App\Services\Reports\SalesReturnAggregates;
-use App\Services\ShiftService;
+use App\Services\Shifts\BranchDrawers;
 use App\Support\CostVisibility;
 use App\Support\DashboardCache;
 use App\Support\Money\Decimal;
@@ -35,7 +35,7 @@ final class GetDashboardOverviewAction
         private readonly TenantClock $tenantClock,
         private readonly LowStockRadar $lowStockRadar,
         private readonly GetOwnShiftDashboardAction $ownShiftDashboard,
-        private readonly ShiftService $shiftService,
+        private readonly BranchDrawers $drawers,
         private readonly DailyCashFlowService $dailyCashFlow,
         private readonly SalesReturnAggregates $salesReturns,
         private readonly InvoiceAggregates $invoices,
@@ -104,7 +104,11 @@ final class GetDashboardOverviewAction
         );
 
         // 11. Active Cash Shift
+        // SHIFT-02: a per-cashier branch has one open shift per cashier; starting_cash /
+        // current_cash are the branch's totals over all of them (a shared branch has one shift:
+        // unchanged), and open_shifts lists them.
         $activeShift = null;
+        $openShifts = null;
         if ($storeFilter) {
             $shift = CashShift::with('user')
                 ->where('store_id', $storeFilter)
@@ -113,13 +117,17 @@ final class GetDashboardOverviewAction
                 ->first();
 
             if ($shift) {
+                $openShifts = $this->drawers->summary($storeFilter);
                 $activeShift = [
                     'id' => $shift->id,
                     'shift_number' => $shift->shift_number,
-                    'user_name' => $shift->user?->name ?? __('common.cashier'),
-                    'starting_cash' => Decimal::normalize((string) $shift->opening_cash_balance),
-                    'current_cash' => Decimal::normalize((string) $this->shiftService->calculateShiftTotals($shift)['expected_cash_balance']),
+                    'user_name' => $openShifts['count'] > 1
+                        ? __('treasury.open_shifts_cashiers', ['count' => $openShifts['count']])
+                        : ($shift->user?->name ?? __('common.cashier')),
+                    'starting_cash' => $openShifts['opening_cash_balance'],
+                    'current_cash' => Decimal::normalize((string) $openShifts['expected_cash_balance']),
                     'opened_at' => $shift->opened_at?->toDateTimeString(),
+                    'open_shifts_count' => $openShifts['count'],
                 ];
             }
         }
@@ -158,6 +166,7 @@ final class GetDashboardOverviewAction
             'low_stock_items' => $aggregates['low_stock_items'],
             'top_selling_items' => $aggregates['top_selling_items'],
             'active_shift' => $activeShift,
+            'open_shifts' => $openShifts,
             'recent_invoices' => $recentInvoices,
         ];
     }

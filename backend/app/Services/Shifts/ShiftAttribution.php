@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Shifts;
 
+use App\Enums\ShiftMode;
 use App\Models\CashShift;
 use App\Models\Expense;
 use App\Models\Invoice;
@@ -30,9 +31,11 @@ use Illuminate\Database\Eloquent\Model;
  * The rule now:
  *  - a row is stamped, ONCE, when it is created (`creating` hook, CashShiftStampObserver), with
  *    the shift OPEN in its store at that moment (one open shift per store, ShiftService; SHIFT-01:
- *    in a per-cashier branch, the open shift of the row's user in its store). A row
- *    without a resolvable store, or created while its store has no open shift, stays NULL. The
- *    value is never taken from the client: it is not mass assignable and is always overwritten.
+ *    in a per-cashier branch, the open shift of the row's user in its store; SHIFT-02: a reversal /
+ *    refund first goes to the still-open shift of the document it reverses). A row without a
+ *    resolvable store, or created while its store has no open shift (per-cashier: its writer has
+ *    none), stays NULL = paid from the main treasury, outside every drawer. The value is never
+ *    taken from the client: it is not mass assignable and is always overwritten.
  *  - a row belongs to shift S when `cash_shift_id = S.id`, OR (history, rows written before the
  *    column existed / without an open shift) `cash_shift_id IS NULL` and its created_at lies in
  *    S's legacy window, exactly as before. A stamped row never matches a second shift.
@@ -46,10 +49,6 @@ use Illuminate\Database\Eloquent\Model;
 final class ShiftAttribution
 {
     public const COLUMN = 'cash_shift_id';
-
-    public function __construct(
-        private readonly OpenShiftResolver $resolver,
-    ) {}
 
     /**
      * Sets cash_shift_id on a row about to be inserted (overwrites any value already set).
@@ -66,11 +65,77 @@ final class ShiftAttribution
         }
 
         $storeId = $this->storeIdOf($row);
-        // SHIFT-01: in a per-cashier branch the row belongs to the open shift of the user who wrote
-        // it (the seller of an invoice, the writer of a voucher / expense / return).
-        $userId = $row->user_id !== null ? (int) $row->user_id : null;
+        if ($storeId === null) {
+            $row->setAttribute(self::COLUMN, null);
 
-        $row->setAttribute(self::COLUMN, $storeId === null ? null : $this->openShiftIdFor($storeId, $userId));
+            return;
+        }
+
+        // SHIFT-01: in a per-cashier branch the row belongs to the open shift of the user who wrote
+        // it (the seller of an invoice, the writer of a voucher / expense / return): that drawer is
+        // the one the cash physically moved through - a cashier B taking a cash return on cashier
+        // A's sale pays it from B's drawer, so it lands on B's shift.
+        $userId = $row->user_id !== null ? (int) $row->user_id : null;
+        $own = $this->openShiftIdFor($storeId, $userId);
+        if ($own !== null) {
+            $row->setAttribute(self::COLUMN, $own);
+
+            return;
+        }
+
+        // SHIFT-02: a writer without an open shift (an admin cancelling a cashier's cash sale) sends
+        // a reversal / refund back to the shift holding the original document's money while that
+        // shift is still open, so the cashier's Z shows no false surplus. Any other row written
+        // without a shift stays unstamped: it was paid from the main treasury, not from a drawer.
+        $originalShiftId = $this->originalShiftIdOf($row);
+        $row->setAttribute(
+            self::COLUMN,
+            $originalShiftId !== null ? $this->lockIfOpen($originalShiftId, $storeId) : null,
+        );
+    }
+
+    /**
+     * SHIFT-02: the shift that holds the money of the document $row reverses or refunds, or null
+     * when $row is not a reversal / refund (or the original was never stamped):
+     *  - an invoice-cancel reversal voucher (reverses_payment_id): the reversed voucher's shift;
+     *  - a sales-return refund voucher (return_id): its return's shift (stamped just before it,
+     *    by this same rule, in the same transaction);
+     *  - a sales return against an invoice: the shift of the invoice's own sale voucher, else of
+     *    the invoice (a credit sale has no voucher).
+     */
+    private function originalShiftIdOf(Invoice|Payment|Expense|ReturnDocument $row): ?int
+    {
+        $shiftId = null;
+
+        if ($row instanceof Payment && $row->reverses_payment_id !== null) {
+            $shiftId = Payment::withTrashed()->whereKey($row->reverses_payment_id)->value(self::COLUMN);
+        } elseif ($row instanceof Payment && $row->return_id !== null) {
+            $shiftId = ReturnDocument::withTrashed()->whereKey($row->return_id)->value(self::COLUMN);
+        } elseif ($row instanceof ReturnDocument && $row->invoice_id !== null) {
+            $shiftId = Payment::withTrashed()
+                ->where('payments.invoice_id', $row->invoice_id)
+                ->where('payments.amount', '>', 0)
+                ->excludingRefunds()
+                ->whereNotNull('payments.'.self::COLUMN)
+                ->orderBy('payments.id')
+                ->value('payments.'.self::COLUMN)
+                ?? Invoice::withTrashed()->whereKey($row->invoice_id)->value(self::COLUMN);
+        }
+
+        return $shiftId !== null ? (int) $shiftId : null;
+    }
+
+    /**
+     * SHIFT-02: $shiftId when it is an OPEN shift of $storeId, read under the same shared lock as
+     * openShiftIdFor() (a close waits for this transaction; a leaf lock by primary key), else null.
+     */
+    private function lockIfOpen(int $shiftId, int $storeId): ?int
+    {
+        $locked = CashShift::query()->whereKey($shiftId)->sharedLock()->first(['id', 'store_id', 'status']);
+
+        return $locked instanceof CashShift && $locked->status === 'open' && (int) $locked->store_id === $storeId
+            ? (int) $locked->id
+            : null;
     }
 
     /**
@@ -148,10 +213,22 @@ final class ShiftAttribution
     public function openShiftIdFor(int $storeId, ?int $userId): ?int
     {
         // SHIFT-01: shared branch -> its open shift; per-cashier branch -> $userId's open shift there.
-        $mode = $this->resolver->modeFor($storeId);
-
+        // SHIFT-02: the mode is the candidate shift's own (cash_shifts.shift_mode, fixed when it
+        // opened), never a separate unlocked read of the branch setting. A branch's open shifts all
+        // share one mode (the setting cannot change while any of them is open).
         for ($attempt = 0; $attempt < 2; $attempt++) {
-            $candidate = $this->resolver->scopeOpen(CashShift::query(), $storeId, $userId, $mode)
+            $candidate = CashShift::query()
+                ->where('cash_shifts.store_id', $storeId)
+                ->where('cash_shifts.status', 'open')
+                ->where(function (Builder $q) use ($userId): void {
+                    $q->where('cash_shifts.shift_mode', '!=', ShiftMode::PerCashier->value)
+                        ->orWhere(function (Builder $own) use ($userId): void {
+                            $own->where('cash_shifts.shift_mode', ShiftMode::PerCashier->value);
+                            $userId === null
+                                ? $own->whereNull('cash_shifts.user_id')
+                                : $own->where('cash_shifts.user_id', $userId);
+                        });
+                })
                 ->latest('id')
                 ->value('id');
 

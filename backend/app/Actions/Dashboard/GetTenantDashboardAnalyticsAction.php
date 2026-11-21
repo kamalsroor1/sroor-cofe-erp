@@ -20,6 +20,7 @@ use App\Services\DailyCashFlowService;
 use App\Services\DashboardAnalyticsService;
 use App\Services\ProfitService;
 use App\Services\Settings\TenantSettings;
+use App\Services\Shifts\BranchDrawers;
 use App\Support\ActiveStore;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
@@ -38,6 +39,7 @@ class GetTenantDashboardAnalyticsAction
         protected TenantClock $tenantClock,
         protected TenantSettings $tenantSettings,
         protected DailyCashFlowService $dailyCashFlow,
+        protected BranchDrawers $drawers,
     ) {}
 
     /**
@@ -177,6 +179,9 @@ class GetTenantDashboardAnalyticsAction
                 'total_revenue' => Decimal::normalize((string) $t->total_revenue),
             ]),
             'active_shift' => $activeShift ? (new CashShiftResource($activeShift))->resolve() : null,
+            // SHIFT-02: every open shift of the branch (one per cashier in a per-cashier branch)
+            // with the summed opening / expected cash; active_shift stays the newest one.
+            'open_shifts' => $storeFilter ? $this->drawers->summary((int) $storeFilter) : null,
             'active_store' => $activeStore ? (new StoreResource($activeStore))->resolve() : null,
         ];
 

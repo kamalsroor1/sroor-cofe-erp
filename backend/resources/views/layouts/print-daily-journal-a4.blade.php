@@ -272,6 +272,14 @@
                 <div class="summary-val" style="color: #0369a1;">{{ __('treasury.no_active_shift_desc') }}</div>
                 @endif
             </div>
+
+            @if(bccomp($outsideShiftsCashIn ?? '0.000', '0.000', 3) !== 0 || bccomp($outsideShiftsCashOut ?? '0.000', '0.000', 3) !== 0)
+            <div class="summary-card" style="background: #f5f3ff;">
+                <div class="summary-label">{{ __('treasury.outside_shifts_cash') }}</div>
+                <div class="summary-val">{{ number_format((float)$outsideShiftsNetCash, 2) }} {{ $currencyLabel }}</div>
+                <div class="summary-label">{{ __('treasury.outside_shifts_cash_sub', ['in' => number_format((float)$outsideShiftsCashIn, 2), 'out' => number_format((float)$outsideShiftsCashOut, 2)]) }}</div>
+            </div>
+            @endif
         </div>
 
         <!-- 1. Shifts & Drawer Closing Table -->

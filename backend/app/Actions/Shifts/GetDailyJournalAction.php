@@ -12,7 +12,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Services\DailyCashFlowService;
 use App\Services\Reports\ReportDateRange;
-use App\Services\ShiftService;
+use App\Services\Shifts\BranchDrawers;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Illuminate\Support\Collection;
@@ -22,7 +22,7 @@ final class GetDailyJournalAction
     public function __construct(
         private readonly TenantClock $tenantClock,
         private readonly DailyCashFlowService $dailyCashFlow,
-        private readonly ShiftService $shiftService,
+        private readonly BranchDrawers $drawers,
     ) {}
 
     /**
@@ -38,6 +38,11 @@ final class GetDailyJournalAction
      * only when it is the viewer. No $viewer (internal callers) or `reports.view`: `scope: store`,
      * unchanged figures.
      *
+     * SHIFT-02: the drawer figures are summed over every open shift of the branch (one per cashier
+     * in a per-cashier branch); `open_shifts` lists them (own scope: the count and the viewer's own
+     * shift, without money); `summary.outside_shifts_*` is the cash moved by writers without an
+     * open shift (main treasury, in no Z).
+     *
      * @return array<string, mixed>
      */
     public function execute(string $date, ?int $storeId = null, ?User $viewer = null): array
@@ -45,12 +50,15 @@ final class GetDailyJournalAction
         $storeId = $storeId ?: Store::getMainStore()?->id ?: Store::first()?->id;
         $ownerId = $viewer instanceof User && ! $viewer->can('reports.view') ? (int) $viewer->id : null;
 
-        // Current Active Shift
-        $activeShift = CashShift::with(['user', 'store'])
+        // Current Active Shift. SHIFT-02: a per-cashier branch has one open shift per cashier: the
+        // block describes the viewer's own one when they have it, else the newest (a shared branch
+        // has only one). The branch's drawer figures below are summed over every open shift.
+        $openShifts = fn () => CashShift::with(['user', 'store'])
             ->where('status', 'open')
             ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-            ->latest('id')
-            ->first();
+            ->latest('id');
+        $activeShift = ($viewer instanceof User ? $openShifts()->where('user_id', $viewer->id)->first() : null)
+            ?? $openShifts()->first();
 
         // Invoices on selected date
         // PERF-01: [date, date + 1 day) on the column itself, so the date indexes are usable.
@@ -89,16 +97,23 @@ final class GetDailyJournalAction
         $netCashToday = $cashFlow['net_cash'];
 
         // ROLE-01: the drawer (opening float, expected cash) is store-wide: null in own scope.
-        $openingCashBalance = $this->openingCashBalanceFor($date, $storeId !== null ? (int) $storeId : null, $activeShift);
         $ownScope = $ownerId !== null;
+        $storeKey = $storeId !== null ? (int) $storeId : null;
+        // DATE-03 / SHIFT-02: the selected day's opening float, summed over the drawers (one per
+        // cashier in a per-cashier branch; the branch's one shift in a shared branch).
+        $openingCashBalance = $ownScope ? null : $this->drawers->openingCashFor($date, $storeKey);
 
         // BUG-03: the drawer holds what the OPEN shift expects (opening + every cash movement since
         // it opened, possibly days ago) - the very figure of GET /shifts/current and of the shift's
         // provisional Z report, whatever date is selected. net_cash_today stays the selected day's
         // movement only. No open shift = nothing is expected in a drawer: null, never a guess.
-        $expectedCashInDrawer = ! $ownScope && $activeShift instanceof CashShift
-            ? $this->shiftService->calculateShiftTotals($activeShift)['expected_cash_balance']
-            : null;
+        // SHIFT-02: summed over every open shift of the branch (each cashier's drawer).
+        $drawers = $ownScope ? null : $this->drawers->summary($storeKey);
+        $expectedCashInDrawer = $drawers['expected_cash_balance'] ?? null;
+
+        // SHIFT-02: cash paid / received while the writer had no open shift (an admin's expense
+        // in a per-cashier branch): in the treasury, in no drawer and no Z.
+        $outside = $this->dailyCashFlow->forDate($date, $storeKey, $ownerId, outsideShiftsOnly: true);
 
         return [
             'scope' => $ownScope ? GetOwnShiftDashboardAction::SCOPE_OWN_SHIFT : GetOwnShiftDashboardAction::SCOPE_STORE,
@@ -118,9 +133,17 @@ final class GetDailyJournalAction
                 'cash_refunds' => Decimal::normalize((string) $cashFlow['cash_refunds']),
                 'total_cash_out' => Decimal::normalize((string) $totalCashOut),
                 'net_cash_today' => Decimal::normalize((string) $netCashToday),
-                'opening_cash_balance' => $ownScope ? null : $openingCashBalance,
+                'opening_cash_balance' => $openingCashBalance,
                 'expected_cash_in_drawer' => $expectedCashInDrawer !== null ? Decimal::normalize($expectedCashInDrawer) : null,
+                // SHIFT-02: the part of the day's cash movement that belongs to no shift (already
+                // inside total_cash_in / total_cash_out above).
+                'outside_shifts_cash_in' => $outside['total_cash_in'],
+                'outside_shifts_cash_out' => $outside['total_cash_out'],
+                'outside_shifts_net_cash' => $outside['net_cash'],
             ],
+            // SHIFT-02: every open shift of the branch (a per-cashier branch has one per cashier).
+            // Own scope: the count and the viewer's own shift only, without money.
+            'open_shifts' => $this->openShiftsBlock($drawers, $storeKey, $viewer, $ownScope),
             'invoices' => $invoices->map(fn ($inv) => [
                 'id' => $inv->id,
                 'invoice_number' => $inv->invoice_number,
@@ -166,40 +189,46 @@ final class GetDailyJournalAction
     }
 
     /**
+     * SHIFT-02: the branch's open shifts (BranchDrawers::summary()). Own scope: the count and the
+     * viewer's own open shift only, every money figure null.
+     *
+     * @param  array{count: int, opening_cash_balance: string, expected_cash_balance: string|null, shifts: list<array<string, mixed>>}|null  $drawers
+     * @return array<string, mixed>
+     */
+    private function openShiftsBlock(?array $drawers, ?int $storeId, ?User $viewer, bool $ownScope): array
+    {
+        if (! $ownScope && $drawers !== null) {
+            return $drawers;
+        }
+
+        $open = BranchDrawers::open($storeId);
+        $own = $viewer instanceof User
+            ? $open->filter(fn (CashShift $s): bool => $s->user_id !== null && (int) $s->user_id === (int) $viewer->id)
+            : collect();
+
+        return [
+            'count' => $open->count(),
+            'opening_cash_balance' => null,
+            'expected_cash_balance' => null,
+            'shifts' => $own->map(fn (CashShift $s): array => [
+                'id' => (int) $s->id,
+                'shift_number' => (string) $s->shift_number,
+                'shift_mode' => (string) $s->shift_mode,
+                'store_id' => $s->store_id !== null ? (int) $s->store_id : null,
+                'user_id' => (int) $s->user_id,
+                'user_name' => $viewer?->name,
+                'opened_at' => $this->tenantClock->toTenant($s->opened_at)?->format('Y-m-d H:i'),
+                'opening_cash_balance' => null,
+                'expected_cash_balance' => null,
+            ])->values()->all(),
+        ];
+    }
+
+    /**
      * Exact scale-3 sum of DECIMAL(12,3) values (bcmath, never float).
      *
      * @param  Collection<array-key, mixed>  $values
      */
-    /**
-     * DATE-03: the opening float of the SELECTED business date. Today: the open shift's float (as
-     * before). An older date: the float of the first shift opened on that date, else of the shift
-     * that was already open when that day started - never today's open shift for a past day.
-     */
-    private function openingCashBalanceFor(string $date, ?int $storeId, ?CashShift $activeShift): string
-    {
-        if ($date === $this->tenantClock->today()) {
-            return $activeShift ? Decimal::normalize((string) $activeShift->opening_cash_balance) : '0.000';
-        }
-
-        [$start, $end] = $this->tenantClock->businessDayRange($date);
-        $storeShifts = fn () => CashShift::query()->when($storeId, fn ($q) => $q->where('store_id', $storeId));
-
-        $shift = $storeShifts()
-            ->where('opened_at', '>=', $start)
-            ->where('opened_at', '<', $end)
-            ->orderBy('opened_at')
-            ->orderBy('id')
-            ->first()
-            ?? $storeShifts()
-                ->where('opened_at', '<', $start)
-                ->where(fn ($q) => $q->whereNull('closed_at')->orWhere('closed_at', '>=', $start))
-                ->orderByDesc('opened_at')
-                ->orderByDesc('id')
-                ->first();
-
-        return $shift instanceof CashShift ? Decimal::normalize((string) $shift->opening_cash_balance) : '0.000';
-    }
-
     private function sumDecimal(Collection $values): string
     {
         return $values->reduce(

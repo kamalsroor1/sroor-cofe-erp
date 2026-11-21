@@ -15,6 +15,7 @@ use App\Models\InvoiceItem;
 use App\Models\Item;
 use App\Models\Supplier;
 use App\Services\Settings\TenantSettings;
+use App\Services\Shifts\BranchDrawers;
 use App\Support\ProfitVisibility;
 use App\Support\TenantClock;
 
@@ -23,6 +24,7 @@ class GetDashboardApiOverviewAction
     public function __construct(
         private readonly TenantClock $tenantClock,
         private readonly TenantSettings $tenantSettings,
+        private readonly BranchDrawers $drawers,
     ) {}
 
     /**
@@ -118,6 +120,9 @@ class GetDashboardApiOverviewAction
             ] : []),
             'current_shift' => $activeShift,
             'has_active_shift' => (bool) $activeShift,
+            // SHIFT-02: every open shift in scope (one per cashier in a per-cashier branch) with
+            // the summed opening and expected cash; current_shift stays the newest one.
+            'open_shifts' => $this->drawers->summary($storeId),
             'low_stock_count' => $lowStockCount,
             'recent_invoices' => $recentInvoices,
             'recent_logs' => $recentLogs,
