@@ -41,9 +41,14 @@ return [
 
         'database' => [
             'driver' => 'database',
-            'connection' => env('DB_CACHE_CONNECTION'),
+            // OPS-26: the CENTRAL connection by default (same default as
+            // tenancy.database.central_connection). Unset, the store bound to whatever the default
+            // connection was when it was first resolved; in a queue worker that can be a tenant
+            // database, which then served every other tenant the same process handled, and wrote
+            // counters inside a tenant transaction that could roll them back.
+            'connection' => env('DB_CACHE_CONNECTION') ?: env('DB_CONNECTION', 'mysql'),
             'table' => env('DB_CACHE_TABLE', 'cache'),
-            'lock_connection' => env('DB_CACHE_LOCK_CONNECTION'),
+            'lock_connection' => env('DB_CACHE_LOCK_CONNECTION') ?: (env('DB_CACHE_CONNECTION') ?: env('DB_CONNECTION', 'mysql')),
             'lock_table' => env('DB_CACHE_LOCK_TABLE'),
         ],
 
