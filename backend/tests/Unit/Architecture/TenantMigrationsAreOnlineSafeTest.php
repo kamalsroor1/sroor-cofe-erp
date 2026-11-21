@@ -111,6 +111,45 @@ final class TenantMigrationsAreOnlineSafeTest extends TestCase
                 <?php
                 DB::update('UPDATE payments SET store_id = (SELECT i.store_id FROM invoices i WHERE i.id = payments.invoice_id)');
                 PHP],
+            'references()->on() FK on payments' => [<<<'PHP'
+                <?php
+                Schema::table('payments', function (Blueprint $table) {
+                    $table->foreignId('return_id')->nullable()->references('id')->on('returns');
+                });
+                PHP],
+            'Schema::connection()->table() FK' => [<<<'PHP'
+                <?php
+                Schema::connection('tenant')->table('payments', function (Blueprint $table) {
+                    $table->foreignId('return_id')->nullable()->constrained('returns');
+                });
+                PHP],
+            'one table chunked, another updated in one statement' => [<<<'PHP'
+                <?php
+                OnlineMigration::forEachIdRange('payments', function (int $from, int $to): void {
+                    DB::table('payments')->whereBetween('id', [$from, $to])->update(['store_id' => 1]);
+                });
+                DB::table('invoices')->whereNull('store_id')->update(['store_id' => 1]);
+                PHP],
+            'aliased table' => [<<<'PHP'
+                <?php
+                DB::table('payments as p')->whereNull('p.store_id')->update(['p.store_id' => 1]);
+                PHP],
+            'id range that covers the whole table' => [<<<'PHP'
+                <?php
+                DB::table('invoices')->where('id', '>', 0)->update(['store_id' => 1]);
+                PHP],
+            'heredoc UPDATE' => [<<<'PHP'
+                <?php
+                DB::statement(<<<'SQL'
+                    UPDATE stock_movements SET store_id = 1 WHERE store_id IS NULL
+                    SQL);
+                PHP],
+            'interpolated UPDATE over a big table' => [<<<'PHP'
+                <?php
+                foreach (['invoices', 'returns'] as $table) {
+                    DB::statement("UPDATE {$table} SET store_id = 1 WHERE store_id IS NULL");
+                }
+                PHP],
         ];
     }
 
@@ -153,6 +192,18 @@ final class TenantMigrationsAreOnlineSafeTest extends TestCase
             'key-list builder update' => [<<<'PHP'
                 <?php
                 DB::table('invoices')->whereIn('id', $ids)->update(['store_id' => 1]);
+                PHP],
+            'single-row builder update' => [<<<'PHP'
+                <?php
+                DB::table('store_stocks')->where('id', $id)->update(['quantity' => 1]);
+                PHP],
+            'chunked over a variable table' => [<<<'PHP'
+                <?php
+                foreach (['invoices', 'returns'] as $table) {
+                    OnlineMigration::forEachIdRange($table, function (int $from, int $to) use ($table): void {
+                        DB::table($table)->whereBetween('id', [$from, $to])->whereNull('store_id')->update(['store_id' => 1]);
+                    });
+                }
                 PHP],
             'only mentioned in a comment' => [<<<'PHP'
                 <?php
