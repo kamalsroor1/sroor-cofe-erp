@@ -98,6 +98,28 @@ class StoresApiTest extends TenantTestCase
         ]));
     }
 
+    public function test_a_store_without_a_code_gets_a_free_one_even_when_the_obvious_one_is_taken(): void
+    {
+        // The generated code used to be a random 100-999 suffix: a collision with the unique
+        // `stores.code` index turned "add branch" into a 500 now and then (flaky CI run 44847206371).
+        $nextId = $this->inTenant($this->tenant, fn (): int => (int) Store::withTrashed()->max('id') + 1);
+        $this->inTenant($this->tenant, function () use ($nextId): void {
+            Store::query()->create(['name' => 'Taken', 'code' => 'RET-'.str_pad((string) ($nextId + 1), 3, '0', STR_PAD_LEFT), 'type' => 'retail_shop', 'is_active' => true, 'is_main' => false])->delete();
+        });
+
+        $codes = [];
+        foreach ([1, 2, 3] as $n) {
+            $codes[] = (string) $this->postJson('/api/v1/stores', ['name' => "Auto {$n}", 'type' => 'retail_shop'], $this->adminHeaders)
+                ->assertCreated()
+                ->json('data.code');
+        }
+
+        $this->assertCount(3, array_unique($codes));
+        foreach ($codes as $code) {
+            $this->assertMatchesRegularExpression('/^RET-\d{3,}$/', $code);
+        }
+    }
+
     public function test_create_store_fails_validation_on_missing_fields(): void
     {
         $response = $this->postJson('/api/v1/stores', [
