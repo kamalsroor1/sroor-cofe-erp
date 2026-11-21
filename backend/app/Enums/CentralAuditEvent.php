@@ -80,6 +80,8 @@ enum CentralAuditEvent: string
     // W2 batch 3 (lane 3G): monitoring access and the legacy control-plane endpoints
     case TelescopeLinkIssued = 'telescope_link_issued';
     case TenantMigrationsRun = 'tenant_migrations_run';
+    // OPS-25: the console button queues the run (RunTenantMigrationsJob); the outcome is TenantMigrationsRun
+    case TenantMigrationsQueued = 'tenant_migrations_queued';
     case TenantFeatureOverridden = 'tenant_feature_overridden';
     case TenantUnitsUpdated = 'tenant_units_updated';
     case PlatformUnitsUpdated = 'platform_units_updated';

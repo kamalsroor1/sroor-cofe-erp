@@ -60,6 +60,7 @@ return [
         'recovery_codes_viewed' => 'عرض أكواد الاسترداد للتحقق الثنائي',
         'telescope_link_issued' => 'إصدار رابط دخول مؤقت للوحة المراقبة',
         'tenant_migrations_run' => 'تشغيل تحديثات قاعدة بيانات محل',
+        'tenant_migrations_queued' => 'طلب تحديث قاعدة بيانات محل في الطابور',
         'tenant_feature_overridden' => 'تعديل ميزة لمحل يدويًا',
         'tenant_units_updated' => 'تعديل وحدات القياس المسموحة لمحل',
         'platform_units_updated' => 'تعديل وحدات القياس العامة للمنصة',
