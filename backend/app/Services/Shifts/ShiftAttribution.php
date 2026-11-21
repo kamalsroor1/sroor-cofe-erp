@@ -29,7 +29,8 @@ use Illuminate\Database\Eloquent\Model;
  *
  * The rule now:
  *  - a row is stamped, ONCE, when it is created (`creating` hook, CashShiftStampObserver), with
- *    the shift OPEN in its store at that moment (one open shift per store, ShiftService). A row
+ *    the shift OPEN in its store at that moment (one open shift per store, ShiftService; SHIFT-01:
+ *    in a per-cashier branch, the open shift of the row's user in its store). A row
  *    without a resolvable store, or created while its store has no open shift, stays NULL. The
  *    value is never taken from the client: it is not mass assignable and is always overwritten.
  *  - a row belongs to shift S when `cash_shift_id = S.id`, OR (history, rows written before the
@@ -46,6 +47,10 @@ final class ShiftAttribution
 {
     public const COLUMN = 'cash_shift_id';
 
+    public function __construct(
+        private readonly OpenShiftResolver $resolver,
+    ) {}
+
     /**
      * Sets cash_shift_id on a row about to be inserted (overwrites any value already set).
      *
@@ -61,8 +66,11 @@ final class ShiftAttribution
         }
 
         $storeId = $this->storeIdOf($row);
+        // SHIFT-01: in a per-cashier branch the row belongs to the open shift of the user who wrote
+        // it (the seller of an invoice, the writer of a voucher / expense / return).
+        $userId = $row->user_id !== null ? (int) $row->user_id : null;
 
-        $row->setAttribute(self::COLUMN, $storeId === null ? null : $this->openShiftIdFor($storeId));
+        $row->setAttribute(self::COLUMN, $storeId === null ? null : $this->openShiftIdFor($storeId, $userId));
     }
 
     /**
@@ -137,12 +145,13 @@ final class ShiftAttribution
      * shared lock behind the close's pending exclusive request) is detected by InnoDB as 1213,
      * whose victim is the close (it has written nothing yet), and TransactionRetry restarts it.
      */
-    public function openShiftIdFor(int $storeId): ?int
+    public function openShiftIdFor(int $storeId, ?int $userId): ?int
     {
+        // SHIFT-01: shared branch -> its open shift; per-cashier branch -> $userId's open shift there.
+        $mode = $this->resolver->modeFor($storeId);
+
         for ($attempt = 0; $attempt < 2; $attempt++) {
-            $candidate = CashShift::query()
-                ->where('store_id', $storeId)
-                ->where('status', 'open')
+            $candidate = $this->resolver->scopeOpen(CashShift::query(), $storeId, $userId, $mode)
                 ->latest('id')
                 ->value('id');
 
@@ -181,7 +190,7 @@ final class ShiftAttribution
 
         return $query->where(function (Builder $q) use ($table, $shift, $openedAt, $until, $legacyStore): void {
             $q->where($table.'.'.self::COLUMN, (int) $shift->id)
-                ->orWhere(function (Builder $legacy) use ($table, $openedAt, $until, $legacyStore): void {
+                ->orWhere(function (Builder $legacy) use ($table, $shift, $openedAt, $until, $legacyStore): void {
                     $legacy->whereNull($table.'.'.self::COLUMN)
                         ->where($table.'.created_at', '>=', $openedAt);
 
@@ -191,6 +200,15 @@ final class ShiftAttribution
 
                     if ($legacyStore !== null) {
                         $legacyStore($legacy);
+                    }
+
+                    // SHIFT-01: per-cashier shifts of one branch overlap in time, so an unstamped
+                    // row inside the window belongs to its opener's shift only (never to every
+                    // cashier's shift at once). Shared shifts keep the store-wide window.
+                    if ($shift->isPerCashier()) {
+                        $shift->user_id !== null
+                            ? $legacy->where($table.'.user_id', (int) $shift->user_id)
+                            : $legacy->whereNull($table.'.user_id');
                     }
                 });
         });

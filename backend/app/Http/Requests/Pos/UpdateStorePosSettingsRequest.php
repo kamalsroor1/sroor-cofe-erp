@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Pos;
 
+use App\Enums\ShiftMode;
 use App\Http\Requests\Pos\Concerns\ResolvesTargetStore;
 use App\Models\StorePosSetting;
 use App\Services\Pos\ScaleBarcodeConfig;
@@ -43,6 +44,8 @@ class UpdateStorePosSettingsRequest extends FormRequest
             'require_shift_for_sales' => ['sometimes', 'boolean'],
             'catalog_cards_per_row' => ['sometimes', 'string', Rule::in(StorePosSetting::CARDS_PER_ROW)],
             'show_item_images' => ['sometimes', 'boolean'],
+            // SHIFT-01: per_cashier (default) | shared.
+            'shift_mode' => ['sometimes', 'string', Rule::enum(ShiftMode::class)],
         ];
     }
 }

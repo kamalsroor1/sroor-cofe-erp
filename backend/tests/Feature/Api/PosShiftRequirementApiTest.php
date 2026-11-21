@@ -102,10 +102,10 @@ final class PosShiftRequirementApiTest extends TenantTestCase
         ], $extra));
     }
 
-    private function openShift(Store $store, string $status = 'open'): CashShift
+    private function openShift(Store $store, string $status = 'open', ?User $opener = null): CashShift
     {
         return CashShift::create([
-            'user_id' => $this->admin->id, 'store_id' => $store->id, 'shift_number' => 'SHIFT-T-'.$store->id.$status,
+            'user_id' => ($opener ?? $this->admin)->id, 'store_id' => $store->id, 'shift_number' => 'SHIFT-T-'.$store->id.$status,
             'status' => $status, 'opened_at' => now(), 'opening_cash_balance' => '100.000',
         ]);
     }
@@ -125,9 +125,14 @@ final class PosShiftRequirementApiTest extends TenantTestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['shift'])
-            ->assertJsonPath('errors.shift.0', __('pos.shift_required'));
+            // SHIFT-01: per_cashier by default - the seller has no shift of their own.
+            ->assertJsonPath('errors.shift.0', __('pos.shift_required_own'));
         $this->assertSame(0, Invoice::count());
         $this->assertSame('100.000', (string) StoreStock::where('store_id', $this->store->id)->where('item_id', $this->item->id)->value('quantity'));
+
+        // A shared branch keeps the branch-wide message.
+        StorePosSetting::query()->updateOrCreate(['store_id' => $this->store->id], ['shift_mode' => 'shared']);
+        $this->sell($this->cashier)->assertStatus(422)->assertJsonPath('errors.shift.0', __('pos.shift_required'));
     }
 
     public function test_generic_invoices_endpoint_is_refused_without_an_open_shift(): void
@@ -156,7 +161,7 @@ final class PosShiftRequirementApiTest extends TenantTestCase
 
     public function test_checkout_is_allowed_with_an_open_shift(): void
     {
-        $this->openShift($this->store);
+        $this->openShift($this->store, opener: $this->cashier);
 
         $this->sell($this->cashier)->assertCreated();
         $this->sell($this->cashier, '/api/v1/invoices')->assertCreated();
@@ -188,7 +193,7 @@ final class PosShiftRequirementApiTest extends TenantTestCase
 
     public function test_an_idempotent_replay_still_succeeds_after_the_shift_was_closed(): void
     {
-        $shift = $this->openShift($this->store);
+        $shift = $this->openShift($this->store, opener: $this->cashier);
         $uuid = '3f1c9a52-6b7e-4d1a-9c55-0a1b2c3d4e5f';
 
         $this->sell($this->cashier, '/api/v1/pos/checkout', ['client_uuid' => $uuid])->assertCreated();
@@ -208,7 +213,7 @@ final class PosShiftRequirementApiTest extends TenantTestCase
         $this->setRequired($this->store, false);
         $this->as($this->cashier)->getJson('/api/v1/shifts/current')->assertJsonPath('requires_shift', false);
 
-        $this->openShift($this->store);
+        $this->openShift($this->store, opener: $this->cashier);
         $this->as($this->cashier)->getJson('/api/v1/shifts/current')->assertJsonPath('has_active', true);
     }
 

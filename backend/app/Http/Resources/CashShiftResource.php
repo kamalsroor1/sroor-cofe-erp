@@ -60,6 +60,8 @@ class CashShiftResource extends JsonResource
             'id' => $this->id,
             'shift_number' => $this->shift_number,
             'status' => $this->status,
+            // SHIFT-01: per_cashier | shared, the branch mode the shift was opened in.
+            'shift_mode' => $this->shift_mode,
             'store_id' => $this->store_id,
             'store_name' => $this->store?->name,
             'user_id' => $this->user_id,

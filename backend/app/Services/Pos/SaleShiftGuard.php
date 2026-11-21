@@ -5,19 +5,20 @@ declare(strict_types=1);
 namespace App\Services\Pos;
 
 use App\Exceptions\BusinessRuleException;
-use App\Models\CashShift;
 use App\Models\Invoice;
 use App\Models\Store;
 use App\Models\StorePosSetting;
+use App\Services\Shifts\OpenShiftResolver;
 use App\Services\Shifts\ShiftAttribution;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 /**
  * POS-10: a branch that requires an open cash shift (store_pos_settings.require_shift_for_sales,
- * default ON) cannot sell without one. Shifts are per store (ShiftService: one open shift per
- * store, shared by its cashiers), so the check is "this store has an open shift" - a shift of
- * another store never counts.
+ * default ON) cannot sell without one. SHIFT-01: which shift counts follows the branch's shift
+ * mode (OpenShiftResolver): in a shared branch "this store has an open shift"; in a per-cashier
+ * branch (default) "the SELLER has their own open shift in this store". A shift of another store,
+ * or (per-cashier) of another cashier, never counts.
  *
  * Two checks:
  *  - assertCanSell(), before the sale's transaction: no open shift -> 422 on `shift` (the POS
@@ -33,19 +34,24 @@ final class SaleShiftGuard
 {
     public function __construct(
         private readonly ShiftAttribution $attribution,
+        private readonly OpenShiftResolver $resolver,
     ) {}
 
     /**
+     * $sellerId: the user the invoice will be attributed to (default: the authenticated user).
+     *
      * @throws ValidationException 422 on `shift` when the store requires a shift and none is open
      */
-    public function assertCanSell(?int $storeId, ?string $clientUuid = null): void
+    public function assertCanSell(?int $storeId, ?string $clientUuid = null, ?int $sellerId = null): void
     {
         $storeId ??= Auth::user()?->getCurrentStore()->id ?? Store::getMainStore()?->id;
         if ($storeId === null || ! $this->isRequired((int) $storeId)) {
             return;
         }
 
-        if (CashShift::query()->where('status', 'open')->where('store_id', $storeId)->exists()) {
+        $authId = Auth::id();
+        $sellerId ??= $authId !== null ? (int) $authId : null;
+        if ($this->resolver->hasOpenFor((int) $storeId, $sellerId)) {
             return;
         }
 
@@ -55,24 +61,28 @@ final class SaleShiftGuard
             return;
         }
 
-        throw ValidationException::withMessages(['shift' => [__('pos.shift_required')]]);
+        $perCashier = $this->resolver->modeFor((int) $storeId)->isPerCashier();
+
+        throw ValidationException::withMessages(['shift' => [__($perCashier ? 'pos.shift_required_own' : 'pos.shift_required')]]);
     }
 
     /**
      * Call inside the sale's transaction, right before the invoice row is inserted (after the
-     * idempotency replay check, so a replayed sale is never refused).
+     * idempotency replay check, so a replayed sale is never refused). $sellerId: the invoice's user.
      *
-     * @throws BusinessRuleException 409 `pos.shift_closed_during_sale` when the store requires a
-     *                               shift and none is open any more
+     * @throws BusinessRuleException 409 `pos.shift_closed_during_sale` (`..._own` in a per-cashier
+     *                               branch) when the store requires a shift and none is open any more
      */
-    public function assertShiftStillOpen(?int $storeId): void
+    public function assertShiftStillOpen(?int $storeId, ?int $sellerId = null): void
     {
         if ($storeId === null || ! $this->isRequired($storeId)) {
             return;
         }
 
-        if ($this->attribution->openShiftIdFor($storeId) === null) {
-            throw BusinessRuleException::conflict('pos.shift_closed_during_sale');
+        if ($this->attribution->openShiftIdFor($storeId, $sellerId) === null) {
+            throw BusinessRuleException::conflict(
+                $this->resolver->modeFor($storeId)->isPerCashier() ? 'pos.shift_closed_during_sale_own' : 'pos.shift_closed_during_sale'
+            );
         }
     }
 

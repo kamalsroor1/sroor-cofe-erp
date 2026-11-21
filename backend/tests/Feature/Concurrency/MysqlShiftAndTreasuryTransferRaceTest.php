@@ -6,6 +6,8 @@ namespace Tests\Feature\Concurrency;
 
 use App\Exceptions\BusinessRuleException;
 use App\Models\CashShift;
+use App\Models\StorePosSetting;
+use App\Models\Tenant;
 use App\Models\TreasuryTransfer;
 use App\Services\TreasuryService;
 use Illuminate\Support\Facades\DB;
@@ -76,7 +78,22 @@ final class MysqlShiftAndTreasuryTransferRaceTest extends TenantTestCase
         $this->assertSame(['transfers' => 2, 'cash' => '20.000', 'instapay' => '80.000'], $state);
     }
 
-    public function test_parallel_shift_opens_for_one_branch_create_a_single_shift(): void
+    public function test_parallel_shift_opens_for_one_shared_branch_create_a_single_shift(): void
+    {
+        $tenant = $this->createTenant();
+        $storeId = (int) $this->tenantStore($tenant)->id;
+        // SHIFT-01: shared mode, so different cashiers racing still get ONE shift for the branch.
+        $this->inTenant($tenant, fn () => StorePosSetting::query()->updateOrCreate(['store_id' => $storeId], ['shift_mode' => 'shared']));
+
+        $payloads = [];
+        for ($i = 1; $i <= self::WORKERS; $i++) {
+            $payloads[] = ['store_id' => $storeId, 'user_id' => (int) $this->createTenantUser($tenant, 'cashier')->id, 'opening_cash' => '50.000'];
+        }
+
+        $this->assertSingleOpenShift($tenant, $storeId, $this->runWorkers('shift_open', $tenant, $payloads));
+    }
+
+    public function test_parallel_shift_opens_by_one_cashier_in_a_per_cashier_branch_create_a_single_shift(): void
     {
         $tenant = $this->createTenant();
         $storeId = (int) $this->tenantStore($tenant)->id;
@@ -87,8 +104,15 @@ final class MysqlShiftAndTreasuryTransferRaceTest extends TenantTestCase
             $payloads[] = ['store_id' => $storeId, 'user_id' => $adminId, 'opening_cash' => '50.000'];
         }
 
-        $results = $this->runWorkers('shift_open', $tenant, $payloads);
+        $this->assertSingleOpenShift($tenant, $storeId, $this->runWorkers('shift_open', $tenant, $payloads));
+        $this->inTenant($tenant, fn () => $this->assertSame('per_cashier', CashShift::query()->where('status', 'open')->value('shift_mode')));
+    }
 
+    /**
+     * @param  list<array<string, mixed>>  $results
+     */
+    private function assertSingleOpenShift(Tenant $tenant, int $storeId, array $results): void
+    {
         $succeeded = array_values(array_filter($results, fn (array $r): bool => $r['ok'] === true));
         $failed = array_values(array_filter($results, fn (array $r): bool => $r['ok'] !== true));
 

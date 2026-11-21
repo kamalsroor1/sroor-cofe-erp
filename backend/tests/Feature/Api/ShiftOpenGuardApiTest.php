@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Tests\Feature\Api;
 
 use App\Models\CashShift;
+use App\Models\StorePosSetting;
 use App\Models\Tenant;
 use App\Services\ShiftService;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Tests\TenantTestCase;
 
 /**
- * SHOP-06 / BE-19: one open shift per branch (store-row lock + UNIQUE open_store_guard) and an
+ * SHOP-06 / BE-19: one open shift per branch (store-row lock + UNIQUE open_guard; SHIFT-01: per branch in shared mode, per cashier and branch by default) and an
  * idempotent close. The real parallel race runs on MySQL (MysqlShiftAndTransferRaceTest).
  */
 final class ShiftOpenGuardApiTest extends TenantTestCase
@@ -37,7 +38,7 @@ final class ShiftOpenGuardApiTest extends TenantTestCase
 
         $this->inTenant($this->tenant, function (): void {
             $shift = CashShift::query()->sole();
-            $this->assertSame($this->storeId, (int) $shift->open_store_guard);
+            $this->assertSame('store:'.$this->storeId.':user:'.$shift->user_id, $shift->open_guard);
         });
     }
 
@@ -52,7 +53,29 @@ final class ShiftOpenGuardApiTest extends TenantTestCase
             'store_id' => $this->storeId,
             'shift_number' => 'SHIFT-RACE-2',
             'status' => 'open',
-            'open_store_guard' => $this->storeId,
+            'shift_mode' => 'per_cashier',
+            'open_guard' => 'store:'.$this->storeId.':user:'.$this->tenantAdmin($this->tenant)->id,
+            'opened_at' => now(),
+            'opening_cash_balance' => '0.000',
+        ]));
+    }
+
+    public function test_in_shared_mode_the_database_refuses_a_second_open_shift_for_the_branch_whoever_opens_it(): void
+    {
+        $this->inTenant($this->tenant, fn () => StorePosSetting::query()->updateOrCreate(['store_id' => $this->storeId], ['shift_mode' => 'shared']));
+        $first = $this->openViaService();
+        $this->inTenant($this->tenant, fn () => $this->assertSame('store:'.$this->storeId, CashShift::query()->findOrFail($first)->open_guard));
+
+        $this->expectException(UniqueConstraintViolationException::class);
+
+        $other = $this->createTenantUser($this->tenant, 'cashier');
+        $this->inTenant($this->tenant, fn () => CashShift::query()->create([
+            'user_id' => $other->id,
+            'store_id' => $this->storeId,
+            'shift_number' => 'SHIFT-RACE-SHARED',
+            'status' => 'open',
+            'shift_mode' => 'shared',
+            'open_guard' => 'store:'.$this->storeId,
             'opened_at' => now(),
             'opening_cash_balance' => '0.000',
         ]));
@@ -63,7 +86,7 @@ final class ShiftOpenGuardApiTest extends TenantTestCase
         $first = $this->openViaService();
         $this->inTenant($this->tenant, fn () => app(ShiftService::class)->closeShift(CashShift::query()->findOrFail($first), '10.000'));
 
-        $this->inTenant($this->tenant, fn () => $this->assertNull(CashShift::query()->findOrFail($first)->open_store_guard));
+        $this->inTenant($this->tenant, fn () => $this->assertNull(CashShift::query()->findOrFail($first)->open_guard));
 
         $second = $this->openViaService();
         $this->assertNotSame($first, $second);

@@ -10,6 +10,7 @@ use App\Models\Expense;
 use App\Models\InvoiceItem;
 use App\Models\Item;
 use App\Models\Store;
+use App\Models\StorePosSetting;
 use App\Models\StoreStock;
 use App\Models\Supplier;
 use App\Models\Tenant;
@@ -197,6 +198,9 @@ final class ShiftZReportTotalsApiTest extends TenantTestCase
 
     public function test_a_shift_edited_after_close_is_reported_and_its_expected_balance_is_kept(): void
     {
+        // SHIFT-01: the late expense below has no user; only a shared shift's window takes it in
+        // (a per-cashier shift only takes its opener's unstamped rows, see ShiftModeApiTest).
+        $this->inTenant($this->tenant, fn () => StorePosSetting::query()->updateOrCreate(['store_id' => $this->storeId], ['shift_mode' => 'shared']));
         $this->fullDayBeforeClose();
         $shiftId = (int) $this->closeShift('169.250')->json('data.id');
         $this->simulatePreFixClose($shiftId);

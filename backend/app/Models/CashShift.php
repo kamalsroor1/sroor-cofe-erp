@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ShiftMode;
 use App\Policies\ShiftPolicy;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,8 @@ use Illuminate\Support\Carbon;
  * @property int|null $user_id
  * @property string $shift_number
  * @property string $status
- * @property int|null $open_store_guard
+ * @property string $shift_mode
+ * @property string|null $open_guard
  * @property Carbon|null $opened_at
  * @property Carbon|null $closed_at
  * @property string $opening_cash_balance
@@ -45,7 +47,8 @@ class CashShift extends Model
         'store_id',
         'shift_number',
         'status',
-        'open_store_guard',
+        'shift_mode',
+        'open_guard',
         'opened_at',
         'closed_at',
         'opening_cash_balance',
@@ -77,24 +80,31 @@ class CashShift extends Model
     ];
 
     /**
-     * SHOP-06 / BE-19: `open_store_guard` (UNIQUE) is set by ShiftService only while a shift is
-     * open; it is cleared whenever the shift stops being open (closed, or deleted while open),
-     * so a branch can open its next shift.
+     * SHOP-06 / BE-19, SHIFT-01: `open_guard` (UNIQUE) is set by ShiftService only while a shift is
+     * open (OpenShiftResolver::guardKey: the branch, or the branch and the cashier); it is cleared
+     * whenever the shift stops being open (closed, or deleted while open), so the branch / cashier
+     * can open the next shift.
      */
     protected static function booted(): void
     {
         static::saving(function (CashShift $shift): void {
-            if ($shift->status !== 'open' && $shift->open_store_guard !== null) {
-                $shift->open_store_guard = null;
+            if ($shift->status !== 'open' && $shift->open_guard !== null) {
+                $shift->open_guard = null;
             }
         });
 
         static::deleting(function (CashShift $shift): void {
-            if ($shift->open_store_guard !== null) {
-                $shift->open_store_guard = null;
+            if ($shift->open_guard !== null) {
+                $shift->open_guard = null;
                 $shift->saveQuietly();
             }
         });
+    }
+
+    /** SHIFT-01: opened in a per-cashier branch (its own drawer; legacy rows are 'shared'). */
+    public function isPerCashier(): bool
+    {
+        return $this->shift_mode === ShiftMode::PerCashier->value;
     }
 
     /**

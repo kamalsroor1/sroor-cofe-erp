@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ShiftMode;
 use App\Services\Pos\ScaleBarcodeConfig;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +28,7 @@ use Illuminate\Support\Carbon;
  * @property bool $require_shift_for_sales
  * @property string $catalog_cards_per_row
  * @property bool $show_item_images
+ * @property string $shift_mode
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Store $store
@@ -56,6 +58,7 @@ class StorePosSetting extends Model
         'require_shift_for_sales',
         'catalog_cards_per_row',
         'show_item_images',
+        'shift_mode',
     ];
 
     protected function casts(): array
@@ -83,7 +86,7 @@ class StorePosSetting extends Model
         $setting = new self;
         $setting->forceFill(array_merge(
             ScaleBarcodeConfig::defaults()->toArray(),
-            ['store_id' => $storeId, 'max_discount_percent' => null, 'require_shift_for_sales' => (bool) config('pos.require_shift_by_default', true), 'catalog_cards_per_row' => '3', 'show_item_images' => false],
+            ['store_id' => $storeId, 'max_discount_percent' => null, 'require_shift_for_sales' => (bool) config('pos.require_shift_by_default', true), 'catalog_cards_per_row' => '3', 'show_item_images' => false, 'shift_mode' => ShiftMode::DEFAULT->value],
         ));
 
         return $setting;
@@ -106,6 +109,14 @@ class StorePosSetting extends Model
         return $this->max_discount_percent === null
             ? self::DEFAULT_MAX_DISCOUNT_PERCENT
             : bcadd((string) $this->max_discount_percent, '0', 3);
+    }
+
+    /**
+     * SHIFT-01: per_cashier (default) or shared. An unknown stored value falls back to the default.
+     */
+    public function shiftMode(): ShiftMode
+    {
+        return ShiftMode::tryFrom((string) $this->shift_mode) ?? ShiftMode::DEFAULT;
     }
 
     public function scaleConfig(): ScaleBarcodeConfig

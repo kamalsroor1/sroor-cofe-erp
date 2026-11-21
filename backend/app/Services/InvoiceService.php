@@ -216,7 +216,8 @@ class InvoiceService
             // rolls back) when its store's shift was closed after the pre-transaction check. Same
             // shared lock and same point as the DATE-01 stamp of the invoice below.
             if ($requireOpenShift) {
-                app(SaleShiftGuard::class)->assertShiftStillOpen($storeId !== null ? (int) $storeId : null);
+                // SHIFT-01: in a per-cashier branch, the seller's own shift (the invoice's user_id).
+                app(SaleShiftGuard::class)->assertShiftStillOpen($storeId !== null ? (int) $storeId : null, $this->actorId($data));
             }
 
             $invoice = Invoice::create([

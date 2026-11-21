@@ -201,6 +201,7 @@ return [
     'shift_opened_numbered' => 'Shift :number opened successfully',
     'shift_closed_numbered' => 'Shift :number closed successfully (:status)',
     'shift_already_open' => 'Shift :number is already open for this branch. Close it first.',
+    'shift_already_open_own' => 'You already have shift :number open in this branch. Close it first.',
     'cash_diff_matched' => 'Drawer matches',
     'cash_diff_surplus' => 'Surplus of :amount :currency',
     'cash_diff_shortage' => 'Shortage of :amount :currency',

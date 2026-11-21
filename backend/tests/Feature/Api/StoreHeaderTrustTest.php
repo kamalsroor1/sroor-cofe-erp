@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsureCentralContext;
 use App\Models\CashShift;
 use App\Models\Item;
 use App\Models\Store;
+use App\Models\StorePosSetting;
 use App\Models\StoreStock;
 use App\Models\Tenant;
 use App\Models\User;
@@ -56,6 +57,9 @@ final class StoreHeaderTrustTest extends TenantTestCase
                 'quantity' => '7.250',
                 'min_stock' => '0.000',
             ]);
+
+            // SHIFT-01: one shared shift in branch B, so any user of B reads it in the bootstrap.
+            StorePosSetting::query()->create(['store_id' => $storeB->id, 'shift_mode' => 'shared']);
 
             $shift = CashShift::query()->create([
                 'user_id' => User::query()->orderBy('id')->value('id'),

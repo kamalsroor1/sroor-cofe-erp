@@ -19,6 +19,7 @@ use App\Models\User;
 use App\Policies\ShiftPolicy;
 use App\Services\Pos\SaleShiftGuard;
 use App\Services\Settings\TenantSettings;
+use App\Services\Shifts\OpenShiftResolver;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -78,7 +79,7 @@ final class ShiftController extends Controller
     /**
      * Get Current Active Shift & Live Shift Metrics
      */
-    public function current(Request $request, ActiveStore $activeStore, SaleShiftGuard $saleShiftGuard): JsonResponse
+    public function current(Request $request, ActiveStore $activeStore, SaleShiftGuard $saleShiftGuard, OpenShiftResolver $shiftResolver): JsonResponse
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('daily_journal.view') && ! $user->can('pos.access')) {
@@ -86,7 +87,10 @@ final class ShiftController extends Controller
         }
 
         $storeId = $activeStore->singleStoreId($request);
-        $result = $this->getActiveShiftAction->execute($storeId, viewer: $user instanceof User ? $user : null);
+        // SHIFT-01: in a per-cashier branch "the current shift" is the caller's own open shift.
+        $shiftMode = $shiftResolver->modeFor($storeId);
+        $ownerId = $shiftMode->isPerCashier() && $user instanceof User ? (int) $user->id : null;
+        $result = $this->getActiveShiftAction->execute($storeId, $ownerId, viewer: $user instanceof User ? $user : null);
         // POS-10: whether this branch refuses sales without an open shift (the POS gate reads it).
         $requiresShift = $saleShiftGuard->isRequired($storeId);
 
@@ -95,6 +99,7 @@ final class ShiftController extends Controller
                 'success' => true,
                 'has_active' => false,
                 'requires_shift' => $requiresShift,
+                'shift_mode' => $shiftMode->value,
                 'active_shift' => null,
                 'metrics' => null,
             ], 200);
@@ -104,6 +109,7 @@ final class ShiftController extends Controller
             'success' => true,
             'has_active' => true,
             'requires_shift' => $requiresShift,
+            'shift_mode' => $shiftMode->value,
             // ROLE-01: another user's shift read without reports.view: cash figures null.
             // DEC-SHIFT: without reports.view the open shift's expected cash is withheld (blind count).
             'active_shift' => (new CashShiftResource($result['shift']))
@@ -138,7 +144,7 @@ final class ShiftController extends Controller
     /**
      * Close the active cashier shift and generate Z-Report
      */
-    public function close(CloseShiftRequest $request, ActiveStore $activeStore): JsonResponse
+    public function close(CloseShiftRequest $request, ActiveStore $activeStore, OpenShiftResolver $shiftResolver): JsonResponse
     {
         // STOR-2: only a shift of the active store (store.active:concrete) can be closed; a shift
         // of any other store is answered as not found (CTO Q13).
@@ -147,7 +153,8 @@ final class ShiftController extends Controller
 
         $shiftId = (int) ($request->validated('shift_id') ?? 0);
         if ($shiftId <= 0) {
-            $shiftId = (int) CashShift::where('status', 'open')->where('store_id', $storeId)->value('id');
+            // SHIFT-01: without an id, "the current shift": the branch's (shared) or the caller's own (per_cashier).
+            $shiftId = (int) $shiftResolver->currentFor($storeId, $request->user() instanceof User ? (int) $request->user()->id : null)?->id;
         }
 
         // DEC-SHIFT: a shift outside the active store is not found (404); one the caller neither

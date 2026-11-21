@@ -10,6 +10,7 @@ use App\Models\Customer;
 use App\Models\Item;
 use App\Models\ReturnDocument;
 use App\Models\Store;
+use App\Models\StorePosSetting;
 use App\Models\StoreStock;
 use App\Models\Tenant;
 use App\Models\User;
@@ -73,6 +74,7 @@ final class CashierShiftVisibilityApiTest extends TenantTestCase
 
     public function test_cashier_selling_inside_a_shift_another_cashier_opened_sees_only_their_own_sales(): void
     {
+        $this->sharedBranch();
         $opener = $this->createTenantUser($this->tenant, 'cashier');
         $seller = $this->createTenantUser($this->tenant, 'cashier');
         $shiftId = $this->openShift($opener, now()->subHour());
@@ -314,6 +316,7 @@ final class CashierShiftVisibilityApiTest extends TenantTestCase
 
     public function test_current_shift_hides_the_cash_figures_from_a_cashier_who_did_not_open_it(): void
     {
+        $this->sharedBranch();
         $opener = $this->createTenantUser($this->tenant, 'cashier');
         $seller = $this->createTenantUser($this->tenant, 'cashier');
         $shiftId = $this->openShift($opener, now()->subHour());
@@ -343,6 +346,7 @@ final class CashierShiftVisibilityApiTest extends TenantTestCase
 
     public function test_me_hides_the_opening_float_of_a_shift_the_cashier_did_not_open(): void
     {
+        $this->sharedBranch();
         $opener = $this->createTenantUser($this->tenant, 'cashier');
         $seller = $this->createTenantUser($this->tenant, 'cashier');
         $shiftId = $this->openShift($opener, now()->subHour());
@@ -485,6 +489,12 @@ final class CashierShiftVisibilityApiTest extends TenantTestCase
     private function adminId(): int
     {
         return $this->inTenant($this->tenant, fn (): int => (int) User::role('admin')->orderBy('id')->value('id'));
+    }
+
+    /** SHIFT-01: these cases are about the shared drawer (one shift per branch, every cashier sells in it). */
+    private function sharedBranch(): void
+    {
+        $this->inTenant($this->tenant, fn () => StorePosSetting::query()->updateOrCreate(['store_id' => $this->storeId], ['shift_mode' => 'shared']));
     }
 
     /** One open shift per store, as ShiftService allows. */

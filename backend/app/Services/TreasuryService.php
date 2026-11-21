@@ -699,15 +699,18 @@ class TreasuryService
 
     /**
      * Opening cash of the open shift(s): the latest open shift of the branch, or - for the
-     * all-branches view - the latest open shift of every branch.
+     * all-branches view - the latest open shift of every branch. SHIFT-01: plus every open
+     * per-cashier shift (one drawer each).
      */
     private function openShiftsOpeningCash(?int $storeId): string
     {
         $shifts = CashShift::where('status', 'open')
             ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
             ->orderBy('id')
-            ->get(['id', 'store_id', 'opening_cash_balance'])
-            ->keyBy(fn (CashShift $s): string => (string) $s->store_id); // later (higher id) wins
+            ->get(['id', 'store_id', 'shift_mode', 'opening_cash_balance'])
+            // Shared: the latest (higher id) open shift of the branch wins. SHIFT-01: every open
+            // per-cashier shift is its own drawer, so each one's float counts.
+            ->keyBy(fn (CashShift $s): string => $s->isPerCashier() ? 'shift:'.$s->id : 'store:'.$s->store_id);
 
         $total = '0.000';
         foreach ($shifts as $shift) {

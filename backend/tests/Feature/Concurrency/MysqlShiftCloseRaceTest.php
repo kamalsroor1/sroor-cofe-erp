@@ -44,7 +44,8 @@ final class MysqlShiftCloseRaceTest extends TenantTestCase
         $storeId = (int) $this->tenantStore($tenant)->getKey();
 
         [$itemId, $customerIds, $shiftId] = $this->inTenant($tenant, function () use ($storeId): array {
-            StorePosSetting::query()->updateOrCreate(['store_id' => $storeId], ['require_shift_for_sales' => true]);
+            // SHIFT-01: one shared shift for the branch (the sales below carry no seller).
+            StorePosSetting::query()->updateOrCreate(['store_id' => $storeId], ['require_shift_for_sales' => true, 'shift_mode' => 'shared']);
 
             $item = $this->stockInAllStores(Item::query()->create([
                 'code' => 'QA-SHIFT-01', 'name' => 'صنف وردية', 'unit' => 'كجم', 'cost_price' => '100.000',
