@@ -81,20 +81,27 @@ final class SuperAdminControlPlaneAuditTest extends TenantTestCase
         $this->assertSame('custom_branding', $override->properties['feature_key'] ?? null);
     }
 
-    public function test_run_migrations_returns_a_status_only_and_is_audited(): void
+    public function test_run_migrations_is_queued_and_both_steps_are_audited(): void
     {
         $tenant = $this->createTenant();
         $id = (string) $tenant->getTenantKey();
 
+        // OPS-25: queued (202 + run id); the sync test queue runs the job right after the commit.
         $response = $this->postJson("/api/v1/super-admin/tenants/{$id}/run-migrations", [], $this->headers)
-            ->assertOk()
+            ->assertStatus(202)
             ->assertJsonPath('success', true)
             ->assertJsonMissingPath('output');
-        $this->assertSame(['success', 'message'], array_keys((array) $response->json()));
+        $this->assertSame(['success', 'message', 'data'], array_keys((array) $response->json()));
+        $runId = (string) $response->json('data.run_id');
+
+        $queued = $this->auditRow(CentralAuditEvent::TenantMigrationsQueued);
+        $this->assertSame($id, $queued->tenant_id);
+        $this->assertSame($runId, $queued->properties['run_id'] ?? null);
 
         $log = $this->auditRow(CentralAuditEvent::TenantMigrationsRun);
         $this->assertSame($id, $log->tenant_id);
         $this->assertSame('succeeded', $log->properties['status'] ?? null);
+        $this->assertSame($runId, $log->properties['run_id'] ?? null);
     }
 
     public function test_db_config_change_is_audited_without_the_password(): void

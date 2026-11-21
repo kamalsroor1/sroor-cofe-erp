@@ -60,6 +60,7 @@ return [
         'recovery_codes_viewed' => 'Two-factor recovery codes viewed',
         'telescope_link_issued' => 'Monitoring dashboard access link issued',
         'tenant_migrations_run' => 'Tenant migrations run',
+        'tenant_migrations_queued' => 'Tenant migrations queued',
         'tenant_feature_overridden' => 'Tenant feature overridden',
         'tenant_units_updated' => 'Tenant units updated',
         'platform_units_updated' => 'Platform units updated',

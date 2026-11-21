@@ -85,7 +85,7 @@ final class ProvisioningReadyGuardTest extends TenantTestCase
             ->assertStatus(409)
             ->assertJsonPath('error_code', 'provisioning.workspace_not_ready');
 
-        $this->assertSame(0, CentralAuditLog::query()->where('event', CentralAuditEvent::TenantMigrationsRun->value)->count());
+        $this->assertSame(0, CentralAuditLog::query()->whereIn('event', [CentralAuditEvent::TenantMigrationsRun->value, CentralAuditEvent::TenantMigrationsQueued->value])->count());
         $this->assertFalse($tenant->database()->manager()->databaseExists((string) $tenant->database()->getName()), 'No database was created by a migrate run.');
     }
 

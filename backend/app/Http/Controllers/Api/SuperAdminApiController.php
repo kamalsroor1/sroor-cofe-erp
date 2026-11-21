@@ -8,7 +8,7 @@ use App\Actions\Tenants\GetTenantDetailsAction;
 use App\Actions\Tenants\GetTenantsIndexDataAction;
 use App\Actions\Tenants\OverrideTenantFeatureAction;
 use App\Actions\Tenants\ProvisionTenantAction;
-use App\Actions\Tenants\RunTenantMigrationsAction;
+use App\Actions\Tenants\QueueTenantMigrationsAction;
 use App\Actions\Tenants\ToggleTenantStatusAction;
 use App\Actions\Tenants\UpdateTenantDatabaseConfigAction;
 use App\Contracts\SuperAdminDashboardAnalyticsInterface;
@@ -200,24 +200,19 @@ final class SuperAdminApiController extends Controller
     }
 
     /**
-     * Run migrations specifically for this tenant. Returns a status only: the console
-     * output (paths, SQL, connection names) is logged, never returned.
+     * OPS-25: queue the pending migrations of this tenant (202 + run id). The run itself
+     * happens in RunTenantMigrationsJob; its outcome is the `tenant_migrations_run` audit line
+     * carrying the same run id. No console output is ever returned.
      */
-    public function runTenantMigrations(Request $request, string $id, RunTenantMigrationsAction $action): JsonResponse
+    public function runTenantMigrations(Request $request, string $id, QueueTenantMigrationsAction $action): JsonResponse
     {
-        $tenant = $this->findTenant($id);
-
-        if (! $action->execute($tenant, $this->operator($request))) {
-            return response()->json([
-                'success' => false,
-                'message' => __('super.migrations_failed'),
-            ], 422);
-        }
+        $runId = $action->execute($this->findTenant($id), $this->operator($request));
 
         return response()->json([
             'success' => true,
-            'message' => __('super.migrations_completed_success'),
-        ]);
+            'message' => __('super.migrations_queued'),
+            'data' => ['run_id' => $runId, 'status' => 'queued'],
+        ], 202);
     }
 
     /**

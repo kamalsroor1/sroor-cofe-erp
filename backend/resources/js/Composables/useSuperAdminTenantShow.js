@@ -187,11 +187,12 @@ export function useSuperAdminTenantShow() {
     const runMigrations = async () => {
         isMigrating.value = true;
         try {
+            // OPS-25: 202 — the run is queued; its outcome lands in the central audit log.
             const res = await api.post(`/super-admin/tenants/${tenantId}/run-migrations`);
             DarkSwal.fire({
-                icon: 'success',
-                title: t('common.success'),
-                text: res.data?.message || t('super.migrations_completed_success'),
+                icon: 'info',
+                title: t('super.migrations_queued_title'),
+                text: res.data?.message || t('super.migrations_queued'),
             });
         } catch (e) {
             DarkSwal.fire({
