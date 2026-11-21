@@ -71,7 +71,7 @@ final class TreasuryTransfersApiTest extends TenantTestCase
             ->assertJsonPath('data.amount', '200.250')
             ->assertJsonPath('data.transfer_fee', '5.000')
             ->assertJsonPath('data.notes', 'توريد للبنك');
-        $this->assertStringStartsWith('TRF-', (string) $response->json('data.transfer_number'));
+        $this->assertStringStartsWith('TTRF-', (string) $response->json('data.transfer_number'));
 
         $balances = $this->balances($this->mainStoreId);
         $this->assertSame('294.750', $balances['cash']['balance']);

@@ -487,7 +487,7 @@ class ImportApiTest extends TenantTestCase
         $sheet = [$this->headers('categories'), ['مشروبات', '']];
         $first = $this->previewToken('categories', $this->xlsx($sheet));
         $second = $this->previewToken('categories', $this->xlsx($sheet));
-        $customers = $this->previewToken('customers', $this->xlsx([$this->headers('customers'), ['عميل القفل', '01001112223']]));
+        $customers = $this->previewToken('customers', $this->xlsx([$this->headers('customers'), ['عميل القفل', '01000000223']]));
 
         $lock = Cache::lock(TenantCache::keyFor((string) $this->tenant->getTenantKey(), 'import-commit:categories'), 60);
         $this->assertTrue($lock->get());

@@ -91,8 +91,8 @@ class ImportRealFilesApiTest extends TenantTestCase
 
     public function test_egyptian_mobiles_with_the_country_code_become_the_local_form(): void
     {
-        foreach (['+20 100 123 4567', '00201001234567', '201001234567', '1001234567', '٠١٠٠١٢٣٤٥٦٧'] as $typed) {
-            $this->assertSame('01001234567', NumberNormalizer::phone($typed), $typed);
+        foreach (['+20 100 000 0001', '00201000000001', '201000000001', '1000000001', '٠١٠٠٠٠٠٠٠٠١'] as $typed) {
+            $this->assertSame('01000000001', NumberNormalizer::phone($typed), $typed);
         }
         $this->assertSame('+97150123456', NumberNormalizer::phone('+971 50 123 456'));
     }
@@ -145,10 +145,10 @@ class ImportRealFilesApiTest extends TenantTestCase
     public function test_re_uploading_customers_without_phones_matches_by_normalized_name(): void
     {
         $this->inTenant($this->tenant, fn () => Customer::query()->create([
-            'name' => 'كافيه بالتليفون', 'phone' => '01001234567', 'price_tier' => 'retail', 'current_balance' => '0.000', 'is_active' => true,
+            'name' => 'كافيه بالتليفون', 'phone' => '01000000001', 'price_tier' => 'retail', 'current_balance' => '0.000', 'is_active' => true,
         ]));
 
-        // «+20 100 123 4567» is the existing 01001234567: a duplicate, not a new customer.
+        // «+20 100 000 0001» is the existing 01000000001: a duplicate, not a new customer.
         $first = $this->preview('customers', $this->fixture('customers-without-phones.csv'))->assertOk()
             ->assertJsonPath('data.summary', ['total' => 3, 'valid' => 2, 'invalid' => 0, 'duplicates' => 1]);
         $this->commit('customers', (string) $first->json('data.token'))->assertOk()->assertJsonPath('data.created', 2);
@@ -165,19 +165,19 @@ class ImportRealFilesApiTest extends TenantTestCase
     {
         // Parties saved before phones were normalized, each in another format of an Egyptian mobile.
         $this->inTenant($this->tenant, function (): void {
-            foreach (['+201001234567', '201101234567', '00201201234567', '010 1555 4444', '٠١٢٢٣٣٣٤٤٤٤'] as $i => $phone) {
+            foreach (['+201000000010', '201100000020', '00201200000030', '010 1111 1111', '٠١٢٢٢٢٢٢٢٠١'] as $i => $phone) {
                 Customer::query()->create(['name' => 'قديم '.$i, 'phone' => $phone, 'price_tier' => 'retail', 'current_balance' => '0.000', 'is_active' => true]);
                 Supplier::query()->create(['name' => 'مورد قديم '.$i, 'phone' => $phone, 'current_balance' => '0.000']);
             }
         });
 
         $rows = [
-            ['01001234567', 'نفس +2010'],
-            ['+20 110 123 4567', 'نفس 2011'],
-            ['0020 120 123 4567', 'نفس 002012'],
-            ['01015554444', 'نفس بمسافات'],
-            ['01223334444', 'نفس بأرقام عربية'],
-            ['01099998888', 'جديد'],
+            ['01000000010', 'نفس +2010'],
+            ['+20 110 000 0020', 'نفس 2011'],
+            ['0020 120 000 0030', 'نفس 002012'],
+            ['01011111111', 'نفس بمسافات'],
+            ['01222222201', 'نفس بأرقام عربية'],
+            ['01000000099', 'جديد'],
         ];
 
         $customers = $this->xlsx([['اسم العميل', 'الموبايل', 'الرصيد الافتتاحي'], ...array_map(static fn (array $r): array => [$r[1], $r[0], '100'], $rows)]);
@@ -370,23 +370,23 @@ class ImportRealFilesApiTest extends TenantTestCase
     {
         $token = (string) $this->preview('customers', $this->xlsx([
             ['اسم العميل', 'الموبايل', 'الرصيد الافتتاحي'],
-            ['', '+20 100 123 4567', '١٢٫٥'],
-            ['عميل', '01001234567', '5'],
-            ['عميل تاني', '0020 100 123 4567', '١٬٠٠٠'],
+            ['', '+20 100 000 0001', '١٢٫٥'],
+            ['عميل', '01000000001', '5'],
+            ['عميل تاني', '0020 100 000 0001', '١٬٠٠٠'],
         ]))->assertOk()->json('data.token');
 
         $csv = $this->post('/api/v1/imports/customers/errors', ['token' => $token], $this->tenantHeaders($this->tenant))->assertOk()->streamedContent();
         $lines = array_values(array_filter(explode("\r\n", substr($csv, 3))));
 
         $this->assertCount(3, $lines); // header, the invalid row, the in-file duplicate
-        // What the user typed, so the line can be found in the sheet: not 01001234567 / 12.500.
+        // What the user typed, so the line can be found in the sheet: not 01000000001 / 12.500.
         // (a leading + is neutralised against formula injection, as every exported cell is).
-        $this->assertStringContainsString('"\'+20 100 123 4567"', $lines[1]);
+        $this->assertStringContainsString('"\'+20 100 000 0001"', $lines[1]);
         $this->assertStringContainsString('"١٢٫٥"', $lines[1]);
-        $this->assertStringNotContainsString('01001234567', $lines[1]);
+        $this->assertStringNotContainsString('01000000001', $lines[1]);
         $this->assertStringNotContainsString('12.500', $lines[1]);
         $this->assertStringContainsString(__('import.error_report.statuses.duplicate'), $lines[2]);
-        $this->assertStringContainsString('"0020 100 123 4567"', $lines[2]);
+        $this->assertStringContainsString('"0020 100 000 0001"', $lines[2]);
         $this->assertStringContainsString('"١٬٠٠٠"', $lines[2]);
         $this->assertStringNotContainsString('1000.000', $lines[2]);
     }

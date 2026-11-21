@@ -78,13 +78,13 @@ test('code 128 rejects empty and non-ASCII values', () => {
 
 test('ean-13 check digit and modules', () => {
     assert.equal(ean13CheckDigit('400638133393'), 1);
-    assert.equal(ean13CheckDigit('590123412345'), 7);
+    assert.equal(ean13CheckDigit('590234512345'), 9);
     assert.ok(isValidEan13('4006381333931'));
-    assert.ok(isValidEan13('5901234123457'));
-    assert.equal(isValidEan13('5901234123458'), false);
+    assert.ok(isValidEan13('5902345123459'));
+    assert.equal(isValidEan13('5902345123458'), false);
     assert.equal(isValidEan13('123'), false);
 
-    const modules = ean13Modules('5901234123457');
+    const modules = ean13Modules('5902345123459');
     assert.equal(modules.length, 95);
     assert.ok(modules.startsWith('101'));
     assert.ok(modules.endsWith('101'));
@@ -95,16 +95,16 @@ test('ean-13 check digit and modules', () => {
     // right half starts with digit 1 (8th digit), R(1) = 1100110
     assert.equal(modules.slice(50, 57), '1100110');
 
-    const encoded = encodeEan13('5901234123457');
+    const encoded = encodeEan13('5902345123459');
     assert.equal(encoded.width, 11 + 95 + 7);
     const barModules = encoded.bars.reduce((s, b) => s + b.w, 0);
     assert.equal(barModules, modules.split('').filter((b) => b === '1').length);
 });
 
 test('symbology resolution', () => {
-    assert.equal(resolveSymbology('5901234123457'), 'ean13');
-    assert.equal(resolveSymbology('5901234123457', 'code128'), 'code128');
-    assert.equal(resolveSymbology('5901234123458'), 'code128');
+    assert.equal(resolveSymbology('5902345123459'), 'ean13');
+    assert.equal(resolveSymbology('5902345123459', 'code128'), 'code128');
+    assert.equal(resolveSymbology('5902345123458'), 'code128');
     assert.equal(resolveSymbology('ITEM-001', 'ean13'), 'code128');
     assert.equal(resolveSymbology(''), null);
     assert.equal(resolveSymbology('صنف'), null);
@@ -132,7 +132,7 @@ test('label line keeps only what a label needs', () => {
 
 test('two items x 3 copies -> 6 labels; items without a printable code are skipped', () => {
     const lines = [
-        { id: 1, name: 'A', code: '5901234123457', selling_price: '10.000', copies: 3 },
+        { id: 1, name: 'A', code: '5902345123459', selling_price: '10.000', copies: 3 },
         { id: 2, name: 'B', code: 'ITEM-2', selling_price: '5.250', copies: 3 },
         { id: 3, name: 'C', code: '', selling_price: '1.000', copies: 2 },
         { id: 4, name: 'D', code: 'كود', selling_price: '1.000', copies: 2 },
