@@ -61,7 +61,7 @@ final class GetTreasurySummaryAction
         $activeShift = CashShift::query()->where('store_id', $storeId)->where('status', 'open')->latest('id')->first();
         // SHIFT-02: a per-cashier branch has one open shift (drawer) per cashier: the branch's
         // opening cash is their sum (one shift in a shared branch: unchanged).
-        $drawers = $this->drawers->summary($storeId);
+        $drawers = $this->drawers->summary($storeId, withExpected: false);
 
         return [
             'store_id' => $storeId,
@@ -92,7 +92,8 @@ final class GetTreasurySummaryAction
                 'opened_at' => $activeShift->opened_at,
                 'open_shifts_count' => $drawers['count'],
             ] : null,
-            // SHIFT-02: every open shift of the branch with its float and expected cash, and the totals.
+            // SHIFT-02: every open shift of the branch with its float and the totals (no expected cash here:
+            // the journal and the Z carry it; computing it per drawer would grow the query count).
             'open_shifts' => $drawers,
         ];
     }

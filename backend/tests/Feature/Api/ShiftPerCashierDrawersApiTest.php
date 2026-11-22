@@ -155,7 +155,11 @@ final class ShiftPerCashierDrawersApiTest extends TenantTestCase
             ->assertJsonPath('active_shift.opening_cash_balance', '700.000')
             ->assertJsonPath('active_shift.open_shifts_count', 2)
             ->assertJsonPath('open_shifts.count', 2)
-            ->assertJsonPath('open_shifts.expected_cash_balance', '2000.000');
+            ->assertJsonPath('open_shifts.opening_cash_balance', '700.000')
+            // The treasury summary carries floats and the count only (query budget of
+            // DashboardItemsTreasuryLargeDatasetPerformanceTest); expected cash is asserted on
+            // the dashboard and the journal below.
+            ->assertJsonPath('open_shifts.expected_cash_balance', null);
 
         $dashboard = $this->getJson('/api/v1/dashboard', $this->tenantHeaders($this->tenant))->assertOk();
         $this->assertSame('700.000', $dashboard->json('data.active_shift.starting_cash'));

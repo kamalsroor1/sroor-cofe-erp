@@ -77,11 +77,13 @@ final class BranchDrawers
     }
 
     /**
-     * The open drawers of $storeId with their branch totals.
+     * The open drawers of $storeId with their branch totals. $withExpected = false skips the
+     * per-shift expected-cash calculation (several queries per drawer) for readers that only show
+     * the floats and the count (the treasury summary): expected_cash_balance is then null.
      *
-     * @return array{count: int, opening_cash_balance: string, expected_cash_balance: string|null, shifts: list<array{id: int, shift_number: string, shift_mode: string, store_id: int|null, user_id: int|null, user_name: string|null, opened_at: string|null, opening_cash_balance: string, expected_cash_balance: string}>}
+     * @return array{count: int, opening_cash_balance: string, expected_cash_balance: string|null, shifts: list<array{id: int, shift_number: string, shift_mode: string, store_id: int|null, user_id: int|null, user_name: string|null, opened_at: string|null, opening_cash_balance: string, expected_cash_balance: string|null}>}
      */
-    public function summary(?int $storeId): array
+    public function summary(?int $storeId, bool $withExpected = true): array
     {
         $opening = '0.000';
         $expected = '0.000';
@@ -89,9 +91,11 @@ final class BranchDrawers
 
         foreach (self::open($storeId, ['user:id,name']) as $shift) {
             $float = Decimal::normalize((string) $shift->opening_cash_balance);
-            $drawer = $this->shiftService->calculateShiftTotals($shift)['expected_cash_balance'];
+            $drawer = $withExpected ? $this->shiftService->calculateShiftTotals($shift)['expected_cash_balance'] : null;
             $opening = bcadd($opening, $float, 3);
-            $expected = bcadd($expected, $drawer, 3);
+            if ($drawer !== null) {
+                $expected = bcadd($expected, $drawer, 3);
+            }
 
             $rows[] = [
                 'id' => (int) $shift->id,
@@ -109,7 +113,7 @@ final class BranchDrawers
         return [
             'count' => count($rows),
             'opening_cash_balance' => $opening,
-            'expected_cash_balance' => $rows === [] ? null : $expected,
+            'expected_cash_balance' => $rows === [] || ! $withExpected ? null : $expected,
             'shifts' => $rows,
         ];
     }
