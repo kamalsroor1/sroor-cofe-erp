@@ -4,10 +4,10 @@
 // that has the preload bridge. Pure module: must not require electron so it
 // can be unit-tested with node:test.
 
-const APP_BASE_DOMAIN = 'baraa-solutions.com';
+const APP_BASE_DOMAIN = 'ibraa.app';
 const CENTRAL_ORIGIN = `https://${APP_BASE_DOMAIN}`;
 const CONNECT_URL = `${CENTRAL_ORIGIN}/connect`;
-const FALLBACK_TENANT_URL = `https://2m.${APP_BASE_DOMAIN}`;
+const FALLBACK_TENANT_URL = CENTRAL_ORIGIN;
 
 const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 const KEPT_PATH_PATTERN = /^\/(?:connect|login|workspace)\/?$/;

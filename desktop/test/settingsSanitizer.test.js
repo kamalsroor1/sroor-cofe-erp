@@ -34,11 +34,11 @@ test('rejects a foreign serverUrl', () => {
 });
 
 test('rejects the finding 14 serverUrl shape', () => {
-    assert.equal(sanitizer()({ serverUrl: 'https://evil.example/.baraa-solutions.com' }).ok, false);
+    assert.equal(sanitizer()({ serverUrl: 'https://evil.example/.ibraa.app' }).ok, false);
 });
 
 test('rejects an http (downgraded) tenant serverUrl', () => {
-    assert.equal(sanitizer()({ serverUrl: 'http://2m.baraa-solutions.com' }).ok, false);
+    assert.equal(sanitizer()({ serverUrl: 'http://2m.ibraa.app' }).ok, false);
 });
 
 test('rejects a hostile tenantId', () => {
@@ -74,17 +74,17 @@ test('drops unknown and privileged keys (kioskMode, windowBounds, centralUrl, fo
 
 // Legitimate payloads the SPA sends today must keep working.
 test('accepts WorkspaceConnectView payload (tenant origin + tenant id)', () => {
-    const res = sanitizer()({ serverUrl: 'https://2m.baraa-solutions.com', tenantId: '2m' });
+    const res = sanitizer()({ serverUrl: 'https://2m.ibraa.app', tenantId: '2m' });
     assert.equal(res.ok, true);
-    assert.equal(new URL(res.settings.serverUrl).origin, 'https://2m.baraa-solutions.com');
+    assert.equal(new URL(res.settings.serverUrl).origin, 'https://2m.ibraa.app');
     assert.equal(res.settings.tenantId, '2m');
 });
 
 test('accepts LoginView "switch workspace" payload (central connect page + empty tenant)', () => {
-    const res = sanitizer()({ tenantId: '', serverUrl: 'https://baraa-solutions.com/connect' });
+    const res = sanitizer()({ tenantId: '', serverUrl: 'https://ibraa.app/connect' });
     assert.equal(res.ok, true);
     assert.equal(res.settings.tenantId, '');
-    assert.equal(res.settings.serverUrl, 'https://baraa-solutions.com/connect');
+    assert.equal(res.settings.serverUrl, 'https://ibraa.app/connect');
 });
 
 // APP-5 ext: cash drawer pin is a per-device setting, exactly 2 or 5.

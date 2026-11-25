@@ -128,7 +128,7 @@ function createApplicationMenu(mainWindow) {
                 {
                     label: 'موقع المنظومة',
                     click: async () => {
-                        await shell.openExternal('https://baraa-solutions.com');
+                        await shell.openExternal('https://ibraa.app');
                     },
                 },
                 {

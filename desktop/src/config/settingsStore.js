@@ -8,7 +8,7 @@ class SettingsStore {
         this.defaults = {
             serverUrl: '',
             tenantId: '',
-            centralUrl: 'https://baraa-solutions.com',
+            centralUrl: 'https://ibraa.app',
             thermalPrinterName: '',
             paperWidth: '80mm',
             autoOpenDrawerOnCash: true,

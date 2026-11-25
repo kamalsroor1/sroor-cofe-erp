@@ -33,7 +33,7 @@ const HEX = 'AB'.repeat(32); // 64 hex chars, upper case
 test('extractChecksum throws when the manifest has no checksum (current backend)', () => {
     const { extractChecksum } = verify();
     assert.throws(() => extractChecksum({}));
-    assert.throws(() => extractChecksum({ download_url: 'https://2m.baraa-solutions.com/x.exe' }));
+    assert.throws(() => extractChecksum({ download_url: 'https://2m.ibraa.app/x.exe' }));
     assert.throws(() => extractChecksum(null));
     assert.throws(() => extractChecksum(undefined));
 });
@@ -52,31 +52,31 @@ test('extractChecksum returns the lowercased 64-hex digest', () => {
 });
 
 test('download URL over plain http is not allowed (finding 14 PoC)', () => {
-    assert.equal(policy().isAllowedAppUrl('http://baraa-solutions.com/x.exe'), false);
+    assert.equal(policy().isAllowedAppUrl('http://ibraa.app/x.exe'), false);
     assert.equal(policy().isAllowedAppUrl('http://evil/x.exe'), false);
 });
 
 test('download URL on a foreign host is not allowed', () => {
     assert.equal(policy().isAllowedAppUrl('https://evil.com/x.exe'), false);
-    assert.equal(policy().isAllowedAppUrl('https://baraa-solutions.com.evil.com/x.exe'), false);
+    assert.equal(policy().isAllowedAppUrl('https://ibraa.app.evil.com/x.exe'), false);
 });
 
 test('resolveRedirect rejects a redirect to another host', () => {
     const { resolveRedirect } = verify();
-    const from = 'https://2m.baraa-solutions.com/Sroor-ERP-POS-Setup.exe';
+    const from = 'https://2m.ibraa.app/Sroor-ERP-POS-Setup.exe';
     assert.equal(resolveRedirect(from, 'https://evil.com/x.exe'), null);
     assert.equal(resolveRedirect(from, '//evil.com/x.exe'), null);
-    assert.equal(resolveRedirect(from, 'https://2m.baraa-solutions.com.evil.com/x.exe'), null);
+    assert.equal(resolveRedirect(from, 'https://2m.ibraa.app.evil.com/x.exe'), null);
 });
 
 test('resolveRedirect rejects an https -> http downgrade', () => {
     const { resolveRedirect } = verify();
-    assert.equal(resolveRedirect('https://2m.baraa-solutions.com/a.exe', 'http://2m.baraa-solutions.com/b.exe'), null);
+    assert.equal(resolveRedirect('https://2m.ibraa.app/a.exe', 'http://2m.ibraa.app/b.exe'), null);
 });
 
 test('resolveRedirect rejects non-http schemes and empty locations', () => {
     const { resolveRedirect } = verify();
-    const from = 'https://2m.baraa-solutions.com/a.exe';
+    const from = 'https://2m.ibraa.app/a.exe';
     assert.equal(resolveRedirect(from, 'file:///C:/x.exe'), null);
     assert.equal(resolveRedirect(from, 'javascript:alert(1)'), null);
     assert.equal(resolveRedirect(from, ''), null);
@@ -84,8 +84,8 @@ test('resolveRedirect rejects non-http schemes and empty locations', () => {
 });
 
 test('resolveRedirect keeps a same-host relative redirect', () => {
-    const out = verify().resolveRedirect('https://2m.baraa-solutions.com/a.exe', '/downloads/b.exe');
-    assert.equal(out, 'https://2m.baraa-solutions.com/downloads/b.exe');
+    const out = verify().resolveRedirect('https://2m.ibraa.app/a.exe', '/downloads/b.exe');
+    assert.equal(out, 'https://2m.ibraa.app/downloads/b.exe');
 });
 
 test('verifySha256 matches only the right digest', async (t) => {
@@ -126,8 +126,8 @@ const manifest = (overrides = {}) => ({
     force_update: false,
     latest_version: '1.2.0',
     latest_version_code: 1002000,
-    download_url: 'https://baraa-solutions.com/api/v1/app/download-apk?platform=windows&version_code=1002000',
-    manual_download_url: 'https://baraa-solutions.com/download',
+    download_url: 'https://ibraa.app/api/v1/app/download-apk?platform=windows&version_code=1002000',
+    manual_download_url: 'https://ibraa.app/download',
     file_size_bytes: 73400320,
     checksum: SHA,
     checksum_algorithm: 'sha256',
@@ -173,7 +173,7 @@ test('rollbackFromManifest only accepts an older, fully described, allow-listed 
     const rollback = {
         version: '1.1.0',
         version_code: 1001000,
-        download_url: 'https://baraa-solutions.com/api/v1/app/download-apk?platform=windows&version_code=1001000',
+        download_url: 'https://ibraa.app/api/v1/app/download-apk?platform=windows&version_code=1001000',
         checksum: SHA,
         file_size_bytes: 1000,
     };
@@ -187,10 +187,7 @@ test('rollbackFromManifest only accepts an older, fully described, allow-listed 
     assert.equal(rollbackFromManifest(manifest({ rollback }), 1001000), null, 'not older than the running build');
     assert.equal(rollbackFromManifest(manifest({ rollback: { ...rollback, checksum: null } }), 1002000), null);
     assert.equal(
-        rollbackFromManifest(
-            manifest({ rollback: { ...rollback, download_url: 'http://baraa-solutions.com/a.exe' } }),
-            1002000
-        ),
+        rollbackFromManifest(manifest({ rollback: { ...rollback, download_url: 'http://ibraa.app/a.exe' } }), 1002000),
         null
     );
     assert.equal(rollbackFromManifest(manifest(), 1002000), null);
@@ -198,12 +195,12 @@ test('rollbackFromManifest only accepts an older, fully described, allow-listed 
 
 test('manualDownloadUrl keeps an allow-listed page and falls back to the official one', () => {
     const { manualDownloadUrl } = verify();
-    assert.equal(manualDownloadUrl(manifest()), 'https://baraa-solutions.com/download');
+    assert.equal(manualDownloadUrl(manifest()), 'https://ibraa.app/download');
     assert.equal(
         manualDownloadUrl(manifest({ manual_download_url: 'https://evil.com/download' })),
-        'https://baraa-solutions.com/download'
+        'https://ibraa.app/download'
     );
-    assert.equal(manualDownloadUrl(null), 'https://baraa-solutions.com/download');
+    assert.equal(manualDownloadUrl(null), 'https://ibraa.app/download');
 });
 
 test('the renderer only ever receives app_update.* codes', () => {

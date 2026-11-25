@@ -2,12 +2,12 @@
 
 // Regression tests for P0-ELEC-1 (02-security.md finding 14).
 // The deep link sroor://connect?tenant=<x> used to be turned into
-// `https://${x}.baraa-solutions.com` with no validation, so a crafted tenant
+// `https://${x}.ibraa.app` with no validation, so a crafted tenant
 // value could move the main window (with the preload bridge) to any origin.
 //
 // Contract required from src/security/urlPolicy.js (pure, must not require electron):
 //   parseDeepLink(url: string): string | null        -> normalised tenant code or null
-//   buildTenantOrigin(code: string): string           -> 'https://<code>.baraa-solutions.com'
+//   buildTenantOrigin(code: string): string           -> 'https://<code>.ibraa.app'
 //   isAllowedAppUrl(url: string, tenant?: string): boolean
 //   sanitizeServerUrl(url: string): string | null
 
@@ -69,7 +69,7 @@ test('parseDeepLink only accepts the connect action of the sroor scheme', () => 
 });
 
 test('buildTenantOrigin builds the official tenant origin', () => {
-    assert.equal(policy().buildTenantOrigin('2m'), 'https://2m.baraa-solutions.com');
+    assert.equal(policy().buildTenantOrigin('2m'), 'https://2m.ibraa.app');
 });
 
 test('buildTenantOrigin refuses an invalid tenant code instead of building a foreign origin', () => {
@@ -87,29 +87,29 @@ test('buildTenantOrigin refuses an invalid tenant code instead of building a for
 
 test('isAllowedAppUrl accepts the tenant origin and the central connect page', () => {
     const { isAllowedAppUrl } = policy();
-    assert.equal(isAllowedAppUrl('https://2m.baraa-solutions.com', '2m'), true);
-    assert.equal(isAllowedAppUrl('https://2m.baraa-solutions.com/login', '2m'), true);
-    assert.equal(isAllowedAppUrl('https://2m.baraa-solutions.com/pos?tab=1#x', '2m'), true);
-    assert.equal(isAllowedAppUrl('https://baraa-solutions.com/connect', '2m'), true);
+    assert.equal(isAllowedAppUrl('https://2m.ibraa.app', '2m'), true);
+    assert.equal(isAllowedAppUrl('https://2m.ibraa.app/login', '2m'), true);
+    assert.equal(isAllowedAppUrl('https://2m.ibraa.app/pos?tab=1#x', '2m'), true);
+    assert.equal(isAllowedAppUrl('https://ibraa.app/connect', '2m'), true);
 });
 
 test('isAllowedAppUrl rejects foreign, downgraded and malformed URLs', async (t) => {
     const hostile = [
-        'http://2m.baraa-solutions.com', // https downgrade
-        'http://2m.baraa-solutions.com/login',
-        'https://evil.com/.baraa-solutions.com', // suffix in the path
-        'https://evil.example/.baraa-solutions.com/login', // finding 14 resulting URL
-        'https://baraa-solutions.com.evil.com', // suffix spoof
-        'https://2m.baraa-solutions.com.evil.com/login',
+        'http://2m.ibraa.app', // https downgrade
+        'http://2m.ibraa.app/login',
+        'https://evil.com/.ibraa.app', // suffix in the path
+        'https://evil.example/.ibraa.app/login', // finding 14 resulting URL
+        'https://ibraa.app.evil.com', // suffix spoof
+        'https://2m.ibraa.app.evil.com/login',
         'https://x@evil.com', // userinfo
-        'https://2m.baraa-solutions.com@evil.com/login',
-        'https://2m.baraa-solutions.com:8443', // non-default port
-        'https://a.b.baraa-solutions.com', // nested subdomain
-        'https://evilbaraa-solutions.com', // no dot boundary
+        'https://2m.ibraa.app@evil.com/login',
+        'https://2m.ibraa.app:8443', // non-default port
+        'https://a.b.ibraa.app', // nested subdomain
+        'https://evilibraa.app', // no dot boundary
         'data:text/html,<script>alert(1)</script>',
         'file:///C:/Windows/System32/calc.exe',
         'javascript:alert(1)',
-        'ftp://2m.baraa-solutions.com',
+        'ftp://2m.ibraa.app',
         'not a url',
         '',
     ];
@@ -124,15 +124,15 @@ test('isAllowedAppUrl rejects non-string input', () => {
     const { isAllowedAppUrl } = policy();
     assert.equal(isAllowedAppUrl(null, '2m'), false);
     assert.equal(isAllowedAppUrl(undefined, '2m'), false);
-    assert.equal(isAllowedAppUrl({ href: 'https://2m.baraa-solutions.com' }, '2m'), false);
+    assert.equal(isAllowedAppUrl({ href: 'https://2m.ibraa.app' }, '2m'), false);
 });
 
 test('sanitizeServerUrl rejects the finding 14 serverUrl and other foreign origins', () => {
     const { sanitizeServerUrl } = policy();
-    assert.equal(sanitizeServerUrl('https://evil.example/.baraa-solutions.com'), null);
+    assert.equal(sanitizeServerUrl('https://evil.example/.ibraa.app'), null);
     assert.equal(sanitizeServerUrl('https://evil.com'), null);
-    assert.equal(sanitizeServerUrl('http://2m.baraa-solutions.com'), null);
-    assert.equal(sanitizeServerUrl('https://baraa-solutions.com.evil.com'), null);
+    assert.equal(sanitizeServerUrl('http://2m.ibraa.app'), null);
+    assert.equal(sanitizeServerUrl('https://ibraa.app.evil.com'), null);
     assert.equal(sanitizeServerUrl('https://x@evil.com'), null);
     assert.equal(sanitizeServerUrl('javascript:alert(1)'), null);
     assert.equal(sanitizeServerUrl(''), null);
@@ -140,7 +140,7 @@ test('sanitizeServerUrl rejects the finding 14 serverUrl and other foreign origi
 });
 
 test('sanitizeServerUrl keeps a valid tenant origin', () => {
-    const out = policy().sanitizeServerUrl('https://2m.baraa-solutions.com');
+    const out = policy().sanitizeServerUrl('https://2m.ibraa.app');
     assert.equal(typeof out, 'string');
-    assert.equal(new URL(out).origin, 'https://2m.baraa-solutions.com');
+    assert.equal(new URL(out).origin, 'https://2m.ibraa.app');
 });
