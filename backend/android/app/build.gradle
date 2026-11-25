@@ -29,8 +29,30 @@ android {
             dimension "dist"
         }
     }
+    // Release signing: the keystore and its passwords never live in the repo. Point
+    // IBRAA_KEYSTORE_PROPERTIES (env) at a properties file outside the repo with
+    // storeFile, storePassword, keyAlias, keyPassword (default ~/.ibraa/keystore.properties).
+    // Without the file the release build stays unsigned.
+    def keystorePropsFile = new File(System.getenv('IBRAA_KEYSTORE_PROPERTIES') ?: "${System.getProperty('user.home')}/.ibraa/keystore.properties")
+    def keystoreProps = new Properties()
+    if (keystorePropsFile.exists()) {
+        keystorePropsFile.withInputStream { keystoreProps.load(it) }
+    }
+    signingConfigs {
+        release {
+            if (keystoreProps['storeFile']) {
+                storeFile file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
+            if (keystoreProps['storeFile']) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
