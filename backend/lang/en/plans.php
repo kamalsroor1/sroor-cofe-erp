@@ -13,8 +13,8 @@ return [
 
     'plans' => [
         'free' => [
-            'name' => 'Trial',
-            'description' => 'Free trial with every Growth feature and small limits.',
+            'name' => 'Free',
+            'description' => 'Free forever for a small shop: POS, stock, purchases and treasury, with small limits.',
         ],
         'basic' => [
             'name' => 'Starter',
