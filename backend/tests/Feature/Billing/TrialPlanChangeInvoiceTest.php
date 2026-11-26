@@ -151,7 +151,7 @@ final class TrialPlanChangeInvoiceTest extends PlanChangeTestCase
         $this->assertSame(1, BillingInvoice::query()->count());
     }
 
-    public function test_paying_the_trial_upgrade_invoice_switches_the_plan_and_starts_a_paid_month(): void
+    public function test_paying_the_trial_upgrade_invoice_switches_the_plan_and_keeps_the_rest_of_the_trial(): void
     {
         $big = $this->plan(['max_users' => 50]);
         $tenant = $this->trialTenant();
@@ -178,7 +178,11 @@ final class TrialPlanChangeInvoiceTest extends PlanChangeTestCase
         $this->assertSame($big->getKey(), $tenant->plan_id);
         $this->assertSame('active', $tenant->status);
         $this->assertNotNull($tenant->subscription_ends_at);
-        $this->assertLessThan(120, abs(now()->addMonthNoOverflow()->diffInSeconds($tenant->subscription_ends_at, true)));
+        // #232 review: like the trial-end invoice, paying early keeps the 5 trial days left: the paid
+        // month starts at trial end, not today.
+        $this->assertNotNull($invoice->period_start);
+        $this->assertLessThan(120, abs(now()->addDays(5)->diffInSeconds($invoice->period_start, true)));
+        $this->assertLessThan(120, abs(now()->addDays(5)->addMonthNoOverflow()->diffInSeconds($tenant->subscription_ends_at, true)));
         $this->assertSame('paid', $invoice->fresh()->status->value);
         $this->assertSame('completed', PlanChangeRequest::query()->findOrFail($requestId)->status->value);
 

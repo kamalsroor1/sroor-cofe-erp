@@ -142,7 +142,10 @@ final class IssuePlanChangeInvoiceAction
         }
 
         $target = $request->requestedPlan;
-        $tenant = Tenant::query()->whereKey($tenantId)->firstOrFail();
+        // #232 review: lock the tenant before choosing full-invoice vs difference, so a renewal paid
+        // between this read and IssueSubscriptionInvoiceAction's own lock cannot flip the decision.
+        // Re-entrant in the same transaction; keeps the tenant-first lock order.
+        $tenant = Tenant::query()->whereKey($tenantId)->lockForUpdate()->firstOrFail();
 
         if (! $target instanceof Plan) {
             throw BillingException::requestPlanUnavailable();
@@ -174,7 +177,10 @@ final class IssuePlanChangeInvoiceAction
                 serviceLines: [],
                 discount: '0.000',
                 notes: $dto->notes,
-                periodStart: null,
+                // #232 review: like the trial-end invoice (SELL-06), a trial that upgrades early keeps
+                // the rest of its trial: the paid term starts at trial end, and the shop has full
+                // access in between (ActivateSubscriptionAction honours a future period_start).
+                periodStart: $this->remainingTrialEnd($tenant),
                 issuedBy: $issuedBy,
                 fromRequest: true,
                 // SELL-06: an open trial-end / plan invoice paid as well would extend the term twice.
@@ -212,5 +218,15 @@ final class IssuePlanChangeInvoiceAction
             ],
             fromRequest: true,
         );
+    }
+
+    /** The trial end when the tenant is still in a running trial, else null (period starts today). */
+    private function remainingTrialEnd(Tenant $tenant): ?CarbonImmutable
+    {
+        if ($tenant->status !== 'trial' || $tenant->trial_ends_at === null || ! $tenant->trial_ends_at->isFuture()) {
+            return null;
+        }
+
+        return CarbonImmutable::instance($tenant->trial_ends_at)->startOfSecond();
     }
 }
