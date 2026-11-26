@@ -75,6 +75,23 @@ class UsersApiTest extends TenantTestCase
             ]);
     }
 
+    public function test_roles_list_returns_translated_names_for_builtin_roles_and_raw_name_for_custom(): void
+    {
+        $this->tenant->run(fn () => Role::findOrCreate('cashier', 'web'));
+        $this->tenant->run(fn () => Role::findOrCreate('night_supervisor', 'web'));
+
+        $roles = collect($this->getJson('/api/v1/users', $this->adminHeaders)->assertStatus(200)->json('roles'))
+            ->pluck('name', 'id');
+
+        $this->assertSame(__('users.role_cashier'), $roles['cashier']);
+        $this->assertNotSame('cashier', $roles['cashier']);
+        $this->assertSame('night_supervisor', $roles['night_supervisor']);
+
+        foreach ($roles as $name) {
+            $this->assertStringNotContainsString('users.role', (string) $name);
+        }
+    }
+
     public function test_can_show_user_profile(): void
     {
         $targetUser = $this->createTenantUser($this->tenant, 'cashier', attributes: [

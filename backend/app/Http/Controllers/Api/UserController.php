@@ -108,7 +108,7 @@ final class UserController extends Controller
             'roles' => $roles->map(fn ($r) => [
                 'id' => $r->name,
                 'name' => match ($r->name) {
-                    'admin', 'cashier', 'storekeeper', 'accountant' => __('users.roles.'.$r->name),
+                    'admin', 'cashier', 'storekeeper', 'accountant' => __('users.role_'.$r->name),
                     default => $r->name,
                 },
             ]),
