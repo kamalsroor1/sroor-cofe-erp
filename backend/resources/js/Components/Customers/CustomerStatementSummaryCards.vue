@@ -58,7 +58,7 @@
         {{ formatMoney(closing) }}
         <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
       </div>
-      <div v-if="differsFromCurrent" class="text-[11px] text-slate-500 dark:text-slate-400 font-tajawal">
+      <div v-if="differsFromCurrent" class="text-xs text-slate-500 dark:text-slate-400 font-tajawal">
         {{ $t('contacts.statement_current_balance_note', { amount: formatMoney(currentBalance) }) }}
       </div>
     </div>

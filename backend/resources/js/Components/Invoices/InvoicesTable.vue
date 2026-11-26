@@ -10,22 +10,27 @@
     @page-change="$emit('change-page', $event)"
     data-testid="invoices-table"
   >
+    <!-- UX-237: a 20px box inside a 44x44 hit area -->
     <template #cell-checkbox="{ row }">
-      <input
-        type="checkbox"
-        :value="row.id"
-        :checked="selectedIds.includes(row.id)"
-        @change="$emit('toggle-select', row.id)"
-        class="w-4 h-4 text-theme-primary rounded border-slate-300 dark:border-slate-700 focus:ring-theme-primary cursor-pointer"
-      />
+      <label class="inline-flex items-center justify-center min-h-11 min-w-11 cursor-pointer" @click.stop>
+        <input
+          type="checkbox"
+          :value="row.id"
+          :checked="selectedIds.includes(row.id)"
+          @change="$emit('toggle-select', row.id)"
+          class="w-5 h-5 text-theme-primary rounded border-slate-300 dark:border-slate-700 focus:ring-theme-primary cursor-pointer"
+        />
+      </label>
     </template>
     <template #header-checkbox>
-      <input
-        type="checkbox"
-        :checked="isAllSelected"
-        @change="$emit('toggle-select-all')"
-        class="w-4 h-4 text-theme-primary rounded border-slate-300 dark:border-slate-700 focus:ring-theme-primary cursor-pointer"
-      />
+      <label class="inline-flex items-center justify-center min-h-11 min-w-11 cursor-pointer">
+        <input
+          type="checkbox"
+          :checked="isAllSelected"
+          @change="$emit('toggle-select-all')"
+          class="w-5 h-5 text-theme-primary rounded border-slate-300 dark:border-slate-700 focus:ring-theme-primary cursor-pointer"
+        />
+      </label>
     </template>
 
     <template #cell-invoice_number="{ row }">
@@ -38,13 +43,13 @@
 
     <template #cell-customer="{ row }">
       <div class="font-bold text-slate-900 dark:text-white font-tajawal">{{ row.customer_name }}</div>
-      <div v-if="row.customer_phone" class="text-[10px] text-slate-400 font-mono">
+      <div v-if="row.customer_phone" class="text-xs text-slate-400 font-mono">
         {{ row.customer_phone }}
       </div>
     </template>
 
     <template #cell-date="{ row }">
-      <span class="font-mono text-slate-500 text-[11px] whitespace-nowrap">{{ row.invoice_date }}</span>
+      <span class="font-mono text-slate-500 text-xs whitespace-nowrap">{{ row.invoice_date }}</span>
     </template>
 
     <template #cell-payment_method="{ row }">
@@ -52,7 +57,7 @@
         <span
           v-for="label in invoicePaymentLabels(row, t)"
           :key="label"
-          class="px-2 py-0.5 rounded-lg text-[11px] font-bold font-tajawal bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200"
+          class="px-2 py-0.5 rounded-lg text-xs font-bold font-tajawal bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200"
           data-testid="invoice-payment-label"
         >
           {{ label }}
@@ -80,7 +85,7 @@
 
     <template #cell-status="{ row }">
       <span
-        class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border inline-block font-tajawal"
+        class="px-2.5 py-0.5 rounded-full text-xs font-bold border inline-block font-tajawal"
         :class="
           !row.is_cancelled
             ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'

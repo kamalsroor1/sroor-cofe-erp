@@ -71,7 +71,7 @@ const columns = computed(() => [
 
     <template #cell-name="{ row }">
       <div class="font-bold text-slate-900 dark:text-white font-tajawal text-sm">{{ row.name }}</div>
-      <div v-if="row.tax_number" class="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+      <div v-if="row.tax_number" class="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
         {{ $t('contacts.tax_number_label') }} {{ row.tax_number }}
       </div>
     </template>
@@ -103,7 +103,7 @@ const columns = computed(() => [
           {{ formatMoney(row.current_balance) }}
           <span class="text-xs font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
-        <div class="text-[10px] font-tajawal text-slate-500 dark:text-slate-400 mt-0.5">
+        <div class="text-xs font-tajawal text-slate-500 dark:text-slate-400 mt-0.5">
           {{
             row.current_balance > 0
               ? $t('contacts.debt_due')
@@ -117,7 +117,7 @@ const columns = computed(() => [
 
     <template #cell-status="{ row }">
       <span
-        class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-tajawal border inline-block"
+        class="px-2.5 py-0.5 rounded-full text-xs font-bold font-tajawal border inline-block"
         :class="
           row.is_active
             ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'

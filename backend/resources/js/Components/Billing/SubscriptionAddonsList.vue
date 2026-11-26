@@ -28,7 +28,7 @@ const { formatDate, formatNumber } = useFormatters();
       >
         <div class="min-w-0">
           <p class="text-sm font-black text-slate-900 dark:text-white truncate">{{ addon.name }}</p>
-          <p v-if="addon.ends_at" class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+          <p v-if="addon.ends_at" class="text-xs font-bold text-slate-500 dark:text-slate-400">
             {{ $t('subscription.billing.addons.ends_at', { date: formatDate(addon.ends_at) }) }}
           </p>
         </div>

@@ -40,10 +40,10 @@ const options = [
         <span>{{ $t(option.label) }}</span>
       </button>
     </div>
-    <p v-if="locked" class="text-[11px] text-slate-500 dark:text-slate-400" data-testid="refund-walk-in-hint">
+    <p v-if="locked" class="text-xs text-slate-500 dark:text-slate-400" data-testid="refund-walk-in-hint">
       {{ $t('returns.refund_method_walk_in_cash') }}
     </p>
-    <p v-if="hint" class="text-[11px] text-slate-500 dark:text-slate-400" data-testid="refund-cash-hint">
+    <p v-if="hint" class="text-xs text-slate-500 dark:text-slate-400" data-testid="refund-cash-hint">
       {{ hint }}
     </p>
     <p

@@ -84,12 +84,12 @@ const dotColor = computed(() => {
 const sizeClass = computed(() => {
   switch (props.size) {
     case 'xs':
-      return 'px-2 py-0.5 text-[10px] rounded-lg';
+      return 'px-2 py-0.5 text-xs rounded-lg';
     case 'md':
       return 'px-3 py-1.5 text-xs rounded-xl';
     case 'sm':
     default:
-      return 'px-2.5 py-1 text-[11px] rounded-xl';
+      return 'px-2.5 py-1 text-xs rounded-xl';
   }
 });
 </script>

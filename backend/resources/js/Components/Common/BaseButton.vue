@@ -27,7 +27,7 @@
 
     <span
       v-if="badge !== null && badge !== undefined && badge !== ''"
-      class="w-5 h-5 rounded-full bg-white/20 text-current text-[10px] font-black flex items-center justify-center shrink-0"
+      class="w-5 h-5 rounded-full bg-white/20 text-current text-xs font-black flex items-center justify-center shrink-0"
     >
       {{ badge }}
     </span>

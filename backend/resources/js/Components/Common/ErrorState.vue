@@ -75,7 +75,7 @@ const effectiveCanRetry = computed(() => {
       <p
         v-if="message"
         class="text-slate-500 dark:text-slate-400 font-medium leading-relaxed"
-        :class="[compact ? 'text-[11px]' : 'text-xs sm:text-sm']"
+        :class="[compact ? 'text-xs' : 'text-xs sm:text-sm']"
       >
         {{ message }}
       </p>

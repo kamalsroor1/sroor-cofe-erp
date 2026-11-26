@@ -9,7 +9,7 @@ defineProps({
 
 <template>
   <span
-    class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-black leading-none whitespace-nowrap"
+    class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-black leading-none whitespace-nowrap"
     :class="toneClass(tone)"
   >
     {{ label }}

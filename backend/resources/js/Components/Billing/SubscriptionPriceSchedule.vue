@@ -30,7 +30,7 @@ const hasNext = computed(() => Boolean(props.schedule?.next_step && props.schedu
         </h2>
       </div>
       <span
-        class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-black"
+        class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-black"
         :class="toneClass(stepTone)"
       >
         {{ schedule.step.label }}
@@ -57,31 +57,31 @@ const hasNext = computed(() => Boolean(props.schedule?.next_step && props.schedu
 
     <dl class="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <div class="rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-3 min-w-0">
-        <dt class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+        <dt class="text-xs font-bold text-slate-500 dark:text-slate-400">
           {{ $t('subscription.billing.schedule.current_price') }}
         </dt>
         <dd class="mt-1 text-sm font-black text-slate-900 dark:text-white">
           {{ formatMoney(schedule.current_price) }}
-          <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+          <span class="text-xs font-bold text-slate-500 dark:text-slate-400">
             / {{ $t(`subscription.billing.schedule.per_${schedule.billing_cycle}`) }}
           </span>
         </dd>
-        <dd class="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+        <dd class="text-xs font-medium text-slate-500 dark:text-slate-400">
           {{ $t('subscription.billing.schedule.excl_vat') }}
         </dd>
       </div>
       <div class="rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-3 min-w-0">
-        <dt class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+        <dt class="text-xs font-bold text-slate-500 dark:text-slate-400">
           {{ $t('subscription.billing.schedule.list_price') }}
         </dt>
         <dd class="mt-1 text-sm font-black text-slate-900 dark:text-white">{{ formatMoney(schedule.list_price) }}</dd>
       </div>
       <div v-if="hasNext" class="rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-3 min-w-0">
-        <dt class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+        <dt class="text-xs font-bold text-slate-500 dark:text-slate-400">
           {{ $t('subscription.billing.schedule.next_step', { step: schedule.next_step.label }) }}
         </dt>
         <dd class="mt-1 text-sm font-black text-slate-900 dark:text-white">{{ formatMoney(schedule.next_price) }}</dd>
-        <dd class="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+        <dd class="text-xs font-medium text-slate-500 dark:text-slate-400">
           {{ $t('subscription.billing.schedule.from_date', { date: formatDate(schedule.next_step_at) }) }}
         </dd>
       </div>

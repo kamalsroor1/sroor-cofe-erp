@@ -74,7 +74,7 @@ const notice = computed(() => {
         />
         <span
           v-if="sub.is_founder"
-          class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-black"
+          class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-black"
           :class="toneClass('warning')"
         >
           <Crown class="w-3 h-3" />
@@ -95,13 +95,13 @@ const notice = computed(() => {
 
     <dl class="grid grid-cols-2 lg:grid-cols-4 gap-3">
       <div class="rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-3 min-w-0">
-        <dt class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+        <dt class="text-xs font-bold text-slate-500 dark:text-slate-400">
           {{ $t('subscription.billing.plan.plan') }}
         </dt>
         <dd class="mt-1 text-sm font-black text-slate-900 dark:text-white truncate">{{ data.plan?.name }}</dd>
       </div>
       <div class="rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-3 min-w-0">
-        <dt class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+        <dt class="text-xs font-bold text-slate-500 dark:text-slate-400">
           {{ $t('subscription.billing.plan.cycle') }}
         </dt>
         <dd class="mt-1 text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
@@ -110,7 +110,7 @@ const notice = computed(() => {
         </dd>
       </div>
       <div class="rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-3 min-w-0">
-        <dt class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+        <dt class="text-xs font-bold text-slate-500 dark:text-slate-400">
           {{ isTrial ? $t('subscription.billing.plan.trial_ends_at') : $t('subscription.billing.plan.ends_at') }}
         </dt>
         <dd class="mt-1 text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
@@ -119,7 +119,7 @@ const notice = computed(() => {
         </dd>
       </div>
       <div class="rounded-2xl border p-3 min-w-0" :class="toneClass(countdownTone)">
-        <dt class="text-[11px] font-bold opacity-80">
+        <dt class="text-xs font-bold opacity-80">
           {{ $t('subscription.billing.plan.open_invoices', { count: formatNumber(data.open_invoices_count || 0) }) }}
         </dt>
         <dd class="mt-1 text-sm font-black">{{ countdownText }}</dd>

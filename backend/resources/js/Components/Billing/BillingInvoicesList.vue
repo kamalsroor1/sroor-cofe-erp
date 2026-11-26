@@ -58,15 +58,12 @@ const { formatMoney, formatDate } = useFormatters();
                   <BillingStatusBadge :label="invoice.status.label" :tone="invoiceTone(invoice.status.value)" />
                   <p
                     v-if="invoice.has_pending_payment"
-                    class="flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400"
+                    class="flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400"
                   >
                     <Clock class="w-3 h-3" />
                     {{ $t('subscription.billing.invoices.pending_review') }}
                   </p>
-                  <p
-                    v-if="lastRejection(invoice)"
-                    class="text-[11px] font-bold text-rose-600 dark:text-rose-400 max-w-56"
-                  >
+                  <p v-if="lastRejection(invoice)" class="text-xs font-bold text-rose-600 dark:text-rose-400 max-w-56">
                     {{ $t('subscription.billing.invoices.rejected_reason', { reason: lastRejection(invoice) }) }}
                   </p>
                 </div>
@@ -110,7 +107,7 @@ const { formatMoney, formatDate } = useFormatters();
           <div class="flex items-start justify-between gap-2">
             <div class="min-w-0">
               <p class="text-sm font-black text-slate-900 dark:text-white">{{ invoice.number }}</p>
-              <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400">{{ invoice.type?.label }}</p>
+              <p class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ invoice.type?.label }}</p>
             </div>
             <BillingStatusBadge :label="invoice.status.label" :tone="invoiceTone(invoice.status.value)" />
           </div>
@@ -142,12 +139,12 @@ const { formatMoney, formatDate } = useFormatters();
           </dl>
           <p
             v-if="invoice.has_pending_payment"
-            class="flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400"
+            class="flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400"
           >
             <Clock class="w-3 h-3" />
             {{ $t('subscription.billing.invoices.pending_review') }}
           </p>
-          <p v-if="lastRejection(invoice)" class="text-[11px] font-bold text-rose-600 dark:text-rose-400">
+          <p v-if="lastRejection(invoice)" class="text-xs font-bold text-rose-600 dark:text-rose-400">
             {{ $t('subscription.billing.invoices.rejected_reason', { reason: lastRejection(invoice) }) }}
           </p>
           <div class="flex gap-2">

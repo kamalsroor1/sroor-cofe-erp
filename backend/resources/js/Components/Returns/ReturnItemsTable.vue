@@ -49,7 +49,7 @@
           <tr v-for="(item, idx) in itemsList" :key="item.item_id" class="hover:bg-slate-50 dark:hover:bg-slate-900/40">
             <td class="p-3 font-bold text-slate-900 dark:text-white font-tajawal">
               <div>{{ item.name }}</div>
-              <span class="text-[10px] text-slate-500 font-mono">({{ item.unit }})</span>
+              <span class="text-xs text-slate-500 font-mono">({{ item.unit }})</span>
             </td>
             <td class="p-3 text-center">
               <input

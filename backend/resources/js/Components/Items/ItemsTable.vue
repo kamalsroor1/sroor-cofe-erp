@@ -16,14 +16,16 @@
               class="bg-slate-100/90 dark:bg-slate-950/80 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800"
             >
               <th class="py-3 ps-4 pe-1 w-8">
-                <input
-                  type="checkbox"
-                  class="w-4 h-4 cursor-pointer accent-[var(--color-primary)] align-middle"
-                  :checked="allPageSelected"
-                  :aria-label="$t('inventory.labels.select_page')"
-                  data-testid="items-select-page"
-                  @change="$emit('toggle-select-page', items, $event.target.checked)"
-                />
+                <label class="inline-flex items-center justify-center min-h-11 min-w-11 -m-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    class="w-5 h-5 cursor-pointer accent-[var(--color-primary)] align-middle"
+                    :checked="allPageSelected"
+                    :aria-label="$t('inventory.labels.select_page')"
+                    data-testid="items-select-page"
+                    @change="$emit('toggle-select-page', items, $event.target.checked)"
+                  />
+                </label>
               </th>
               <th class="hidden xl:table-cell py-3 px-4 text-start font-bold whitespace-nowrap">#</th>
               <th class="py-3 px-4 text-start font-bold whitespace-nowrap">{{ $t('inventory.code') }}</th>
@@ -67,14 +69,16 @@
               :class="item.is_low_stock ? 'bg-rose-500/5' : ''"
             >
               <td class="py-3.5 ps-4 pe-1">
-                <input
-                  type="checkbox"
-                  class="w-4 h-4 cursor-pointer accent-[var(--color-primary)] align-middle"
-                  :checked="isSelected(item)"
-                  :aria-label="$t('inventory.labels.select_item', { name: item.name })"
-                  data-testid="item-select"
-                  @change="$emit('toggle-select', item)"
-                />
+                <label class="inline-flex items-center justify-center min-h-11 min-w-11 -m-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    class="w-5 h-5 cursor-pointer accent-[var(--color-primary)] align-middle"
+                    :checked="isSelected(item)"
+                    :aria-label="$t('inventory.labels.select_item', { name: item.name })"
+                    data-testid="item-select"
+                    @change="$emit('toggle-select', item)"
+                  />
+                </label>
               </td>
               <td class="hidden xl:table-cell py-3.5 px-4 font-mono text-slate-500">
                 {{ idx + 1 + (pagination.current_page - 1) * pagination.per_page }}
@@ -84,14 +88,14 @@
               </td>
               <td class="py-3.5 px-4">
                 <div class="font-bold text-slate-900 dark:text-white font-tajawal text-sm">{{ item.name }}</div>
-                <div v-if="item.notes" class="text-[10px] text-slate-500 font-tajawal mt-0.5 max-w-xs truncate">
+                <div v-if="item.notes" class="text-xs text-slate-500 font-tajawal mt-0.5 max-w-xs truncate">
                   {{ item.notes }}
                 </div>
               </td>
               <td class="py-3.5 px-4 font-tajawal">
                 <span
                   v-if="item.category"
-                  class="inline-block max-w-[10rem] truncate align-middle px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold whitespace-nowrap"
+                  class="inline-block max-w-[10rem] truncate align-middle px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold whitespace-nowrap"
                   :title="item.category"
                 >
                   {{ item.category }}
@@ -136,7 +140,7 @@
               <td class="py-3.5 px-4 text-center font-tajawal">
                 <span
                   data-testid="item-status"
-                  class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border inline-block whitespace-nowrap"
+                  class="px-2.5 py-0.5 rounded-full text-xs font-bold border inline-block whitespace-nowrap"
                   :class="
                     item.is_active
                       ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
@@ -196,17 +200,17 @@
                 {{ item.name }}
               </div>
               <div class="flex items-center gap-2 text-xs">
-                <span class="font-mono font-bold text-theme-primary text-[11px]">{{ item.code || '—' }}</span>
+                <span class="font-mono font-bold text-theme-primary text-xs">{{ item.code || '—' }}</span>
                 <span
                   v-if="item.category"
-                  class="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] text-slate-600 dark:text-slate-300 font-bold"
+                  class="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 font-bold"
                 >
                   {{ item.category }}
                 </span>
               </div>
             </div>
             <span
-              class="px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0"
+              class="px-2 py-0.5 rounded-full text-xs font-bold border shrink-0"
               :class="
                 item.is_active
                   ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
@@ -222,7 +226,7 @@
             class="grid grid-cols-2 gap-2 p-2.5 bg-white dark:bg-slate-900/80 rounded-xl border border-slate-100 dark:border-slate-800 text-xs"
           >
             <div>
-              <span class="text-[10px] text-slate-400 block">{{ $t('inventory.current_stock') }}:</span>
+              <span class="text-xs text-slate-400 block">{{ $t('inventory.current_stock') }}:</span>
               <span
                 class="font-mono font-black text-sm"
                 :class="
@@ -235,19 +239,19 @@
               >
                 {{ formatQty(item.current_stock) }} {{ item.unit }}
               </span>
-              <div v-if="item.is_low_stock" class="text-[10px] text-rose-500 font-bold mt-0.5">
+              <div v-if="item.is_low_stock" class="text-xs text-rose-500 font-bold mt-0.5">
                 <AlertTriangle class="inline w-3 h-3 me-1 align-text-bottom" />{{ $t('inventory.min_stock_level') }}:
                 {{ formatQty(item.min_stock_level) }}
               </div>
             </div>
 
             <div class="text-end">
-              <span class="text-[10px] text-slate-400 block">{{ $t('inventory.retail_price') }}:</span>
+              <span class="text-xs text-slate-400 block">{{ $t('inventory.retail_price') }}:</span>
               <span class="font-mono font-black text-sm text-emerald-500">
                 {{ formatMoney(item.selling_price) }}
-                <span class="text-[10px] font-normal font-tajawal">{{ currencyLabel }}</span>
+                <span class="text-xs font-normal font-tajawal">{{ currencyLabel }}</span>
               </span>
-              <div class="text-[10px] text-purple-500 dark:text-purple-400 font-mono mt-0.5">
+              <div class="text-xs text-purple-500 dark:text-purple-400 font-mono mt-0.5">
                 {{ $t('inventory.wholesale_price') }}: {{ formatMoney(priceFor(item, 'wholesale')) }}
               </div>
             </div>

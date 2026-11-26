@@ -177,7 +177,7 @@ onUnmounted(() => {
         >
           <div
             v-if="title"
-            class="px-3 py-1.5 text-[11px] font-black text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800/80 truncate"
+            class="px-3 py-1.5 text-xs font-black text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800/80 truncate"
           >
             {{ title }}
           </div>
@@ -203,7 +203,7 @@ onUnmounted(() => {
                 <span v-else-if="item.emoji" class="text-sm shrink-0">{{ item.emoji }}</span>
                 <div class="flex-1 min-w-0">
                   <span class="block truncate">{{ item.label }}</span>
-                  <span v-if="item.description" class="block text-[10px] text-slate-400 font-normal truncate">{{
+                  <span v-if="item.description" class="block text-xs text-slate-400 font-normal truncate">{{
                     item.description
                   }}</span>
                 </div>
@@ -228,7 +228,7 @@ onUnmounted(() => {
                 <span v-else-if="item.emoji" class="text-sm shrink-0">{{ item.emoji }}</span>
                 <div class="flex-1 min-w-0">
                   <span class="block truncate">{{ item.label }}</span>
-                  <span v-if="item.description" class="block text-[10px] text-slate-400 font-normal truncate">{{
+                  <span v-if="item.description" class="block text-xs text-slate-400 font-normal truncate">{{
                     item.description
                   }}</span>
                 </div>
@@ -273,7 +273,7 @@ onUnmounted(() => {
                 <h3 class="font-black text-sm text-slate-900 dark:text-white">
                   {{ title || $t('common.action_options') }}
                 </h3>
-                <p class="text-[11px] text-slate-400 font-bold">{{ $t('common.select_action') }}</p>
+                <p class="text-xs text-slate-400 font-bold">{{ $t('common.select_action') }}</p>
               </div>
               <button
                 @click="closeMenu"
@@ -307,7 +307,7 @@ onUnmounted(() => {
                     <span v-else-if="item.emoji" class="text-base shrink-0">{{ item.emoji }}</span>
                     <div class="flex-1 min-w-0">
                       <span class="block text-xs font-black truncate">{{ item.label }}</span>
-                      <span v-if="item.description" class="block text-[10px] text-slate-400 font-bold truncate">{{
+                      <span v-if="item.description" class="block text-xs text-slate-400 font-bold truncate">{{
                         item.description
                       }}</span>
                     </div>
@@ -333,7 +333,7 @@ onUnmounted(() => {
                     <span v-else-if="item.emoji" class="text-base shrink-0">{{ item.emoji }}</span>
                     <div class="flex-1 min-w-0">
                       <span class="block text-xs font-black truncate">{{ item.label }}</span>
-                      <span v-if="item.description" class="block text-[10px] text-slate-400 font-bold truncate">{{
+                      <span v-if="item.description" class="block text-xs text-slate-400 font-bold truncate">{{
                         item.description
                       }}</span>
                     </div>

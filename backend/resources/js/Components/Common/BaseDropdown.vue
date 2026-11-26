@@ -58,7 +58,7 @@
             <span class="flex-1 truncate">{{ item.label }}</span>
             <span
               v-if="item.badge"
-              class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-theme-light text-theme-primary"
+              class="px-1.5 py-0.2 rounded text-xs font-mono font-bold bg-theme-light text-theme-primary"
             >
               {{ item.badge }}
             </span>

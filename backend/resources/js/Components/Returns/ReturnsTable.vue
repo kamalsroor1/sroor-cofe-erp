@@ -35,7 +35,7 @@
 
       <template #cell-return_type="{ row }">
         <span
-          class="px-2.5 py-1 rounded-full text-[10px] font-bold border font-tajawal inline-block"
+          class="px-2.5 py-1 rounded-full text-xs font-bold border font-tajawal inline-block"
           :class="
             row.return_type === 'sales_return'
               ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-600 dark:text-cyan-400'
@@ -53,7 +53,7 @@
       <template #cell-party_name="{ row }">
         <div>
           <div class="font-bold text-slate-900 dark:text-white font-tajawal">{{ row.party_name }}</div>
-          <div v-if="row.party_phone" class="text-[10px] text-slate-500 font-mono mt-0.5">
+          <div v-if="row.party_phone" class="text-xs text-slate-500 font-mono mt-0.5">
             {{ row.party_phone }}
           </div>
         </div>
@@ -69,7 +69,7 @@
         </span>
         <div
           v-if="row.refund_method"
-          class="text-[10px] text-slate-500 dark:text-slate-400 font-tajawal mt-0.5"
+          class="text-xs text-slate-500 dark:text-slate-400 font-tajawal mt-0.5"
           data-testid="return-refund-line"
         >
           {{ $t(`returns.refund_method_${row.refund_method}`) }}

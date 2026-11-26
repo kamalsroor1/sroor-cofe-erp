@@ -186,7 +186,7 @@ const onSubmit = () => {
             })
           }}
         </p>
-        <p v-if="plan || estimate" class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+        <p v-if="plan || estimate" class="text-xs font-bold text-slate-500 dark:text-slate-400">
           {{ $t('subscription.billing.requests.price_note') }}
         </p>
 

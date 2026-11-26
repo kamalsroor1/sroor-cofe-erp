@@ -13,7 +13,7 @@
       >
         <!-- Tooltip on Hover or Mobile Tap -->
         <div
-          class="transition-all duration-200 absolute z-20 bg-slate-900 text-white text-[10px] font-mono py-1 px-2.5 rounded-xl shadow-xl pointer-events-none whitespace-nowrap border border-slate-700"
+          class="transition-all duration-200 absolute z-20 bg-slate-900 text-white text-xs font-mono py-1 px-2.5 rounded-xl shadow-xl pointer-events-none whitespace-nowrap border border-slate-700"
           :class="
             activeIndex === idx
               ? 'opacity-100 scale-100'
@@ -47,7 +47,7 @@
 
         <!-- Label below bar -->
         <div
-          class="text-[9.5px] sm:text-[10px] font-bold text-center truncate w-full text-slate-500 dark:text-slate-400 group-hover:text-theme-primary transition-colors font-tajawal mt-1"
+          class="text-[9.5px] sm:text-xs font-bold text-center truncate w-full text-slate-500 dark:text-slate-400 group-hover:text-theme-primary transition-colors font-tajawal mt-1"
           :class="{ 'text-theme-primary font-black': activeIndex === idx }"
         >
           {{ item[labelField] }}

@@ -13,7 +13,7 @@
     <span>{{ label || $t('invoices.filter_search') }}</span>
     <span
       v-if="count > 0"
-      class="w-5 h-5 rounded-full bg-theme-primary text-white text-[10px] font-black flex items-center justify-center shrink-0"
+      class="w-5 h-5 rounded-full bg-theme-primary text-white text-xs font-black flex items-center justify-center shrink-0"
     >
       {{ count }}
     </span>

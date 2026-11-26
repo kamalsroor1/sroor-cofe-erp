@@ -304,7 +304,7 @@ const lastIsActions = computed(() => props.columns?.[props.columns.length - 1]?.
                     type="checkbox"
                     :checked="isAllSelected"
                     :indeterminate="modelValue.length > 0 && !isAllSelected"
-                    class="w-4 h-4 rounded text-theme-primary focus:ring-theme-primary cursor-pointer"
+                    class="w-5 h-5 rounded text-theme-primary focus:ring-theme-primary cursor-pointer"
                     @change="toggleSelectAll"
                   />
                 </label>
@@ -385,7 +385,7 @@ const lastIsActions = computed(() => props.columns?.[props.columns.length - 1]?.
                     <input
                       type="checkbox"
                       :checked="isRowSelected(row)"
-                      class="w-4 h-4 rounded text-theme-primary focus:ring-theme-primary cursor-pointer"
+                      class="w-5 h-5 rounded text-theme-primary focus:ring-theme-primary cursor-pointer"
                       @change="toggleSelectRow(row)"
                     />
                   </label>
@@ -485,7 +485,7 @@ const lastIsActions = computed(() => props.columns?.[props.columns.length - 1]?.
                   <input
                     type="checkbox"
                     :checked="isRowSelected(row)"
-                    class="w-4 h-4 rounded text-theme-primary focus:ring-theme-primary cursor-pointer"
+                    class="w-5 h-5 rounded text-theme-primary focus:ring-theme-primary cursor-pointer"
                     @change="toggleSelectRow(row)"
                   />
                 </label>
@@ -525,7 +525,7 @@ const lastIsActions = computed(() => props.columns?.[props.columns.length - 1]?.
                 :key="col.key"
                 class="space-y-0.5"
               >
-                <span class="text-[10px] text-slate-400 dark:text-slate-500 font-bold block">{{ col.label }}</span>
+                <span class="text-xs text-slate-400 dark:text-slate-500 font-bold block">{{ col.label }}</span>
                 <slot
                   v-if="$slots[`cell-${col.key}`]"
                   :name="`cell-${col.key}`"
