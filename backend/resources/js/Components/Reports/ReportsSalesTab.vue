@@ -31,7 +31,8 @@
           :title="$t('reports.cogs_tooltip')"
           >{{ $t('reports.total_cogs_label') }}</span
         >
-        <div class="text-2xl font-black text-rose-500 dark:text-rose-400 font-mono">
+        <ProLockedFigure v-if="isStripped('total_cogs')" />
+        <div v-else class="text-2xl font-black text-rose-500 dark:text-rose-400 font-mono">
           {{ formatMoney(summary.total_cogs) }}
           <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
@@ -51,7 +52,7 @@
           {{ formatMoney(summary.gross_profit) }}
           <span class="text-xs text-emerald-500 font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
-        <span class="text-[10px] text-emerald-500 font-bold">{{
+        <span v-if="!isStripped('margin_percentage')" class="text-[10px] text-emerald-500 font-bold">{{
           $t('reports.gross_margin_label', { pct: summary.margin_percentage || 0 })
         }}</span>
       </div>
@@ -99,7 +100,9 @@
             >{{ $t('reports.formula_badge') }}</span
           >
         </div>
+        <ProLockedFigure v-if="isStripped('net_profit')" />
         <div
+          v-else
           class="text-3xl font-black font-mono"
           :class="
             (summary.net_profit || 0) >= 0
@@ -136,12 +139,16 @@
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 import Skeleton from '../Common/Skeletons/Skeleton.vue';
 import ReportsSalesBreakdown from './ReportsSalesBreakdown.vue';
+import ProLockedFigure from './ProLockedFigure.vue';
+import { isStrippedFigure } from '../../helpers/reportSummary';
 import { useFormatters } from '../../Composables/useFormatters';
 
 const { formatMoney, currencyLabel } = useFormatters();
 
-defineProps({
+const props = defineProps({
   summary: { type: Object, default: () => ({}) },
   loading: { type: Boolean, default: false },
 });
+
+const isStripped = (key) => isStrippedFigure(props.summary, key);
 </script>
