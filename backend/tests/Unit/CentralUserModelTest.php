@@ -47,6 +47,7 @@ final class CentralUserModelTest extends TenantTestCase
         'database/migrations/2026_10_10_200710_create_tenant_credit_ledger_table.php', // FK to billing_invoices
         'database/migrations/2026_10_10_400000_create_platform_settings_table.php',  // updated_by
         'database/migrations/2026_11_10_130000_create_plan_change_requests_table.php', // reviewed_by + FK to billing_invoices
+        'database/migrations/2026_11_26_120300_create_platform_notifications_tables.php', // read marks FK to central_users
     ];
 
     public function test_central_user_is_standalone_and_not_a_tenant_user(): void

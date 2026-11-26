@@ -95,7 +95,7 @@ test('invoice type label uses the plan names only when the API sends them', () =
 test('method status mirrors the server rules', () => {
     assert.equal(methodStatus('vodafone_cash', {}).status, 'empty');
     assert.equal(methodStatus('vodafone_cash', { billing_vodafone_cash_note: 'x' }).status, 'missing');
-    assert.equal(methodStatus('vodafone_cash', { billing_vodafone_cash_number: '01001234567' }).visible, true);
+    assert.equal(methodStatus('vodafone_cash', { billing_vodafone_cash_number: '01000000001' }).visible, true);
     const bank = methodStatus('bank_transfer', { billing_bank_name: 'B', billing_bank_iban: 'EG1' });
     assert.equal(bank.status, 'missing');
     assert.deepEqual(bank.missing, ['billing_bank_account_holder', 'billing_bank_account_number']);
