@@ -9,6 +9,8 @@ use App\Enums\Billing\BillingPaymentStatus;
 use App\Enums\Billing\FounderPriceStep;
 use App\Models\BillingInvoice;
 use App\Models\BillingPayment;
+use App\Services\Billing\TemporaryAccessService;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -64,7 +66,16 @@ final class BillingInvoiceResource extends JsonResource
             'notes' => $this->when($this->resource->relationLoaded('issuer'), fn () => $this->notes),
             'issued_by_name' => $this->whenLoaded('issuer', fn () => $this->issuer?->name),
             'payments' => BillingPaymentResource::collection($this->whenLoaded('payments')),
+            // #232 spec D: the invoice's one 48-hour temporary-access window (state none | active |
+            // expired | verified | rejected | voided), and the UI §2 status card (payments loaded only).
+            'temporary_access' => $this->temporaryAccess()->invoiceWindow($this->resource, CarbonImmutable::now()),
+            'review_state' => $this->whenLoaded('payments', fn () => $this->temporaryAccess()->reviewState($this->resource, CarbonImmutable::now())->value),
         ];
+    }
+
+    private function temporaryAccess(): TemporaryAccessService
+    {
+        return app(TemporaryAccessService::class);
     }
 
     private function paidAmount(): string

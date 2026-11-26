@@ -134,8 +134,28 @@ final class RecordManualPaymentAction
 
             // #232 spec A: the operator-entered payment date is the actual transfer moment that starts
             // a new paid term (VerifyManualPaymentAction re-checks it against the invoice issue day).
-            return $this->verify->execute(new VerifyManualPaymentDTO((int) $payment->getKey(), $dto->paidAt), $operator);
+            // The operator typed `paid_at` here, so a transfer-moment error from the verify step is
+            // reported on that field (#232 review), not on `transferred_at`, which this form has not.
+            try {
+                return $this->verify->execute(new VerifyManualPaymentDTO((int) $payment->getKey(), $dto->paidAt), $operator);
+            } catch (ValidationException $e) {
+                throw ValidationException::withMessages(self::onPaidAt($e->errors()));
+            }
         }, connectionName: $connection);
+    }
+
+    /**
+     * @param  array<string, array<int, string>>  $errors
+     * @return array<string, array<int, string>>
+     */
+    private static function onPaidAt(array $errors): array
+    {
+        if (isset($errors['transferred_at'])) {
+            $errors['paid_at'] = array_merge($errors['paid_at'] ?? [], $errors['transferred_at']);
+            unset($errors['transferred_at']);
+        }
+
+        return $errors;
     }
 
     /** The payment this invoice already recorded with the same idempotency key, if any. */

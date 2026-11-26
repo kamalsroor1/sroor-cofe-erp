@@ -7,6 +7,8 @@ namespace App\Models;
 use App\Enums\Billing\BillingCycle;
 use App\Enums\Billing\BillingInvoiceStatus;
 use App\Enums\Billing\BillingInvoiceType;
+use App\Enums\Billing\TemporaryAccessOutcome;
+use App\Enums\Billing\TemporaryAccessState;
 use App\Models\Concerns\UsesCentralConnection;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
@@ -37,6 +39,7 @@ use Illuminate\Support\Carbon;
  * @property string $tax_rate percentage, DECIMAL(6,3) as a numeric string (14.000 = 14%)
  * @property string $tax DECIMAL(12,3) as a numeric string
  * @property string $total DECIMAL(12,3) as a numeric string
+ * @property string $overpaid_amount DECIMAL(12,3): paid above the final (re-priced) total at settlement; policy open
  * @property string $currency ISO 4217
  * @property Carbon|null $issued_at
  * @property Carbon|null $due_at
@@ -44,6 +47,12 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $voided_at
  * @property int|null $issued_by central_users id
  * @property string|null $notes
+ * @property Carbon|null $temporary_access_started_at #232 spec D: the invoice's one 48h window opened
+ * @property Carbon|null $temporary_access_ends_at
+ * @property int|null $temporary_access_payment_id the payment whose receipt opened it (no FK)
+ * @property Carbon|null $temporary_access_settled_at the review decision that closed it
+ * @property TemporaryAccessOutcome|null $temporary_access_outcome
+ * @property Carbon|null $temporary_access_reminder_sent_at the 6h-before reminder went out
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Tenant|null $tenant
@@ -72,6 +81,7 @@ class BillingInvoice extends Model
         'tax_rate',
         'tax',
         'total',
+        'overpaid_amount',
         'currency',
         'issued_at',
         'due_at',
@@ -79,6 +89,12 @@ class BillingInvoice extends Model
         'voided_at',
         'issued_by',
         'notes',
+        'temporary_access_started_at',
+        'temporary_access_ends_at',
+        'temporary_access_payment_id',
+        'temporary_access_settled_at',
+        'temporary_access_outcome',
+        'temporary_access_reminder_sent_at',
     ];
 
     /**
@@ -94,6 +110,7 @@ class BillingInvoice extends Model
         'tax_rate' => '0.000',
         'tax' => '0.000',
         'total' => '0.000',
+        'overpaid_amount' => '0.000',
         'currency' => Subscription::DEFAULT_CURRENCY,
     ];
 
@@ -116,10 +133,17 @@ class BillingInvoice extends Model
             'tax_rate' => 'decimal:3',
             'tax' => 'decimal:3',
             'total' => 'decimal:3',
+            'overpaid_amount' => 'decimal:3',
             'issued_at' => 'datetime',
             'due_at' => 'datetime',
             'paid_at' => 'datetime',
             'voided_at' => 'datetime',
+            'temporary_access_started_at' => 'datetime',
+            'temporary_access_ends_at' => 'datetime',
+            'temporary_access_payment_id' => 'integer',
+            'temporary_access_settled_at' => 'datetime',
+            'temporary_access_outcome' => TemporaryAccessOutcome::class,
+            'temporary_access_reminder_sent_at' => 'datetime',
         ];
     }
 
@@ -167,5 +191,28 @@ class BillingInvoice extends Model
         $issued = $this->issued_at ?? $this->created_at ?? Carbon::now();
 
         return CarbonImmutable::instance($issued)->setTimezone((string) config('app.timezone'))->startOfDay();
+    }
+
+    /**
+     * #232 spec D: the state of this invoice's one temporary-access window at $now (never stored).
+     * Settled wins; otherwise active until temporary_access_ends_at (exclusive), then expired.
+     */
+    public function temporaryAccessState(CarbonImmutable $now): TemporaryAccessState
+    {
+        if ($this->temporary_access_started_at === null || $this->temporary_access_ends_at === null) {
+            return TemporaryAccessState::None;
+        }
+
+        if ($this->temporary_access_outcome instanceof TemporaryAccessOutcome) {
+            return TemporaryAccessState::fromOutcome($this->temporary_access_outcome);
+        }
+
+        return $now->lessThan($this->temporary_access_ends_at) ? TemporaryAccessState::Active : TemporaryAccessState::Expired;
+    }
+
+    /** #232 spec D: a window was opened and no review decision closed it yet (active OR expired). */
+    public function hasUnsettledTemporaryAccess(): bool
+    {
+        return $this->temporary_access_started_at !== null && $this->temporary_access_settled_at === null;
     }
 }

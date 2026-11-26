@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\Billing\BillingGateway;
 use App\Enums\Billing\BillingPaymentMethod;
 use App\Enums\Billing\BillingPaymentStatus;
+use App\Enums\Billing\ReceiptClassification;
 use App\Models\Concerns\InteractsWithCentralMedia;
 use App\Models\Concerns\UsesCentralConnection;
 use Illuminate\Database\Eloquent\Model;
@@ -33,6 +34,8 @@ use Spatie\MediaLibrary\HasMedia;
  * @property string|null $gateway_reference
  * @property BillingPaymentStatus $status
  * @property string|null $proof_path
+ * @property ReceiptClassification|null $receipt_classification #232 spec D: TransferReceiptClassifier verdict (gates the 48h access)
+ * @property string|null $receipt_classification_reason short reason code of that verdict
  * @property int|null $submitted_by tenant user id
  * @property Carbon|null $paid_at
  * @property Carbon|null $transferred_at #232: the actual transfer moment entered at Verify (starts a new paid term)
@@ -68,6 +71,8 @@ class BillingPayment extends Model implements HasMedia
         'gateway_reference',
         'status',
         'proof_path',
+        'receipt_classification',
+        'receipt_classification_reason',
         'submitted_by',
         'paid_at',
         'transferred_at',
@@ -102,6 +107,7 @@ class BillingPayment extends Model implements HasMedia
             'method' => BillingPaymentMethod::class,
             'gateway' => BillingGateway::class,
             'status' => BillingPaymentStatus::class,
+            'receipt_classification' => ReceiptClassification::class,
             'paid_at' => 'datetime',
             'transferred_at' => 'datetime',
             'verified_at' => 'datetime',

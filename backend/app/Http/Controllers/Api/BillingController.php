@@ -7,15 +7,19 @@ namespace App\Http\Controllers\Api;
 use App\Actions\Billing\CancelOwnBillingPaymentAction;
 use App\Actions\Billing\GetTenantSubscriptionAction;
 use App\Actions\Billing\ListOwnBillingInvoicesAction;
+use App\Actions\Billing\PreviewBillingChangeAction;
 use App\Actions\Billing\RequestRenewalInvoiceAction;
 use App\Actions\Billing\ShowOwnBillingInvoiceAction;
 use App\Actions\Billing\SubmitManualPaymentAction;
+use App\DTOs\Billing\BillingChangePreviewDTO;
 use App\DTOs\Billing\SubmitManualPaymentDTO;
 use App\Enums\Billing\BillingCycle;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Billing\BillingChangePreviewRequest;
 use App\Http\Requests\Billing\ListOwnBillingInvoicesRequest;
 use App\Http\Requests\Billing\RequestRenewalInvoiceRequest;
 use App\Http\Requests\Billing\SubmitBillingPaymentRequest;
+use App\Http\Resources\Billing\BillingChangePreviewResource;
 use App\Http\Resources\Billing\BillingInvoiceResource;
 use App\Http\Resources\Billing\BillingPaymentResource;
 use App\Http\Resources\Billing\TenantSubscriptionResource;
@@ -25,6 +29,7 @@ use Illuminate\Http\JsonResponse;
 /**
  * The shop's own subscription & billing (PRD-04 / ENTI-3.3), tenant permission `billing.manage`:
  *   GET  /api/v1/billing/subscription
+ *   GET  /api/v1/billing/change-preview          (#232: price of an upgrade / renewal before creating it)
  *   GET  /api/v1/billing/invoices            GET /api/v1/billing/invoices/{id}
  *   POST /api/v1/billing/invoices/{id}/payments   (multipart receipt; allowed while read-only / past due)
  *   POST /api/v1/billing/renewal-invoice          (allowed while read-only / past due)
@@ -39,11 +44,19 @@ final class BillingController extends Controller
         private readonly SubmitManualPaymentAction $submitAction,
         private readonly RequestRenewalInvoiceAction $renewalAction,
         private readonly CancelOwnBillingPaymentAction $cancelPaymentAction,
+        private readonly PreviewBillingChangeAction $previewAction,
     ) {}
 
     public function subscription(): JsonResponse
     {
         return (new TenantSubscriptionResource($this->subscriptionAction->execute($this->tenant())))
+            ->additional(['success' => true])
+            ->response();
+    }
+
+    public function changePreview(BillingChangePreviewRequest $request): JsonResponse
+    {
+        return (new BillingChangePreviewResource($this->previewAction->execute($this->tenant(), BillingChangePreviewDTO::fromArray($request->validated()))))
             ->additional(['success' => true])
             ->response();
     }

@@ -57,6 +57,8 @@ use Throwable;
  *   ANOTHER free / self-signup shop (FreeShopGuard): the trial takes the normal read_only move and
  *   the lifecycle event records `fallback_refused: free_shop_exists`.
  *
+ * #232 spec D: a tenant with an open 48-hour temporary-access window is skipped entirely.
+ *
  * Access enforcement does not depend on this sweep (EnsureTenantActive reads the derived
  * status); the sweep makes the stored status, the audit trail and the console list match.
  */
@@ -135,6 +137,13 @@ final class ApplyTenantLifecycleAction
     {
         $id = (string) $tenant->getKey();
         $stored = $tenant->lifecycleStatus();
+
+        // #232 spec D: nothing moves while a temporary-access window runs (full access on the CURRENT
+        // plan: no free-plan fallback, no downgrade, no suspension that would revoke tokens). The
+        // deadlines are kept, so the next sweep after the window catches up from the original dates.
+        if ($tenant->hasOpenTemporaryAccess($now)) {
+            return;
+        }
 
         // PLAN-10 review: the shop's scheduled downgrade to a free plan, once no paid term runs.
         $downgrade = $this->scheduledDowngrades[$id] ?? null;

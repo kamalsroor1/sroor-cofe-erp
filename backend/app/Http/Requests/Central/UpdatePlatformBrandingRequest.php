@@ -45,10 +45,22 @@ final class UpdatePlatformBrandingRequest extends FormRequest
             'website_url' => ['sometimes', 'nullable', 'string', 'max:255', 'url:https,http'],
             'powered_by_enabled' => ['sometimes', 'required', 'boolean'],
             // PRD-03 manual billing details shown to tenants (blank/null = not set).
-            'billing_instapay_address' => ['sometimes', 'nullable', 'string', 'max:100', self::NO_MARKUP],
-            'billing_vodafone_cash_number' => ['sometimes', 'nullable', 'string', 'max:30', 'regex:/^\+?[0-9][0-9 ()\-]{2,29}$/'],
+            // #232 UI spec 6b: `name@instapay` or an Egyptian mobile number.
+            'billing_instapay_address' => ['sometimes', 'nullable', 'string', 'max:100', 'regex:/^([A-Za-z0-9._-]{1,64}@instapay|01\d{9})$/i'],
+            // #232 UI spec 6b: an Egyptian mobile (11 digits starting 01; spaces / dashes are stripped first).
+            'billing_vodafone_cash_number' => ['sometimes', 'nullable', 'string', 'regex:/^01\d{9}$/'],
             'billing_account_name' => ['sometimes', 'nullable', 'string', 'max:100', self::NO_MARKUP],
             'billing_payment_note' => ['sometimes', 'nullable', 'string', 'max:500', self::NO_MARKUP],
+            // #232 spec F / UI spec 6b: per-method details (null / '' = not set; a method missing a required
+            // detail is hidden from shops). IBAN / account number are stored without spaces.
+            'billing_vodafone_cash_note' => ['sometimes', 'nullable', 'string', 'max:300', self::NO_MARKUP],
+            'billing_instapay_note' => ['sometimes', 'nullable', 'string', 'max:300', self::NO_MARKUP],
+            'billing_bank_name' => ['sometimes', 'nullable', 'string', 'max:120', self::NO_MARKUP],
+            'billing_bank_account_holder' => ['sometimes', 'nullable', 'string', 'max:120', self::NO_MARKUP],
+            'billing_bank_account_number' => ['sometimes', 'nullable', 'string', 'regex:/^\d{1,34}$/'],
+            'billing_bank_iban' => ['sometimes', 'nullable', 'string', 'regex:/^EG\d{27}$/'],
+            'billing_bank_branch' => ['sometimes', 'nullable', 'string', 'max:120', self::NO_MARKUP],
+            'billing_bank_note' => ['sometimes', 'nullable', 'string', 'max:300', self::NO_MARKUP],
             'billing_tax_rate' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:100', 'regex:/^\d{1,3}(\.\d{1,3})?$/'],
             // SELL-06: trial days of an approved signup whose plan has none (null = config default).
             'signup_trial_days' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:'.PlatformBranding::MAX_SIGNUP_TRIAL_DAYS],
@@ -58,6 +70,48 @@ final class UpdatePlatformBrandingRequest extends FormRequest
             'trial_fallback_plan_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
             'self_signup_enabled' => ['sometimes', 'required', 'boolean'],
             'signup_daily_cap' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:'.PlatformBranding::MAX_SIGNUP_DAILY_CAP],
+        ];
+    }
+
+    /**
+     * #232 UI spec 6b: numbers may be typed with spaces (and dashes for the mobile number); they are
+     * validated and stored without them, the IBAN upper-cased. An InstaPay phone number likewise.
+     */
+    protected function prepareForValidation(): void
+    {
+        $clean = [];
+
+        foreach (['billing_vodafone_cash_number' => '/[\s\-]+/u', 'billing_bank_account_number' => '/\s+/u', 'billing_bank_iban' => '/\s+/u'] as $field => $pattern) {
+            $value = $this->input($field);
+            if (is_string($value)) {
+                $clean[$field] = (string) preg_replace($pattern, '', $value);
+            }
+        }
+
+        if (isset($clean['billing_bank_iban'])) {
+            $clean['billing_bank_iban'] = strtoupper($clean['billing_bank_iban']);
+        }
+
+        $instapay = $this->input('billing_instapay_address');
+        if (is_string($instapay) && ! str_contains($instapay, '@')) {
+            $clean['billing_instapay_address'] = (string) preg_replace('/[\s\-]+/u', '', $instapay);
+        }
+
+        if ($clean !== []) {
+            $this->merge($clean);
+        }
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'billing_vodafone_cash_number.regex' => (string) __('billing.console.settings.vodafone_number_invalid'),
+            'billing_instapay_address.regex' => (string) __('billing.console.settings.instapay_address_invalid'),
+            'billing_bank_account_number.regex' => (string) __('billing.console.settings.bank_account_number_invalid'),
+            'billing_bank_iban.regex' => (string) __('billing.console.settings.iban_invalid'),
         ];
     }
 

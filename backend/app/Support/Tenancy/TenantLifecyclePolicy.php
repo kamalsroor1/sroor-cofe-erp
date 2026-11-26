@@ -33,6 +33,8 @@ use InvalidArgumentException;
  *   - a self-signup trial with a platform fallback plan (snapshot trialFallsBackToFreePlan)
  *     goes trial → active (the free plan) at the same deadline instead of read_only, and
  *     nothing follows that move. The sweep applies it through MoveTenantToFreePlanAction.
+ * #232 spec D: an open temporary-access window (snapshot temporaryAccessEndsAt) lifts a
+ * payment-related state to full access until it ends (LifecycleDecision::access()).
  * Leaving `archived` (unarchive) is a manual super-admin move only (TenantStatus).
  * A tenant that was never swept is caught up in at most MAX_CATCH_UP_STEPS moves, each
  * one starting when the previous deadline passed (not "now").
@@ -102,7 +104,34 @@ final class TenantLifecyclePolicy
             nextStatus: $next === null ? null : $next[0],
             nextTransitionAt: $next === null ? null : $next[1],
             daysLeft: $next === null ? null : $this->daysUntil($now, $next[1]),
+            temporaryAccessUntil: $this->temporaryAccessUntil($snapshot, $status, $now),
         );
+    }
+
+    /**
+     * #232 spec D: an UNSETTLED temporary-access window still running at $now gives full access on
+     * the current plan to a shop whose state is payment-related: trial (ended), active, past_due,
+     * read_only, or suspended for non-payment (a suspension DERIVED by time from read_only is one,
+     * whatever reason the stored row carries). Never for cancelled / archived or a violation
+     * suspension. The time-driven chain itself is untouched: when the window ends (or is settled)
+     * the shop is exactly where these deadlines put it ("back to the previous state").
+     */
+    private function temporaryAccessUntil(TenantLifecycleSnapshot $snapshot, TenantStatus $effective, CarbonImmutable $now): ?CarbonImmutable
+    {
+        $until = $snapshot->temporaryAccessEndsAt;
+
+        if ($until === null || ! $now->lessThan($until)) {
+            return null;
+        }
+
+        $eligible = match ($effective) {
+            TenantStatus::Trial, TenantStatus::Active, TenantStatus::PastDue, TenantStatus::ReadOnly => true,
+            TenantStatus::Suspended => $snapshot->status !== TenantStatus::Suspended
+                || $snapshot->suspensionReason === TenantSuspensionReason::NonPayment,
+            default => false,
+        };
+
+        return $eligible ? $until : null;
     }
 
     /**

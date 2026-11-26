@@ -53,6 +53,11 @@ final class BillingMigrationsRoundTripTest extends TenantTestCase
         // #232: billing_payments (recreated by the chain) and plan_change_requests (dependent above).
         '2026_11_26_100000_add_transferred_at_to_billing_payments_table',
         '2026_11_26_100100_add_founder_review_held_at_to_plan_change_requests_table',
+        // #232 owner decision: overpaid_amount on billing_invoices (recreated by the chain).
+        '2026_11_26_110000_add_overpaid_amount_to_billing_invoices_table',
+        // #232 spec D: columns on billing_payments / billing_invoices (both recreated by the chain).
+        '2026_11_26_120000_add_receipt_classification_to_billing_payments_table',
+        '2026_11_26_120100_add_temporary_access_to_billing_invoices_table',
     ];
 
     private const TABLES = [

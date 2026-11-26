@@ -21,6 +21,8 @@ use App\Models\Plan;
 use App\Models\PlanAddon;
 use App\Models\PlanChangeRequest;
 use App\Models\PlanFeature;
+use App\Models\PlatformNotification;
+use App\Models\PlatformNotificationRead;
 use App\Models\PlatformSetting;
 use App\Models\SignupRequest;
 use App\Models\Subscription;
@@ -105,6 +107,8 @@ final class CentralModelsConnectionTest extends TenantTestCase
             'SignupRequest' => [SignupRequest::class, self::VIA_TRAIT],
             'AccountDeletionRequest' => [AccountDeletionRequest::class, self::VIA_TRAIT],
             'TenantLifecycleReminder' => [TenantLifecycleReminder::class, self::VIA_TRAIT],
+            'PlatformNotification' => [PlatformNotification::class, self::VIA_TRAIT],
+            'PlatformNotificationRead' => [PlatformNotificationRead::class, self::VIA_TRAIT],
             'Tenant' => [Tenant::class, self::VIA_STANCL],
             'Domain' => [Domain::class, self::VIA_STANCL],
         ];

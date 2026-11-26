@@ -3,7 +3,7 @@
     Email-client safe: table layout, inline styles, system fonts only, light background,
     max width 600px (fluid on phones). RTL for Arabic, LTR for English.
     Provided by PlatformMailable::content(): $mailLocale, $mailDir, $mailAlign, $brand, $year.
-    Child views fill @section('content').
+    Child views fill @section('content'); an optional @section('footer') replaces the support block.
 --}}
 <!DOCTYPE html>
 <html lang="{{ $mailLocale }}" dir="{{ $mailDir }}">
@@ -49,6 +49,10 @@
                 {{-- Footer: support contact --}}
                 <tr>
                     <td dir="{{ $mailDir }}" style="padding:20px 36px 28px 36px; background-color:#f9fafb; border-top:1px solid #e5e7eb; font-family:Tahoma, Arial, 'Segoe UI', sans-serif; font-size:13px; line-height:1.7; color:#6b7280; text-align:{{ $mailAlign }};">
+                        @hasSection('footer')
+                            {{-- #232: operator e-mails carry their own footer instead of the shop support block. --}}
+                            @yield('footer')
+                        @else
                         <div style="font-weight:bold; color:#374151;">{{ __('mail.layout.support_title') }}</div>
                         <div>{{ __('mail.layout.support_intro', ['app' => $brand['name']]) }}</div>
                         @if ($brand['support_phone'] !== '')
@@ -59,6 +63,7 @@
                         @endif
                         @if ($brand['website_url'] !== '' && preg_match('#^https?://#i', $brand['website_url']) === 1)
                             <div>{{ __('mail.layout.website_label') }} <a href="{{ $brand['website_url'] }}" style="color:{{ $brand['primary_color'] }}; text-decoration:none;">{{ $brand['website_url'] }}</a></div>
+                        @endif
                         @endif
                         <div style="margin-top:12px; font-size:12px; color:#9ca3af;">{{ __('mail.layout.automated_notice', ['app' => $brand['name']]) }}</div>
                         <div style="font-size:12px; color:#9ca3af;">{{ __('mail.layout.copyright', ['year' => $year, 'name' => $brand['legal_name']]) }}</div>

@@ -23,6 +23,8 @@ use App\Models\Subscription;
 use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Billing\PaymentMethodDetails;
+use App\Services\Billing\TemporaryAccessService;
 use App\Services\Branding\PlatformBranding;
 use App\Services\Entitlements\MonthlyInvoiceCounter;
 use App\Services\Entitlements\TenantOverrides;
@@ -51,6 +53,8 @@ final class GetTenantSubscriptionAction
         private readonly MonthlyInvoiceCounter $invoiceCounter,
         private readonly TenantStorageUsage $storageUsage,
         private readonly TenantOverrides $overrides,
+        private readonly TemporaryAccessService $temporaryAccess,
+        private readonly PaymentMethodDetails $paymentMethods,
     ) {}
 
     /**
@@ -97,7 +101,12 @@ final class GetTenantSubscriptionAction
                 'value' => $decision->effectiveStatus->value,
                 'label' => $decision->effectiveStatus->label(),
                 'access' => $decision->access()->value,
+                // #232 spec D: full access comes from a 48h temporary access (the value above is the
+                // state the shop returns to when it ends).
+                'temporary_access' => $decision->hasTemporaryAccess(),
             ],
+            // #232 UI §3 banner: the shop's unsettled window, else the last settled one (7 days), else null.
+            'temporary_access' => $this->temporaryAccess->tenantWindow($tenant, $now),
             'usage' => $this->usage($tenant),
             'addons' => $this->addons($tenant),
             'pending_plan_change' => $this->pendingRequest($tenant, PlanChangeRequestKind::PlanChange),
@@ -109,6 +118,10 @@ final class GetTenantSubscriptionAction
                 ->where('status', BillingInvoiceStatus::Pending->value)
                 ->count(),
             'partial_payment' => $this->partialPayment($tenant),
+            // #232 spec F / UI spec 2b: ONLY fully configured methods, each with its own details and note.
+            'payment_methods' => $this->paymentMethods->forShops($branding),
+            // Legacy shape kept for the current screen; account_name / payment_note are superseded
+            // by the per-method details above.
             'payment_instructions' => [
                 'instapay_address' => $branding->billingInstapayAddress,
                 'vodafone_cash_number' => $branding->billingVodafoneCashNumber,
@@ -276,7 +289,7 @@ final class GetTenantSubscriptionAction
     /**
      * Public, active plans the shop may ask to move to (price list for the request form).
      *
-     * @return list<array{code: string, name: string, price_monthly: string, price_yearly: string, is_free: bool, is_current: bool}>
+     * @return list<array{id: int, code: string, name: string, price_monthly: string, price_yearly: string, is_free: bool, is_current: bool}>
      */
     private function availablePlans(Tenant $tenant): array
     {
@@ -284,6 +297,8 @@ final class GetTenantSubscriptionAction
 
         foreach (Plan::query()->active()->where('is_public', true)->get() as $plan) {
             $rows[] = [
+                // #232: the change preview takes `plan_id`.
+                'id' => (int) $plan->getKey(),
                 'code' => $plan->slug,
                 'name' => $plan->name,
                 'price_monthly' => $plan->price_monthly,

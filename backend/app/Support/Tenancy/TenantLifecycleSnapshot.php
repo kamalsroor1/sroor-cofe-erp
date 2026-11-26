@@ -28,6 +28,9 @@ use Carbon\CarbonImmutable;
  *    time-driven move out of trial / active / past_due / read_only (a free tenant is always active).
  *  - trialFallsBackToFreePlan (PLAN-10): a self-signup trial with a platform fallback plan: the
  *    trial deadline leads to `active` (on the free plan) instead of `read_only`.
+ *  - temporaryAccessEndsAt (#232 spec D): end of the tenant's UNSETTLED 48-hour temporary-access
+ *    window (`tenants.temporary_access_ends_at`). While it is in the future the policy grants full
+ *    access on the current plan (see TenantLifecyclePolicy::evaluate); a past value changes nothing.
  *
  * Build it from a central row with App\Models\Tenant::lifecycleSnapshot() (IDEN-3.2).
  */
@@ -44,5 +47,6 @@ final readonly class TenantLifecycleSnapshot
         public ?TenantSuspensionReason $suspensionReason = null,
         public bool $onFreePlan = false,
         public bool $trialFallsBackToFreePlan = false,
+        public ?CarbonImmutable $temporaryAccessEndsAt = null,
     ) {}
 }

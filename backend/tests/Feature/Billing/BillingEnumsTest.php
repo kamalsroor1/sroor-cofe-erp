@@ -13,10 +13,14 @@ use App\Enums\Billing\BillingPaymentMethod;
 use App\Enums\Billing\BillingPaymentStatus;
 use App\Enums\Billing\Concerns\BillingEnum;
 use App\Enums\Billing\FounderPriceStep;
+use App\Enums\Billing\InvoiceReviewState;
 use App\Enums\Billing\PlanChangeRequestKind;
 use App\Enums\Billing\PlanChangeRequestStatus;
+use App\Enums\Billing\ReceiptClassification;
 use App\Enums\Billing\SubscriptionAddonStatus;
 use App\Enums\Billing\SubscriptionStatus;
+use App\Enums\Billing\TemporaryAccessOutcome;
+use App\Enums\Billing\TemporaryAccessState;
 use App\Enums\PaymentMethod;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Lang;
@@ -53,6 +57,11 @@ class BillingEnumsTest extends TestCase
             'PlanChangeRequestKind' => [PlanChangeRequestKind::class, ['plan_change', 'addon']],
             'PlanChangeRequestStatus' => [PlanChangeRequestStatus::class, ['pending', 'invoiced', 'completed', 'rejected', 'cancelled', 'scheduled']],
             'FounderPriceStep' => [FounderPriceStep::class, ['founder', 'transition', 'list']],
+            // #232 spec D
+            'ReceiptClassification' => [ReceiptClassification::class, ['transfer_receipt_image', 'not_receipt']],
+            'TemporaryAccessOutcome' => [TemporaryAccessOutcome::class, ['verified', 'rejected', 'voided']],
+            'TemporaryAccessState' => [TemporaryAccessState::class, ['none', 'active', 'expired', 'verified', 'rejected', 'voided']],
+            'InvoiceReviewState' => [InvoiceReviewState::class, ['awaiting_payment', 'under_review_temporary', 'under_review_grace_used', 'under_review_manual', 'under_review', 'rejected', 'paid', 'void']],
         ];
     }
 

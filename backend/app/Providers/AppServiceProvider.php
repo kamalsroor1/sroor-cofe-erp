@@ -6,6 +6,7 @@ use App\Console\Tenancy\MigrateProvisionedTenants;
 use App\Console\Tenancy\RollbackProvisionedTenants;
 use App\Console\Tenancy\RunForProvisionedTenants;
 use App\Console\Tenancy\SeedProvisionedTenants;
+use App\Contracts\Billing\TransferReceiptClassifier;
 use App\Contracts\SuperAdminDashboardAnalyticsInterface;
 use App\Contracts\TenantFeatureManagerInterface;
 use App\Contracts\TenantProvisionerInterface;
@@ -28,6 +29,7 @@ use App\Observers\Billing\EntitlementsCacheObserver;
 use App\Observers\CashShiftStampObserver;
 use App\Observers\Landing\PublicCatalogObserver;
 use App\Observers\TenantObserver;
+use App\Services\Billing\Receipts\ImageHeuristicReceiptClassifier;
 use App\Services\Branding\PlatformBranding;
 use App\Services\Entitlements\EntitlementFeatures;
 use App\Services\Entitlements\TenantEntitlementService;
@@ -85,6 +87,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             SuperAdminDashboardAnalyticsInterface::class,
             SuperAdminAnalyticsService::class
+        );
+
+        // #232 spec D: the receipt classifier gating the 48-hour temporary access (swappable).
+        $this->app->bind(
+            TransferReceiptClassifier::class,
+            ImageHeuristicReceiptClassifier::class
         );
 
         $this->app->singleton(PlatformBranding::class);

@@ -494,4 +494,9 @@ return [
         'failed_row' => 'المحل :tenant_id فشل (راجع السجل).',
         'summary' => 'المحلات المجانية الخاملة: اتفحص :checked، اتبعت تذكير :reminded، اتأرشف :archived، اتأجل :postponed، اتخطى :skipped، فشل :failed.',
     ],
+    // #232 spec E: billing:send-temporary-access-reminders
+    'temporary_access_reminders' => [
+        'description' => 'تذكير مسؤولي المنصة قبل انتهاء التفعيل المؤقت (48 ساعة) لمحل بـ 6 ساعات لو لسه ماتراجعش (مرة واحدة لكل تفعيل)',
+        'summary' => 'تذكيرات التفعيل المؤقت: اتبعت :sent.',
+    ],
 ];

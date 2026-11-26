@@ -494,4 +494,9 @@ return [
         'failed_row' => 'Tenant :tenant_id failed (see the log).',
         'summary' => 'Dormant free shops: :checked checked, :reminded reminded, :archived archived, :postponed postponed, :skipped skipped, :failed failed.',
     ],
+    // #232 spec E: billing:send-temporary-access-reminders
+    'temporary_access_reminders' => [
+        'description' => 'Remind the platform operators 6 hours before a shop\'s 48-hour temporary access ends without a review decision (once per window)',
+        'summary' => 'Temporary-access reminders: :sent sent.',
+    ],
 ];

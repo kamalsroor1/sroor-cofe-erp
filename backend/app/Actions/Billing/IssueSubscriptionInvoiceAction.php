@@ -9,8 +9,7 @@ use App\Enums\Billing\BillingCycle;
 use App\Enums\Billing\BillingInvoiceStatus;
 use App\Enums\Billing\BillingInvoiceType;
 use App\Enums\Billing\BillingPaymentStatus;
-use App\Enums\Billing\FounderPriceStep;
-use App\Enums\Billing\SubscriptionAddonStatus;
+use App\Enums\Billing\TemporaryAccessOutcome;
 use App\Enums\CentralAuditEvent;
 use App\Exceptions\Billing\BillingException;
 use App\Models\Addon;
@@ -20,11 +19,10 @@ use App\Models\CentralUser;
 use App\Models\Plan;
 use App\Models\PlanAddon;
 use App\Models\Subscription;
-use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
 use App\Services\Billing\BillingSequenceService;
-use App\Services\Billing\FounderPricingService;
-use App\Services\Branding\PlatformBranding;
+use App\Services\Billing\SubscriptionInvoicePricer;
+use App\Services\Billing\TemporaryAccessService;
 use App\Services\CentralAuditLogger;
 use App\Support\Database\TransactionRetry;
 use App\Support\Money\Decimal;
@@ -50,6 +48,9 @@ use Carbon\CarbonImmutable;
  *
  * Money: bcmath strings at scale 3. VAT = platform setting billing_tax_rate, computed ONCE on the
  * net (subtotal - discount) and rounded half-up with App\Support\Money\Decimal (the SETG-13 rule).
+ * #232: plan lines, renewal add-on lines, subtotal and VAT are priced by SubscriptionInvoicePricer,
+ * the same code GET /billing/change-preview runs, so a preview always equals the issued invoice.
+ * `listPriceOnly` (the plan-change path, spec C) bills plan lines at the list price only.
  *
  * One central transaction through TransactionRetry (a deadlock is retried, then 409 busy): the
  * tenant row is locked first, so two issuers for the same tenant are serialised and the duplicate
@@ -70,9 +71,9 @@ final class IssueSubscriptionInvoiceAction
 
     public function __construct(
         private readonly BillingSequenceService $sequences,
-        private readonly FounderPricingService $founder,
-        private readonly PlatformBranding $platform,
+        private readonly SubscriptionInvoicePricer $pricer,
         private readonly CentralAuditLogger $audit,
+        private readonly TemporaryAccessService $temporaryAccess,
     ) {}
 
     public function execute(IssueSubscriptionInvoiceDTO $dto, ?CentralUser $actor = null): BillingInvoice
@@ -126,17 +127,17 @@ final class IssueSubscriptionInvoiceAction
             if ($plan instanceof Plan && $cycle instanceof BillingCycle) {
                 $lines[] = $dto->differenceLine !== null
                     ? $this->differenceLine($dto->differenceLine, $plan, $cycle, $termEnd)
-                    : $this->planLine($dto, $plan, $cycle, $tenant, $subscription, $periodStart);
+                    : $this->pricer->planLine($plan, $cycle, $tenant, $subscription, $periodStart, $dto->useFounderPrice, $dto->founderPriceIfAvailable, $dto->listPriceOnly);
             }
             if ($appendRenewal && $plan instanceof Plan && $renewalCycle instanceof BillingCycle) {
-                $lines[] = array_merge($this->planLine($dto, $plan, $renewalCycle, $tenant, $subscription, $periodStart), [
+                $lines[] = array_merge($this->pricer->planLine($plan, $renewalCycle, $tenant, $subscription, $periodStart, $dto->useFounderPrice, $dto->founderPriceIfAvailable, $dto->listPriceOnly), [
                     'renewal' => true,
                     'description' => (string) __('billing.invoice.upgrade_renewal_line', ['plan' => $plan->name, 'cycle' => $renewalCycle->label()]),
                 ]);
                 $cycle = $renewalCycle;
             }
             if ($dto->type === BillingInvoiceType::Renewal && $cycle instanceof BillingCycle && $subscription instanceof Subscription) {
-                foreach ($this->renewalAddonLines($subscription, $tenant, $periodStart, $this->periodEnd($periodStart, $cycle), $cycle) as $renewalLine) {
+                foreach ($this->pricer->renewalAddonLines($subscription, $tenant, $periodStart, $this->pricer->periodEnd($periodStart, $cycle), $cycle) as $renewalLine) {
                     $lines[] = $renewalLine;
                 }
             }
@@ -162,10 +163,7 @@ final class IssueSubscriptionInvoiceAction
                 ];
             }
 
-            $subtotal = '0.000';
-            foreach ($lines as $line) {
-                $subtotal = bcadd($subtotal, (string) $line['amount'], 3);
-            }
+            $subtotal = $this->pricer->subtotal($lines);
 
             // A discount can reduce the invoice but never to zero or below: such an invoice is unpayable.
             if (bccomp($dto->discount, '0', 3) < 0 || bccomp($dto->discount, $subtotal, 3) >= 0) {
@@ -173,9 +171,7 @@ final class IssueSubscriptionInvoiceAction
             }
 
             $net = bcsub($subtotal, $dto->discount, 3);
-            $taxRate = $this->platform->get()->billingTaxRate;
-            $tax = Decimal::percent($net, $taxRate);
-            $total = bcadd($net, $tax, 3);
+            ['rate' => $taxRate, 'tax' => $tax, 'total' => $total] = $this->pricer->tax($net);
 
             $now = CarbonImmutable::now();
 
@@ -187,7 +183,7 @@ final class IssueSubscriptionInvoiceAction
                 'status' => BillingInvoiceStatus::Pending,
                 'billing_cycle' => $cycle,
                 'period_start' => $periodStart,
-                'period_end' => $dto->differenceLine !== null && ! $appendRenewal ? $termEnd : $this->periodEnd($periodStart, $cycle),
+                'period_end' => $dto->differenceLine !== null && ! $appendRenewal ? $termEnd : $this->pricer->periodEnd($periodStart, $cycle),
                 'lines' => $lines,
                 'subtotal' => $subtotal,
                 'discount' => $dto->discount,
@@ -264,6 +260,9 @@ final class IssueSubscriptionInvoiceAction
             $renewal->voided_at = now();
             $renewal->save();
 
+            // #232 spec D: a voided invoice never keeps an unsettled 48h window.
+            $this->temporaryAccess->settle($tenant, $renewal, TemporaryAccessOutcome::Voided, $actor, CarbonImmutable::now());
+
             $this->audit->record(
                 CentralAuditEvent::BillingInvoiceVoided,
                 ['invoice_id' => (int) $renewal->getKey(), 'number' => $renewal->number, 'type' => $renewal->type->value, 'reason' => 'superseded_by_upgrade'],
@@ -293,78 +292,6 @@ final class IssueSubscriptionInvoiceAction
         }
 
         return $months;
-    }
-
-    /** Months in one renewal period of the subscription's cycle. */
-    private static function monthsIn(BillingCycle $cycle): int
-    {
-        return $cycle === BillingCycle::Yearly ? 12 : 1;
-    }
-
-    /**
-     * BILL-02: add-ons are billed on renewal. An ACTIVE add-on line is charged when its own paid
-     * end falls inside the period being renewed (a yearly add-on on a monthly subscription is only
-     * due once a year), priced from the tenant's plan catalog and falling back to the stored unit
-     * price. A YEARLY add-on is charged one year. A MONTHLY add-on is charged for every month of the
-     * renewed period (x12 on a yearly renewal): `unit_price` is then the per-unit price of the whole
-     * period, `cycle_unit_price` the monthly one and `months` the count, so quantity x unit_price =
-     * amount still holds. ActivateSubscriptionAction extends exactly the lines found here.
-     *
-     * @return list<array<string, mixed>>
-     */
-    private function renewalAddonLines(Subscription $subscription, Tenant $tenant, CarbonImmutable $periodStart, ?CarbonImmutable $periodEnd, BillingCycle $renewalCycle): array
-    {
-        if ($periodEnd === null) {
-            return [];
-        }
-
-        $rows = SubscriptionAddon::query()
-            ->where('subscription_id', $subscription->getKey())
-            ->where('status', SubscriptionAddonStatus::Active->value)
-            ->where(function ($q) use ($periodEnd): void {
-                $q->whereNull('ends_at')->orWhere('ends_at', '<=', $periodEnd);
-            })
-            ->orderBy('id')
-            ->get();
-
-        $lines = [];
-
-        foreach ($rows as $row) {
-            $addon = Addon::query()->find($row->addon_id);
-            if (! $addon instanceof Addon || ! $addon->is_active || $row->ends_at === null) {
-                continue;
-            }
-
-            $addonCycle = $row->billing_cycle->isSellable() ? $row->billing_cycle : BillingCycle::Monthly;
-            $quantity = max(1, (int) $row->quantity);
-            $planAddon = $tenant->plan_id === null ? null : PlanAddon::query()
-                ->where('plan_id', $tenant->plan_id)
-                ->where('addon_id', $addon->getKey())
-                ->where('is_available', true)
-                ->first();
-
-            $unit = $planAddon instanceof PlanAddon
-                ? Decimal::normalize($planAddon->unitPriceFor($addonCycle, $quantity))
-                : Decimal::normalize((string) $row->unit_price);
-            $months = $addonCycle === BillingCycle::Monthly ? self::monthsIn($renewalCycle) : 1;
-            $periodUnit = bcmul($unit, (string) $months, 3);
-
-            $lines[] = [
-                'type' => 'addon',
-                'renewal' => true,
-                'addon_id' => (int) $addon->getKey(),
-                'addon_key' => $addon->key,
-                'description' => (string) __('billing.invoice.addon_line', ['addon' => (string) __($addon->name_key), 'cycle' => $addonCycle->label()]),
-                'billing_cycle' => $addonCycle->value,
-                'months' => $months,
-                'quantity' => $quantity,
-                'cycle_unit_price' => $unit,
-                'unit_price' => $periodUnit,
-                'amount' => bcmul($periodUnit, (string) $quantity, 3),
-            ];
-        }
-
-        return $lines;
     }
 
     private function planFor(IssueSubscriptionInvoiceDTO $dto): ?Plan
@@ -400,45 +327,18 @@ final class IssueSubscriptionInvoiceAction
     }
 
     /**
-     * @return array<string, mixed>
-     */
-    private function planLine(IssueSubscriptionInvoiceDTO $dto, Plan $plan, BillingCycle $cycle, Tenant $tenant, ?Subscription $subscription, CarbonImmutable $periodStart): array
-    {
-        $step = $subscription instanceof Subscription
-            ? $this->founder->stepFor($subscription, $plan, $cycle, $periodStart)
-            : FounderPriceStep::List;
-
-        if (! $step->isDiscounted() && $dto->useFounderPrice) {
-            if (! $this->canClaimFounderPrice($plan, $cycle, $tenant, $subscription)) {
-                throw BillingException::founderPriceUnavailable();
-            }
-            $step = FounderPriceStep::Founder;
-        } elseif (! $step->isDiscounted() && $dto->founderPriceIfAvailable && $this->canClaimFounderPrice($plan, $cycle, $tenant, $subscription)) {
-            $step = FounderPriceStep::Founder;
-        }
-
-        $price = Decimal::normalize($this->founder->stepPrice($plan, $cycle, $step));
-
-        return [
-            'type' => 'plan',
-            'plan_id' => (int) $plan->getKey(),
-            'plan_name' => $plan->name,
-            'billing_cycle' => $cycle->value,
-            'quantity' => 1,
-            'unit_price' => $price,
-            'amount' => $price,
-            'founder' => $step->isDiscounted(),
-            'price_step' => $step->value,
-        ];
-    }
-
-    /**
      * The upgrade difference line (the pro-rata suggestion or the amount the admin typed), never a
      * catalog / founder price. `difference` tells ActivateSubscriptionAction to switch the plan
      * without extending the term (unless a `renewal` line follows); `term_end` is the paid-term end
      * it priced (#232), so a renewal paid in between is detected even on an upgrade + renewal invoice.
      *
-     * @param  array{description: string, amount: string}  $difference
+     * A system-computed difference carries its `proration` inputs (owner decision 2026-11-26): the
+     * line is flagged `prorated` with old/new price, period days, the remaining days and the moment
+     * it was priced, so VerifyManualPaymentAction can re-price it from the verified transfer moment
+     * with the same ProrationCalculator (UpgradeDifferenceRepricer). A typed amount has no
+     * `proration` and is never re-priced.
+     *
+     * @param  array{description: string, amount: string, proration?: array{old_price: string, new_price: string, remaining_days: int, period_days: int, priced_at: string}}  $difference
      * @return array<string, mixed>
      */
     private function differenceLine(array $difference, Plan $plan, BillingCycle $cycle, ?CarbonImmutable $termEnd): array
@@ -457,7 +357,7 @@ final class IssueSubscriptionInvoiceAction
             'unit_price' => $amount,
             'amount' => $amount,
             'founder' => false,
-        ];
+        ] + (isset($difference['proration']) ? ['prorated' => true] + $difference['proration'] : []);
     }
 
     /**
@@ -506,30 +406,6 @@ final class IssueSubscriptionInvoiceAction
         ];
     }
 
-    /**
-     * A tenant not (or no longer) on a discounted step may take the year-1 founder price only
-     * with its first-ever payment, while a slot is free (FounderPricingService::claim takes
-     * the slot when that payment is verified).
-     */
-    private function canClaimFounderPrice(Plan $plan, BillingCycle $cycle, Tenant $tenant, ?Subscription $subscription): bool
-    {
-        if (! $this->founder->isEligiblePlan($plan, $cycle)) {
-            return false;
-        }
-
-        // A founder whose schedule has ended never starts it again.
-        if ($subscription instanceof Subscription && $subscription->is_founder) {
-            return false;
-        }
-
-        $paidBefore = BillingPayment::query()
-            ->where('tenant_id', $tenant->getKey())
-            ->whereIn('status', [BillingPaymentStatus::Verified->value, BillingPaymentStatus::Refunded->value])
-            ->exists();
-
-        return ! $paidBefore && $this->founder->hasAvailableSlot();
-    }
-
     private function periodStart(IssueSubscriptionInvoiceDTO $dto, Tenant $tenant, ?Subscription $subscription): CarbonImmutable
     {
         if ($dto->periodStart !== null) {
@@ -564,15 +440,6 @@ final class IssueSubscriptionInvoiceAction
         $end = $tenant->subscription_ends_at;
 
         return $end !== null && $end->isFuture() ? CarbonImmutable::instance($end) : null;
-    }
-
-    private function periodEnd(CarbonImmutable $start, ?BillingCycle $cycle): ?CarbonImmutable
-    {
-        return match ($cycle) {
-            BillingCycle::Monthly => $start->addMonthNoOverflow(),
-            BillingCycle::Yearly => $start->addYearNoOverflow(),
-            default => null,
-        };
     }
 
     /**

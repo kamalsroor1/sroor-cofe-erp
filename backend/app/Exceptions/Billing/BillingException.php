@@ -46,6 +46,8 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * | renewalInFlight()        | 409  | billing.renewal_in_flight (details.invoice_id/number) |
  * | duplicatePayment()       | 409  | billing.payment_duplicate        |
  * | upgradeHeldForFounderReview() #232 C | 409 | billing.upgrade_held_for_founder_review (details.request_id) |
+ * | founderHoldNotSet() #232 review | 409 | billing.founder_hold_not_set (details.request_id) |
+ * | upgradeNotHigher() #232 preview | 422 | billing.upgrade_not_higher |
  */
 final class BillingException extends HttpException
 {
@@ -240,6 +242,20 @@ final class BillingException extends HttpException
         return new self(Response::HTTP_CONFLICT, 'billing.upgrade_held_for_founder_review', (string) __('billing.errors.upgrade_held_for_founder_review'), [
             'request_id' => $requestId,
         ]);
+    }
+
+    /** #232 review: `release_founder_hold` was sent for a request that was never held for review. */
+    public static function founderHoldNotSet(int $requestId): self
+    {
+        return new self(Response::HTTP_CONFLICT, 'billing.founder_hold_not_set', (string) __('billing.errors.founder_hold_not_set'), [
+            'request_id' => $requestId,
+        ]);
+    }
+
+    /** #232 change preview: the chosen plan costs no more than the current one (downgrade is an open decision). */
+    public static function upgradeNotHigher(): self
+    {
+        return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'upgrade_not_higher');
     }
 
     public function render(Request $request): JsonResponse

@@ -115,4 +115,34 @@ return [
         'expiry' => 'اللينك ده بيشتغل مرة واحدة وصلاحيته :minutes دقيقة.',
         'not_you' => 'لو مش انت اللي طلبت ده، تجاهل الرسالة: كلمة السر هتفضل زي ما هي.',
     ],
+
+    // #232 UI §5 (option B): operator e-mails. App\Mail\BillingReceiptUploadedMail.
+    'billing_receipt' => [
+        'subject' => 'إيصال تحويل جديد من :tenant — :amount',
+        'title' => 'إيصال تحويل جديد محتاج مراجعة',
+        'tenant' => 'المحل:',
+        'invoice' => 'الفاتورة:',
+        'amount' => 'المبلغ:',
+        'uploaded_at' => 'وقت الرفع:',
+        'access' => 'التفعيل المؤقت:',
+        'access_until' => 'شغال لحد',
+        'access_manual' => 'مراجعة يدوية — مفيش تفعيل مؤقت',
+        'button' => 'راجع الإيصال في اللوحة',
+    ],
+
+    // #232 UI §5 (option B): App\Mail\BillingTemporaryAccessReminderMail.
+    'billing_grace_reminder' => [
+        'subject' => 'باقي 6 ساعات على التفعيل المؤقت — :tenant',
+        'title' => 'باقي 6 ساعات على تفعيل مؤقت',
+        'tenant' => 'المحل:',
+        'invoice' => 'الفاتورة:',
+        'ends_at' => 'التفعيل المؤقت بينتهي:',
+        'consequence' => 'لو ماتأكدش لحد كده المحل هيرجع لاشتراكه السابق.',
+        'button' => 'راجع الآن',
+    ],
+
+    // #232 UI §5: footer shared by the operator e-mails above.
+    'billing_admin' => [
+        'footer' => 'وصلك الإيميل ده لأنك مسؤول منصة :app. الإيصال نفسه مش مرفق (بيانات خاصة).',
+    ],
 ];

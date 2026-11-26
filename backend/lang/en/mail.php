@@ -115,4 +115,34 @@ return [
         'expiry' => 'This link works once and expires in :minutes minutes.',
         'not_you' => 'If you did not ask for this, ignore this message: your password stays as it is.',
     ],
+
+    // #232 UI §5 (option B): operator e-mails. App\Mail\BillingReceiptUploadedMail.
+    'billing_receipt' => [
+        'subject' => 'New transfer receipt from :tenant — :amount',
+        'title' => 'A new transfer receipt needs review',
+        'tenant' => 'Shop:',
+        'invoice' => 'Invoice:',
+        'amount' => 'Amount:',
+        'uploaded_at' => 'Uploaded at:',
+        'access' => 'Temporary access:',
+        'access_until' => 'active until',
+        'access_manual' => 'Manual review — no temporary access',
+        'button' => 'Review the receipt in the console',
+    ],
+
+    // #232 UI §5 (option B): App\Mail\BillingTemporaryAccessReminderMail.
+    'billing_grace_reminder' => [
+        'subject' => '6 hours left on temporary access — :tenant',
+        'title' => '6 hours left on a temporary access',
+        'tenant' => 'Shop:',
+        'invoice' => 'Invoice:',
+        'ends_at' => 'Temporary access ends:',
+        'consequence' => 'If it is not confirmed by then, the shop goes back to its previous subscription.',
+        'button' => 'Review now',
+    ],
+
+    // #232 UI §5: footer shared by the operator e-mails above.
+    'billing_admin' => [
+        'footer' => 'You get this e-mail because you are an operator of the :app platform. The receipt itself is not attached (private data).',
+    ],
 ];

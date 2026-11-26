@@ -6,7 +6,6 @@ namespace App\Actions\Billing;
 
 use App\DTOs\Billing\IssuePlanChangeInvoiceDTO;
 use App\DTOs\Billing\IssueSubscriptionInvoiceDTO;
-use App\Enums\Billing\BillingCycle;
 use App\Enums\Billing\BillingInvoiceType;
 use App\Enums\Billing\PlanChangeRequestKind;
 use App\Enums\Billing\PlanChangeRequestStatus;
@@ -15,12 +14,10 @@ use App\Exceptions\Billing\BillingException;
 use App\Models\CentralUser;
 use App\Models\Plan;
 use App\Models\PlanChangeRequest;
-use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Services\Billing\FounderPricingService;
-use App\Services\Billing\ProrationCalculator;
+use App\Services\Billing\SubscriptionInvoicePricer;
 use App\Services\CentralAuditLogger;
-use App\Support\Money\Decimal;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
@@ -47,11 +44,14 @@ use Illuminate\Support\Facades\DB;
  * once) and the call answers 409 `billing.upgrade_held_for_founder_review`. The owner releases it by
  * issuing again with `release_founder_hold` (optionally with a typed amount). The stamp is committed
  * before the 409 is thrown, so the console can show the held state.
+ * `release_founder_hold` on a request that was never held is refused with 409
+ * `billing.founder_hold_not_set`. Released or not, every plan line of a plan change is billed at the
+ * LIST price (`listPriceOnly`): a founder step never applies to an upgrade automatically.
  *
  * A request whose target is a permanent free plan is never invoiced: it is stored `scheduled`
  * (not pending -> 409 here) and an older pending one is refused (422 free_plan_not_billable).
  *
- * One central transaction: the request row is locked first (409 `billing.request_not_pending`
+ * One central transaction: the tenant row is locked first, then the request row (409 `billing.request_not_pending`
  * when it is no longer pending, so a double click issues one invoice), then
  * IssueSubscriptionInvoiceAction reuses its numbering / VAT / rounding inside the same transaction.
  */
@@ -60,7 +60,7 @@ final class IssuePlanChangeInvoiceAction
     public function __construct(
         private readonly IssueSubscriptionInvoiceAction $issue,
         private readonly CentralAuditLogger $audit,
-        private readonly ProrationCalculator $proration,
+        private readonly SubscriptionInvoicePricer $pricer,
         private readonly FounderPricingService $founder,
     ) {}
 
@@ -69,10 +69,21 @@ final class IssuePlanChangeInvoiceAction
         $connection = DB::connection((string) (new PlanChangeRequest)->getConnectionName());
 
         $issued = $connection->transaction(function () use ($dto, $operator): ?PlanChangeRequest {
+            // #232 review: the billing lock order is tenant -> payment -> invoice(s) -> subscription ->
+            // plan_change_requests (ActivateSubscriptionAction completes the request last). Lock the
+            // tenant FIRST (its id read unlocked; a request never changes tenant), then the request.
+            $tenantId = PlanChangeRequest::query()->whereKey($dto->requestId)->valueOrFail('tenant_id');
+            Tenant::query()->whereKey($tenantId)->lockForUpdate()->firstOrFail();
+
             $request = PlanChangeRequest::query()->whereKey($dto->requestId)->lockForUpdate()->firstOrFail();
 
             if (! $request->isPending()) {
                 throw BillingException::requestNotPending();
+            }
+
+            // #232 review: releasing a founder hold is only meaningful for a request that was held.
+            if ($dto->releaseFounderHold && $request->founder_review_held_at === null) {
+                throw BillingException::founderHoldNotSet($dto->requestId);
             }
 
             if ($request->kind === PlanChangeRequestKind::PlanChange
@@ -100,7 +111,8 @@ final class IssuePlanChangeInvoiceAction
                     'invoice_number' => $invoice->number,
                     'total' => $invoice->total,
                     'with_renewal' => $dto->withRenewal,
-                    'founder_hold_released' => $dto->releaseFounderHold && $request->founder_review_held_at !== null,
+                    // A release is only accepted for a held request (founder_hold_not_set otherwise).
+                    'founder_hold_released' => $dto->releaseFounderHold,
                 ],
                 $operator,
                 $request,
@@ -133,33 +145,6 @@ final class IssuePlanChangeInvoiceAction
             $operator,
             $request,
             (string) $request->tenant_id,
-        );
-    }
-
-    /**
-     * #232 spec B: (new - current) x remaining days / actual days of the current period, both prices
-     * at the subscription's own cycle; the current period is the cycle that ends at
-     * tenants.subscription_ends_at. Days per ProrationCalculator (remaining rounded UP to whole days
-     * on the platform clock). '0.000' when there is no running term or no price gap.
-     */
-    private function suggestedDifference(Tenant $tenant, ?Plan $current, Plan $target): string
-    {
-        $end = $tenant->subscription_ends_at;
-        $subscription = Subscription::query()->where('tenant_id', $tenant->getKey())->orderByDesc('id')->first();
-
-        if ($end === null || ! $end->isFuture() || ! $current instanceof Plan || ! $subscription instanceof Subscription || ! $subscription->billing_cycle->isSellable()) {
-            return '0.000';
-        }
-
-        $yearly = $subscription->billing_cycle === BillingCycle::Yearly;
-        $termEnd = CarbonImmutable::instance($end)->setTimezone((string) config('app.timezone'));
-        $termStart = $yearly ? $termEnd->subYearNoOverflow() : $termEnd->subMonthNoOverflow();
-
-        return $this->proration->difference(
-            Decimal::normalize($yearly ? $current->price_yearly : $current->price_monthly),
-            Decimal::normalize($yearly ? $target->price_yearly : $target->price_monthly),
-            $this->proration->wholeDaysUp(CarbonImmutable::now(), $termEnd),
-            $this->proration->wholeDaysUp($termStart, $termEnd),
         );
     }
 
@@ -235,13 +220,19 @@ final class IssuePlanChangeInvoiceAction
                 fromRequest: true,
                 // SELL-06: an open trial-end / plan invoice paid as well would extend the term twice.
                 refuseWhenOpenPlanInvoice: true,
+                // #232 spec C: list price only, even for a founder whose hold was released.
+                listPriceOnly: true,
             );
         }
 
         $current = Plan::query()->find($tenant->plan_id ?? $request->current_plan_id);
 
-        // BILL-02: no amount typed -> the system proposes the pro-rata difference for the rest of the term.
-        $amount = $dto->amount ?? $this->suggestedDifference($tenant, $current, $target);
+        // BILL-02: no amount typed -> the system proposes the pro-rata difference for the rest of the term
+        // (SubscriptionInvoicePricer, the same code as the shop's change preview), priced now as an
+        // estimate. Owner decision 2026-11-26: the amount becomes final at Verify, re-priced from the
+        // verified transfer moment (UpgradeDifferenceRepricer), so the line keeps its proration inputs.
+        $suggested = $dto->amount === null ? $this->pricer->upgradeDifference($tenant, $current, $target) : null;
+        $amount = $dto->amount ?? $suggested['amount'] ?? '0.000';
 
         if (bccomp($amount, '0', 3) <= 0) {
             throw BillingException::differenceRequired();
@@ -264,9 +255,17 @@ final class IssuePlanChangeInvoiceAction
                     'to' => $target->name,
                 ]),
                 'amount' => $amount,
-            ],
+            ] + ($suggested === null ? [] : ['proration' => [
+                'old_price' => $suggested['old_price'],
+                'new_price' => $suggested['new_price'],
+                'remaining_days' => $suggested['remaining_days'],
+                'period_days' => $suggested['period_days'],
+                'priced_at' => CarbonImmutable::now()->toIso8601String(),
+            ]]),
             fromRequest: true,
             appendRenewal: $dto->withRenewal,
+            // #232 spec C: the appended renewal cycle is billed at the list price (no founder step).
+            listPriceOnly: true,
         );
     }
 }

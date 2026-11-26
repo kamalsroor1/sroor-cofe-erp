@@ -71,6 +71,14 @@ final class PlatformBranding
             'trial_fallback_plan_id' => $this->planId(PlatformSettingKey::TrialFallbackPlanId, $stored),
             'self_signup_enabled' => $this->selfSignupEnabled($stored),
             'signup_daily_cap' => $this->signupDailyCap($stored),
+            'billing_vodafone_cash_note' => $this->billingString(PlatformSettingKey::BillingVodafoneCashNote, $stored),
+            'billing_instapay_note' => $this->billingString(PlatformSettingKey::BillingInstapayNote, $stored),
+            'billing_bank_name' => $this->billingString(PlatformSettingKey::BillingBankName, $stored),
+            'billing_bank_account_holder' => $this->billingString(PlatformSettingKey::BillingBankAccountHolder, $stored),
+            'billing_bank_account_number' => $this->billingString(PlatformSettingKey::BillingBankAccountNumber, $stored),
+            'billing_bank_iban' => $this->billingString(PlatformSettingKey::BillingBankIban, $stored),
+            'billing_bank_branch' => $this->billingString(PlatformSettingKey::BillingBankBranch, $stored),
+            'billing_bank_note' => $this->billingString(PlatformSettingKey::BillingBankNote, $stored),
         ]);
     }
 

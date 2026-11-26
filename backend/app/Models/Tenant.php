@@ -70,6 +70,7 @@ use Throwable;
  * @property TenantSignupSource|null $signup_source PLAN-10: self_signup | console (column default console)
  * @property string|null $canonical_email security review: SignupIdentity::canonicalEmail(email), set on save
  * @property string|null $phone_normalized security review: SignupIdentity::normalizedPhone(phone), set on save
+ * @property Carbon|null $temporary_access_ends_at #232 spec D: end of the UNSETTLED 48h temporary-access window (copy of the invoice's; null when none)
  * @property Carbon|null $last_activity_at FREE-15: last login / throttled API use; null = never stamped (use created_at)
  * @property array|null $enabled_features
  * @property array|null $settings
@@ -112,6 +113,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'purged_at' => 'datetime',
         'signup_source' => TenantSignupSource::class,
         'last_activity_at' => 'datetime',
+        'temporary_access_ends_at' => 'datetime',
     ];
 
     /**
@@ -169,6 +171,8 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'signup_source',
             // FREE-15: dormant free shop clock (stamped by TenantActivityTracker).
             'last_activity_at',
+            // #232 spec D: end of the unsettled 48h temporary-access window (read by the lifecycle policy).
+            'temporary_access_ends_at',
             // Security review: comparable identity for the one-free-shop guard (set on save).
             'canonical_email',
             'phone_normalized',
@@ -579,7 +583,17 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             suspensionReason: $this->suspension_reason,
             onFreePlan: $onFreePlan,
             trialFallsBackToFreePlan: $fallsBack,
+            temporaryAccessEndsAt: self::immutable($this->temporary_access_ends_at),
         );
+    }
+
+    /**
+     * #232 spec D: an unsettled temporary-access window is running at $now (full access on the
+     * CURRENT plan, see TenantLifecyclePolicy).
+     */
+    public function hasOpenTemporaryAccess(CarbonImmutable $now): bool
+    {
+        return $this->temporary_access_ends_at !== null && $now->lessThan($this->temporary_access_ends_at);
     }
 
     private static function immutable(?Carbon $value): ?CarbonImmutable

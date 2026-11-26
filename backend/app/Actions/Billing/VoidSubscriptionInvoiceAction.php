@@ -6,12 +6,16 @@ namespace App\Actions\Billing;
 
 use App\Enums\Billing\BillingInvoiceStatus;
 use App\Enums\Billing\BillingPaymentStatus;
+use App\Enums\Billing\TemporaryAccessOutcome;
 use App\Enums\CentralAuditEvent;
 use App\Exceptions\Billing\BillingException;
 use App\Models\BillingInvoice;
 use App\Models\BillingPayment;
 use App\Models\CentralUser;
+use App\Models\Tenant;
+use App\Services\Billing\TemporaryAccessService;
 use App\Services\CentralAuditLogger;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -19,16 +23,25 @@ use Illuminate\Support\Facades\DB;
  * payment waiting for review can be voided (409 otherwise). The number is never reused (gap-free
  * numbering keeps the voided row). Central transaction with the invoice locked: a payment being
  * verified at the same moment either wins (the void then fails) or loses.
+ *
+ * #232 spec D: billing lock order tenant -> invoice; a void settles the invoice's 48-hour
+ * temporary-access window `voided` (e.g. the shop withdrew its receipt while the window ran).
  */
 final class VoidSubscriptionInvoiceAction
 {
-    public function __construct(private readonly CentralAuditLogger $audit) {}
+    public function __construct(
+        private readonly CentralAuditLogger $audit,
+        private readonly TemporaryAccessService $temporaryAccess,
+    ) {}
 
     public function execute(int $invoiceId, CentralUser $operator): BillingInvoice
     {
         $connection = DB::connection((string) (new BillingInvoice)->getConnectionName());
 
         return $connection->transaction(function () use ($invoiceId, $operator): BillingInvoice {
+            $tenantId = BillingInvoice::query()->whereKey($invoiceId)->valueOrFail('tenant_id');
+            $tenant = Tenant::query()->whereKey($tenantId)->lockForUpdate()->firstOrFail();
+
             $invoice = BillingInvoice::query()->whereKey($invoiceId)->lockForUpdate()->firstOrFail();
 
             $blocking = BillingPayment::query()
@@ -43,6 +56,8 @@ final class VoidSubscriptionInvoiceAction
             $invoice->status = BillingInvoiceStatus::Void;
             $invoice->voided_at = now();
             $invoice->save();
+
+            $this->temporaryAccess->settle($tenant, $invoice, TemporaryAccessOutcome::Voided, $operator, CarbonImmutable::now());
 
             $this->audit->record(
                 CentralAuditEvent::BillingInvoiceVoided,

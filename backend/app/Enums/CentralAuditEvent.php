@@ -101,6 +101,10 @@ enum CentralAuditEvent: string
     case BillingPaymentVerified = 'billing_payment_verified';
     case BillingPaymentRejected = 'billing_payment_rejected';
     case BillingReceiptViewed = 'billing_receipt_viewed';
+    // #232 spec D: the receipt classifier verdict (and whether it opened the 48h temporary access),
+    // and the review decision / void that settled such a window
+    case BillingReceiptClassified = 'billing_receipt_classified';
+    case BillingTemporaryAccessSettled = 'billing_temporary_access_settled';
     // Plan change / add-on requests through support
     case PlanChangeRequested = 'plan_change_requested';
     case PlanChangeCancelled = 'plan_change_cancelled';
@@ -108,6 +112,8 @@ enum CentralAuditEvent: string
     case PlanChangeRejected = 'plan_change_rejected';
     // #232 spec C: a plan change of a tenant with an agreed founder price held for the owner's review
     case PlanChangeHeldForFounderReview = 'plan_change_held_for_founder_review';
+    // #232 owner decision 2026-11-26: an upgrade difference re-priced at Verify (old -> new, overpaid)
+    case BillingInvoiceRepriced = 'billing_invoice_repriced';
     // PRD-05: assisted signup review
     case SignupRequestApproved = 'signup_request_approved';
     case SignupRequestRejected = 'signup_request_rejected';

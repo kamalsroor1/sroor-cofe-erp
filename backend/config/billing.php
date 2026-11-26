@@ -65,6 +65,43 @@ return [
     'receipt_url_minutes' => 5,
 
     /*
+    | #232 spec D: thresholds of the default receipt classifier
+    | (App\Services\Billing\Receipts\ImageHeuristicReceiptClassifier). A JPG / PNG / WEBP (sniffed
+    | from the bytes) inside these bounds is a "transfer receipt image" and opens the 48-hour
+    | temporary access; anything else (PDF, tiny / huge / strip-shaped images) goes to manual review
+    | only. Plain values, not env: changing them is a product decision.
+    */
+    'receipt_classifier' => [
+        'min_bytes' => 8192,
+        'max_bytes' => 5120 * 1024,
+        'min_short_side' => 320,
+        'max_long_side' => 12000,
+        'max_aspect_ratio' => 6,
+    ],
+
+    /*
+    | #232 spec D / E (owner decisions): length of the temporary access a classified receipt opens,
+    | and when the operators are reminded before it ends. Plain values (product decisions).
+    */
+    'temporary_access' => [
+        'hours' => 48,
+        'reminder_hours_before' => 6,
+    ],
+
+    /*
+    | #232 spec E: who gets the operator e-mails (receipt uploaded, 6-hour reminder).
+    | `emails`: comma-separated list from BILLING_ADMIN_NOTIFICATION_EMAILS. When empty, every
+    | ACTIVE central user holding super_admin.billing.manage gets them. `locale`: ar | en.
+    */
+    'admin_notifications' => [
+        'emails' => array_values(array_filter(array_map(
+            static fn (string $email): string => strtolower(trim($email)),
+            explode(',', (string) env('BILLING_ADMIN_NOTIFICATION_EMAILS', '')),
+        ))),
+        'locale' => env('BILLING_ADMIN_NOTIFICATION_LOCALE', 'ar'),
+    ],
+
+    /*
     | Founder pricing (ENTI-1.7, CTO decision): the first `slots` paying customers keep the
     | plan founder price (plans.founder_price_*) for `months` months from their first payment.
     | Plain values, not env: changing them is a product decision. Lowering `slots` below the

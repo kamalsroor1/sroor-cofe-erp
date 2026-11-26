@@ -37,6 +37,14 @@ final class PlatformBrandingDTO
         public readonly ?int $trialFallbackPlanId = null,
         public readonly bool $selfSignupEnabled = true,
         public readonly int $signupDailyCap = 100,
+        public readonly string $billingVodafoneCashNote = '',
+        public readonly string $billingInstapayNote = '',
+        public readonly string $billingBankName = '',
+        public readonly string $billingBankAccountHolder = '',
+        public readonly string $billingBankAccountNumber = '',
+        public readonly string $billingBankIban = '',
+        public readonly string $billingBankBranch = '',
+        public readonly string $billingBankNote = '',
     ) {}
 
     /**
@@ -48,7 +56,8 @@ final class PlatformBrandingDTO
      *     billing_instapay_address?: string, billing_vodafone_cash_number?: string,
      *     billing_account_name?: string, billing_payment_note?: string, billing_tax_rate?: string,
      *     signup_trial_days?: int, default_signup_plan_id?: int|null, trial_fallback_plan_id?: int|null,
-     *     self_signup_enabled?: bool, signup_daily_cap?: int
+     *     self_signup_enabled?: bool, signup_daily_cap?: int,
+     *     billing_vodafone_cash_note?: string, billing_instapay_note?: string, billing_bank_name?: string, billing_bank_account_holder?: string, billing_bank_account_number?: string, billing_bank_iban?: string, billing_bank_branch?: string, billing_bank_note?: string
      * }  $data
      */
     public static function fromArray(array $data): self
@@ -77,6 +86,14 @@ final class PlatformBrandingDTO
             trialFallbackPlanId: $data['trial_fallback_plan_id'] ?? null,
             selfSignupEnabled: $data['self_signup_enabled'] ?? true,
             signupDailyCap: $data['signup_daily_cap'] ?? 100,
+            billingVodafoneCashNote: $data['billing_vodafone_cash_note'] ?? '',
+            billingInstapayNote: $data['billing_instapay_note'] ?? '',
+            billingBankName: $data['billing_bank_name'] ?? '',
+            billingBankAccountHolder: $data['billing_bank_account_holder'] ?? '',
+            billingBankAccountNumber: $data['billing_bank_account_number'] ?? '',
+            billingBankIban: $data['billing_bank_iban'] ?? '',
+            billingBankBranch: $data['billing_bank_branch'] ?? '',
+            billingBankNote: $data['billing_bank_note'] ?? '',
         );
     }
 
@@ -89,7 +106,8 @@ final class PlatformBrandingDTO
      *     billing_instapay_address?: string, billing_vodafone_cash_number?: string,
      *     billing_account_name?: string, billing_payment_note?: string, billing_tax_rate?: string,
      *     signup_trial_days?: int, default_signup_plan_id?: int|null, trial_fallback_plan_id?: int|null,
-     *     self_signup_enabled?: bool, signup_daily_cap?: int
+     *     self_signup_enabled?: bool, signup_daily_cap?: int,
+     *     billing_vodafone_cash_note?: string, billing_instapay_note?: string, billing_bank_name?: string, billing_bank_account_holder?: string, billing_bank_account_number?: string, billing_bank_iban?: string, billing_bank_branch?: string, billing_bank_note?: string
      * }
      */
     public function toArray(): array
@@ -118,6 +136,14 @@ final class PlatformBrandingDTO
             'trial_fallback_plan_id' => $this->trialFallbackPlanId,
             'self_signup_enabled' => $this->selfSignupEnabled,
             'signup_daily_cap' => $this->signupDailyCap,
+            'billing_vodafone_cash_note' => $this->billingVodafoneCashNote,
+            'billing_instapay_note' => $this->billingInstapayNote,
+            'billing_bank_name' => $this->billingBankName,
+            'billing_bank_account_holder' => $this->billingBankAccountHolder,
+            'billing_bank_account_number' => $this->billingBankAccountNumber,
+            'billing_bank_iban' => $this->billingBankIban,
+            'billing_bank_branch' => $this->billingBankBranch,
+            'billing_bank_note' => $this->billingBankNote,
         ];
     }
 }

@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\Central;
 use App\Actions\Billing\CreatePaymentReceiptLinkAction;
 use App\Actions\Billing\GetPaymentReceiptFileAction;
 use App\Actions\Billing\ListBillingPaymentsAction;
+use App\Actions\Billing\PreviewPaymentVerificationAction;
 use App\Actions\Billing\RejectManualPaymentAction;
 use App\Actions\Billing\VerifyManualPaymentAction;
 use App\DTOs\Billing\RejectManualPaymentDTO;
@@ -14,9 +15,11 @@ use App\DTOs\Billing\VerifyManualPaymentDTO;
 use App\Http\Controllers\Api\Central\Concerns\ResolvesCentralOperator;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Central\ListBillingPaymentsRequest;
+use App\Http\Requests\Central\PreviewBillingPaymentVerificationRequest;
 use App\Http\Requests\Central\RejectBillingPaymentRequest;
 use App\Http\Requests\Central\VerifyBillingPaymentRequest;
 use App\Http\Resources\Billing\BillingPaymentResource;
+use App\Http\Resources\Billing\VerificationQuoteResource;
 use App\Models\BillingPayment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,6 +31,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  *   GET  /api/v1/super-admin/billing/payments                       super_admin.billing.view
  *   GET  /api/v1/super-admin/billing/payments/{payment}/receipt     super_admin.billing.view  (signed link)
  *   GET  .../payments/{payment}/receipt/file                        signed URL only, SINGLE-USE (streams the file)
+ *   GET  /api/v1/super-admin/billing/payments/{payment}/verify-preview  super_admin.billing.manage  ?transferred_at (#232)
  *   POST /api/v1/super-admin/billing/payments/{payment}/verify      super_admin.billing.manage + step-up  {transferred_at}
  *   POST /api/v1/super-admin/billing/payments/{payment}/reject      super_admin.billing.manage + step-up
  */
@@ -41,6 +45,7 @@ final class BillingReviewController extends Controller
         private readonly GetPaymentReceiptFileAction $fileAction,
         private readonly VerifyManualPaymentAction $verifyAction,
         private readonly RejectManualPaymentAction $rejectAction,
+        private readonly PreviewPaymentVerificationAction $previewAction,
     ) {}
 
     public function index(ListBillingPaymentsRequest $request)
@@ -72,6 +77,13 @@ final class BillingReviewController extends Controller
             'Content-Security-Policy' => "default-src 'none'; sandbox",
             'Cache-Control' => 'private, no-store',
         ]);
+    }
+
+    public function verifyPreview(PreviewBillingPaymentVerificationRequest $request, int $payment): JsonResponse
+    {
+        return (new VerificationQuoteResource($this->previewAction->execute(VerifyManualPaymentDTO::fromArray($request->validated(), $payment))))
+            ->additional(['success' => true])
+            ->response();
     }
 
     public function verify(VerifyBillingPaymentRequest $request, int $payment): JsonResponse

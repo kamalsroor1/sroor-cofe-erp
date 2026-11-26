@@ -151,6 +151,8 @@ return [
         'transferred_at_future' => 'تاريخ ووقت التحويل مينفعش يكون في المستقبل.',
         'transferred_at_before_invoice' => 'تاريخ التحويل مينفعش يكون قبل يوم إصدار الفاتورة.',
         'upgrade_held_for_founder_review' => 'العميل ده عليه سعر مؤسس متفق عليه، فطلب تغيير الباقة اتعلّق لمراجعة المالك ومفيش فاتورة اتصدرت. راجعه، وبعدين أصدره باختيار "إصدار رغم سعر المؤسس".',
+        'founder_hold_not_set' => 'الطلب ده ماتحجزش لمراجعة سعر المؤسسين، فمفيش حجز يتفك. أصدر الفاتورة عادي.',
+        'upgrade_not_higher' => 'اختار باقة أعلى من باقتك الحالية. تخفيض الباقة مش متاح لسه.',
     ],
     'messages' => [
         'payment_cancelled' => 'تم إلغاء الدفعة قيد المراجعة، ويمكنك إرسال دفعة جديدة.',
@@ -187,7 +189,60 @@ return [
         'customers' => 'العملاء',
         'suppliers' => 'الموردين',
     ],
+    // #232 spec D: receipt classifier verdict and the 48-hour temporary-access window.
+    'receipt_classification' => [
+        'transfer_receipt_image' => 'صورة إيصال تحويل',
+        'not_receipt' => 'مش إيصال — مراجعة يدوية',
+    ],
+    'temporary_access_outcome' => [
+        'verified' => 'تم تأكيد الدفع',
+        'rejected' => 'اترفض الإيصال',
+        'voided' => 'الفاتورة اتلغت',
+    ],
+    'invoice_review_state' => [
+        'awaiting_payment' => 'مستني الدفع',
+        'under_review_temporary' => 'قيد المراجعة',
+        'under_review_grace_used' => 'قيد المراجعة',
+        'under_review_manual' => 'قيد المراجعة اليدوية',
+        'under_review' => 'قيد المراجعة',
+        'rejected' => 'اترفض الإيصال',
+        'paid' => 'تم تأكيد الدفع',
+        'void' => 'ملغية',
+    ],
+    'temporary_access_state' => [
+        'none' => 'مفيش تفعيل مؤقت',
+        'active' => 'تفعيل مؤقت شغال',
+        'expired' => 'التفعيل المؤقت انتهى ولسه بنراجع',
+        'verified' => 'تم تأكيد الدفع',
+        'rejected' => 'اترفض الإيصال',
+        'voided' => 'الفاتورة اتلغت',
+    ],
+    // #232 UI spec 2b: labels of the details a shop sees for each payment method.
+    'payment_method_details' => [
+        'vodafone_cash' => [
+            'number' => 'رقم فودافون كاش',
+        ],
+        'instapay' => [
+            'address' => 'عنوان إنستاباي',
+        ],
+        'bank_transfer' => [
+            'bank_name' => 'اسم البنك',
+            'account_holder' => 'صاحب الحساب',
+            'account_number' => 'رقم الحساب',
+            'iban' => 'IBAN',
+            'branch' => 'الفرع',
+        ],
+    ],
     'console' => [
+        // #232 spec E / UI §4.2: panel notification items (the bell).
+        'notifications' => [
+            'receipt_title' => 'إيصال تحويل جديد — :tenant',
+            'receipt_body' => ':amount · :method · :access · منذ :ago',
+            'access_grace' => 'تفعيل مؤقت 48س',
+            'access_manual' => 'مراجعة يدوية',
+            'reminder_title' => 'باقي 6 ساعات — :tenant',
+            'reminder_body' => 'التفعيل المؤقت هينتهي :time · راجع الإيصال',
+        ],
         'nav' => 'مراجعة المدفوعات',
         'page_titles' => [
             'queue' => 'مراجعة المدفوعات',
@@ -437,6 +492,29 @@ return [
             'signup_trial_days_placeholder' => '14',
             'signup_trial_days_hint' => 'تُستخدم لما الباقة المختارة ملهاش تجربة خاصة بيها. من 1 لـ 90 يوم. سيبها فاضية للافتراضي (14).',
             'shown_to_shops_hint' => 'تظهر للعملاء في صفحة الاشتراك.',
+            // #232 UI spec 6b: one card per payment method with a computed status.
+            'methods_title' => 'طرق الدفع',
+            'methods_subtitle' => 'الطريقة اللي بياناتها مش كاملة مش بتظهر للمحلات.',
+            'method_vodafone_cash' => 'فودافون كاش',
+            'method_instapay' => 'إنستاباي',
+            'method_bank_transfer' => 'تحويل بنكي',
+            'status_visible' => 'بتظهر للمحلات',
+            'status_missing' => 'مخفية: ناقص :fields',
+            'status_empty' => 'مخفية: مش متظبطة',
+            'bank_name' => 'اسم البنك',
+            'bank_account_holder' => 'صاحب الحساب',
+            'bank_account_number' => 'رقم الحساب',
+            'bank_iban' => 'IBAN',
+            'bank_branch' => 'الفرع (اختياري)',
+            'method_note' => 'ملاحظة للمحل',
+            'method_note_placeholder' => 'اكتب اسم محلك في ملاحظة التحويل',
+            'method_note_hint' => 'بتظهر للمحل تحت بيانات الطريقة دي.',
+            'preview_title' => 'المحل هيشوف كده',
+            'general_title' => 'إعدادات الفوترة العامة',
+            'iban_invalid' => 'الـIBAN لازم يبدأ بـ EG وبعده 27 رقم',
+            'vodafone_number_invalid' => 'رقم فودافون كاش لازم يكون 11 رقم ويبدأ بـ 01',
+            'instapay_address_invalid' => 'عنوان إنستاباي لازم يكون بالشكل name@instapay أو رقم موبايل 11 رقم يبدأ بـ 01',
+            'bank_account_number_invalid' => 'رقم الحساب لازم يكون أرقام بس (لحد 34 رقم)',
         ],
     ],
 ];

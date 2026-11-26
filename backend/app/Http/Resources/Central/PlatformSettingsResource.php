@@ -6,6 +6,7 @@ namespace App\Http\Resources\Central;
 
 use App\DTOs\Branding\PlatformBrandingDTO;
 use App\Enums\PlatformAssetSlot;
+use App\Services\Billing\PaymentMethodDetails;
 use App\Services\Signup\TrialFallbackPlan;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -43,6 +44,16 @@ final class PlatformSettingsResource extends JsonResource
             'billing_account_name' => $branding->billingAccountName,
             'billing_payment_note' => $branding->billingPaymentNote,
             'billing_tax_rate' => $branding->billingTaxRate,
+            // #232 spec F: per-method payment details and their computed status (unfilled = hidden).
+            'billing_vodafone_cash_note' => $branding->billingVodafoneCashNote,
+            'billing_instapay_note' => $branding->billingInstapayNote,
+            'billing_bank_name' => $branding->billingBankName,
+            'billing_bank_account_holder' => $branding->billingBankAccountHolder,
+            'billing_bank_account_number' => $branding->billingBankAccountNumber,
+            'billing_bank_iban' => $branding->billingBankIban,
+            'billing_bank_branch' => $branding->billingBankBranch,
+            'billing_bank_note' => $branding->billingBankNote,
+            'payment_methods_status' => app(PaymentMethodDetails::class)->statuses($branding),
             'signup_trial_days' => $branding->signupTrialDays,
             // PLAN-10: signup / free plan settings (null plan id = not set).
             'default_signup_plan_id' => $branding->defaultSignupPlanId,

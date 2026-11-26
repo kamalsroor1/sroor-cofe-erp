@@ -29,6 +29,17 @@ enum PlatformSettingKey: string
     case BillingVodafoneCashNumber = 'billing_vodafone_cash_number';
     case BillingAccountName = 'billing_account_name';
     case BillingPaymentNote = 'billing_payment_note';
+    // #232 spec F: per-method payment details. A method is offered to shops only when its required
+    // details are all filled (App\Services\Billing\PaymentMethodDetails). The shared account name /
+    // note above are legacy: migrated into these keys (2026_11_26_110100), kept readable only.
+    case BillingVodafoneCashNote = 'billing_vodafone_cash_note';
+    case BillingInstapayNote = 'billing_instapay_note';
+    case BillingBankName = 'billing_bank_name';
+    case BillingBankAccountHolder = 'billing_bank_account_holder';
+    case BillingBankAccountNumber = 'billing_bank_account_number';
+    case BillingBankIban = 'billing_bank_iban';
+    case BillingBankBranch = 'billing_bank_branch';
+    case BillingBankNote = 'billing_bank_note';
     // Subscription VAT, a percentage with 3 decimals (0-100). Default 0.
     case BillingTaxRate = 'billing_tax_rate';
 

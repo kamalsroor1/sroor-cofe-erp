@@ -23,6 +23,7 @@ final readonly class LifecycleDecision
      * @param  ?TenantStatus  $nextStatus  next automatic move from the effective status, if any
      * @param  ?CarbonImmutable  $nextTransitionAt  when that move happens (always in the future)
      * @param  ?int  $daysLeft  whole days until $nextTransitionAt, rounded up (null = no deadline)
+     * @param  ?CarbonImmutable  $temporaryAccessUntil  #232: end of an open temporary-access window that grants full access (null = none)
      */
     public function __construct(
         public TenantStatus $storedStatus,
@@ -32,11 +33,27 @@ final readonly class LifecycleDecision
         public ?TenantStatus $nextStatus,
         public ?CarbonImmutable $nextTransitionAt,
         public ?int $daysLeft,
+        public ?CarbonImmutable $temporaryAccessUntil = null,
     ) {}
 
+    /**
+     * #232 spec D: an open temporary-access window lifts a payment-related state (trial ended,
+     * past_due, read_only, non-payment suspension) to FULL access until it ends. The effective
+     * status itself is not changed: it still says where the shop returns when the window ends.
+     */
     public function access(): TenantAccessLevel
     {
+        if ($this->temporaryAccessUntil !== null) {
+            return TenantAccessLevel::Full;
+        }
+
         return $this->effectiveStatus->accessLevel();
+    }
+
+    /** #232 spec D: full access comes from an open temporary-access window. */
+    public function hasTemporaryAccess(): bool
+    {
+        return $this->temporaryAccessUntil !== null;
     }
 
     public function canRead(): bool

@@ -151,6 +151,8 @@ return [
         'transferred_at_future' => 'The transfer date and time cannot be in the future.',
         'transferred_at_before_invoice' => 'The transfer date cannot be before the day the invoice was issued.',
         'upgrade_held_for_founder_review' => 'This shop has an agreed founder price, so the plan change is held for the owner\'s review and no invoice was issued. Review it, then issue it with "Issue despite founder price".',
+        'founder_hold_not_set' => 'This request was never held for a founder-price review, so there is no hold to release. Issue it normally.',
+        'upgrade_not_higher' => 'Choose a plan higher than your current one. Downgrading is not available yet.',
     ],
     'messages' => [
         'payment_cancelled' => 'The pending payment was cancelled; you can submit a new one.',
@@ -187,7 +189,60 @@ return [
         'customers' => 'Customers',
         'suppliers' => 'Suppliers',
     ],
+    // #232 spec D: receipt classifier verdict and the 48-hour temporary-access window.
+    'receipt_classification' => [
+        'transfer_receipt_image' => 'Transfer receipt image',
+        'not_receipt' => 'Not a receipt — manual review',
+    ],
+    'temporary_access_outcome' => [
+        'verified' => 'Payment confirmed',
+        'rejected' => 'Receipt rejected',
+        'voided' => 'Invoice voided',
+    ],
+    'invoice_review_state' => [
+        'awaiting_payment' => 'Waiting for payment',
+        'under_review_temporary' => 'Under review',
+        'under_review_grace_used' => 'Under review',
+        'under_review_manual' => 'Manual review',
+        'under_review' => 'Under review',
+        'rejected' => 'Receipt rejected',
+        'paid' => 'Payment confirmed',
+        'void' => 'Voided',
+    ],
+    'temporary_access_state' => [
+        'none' => 'No temporary access',
+        'active' => 'Temporary access running',
+        'expired' => 'Temporary access ended, still under review',
+        'verified' => 'Payment confirmed',
+        'rejected' => 'Receipt rejected',
+        'voided' => 'Invoice voided',
+    ],
+    // #232 UI spec 2b: labels of the details a shop sees for each payment method.
+    'payment_method_details' => [
+        'vodafone_cash' => [
+            'number' => 'Vodafone Cash number',
+        ],
+        'instapay' => [
+            'address' => 'InstaPay address',
+        ],
+        'bank_transfer' => [
+            'bank_name' => 'Bank name',
+            'account_holder' => 'Account holder',
+            'account_number' => 'Account number',
+            'iban' => 'IBAN',
+            'branch' => 'Branch',
+        ],
+    ],
     'console' => [
+        // #232 spec E / UI §4.2: panel notification items (the bell).
+        'notifications' => [
+            'receipt_title' => 'New transfer receipt — :tenant',
+            'receipt_body' => ':amount · :method · :access · :ago ago',
+            'access_grace' => '48h temporary access',
+            'access_manual' => 'Manual review',
+            'reminder_title' => '6 hours left — :tenant',
+            'reminder_body' => 'Temporary access ends :time · review the receipt',
+        ],
         'nav' => 'Payments review',
         'page_titles' => [
             'queue' => 'Payments review',
@@ -437,6 +492,29 @@ return [
             'signup_trial_days_placeholder' => '14',
             'signup_trial_days_hint' => 'Used when the chosen plan has no trial of its own. From 1 to 90 days. Leave empty for the default (14).',
             'shown_to_shops_hint' => 'Shown to shops on their subscription page.',
+            // #232 UI spec 6b: one card per payment method with a computed status.
+            'methods_title' => 'Payment methods',
+            'methods_subtitle' => 'A method with incomplete details is hidden from shops.',
+            'method_vodafone_cash' => 'Vodafone Cash',
+            'method_instapay' => 'InstaPay',
+            'method_bank_transfer' => 'Bank transfer',
+            'status_visible' => 'Visible to shops',
+            'status_missing' => 'Hidden: missing :fields',
+            'status_empty' => 'Hidden: not set up',
+            'bank_name' => 'Bank name',
+            'bank_account_holder' => 'Account holder',
+            'bank_account_number' => 'Account number',
+            'bank_iban' => 'IBAN',
+            'bank_branch' => 'Branch (optional)',
+            'method_note' => 'Note for the shop',
+            'method_note_placeholder' => 'Write your shop name in the transfer note',
+            'method_note_hint' => 'Shown to the shop under this method\'s details.',
+            'preview_title' => 'What the shop sees',
+            'general_title' => 'General billing settings',
+            'iban_invalid' => 'The IBAN must start with EG followed by 27 digits',
+            'vodafone_number_invalid' => 'The Vodafone Cash number must be 11 digits starting with 01',
+            'instapay_address_invalid' => 'The InstaPay address must look like name@instapay or be an 11-digit mobile number starting with 01',
+            'bank_account_number_invalid' => 'The account number must be digits only (up to 34)',
         ],
     ],
 ];

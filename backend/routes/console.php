@@ -131,6 +131,14 @@ Schedule::command('billing:issue-trial-invoices')
     ->withoutOverlapping(60)
     ->onOneServer();
 
+// #232 spec E: 6 hours before a shop's 48-hour temporary access (opened by a classified transfer
+// receipt) ends unreviewed, remind the operators (panel item + queued e-mail). Once per window
+// (billing_invoices.temporary_access_reminder_sent_at); a 15-minute tick sends it within 15 min of T-6h.
+Schedule::command('billing:send-temporary-access-reminders')
+    ->everyFifteenMinutes()
+    ->withoutOverlapping(10)
+    ->onOneServer();
+
 // SELL-02: trial / subscription expiry reminders (7 / 3 / 1 days before, the end day, and the
 // day after = grace started): in-app notification per shop + one Telegram summary for the
 // operator. After the 01:00 lifecycle sweep, in the morning so the owner reads it the same day.

@@ -32,9 +32,20 @@ final class PlatformSettingsDTO
         'powered_by_enabled',
         'billing_instapay_address',
         'billing_vodafone_cash_number',
+        // Legacy shared account name / note: still accepted so the current console keeps saving;
+        // #232 moved them into the per-method keys below (migration 2026_11_26_110100).
         'billing_account_name',
         'billing_payment_note',
         'billing_tax_rate',
+        // #232 spec F: per-method payment details.
+        'billing_vodafone_cash_note',
+        'billing_instapay_note',
+        'billing_bank_name',
+        'billing_bank_account_holder',
+        'billing_bank_account_number',
+        'billing_bank_iban',
+        'billing_bank_branch',
+        'billing_bank_note',
         'signup_trial_days',
         // PLAN-10
         'default_signup_plan_id',

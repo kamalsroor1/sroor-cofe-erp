@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Central\CentralTwoFactorController;
 use App\Http\Controllers\Api\Central\PlanChangeRequestReviewController;
 use App\Http\Controllers\Api\Central\PlanController;
 use App\Http\Controllers\Api\Central\PlanInsightsController;
+use App\Http\Controllers\Api\Central\PlatformNotificationController;
 use App\Http\Controllers\Api\Central\PlatformSettingsController;
 use App\Http\Controllers\Api\Central\PlatformUnitsController;
 use App\Http\Controllers\Api\Central\SignupRequestController;
@@ -204,12 +205,25 @@ Route::prefix('v1/super-admin')
         Route::get('/billing/payments/{payment}/receipt', [BillingReviewController::class, 'receipt'])
             ->whereNumber('payment')
             ->middleware([$can(CentralPermission::BillingView), 'throttle:30,1'])->name('billing.payments.receipt');
+        // #232: what Verify would settle for this transfer moment (re-priced upgrade difference, overpaid).
+        Route::get('/billing/payments/{payment}/verify-preview', [BillingReviewController::class, 'verifyPreview'])
+            ->whereNumber('payment')
+            ->middleware([$can(CentralPermission::BillingManage), 'throttle:60,1'])->name('billing.payments.verify_preview');
         Route::post('/billing/payments/{payment}/verify', [BillingReviewController::class, 'verify'])
             ->whereNumber('payment')
             ->middleware([$can(CentralPermission::BillingManage), RequireRecentTwoFactor::class])->name('billing.payments.verify');
         Route::post('/billing/payments/{payment}/reject', [BillingReviewController::class, 'reject'])
             ->whereNumber('payment')
             ->middleware([$can(CentralPermission::BillingManage), RequireRecentTwoFactor::class])->name('billing.payments.reject');
+
+        // #232 spec E / UI §4.2: panel notification items (the bell). Per-operator read marks.
+        Route::get('/notifications', [PlatformNotificationController::class, 'index'])
+            ->middleware($can(CentralPermission::BillingView))->name('notifications.index');
+        Route::post('/notifications/read-all', [PlatformNotificationController::class, 'readAll'])
+            ->middleware([$can(CentralPermission::BillingView), 'throttle:30,1'])->name('notifications.read_all');
+        Route::post('/notifications/{id}/read', [PlatformNotificationController::class, 'read'])
+            ->whereNumber('id')
+            ->middleware([$can(CentralPermission::BillingView), 'throttle:120,1'])->name('notifications.read');
 
         // Plan change / add-on requests (owner decision: through support, manual invoice, no proration).
         Route::get('/billing/plan-change-requests', [PlanChangeRequestReviewController::class, 'index'])

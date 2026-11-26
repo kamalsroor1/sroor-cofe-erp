@@ -29,12 +29,15 @@ use Carbon\CarbonImmutable;
  * #232 spec C: the plan-change path never sets it.
  * `appendRenewal` (#232 spec B, with a `differenceLine` only): "upgrade + renewal" - a second plan
  * line (flagged `renewal`) bills one full `cycle` of the new plan appended after the current paid end.
+ * `listPriceOnly` (#232 spec C, the plan-change path): every plan line is billed at the plan LIST
+ * price, never at a founder / transition step of the tenant's schedule, and is flagged
+ * `founder_excluded` so ActivateSubscriptionAction never claims a founder slot for it either.
  */
 final readonly class IssueSubscriptionInvoiceDTO
 {
     /**
      * @param  list<array{description: string, amount: string}>  $serviceLines
-     * @param  array{description: string, amount: string}|null  $differenceLine
+     * @param  array{description: string, amount: string, proration?: array{old_price: string, new_price: string, remaining_days: int, period_days: int, priced_at: string}}|null  $differenceLine
      * @param  list<array{addon_id: int, quantity: int, unit_price: string|null}>  $addonLines
      */
     public function __construct(
@@ -54,6 +57,7 @@ final readonly class IssueSubscriptionInvoiceDTO
         public bool $refuseWhenOpenPlanInvoice = false,
         public bool $founderPriceIfAvailable = false,
         public bool $appendRenewal = false,
+        public bool $listPriceOnly = false,
     ) {}
 
     /**

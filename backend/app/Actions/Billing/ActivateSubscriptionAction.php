@@ -12,6 +12,7 @@ use App\Enums\Billing\BillingPaymentStatus;
 use App\Enums\Billing\PlanChangeRequestStatus;
 use App\Enums\Billing\SubscriptionAddonStatus;
 use App\Enums\Billing\SubscriptionStatus;
+use App\Enums\Billing\TemporaryAccessOutcome;
 use App\Enums\CentralAuditEvent;
 use App\Enums\TenantLifecycleActor;
 use App\Enums\TenantStatus;
@@ -26,6 +27,7 @@ use App\Models\Subscription;
 use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
 use App\Services\Billing\FounderPricingService;
+use App\Services\Billing\TemporaryAccessService;
 use App\Services\CentralAuditLogger;
 use App\Services\Entitlements\TenantEntitlementService;
 use App\Support\Money\Decimal;
@@ -74,8 +76,11 @@ use LogicException;
  * BILL-01 review: a difference invoice is refused (409 difference_term_changed) unless the term it
  * priced (pricedTermEnd()) is still the tenant's subscription_ends_at: a renewal paid in between moved it.
  *
- * #232 spec C: an upgrade invoice never claims a founder slot (no automatic founder pricing on the
- * plan-change path); FounderPricingService::claim runs for plan / renewal invoices only.
+ * #232 spec C: a difference invoice and a plan-change invoice billed at the list price only
+ * (`founder_excluded` lines) never claim a founder slot; every other full-cycle invoice (plan,
+ * renewal, a console upgrade invoice) runs FounderPricingService::claim.
+ * #232 review: a term that is already over when it is applied (an old transfer verified late) is
+ * flagged `term_already_ended` on the payment's raw_payload and in the audit row.
  *
  * PLAN-10 review: a tenant on a permanent free plan holds an active 0.000 row with no paid term;
  * paying a plan invoice CLOSES that row (expired, ends_at = now) and creates a new paid row (the
@@ -90,6 +95,7 @@ final class ActivateSubscriptionAction
         private readonly FounderPricingService $founder,
         private readonly TenantEntitlementService $entitlements,
         private readonly CentralAuditLogger $audit,
+        private readonly TemporaryAccessService $temporaryAccess,
     ) {}
 
     public function execute(BillingInvoice $invoice, BillingPayment $payment, ?CentralUser $operator = null): Subscription
@@ -152,6 +158,15 @@ final class ActivateSubscriptionAction
         $newEnd = $keepsTerm
             ? $base
             : ($cycle === BillingCycle::Yearly ? $base->addYearNoOverflow() : $base->addMonthNoOverflow());
+
+        // #232 review: an old transfer verified late can buy a term that is already over (spec A
+        // starts it at the transfer). The math is kept, but never silently: the payment and the
+        // audit row carry `term_already_ended` and the verify response shows it to the operator.
+        $termAlreadyEnded = ! $newEnd->isAfter($now);
+        if ($termAlreadyEnded) {
+            $payment->raw_payload = array_merge(is_array($payment->raw_payload) ? $payment->raw_payload : [], ['term_already_ended' => true]);
+            $payment->save();
+        }
 
         $subscription = Subscription::query()
             ->where('tenant_id', $tenant->getKey())
@@ -238,8 +253,11 @@ final class ActivateSubscriptionAction
             ));
         }
 
-        // #232 spec C: no automatic founder pricing on the plan-change (upgrade) path.
-        if ($invoice->type !== BillingInvoiceType::Upgrade) {
+        // #232 spec C + review: a difference invoice (a lone difference, or difference + renewal) and a
+        // plan-change invoice billed at the list price only (`founder_excluded` lines) never claim a
+        // founder slot. Every other full-cycle invoice does, including a console upgrade invoice
+        // billed at the founder price (`use_founder_price`).
+        if (! $difference && ! $this->isFounderExcluded($invoice)) {
             $this->founder->claim($subscription, $payment);
         }
 
@@ -259,6 +277,7 @@ final class ActivateSubscriptionAction
                 'term_start' => $base->toIso8601String(),
                 'transferred_at' => $payment->transferred_at?->toIso8601String(),
                 'term_kept' => $keepsTerm,
+                'term_already_ended' => $termAlreadyEnded,
                 'status_kept_for_violation' => $statusKept,
             ],
             $operator,
@@ -480,6 +499,9 @@ final class ActivateSubscriptionAction
             $old->voided_at = now();
             $old->save();
 
+            // #232 spec D: a voided invoice never keeps an unsettled 48h window.
+            $this->temporaryAccess->settle($tenant, $old, TemporaryAccessOutcome::Voided, $operator, CarbonImmutable::now());
+
             $this->audit->record(
                 CentralAuditEvent::BillingInvoiceVoided,
                 ['invoice_id' => (int) $old->getKey(), 'number' => $old->number, 'type' => $old->type->value, 'reason' => 'plan_changed'],
@@ -581,6 +603,18 @@ final class ActivateSubscriptionAction
     {
         foreach ($invoice->lines as $line) {
             if (($line['type'] ?? null) === 'plan' && ($line['renewal'] ?? false) === true && ($line['difference'] ?? false) !== true) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** #232 spec C: a plan line billed by the plan-change path at the list price only. */
+    private function isFounderExcluded(BillingInvoice $invoice): bool
+    {
+        foreach ($invoice->lines as $line) {
+            if (($line['type'] ?? null) === 'plan' && ($line['founder_excluded'] ?? false) === true) {
                 return true;
             }
         }
