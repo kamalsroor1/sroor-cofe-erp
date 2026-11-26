@@ -83,6 +83,29 @@ class SuppliersApiTest extends TenantTestCase
             ]);
     }
 
+    public function test_supplier_list_summary_carries_exact_payables_and_counts(): void
+    {
+        $this->getJson('/api/v1/suppliers', $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonPath('summary.total_payable', '0.000')
+            ->assertJsonPath('summary.creditors_count', 0)
+            ->assertJsonPath('summary.total_suppliers', 0);
+
+        $this->inTenant($this->tenant, fn () => Supplier::create([
+            'name' => 'مورد عليه مستحقات',
+            'phone' => '01000007043',
+            'current_balance' => '2000.000',
+            'is_active' => true,
+        ]));
+
+        $this->getJson('/api/v1/suppliers', $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonPath('data.0.current_balance', '2000.000')
+            ->assertJsonPath('summary.total_payable', '2000.000')
+            ->assertJsonPath('summary.creditors_count', 1)
+            ->assertJsonPath('summary.total_suppliers', 1);
+    }
+
     public function test_supplier_opening_balance_is_a_statement_entry_that_survives_recalculation(): void
     {
         $id = (int) $this->postJson('/api/v1/suppliers', [

@@ -4,16 +4,13 @@ import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 import { useLoadError } from './useLoadError';
 import { businessToday } from './useBusinessDate';
+import { EMPTY_SUPPLIER_METRICS, buildSuppliersParams, supplierMetricsFrom } from '../helpers/suppliersList';
 
 export function useSuppliers() {
     const { t } = useTrans();
 
     const suppliers = ref([]);
-    const metrics = ref({
-        total_payable: 0,
-        creditors_count: 0,
-        total_suppliers: 0,
-    });
+    const metrics = ref({ ...EMPTY_SUPPLIER_METRICS });
 
     const searchQuery = ref('');
     const debtStatus = ref('all');
@@ -65,19 +62,10 @@ export function useSuppliers() {
         clearError();
         try {
             const response = await api.get('/suppliers', {
-                params: {
-                    search: searchQuery.value || undefined,
-                    balance_type: debtStatus.value !== 'all' ? debtStatus.value : undefined,
-                    page: page,
-                    per_page: 15,
-                },
+                params: buildSuppliersParams({ search: searchQuery.value, debtStatus: debtStatus.value, page }),
             });
             suppliers.value = response.data?.data || [];
-            metrics.value = response.data?.metrics || {
-                total_payable: 0,
-                creditors_count: 0,
-                total_suppliers: 0,
-            };
+            metrics.value = supplierMetricsFrom(response.data);
             pagination.value = response.data?.meta || {
                 current_page: page,
                 last_page: 1,
