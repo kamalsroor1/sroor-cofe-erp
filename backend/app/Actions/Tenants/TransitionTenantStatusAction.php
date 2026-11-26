@@ -13,11 +13,13 @@ use App\Exceptions\TenantLifecycleException;
 use App\Models\Tenant;
 use App\Models\TenantBackup;
 use App\Models\TenantLifecycleEvent;
+use App\Services\Billing\TemporaryAccessService;
 use App\Services\CentralAuditLogger;
 use App\Support\Tenancy\TenantLifecyclePolicy;
 use App\Support\Tenancy\TenantStatusTransition;
 use App\Support\Tenancy\TenantStatusTransitioned;
 use App\Support\Tenancy\TenantSuspensionReason;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -36,7 +38,8 @@ use Throwable;
  *         final_backup_required + TenantArchiveRefused audit); a purged / purging tenant
  *         never changes again (409 tenant_purged);
  *       - any other move missing from the table → 409;
- *  3. updates the lifecycle columns, appends a `tenant_lifecycle_events` row, and writes
+ *  3. updates the lifecycle columns (an operator's suspend / cancel / archive also voids the
+ *     shop's unsettled 48h temporary-access window, security review S1), appends a `tenant_lifecycle_events` row, and writes
  *     the central audit (TenantStatusChanged / TenantArchived / TenantUnarchived);
  *  4. AFTER commit: dispatches TenantStatusTransitioned and, when the tenant became
  *     blocked, revokes its tokens (RevokeTenantTokensAction, tenant DB, never inside the
@@ -51,6 +54,7 @@ final class TransitionTenantStatusAction
         private readonly TenantLifecyclePolicy $policy,
         private readonly CentralAuditLogger $audit,
         private readonly RevokeTenantTokensAction $revokeTokens,
+        private readonly TemporaryAccessService $temporaryAccess,
     ) {}
 
     public function execute(TenantStatusTransition $transition): Tenant
@@ -86,6 +90,13 @@ final class TransitionTenantStatusAction
             $reason = $this->reasonFor($transition, $tenant, $to);
 
             $this->applyColumns($tenant, $from, $to, $reason, $transition->isUnarchive(), $finalBackup);
+
+            // Security review S1: an operator's suspension / cancellation / archive is never lifted
+            // by a shop's 48h temporary access: its unsettled window is closed (voided) here.
+            if ($transition->actor === TenantLifecycleActor::SuperAdmin && ! $transition->isUnarchive()
+                && in_array($to, [TenantStatus::Suspended, TenantStatus::Cancelled, TenantStatus::Archived], true)) {
+                $this->temporaryAccess->voidForOperatorDecision($tenant, $transition->causer, CarbonImmutable::now());
+            }
 
             $event = TenantLifecycleEvent::query()->create([
                 'tenant_id' => (string) $tenant->getKey(),

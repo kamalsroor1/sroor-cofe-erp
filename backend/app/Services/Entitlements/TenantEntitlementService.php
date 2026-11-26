@@ -13,7 +13,9 @@ use App\Models\Plan;
 use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
 use App\Models\TenantFeatureOverride;
+use App\Support\Tenancy\TenantLifecyclePolicy;
 use App\Support\TenantCache;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -58,7 +60,10 @@ final class TenantEntitlementService implements TenantFeatureManagerInterface
 {
     public const CACHE_NAMESPACE = 'entitlements';
 
-    public function __construct(private readonly TenantOverrides $overrides) {}
+    public function __construct(
+        private readonly TenantOverrides $overrides,
+        private readonly TenantLifecyclePolicy $policy,
+    ) {}
 
     public function entitlements(Tenant|string $tenant): EntitlementsDTO
     {
@@ -128,7 +133,8 @@ final class TenantEntitlementService implements TenantFeatureManagerInterface
     }
 
     /**
-     * @param  list<Carbon>  $expiries  filled with the expiry of every active override that has one
+     * @param  list<Carbon>  $expiries  filled with the expiry of every active override that has one, and
+     *                                  the moments the lifecycle access can change by time (R3)
      */
     private function resolveWithExpiries(string $tenantId, array &$expiries): EntitlementsDTO
     {
@@ -160,7 +166,7 @@ final class TenantEntitlementService implements TenantFeatureManagerInterface
         }
 
         $addons = [];
-        foreach ($this->activeAddonLines($tenant) as $line) {
+        foreach ($this->activeAddonLines($tenant, $expiries) as $line) {
             $addon = $line->addon;
             $quantity = max(0, (int) $line->quantity);
 
@@ -333,14 +339,28 @@ final class TenantEntitlementService implements TenantFeatureManagerInterface
     }
 
     /**
-     * Lines that count right now, with their catalog add-on; none when the tenant's
-     * lifecycle status does not grant full access.
+     * Lines that count right now, with their catalog add-on; none when the tenant's lifecycle
+     * does not grant full access.
      *
+     * Code review R3: the access comes from the lifecycle POLICY decision (derived status plus a
+     * 48h temporary access), not the stored column: during a window a read-only shop keeps the
+     * add-ons it owns on its current plan. The cache entry dies when that access can change by
+     * time (window end, next lifecycle deadline): both are pushed onto $expiries.
+     *
+     * @param  list<Carbon>  $expiries
      * @return iterable<int, SubscriptionAddon>
      */
-    private function activeAddonLines(Tenant $tenant): iterable
+    private function activeAddonLines(Tenant $tenant, array &$expiries): iterable
     {
-        if ($tenant->lifecycleStatus()?->accessLevel() !== TenantAccessLevel::Full) {
+        $decision = $this->policy->evaluate($tenant->lifecycleSnapshot(), CarbonImmutable::now());
+
+        foreach ([$decision->temporaryAccessUntil, $decision->nextTransitionAt] as $moment) {
+            if ($moment !== null) {
+                $expiries[] = Carbon::instance($moment);
+            }
+        }
+
+        if ($decision->access() !== TenantAccessLevel::Full) {
             return [];
         }
 

@@ -191,9 +191,11 @@ final class SubscriptionInvoicePricer
      * from the end (Feb 28 - 1 month = Jan 28 would give 31 days instead of 28). Only when no such
      * invoice exists (a legacy / hand-made term) is it end minus one cycle.
      *
-     * The difference is priced when the invoice is ISSUED (remaining days counted from the issue
-     * moment), not re-priced at Verify: whether it should be re-priced at the transfer moment is an
-     * owner decision that is still open, so this stays the current behaviour.
+     * This prices the difference when the invoice is ISSUED (remaining days counted from the issue
+     * moment, stored on the line as `priced_at` with its inputs). It is NOT final: per the owner
+     * decision of 2026-11-26 (#232 spec G) UpgradeDifferenceRepricer re-prices it at Verify from the
+     * verified transfer moment (or the approval moment when that is more than 48h later), never
+     * above this issue-time amount; any excess paid is stored as overpaid_amount.
      *
      * @return array{amount: string, remaining_days: int, period_days: int, old_price: string, new_price: string, cycle: BillingCycle|null, term_end: CarbonImmutable|null}
      */

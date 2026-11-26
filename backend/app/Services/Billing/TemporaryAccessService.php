@@ -12,11 +12,15 @@ use App\Enums\Billing\ReceiptClassification;
 use App\Enums\Billing\TemporaryAccessOutcome;
 use App\Enums\Billing\TemporaryAccessState;
 use App\Enums\CentralAuditEvent;
+use App\Enums\TenantLifecycleActor;
+use App\Enums\TenantStatus;
 use App\Models\BillingInvoice;
 use App\Models\BillingPayment;
 use App\Models\CentralUser;
 use App\Models\Tenant;
+use App\Models\TenantLifecycleEvent;
 use App\Services\CentralAuditLogger;
+use App\Services\Entitlements\TenantEntitlementService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -32,14 +36,17 @@ use LogicException;
  *                      │                                  │
  *                      └──────────settle(outcome)─────────┴──▶ verified | rejected | voided
  *
- *  - open(): only for a proof classified `transfer_receipt_image`, on a plan / renewal / upgrade /
+ *  - open(): only for a proof classified `transfer_receipt_image` whose amount covers the whole
+ *    amount still owed on the invoice, never for a shop an operator suspended by hand (security
+ *    review S1), on a plan / renewal / upgrade /
  *    add-on invoice (a `service` invoice activates nothing), when the invoice never had a window
  *    (one per invoice, never reset by a re-upload or a withdraw) and the tenant holds no OTHER
  *    unsettled window (active or expired). The end is copied onto tenants.temporary_access_ends_at,
  *    which the lifecycle policy reads: full access on the CURRENT plan until then (the plan and
  *    the paid term are not touched, so upgrade features wait for Verify).
  *  - settle(): a super-admin verify that settles the invoice (verified), a super-admin reject of
- *    any receipt of the invoice (rejected), or a void (voided). Clears the tenant copy, so access
+ *    any receipt of the invoice (rejected), a void, or an operator suspending / cancelling /
+ *    archiving the shop (voided, voidForOperatorDecision()). Clears the tenant copy, so access
  *    is back to the lifecycle state at once; data and a running paid term were never changed.
  *    A shop withdrawing its own receipt settles nothing. Expiry is not a settlement: an expired
  *    window still blocks a new one until the review decides.
@@ -59,7 +66,16 @@ final class TemporaryAccessService
 
     public const NOT_OPENED_TENANT_WINDOW_UNSETTLED = 'tenant_window_unsettled';
 
-    public function __construct(private readonly CentralAuditLogger $audit) {}
+    /** Security review S1: the submitted amount does not cover what is still owed on the invoice. */
+    public const NOT_OPENED_PARTIAL_AMOUNT = 'partial_amount';
+
+    /** Security review S1: the shop is suspended by an operator's hand (never lifted by a receipt). */
+    public const NOT_OPENED_OPERATOR_SUSPENSION = 'operator_suspension';
+
+    public function __construct(
+        private readonly CentralAuditLogger $audit,
+        private readonly TenantEntitlementService $entitlements,
+    ) {}
 
     public function hours(): int
     {
@@ -74,13 +90,26 @@ final class TemporaryAccessService
     /**
      * Open the invoice's window when every rule allows it. Returns null when it was opened, else
      * the reason it was not (one of the NOT_OPENED_* codes).
+     *
+     * Security review S1: $remaining is what is still owed on the invoice (total - verified
+     * payments). A payment that does not cover it in full opens nothing (manual review only), and a
+     * shop an operator suspended by hand is never lifted by a receipt (only a suspension the
+     * lifecycle reached by time, actor System, is payment-related).
      */
-    public function open(Tenant $tenant, BillingInvoice $invoice, BillingPayment $payment, CarbonImmutable $now): ?string
+    public function open(Tenant $tenant, BillingInvoice $invoice, BillingPayment $payment, string $remaining, CarbonImmutable $now): ?string
     {
         $this->assertInTransaction();
 
         if ($payment->receipt_classification !== ReceiptClassification::TransferReceiptImage) {
             return self::NOT_OPENED_NOT_RECEIPT;
+        }
+
+        if (bccomp((string) $payment->amount, $remaining, 3) < 0) {
+            return self::NOT_OPENED_PARTIAL_AMOUNT;
+        }
+
+        if ($this->suspendedByOperator($tenant)) {
+            return self::NOT_OPENED_OPERATOR_SUSPENSION;
         }
 
         if ($invoice->type === BillingInvoiceType::Service) {
@@ -112,6 +141,9 @@ final class TemporaryAccessService
         $tenant->temporary_access_ends_at = Carbon::instance($endsAt);
         $tenant->save();
 
+        // Code review R3: the add-ons the shop owns count during the window (entitlements cache).
+        $this->forgetEntitlementsAfterCommit((string) $tenant->getKey());
+
         return null;
     }
 
@@ -137,6 +169,8 @@ final class TemporaryAccessService
             $tenant->save();
         }
 
+        $this->forgetEntitlementsAfterCommit((string) $invoice->tenant_id);
+
         $this->audit->record(
             CentralAuditEvent::BillingTemporaryAccessSettled,
             [
@@ -153,6 +187,60 @@ final class TemporaryAccessService
         );
 
         return true;
+    }
+
+    /**
+     * Security review S1: an operator suspended, cancelled or archived the shop. Every unsettled
+     * window of the shop is settled as `voided` at once (in the operator's transaction, the tenant
+     * row already locked), so a receipt never keeps a shop open against an operator's decision.
+     * Returns how many windows were closed.
+     */
+    public function voidForOperatorDecision(Tenant $tenant, ?CentralUser $operator, CarbonImmutable $now): int
+    {
+        $this->assertInTransaction();
+
+        $invoices = BillingInvoice::query()
+            ->where('tenant_id', $tenant->getKey())
+            ->whereNotNull('temporary_access_started_at')
+            ->whereNull('temporary_access_settled_at')
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get();
+
+        $closed = 0;
+        foreach ($invoices as $invoice) {
+            if ($this->settle($tenant, $invoice, TemporaryAccessOutcome::Voided, $operator, $now)) {
+                $closed++;
+            }
+        }
+
+        // A stale tenant copy without an unsettled invoice window grants nothing either.
+        if ($tenant->temporary_access_ends_at !== null) {
+            $tenant->temporary_access_ends_at = null;
+            $tenant->save();
+        }
+
+        return $closed;
+    }
+
+    /**
+     * The stored status is `suspended` and the last move into it was not the time-driven
+     * lifecycle (actor System). A suspension without any lifecycle event (legacy / hand-edited
+     * row) counts as an operator's: it is never lifted by a receipt.
+     */
+    private function suspendedByOperator(Tenant $tenant): bool
+    {
+        if ($tenant->lifecycleStatus() !== TenantStatus::Suspended) {
+            return false;
+        }
+
+        $actor = TenantLifecycleEvent::query()
+            ->where('tenant_id', (string) $tenant->getKey())
+            ->where('to_status', TenantStatus::Suspended->value)
+            ->orderByDesc('id')
+            ->value('actor');
+
+        return ($actor instanceof TenantLifecycleActor ? $actor : TenantLifecycleActor::tryFrom((string) $actor)) !== TenantLifecycleActor::System;
     }
 
     /**
@@ -335,6 +423,12 @@ final class TemporaryAccessService
                 ->exists(),
             'rejection_reason' => is_string($rejection) ? $rejection : null,
         ];
+    }
+
+    private function forgetEntitlementsAfterCommit(string $tenantId): void
+    {
+        DB::connection((string) (new BillingInvoice)->getConnectionName())
+            ->afterCommit(fn () => $this->entitlements->forget($tenantId));
     }
 
     private function assertInTransaction(): void

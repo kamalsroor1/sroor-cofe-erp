@@ -67,11 +67,12 @@ final class BillingPaymentResource extends JsonResource
             ]),
             'has_receipt' => $this->proof_path !== null && $this->proof_path !== '',
             // #232 spec D: the receipt classifier verdict (null for operator-recorded payments).
+            // Security review S4: the classifier's `reason` (how it decided) is for the console only;
+            // a shop request (tenancy initialised) never learns how to game it.
             'receipt_classification' => $this->receipt_classification === null ? null : [
                 'value' => $this->receipt_classification->value,
                 'label' => $this->receipt_classification->label(),
-                'reason' => $this->receipt_classification_reason,
-            ],
+            ] + (self::isTenantRequest() ? [] : ['reason' => $this->receipt_classification_reason]),
             // #232 console: from/to plans of an upgrade that answered a plan-change request.
             'invoice_plan_change' => $this->when(
                 $this->resource->relationLoaded('invoice') && $this->invoice->relationLoaded('planChangeRequest'),
@@ -80,6 +81,12 @@ final class BillingPaymentResource extends JsonResource
             // #232 UI §4.1: the invoice's 48h window, for the console queue chip (invoice loaded only).
             'invoice_temporary_access' => $this->whenLoaded('invoice', fn () => app(TemporaryAccessService::class)->invoiceWindow($this->invoice, CarbonImmutable::now())),
         ];
+    }
+
+    /** A shop request: tenancy is initialised (console routes never initialise it). */
+    private static function isTenantRequest(): bool
+    {
+        return function_exists('tenancy') && tenancy()->initialized;
     }
 
     /**

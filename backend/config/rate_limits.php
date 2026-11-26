@@ -100,9 +100,18 @@ return [
         'per_minute' => (int) env('RATE_LIMIT_TENANT_RESOLVE', 30),
     ],
 
-    // POST /api/v1/billing/invoices/{id}/payments (receipt upload), per tenant + user + IP.
+    // POST /api/v1/billing/invoices/{id}/payments (receipt upload), per tenant + user + IP, and
+    // (security review S2) per tenant whatever the user / IP.
     'billing_receipt_upload' => [
         'per_hour' => (int) (env('RATE_LIMIT_BILLING_RECEIPT_HOURLY') ?: 20),
+        'per_tenant_per_hour' => (int) (env('RATE_LIMIT_BILLING_RECEIPT_TENANT_HOURLY') ?: 30),
+    ],
+
+    // POST /api/v1/billing/payments/{id}/cancel (shop withdraws its own receipt), security review S2:
+    // per tenant + user + IP, and per tenant whatever the user / IP.
+    'billing_payment_cancel' => [
+        'per_hour' => (int) (env('RATE_LIMIT_BILLING_PAYMENT_CANCEL_HOURLY') ?: 20),
+        'per_tenant_per_hour' => (int) (env('RATE_LIMIT_BILLING_PAYMENT_CANCEL_TENANT_HOURLY') ?: 30),
     ],
 
     // POST /api/v1/billing/renewal-invoice, per tenant + user + IP.

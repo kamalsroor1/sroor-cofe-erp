@@ -10,6 +10,7 @@ use App\Enums\Billing\FounderPriceStep;
 use App\Models\BillingInvoice;
 use App\Models\BillingPayment;
 use App\Services\Billing\TemporaryAccessService;
+use App\Support\Money\Decimal;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -19,7 +20,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *
  * `lines` is the frozen snapshot; the display `description` is built here in the request
  * locale (plan lines) or taken from the stored text (service lines). `paid_amount`,
- * `remaining` and `payments` need the `payments` relation loaded. `tenant` and `issued_by_name`
+ * `remaining` (never below zero) and `payments` need the `payments` relation loaded.
+ * `overpaid_amount` is what was paid above a verify-time re-priced total (policy open). `tenant` and `issued_by_name`
  * appear only when loaded (console).
  *
  * @mixin BillingInvoice
@@ -54,7 +56,10 @@ final class BillingInvoiceResource extends JsonResource
             'total' => $this->total,
             'currency' => $this->currency,
             'paid_amount' => $this->whenLoaded('payments', fn () => $this->paidAmount()),
-            'remaining' => $this->whenLoaded('payments', fn () => bcsub($this->total, $this->paidAmount(), 3)),
+            // Code review R2: never negative. A verify-time reprice can leave the verified payments
+            // above the final total; that excess is `overpaid_amount` (refund / credit policy open).
+            'remaining' => $this->whenLoaded('payments', fn () => $this->remaining()),
+            'overpaid_amount' => Decimal::normalize($this->overpaid_amount),
             'has_pending_payment' => $this->whenLoaded('payments', fn () => $this->payments->contains(
                 static fn (BillingPayment $payment): bool => $payment->status === BillingPaymentStatus::Pending,
             )),
@@ -76,6 +81,14 @@ final class BillingInvoiceResource extends JsonResource
     private function temporaryAccess(): TemporaryAccessService
     {
         return app(TemporaryAccessService::class);
+    }
+
+    /** Total minus the verified payments, clamped at zero (bcmath, scale 3). */
+    private function remaining(): string
+    {
+        $remaining = bcsub((string) $this->total, $this->paidAmount(), 3);
+
+        return bccomp($remaining, '0', 3) < 0 ? '0.000' : $remaining;
     }
 
     private function paidAmount(): string

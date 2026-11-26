@@ -367,8 +367,23 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // PRD-03: payment receipt uploads, per tenant + user + IP (the cache is shared by all tenants).
-        RateLimiter::for('billing-receipt-upload', fn (Request $request): Limit => Limit::perHour($this->limit('rate_limits.billing_receipt_upload.per_hour', 20))
-            ->by('billing-receipt|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->user()?->getAuthIdentifier()).'|'.$request->ip()));
+        // Security review S2: plus a per-TENANT hourly cap that ignores user and IP (operator e-mail /
+        // panel flood through upload -> withdraw loops from many accounts or addresses).
+        RateLimiter::for('billing-receipt-upload', fn (Request $request): array => [
+            Limit::perHour($this->limit('rate_limits.billing_receipt_upload.per_hour', 20))
+                ->by('billing-receipt|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->user()?->getAuthIdentifier()).'|'.$request->ip()),
+            Limit::perHour($this->limit('rate_limits.billing_receipt_upload.per_tenant_per_hour', 30))
+                ->by('billing-receipt-tenant|'.RateLimitKey::scope()),
+        ]);
+
+        // Security review S2: POST /billing/payments/{id}/cancel (the shop withdraws its own receipt),
+        // per tenant + user + IP and per tenant.
+        RateLimiter::for('billing-payment-cancel', fn (Request $request): array => [
+            Limit::perHour($this->limit('rate_limits.billing_payment_cancel.per_hour', 20))
+                ->by('billing-payment-cancel|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->user()?->getAuthIdentifier()).'|'.$request->ip()),
+            Limit::perHour($this->limit('rate_limits.billing_payment_cancel.per_tenant_per_hour', 30))
+                ->by('billing-payment-cancel-tenant|'.RateLimitKey::scope()),
+        ]);
 
         // PRD-04: renewal-invoice requests, per tenant + user + IP.
         RateLimiter::for('billing-renewal-invoice', fn (Request $request): Limit => Limit::perHour($this->limit('rate_limits.billing_renewal_invoice.per_hour', 10))

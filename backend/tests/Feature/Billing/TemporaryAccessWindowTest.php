@@ -215,7 +215,8 @@ final class TemporaryAccessWindowTest extends BillingTestCase
     {
         $tenant = $this->expiredTrialTenant();
         $invoice = $this->pendingInvoice($tenant, ['type' => 'plan']);
-        $first = $this->upload($tenant, $invoice, $this->receiptImage(), '40.000');
+        // Security review S1: only a full-amount receipt opens the window.
+        $first = $this->upload($tenant, $invoice, $this->receiptImage());
 
         $this->moveClockTo($this->t0->addHours(10));
         $this->postJson('/api/v1/billing/payments/'.$first->getKey().'/cancel', [], $this->tenantHeaders($tenant))->assertOk();

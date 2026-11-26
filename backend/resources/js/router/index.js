@@ -711,6 +711,11 @@ async function tenantGuard(to, from, next) {
 
     // 1. If user is marked authenticated, ensure profile and system context load cleanly
     // SELL-07: a shop suspended for non-payment only reaches /billing (every other API answers 403).
+    // Code review R1: re-read /auth/me first; it clears the flag once access is back (payment, or a
+    // 48h temporary access), and a 401 there ends the session.
+    if (authStore.isAuthenticated && authStore.subscriptionBlocked) {
+        await authStore.fetchMe().catch(() => null);
+    }
     if (authStore.isAuthenticated && authStore.subscriptionBlocked) {
         document.title = trans('nav.page_titles.billing_index');
         if (to.name === 'billing.index') return next();

@@ -4,6 +4,7 @@ import { trans } from '../helpers/trans';
 import { isCentralAppContext } from '../Services/centralApi';
 import { mustChangeFromPayload } from '../helpers/passwordChange';
 import { NO_STORE_ASSIGNED, storeNoticeFromPayload } from '../helpers/storeNotice';
+import { paymentRequiredAfterMe } from '../helpers/subscriptionBlock';
 
 export const useAuthStore = defineStore('auth', {
     state: () => {
@@ -116,9 +117,7 @@ export const useAuthStore = defineStore('auth', {
             this.currentStore = payload.store;
             this.stores = payload.stores || [];
             this.setStoreNotice(storeNoticeFromPayload(payload));
-            this.subscriptionBlocked = payload.subscription_blocked === true;
-            if (this.subscriptionBlocked) localStorage.setItem('auth_payment_required', '1');
-            else localStorage.removeItem('auth_payment_required');
+            this.setSubscriptionBlocked(payload.subscription_blocked === true);
 
             localStorage.setItem('auth_token', payload.token);
             localStorage.setItem('auth_user', JSON.stringify(payload.user));
@@ -154,6 +153,7 @@ export const useAuthStore = defineStore('auth', {
                         this.stores = payload.stores;
                     }
                     this.setStoreNotice(storeNoticeFromPayload(payload));
+                    this.setSubscriptionBlocked(paymentRequiredAfterMe(payload, this.subscriptionBlocked));
                     localStorage.setItem('auth_user', JSON.stringify(this.user));
                 }
                 return payload;
@@ -177,6 +177,15 @@ export const useAuthStore = defineStore('auth', {
             } else {
                 localStorage.removeItem('auth_store_notice');
             }
+        },
+
+        /**
+         * SELL-07: remember (or clear) that the session may only reach /billing (shop suspended for non-payment).
+         */
+        setSubscriptionBlocked(blocked) {
+            this.subscriptionBlocked = blocked === true;
+            if (this.subscriptionBlocked) localStorage.setItem('auth_payment_required', '1');
+            else localStorage.removeItem('auth_payment_required');
         },
 
         /**

@@ -45,7 +45,8 @@ use Throwable;
  *  - the proof is classified BEFORE the transaction by the container's TransferReceiptClassifier
  *    (content-based, no I/O beyond reading the temp file); the verdict and reason are stored on the
  *    payment and audited (`billing_receipt_classified`, with whether the 48h window opened and why not);
- *  - a `transfer_receipt_image` opens the invoice's one 48-hour temporary access through
+ *  - a `transfer_receipt_image` for the FULL amount still owed (security review S1: a partial
+ *    amount stays pending for manual review, no window) opens the invoice's one 48-hour temporary access through
  *    TemporaryAccessService (never reset by a re-upload; refused while another invoice of the shop
  *    holds an unsettled window). The payment stays `pending`: the shop is under review, never paid;
  *  - the operators get a panel notification item (same transaction) and an e-mail (queued after commit).
@@ -136,7 +137,7 @@ final class SubmitManualPaymentAction
                     $dto->tenantId,
                 );
 
-                $this->applyTemporaryAccess($tenant, $invoice, $payment, $classification);
+                $this->applyTemporaryAccess($tenant, $invoice, $payment, $classification, $remaining);
             } catch (Throwable $e) {
                 // The file is already on disk but the DB is about to roll back: no orphan receipts.
                 $media->delete();
@@ -151,10 +152,10 @@ final class SubmitManualPaymentAction
     /**
      * #232 spec D / E: open the 48h window when allowed, audit the classifier verdict, notify the operators.
      */
-    private function applyTemporaryAccess(Tenant $tenant, BillingInvoice $invoice, BillingPayment $payment, ReceiptClassificationResult $classification): void
+    private function applyTemporaryAccess(Tenant $tenant, BillingInvoice $invoice, BillingPayment $payment, ReceiptClassificationResult $classification, string $remaining): void
     {
         $now = CarbonImmutable::now();
-        $notOpened = $this->temporaryAccess->open($tenant, $invoice, $payment, $now);
+        $notOpened = $this->temporaryAccess->open($tenant, $invoice, $payment, $remaining, $now);
         // The window that runs for this invoice now: just opened, or the first one still running (a re-upload).
         $endsAt = $invoice->temporaryAccessState($now) === TemporaryAccessState::Active && $invoice->temporary_access_ends_at !== null
             ? CarbonImmutable::instance($invoice->temporary_access_ends_at)

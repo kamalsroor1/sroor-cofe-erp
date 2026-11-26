@@ -136,6 +136,7 @@ final class ApiLoginAction
 
         $decision = app(TenantLifecyclePolicy::class)->evaluate($tenant->lifecycleSnapshot(), CarbonImmutable::now());
 
-        return EnsureTenantActive::isPaymentRecovery($decision->effectiveStatus, $tenant);
+        // Code review R1: a 48h temporary access (decision access Full) is not payment recovery.
+        return EnsureTenantActive::isPaymentRecovery($decision, $tenant);
     }
 }

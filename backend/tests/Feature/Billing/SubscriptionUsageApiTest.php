@@ -40,7 +40,7 @@ final class SubscriptionUsageApiTest extends BillingTestCase
                 'usage' => [['resource', 'label', 'unit', 'used', 'limit', 'percent', 'over_limit', 'resets_at']],
                 'addons',
                 'open_invoices_count',
-                'payment_instructions' => ['instapay_address', 'vodafone_cash_number', 'account_name', 'payment_note', 'tax_rate'],
+                'payment_methods',
                 'support' => ['phone', 'email'],
             ]])
             // PLAN-ENF: the monthly-invoice and storage limits are enforced, so they are shown.
@@ -108,7 +108,7 @@ final class SubscriptionUsageApiTest extends BillingTestCase
         $this->assertSame(2, $data['addons'][0]['quantity']);
     }
 
-    public function test_open_invoices_and_payment_instructions_come_from_the_platform(): void
+    public function test_open_invoices_and_payment_methods_come_from_the_platform(): void
     {
         $tenant = $this->createTenant();
         $other = $this->createTenant();
@@ -130,11 +130,13 @@ final class SubscriptionUsageApiTest extends BillingTestCase
         $this->getJson('/api/v1/billing/subscription', $this->tenantHeaders($tenant))
             ->assertOk()
             ->assertJsonPath('data.open_invoices_count', 1)
-            ->assertJsonPath('data.payment_instructions.instapay_address', 'dummy@instapay')
-            ->assertJsonPath('data.payment_instructions.vodafone_cash_number', '01000000123')
-            ->assertJsonPath('data.payment_instructions.account_name', 'Dummy Account')
-            ->assertJsonPath('data.payment_instructions.payment_note', 'Send the exact amount.')
-            ->assertJsonPath('data.payment_instructions.tax_rate', '14.000')
+            // Security review S5: the legacy block is gone; only the configured methods are listed.
+            ->assertJsonMissingPath('data.payment_instructions')
+            ->assertJsonPath('data.payment_methods.0.key', 'vodafone_cash')
+            ->assertJsonPath('data.payment_methods.0.details.0.value', '01000000123')
+            ->assertJsonPath('data.payment_methods.1.key', 'instapay')
+            ->assertJsonPath('data.payment_methods.1.details.0.value', 'dummy@instapay')
+            ->assertJsonCount(2, 'data.payment_methods')
             ->assertJsonPath('data.support.phone', '01000000456')
             ->assertJsonPath('data.support.email', 'support@example.test');
     }

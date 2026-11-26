@@ -128,6 +128,22 @@ final class UpgradeRepricingAtVerifyTest extends PlanChangeTestCase
         $this->assertSame('190.000', $invoice->total);
     }
 
+    public function test_the_shop_invoice_never_shows_a_negative_remaining_after_an_overpaid_reprice(): void
+    {
+        $payment = $this->issuedUpgrade();
+        $this->travelTo($this->at('2026-11-29 12:00:00'));
+        $this->verify($payment, '2026-11-29T10:00:00+02:00')->assertOk();
+
+        // Code review R2: 152.000 total, 190.000 paid -> remaining 0.000 (not -38.000), overpaid 38.000.
+        $tenant = Tenant::query()->findOrFail($this->invoiceOf($payment)->tenant_id);
+        $this->getJson('/api/v1/billing/invoices/'.$payment->billing_invoice_id, $this->tenantHeaders($tenant))
+            ->assertOk()
+            ->assertJsonPath('data.total', '152.000')
+            ->assertJsonPath('data.paid_amount', '190.000')
+            ->assertJsonPath('data.remaining', '0.000')
+            ->assertJsonPath('data.overpaid_amount', '38.000');
+    }
+
     public function test_a_transfer_days_after_issue_reprices_to_the_remaining_days_and_stores_the_excess(): void
     {
         $payment = $this->issuedUpgrade();

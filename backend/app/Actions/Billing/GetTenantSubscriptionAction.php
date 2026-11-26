@@ -119,16 +119,9 @@ final class GetTenantSubscriptionAction
                 ->count(),
             'partial_payment' => $this->partialPayment($tenant),
             // #232 spec F / UI spec 2b: ONLY fully configured methods, each with its own details and note.
+            // Security review S5: the legacy `payment_instructions` block (unconfigured methods and the
+            // shared account name / note included) is gone; the shop screen reads payment_methods only.
             'payment_methods' => $this->paymentMethods->forShops($branding),
-            // Legacy shape kept for the current screen; account_name / payment_note are superseded
-            // by the per-method details above.
-            'payment_instructions' => [
-                'instapay_address' => $branding->billingInstapayAddress,
-                'vodafone_cash_number' => $branding->billingVodafoneCashNumber,
-                'account_name' => $branding->billingAccountName,
-                'payment_note' => $branding->billingPaymentNote,
-                'tax_rate' => $branding->billingTaxRate,
-            ],
             'support' => [
                 'phone' => $branding->supportPhone,
                 'email' => $branding->supportEmail,

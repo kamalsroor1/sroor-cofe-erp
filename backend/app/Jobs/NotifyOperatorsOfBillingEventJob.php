@@ -25,7 +25,10 @@ use Throwable;
  * only the notification id. Runs in CENTRAL context (a job queued from a shop request arrives with
  * the tenant initialised: it is ended for the work and restored after). One queued
  * PlatformMailable per address, so operators never see each other's address. No receipt is
- * attached. Best effort: a failure is logged (never the addresses) and does not throw.
+ * attached. A failure is logged (never the addresses) and RETHROWN so the queue retries it
+ * ($tries / $backoff, code review R5); the panel item already exists whatever happens here. A retry
+ * after a partial run can queue a second copy for the addresses that were already queued: a
+ * duplicate operator e-mail is preferred over a lost one.
  */
 final class NotifyOperatorsOfBillingEventJob implements ShouldQueue
 {
@@ -33,6 +36,9 @@ final class NotifyOperatorsOfBillingEventJob implements ShouldQueue
     use Queueable;
 
     public int $tries = 3;
+
+    /** Seconds before each retry. */
+    public int $backoff = 60;
 
     public function __construct(public readonly int $notificationId) {}
 
@@ -48,7 +54,9 @@ final class NotifyOperatorsOfBillingEventJob implements ShouldQueue
         try {
             $this->send($recipients);
         } catch (Throwable $e) {
-            Log::warning('Billing operator e-mail could not be queued', ['notification_id' => $this->notificationId, 'exception' => $e::class]);
+            Log::warning('Billing operator e-mail could not be queued', ['notification_id' => $this->notificationId, 'exception' => $e::class, 'attempt' => $this->attempts()]);
+
+            throw $e;
         } finally {
             if ($previous !== null) {
                 $tenancy->initialize($previous);

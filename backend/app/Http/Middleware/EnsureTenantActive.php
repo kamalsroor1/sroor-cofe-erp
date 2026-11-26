@@ -12,6 +12,7 @@ use App\Exceptions\TenantLifecycleException;
 use App\Models\BillingInvoice;
 use App\Models\Tenant;
 use App\Services\Branding\PlatformBranding;
+use App\Support\Tenancy\LifecycleDecision;
 use App\Support\Tenancy\TenantLifecyclePolicy;
 use App\Support\Tenancy\TenantSuspensionReason;
 use Carbon\CarbonImmutable;
@@ -99,7 +100,7 @@ final class EnsureTenantActive
             TenantAccessLevel::ReadOnly => $this->isWrite($request) && ! $request->routeIs(self::WRITE_ALLOWLIST)
                 ? $this->readOnly($request, $tenant)->render($request)
                 : $next($request),
-            TenantAccessLevel::Blocked => $this->blocked($request, $next, $decision->effectiveStatus, $tenant),
+            TenantAccessLevel::Blocked => $this->blocked($request, $next, $decision, $tenant),
         };
     }
 
@@ -128,8 +129,10 @@ final class EnsureTenantActive
         );
     }
 
-    private function blocked(Request $request, Closure $next, TenantStatus $status, Tenant $tenant): Response
+    private function blocked(Request $request, Closure $next, LifecycleDecision $decision, Tenant $tenant): Response
     {
+        $status = $decision->effectiveStatus;
+
         if (! $request->is('api/*')) {
             // Tenant web pages (print / export): only the SPA shell stays reachable.
             if ($request->routeIs(self::WEB_BLOCKED_ALLOWLIST)) {
@@ -145,7 +148,7 @@ final class EnsureTenantActive
 
         // SELL-07: a shop suspended for NON-PAYMENT (never a violation) may sign in and use the
         // billing screen only, so it can pay and come back without the operator.
-        if ($this->isPaymentRecovery($status, $tenant) && $request->routeIs(self::PAYMENT_RECOVERY_ROUTES)) {
+        if (self::isPaymentRecovery($decision, $tenant) && $request->routeIs(self::PAYMENT_RECOVERY_ROUTES)) {
             return $next($request);
         }
 
@@ -157,9 +160,16 @@ final class EnsureTenantActive
         return $exception->render($request);
     }
 
-    public static function isPaymentRecovery(TenantStatus $status, Tenant $tenant): bool
+    /**
+     * SELL-07: the shop is BLOCKED because it is suspended for non-payment (sign-in for billing
+     * managers, /billing only). Code review R1: decided from the whole lifecycle decision, so a
+     * 48h temporary access that restored full access is never treated as payment recovery.
+     */
+    public static function isPaymentRecovery(LifecycleDecision $decision, Tenant $tenant): bool
     {
-        return $status === TenantStatus::Suspended && $tenant->suspension_reason === TenantSuspensionReason::NonPayment;
+        return $decision->access() === TenantAccessLevel::Blocked
+            && $decision->effectiveStatus === TenantStatus::Suspended
+            && $tenant->suspension_reason === TenantSuspensionReason::NonPayment;
     }
 
     /** A live tenant-DB Sanctum token (tenancy is already initialised here). */
