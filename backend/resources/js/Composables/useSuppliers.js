@@ -182,7 +182,7 @@ export function useSuppliers() {
 
         isSubmittingPayment.value = true;
         try {
-            await api.post(`/suppliers/${targetSupplier.value.id}/payments`, paymentForm);
+            await api.post(`/suppliers/${targetSupplier.value.id}/pay`, paymentForm);
             Swal.fire({
                 icon: 'success',
                 title: t('common.success'),
