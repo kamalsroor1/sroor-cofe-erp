@@ -48,14 +48,14 @@ const stepClass =
     data-testid="pos-cart-row"
     class="px-1 py-0.5 border-b border-slate-100 dark:border-slate-800/70 last:border-b-0"
   >
-    <div class="flex items-center gap-2 min-h-6 min-w-0">
-      <span class="min-w-0 flex-1 truncate font-black text-sm leading-6 text-slate-950 dark:text-white" dir="auto">
+    <div class="flex items-center gap-2 min-h-5 min-w-0">
+      <span class="min-w-0 flex-1 truncate font-black text-sm leading-5 text-slate-950 dark:text-white" dir="auto">
         {{ line.name }}
       </span>
       <span
         v-if="line.has_min_price"
         data-testid="pos-line-min-price"
-        class="shrink-0 inline-flex items-center gap-1 px-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 text-xs font-bold leading-5 text-amber-700 dark:text-amber-300"
+        class="shrink-0 inline-flex items-center gap-1 px-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 text-xs font-bold leading-4 text-amber-700 dark:text-amber-300"
         :title="$t('pos.price_min_locked')"
       >
         <Lock class="w-3 h-3 shrink-0" aria-hidden="true" />
@@ -74,7 +74,7 @@ const stepClass =
         >{{ formatMoney(lineGross(line)) }}</span
       >
       <span
-        class="shrink-0 font-mono font-black text-base leading-6 text-slate-950 dark:text-white"
+        class="shrink-0 font-mono font-black text-base leading-5 text-slate-950 dark:text-white"
         data-testid="pos-line-total"
         :aria-label="`${$t('pos.line_total')}: ${formatMoney(lineNet(line))} ${currencyLabel}`"
         >{{ formatMoney(lineNet(line)) }}
