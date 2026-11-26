@@ -147,7 +147,7 @@
         <div class="col-span-7 space-y-2 text-xs">
           <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-300 space-y-1">
             <div class="font-black text-slate-950">{{ $t('invoices.terms_and_conditions') }}</div>
-            <div class="text-[10px] text-slate-700 space-y-0.5 leading-relaxed font-bold">
+            <div class="text-xs text-slate-900 space-y-1 leading-relaxed font-bold">
               <p>{{ $t('invoices.terms_1') }}</p>
               <p>{{ $t('invoices.terms_2') }}</p>
               <p>{{ $t('invoices.terms_3') }}</p>
@@ -155,7 +155,7 @@
           </div>
           <div
             v-if="invoice?.notes"
-            class="p-3 rounded-2xl bg-slate-50 border border-slate-300 text-[11px] text-slate-800"
+            class="p-3 rounded-2xl bg-slate-50 border border-slate-300 text-xs text-slate-900"
           >
             <strong>{{ $t('invoices.notes') }}:</strong> {{ invoice.notes }}
           </div>
