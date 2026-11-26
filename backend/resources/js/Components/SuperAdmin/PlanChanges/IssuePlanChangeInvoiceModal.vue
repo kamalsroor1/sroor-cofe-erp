@@ -30,6 +30,8 @@ const priceOf = (ref) => {
 };
 const currentPrice = computed(() => priceOf(props.request?.current_plan));
 const requestedPrice = computed(() => priceOf(props.request?.requested_plan));
+// #232: a trial / expired shop has no term to price a difference on: the server issues a full plan invoice.
+const fullPlanInvoice = computed(() => !isAddon.value && props.request?.tenant?.has_paid_term === false);
 
 const firstError = (key) => props.errors[key]?.[0];
 
@@ -56,7 +58,9 @@ const onSubmit = () => {
           unit_price: form.unit_price.trim() || undefined,
           notes,
         }
-      : { amount: form.amount.trim(), description: form.description.trim() || undefined, notes }
+      : fullPlanInvoice.value
+        ? { notes }
+        : { amount: form.amount.trim(), description: form.description.trim() || undefined, notes }
   );
 };
 </script>
@@ -139,22 +143,31 @@ const onSubmit = () => {
           {{ $t('billing.console.plan_changes.issue.prices_unknown') }}
         </p>
 
-        <BaseInput
-          v-model="form.amount"
-          dir="ltr"
-          inputmode="decimal"
-          :label="$t('billing.console.plan_changes.issue.amount')"
-          :hint="$t('billing.console.plan_changes.issue.amount_hint')"
-          :error="firstError('amount')"
-          required
-        />
-        <BaseInput
-          v-model="form.description"
-          maxlength="255"
-          :label="$t('billing.console.plan_changes.issue.description')"
-          :placeholder="$t('billing.console.plan_changes.issue.description_placeholder')"
-          :error="firstError('description')"
-        />
+        <p
+          v-if="fullPlanInvoice"
+          class="rounded-2xl bg-sky-50 p-3 text-xs font-bold text-sky-800 dark:bg-sky-950/40 dark:text-sky-200"
+          data-testid="plan-change-full-invoice-note"
+        >
+          {{ $t('billing.console.plan_changes.issue.no_paid_term', { plan: request.requested_plan?.name || '-' }) }}
+        </p>
+        <template v-else>
+          <BaseInput
+            v-model="form.amount"
+            dir="ltr"
+            inputmode="decimal"
+            :label="$t('billing.console.plan_changes.issue.amount')"
+            :hint="$t('billing.console.plan_changes.issue.amount_hint')"
+            :error="firstError('amount')"
+            required
+          />
+          <BaseInput
+            v-model="form.description"
+            maxlength="255"
+            :label="$t('billing.console.plan_changes.issue.description')"
+            :placeholder="$t('billing.console.plan_changes.issue.description_placeholder')"
+            :error="firstError('description')"
+          />
+        </template>
       </template>
 
       <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2">

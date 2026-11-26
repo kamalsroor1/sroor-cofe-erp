@@ -612,6 +612,16 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     }
 
     /**
+     * #232: is a PAID term still running (subscription_ends_at in the future)? False for a trial
+     * (it has no paid term) and for an expired term: there is no remainder to price a difference on.
+     * Same rule as IssueSubscriptionInvoiceAction::futureEnd().
+     */
+    public function hasPaidTermRunning(): bool
+    {
+        return $this->subscription_ends_at !== null && $this->subscription_ends_at->isFuture();
+    }
+
+    /**
      * Is the tenant fully BLOCKED (suspended / cancelled / archived, an unknown stored status,
      * or a lifecycle that has run past read-only)? Used by the workspace resolver.
      *

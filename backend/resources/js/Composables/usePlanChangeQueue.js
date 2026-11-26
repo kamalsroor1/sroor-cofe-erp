@@ -15,6 +15,16 @@ export const PLAN_CHANGE_TABS = Object.freeze(['pending', 'invoiced', 'rejected'
 
 const BASE = '/super-admin/billing/plan-change-requests';
 
+// #232: a 409 is "already processed" ONLY when the server says so; every other 409 (e.g. no paid
+// term to price a difference on) leaves the request pending and gets its own title.
+const NOT_PENDING = 'billing.request_not_pending';
+const DIFFERENCE_CONFLICTS = Object.freeze([
+    'billing.difference_needs_active_term',
+    'billing.difference_term_changed',
+    'billing.renewal_in_flight',
+]);
+const errorCodeOf = (e) => e.response?.data?.error_code || null;
+
 /** Console queue of tenant plan-change / add-on requests: tabs, paging, issue invoice and reject. */
 export function usePlanChangeQueue() {
     const { t } = useTrans();
@@ -102,10 +112,15 @@ export function usePlanChangeQueue() {
         } catch (e) {
             if (e.response?.status === 422 && e.response.data?.errors) {
                 errors.value = e.response.data.errors;
-            } else if (e.response?.status === 409) {
+            } else if (e.response?.status === 409 && errorCodeOf(e) === NOT_PENDING) {
                 notifyWarning(t('billing.console.plan_changes.reject.already_handled'), e.userMessage);
                 closeIssue();
                 afterAction();
+            } else if (e.response?.status === 409) {
+                const title = DIFFERENCE_CONFLICTS.includes(errorCodeOf(e))
+                    ? 'billing.console.plan_changes.issue.difference_failed_title'
+                    : 'billing.console.plan_changes.issue.failed_title';
+                notifyWarning(t(title), e.userMessage);
             } else if (e.response?.status !== 403) {
                 notifyWarning(t('billing.console.plan_changes.reject.action_failed'), e.userMessage);
             }
@@ -136,7 +151,7 @@ export function usePlanChangeQueue() {
             const res = await api.post(`${BASE}/${request.id}/reject`, { reason: String(result.value).trim() });
             notifySuccess(res.data?.message || t('billing.console.plan_changes.actions.reject'));
         } catch (e) {
-            if (e.response?.status === 409) {
+            if (e.response?.status === 409 && errorCodeOf(e) === NOT_PENDING) {
                 notifyWarning(t('billing.console.plan_changes.reject.already_handled'), e.userMessage);
             } else if (e.response?.status !== 403) {
                 notifyWarning(t('billing.console.plan_changes.reject.action_failed'), e.userMessage);

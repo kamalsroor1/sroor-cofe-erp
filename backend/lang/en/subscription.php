@@ -217,6 +217,7 @@ return [
                 'plan_change' => 'Request to move to the :plan plan (:cycle)',
                 'addon' => 'Request to add :addon x :quantity (:cycle)',
                 'hint' => 'Support will contact you with the difference invoice.',
+                'hint_plan_invoice' => 'Support will contact you with the invoice for the new plan.',
             ],
             'cancel' => 'Cancel request',
             'cancel_title' => 'Cancel this request?',

@@ -217,6 +217,7 @@ return [
                 'plan_change' => 'طلب الانتقال إلى باقة :plan (:cycle)',
                 'addon' => 'طلب إضافة :addon × :quantity (:cycle)',
                 'hint' => 'سيتواصل معك الدعم بفاتورة الفرق.',
+                'hint_plan_invoice' => 'سيتواصل معك الدعم بفاتورة الباقة الجديدة.',
             ],
             'cancel' => 'إلغاء الطلب',
             'cancel_title' => 'إلغاء الطلب؟',

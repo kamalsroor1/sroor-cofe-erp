@@ -49,6 +49,7 @@ onMounted(loadRequests);
       :request="pendingPlanChange"
       :busy="cancellingId === pendingPlanChange.id"
       :ends-at="subscription.subscription?.ends_at || null"
+      :has-paid-term="subscription.subscription?.has_paid_term !== false"
       @cancel="cancel"
     />
     <PlanChangePendingCard

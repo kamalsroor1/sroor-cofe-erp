@@ -28,6 +28,8 @@ use Illuminate\Support\Facades\DB;
  *
  *  - plan_change: ONE `upgrade` line with the DIFFERENCE the admin typed, plan = the requested
  *    plan, cycle = the request's. Paying it switches the plan and keeps the paid term.
+ *    #232: with no paid term running (trial / expired) and no amount typed, a regular full-cycle
+ *    plan line for the requested plan instead (the 409 difference_needs_active_term is only for a typed amount).
  *  - addon: an `addon` invoice with the add-on line(s), priced from the tenant's plan catalog for
  *    the request's cycle unless the admin overrides the unit price. It is a separate invoice.
  *
@@ -154,6 +156,31 @@ final class IssuePlanChangeInvoiceAction
 
         if ($tenant->plan_id !== null && (int) $tenant->plan_id === (int) $target->getKey()) {
             throw BillingException::requestSamePlan();
+        }
+
+        // #232: no paid term running (a trial, or an expired term) means there is no remainder to
+        // price a difference on. With no amount typed, the request is answered with a REGULAR
+        // full-cycle invoice for the requested plan (a plan line priced by IssueSubscriptionInvoiceAction
+        // exactly like a console plan invoice, founder price when the shop could still claim a slot,
+        // as the trial-end invoice does); paying it switches the plan and starts a new paid term.
+        // A typed amount is still a difference and stays 409 difference_needs_active_term.
+        if ($dto->amount === null && ! $tenant->hasPaidTermRunning()) {
+            return new IssueSubscriptionInvoiceDTO(
+                tenantId: $tenantId,
+                type: BillingInvoiceType::Upgrade,
+                planId: (int) $target->getKey(),
+                cycle: $request->billing_cycle,
+                useFounderPrice: false,
+                serviceLines: [],
+                discount: '0.000',
+                notes: $dto->notes,
+                periodStart: null,
+                issuedBy: $issuedBy,
+                fromRequest: true,
+                // SELL-06: an open trial-end / plan invoice paid as well would extend the term twice.
+                refuseWhenOpenPlanInvoice: true,
+                founderPriceIfAvailable: true,
+            );
         }
 
         $current = Plan::query()->find($tenant->plan_id ?? $request->current_plan_id);

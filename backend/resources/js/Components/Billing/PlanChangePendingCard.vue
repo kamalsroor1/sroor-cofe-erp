@@ -9,6 +9,8 @@ const props = defineProps({
   busy: { type: Boolean, default: false },
   // End of the paid term: when a scheduled downgrade to the free plan takes effect.
   endsAt: { type: String, default: null },
+  // #232: no paid term (trial / expired) -> support answers a plan change with a plan invoice, not a difference.
+  hasPaidTerm: { type: Boolean, default: true },
 });
 
 defineEmits(['cancel']);
@@ -17,6 +19,11 @@ const { formatDate } = useFormatters();
 
 // PLAN-13: a downgrade to the free plan waits for the end of the term instead of an invoice from support.
 const isScheduled = computed(() => props.request.status?.value === 'scheduled');
+const hintKey = computed(() =>
+  props.request.kind.value === 'plan_change' && !props.hasPaidTerm
+    ? 'subscription.billing.requests.pending.hint_plan_invoice'
+    : 'subscription.billing.requests.pending.hint'
+);
 </script>
 
 <template>
@@ -68,9 +75,7 @@ const isScheduled = computed(() => props.request.status?.value === 'scheduled');
         </p>
         <p class="text-[11px] font-bold text-slate-600 dark:text-slate-400">
           <template v-if="isScheduled">{{ $t('subscription.downgrade.scheduled_hint') }}</template>
-          <template v-else>
-            {{ $t('subscription.billing.requests.pending.hint') }} ({{ formatDate(request.created_at) }})
-          </template>
+          <template v-else> {{ $t(hintKey) }} ({{ formatDate(request.created_at) }}) </template>
         </p>
       </div>
     </div>

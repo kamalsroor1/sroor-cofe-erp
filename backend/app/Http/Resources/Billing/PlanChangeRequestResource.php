@@ -32,6 +32,8 @@ final class PlanChangeRequestResource extends JsonResource
             'tenant' => $this->whenLoaded('tenant', fn () => $this->tenant === null ? null : [
                 'id' => (string) $this->tenant->getKey(),
                 'name' => $this->tenant->name,
+                // #232: false (trial / expired) -> the console issues a full plan invoice, not a difference.
+                'has_paid_term' => $this->tenant->hasPaidTermRunning(),
             ]),
             'current_plan' => $this->whenLoaded('currentPlan', fn () => $this->planSummary($this->currentPlan)),
             'requested_plan' => $this->whenLoaded('requestedPlan', fn () => $this->planSummary($this->requestedPlan)),
