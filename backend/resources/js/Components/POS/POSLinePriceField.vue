@@ -142,7 +142,13 @@ onBeforeUnmount(close);
 
 <template>
   <div class="flex items-center gap-1" :class="fluid ? 'w-full min-w-0' : ''">
-    <div class="relative" :class="fluid ? 'flex-1 min-w-0 max-w-32' : ''">
+    <div class="relative" :class="fluid ? 'flex-1 min-w-0 max-w-36' : ''">
+      <span
+        v-if="fluid"
+        class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-1.5 text-xs font-bold text-slate-400 dark:text-slate-500 font-tajawal"
+        aria-hidden="true"
+        >{{ $t('pos.price_prefix') }}</span
+      >
       <input
         ref="inputRef"
         type="text"
@@ -163,7 +169,7 @@ onBeforeUnmount(close);
           compact
             ? 'w-18 h-9 pointer-coarse:h-11 px-1.5 text-xs'
             : fluid
-              ? 'w-full min-w-0 h-9 pointer-coarse:h-11 ps-2 pe-8 pointer-coarse:pe-2 text-sm'
+              ? 'w-full min-w-0 h-9 pointer-coarse:h-11 ps-7 pe-8 pointer-coarse:pe-1.5 text-sm'
               : 'w-24 h-9 pointer-coarse:h-11 ps-2 pe-8 text-sm'
         "
         @focus="onFocus"
@@ -202,7 +208,7 @@ onBeforeUnmount(close);
     </button>
 
     <Lock
-      v-if="line.has_min_price"
+      v-if="line.has_min_price && !fluid"
       class="w-3.5 h-3.5 shrink-0 text-amber-500"
       role="img"
       :aria-label="$t('pos.min_price_protected')"

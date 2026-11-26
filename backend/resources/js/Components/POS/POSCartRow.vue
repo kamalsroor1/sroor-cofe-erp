@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { EllipsisVertical, Percent, Trash2 } from 'lucide-vue-next';
+import { EllipsisVertical, Lock, Percent, Trash2 } from 'lucide-vue-next';
 import POSLineDiscount from './POSLineDiscount.vue';
 import POSLinePriceField from './POSLinePriceField.vue';
 import { useFormatters } from '../../Composables/useFormatters';
@@ -27,7 +27,7 @@ const emit = defineEmits([
   'remove-item',
 ]);
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const { unitLabel } = useUnits();
 const { onNumberInput, onFieldBlur, onFieldFocus, revertField } = useCartQtyField({
   emit,
@@ -48,9 +48,18 @@ const stepClass =
     data-testid="pos-cart-row"
     class="px-1 py-0.5 border-b border-slate-100 dark:border-slate-800/70 last:border-b-0"
   >
-    <div class="flex items-center gap-2 h-[18px] min-w-0">
-      <span class="min-w-0 flex-1 truncate font-black text-sm leading-[18px] text-slate-950 dark:text-white" dir="auto">
+    <div class="flex items-center gap-2 min-h-6 min-w-0">
+      <span class="min-w-0 flex-1 truncate font-black text-sm leading-6 text-slate-950 dark:text-white" dir="auto">
         {{ line.name }}
+      </span>
+      <span
+        v-if="line.has_min_price"
+        data-testid="pos-line-min-price"
+        class="shrink-0 inline-flex items-center gap-1 px-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 text-xs font-bold leading-5 text-amber-700 dark:text-amber-300"
+        :title="$t('pos.price_min_locked')"
+      >
+        <Lock class="w-3 h-3 shrink-0" aria-hidden="true" />
+        <span>{{ $t('pos.min_price_badge') }}</span>
       </span>
       <span
         v-if="line.is_weighted"
@@ -64,9 +73,13 @@ const stepClass =
         data-testid="pos-line-gross"
         >{{ formatMoney(lineGross(line)) }}</span
       >
-      <span class="shrink-0 font-mono font-black text-sm text-emerald-600 dark:text-emerald-400">{{
-        formatMoney(lineNet(line))
-      }}</span>
+      <span
+        class="shrink-0 font-mono font-black text-base leading-6 text-slate-950 dark:text-white"
+        data-testid="pos-line-total"
+        :aria-label="`${$t('pos.line_total')}: ${formatMoney(lineNet(line))} ${currencyLabel}`"
+        >{{ formatMoney(lineNet(line)) }}
+        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 font-tajawal">{{ currencyLabel }}</span></span
+      >
     </div>
 
     <div class="flex items-center gap-1 min-w-0">
@@ -103,6 +116,8 @@ const stepClass =
       >
         +
       </button>
+
+      <span class="shrink-0 font-black text-sm text-slate-400 dark:text-slate-500" aria-hidden="true">×</span>
 
       <div class="min-w-0 flex-1 flex justify-end">
         <POSLinePriceField fluid :line="line" :index="index" @update-price="emit('update-price', $event)" />
