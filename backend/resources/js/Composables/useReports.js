@@ -1,7 +1,7 @@
 import { ref, reactive, computed, watch, onMounted } from 'vue';
 import {
     TrendingUp,
-    Coffee,
+    ShoppingBag,
     Store,
     Users,
     Receipt,
@@ -56,7 +56,7 @@ export function useReports() {
 
     const tabs = computed(() => [
         { key: 'sales', label: t('reports.tab_sales'), icon: TrendingUp },
-        { key: 'items', label: t('reports.tab_items'), icon: Coffee, locked: itemsLocked.value },
+        { key: 'items', label: t('reports.tab_items'), icon: ShoppingBag, locked: itemsLocked.value },
         { key: 'stores', label: t('reports.tab_stores'), icon: Store, locked: storesLocked.value },
         { key: 'sales_by_cashier', label: t('reports.tab_sales_by_cashier'), icon: UserCheck },
         { key: 'sales_by_category', label: t('reports.tab_sales_by_category'), icon: Tags },

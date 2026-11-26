@@ -61,6 +61,18 @@ class PermissionApiTest extends TenantTestCase
             ]);
     }
 
+    /** Trello #221: the inventory group title is neutral retail wording, not coffee-specific. */
+    public function test_inventory_permission_group_title_is_neutral(): void
+    {
+        $title = $this->getJson('/api/v1/permissions', $this->tenantHeaders($this->tenant))
+            ->assertStatus(200)
+            ->json('data.permission_modules.inventory.title');
+
+        $this->assertSame(__('roles.modules.inventory'), $title);
+        $this->assertSame('الأصناف والمخزون', trans('roles.modules.inventory', [], 'ar'));
+        $this->assertSame('Items & Inventory', trans('roles.modules.inventory', [], 'en'));
+    }
+
     public function test_authenticated_staff_fetches_permissions_tree_with_exact_role_and_permissions(): void
     {
         $response = $this->getJson('/api/v1/permissions', $this->tenantHeaders($this->tenant, $this->staffUser));

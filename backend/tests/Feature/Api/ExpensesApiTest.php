@@ -100,6 +100,30 @@ class ExpensesApiTest extends TenantTestCase
             ]);
     }
 
+    /**
+     * Trello #221: every tenant (any retail vertical) gets neutral suggested categories,
+     * not coffee-shop ones (cups, grinder maintenance, buffet).
+     */
+    public function test_quick_categories_are_neutral_retail_suggestions(): void
+    {
+        $expected = array_map(
+            static fn (string $key): string => __('expenses.quick_categories.'.$key),
+            ['rent', 'utilities', 'salaries', 'maintenance', 'shipping', 'bags', 'office_supplies', 'marketing', 'hospitality', 'other'],
+        );
+
+        $categories = $this->getJson('/api/v1/expenses', $this->adminHeaders)
+            ->assertStatus(200)
+            ->json('quick_categories');
+
+        $this->assertSame($expected, $categories);
+
+        foreach (['ar', 'en'] as $locale) {
+            foreach ((array) trans('expenses.quick_categories', [], $locale) as $label) {
+                $this->assertDoesNotMatchRegularExpression('/أكواب|مطاحن|بوفيه|بن |قهوة|cups|grinder|coffee/iu', (string) $label);
+            }
+        }
+    }
+
     public function test_can_create_a_new_expense_with_sequential_number(): void
     {
         $payload = [

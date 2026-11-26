@@ -23,7 +23,7 @@ return [
     'activity_permissions_updated' => ':user عدّل صلاحيات الدور ":role"',
     'modules' => [
         'sales' => 'المبيعات ونقاط البيع (POS)',
-        'inventory' => 'الأصناف والمخزون وخامات البن',
+        'inventory' => 'الأصناف والمخزون',
         'purchases' => 'المشتريات والتوريدات',
         'customers' => 'العملاء والتحصيل النقدي',
         'suppliers' => 'الموردين وسندات السداد',

@@ -87,7 +87,7 @@ return [
     'empty_cart_prompt' => 'Cart is empty, click an item to add',
     'paid_cash_now' => 'Paid in cash now:',
     'checkout_btn_f9' => 'Save & Confirm Invoice (F9)',
-    'customer_name_placeholder' => 'Full name or cafe name...',
+    'customer_name_placeholder' => 'Full name or shop name...',
     'save_and_select' => 'Save & Select',
     'invoice_success_title' => 'Invoice Confirmed Successfully',
     'send_whatsapp' => 'Send via WhatsApp',

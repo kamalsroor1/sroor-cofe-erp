@@ -7,7 +7,7 @@
       <span
         class="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-xl bg-theme-primary/10 text-theme-primary shrink-0"
       >
-        <Coffee class="w-4 h-4 stroke-[2.5]" />
+        <Store class="w-4 h-4 stroke-[2.5]" />
       </span>
       <div class="min-w-0">
         <h1 class="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight truncate">
@@ -51,7 +51,7 @@
 </template>
 <script setup>
 import { computed } from 'vue';
-import { Zap, RefreshCw, Coffee, CircleHelp } from 'lucide-vue-next';
+import { Zap, RefreshCw, Store, CircleHelp } from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
 
 defineProps({

@@ -87,7 +87,7 @@ return [
     'empty_cart_prompt' => 'السلة فارغة، اضغط على صنف للإضافة',
     'paid_cash_now' => 'المدفوع نقداً الآن:',
     'checkout_btn_f9' => 'حفظ واعتماد الفاتورة (F9)',
-    'customer_name_placeholder' => 'الاسم الكامل أو اسم الكافيه...',
+    'customer_name_placeholder' => 'الاسم الكامل أو اسم المحل...',
     'save_and_select' => 'حفظ وتحديد',
     'invoice_success_title' => 'تم اعتماد الفاتورة بنجاح',
     'send_whatsapp' => 'إرسال بالواتساب',

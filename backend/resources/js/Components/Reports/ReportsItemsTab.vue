@@ -162,7 +162,7 @@
       />
     </div>
 
-    <EmptyState v-else :title="$t('reports.no_data_title')" :description="$t('reports.no_data_desc')" icon="coffee" />
+    <EmptyState v-else :title="$t('reports.no_data_title')" :description="$t('reports.no_data_desc')" icon="package" />
   </div>
 </template>
 

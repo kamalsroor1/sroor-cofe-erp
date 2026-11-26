@@ -11,7 +11,7 @@
             <div
               class="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-sm print:border print:border-slate-800"
             >
-              <Coffee class="w-6 h-6 stroke-[2]" />
+              <Store class="w-6 h-6 stroke-[2]" />
             </div>
             <div>
               <h1 class="text-2xl font-black text-slate-950 tracking-tight leading-tight">{{ companyInfo?.name }}</h1>
@@ -153,10 +153,7 @@
               <p>{{ $t('invoices.terms_3') }}</p>
             </div>
           </div>
-          <div
-            v-if="invoice?.notes"
-            class="p-3 rounded-2xl bg-slate-50 border border-slate-300 text-xs text-slate-900"
-          >
+          <div v-if="invoice?.notes" class="p-3 rounded-2xl bg-slate-50 border border-slate-300 text-xs text-slate-900">
             <strong>{{ $t('invoices.notes') }}:</strong> {{ invoice.notes }}
           </div>
         </div>
@@ -233,7 +230,7 @@
 </template>
 
 <script setup>
-import { Coffee, MapPin, Phone } from 'lucide-vue-next';
+import { MapPin, Phone, Store } from 'lucide-vue-next';
 import { useFormatters } from '../../../Composables/useFormatters';
 import { useUnits } from '../../../Composables/useUnits';
 import { useTrans } from '../../../Composables/useTrans';

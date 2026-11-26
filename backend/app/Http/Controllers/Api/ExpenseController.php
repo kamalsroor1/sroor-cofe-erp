@@ -117,15 +117,11 @@ final class ExpenseController extends Controller
             'shipping' => __('expenses.cc_shipping'),
         ];
 
-        $quickCategories = [
-            __('expenses.quick_categories.bags'),
-            __('expenses.quick_categories.cups'),
-            __('expenses.quick_categories.tape'),
-            __('expenses.quick_categories.hospitality'),
-            __('expenses.quick_categories.equipment_maintenance'),
-            __('expenses.quick_categories.rent_utilities'),
-            __('expenses.quick_categories.petty_operations'),
-        ];
+        // Neutral retail suggestions (Trello #221): no vertical-specific wording for every tenant.
+        $quickCategories = array_map(
+            static fn (string $key): string => __('expenses.quick_categories.'.$key),
+            ['rent', 'utilities', 'salaries', 'maintenance', 'shipping', 'bags', 'office_supplies', 'marketing', 'hospitality', 'other'],
+        );
 
         return response()->json([
             'success' => true,

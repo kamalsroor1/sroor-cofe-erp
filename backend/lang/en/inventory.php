@@ -352,7 +352,7 @@ return [
     'add_category' => 'Add New Category',
     'edit_category' => 'Edit Category',
     'category_name' => 'Category Name',
-    'category_name_placeholder' => 'e.g. Hot Drinks, Ground Coffee, Pastries',
+    'category_name_placeholder' => 'e.g. Accessories, Cleaning supplies, Drinks',
     'category_icon_emoji' => 'Category Icon or Emoji',
     'sort_order' => 'Display Order in POS Bar',
     'category_active_desc' => 'Enable visibility of this category in POS and cashier screens',

@@ -117,13 +117,17 @@ return [
     'general_expenses' => 'مصروفات عامة',
     'operational_expense' => 'مصروف تشغيلي',
     'daily_category' => 'مصاريف يومية',
+    // Neutral retail suggestions shown to every tenant, whatever its business type.
     'quick_categories' => [
+        'rent' => 'إيجار',
+        'utilities' => 'كهرباء ومياه',
+        'salaries' => 'رواتب',
+        'maintenance' => 'صيانة',
+        'shipping' => 'نقل وشحن',
         'bags' => 'شنط وأكياس',
-        'cups' => 'أكواب ورقية وبلاستيكية',
-        'tape' => 'لاصق وشرائط تغليف',
-        'hospitality' => 'بوفيه وضيافة',
-        'equipment_maintenance' => 'صيانة مطاحن ومعدات',
-        'rent_utilities' => 'إيجار وكهرباء ومرافق',
-        'petty_operations' => 'نثريات ومصاريف تشغيل',
+        'office_supplies' => 'أدوات مكتبية',
+        'marketing' => 'تسويق ودعاية',
+        'hospitality' => 'ضيافة',
+        'other' => 'أخرى',
     ],
 ];

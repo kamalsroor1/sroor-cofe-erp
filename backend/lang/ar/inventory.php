@@ -352,7 +352,7 @@ return [
     'add_category' => 'إضافة فئة جديدة',
     'edit_category' => 'تعديل بيانات الفئة',
     'category_name' => 'اسم الفئة',
-    'category_name_placeholder' => 'مثال: مشروبات ساخنة، بن مطحون، حلويات',
+    'category_name_placeholder' => 'مثال: إكسسوارات، منظفات، مشروبات',
     'category_icon_emoji' => 'أيقونة أو إيموجي الفئة',
     'sort_order' => 'ترتيب الظهور في شريط الفئات',
     'category_active_desc' => 'تفعيل ظهور هذه الفئة في شاشات الكاشير ونقاط البيع',
@@ -361,7 +361,7 @@ return [
     'category_updated_success' => 'تم تعديل الفئة بنجاح ✓',
     'category_deleted_success' => 'تم حذف الفئة بنجاح ✓',
     'no_categories_yet' => 'لا توجد فئات مسجلة حالياً',
-    'create_first_category_hint' => 'ابدأ بإضافة فئات لتقسيم أصنافك مثل (قهوة، مشروبات، حلويات، سندوتشات)',
+    'create_first_category_hint' => 'ابدأ بإضافة فئات لتقسيم أصنافك مثل (إكسسوارات، منظفات، مشروبات، أدوات مكتبية)',
     'add_first_category' => 'إضافة أول فئة',
     'items_unit' => 'صنف',
 

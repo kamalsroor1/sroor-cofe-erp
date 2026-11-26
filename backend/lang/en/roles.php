@@ -23,7 +23,7 @@ return [
     'activity_permissions_updated' => ':user updated the permissions of role ":role"',
     'modules' => [
         'sales' => 'Sales & POS',
-        'inventory' => 'Items, Inventory & Raw Beans',
+        'inventory' => 'Items & Inventory',
         'purchases' => 'Purchases & Supplies',
         'customers' => 'Customers & Cash Collections',
         'suppliers' => 'Suppliers & Payment Vouchers',
