@@ -21,7 +21,7 @@
 
     <template #cell-index="{ index }">
       <span class="font-mono text-slate-500">
-        {{ index + 1 + (pagination.current_page - 1) * pagination.per_page }}
+        {{ rowNumber(index, pagination) }}
       </span>
     </template>
 
@@ -107,6 +107,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { rowNumber } from '@/helpers/rowNumber';
 import { Eye, Ban, Truck } from 'lucide-vue-next';
 import DataTable from '@/Components/Common/DataTable.vue';
 import { useFormatters } from '../../Composables/useFormatters';

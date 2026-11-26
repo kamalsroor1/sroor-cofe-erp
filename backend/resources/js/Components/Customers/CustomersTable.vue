@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { rowNumber } from '@/helpers/rowNumber';
 import { Receipt, FileText, Pencil, Trash2, Users } from 'lucide-vue-next';
 import DataTable from '@/Components/Common/DataTable.vue';
 import { useFormatters } from '@/Composables/useFormatters';
@@ -63,7 +64,7 @@ const columns = computed(() => [
     <!-- Cells -->
     <template #cell-index="{ index }">
       <span class="text-slate-500">
-        {{ index + 1 + ((pagination?.current_page || 1) - 1) * (pagination?.per_page || 15) }}
+        {{ rowNumber(index, pagination) }}
       </span>
     </template>
 

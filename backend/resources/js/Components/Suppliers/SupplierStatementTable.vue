@@ -8,8 +8,8 @@
     :empty-message="$t('contacts.no_transactions_in_period')"
   >
     <!-- # Cell -->
-    <template #cell-index="{ rowIndex }">
-      <div class="font-mono text-slate-500">{{ rowIndex + 1 }}</div>
+    <template #cell-index="{ index }">
+      <div class="font-mono text-slate-500">{{ rowNumber(index) }}</div>
     </template>
 
     <!-- Date Cell -->
@@ -68,6 +68,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { rowNumber } from '@/helpers/rowNumber';
 import DataTable from '../Common/DataTable.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
