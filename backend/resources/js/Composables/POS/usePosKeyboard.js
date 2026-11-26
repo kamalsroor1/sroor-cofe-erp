@@ -1,5 +1,6 @@
 import { onMounted, onBeforeUnmount } from 'vue';
 import { focusLineField, focusedLineId } from '../../helpers/posFocus';
+import { usePrintAfterSave } from './usePrintAfterSave';
 
 const isTypingTarget = (el) => {
     if (!el) return false;
@@ -30,6 +31,8 @@ export function usePosKeyboard({
     getLastLineId,
     showSuccessModal,
 }) {
+    const { printAfterSave } = usePrintAfterSave();
+
     const editLine = (field, { last = false } = {}) => {
         const id = (!last && focusedLineId()) || getLastLineId();
         if (id != null) focusLineField(id, field);
@@ -91,7 +94,7 @@ export function usePosKeyboard({
             toggleCatalog();
         } else if (e.code === 'F9' || (e.ctrlKey && (e.code === 'Enter' || e.code === 'NumpadEnter'))) {
             e.preventDefault();
-            if (canSubmit()) submit(false);
+            if (canSubmit()) submit(printAfterSave.value);
         } else if (e.altKey && !e.ctrlKey && e.code === 'KeyQ') {
             e.preventDefault();
             editLine('qty');

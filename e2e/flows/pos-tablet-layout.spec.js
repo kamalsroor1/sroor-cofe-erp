@@ -171,7 +171,7 @@ for (const size of SIZES) {
                 await expect(page.getByTestId('pos-cart-row')).toHaveCount(3);
                 await expect(page.getByTestId('pos-net-total')).toContainText('375');
                 await expectInViewport(page, 'pos-checkout-submit');
-                await expectInViewport(page, 'pos-checkout-save-print');
+                await expectInViewport(page, 'pos-checkout-print-toggle');
                 await expectInViewport(page, 'pos-net-total');
 
                 // Two columns side by side: the cart is 360-400px wide and level with the catalog, never below it.
@@ -253,7 +253,7 @@ test.describe('RESP-02: sheets on a tablet', () => {
     test('the save button text is not truncated at 1024', async ({ page }) => {
         await openPos(page, SIZES[2]);
         await addItems(page, 1);
-        for (const id of ['pos-checkout-submit', 'pos-checkout-save-print']) {
+        for (const id of ['pos-checkout-submit', 'pos-checkout-print-toggle']) {
             const clipped = await page.getByTestId(id).evaluate((el) => {
                 const label = el.querySelector('span:last-child');
                 const text = label.getBoundingClientRect();

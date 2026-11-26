@@ -55,7 +55,7 @@
           >
             <span class="font-mono text-xs font-bold text-slate-900 dark:text-white">{{ source.number }}</span>
             <span class="flex-1 text-xs text-slate-600 dark:text-slate-300 truncate">{{ source.party_name }}</span>
-            <span class="text-[11px] text-slate-500 font-sans">{{ source.date }}</span>
+            <span class="text-xs text-slate-500 font-sans">{{ source.date }}</span>
             <span class="text-xs font-mono font-bold text-theme-primary">{{ source.net_total }}</span>
           </button>
         </li>

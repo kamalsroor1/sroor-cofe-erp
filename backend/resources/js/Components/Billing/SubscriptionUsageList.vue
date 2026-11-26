@@ -51,7 +51,7 @@ const formatAmount = (row, value) => {
             </template>
           </span>
         </div>
-        <p v-if="row.over_limit" class="text-[11px] font-black text-rose-600 dark:text-rose-400">
+        <p v-if="row.over_limit" class="text-xs font-black text-rose-600 dark:text-rose-400">
           {{ $t('subscription.billing.usage.over_limit') }}
         </p>
         <div
@@ -68,7 +68,7 @@ const formatAmount = (row, value) => {
             :style="{ width: `${Math.min(100, row.percent ?? 0)}%` }"
           />
         </div>
-        <p v-if="row.resets_at" class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+        <p v-if="row.resets_at" class="text-xs font-bold text-slate-500 dark:text-slate-400">
           {{ $t('subscription.billing.usage.resets_on', { date: formatDate(row.resets_at) }) }}
         </p>
       </li>

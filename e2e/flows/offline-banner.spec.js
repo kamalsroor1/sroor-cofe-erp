@@ -36,7 +36,8 @@ test.describe('POS offline banner and checkout guard (OFFL-2)', () => {
         await expect(page.getByTestId('pos-product-tile').first()).toBeVisible({ timeout: 20000 });
 
         const submit = page.getByTestId('pos-checkout-submit');
-        const savePrint = page.getByTestId('pos-checkout-save-print');
+        // UX-233: printing is a remembered switch, not a second save button; only the save button is gated.
+        const printToggle = page.getByTestId('pos-checkout-print-toggle');
         const banner = page.getByTestId('offline-banner');
         const offlineHint = page.getByTestId('pos-checkout-offline-hint');
 
@@ -51,7 +52,7 @@ test.describe('POS offline banner and checkout guard (OFFL-2)', () => {
         await itemButton.click();
 
         await expect(submit).toBeEnabled();
-        await expect(savePrint).toBeEnabled();
+        await expect(printToggle).toBeEnabled();
         await expect(offlineHint).toBeHidden();
 
         // --- Go offline ---
@@ -59,7 +60,7 @@ test.describe('POS offline banner and checkout guard (OFFL-2)', () => {
 
         await expect(banner).toBeVisible({ timeout: 5000 });
         await expect(submit).toBeDisabled();
-        await expect(savePrint).toBeDisabled();
+        await expect(printToggle).toBeEnabled();
         await expect(offlineHint).toBeVisible();
 
         // F9 is the keyboard checkout: it must be blocked with a SweetAlert, not sent.
@@ -80,7 +81,7 @@ test.describe('POS offline banner and checkout guard (OFFL-2)', () => {
         await expect(banner).toBeHidden({ timeout: 10000 });
         await expect(offlineHint).toBeHidden();
         await expect(submit).toBeEnabled();
-        await expect(savePrint).toBeEnabled();
+        await expect(printToggle).toBeEnabled();
 
         // The cart survived the outage and still nothing was posted (no auto-replay, no checkout).
         expect(checkoutPosts).toEqual([]);

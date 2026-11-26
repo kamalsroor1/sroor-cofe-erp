@@ -17,7 +17,7 @@
         >
           <div>
             <div class="font-bold text-slate-900 dark:text-white">{{ t(paymentMethodKey(p.payment_method)) }}</div>
-            <div class="text-[10px] text-slate-400 font-mono mt-0.5">{{ p.payment_date }} • {{ p.user_name }}</div>
+            <div class="text-xs text-slate-400 font-mono mt-0.5">{{ p.payment_date }} • {{ p.user_name }}</div>
           </div>
           <div class="font-mono font-black text-emerald-500 text-sm">
             +{{ formatMoney(p.amount) }} {{ currencyLabel }}

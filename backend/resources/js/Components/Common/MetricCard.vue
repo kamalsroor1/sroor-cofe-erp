@@ -73,7 +73,7 @@ const valueColorClass = computed(() => {
         <DynamicIcon :name="icon" class="w-4 h-4 shrink-0" />
       </div>
       <div class="min-w-0 flex-1">
-        <div class="text-[10px] sm:text-[11px] leading-tight font-bold text-slate-500 dark:text-slate-400 line-clamp-2">
+        <div class="text-xs sm:text-xs leading-tight font-bold text-slate-500 dark:text-slate-400 line-clamp-2">
           {{ title }}
         </div>
         <div
@@ -81,7 +81,7 @@ const valueColorClass = computed(() => {
           :class="valueColorClass"
         >
           <span class="whitespace-nowrap text-[clamp(0.9rem,9cqw,1.125rem)]" data-metric-value="true">{{ value }}</span>
-          <span v-if="currency" class="font-sans text-slate-400 font-bold text-[10px] whitespace-nowrap">
+          <span v-if="currency" class="font-sans text-slate-400 font-bold text-xs whitespace-nowrap">
             {{ currency }}
           </span>
         </div>
@@ -93,7 +93,7 @@ const valueColorClass = computed(() => {
       <div class="flex items-center justify-between gap-1.5 min-w-0">
         <span
           class="font-bold text-slate-500 dark:text-slate-400 line-clamp-2 leading-snug block"
-          :class="compact ? 'text-[10px] sm:text-[11px]' : 'text-[11px] sm:text-xs'"
+          :class="compact ? 'text-xs sm:text-xs' : 'text-xs sm:text-xs'"
         >
           {{ title }}
         </span>
@@ -122,7 +122,7 @@ const valueColorClass = computed(() => {
         <span
           v-if="currency"
           class="font-sans text-slate-400 font-bold whitespace-nowrap"
-          :class="compact ? 'text-[9.5px] sm:text-[10px]' : 'text-[10px] sm:text-xs'"
+          :class="compact ? 'text-[9.5px] sm:text-xs' : 'text-xs sm:text-xs'"
         >
           {{ currency }}
         </span>
@@ -132,7 +132,7 @@ const valueColorClass = computed(() => {
       <div
         v-if="footerLeft || footerRight"
         class="font-bold flex items-center justify-between gap-1 text-slate-500 dark:text-slate-400 min-w-0"
-        :class="compact ? 'text-[9.5px] sm:text-[10px]' : 'text-[10px] sm:text-[11px]'"
+        :class="compact ? 'text-[9.5px] sm:text-xs' : 'text-xs sm:text-xs'"
       >
         <span class="truncate">{{ footerLeft }}</span>
         <span v-if="footerRight" class="num font-black shrink-0" :class="footerRightClass">
@@ -144,7 +144,7 @@ const valueColorClass = computed(() => {
       <p
         v-else-if="subtitle"
         class="text-slate-400 font-medium truncate"
-        :class="compact ? 'text-[9.5px] sm:text-[10px]' : 'text-[10px] sm:text-[10.5px]'"
+        :class="compact ? 'text-[9.5px] sm:text-xs' : 'text-xs sm:text-[10.5px]'"
       >
         {{ subtitle }}
       </p>

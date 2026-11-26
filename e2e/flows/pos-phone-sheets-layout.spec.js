@@ -217,7 +217,7 @@ test.describe('UI-03: phone payment sheet', () => {
                 n500: page.getByTestId('pos-tender-500'),
                 exact: page.getByTestId('pos-tender-exact'),
                 submit: page.getByTestId('pos-checkout-submit'),
-                print: page.getByTestId('pos-checkout-save-print'),
+                print: page.getByTestId('pos-checkout-print-toggle'),
             };
             const viewport = { x: 0, y: 0, width: size.width, height: size.height };
             const boxes = {};

@@ -48,10 +48,7 @@ const handleAction = () => {
       <p class="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300">
         {{ title || $t('common.no_data_available') }}
       </p>
-      <p
-        v-if="description"
-        class="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium leading-relaxed"
-      >
+      <p v-if="description" class="text-xs sm:text-xs text-slate-400 dark:text-slate-500 font-medium leading-relaxed">
         {{ description }}
       </p>
     </div>

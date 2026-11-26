@@ -10,9 +10,9 @@
         <div class="flex items-center gap-2 font-mono">
           <span class="text-slate-900 dark:text-white font-black">
             {{ formatFn(item[amountField]) }}
-            <span class="text-[10px] font-sans text-slate-400"> {{ currency || currencyLabel }}</span>
+            <span class="text-xs font-sans text-slate-400"> {{ currency || currencyLabel }}</span>
           </span>
-          <span class="text-[10px] text-slate-400 font-bold">({{ item[percentageField] }}%)</span>
+          <span class="text-xs text-slate-400 font-bold">({{ item[percentageField] }}%)</span>
         </div>
       </div>
 

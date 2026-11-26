@@ -33,10 +33,10 @@
             :key="item.id || idx"
             class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
           >
-            <td class="py-3 px-3 text-slate-400 font-bold text-[11px]">{{ idx + 1 }}</td>
+            <td class="py-3 px-3 text-slate-400 font-bold text-xs">{{ idx + 1 }}</td>
             <td class="py-3 px-3">
               <span
-                class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px] font-bold"
+                class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-xs font-bold"
               >
                 {{ item.item_code || `ITM-${item.item_id || item.id}` }}
               </span>

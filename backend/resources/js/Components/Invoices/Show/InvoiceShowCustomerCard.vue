@@ -10,7 +10,7 @@
       <router-link
         v-if="customer?.id"
         :to="`/customers/${customer.id}/statement`"
-        class="text-[11px] font-bold text-theme-primary hover:underline flex items-center gap-1"
+        class="text-xs font-bold text-theme-primary hover:underline flex items-center gap-1"
       >
         <span>{{ $t('customers.view_statement') }}</span>
         <ArrowRight class="w-3.5 h-3.5 rtl:rotate-180" />

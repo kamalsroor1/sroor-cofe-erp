@@ -32,7 +32,7 @@
           <tr v-for="line in lines" :key="line.id">
             <td class="p-3 font-bold text-slate-900 dark:text-white font-tajawal">
               <div>{{ line.item_name }}</div>
-              <span class="text-[10px] text-slate-500 font-mono">{{ line.item_code }}</span>
+              <span class="text-xs text-slate-500 font-mono">{{ line.item_code }}</span>
             </td>
             <td class="p-3 text-center font-mono">{{ line.quantity }}</td>
             <td class="p-3 text-center font-mono">{{ line.returned_quantity }}</td>

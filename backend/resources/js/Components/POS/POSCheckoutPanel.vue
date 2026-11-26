@@ -31,8 +31,12 @@
               class="px-1.5 rounded-md bg-rose-500/15 font-mono text-xs font-black"
               >{{ discountValue }}%</span
             >
-            <span class="ms-auto font-mono font-black text-sm text-rose-500" data-testid="pos-discount-total"
-              >-{{ formatMoney(discountAmount) }}</span
+            <span
+              class="ms-auto font-mono font-black text-sm"
+              :class="hasDiscountAmount ? 'text-rose-500' : 'text-slate-500 dark:text-slate-400'"
+              data-testid="pos-discount-total"
+              >{{ hasDiscountAmount ? '-' : '' }}{{ formatMoney(discountAmount) }}
+              <span class="text-xs font-bold font-tajawal">{{ currencyLabel }}</span></span
             >
             <ChevronDown
               class="w-4 h-4 shrink-0 transition-transform"
@@ -48,7 +52,12 @@
             @click="$emit('open-expenses')"
           >
             <Truck class="w-4 h-4 shrink-0" aria-hidden="true" />
-            <span>{{ $t('pos.extra_charges_short') }}</span>
+            <span class="flex flex-col items-start leading-tight">
+              <span>{{ $t('pos.extra_charges_short') }}</span>
+              <span class="text-xs font-normal text-slate-500 dark:text-slate-400">{{
+                $t('pos.extra_charges_hint')
+              }}</span>
+            </span>
             <span
               v-if="expensesCount > 0"
               class="px-1.5 rounded-full bg-theme-primary/15 text-xs font-black text-theme-primary"
@@ -103,8 +112,11 @@
       <div class="pt-1 border-t border-slate-200 dark:border-slate-800 space-y-1.5" data-testid="pos-discount-box">
         <div class="flex items-center justify-between gap-2 text-xs font-bold text-slate-600 dark:text-slate-400">
           <span>{{ $t('pos.discount_label') }}</span>
-          <span class="font-mono font-black text-rose-500" data-testid="pos-discount-total"
-            >-{{ formatMoney(discountAmount) }}</span
+          <span
+            class="font-mono font-black"
+            :class="hasDiscountAmount ? 'text-rose-500' : 'text-slate-500 dark:text-slate-400'"
+            data-testid="pos-discount-total"
+            >{{ hasDiscountAmount ? '-' : '' }}{{ formatMoney(discountAmount) }} {{ currencyLabel }}</span
           >
         </div>
         <POSDiscountBox
@@ -126,8 +138,9 @@
           @click="$emit('open-expenses')"
           class="flex items-center gap-1 min-h-11 pointer-coarse:min-h-11 md:min-h-0 text-xs font-bold text-theme-primary hover:underline cursor-pointer transition"
         >
-          <Truck class="w-3 h-3" />
-          <span>{{ $t('pos.extra_expenses_shipping') }}</span>
+          <Truck class="w-4 h-4" aria-hidden="true" />
+          <span>{{ $t('pos.extra_charges_short') }}</span>
+          <span class="font-normal text-slate-500 dark:text-slate-400">({{ $t('pos.extra_charges_hint') }})</span>
           <span
             v-if="expensesCount > 0"
             class="px-1.5 py-0.5 rounded-full bg-theme-primary/15 text-xs font-black text-theme-primary"
@@ -182,7 +195,7 @@
     >
       <div
         class="grid gap-1.5"
-        :class="compact ? 'grid-cols-6' : 'grid-cols-3'"
+        :class="denseFooter ? 'grid-cols-6' : 'grid-cols-3'"
         role="group"
         :aria-label="$t('pos.payment_method_label')"
       >
@@ -198,17 +211,15 @@
           class="rounded-lg font-bold border transition text-center cursor-pointer flex items-center justify-center"
           :class="[
             methodHeight,
-            compact ? 'flex-col gap-0.5 px-0.5 py-0.5 text-xs leading-tight' : 'gap-1 px-1 text-xs',
+            denseFooter ? 'flex-col gap-0.5 px-0.5 py-0.5 text-xs leading-tight' : 'gap-1.5 px-1 text-sm leading-tight',
             isMethodActive(m.key)
               ? 'bg-theme-primary text-slate-950 font-black border-theme-primary'
               : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800',
           ]"
         >
           <component :is="m.icon" class="w-4 h-4 shrink-0" aria-hidden="true" />
-          <!-- The one-row footer has ~55px per method: icon + short name there, the full name stays in title/aria-label -->
-          <span class="max-w-full" :class="compact ? 'truncate' : 'text-center leading-tight'">{{
-            compact ? m.short : m.label
-          }}</span>
+          <!-- UX-234: a readable name on every tile (3 per row); the long name stays in title/aria-label -->
+          <span class="truncate max-w-full">{{ denseFooter ? m.short : m.tile }}</span>
         </button>
         <button
           type="button"
@@ -219,11 +230,14 @@
           class="rounded-lg font-bold border transition text-center cursor-pointer flex items-center justify-center bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20"
           :class="[
             methodHeight,
-            compact ? 'flex-col gap-0.5 px-0.5 py-0.5 text-xs leading-tight' : 'gap-1 px-1 text-xs',
+            denseFooter ? 'flex-col gap-0.5 px-0.5 py-0.5 text-xs leading-tight' : 'gap-1.5 px-1 text-sm leading-tight',
           ]"
         >
           <Split class="w-4 h-4 shrink-0" aria-hidden="true" />
-          <span class="truncate max-w-full">{{ $t('pos.split_short') }}</span>
+          <span class="flex flex-col items-start min-w-0">
+            <span class="truncate max-w-full">{{ $t('pos.split_short') }}</span>
+            <span v-if="!denseFooter" class="text-xs font-normal truncate max-w-full">{{ $t('pos.split_hint') }}</span>
+          </span>
         </button>
       </div>
 
@@ -246,7 +260,7 @@
             autocomplete="off"
             dir="ltr"
             data-testid="pos-cash-received"
-            :value="cashReceived"
+            :value="trimZeros(cashReceived)"
             @input="onTenderInput"
             @focus="$event.target.select()"
             :placeholder="$t('pos.cash_received_placeholder')"
@@ -371,35 +385,64 @@
         <span>{{ $t('connectivity.checkout_blocked') }}</span>
       </p>
 
+      <!-- UX-233: printing is a labelled choice, not a second "save" button competing with the main one -->
+      <button
+        type="button"
+        role="switch"
+        data-testid="pos-checkout-print-toggle"
+        :aria-label="$t('pos.print_after_save')"
+        :title="$t('pos.print_after_save')"
+        :aria-checked="printAfterSave"
+        :disabled="isSubmitting"
+        class="w-full min-h-11 px-3 rounded-xl border flex items-center justify-between gap-2 text-sm font-bold transition cursor-pointer disabled:opacity-40"
+        :class="[
+          printAfterSave
+            ? 'border-theme-primary bg-theme-primary/10 text-slate-900 dark:text-white'
+            : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
+          denseFooter ? 'col-span-2 px-2' : compact ? 'col-span-5' : '',
+        ]"
+        @click="printAfterSave = !printAfterSave"
+      >
+        <span class="flex items-center gap-2 min-w-0">
+          <Printer class="w-4 h-4 shrink-0" aria-hidden="true" />
+          <span class="truncate">{{ denseFooter ? $t('pos.print_short') : $t('pos.print_after_save') }}</span>
+        </span>
+        <span
+          class="relative shrink-0 w-10 h-6 rounded-full transition-colors"
+          :class="printAfterSave ? 'bg-theme-primary' : 'bg-slate-300 dark:bg-slate-600'"
+          aria-hidden="true"
+        >
+          <span
+            class="absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all"
+            :class="printAfterSave ? 'start-5' : 'start-1'"
+          ></span>
+        </span>
+      </button>
+
       <button
         type="button"
         data-testid="pos-checkout-submit"
-        @click="$emit('submit', false)"
+        :aria-busy="isSubmitting"
+        @click="$emit('submit', printAfterSave)"
         :disabled="cartEmpty || isSubmitting || offline"
-        class="w-full min-h-12 bg-theme-primary hover:opacity-95 text-slate-950 rounded-xl font-black text-sm transition-all duration-150 active:scale-[0.98] shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30"
-        :class="compact ? 'col-span-3 min-h-11!' : ''"
+        class="w-full min-h-14 bg-theme-primary hover:opacity-95 text-slate-950 rounded-xl font-black text-base transition-all duration-150 active:scale-[0.98] shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30"
+        :class="denseFooter ? 'col-span-3 min-h-11!' : compact ? 'col-span-5 min-h-12!' : ''"
       >
         <span
           v-if="isSubmitting"
           class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"
         ></span>
-        <CheckCircle2 v-else class="w-4 h-4 shrink-0 text-slate-950 stroke-[2.5]" />
-        <!-- The F9 / Enter hint is for a keyboard: touch screens show the plain action -->
-        <span class="text-center leading-tight text-balance">{{
-          isTouch ? $t('pos.confirm_and_approve') : $t('pos.confirm_and_approve_f9')
-        }}</span>
-      </button>
-
-      <button
-        type="button"
-        data-testid="pos-checkout-save-print"
-        @click="$emit('submit', true)"
-        :disabled="cartEmpty || isSubmitting || offline"
-        class="w-full min-h-11 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-bold text-xs transition border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30"
-        :class="compact ? 'col-span-2' : ''"
-      >
-        <Printer class="w-3.5 h-3.5 shrink-0" />
-        <span class="text-center leading-tight text-balance">{{ $t('pos.save_and_print_btn') }}</span>
+        <CheckCircle2 v-else class="w-5 h-5 shrink-0 text-slate-950 stroke-[2.5]" />
+        <!-- The F9 hint is for a keyboard: touch screens show the plain action -->
+        <span class="text-center leading-tight text-balance"
+          >{{ submitLabel }}
+          <kbd
+            v-if="!isTouch"
+            class="ms-1 px-1.5 rounded-md bg-slate-950/10 text-xs font-mono font-bold text-slate-900"
+            aria-hidden="true"
+            >F9</kbd
+          ></span
+        >
       </button>
     </div>
   </aside>
@@ -428,11 +471,17 @@ import { useTrans } from '../../Composables/useTrans';
 import POSDiscountBox from './POSDiscountBox.vue';
 import { usePosSaleSettings, tenderGridLayout } from '../../Composables/POS/usePosSaleSettings';
 import { sanitizeAmountInput } from '../../helpers/posCheckout';
+import { usePrintAfterSave } from '../../Composables/POS/usePrintAfterSave';
 import { normalize, dAdd, dSub, dCmp, dMax0, isZero, isPositive } from '../../helpers/decimal';
 
 const { formatMoney, currencyLabel } = useFormatters();
 const isTouch = useMediaQuery('(pointer: coarse)');
+// UX-234: the desktop cart footer (mouse) keeps one row of methods and the print switch beside the save button so the
+// cart still shows 5 lines at 1366x768; touch screens get the roomier 3-per-row methods and full labels.
+const denseFooter = computed(() => props.compact && !isTouch.value);
 const { t } = useTrans();
+const { printAfterSave } = usePrintAfterSave();
+const submitLabel = computed(() => (printAfterSave.value ? t('pos.save_and_print_btn') : t('pos.save_invoice_btn')));
 
 const { enabledMethods, cashDenominations: denominations } = usePosSaleSettings();
 // SET-01: the tender row holds up to 6 denominations + the exact/clear button; keep the columns even.
@@ -446,11 +495,35 @@ const idleClass =
 
 // Method keys are the ones the checkout API accepts; e_wallet is what the server stores for smart wallets.
 const allMethods = computed(() => [
-  { key: 'cash', label: t('pos.method_cash'), short: t('pos.method_cash'), icon: Banknote },
-  { key: 'instapay', label: t('pos.instapay'), short: t('pos.method_instapay_short'), icon: Zap },
-  { key: 'e_wallet', label: t('pos.smart_wallet'), short: t('pos.method_wallet_short'), icon: Smartphone },
-  { key: 'visa', label: t('pos.visa_card'), short: t('pos.method_visa_short'), icon: CreditCard },
-  { key: 'bank_transfer', label: t('pos.bank_transfer'), short: t('pos.method_bank_short'), icon: Building2 },
+  { key: 'cash', label: t('pos.method_cash'), tile: t('pos.method_cash'), short: t('pos.method_cash'), icon: Banknote },
+  {
+    key: 'instapay',
+    label: t('pos.instapay'),
+    tile: t('pos.method_instapay_short'),
+    short: t('pos.method_instapay_short'),
+    icon: Zap,
+  },
+  {
+    key: 'e_wallet',
+    label: t('pos.smart_wallet'),
+    tile: t('pos.smart_wallet'),
+    short: t('pos.method_wallet_short'),
+    icon: Smartphone,
+  },
+  {
+    key: 'visa',
+    label: t('pos.visa_card'),
+    tile: t('pos.method_visa_short'),
+    short: t('pos.method_visa_short'),
+    icon: CreditCard,
+  },
+  {
+    key: 'bank_transfer',
+    label: t('pos.bank_transfer'),
+    tile: t('pos.bank_transfer'),
+    short: t('pos.method_bank_short'),
+    icon: Building2,
+  },
 ]);
 // SET-01: only the methods the shop enabled in Settings > POS (the server refuses the others too).
 const methods = computed(() => allMethods.value.filter((m) => enabledMethods.value.includes(m.key)));
@@ -500,6 +573,13 @@ const props = defineProps({
 
 const discountOpen = ref(false);
 const hasDiscountValue = computed(() => isPositive(String(props.discountValue ?? '0')));
+const hasDiscountAmount = computed(() => isPositive(String(props.discountAmount ?? '0')));
+// UX-234: amounts set by the tender buttons arrive as fixed 3-decimal strings (425.000); show them like every
+// other amount on screen (425). Only that full 3-decimal shape is trimmed, so a half-typed "12.0" stays as typed.
+const trimZeros = (value) => {
+  const text = String(value ?? '');
+  return /\.\d{3}$/.test(text) ? text.replace(/\.?0+$/, '') : text;
+};
 const methodHeight = computed(() => (props.compact ? 'min-h-10 pointer-coarse:min-h-11' : 'min-h-11 py-1'));
 const controlHeight = computed(() => (props.compact ? 'min-h-9 pointer-coarse:min-h-11' : 'min-h-11'));
 

@@ -36,7 +36,7 @@ const copy = async () => {
       class="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50"
     >
       <div v-if="login" class="space-y-1">
-        <dt class="text-[11px] font-black text-slate-500 dark:text-slate-400">
+        <dt class="text-xs font-black text-slate-500 dark:text-slate-400">
           {{ $t('common.temporary_password.login_label') }}
         </dt>
         <dd class="break-all font-mono text-sm font-bold text-slate-900 dark:text-white" dir="ltr">
@@ -44,7 +44,7 @@ const copy = async () => {
         </dd>
       </div>
       <div class="space-y-1">
-        <dt class="text-[11px] font-black text-slate-500 dark:text-slate-400">
+        <dt class="text-xs font-black text-slate-500 dark:text-slate-400">
           {{ $t('common.temporary_password.label') }}
         </dt>
         <dd

@@ -28,7 +28,7 @@
 
         <div>
           <h2 class="text-sm font-black text-slate-900 dark:text-white">{{ title }}</h2>
-          <p v-if="subtitle" class="text-[10px] text-slate-400 font-bold">{{ subtitle }}</p>
+          <p v-if="subtitle" class="text-xs text-slate-400 font-bold">{{ subtitle }}</p>
         </div>
       </div>
 

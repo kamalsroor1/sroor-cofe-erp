@@ -69,7 +69,7 @@ const formatTotal = (qty, price) => {
         <tr v-for="(it, itIdx) in items" :key="it.item_id">
           <td class="py-3 font-bold text-slate-900 dark:text-white font-tajawal">
             {{ it.name }}
-            <span class="text-[10px] text-slate-400 dark:text-slate-500 ms-1">({{ it.unit }})</span>
+            <span class="text-xs text-slate-400 dark:text-slate-500 ms-1">({{ it.unit }})</span>
           </td>
 
           <td class="py-3">
@@ -124,7 +124,7 @@ const formatTotal = (qty, price) => {
       <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
         <div>
           <div class="font-bold text-xs text-slate-900 dark:text-white">{{ it.name }}</div>
-          <div class="text-[10px] text-slate-400 font-mono">({{ it.unit }})</div>
+          <div class="text-xs text-slate-400 font-mono">({{ it.unit }})</div>
         </div>
         <button
           type="button"
@@ -137,7 +137,7 @@ const formatTotal = (qty, price) => {
 
       <div class="grid grid-cols-2 gap-2">
         <div class="space-y-1">
-          <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400">{{ $t('common.quantity') }}</label>
+          <label class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('common.quantity') }}</label>
           <input
             :value="it.quantity"
             type="number"
@@ -150,7 +150,7 @@ const formatTotal = (qty, price) => {
         </div>
 
         <div class="space-y-1">
-          <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400">{{ priceLabel }}</label>
+          <label class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ priceLabel }}</label>
           <input
             :value="it[priceField]"
             type="number"

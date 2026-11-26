@@ -45,7 +45,7 @@
                         </h3>
                         <span
                           v-if="activeCount > 0"
-                          class="px-2 py-0.5 rounded-full text-[10px] font-black bg-theme-primary text-white"
+                          class="px-2 py-0.5 rounded-full text-xs font-black bg-theme-primary text-white"
                         >
                           {{ activeCount }}
                         </span>
@@ -117,7 +117,7 @@
             </h3>
             <span
               v-if="activeCount > 0"
-              class="px-2 py-0.5 rounded-full text-[10px] font-black bg-theme-primary text-white"
+              class="px-2 py-0.5 rounded-full text-xs font-black bg-theme-primary text-white"
             >
               {{ activeCount }}
             </span>

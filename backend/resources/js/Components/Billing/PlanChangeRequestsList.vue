@@ -84,13 +84,13 @@ const TONES = {
                 }}
               </template>
             </p>
-            <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+            <p class="text-xs font-bold text-slate-500 dark:text-slate-400">
               {{ request.kind.label }} - {{ request.billing_cycle.label }} - {{ formatDate(request.created_at) }}
             </p>
           </div>
           <BillingStatusBadge :label="request.status.label" :tone="TONES[request.status.value] || 'neutral'" />
         </div>
-        <p v-if="request.rejection_reason" class="text-[11px] font-bold text-rose-600 dark:text-rose-400">
+        <p v-if="request.rejection_reason" class="text-xs font-bold text-rose-600 dark:text-rose-400">
           {{ $t('subscription.billing.requests.history.rejected_reason', { reason: request.rejection_reason }) }}
         </p>
         <BaseButton

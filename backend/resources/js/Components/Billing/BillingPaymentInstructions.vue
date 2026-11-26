@@ -49,7 +49,7 @@ const copy = async (row) => {
     </div>
 
     <template v-if="hasAny">
-      <p class="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+      <p class="text-xs font-medium text-slate-600 dark:text-slate-300">
         {{ $t('subscription.billing.pay.instructions_hint') }}
       </p>
       <ul class="space-y-2">
@@ -59,7 +59,7 @@ const copy = async (row) => {
           class="flex items-center justify-between gap-2 rounded-xl bg-white/70 dark:bg-slate-900/60 px-3 py-2"
         >
           <div class="min-w-0">
-            <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400">{{ row.label }}</p>
+            <p class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ row.label }}</p>
             <p class="text-sm font-black text-slate-900 dark:text-white break-all" dir="ltr">{{ row.value }}</p>
           </div>
           <button
@@ -73,7 +73,7 @@ const copy = async (row) => {
           </button>
         </li>
       </ul>
-      <p v-if="note" class="text-[11px] font-bold text-slate-700 dark:text-slate-300 leading-relaxed">{{ note }}</p>
+      <p v-if="note" class="text-xs font-bold text-slate-700 dark:text-slate-300 leading-relaxed">{{ note }}</p>
     </template>
 
     <p v-else class="text-xs font-bold text-slate-700 dark:text-slate-300">

@@ -35,7 +35,7 @@
 
       <template #cell-return_type="{ row }">
         <span
-          class="px-2.5 py-1 rounded-full text-[10px] font-bold border font-tajawal inline-block"
+          class="px-2.5 py-1 rounded-full text-xs font-bold border font-tajawal inline-block"
           :class="
             row.return_type === 'sales_return'
               ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-600 dark:text-cyan-400'
@@ -53,7 +53,7 @@
       <template #cell-party_name="{ row }">
         <div>
           <div class="font-bold text-slate-900 dark:text-white font-tajawal">{{ row.party_name }}</div>
-          <div v-if="row.party_phone" class="text-[10px] text-slate-500 font-mono mt-0.5">
+          <div v-if="row.party_phone" class="text-xs text-slate-500 font-mono mt-0.5">
             {{ row.party_phone }}
           </div>
         </div>
@@ -69,7 +69,7 @@
         </span>
         <div
           v-if="row.refund_method"
-          class="text-[10px] text-slate-500 dark:text-slate-400 font-tajawal mt-0.5"
+          class="text-xs text-slate-500 dark:text-slate-400 font-tajawal mt-0.5"
           data-testid="return-refund-line"
         >
           {{ $t(`returns.refund_method_${row.refund_method}`) }}
@@ -86,27 +86,25 @@
       </template>
 
       <template #cell-actions="{ row }">
-        <div class="flex items-center justify-center gap-1">
-          <button
-            type="button"
-            @click="$emit('open-details', row)"
-            data-testid="action-view"
-            class="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0 p-2 text-slate-400 hover:text-cyan-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center"
+        <div class="flex items-center justify-center gap-1.5 flex-wrap">
+          <RowAction
+            :icon="Eye"
+            :label="$t('common.preview')"
             :title="$t('returns.view_return_details_hint')"
-          >
-            <Eye class="w-4 h-4" />
-          </button>
-
-          <button
-            v-if="canDelete"
-            type="button"
-            @click="$emit('delete-return', row)"
-            data-testid="action-delete"
-            class="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0 p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center"
-            :title="$t('returns.archive_return_hint')"
-          >
-            <Trash2 class="w-4 h-4" />
-          </button>
+            data-testid="action-view"
+            @click="$emit('open-details', row)"
+          />
+          <template v-if="canDelete">
+            <span class="hidden sm:block w-px h-6 bg-slate-200 dark:bg-slate-700 mx-0.5" aria-hidden="true"></span>
+            <RowAction
+              :icon="Archive"
+              :label="$t('returns.archive_short')"
+              :title="$t('returns.archive_return_hint')"
+              variant="danger"
+              data-testid="action-delete"
+              @click="$emit('delete-return', row)"
+            />
+          </template>
         </div>
       </template>
     </DataTable>
@@ -115,7 +113,8 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Eye, Trash2, RotateCcw } from 'lucide-vue-next';
+import { Eye, Archive, RotateCcw } from 'lucide-vue-next';
+import RowAction from '../Common/RowAction.vue';
 import DataTable from '@/Components/Common/DataTable.vue';
 import EmptyState from '@/Components/Common/EmptyState.vue';
 import { useTrans } from '@/Composables/useTrans';

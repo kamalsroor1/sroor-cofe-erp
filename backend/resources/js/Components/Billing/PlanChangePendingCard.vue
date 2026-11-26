@@ -73,7 +73,7 @@ const hintKey = computed(() =>
             }}
           </template>
         </p>
-        <p class="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+        <p class="text-xs font-bold text-slate-600 dark:text-slate-400">
           <template v-if="isScheduled">{{ $t('subscription.downgrade.scheduled_hint') }}</template>
           <template v-else> {{ $t(hintKey) }} ({{ formatDate(request.created_at) }}) </template>
         </p>
