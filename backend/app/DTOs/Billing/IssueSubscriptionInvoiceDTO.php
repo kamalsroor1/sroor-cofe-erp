@@ -32,6 +32,10 @@ use Carbon\CarbonImmutable;
  * `listPriceOnly` (#232 spec C, the plan-change path): every plan line is billed at the plan LIST
  * price, never at a founder / transition step of the tenant's schedule, and is flagged
  * `founder_excluded` so ActivateSubscriptionAction never claims a founder slot for it either.
+ * `agreedPlanPrice` (#232 spec C, a released founder hold on a tenant with no running paid term):
+ * the full-cycle plan line is billed at this owner-reviewed amount instead of a catalog price,
+ * flagged `agreed_price` + `founder_excluded` (never re-priced at Verify, never claims a founder
+ * slot). Ignored on a difference invoice.
  */
 final readonly class IssueSubscriptionInvoiceDTO
 {
@@ -58,6 +62,7 @@ final readonly class IssueSubscriptionInvoiceDTO
         public bool $founderPriceIfAvailable = false,
         public bool $appendRenewal = false,
         public bool $listPriceOnly = false,
+        public ?string $agreedPlanPrice = null,
     ) {}
 
     /**

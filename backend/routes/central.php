@@ -202,6 +202,9 @@ Route::prefix('v1/super-admin')
             ->middleware([$can(CentralPermission::BillingManage), RequireRecentTwoFactor::class, 'throttle:20,1'])->name('billing.invoices.record_payment');
         Route::get('/billing/payments', [BillingReviewController::class, 'index'])
             ->middleware($can(CentralPermission::BillingView))->name('billing.payments.index');
+        Route::get('/billing/payments/{payment}', [BillingReviewController::class, 'show'])
+            ->whereNumber('payment')
+            ->middleware($can(CentralPermission::BillingView))->name('billing.payments.show');
         Route::get('/billing/payments/{payment}/receipt', [BillingReviewController::class, 'receipt'])
             ->whereNumber('payment')
             ->middleware([$can(CentralPermission::BillingView), 'throttle:30,1'])->name('billing.payments.receipt');

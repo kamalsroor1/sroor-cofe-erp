@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -59,6 +60,7 @@ use Illuminate\Support\Carbon;
  * @property-read Subscription|null $subscription
  * @property-read CentralUser|null $issuer
  * @property-read Collection<int, BillingPayment> $payments
+ * @property-read PlanChangeRequest|null $planChangeRequest
  */
 class BillingInvoice extends Model
 {
@@ -179,6 +181,17 @@ class BillingInvoice extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(BillingPayment::class);
+    }
+
+    /**
+     * The support request (plan change or add-on) this invoice answered, when it came from one
+     * (IssuePlanChangeInvoiceAction stores the invoice id on the request).
+     *
+     * @return HasOne<PlanChangeRequest, $this>
+     */
+    public function planChangeRequest(): HasOne
+    {
+        return $this->hasOne(PlanChangeRequest::class, 'billing_invoice_id');
     }
 
     /**

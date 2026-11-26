@@ -24,6 +24,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $addon_id
  * @property int $quantity
  * @property BillingCycle $billing_cycle
+ * @property bool $renew #232: the shop also asked for one full cycle of the new plan after the current paid end
  * @property string|null $notes
  * @property PlanChangeRequestStatus $status
  * @property int|null $billing_invoice_id
@@ -55,6 +56,7 @@ class PlanChangeRequest extends Model
         'addon_id',
         'quantity',
         'billing_cycle',
+        'renew',
         'notes',
         'status',
         'billing_invoice_id',
@@ -71,6 +73,7 @@ class PlanChangeRequest extends Model
      */
     protected $attributes = [
         'quantity' => 1,
+        'renew' => false,
         'status' => 'pending',
     ];
 
@@ -81,6 +84,7 @@ class PlanChangeRequest extends Model
             'status' => PlanChangeRequestStatus::class,
             'billing_cycle' => BillingCycle::class,
             'quantity' => 'integer',
+            'renew' => 'boolean',
             'current_plan_id' => 'integer',
             'requested_plan_id' => 'integer',
             'addon_id' => 'integer',

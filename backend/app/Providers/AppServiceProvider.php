@@ -374,6 +374,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('billing-renewal-invoice', fn (Request $request): Limit => Limit::perHour($this->limit('rate_limits.billing_renewal_invoice.per_hour', 10))
             ->by('billing-renewal|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->user()?->getAuthIdentifier()).'|'.$request->ip()));
 
+        // #232: self-service upgrade / subscribe invoices, per tenant + user + IP.
+        RateLimiter::for('billing-change-invoice', fn (Request $request): Limit => Limit::perHour($this->limit('rate_limits.billing_change_invoice.per_hour', 10))
+            ->by('billing-change-invoice|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->user()?->getAuthIdentifier()).'|'.$request->ip()));
+
         // Plan change / add-on requests to support, per tenant + user + IP.
         RateLimiter::for('billing-plan-change-request', fn (Request $request): Limit => Limit::perHour($this->limit('rate_limits.billing_plan_change_request.per_hour', 10))
             ->by('billing-plan-change|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->user()?->getAuthIdentifier()).'|'.$request->ip()));

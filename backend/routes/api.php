@@ -356,6 +356,9 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
             Route::get('/subscription', [BillingController::class, 'subscription'])->name('api.billing.subscription');
             // #232: server-computed price of an upgrade / renewal (read-only, same pricer as the invoice).
             Route::get('/change-preview', [BillingController::class, 'changePreview'])->middleware('throttle:60,1')->name('api.billing.change_preview');
+            // #232 UI §1: the shop issues its own upgrade / subscribe invoice (or files it held for a founder-price review).
+            Route::post('/change-invoice', [BillingController::class, 'changeInvoice'])->middleware('throttle:billing-change-invoice')
+                ->name('api.billing.change_invoice');
             Route::get('/invoices', [BillingController::class, 'invoices'])->name('api.billing.invoices.index');
             Route::get('/invoices/{id}', [BillingController::class, 'showInvoice'])->whereNumber('id')->name('api.billing.invoices.show');
             Route::post('/invoices/{id}/payments', [BillingController::class, 'submitPayment'])

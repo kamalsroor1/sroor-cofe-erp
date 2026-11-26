@@ -127,7 +127,7 @@ final class IssueSubscriptionInvoiceAction
             if ($plan instanceof Plan && $cycle instanceof BillingCycle) {
                 $lines[] = $dto->differenceLine !== null
                     ? $this->differenceLine($dto->differenceLine, $plan, $cycle, $termEnd)
-                    : $this->pricer->planLine($plan, $cycle, $tenant, $subscription, $periodStart, $dto->useFounderPrice, $dto->founderPriceIfAvailable, $dto->listPriceOnly);
+                    : $this->agreed($this->pricer->planLine($plan, $cycle, $tenant, $subscription, $periodStart, $dto->useFounderPrice, $dto->founderPriceIfAvailable, $dto->listPriceOnly), $dto->agreedPlanPrice);
             }
             if ($appendRenewal && $plan instanceof Plan && $renewalCycle instanceof BillingCycle) {
                 $lines[] = array_merge($this->pricer->planLine($plan, $renewalCycle, $tenant, $subscription, $periodStart, $dto->useFounderPrice, $dto->founderPriceIfAvailable, $dto->listPriceOnly), [
@@ -358,6 +358,37 @@ final class IssueSubscriptionInvoiceAction
             'amount' => $amount,
             'founder' => false,
         ] + (isset($difference['proration']) ? ['prorated' => true] + $difference['proration'] : []);
+    }
+
+    /**
+     * #232 spec C: a released founder hold on a tenant with no running paid term bills the full
+     * cycle at the price the owner agreed and reviewed (typed at release). The catalog price stays
+     * on the line as `list_price` for the record; `price_step` is dropped (no schedule step applies).
+     * Flagged `agreed_price` (UpgradeDifferenceRepricer only touches prorated difference lines, so it
+     * is never re-priced at Verify) and `founder_excluded` (ActivateSubscriptionAction never claims a
+     * founder slot for it: general founder policy is an open owner decision).
+     *
+     * @param  array<string, mixed>  $line
+     * @return array<string, mixed>
+     */
+    private function agreed(array $line, ?string $agreedPrice): array
+    {
+        if ($agreedPrice === null) {
+            return $line;
+        }
+
+        $price = Decimal::normalize($agreedPrice);
+        $listPrice = $line['amount'] ?? null;
+        unset($line['price_step']);
+
+        return array_merge($line, [
+            'unit_price' => $price,
+            'amount' => $price,
+            'founder' => false,
+            'founder_excluded' => true,
+            'agreed_price' => true,
+            'list_price' => $listPrice,
+        ]);
     }
 
     /**

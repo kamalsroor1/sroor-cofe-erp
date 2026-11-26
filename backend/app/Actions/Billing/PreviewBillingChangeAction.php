@@ -34,8 +34,10 @@ use Carbon\CarbonImmutable;
  *  - upgrade with a running paid term (IssuePlanChangeInvoiceAction): the pro-rata difference
  *    (ProrationCalculator) for the rest of the term, end kept; with `renew`, plus one full cycle of the
  *    new plan at the LIST price appended after the current end;
- *  - upgrade with no paid term (trial / expired): one full cycle of the new plan at the LIST price,
- *    the term starting at the verified payment (spec A). Remaining trial days are NOT added: open
+ *  - upgrade / subscribe with no paid term (trial / expired): one full cycle of the plan at the LIST
+ *    price, the term starting at the verified payment (spec A). The tenant's OWN paid plan is
+ *    accepted here (a trial subscribing to the plan it tries); with a running term it is 422
+ *    request_same_plan (use renew). Remaining trial days are NOT added: open
  *    owner decision (أ), reported as `trial_days_policy = pending` during a trial.
  * A founder with an agreed price (FounderPricingService::hasAgreedFounderPrice) is held for a manual
  * price review on the upgrade path (spec C): `held_for_price_review` true, no lines, no total.
@@ -101,7 +103,8 @@ final class PreviewBillingChangeAction
         if ($target->is_free) {
             throw BillingException::freePlanNotBillable();
         }
-        if ($current instanceof Plan && (int) $current->getKey() === (int) $target->getKey()) {
+        // #232 item 8: with no paid term running the same (paid) plan is a subscribe, not a no-op.
+        if ($current instanceof Plan && (int) $current->getKey() === (int) $target->getKey() && $termEnd !== null) {
             throw BillingException::requestSamePlan();
         }
 

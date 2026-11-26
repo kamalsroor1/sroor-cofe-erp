@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Resources\Billing;
 
+use App\Enums\Billing\PlanChangeRequestKind;
+use App\Models\BillingInvoice;
 use App\Models\BillingPayment;
+use App\Models\Plan;
+use App\Models\PlanChangeRequest;
 use App\Services\Billing\TemporaryAccessService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -16,6 +20,9 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * through a signed link (GET .../receipt), the shop never re-downloads it.
  *
  * `tenant` / `invoice` / `reviewed_by` appear only when the relation is loaded (the central queue).
+ * `invoice_plan_change` appears only when `invoice.planChangeRequest` is loaded (console queue / show,
+ * ShowBillingPaymentAction::RELATIONS): {from: {id, name}|null, to: {id, name}} for an invoice that
+ * answered a PLAN CHANGE request, else null (add-on request, console-issued invoice, renewal...).
  *
  * @mixin BillingPayment
  */
@@ -65,8 +72,40 @@ final class BillingPaymentResource extends JsonResource
                 'label' => $this->receipt_classification->label(),
                 'reason' => $this->receipt_classification_reason,
             ],
+            // #232 console: from/to plans of an upgrade that answered a plan-change request.
+            'invoice_plan_change' => $this->when(
+                $this->resource->relationLoaded('invoice') && $this->invoice->relationLoaded('planChangeRequest'),
+                fn (): ?array => $this->planChange($this->invoice),
+            ),
             // #232 UI §4.1: the invoice's 48h window, for the console queue chip (invoice loaded only).
             'invoice_temporary_access' => $this->whenLoaded('invoice', fn () => app(TemporaryAccessService::class)->invoiceWindow($this->invoice, CarbonImmutable::now())),
         ];
+    }
+
+    /**
+     * #232 console: the plans of the plan-change request this invoice answered (eager-loaded).
+     *
+     * @return array{from: array{id: int, name: string|null}|null, to: array{id: int, name: string|null}}|null
+     */
+    private function planChange(?BillingInvoice $invoice): ?array
+    {
+        $request = $invoice?->planChangeRequest;
+
+        if (! $request instanceof PlanChangeRequest || $request->kind !== PlanChangeRequestKind::PlanChange || $request->requested_plan_id === null) {
+            return null;
+        }
+
+        return [
+            'from' => $request->current_plan_id === null ? null : $this->planRef($request->current_plan_id, $request->currentPlan),
+            'to' => $this->planRef($request->requested_plan_id, $request->requestedPlan),
+        ];
+    }
+
+    /**
+     * @return array{id: int, name: string|null}
+     */
+    private function planRef(int $id, ?Plan $plan): array
+    {
+        return ['id' => $id, 'name' => $plan?->name];
     }
 }

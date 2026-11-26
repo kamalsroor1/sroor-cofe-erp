@@ -24,7 +24,7 @@ final class ListBillingPaymentsAction
 {
     public function execute(Request $request): LengthAwarePaginator
     {
-        $query = BillingPayment::query()->with(['tenant', 'invoice', 'verifier']);
+        $query = BillingPayment::query()->with(ShowBillingPaymentAction::RELATIONS);
 
         $filtered = app(Pipeline::class)
             ->send($query)

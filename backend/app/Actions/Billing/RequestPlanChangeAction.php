@@ -87,6 +87,8 @@ final class RequestPlanChangeAction
                 'current_plan_id' => $tenant->plan_id,
                 'quantity' => $dto->quantity,
                 'billing_cycle' => $dto->cycle,
+                // A free-plan downgrade is never invoiced, so `renew` means nothing there.
+                'renew' => $dto->renew && ! $toFreePlan,
                 'notes' => $dto->notes,
                 'status' => $toFreePlan ? PlanChangeRequestStatus::Scheduled : PlanChangeRequestStatus::Pending,
                 'requested_by_name' => $dto->requestedByName,
@@ -104,6 +106,7 @@ final class RequestPlanChangeAction
                     'addon_id' => $target['addon_id'],
                     'quantity' => $dto->quantity,
                     'billing_cycle' => $dto->cycle->value,
+                    'renew' => $dto->renew && ! $toFreePlan,
                     'downgrade_to_free' => $toFreePlan,
                     'applies_at' => ! $toFreePlan ? null : ($applyNow ? 'now' : $tenant->subscription_ends_at?->toIso8601String()),
                 ],
@@ -141,7 +144,9 @@ final class RequestPlanChangeAction
             throw BillingException::requestPlanUnavailable();
         }
 
-        if ($tenant->plan_id !== null && (int) $tenant->plan_id === (int) $plan->getKey()) {
+        // #232 item 8: a shop with no paid term running (a trial on a paid plan, or an expired term)
+        // may SUBSCRIBE to the plan it is on; a free plan, or a running paid term, stays refused.
+        if ($tenant->plan_id !== null && (int) $tenant->plan_id === (int) $plan->getKey() && ($plan->is_free || $tenant->hasPaidTermRunning())) {
             throw BillingException::requestSamePlan();
         }
 

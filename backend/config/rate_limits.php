@@ -110,6 +110,11 @@ return [
         'per_hour' => (int) (env('RATE_LIMIT_BILLING_RENEWAL_HOURLY') ?: 10),
     ],
 
+    // POST /api/v1/billing/change-invoice (#232 self-service upgrade / subscribe), per tenant + user + IP.
+    'billing_change_invoice' => [
+        'per_hour' => (int) (env('RATE_LIMIT_BILLING_CHANGE_INVOICE_HOURLY') ?: 10),
+    ],
+
     // POST /api/v1/billing/plan-change-requests, per tenant + user + IP.
     'billing_plan_change_request' => [
         'per_hour' => (int) (env('RATE_LIMIT_BILLING_PLAN_CHANGE_HOURLY') ?: 10),

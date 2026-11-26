@@ -64,6 +64,8 @@ final class EnsureTenantActive
         'api.billing.renewal_invoice',
         'api.billing.plan_change_requests.store',
         'api.billing.plan_change_requests.cancel',
+        // #232: a read-only shop (trial ended / unpaid) must be able to issue its subscribe invoice
+        'api.billing.change_invoice',
         // SELL-07: the shop may withdraw its own still-pending payment (wrong amount) and resubmit
         'api.billing.payments.cancel',
     ];

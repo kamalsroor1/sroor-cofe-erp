@@ -9,6 +9,7 @@ use App\Actions\Billing\GetPaymentReceiptFileAction;
 use App\Actions\Billing\ListBillingPaymentsAction;
 use App\Actions\Billing\PreviewPaymentVerificationAction;
 use App\Actions\Billing\RejectManualPaymentAction;
+use App\Actions\Billing\ShowBillingPaymentAction;
 use App\Actions\Billing\VerifyManualPaymentAction;
 use App\DTOs\Billing\RejectManualPaymentDTO;
 use App\DTOs\Billing\VerifyManualPaymentDTO;
@@ -29,6 +30,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 /**
  * Manual payment review (PRD-03 / ENTI-3.4), routes/central.php:
  *   GET  /api/v1/super-admin/billing/payments                       super_admin.billing.view
+ *   GET  /api/v1/super-admin/billing/payments/{payment}             super_admin.billing.view  (one queue item, 404 unknown)
  *   GET  /api/v1/super-admin/billing/payments/{payment}/receipt     super_admin.billing.view  (signed link)
  *   GET  .../payments/{payment}/receipt/file                        signed URL only, SINGLE-USE (streams the file)
  *   GET  /api/v1/super-admin/billing/payments/{payment}/verify-preview  super_admin.billing.manage  ?transferred_at (#232)
@@ -46,12 +48,20 @@ final class BillingReviewController extends Controller
         private readonly VerifyManualPaymentAction $verifyAction,
         private readonly RejectManualPaymentAction $rejectAction,
         private readonly PreviewPaymentVerificationAction $previewAction,
+        private readonly ShowBillingPaymentAction $showAction,
     ) {}
 
     public function index(ListBillingPaymentsRequest $request)
     {
         return BillingPaymentResource::collection($this->listAction->execute($request))
             ->additional(['success' => true]);
+    }
+
+    public function show(int $payment): JsonResponse
+    {
+        return (new BillingPaymentResource($this->showAction->execute($payment)))
+            ->additional(['success' => true])
+            ->response();
     }
 
     public function receipt(Request $request, int $payment): JsonResponse
@@ -102,7 +112,7 @@ final class BillingReviewController extends Controller
 
     private function respond(BillingPayment $payment, string $message): JsonResponse
     {
-        return (new BillingPaymentResource($payment->load(['tenant', 'invoice', 'verifier'])))
+        return (new BillingPaymentResource($payment->load(ShowBillingPaymentAction::RELATIONS)))
             ->additional(['success' => true, 'message' => $message])
             ->response();
     }

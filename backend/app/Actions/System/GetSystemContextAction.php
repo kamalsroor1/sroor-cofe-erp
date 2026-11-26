@@ -37,6 +37,7 @@ final class GetSystemContextAction
         private readonly TenantFeatureManagerInterface $featureManager,
         private readonly GetSetupProgressAction $setupProgressAction,
         private readonly GetSubscriptionBannerAction $subscriptionBannerAction,
+        private readonly GetTemporaryAccessBannerAction $temporaryAccessBannerAction,
         private readonly ListSubscriptionReminderAlertsAction $subscriptionReminderAlertsAction,
         private readonly OpenShiftResolver $shiftResolver,
     ) {}
@@ -162,6 +163,9 @@ final class GetSystemContextAction
             // SELL-02: permanent trial / expiry banner; null for users without billing.manage and
             // for a healthy subscription (see GetSubscriptionBannerAction for the states).
             'subscription_banner' => $mustChangePassword ? null : $this->subscriptionBannerAction->execute($user, $currentTenant),
+            // #232 UI §3: the 48h temporary-activation banner (one central invoice query; null when none
+            // or for users without billing.manage). See GetTemporaryAccessBannerAction.
+            'subscription_temporary_access' => $mustChangePassword ? null : $this->temporaryAccessBannerAction->execute($user, $currentTenant),
             'setup_progress' => $mustChangePassword ? null : $this->setupProgressAction->execute($user),
             'locale' => $locale,
             'translations_hash' => $translationsHash,

@@ -6,22 +6,26 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\Billing\CancelOwnBillingPaymentAction;
 use App\Actions\Billing\GetTenantSubscriptionAction;
+use App\Actions\Billing\IssueSelfServiceChangeInvoiceAction;
 use App\Actions\Billing\ListOwnBillingInvoicesAction;
 use App\Actions\Billing\PreviewBillingChangeAction;
 use App\Actions\Billing\RequestRenewalInvoiceAction;
 use App\Actions\Billing\ShowOwnBillingInvoiceAction;
 use App\Actions\Billing\SubmitManualPaymentAction;
 use App\DTOs\Billing\BillingChangePreviewDTO;
+use App\DTOs\Billing\SelfServiceChangeInvoiceDTO;
 use App\DTOs\Billing\SubmitManualPaymentDTO;
 use App\Enums\Billing\BillingCycle;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Billing\BillingChangePreviewRequest;
+use App\Http\Requests\Billing\IssueChangeInvoiceRequest;
 use App\Http\Requests\Billing\ListOwnBillingInvoicesRequest;
 use App\Http\Requests\Billing\RequestRenewalInvoiceRequest;
 use App\Http\Requests\Billing\SubmitBillingPaymentRequest;
 use App\Http\Resources\Billing\BillingChangePreviewResource;
 use App\Http\Resources\Billing\BillingInvoiceResource;
 use App\Http\Resources\Billing\BillingPaymentResource;
+use App\Http\Resources\Billing\SelfServiceChangeInvoiceResource;
 use App\Http\Resources\Billing\TenantSubscriptionResource;
 use App\Models\Tenant;
 use Illuminate\Http\JsonResponse;
@@ -30,6 +34,7 @@ use Illuminate\Http\JsonResponse;
  * The shop's own subscription & billing (PRD-04 / ENTI-3.3), tenant permission `billing.manage`:
  *   GET  /api/v1/billing/subscription
  *   GET  /api/v1/billing/change-preview          (#232: price of an upgrade / renewal before creating it)
+ *   POST /api/v1/billing/change-invoice          (#232: issue the upgrade / subscribe invoice, or hold it for a founder-price review)
  *   GET  /api/v1/billing/invoices            GET /api/v1/billing/invoices/{id}
  *   POST /api/v1/billing/invoices/{id}/payments   (multipart receipt; allowed while read-only / past due)
  *   POST /api/v1/billing/renewal-invoice          (allowed while read-only / past due)
@@ -45,6 +50,7 @@ final class BillingController extends Controller
         private readonly RequestRenewalInvoiceAction $renewalAction,
         private readonly CancelOwnBillingPaymentAction $cancelPaymentAction,
         private readonly PreviewBillingChangeAction $previewAction,
+        private readonly IssueSelfServiceChangeInvoiceAction $changeInvoiceAction,
     ) {}
 
     public function subscription(): JsonResponse
@@ -59,6 +65,23 @@ final class BillingController extends Controller
         return (new BillingChangePreviewResource($this->previewAction->execute($this->tenant(), BillingChangePreviewDTO::fromArray($request->validated()))))
             ->additional(['success' => true])
             ->response();
+    }
+
+    public function changeInvoice(IssueChangeInvoiceRequest $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $result = $this->changeInvoiceAction->execute(SelfServiceChangeInvoiceDTO::fromArray(
+            $request->validated(),
+            (string) $this->tenant()->getKey(),
+            $user === null ? null : (string) $user->getAttribute('name'),
+            $user === null ? null : (int) $user->getKey(),
+        ));
+
+        return (new SelfServiceChangeInvoiceResource($result))
+            ->additional(['success' => true, 'message' => __($result->heldForPriceReview ? 'billing.messages.plan_change_requested' : 'billing.messages.invoice_issued')])
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function invoices(ListOwnBillingInvoicesRequest $request): JsonResponse

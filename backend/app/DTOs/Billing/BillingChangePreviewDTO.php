@@ -12,6 +12,7 @@ use App\Enums\Billing\BillingCycle;
  *
  *  - action `upgrade`: `planId` is the target plan, `renew` adds one full cycle of it after the
  *    current paid end (upgrade + renewal);
+ *  - action `subscribe`: same as `upgrade` (the server picks the branch from the tenant's state);
  *  - action `renew`: the current plan at `cycle` (`planId` / `renew` ignored).
  */
 final readonly class BillingChangePreviewDTO
@@ -20,8 +21,11 @@ final readonly class BillingChangePreviewDTO
 
     public const ACTION_RENEW = 'renew';
 
+    /** #232: a trial / no-paid-term shop buying a plan (same branch as upgrade, the state decides). */
+    public const ACTION_SUBSCRIBE = 'subscribe';
+
     /** @var list<string> */
-    public const ACTIONS = [self::ACTION_UPGRADE, self::ACTION_RENEW];
+    public const ACTIONS = [self::ACTION_UPGRADE, self::ACTION_RENEW, self::ACTION_SUBSCRIBE];
 
     public function __construct(
         public string $action,
@@ -36,7 +40,7 @@ final readonly class BillingChangePreviewDTO
     public static function fromArray(array $data): self
     {
         $action = (string) $data['action'];
-        $upgrade = $action === self::ACTION_UPGRADE;
+        $upgrade = $action !== self::ACTION_RENEW;
 
         return new self(
             action: $action,
@@ -48,6 +52,6 @@ final readonly class BillingChangePreviewDTO
 
     public function isUpgrade(): bool
     {
-        return $this->action === self::ACTION_UPGRADE;
+        return $this->action !== self::ACTION_RENEW;
     }
 }

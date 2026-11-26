@@ -10,7 +10,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * GET /api/v1/billing/change-preview?action=upgrade|renew&plan_id=&cycle=monthly|yearly&renew=0|1,
+ * GET /api/v1/billing/change-preview?action=upgrade|subscribe|renew&plan_id=&cycle=monthly|yearly&renew=0|1,
  * tenant permission billing.manage. Only these four query keys are read (anything else is ignored).
  *
  * Shape only: whether the plan exists, is active/public, paid and higher than the current one is
@@ -31,9 +31,9 @@ final class BillingChangePreviewRequest extends FormRequest
     {
         return [
             'action' => ['required', 'string', Rule::in(BillingChangePreviewDTO::ACTIONS)],
-            'plan_id' => ['exclude_unless:action,'.BillingChangePreviewDTO::ACTION_UPGRADE, 'required', 'integer', 'min:1'],
+            'plan_id' => ['exclude_if:action,'.BillingChangePreviewDTO::ACTION_RENEW, 'required', 'integer', 'min:1'],
             'cycle' => ['required', 'string', Rule::in(array_map(static fn (BillingCycle $cycle): string => $cycle->value, BillingCycle::sellable()))],
-            'renew' => ['exclude_unless:action,'.BillingChangePreviewDTO::ACTION_UPGRADE, 'sometimes', 'boolean'],
+            'renew' => ['exclude_if:action,'.BillingChangePreviewDTO::ACTION_RENEW, 'sometimes', 'boolean'],
         ];
     }
 }

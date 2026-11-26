@@ -115,6 +115,8 @@ final class BillingInvoiceResource extends JsonResource
                 // PRICE-2026-11: founder | transition | list; null on non-plan lines and on plan
                 // lines issued before the price schedule (their `founder` flag still tells).
                 'price_step' => $this->priceStep($line, $isPlan),
+                // #232 spec C: billed at the owner-agreed price typed when a founder hold was released.
+                'agreed_price' => ($line['agreed_price'] ?? false) === true,
             ];
         }
 

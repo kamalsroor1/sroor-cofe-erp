@@ -11,6 +11,7 @@ use App\Enums\Billing\PlanChangeRequestKind;
 use App\Enums\Billing\PlanChangeRequestStatus;
 use App\Enums\CentralAuditEvent;
 use App\Exceptions\Billing\BillingException;
+use App\Models\BillingInvoice;
 use App\Models\CentralUser;
 use App\Models\Plan;
 use App\Models\PlanChangeRequest;
@@ -34,6 +35,9 @@ use Illuminate\Support\Facades\DB;
  *  - plan_change with no paid term running (trial / expired) and no amount typed: a regular
  *    full-cycle plan line for the requested plan (a typed amount stays 409
  *    difference_needs_active_term; `with_renewal` changes nothing there, it is one full cycle anyway).
+ *    Exception, spec C: a RELEASED founder hold with a typed amount bills that full cycle at the
+ *    typed amount, the price the owner agreed and reviewed (line flagged `agreed_price`, VAT on top,
+ *    never re-priced at Verify, never claims a founder slot).
  *    The term starts at the verified transfer (ActivateSubscriptionAction, spec A), not at trial end.
  *  - addon: an `addon` invoice with the add-on line(s), priced from the tenant's plan catalog for
  *    the request's cycle unless the admin overrides the unit price. It is a separate invoice.
@@ -51,6 +55,9 @@ use Illuminate\Support\Facades\DB;
  * A request whose target is a permanent free plan is never invoiced: it is stored `scheduled`
  * (not pending -> 409 here) and an older pending one is refused (422 free_plan_not_billable).
  *
+ * `$operator` null = the shop's own self-service change invoice (IssueSelfServiceChangeInvoiceAction):
+ * same pricing, no reviewer stamped. `with_renewal` not sent = the request's stored `renew` choice.
+ *
  * One central transaction: the tenant row is locked first, then the request row (409 `billing.request_not_pending`
  * when it is no longer pending, so a double click issues one invoice), then
  * IssueSubscriptionInvoiceAction reuses its numbering / VAT / rounding inside the same transaction.
@@ -64,7 +71,7 @@ final class IssuePlanChangeInvoiceAction
         private readonly FounderPricingService $founder,
     ) {}
 
-    public function execute(IssuePlanChangeInvoiceDTO $dto, CentralUser $operator): PlanChangeRequest
+    public function execute(IssuePlanChangeInvoiceDTO $dto, ?CentralUser $operator): PlanChangeRequest
     {
         $connection = DB::connection((string) (new PlanChangeRequest)->getConnectionName());
 
@@ -98,8 +105,9 @@ final class IssuePlanChangeInvoiceAction
 
             $request->status = PlanChangeRequestStatus::Invoiced;
             $request->billing_invoice_id = (int) $invoice->getKey();
-            $request->reviewed_by = (int) $operator->getKey();
-            $request->reviewed_at = now();
+            // Self-service (the shop's own change-invoice): issued with no operator, nobody reviewed it.
+            $request->reviewed_by = $operator === null ? null : (int) $operator->getKey();
+            $request->reviewed_at = $operator === null ? null : now();
             $request->save();
 
             $this->audit->record(
@@ -110,9 +118,11 @@ final class IssuePlanChangeInvoiceAction
                     'invoice_id' => (int) $invoice->getKey(),
                     'invoice_number' => $invoice->number,
                     'total' => $invoice->total,
-                    'with_renewal' => $dto->withRenewal,
+                    'with_renewal' => $this->withRenewal($dto, $request),
+                    'self_service' => $operator === null,
                     // A release is only accepted for a held request (founder_hold_not_set otherwise).
                     'founder_hold_released' => $dto->releaseFounderHold,
+                    'agreed_price' => $this->agreedPrice($invoice),
                 ],
                 $operator,
                 $request,
@@ -129,8 +139,26 @@ final class IssuePlanChangeInvoiceAction
         return $issued;
     }
 
+    /** #232: the operator's explicit `with_renewal`, else the shop's choice stored on the request. */
+    private function withRenewal(IssuePlanChangeInvoiceDTO $dto, PlanChangeRequest $request): bool
+    {
+        return $dto->withRenewal ?? (bool) $request->renew;
+    }
+
+    /** #232 spec C: the owner-agreed full-cycle price billed on the invoice, null when none. */
+    private function agreedPrice(BillingInvoice $invoice): ?string
+    {
+        foreach ($invoice->lines as $line) {
+            if (($line['agreed_price'] ?? false) === true) {
+                return (string) $line['amount'];
+            }
+        }
+
+        return null;
+    }
+
     /** #232 spec C: stamp (once) and audit a request held for the owner's founder-price review. */
-    private function holdForFounderReview(PlanChangeRequest $request, CentralUser $operator): void
+    private function holdForFounderReview(PlanChangeRequest $request, ?CentralUser $operator): void
     {
         if ($request->founder_review_held_at !== null) {
             return;
@@ -148,10 +176,10 @@ final class IssuePlanChangeInvoiceAction
         );
     }
 
-    private function invoiceDto(IssuePlanChangeInvoiceDTO $dto, PlanChangeRequest $request, CentralUser $operator): IssueSubscriptionInvoiceDTO
+    private function invoiceDto(IssuePlanChangeInvoiceDTO $dto, PlanChangeRequest $request, ?CentralUser $operator): IssueSubscriptionInvoiceDTO
     {
         $tenantId = (string) $request->tenant_id;
-        $issuedBy = (int) $operator->getKey();
+        $issuedBy = $operator === null ? null : (int) $operator->getKey();
 
         if ($request->kind === PlanChangeRequestKind::Addon) {
             if ($request->addon_id === null) {
@@ -194,7 +222,9 @@ final class IssuePlanChangeInvoiceAction
             throw BillingException::freePlanNotBillable();
         }
 
-        if ($tenant->plan_id !== null && (int) $tenant->plan_id === (int) $target->getKey()) {
+        // #232 item 8: with no paid term running (a trial on a paid plan, or an expired term) the
+        // same plan is a SUBSCRIBE: one full cycle at the list price, starting at the verified transfer.
+        if ($tenant->plan_id !== null && (int) $tenant->plan_id === (int) $target->getKey() && $tenant->hasPaidTermRunning()) {
             throw BillingException::requestSamePlan();
         }
 
@@ -204,8 +234,11 @@ final class IssuePlanChangeInvoiceAction
         // list price: spec C, no automatic founder price on a plan change); paying it switches the
         // plan and starts a new paid term at the verified transfer moment (spec A: not at trial end,
         // remaining trial days are not added - open owner decision أ).
-        // A typed amount is still a difference and stays 409 difference_needs_active_term.
-        if ($dto->amount === null && ! $tenant->hasPaidTermRunning()) {
+        // A typed amount is still a difference and stays 409 difference_needs_active_term, unless it
+        // releases a founder hold: spec C, the owner reviewed the agreed founder price before issue, so
+        // the typed amount IS the full-cycle price (agreedPlanPrice; release needs a held request).
+        $agreedPrice = $dto->releaseFounderHold ? $dto->amount : null;
+        if (($dto->amount === null || $agreedPrice !== null) && ! $tenant->hasPaidTermRunning()) {
             return new IssueSubscriptionInvoiceDTO(
                 tenantId: $tenantId,
                 type: BillingInvoiceType::Upgrade,
@@ -220,8 +253,10 @@ final class IssuePlanChangeInvoiceAction
                 fromRequest: true,
                 // SELL-06: an open trial-end / plan invoice paid as well would extend the term twice.
                 refuseWhenOpenPlanInvoice: true,
-                // #232 spec C: list price only, even for a founder whose hold was released.
+                // #232 spec C: list price only, even for a founder whose hold was released...
                 listPriceOnly: true,
+                // ...unless the release typed the agreed price for this full cycle.
+                agreedPlanPrice: $agreedPrice,
             );
         }
 
@@ -263,7 +298,7 @@ final class IssuePlanChangeInvoiceAction
                 'priced_at' => CarbonImmutable::now()->toIso8601String(),
             ]]),
             fromRequest: true,
-            appendRenewal: $dto->withRenewal,
+            appendRenewal: $this->withRenewal($dto, $request),
             // #232 spec C: the appended renewal cycle is billed at the list price (no founder step).
             listPriceOnly: true,
         );

@@ -103,7 +103,7 @@ final class SubmitManualPaymentAction
                 'status' => BillingPaymentStatus::Pending,
                 'submitted_by' => $dto->submittedBy,
                 'paid_at' => $dto->paidAt,
-                'raw_payload' => ['payer_reference' => $dto->payerReference],
+                'raw_payload' => $dto->payerReference === null ? [] : ['payer_reference' => $dto->payerReference],
                 'receipt_classification' => $classification->classification,
                 'receipt_classification_reason' => $classification->reason,
             ]);

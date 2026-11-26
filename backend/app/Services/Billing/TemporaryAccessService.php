@@ -158,7 +158,11 @@ final class TemporaryAccessService
     /**
      * The invoice's window for the API (shop invoice screen, console queue).
      *
-     * @return array{state: string, started_at: string|null, ends_at: string|null, seconds_left: int, last_hours: bool, payment_id: int|null, settled_at: string|null}
+     * #232 item 9: `plan` {id, name} is the plan the invoice bills (its first plan line, from the
+     * frozen snapshot: no query; null for an add-on / service invoice) and `period_end` the invoice
+     * period end (null when it has none), so the "confirmed" banner can name them.
+     *
+     * @return array{state: string, started_at: string|null, ends_at: string|null, seconds_left: int, last_hours: bool, payment_id: int|null, settled_at: string|null, plan: array{id: int, name: string|null}|null, period_end: string|null}
      */
     public function invoiceWindow(BillingInvoice $invoice, CarbonImmutable $now): array
     {
@@ -175,6 +179,72 @@ final class TemporaryAccessService
             'last_hours' => $state === TemporaryAccessState::Active && $secondsLeft <= $this->reminderSeconds(),
             'payment_id' => $invoice->temporary_access_payment_id,
             'settled_at' => $invoice->temporary_access_settled_at?->toIso8601String(),
+            'plan' => $this->invoicePlan($invoice),
+            'period_end' => $invoice->period_end?->toIso8601String(),
+        ];
+    }
+
+    /**
+     * The plan an invoice bills, read from its frozen lines (the name as billed).
+     *
+     * @return array{id: int, name: string|null}|null
+     */
+    private function invoicePlan(BillingInvoice $invoice): ?array
+    {
+        foreach ($invoice->lines ?? [] as $line) {
+            if (($line['type'] ?? null) === 'plan' && isset($line['plan_id'])) {
+                return ['id' => (int) $line['plan_id'], 'name' => isset($line['plan_name']) ? (string) $line['plan_name'] : null];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * #232 item 7: the light banner summary for GET /system/context (UI §3), so the SPA does not
+     * call /billing/subscription on every load. ONE invoice query: the tenant's unsettled window
+     * first, else the most recently settled one within SETTLED_VISIBLE_DAYS (the same pick as
+     * tenantWindow()). Only a REJECTED window costs one more (payment) query, for its reason.
+     *
+     * @return array{state: string, ends_at: string|null, seconds_left: int, last_hours: bool, invoice_id: int, invoice_type: string, plan: array{id: int, name: string|null}|null, period_end: string|null, rejection_reason: string|null}|null
+     */
+    public function tenantBanner(Tenant $tenant, CarbonImmutable $now): ?array
+    {
+        $invoice = BillingInvoice::query()
+            ->where('tenant_id', $tenant->getKey())
+            ->whereNotNull('temporary_access_started_at')
+            ->where(fn ($q) => $q->whereNull('temporary_access_settled_at')
+                ->orWhere('temporary_access_settled_at', '>=', $now->subDays(self::SETTLED_VISIBLE_DAYS)))
+            // Unsettled first (null settled_at sorts as 0), then the latest decision, then the latest invoice.
+            ->orderByRaw('case when temporary_access_settled_at is null then 0 else 1 end')
+            ->orderByDesc('temporary_access_settled_at')
+            ->orderByDesc('id')
+            ->first(['id', 'tenant_id', 'type', 'lines', 'period_end', 'temporary_access_started_at', 'temporary_access_ends_at', 'temporary_access_payment_id', 'temporary_access_settled_at', 'temporary_access_outcome']);
+
+        if (! $invoice instanceof BillingInvoice) {
+            return null;
+        }
+
+        $window = $this->invoiceWindow($invoice, $now);
+        $rejection = $window['state'] === TemporaryAccessState::Rejected->value
+            ? BillingPayment::query()
+                ->where('billing_invoice_id', $invoice->getKey())
+                ->where('status', BillingPaymentStatus::Rejected->value)
+                ->whereNotNull('verified_by')
+                ->orderByDesc('id')
+                ->value('rejection_reason')
+            : null;
+
+        return [
+            'state' => $window['state'],
+            'ends_at' => $window['ends_at'],
+            'seconds_left' => $window['seconds_left'],
+            'last_hours' => $window['last_hours'],
+            'invoice_id' => (int) $invoice->getKey(),
+            'invoice_type' => $invoice->type->value,
+            'plan' => $window['plan'],
+            'period_end' => $window['period_end'],
+            'rejection_reason' => is_string($rejection) ? $rejection : null,
         ];
     }
 

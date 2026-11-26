@@ -44,6 +44,8 @@ final class PlanChangeRequestResource extends JsonResource
                 'name' => (string) __($this->addon->name_key),
             ]),
             'quantity' => (int) $this->quantity,
+            // #232: the shop asked for upgrade + renewal (the console's default for `with_renewal`).
+            'renew' => (bool) $this->renew,
             'notes' => $this->notes,
             'requested_by_name' => $this->requested_by_name,
             'invoice' => $this->whenLoaded('invoice', fn () => $this->invoice === null ? null : [

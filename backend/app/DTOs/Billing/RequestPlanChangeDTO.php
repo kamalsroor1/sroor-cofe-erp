@@ -10,6 +10,7 @@ use App\Enums\Billing\PlanChangeRequestKind;
 /**
  * Input of RequestPlanChangeAction: what a shop asks support for. The tenant and the requesting
  * user come from the authenticated request, never from the body.
+ * `renew` (#232, plan_change only): upgrade + one full cycle of the new plan after the current paid end.
  */
 final readonly class RequestPlanChangeDTO
 {
@@ -23,6 +24,7 @@ final readonly class RequestPlanChangeDTO
         public ?string $notes,
         public ?string $requestedByName,
         public ?int $requestedByUserId,
+        public bool $renew = false,
     ) {}
 
     /**
@@ -43,6 +45,7 @@ final readonly class RequestPlanChangeDTO
             notes: $notes === '' ? null : $notes,
             requestedByName: $requestedByName,
             requestedByUserId: $requestedByUserId,
+            renew: $kind === PlanChangeRequestKind::PlanChange && filter_var($data['renew'] ?? false, FILTER_VALIDATE_BOOL),
         );
     }
 }

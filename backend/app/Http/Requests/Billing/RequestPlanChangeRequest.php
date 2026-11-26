@@ -35,6 +35,8 @@ final class RequestPlanChangeRequest extends FormRequest
             'quantity' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:50'],
             'billing_cycle' => ['required', 'string', Rule::in(array_map(static fn (BillingCycle $cycle): string => $cycle->value, BillingCycle::sellable()))],
             'notes' => ['sometimes', 'nullable', 'string', 'max:500', 'not_regex:/[<>]/'],
+            // #232: plan_change only - also renew one full cycle of the new plan after the current paid end.
+            'renew' => ['sometimes', 'boolean'],
         ];
     }
 }

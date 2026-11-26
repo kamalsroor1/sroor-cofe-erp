@@ -19,7 +19,7 @@ final readonly class SubmitManualPaymentDTO
         public int $invoiceId,
         public BillingPaymentMethod $method,
         public string $amount,
-        public string $payerReference,
+        public ?string $payerReference,
         public CarbonImmutable $paidAt,
         public UploadedFile $receipt,
         public ?int $submittedBy,
@@ -35,7 +35,8 @@ final readonly class SubmitManualPaymentDTO
             invoiceId: $invoiceId,
             method: BillingPaymentMethod::from((string) $data['method']),
             amount: Decimal::normalize((string) $data['amount']),
-            payerReference: trim((string) $data['payer_reference']),
+            // #232 UI §2: optional; blank = not given (the operator verifies against the bank movement).
+            payerReference: ($ref = trim((string) ($data['payer_reference'] ?? ''))) === '' ? null : $ref,
             paidAt: CarbonImmutable::parse((string) $data['paid_at']),
             receipt: $receipt,
             submittedBy: $submittedBy,

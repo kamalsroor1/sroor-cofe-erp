@@ -158,7 +158,10 @@ final class TenantBillingApiTest extends BillingTestCase
         $headers = $this->multipart($this->tenantHeaders($tenant));
         $url = $this->paymentUrl($invoice);
 
-        $this->post($url, [], $headers)->assertStatus(422)->assertJsonValidationErrors(['receipt', 'method', 'amount', 'payer_reference', 'paid_at']);
+        // #232 UI §2: payer_reference is optional now (still validated when sent, see TenantSelfServiceBillingTest).
+        $this->post($url, [], $headers)->assertStatus(422)
+            ->assertJsonValidationErrors(['receipt', 'method', 'amount', 'paid_at'])
+            ->assertJsonMissingValidationErrors(['payer_reference']);
 
         $svg = UploadedFile::fake()->createWithContent('receipt.svg', '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');
         $this->post($url, $this->paymentPayload(['receipt' => $svg]), $headers)->assertStatus(422)->assertJsonValidationErrors(['receipt']);

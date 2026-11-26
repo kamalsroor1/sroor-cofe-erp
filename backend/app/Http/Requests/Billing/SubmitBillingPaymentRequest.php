@@ -44,7 +44,7 @@ final class SubmitBillingPaymentRequest extends FormRequest
                 BillingPaymentMethod::BankTransfer->value,
             ])],
             'amount' => ['required', 'numeric', 'gt:0', 'regex:/^\d{1,9}(\.\d{1,3})?$/'],
-            'payer_reference' => ['required', 'string', 'min:3', 'max:100', 'not_regex:/[<>]/'],
+            'payer_reference' => ['sometimes', 'nullable', 'string', 'min:3', 'max:100', 'not_regex:/[<>]/'],
             'paid_at' => ['required', 'date', 'before_or_equal:now'],
         ];
     }
