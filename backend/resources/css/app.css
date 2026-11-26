@@ -1146,6 +1146,25 @@ html.dark {
         border-color: color-mix(in srgb, var(--color-warning-text) 45%, transparent);
     }
 
+    /* #231: SweetAlert2 paints .swal2-radio / .swal2-checkbox with --swal2-background (white) while DarkSwal only sets
+       the popup's inline background, so dark popups showed near-white option text on a white strip. Follow the popup. */
+    .swal2-popup .swal2-radio,
+    .swal2-popup .swal2-checkbox {
+        /* !important: this sits in the utilities layer, SweetAlert2's own CSS is unlayered and would win otherwise. */
+        background: transparent !important;
+        color: inherit !important;
+        gap: 0.5rem;
+    }
+
+    .swal2-popup .swal2-radio label,
+    .swal2-popup .swal2-checkbox label {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        gap: 0.4rem;
+        cursor: pointer;
+    }
+
     /* Dark: slate-500/600/700 text is 2-4:1 on slate-900/950; coloured 500/600 shades are marginal on slate-800.
        Elements that carry their own dark:text-* class are left alone (they already chose a dark colour). */
     :where(html.dark) :is(.dark\:text-slate-500, .dark\:text-slate-600, .dark\:text-slate-700),
