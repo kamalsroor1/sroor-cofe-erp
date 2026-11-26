@@ -176,6 +176,8 @@ return [
             'read_only_notice' => 'Your account is read-only. Pay your invoice to restore full access.',
             'blocked_notice' => 'Your account access is suspended. Pay your invoice or contact support.',
             'request_renewal' => 'Request renewal invoice',
+            'renewal_unavailable_trial' => 'You are in your trial, so there is no renewal invoice yet. When you are ready to subscribe, send a plan change or add-on request and we will issue the plan invoice.',
+            'renewal_unavailable_free' => 'Your current plan is free and is never invoiced. To move to a paid plan, send a plan change or add-on request.',
             'pay_now' => 'Pay now / renew subscription',
             'change_plan' => 'Request plan change or add-on',
         ],

@@ -622,6 +622,34 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     }
 
     /**
+     * #230: can the shop ask for its own renewal invoice? Never during a trial (the way to a paid
+     * term is a plan change, answered with a plan invoice) and never on a permanent free plan.
+     * One truth for the subscription API flag and RequestRenewalInvoiceAction.
+     */
+    public function canRequestRenewal(): bool
+    {
+        return $this->renewalRefusal() === null;
+    }
+
+    /**
+     * @return 'trial'|'free_plan'|'no_plan'|null why a renewal invoice cannot be requested, null when it can
+     */
+    public function renewalRefusal(): ?string
+    {
+        if ($this->plan_id === null) {
+            return 'no_plan';
+        }
+
+        $decision = app(TenantLifecyclePolicy::class)->evaluate($this->lifecycleSnapshot(), CarbonImmutable::now());
+
+        if ($decision->effectiveStatus === TenantStatus::Trial) {
+            return 'trial';
+        }
+
+        return Plan::query()->whereKey($this->plan_id)->where('is_free', true)->exists() ? 'free_plan' : null;
+    }
+
+    /**
      * Is the tenant fully BLOCKED (suspended / cancelled / archived, an unknown stored status,
      * or a lifecycle that has run past read-only)? Used by the workspace resolver.
      *

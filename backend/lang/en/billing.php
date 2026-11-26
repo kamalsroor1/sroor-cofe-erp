@@ -129,6 +129,7 @@ return [
         'amount_out_of_range' => 'The amount must be greater than zero and not more than the remaining due (:remaining).',
         'no_plan' => 'No valid plan or billing cycle was given for this invoice.',
         'free_plan_not_billable' => 'This plan is permanently free and cannot be invoiced.',
+        'renewal_not_for_trial' => 'Your shop is in its trial, so there is no renewal invoice yet. Send a plan change request and we will issue the plan invoice.',
         'founder_unavailable' => 'The founder price is not available for this account.',
         'receipt_invalid' => 'The receipt must be a JPG, PNG, WEBP or PDF file.',
         'discount_too_high' => 'The discount must be lower than the invoice subtotal.',

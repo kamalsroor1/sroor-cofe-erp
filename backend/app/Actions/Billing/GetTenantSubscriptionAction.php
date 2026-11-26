@@ -86,6 +86,8 @@ final class GetTenantSubscriptionAction
                 'trial_ends_at' => $tenant->trial_ends_at?->toIso8601String(),
                 // #232: no paid term (trial / expired) -> a plan change is answered with a plan invoice, not a difference.
                 'has_paid_term' => $tenant->hasPaidTermRunning(),
+                // #230: false during a trial and on a permanent free plan (use a plan change request instead).
+                'can_request_renewal' => $tenant->canRequestRenewal(),
                 'days_left' => $this->daysLeft($end, $now),
                 'is_founder' => $subscription !== null && $subscription->is_founder,
                 // PRICE-2026-11: founder schedule step, current / next price and the notice flag.

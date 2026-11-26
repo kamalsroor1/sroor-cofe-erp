@@ -28,6 +28,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * | amountOutOfRange()       | 422  | billing.amount_out_of_range      |
  * | noPlan()                 | 422  | billing.no_plan                  |
  * | freePlanNotBillable() PLAN-10 | 422 | billing.free_plan_not_billable |
+ * | renewalNotForTrial() #230 | 422 | billing.renewal_not_for_trial |
  * | founderPriceUnavailable()| 422  | billing.founder_unavailable      |
  * | discountTooHigh()        | 422  | billing.discount_too_high        |
  * | requestNotPending()      | 409  | billing.request_not_pending      |
@@ -133,6 +134,12 @@ final class BillingException extends HttpException
     public static function freePlanNotBillable(): self
     {
         return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'free_plan_not_billable');
+    }
+
+    /** #230: a shop in its trial has no renewal invoice; it asks for a plan change instead. */
+    public static function renewalNotForTrial(): self
+    {
+        return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'renewal_not_for_trial');
     }
 
     public static function founderPriceUnavailable(): self

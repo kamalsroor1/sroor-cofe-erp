@@ -6,6 +6,7 @@ import BillingStatusBadge from './BillingStatusBadge.vue';
 import { useFormatters } from '@/Composables/useFormatters';
 import { useTrans } from '@/Composables/useTrans';
 import { subscriptionTone, toneClass } from '@/helpers/billing';
+import { canRequestRenewal } from '@/helpers/billingRenewal';
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -37,6 +38,14 @@ const countdownText = computed(() => {
   if (days === 0) return t('subscription.billing.plan.expires_today');
   if (days === 1) return t('subscription.billing.plan.day_left_one');
   return t('subscription.billing.plan.days_left', { days: formatNumber(days) });
+});
+
+const canRenew = computed(() => canRequestRenewal(props.data));
+const renewalHint = computed(() => {
+  if (canRenew.value) return '';
+  return isTrial.value || props.data.tenant_status?.value === 'trial'
+    ? t('subscription.billing.plan.renewal_unavailable_trial')
+    : t('subscription.billing.plan.renewal_unavailable_free');
 });
 
 const cycleLabel = computed(() => sub.value.billing_cycle?.label || '-');
@@ -117,11 +126,15 @@ const notice = computed(() => {
       </div>
     </dl>
 
+    <p v-if="renewalHint" class="text-xs font-bold leading-relaxed text-slate-600 dark:text-slate-300">
+      {{ renewalHint }}
+    </p>
+
     <div class="flex flex-wrap gap-2">
-      <BaseButton variant="primary" :icon="RefreshCw" :loading="busy" @click="$emit('renew')">
+      <BaseButton v-if="canRenew" variant="primary" :icon="RefreshCw" :loading="busy" @click="$emit('renew')">
         {{ $t('subscription.billing.plan.request_renewal') }}
       </BaseButton>
-      <BaseButton variant="secondary" @click="$emit('change-plan')">
+      <BaseButton :variant="canRenew ? 'secondary' : 'primary'" @click="$emit('change-plan')">
         {{ $t('subscription.billing.plan.change_plan') }}
       </BaseButton>
     </div>

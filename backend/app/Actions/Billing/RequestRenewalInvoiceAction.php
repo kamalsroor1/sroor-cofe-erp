@@ -34,6 +34,13 @@ final class RequestRenewalInvoiceAction
             throw BillingException::noPlan();
         }
 
+        // #230: a trial is not "permanently free": say so, and point to the plan change request.
+        match ($tenant->renewalRefusal()) {
+            'trial' => throw BillingException::renewalNotForTrial(),
+            'free_plan' => throw BillingException::freePlanNotBillable(),
+            default => null,
+        };
+
         return $this->issue->execute(new IssueSubscriptionInvoiceDTO(
             tenantId: (string) $tenant->getKey(),
             type: BillingInvoiceType::Renewal,
