@@ -130,6 +130,18 @@ return [
     'pay_supplier' => 'Pay Supplier',
     'payable_balance_label' => 'Payable Balance',
     'due_to_supplier' => 'Due to Supplier',
+    // UX-240: plain-language supplier statement labels (no debit/credit wording).
+    'supplier_statement' => [
+        'total_purchases' => 'Total bought from the supplier',
+        'total_paid' => 'Total you paid the supplier',
+        'remaining' => 'Remaining with the supplier',
+        'col_purchases' => 'Purchases',
+        'col_paid' => 'Paid to supplier',
+        'col_remaining' => 'Remaining after this entry',
+        'you_owe' => 'You owe this',
+        'you_are_owed' => 'Supplier owes you',
+        'settled' => 'Settled',
+    ],
     'fully_settled' => 'Fully Settled',
     // PUR-01: negative supplier balance = the supplier holds money of ours.
     'supplier_credit_in_our_favour' => 'Credit in our favour',

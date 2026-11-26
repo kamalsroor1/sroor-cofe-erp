@@ -130,6 +130,18 @@ return [
     'pay_supplier' => 'سداد دفعة',
     'payable_balance_label' => 'الرصيد المستحق',
     'due_to_supplier' => 'مستحق للمورد',
+    // UX-240: plain-language supplier statement labels (no debit/credit wording).
+    'supplier_statement' => [
+        'total_purchases' => 'إجمالي المشتريات من المورد',
+        'total_paid' => 'إجمالي اللي دفعته للمورد',
+        'remaining' => 'المتبقي للمورد',
+        'col_purchases' => 'مشتريات',
+        'col_paid' => 'مدفوع للمورد',
+        'col_remaining' => 'المتبقي بعد العملية',
+        'you_owe' => 'عليك تدفعه',
+        'you_are_owed' => 'ليك عند المورد',
+        'settled' => 'الحساب متسوّي',
+    ],
     'fully_settled' => 'مسدد بالكامل',
     // PUR-01: negative supplier balance = the supplier holds money of ours.
     'supplier_credit_in_our_favour' => 'رصيد لصالحنا عند المورد',

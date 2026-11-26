@@ -53,7 +53,10 @@
         class="font-mono font-black text-end"
         :class="row.balance_after > 0 ? 'text-theme-primary' : 'text-emerald-500 dark:text-emerald-400'"
       >
-        {{ formatMoney(row.balance_after) }} {{ currencyLabel }}
+        {{ formatMoney(String(row.balance_after ?? '0').replace(/^-/, '')) }} {{ currencyLabel }}
+        <span v-if="String(row.balance_after ?? '').startsWith('-')" class="block text-xs font-bold font-tajawal">{{
+          $t('contacts.supplier_statement.you_are_owed')
+        }}</span>
       </div>
     </template>
 
@@ -86,9 +89,9 @@ const columns = computed(() => [
   { key: 'date', label: t('common.date'), align: 'start' },
   { key: 'type', label: t('contacts.transaction_type'), align: 'start' },
   { key: 'ref_number', label: t('contacts.reference_no'), align: 'start' },
-  { key: 'credit', label: `${t('contacts.period_credit')} (${t('contacts.withdrawals')})`, align: 'end' },
-  { key: 'debit', label: `${t('contacts.period_debit')} (${t('contacts.payments_received')})`, align: 'end' },
-  { key: 'balance_after', label: t('contacts.closing_balance'), align: 'end' },
+  { key: 'credit', label: t('contacts.supplier_statement.col_purchases'), align: 'end' },
+  { key: 'debit', label: t('contacts.supplier_statement.col_paid'), align: 'end' },
+  { key: 'balance_after', label: t('contacts.supplier_statement.col_remaining'), align: 'end' },
   { key: 'notes', label: t('common.notes'), align: 'start' },
 ]);
 </script>
