@@ -198,6 +198,24 @@ class DashboardApiTest extends TenantTestCase
         $this->assertEquals(1300.0, (float) $response->json('data.metrics.today_sales'));
     }
 
+    /**
+     * Card #217 (demo trial 2026-11-26): the cash slice of the payment-method distribution is the
+     * cash share of collected sales, not the drawer balance, so it must not be labelled as the
+     * cash drawer (the drawer balance is the active shift block).
+     */
+    public function test_payment_distribution_labels_cash_as_cash_sales_not_the_drawer(): void
+    {
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/dashboard')
+            ->assertOk();
+
+        $cash = collect($response->json('data.analytics.payment_distribution'))->firstWhere('key', 'cash');
+
+        $this->assertNotNull($cash);
+        $this->assertSame(__('dashboard.cash_sales'), $cash['label']);
+        $this->assertNotSame(__('pos.cash_drawer'), $cash['label']);
+    }
+
     public function test_active_shift_reports_opening_cash_and_expected_drawer_cash(): void
     {
         $today = now()->toDateString();

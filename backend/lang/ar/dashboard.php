@@ -271,4 +271,6 @@ return [
         'no_shift_description' => 'افتح وردية عشان تبدأ البيع، ومبيعات ورديتك هتظهر هنا.',
         'no_shift_action' => 'اذهب للكاشير',
     ],
+    // Card #217: the cash share of collections by payment method, NOT the drawer balance.
+    'cash_sales' => 'مبيعات نقدية',
 ];

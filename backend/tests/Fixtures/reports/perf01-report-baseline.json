@@ -1573,7 +1573,7 @@
         "payment_distribution": [
             {
                 "key": "cash",
-                "label": "درج الكاش (نقداً)",
+                "label": "مبيعات نقدية",
                 "amount": "830",
                 "percentage": 66
             },
@@ -3239,7 +3239,7 @@
         "payment_distribution": [
             {
                 "key": "cash",
-                "label": "درج الكاش (نقداً)",
+                "label": "مبيعات نقدية",
                 "amount": "830",
                 "percentage": 71.7
             },
@@ -4641,7 +4641,7 @@
         "payment_distribution": [
             {
                 "key": "cash",
-                "label": "درج الكاش (نقداً)",
+                "label": "مبيعات نقدية",
                 "amount": "0.000",
                 "percentage": 0
             },

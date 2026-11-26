@@ -133,7 +133,7 @@ class DashboardAnalyticsService
 
         $paymentDistribution = [];
         $methodLabels = [
-            'cash' => __('pos.cash_drawer'),
+            'cash' => __('dashboard.cash_sales'),
             'instapay' => __('pos.instapay'),
             'e_wallet' => __('pos.e_wallet'),
             'visa' => __('pos.visa_card'),

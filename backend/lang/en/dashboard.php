@@ -271,4 +271,6 @@ return [
         'no_shift_description' => 'Open a shift to start selling. Your shift sales will appear here.',
         'no_shift_action' => 'Go to the cashier',
     ],
+    // Card #217: the cash share of collections by payment method, NOT the drawer balance.
+    'cash_sales' => 'Cash sales',
 ];
