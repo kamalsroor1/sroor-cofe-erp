@@ -70,7 +70,7 @@ export function useCustomers() {
             const response = await api.get('/customers', {
                 params: {
                     search: searchQuery.value || undefined,
-                    balance_type: debtStatus.value !== 'all' ? debtStatus.value : undefined,
+                    debt_status: debtStatus.value !== 'all' ? debtStatus.value : undefined,
                     page: page,
                     per_page: 15,
                 },

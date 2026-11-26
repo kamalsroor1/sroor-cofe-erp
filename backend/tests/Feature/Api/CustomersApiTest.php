@@ -86,6 +86,28 @@ class CustomersApiTest extends TenantTestCase
             ]);
     }
 
+    /**
+     * Trello #239: the customers page filter tabs must narrow the list by balance. The SPA sent
+     * balance_type while the API reads debt_status, so every tab showed every customer.
+     */
+    public function test_debt_status_filter_returns_only_matching_balances(): void
+    {
+        $this->inTenant($this->tenant, function (): void {
+            Customer::create(['name' => 'عميل مدين', 'phone' => '01000007101', 'current_balance' => '625.500', 'is_active' => true]);
+            Customer::create(['name' => 'عميل رصيده صفر', 'phone' => '01000007102', 'current_balance' => '0.000', 'is_active' => true]);
+            Customer::create(['name' => 'عميل دائن', 'phone' => '01000007103', 'current_balance' => '-100.000', 'is_active' => true]);
+        });
+
+        $names = fn (string $status): array => collect(
+            $this->getJson('/api/v1/customers?debt_status='.$status, $this->adminHeaders)->assertOk()->json('data')
+        )->pluck('name')->all();
+
+        $this->assertSame(['عميل دائن'], $names('creditor'));
+        $this->assertSame(['عميل مدين'], $names('debtor'));
+        $this->assertSame(['عميل رصيده صفر'], $names('zero'));
+        $this->assertCount(3, $names('all'));
+    }
+
     public function test_can_create_a_new_customer_with_opening_balance(): void
     {
         $payload = [
