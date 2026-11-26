@@ -15,7 +15,7 @@
       </template>
 
       <template #cell-created_at="{ row }">
-        <span class="font-mono text-slate-700 dark:text-slate-300">{{ row.created_at }}</span>
+        <span class="font-mono text-slate-700 dark:text-slate-300">{{ formatDateTime(row.created_at) }}</span>
       </template>
 
       <template #cell-movement_type="{ row }">
@@ -65,7 +65,7 @@ import DataTable from '@/Components/Common/DataTable.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
 
-const { formatQty } = useFormatters();
+const { formatQty, formatDateTime } = useFormatters();
 const { t } = useTrans();
 
 defineProps({

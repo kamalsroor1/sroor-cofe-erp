@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+@inject('tenantClock', 'App\Support\TenantClock')
 <head>
     @php $currencyLabel = app(\App\Services\Settings\TenantSettings::class)->currencyLabel(); @endphp
     <meta charset="UTF-8">
@@ -96,7 +97,7 @@
         </div>
         <div style="display: flex; justify-content: space-between;">
             <span><strong>{{ __('common.date') }}:</strong> {{ $invoice->invoice_date->format('Y-m-d') }}</span>
-            <span><strong>{{ __('common.time') }}:</strong> {{ $invoice->created_at->format('H:i') }}</span>
+            <span><strong>{{ __('common.time') }}:</strong> {{ $tenantClock->toTenant($invoice->created_at)?->format('H:i') }}</span>
         </div>
         <div>
             <span><strong>{{ __('invoices.customer') }}:</strong> {{ $invoice->customer->name }}</span>

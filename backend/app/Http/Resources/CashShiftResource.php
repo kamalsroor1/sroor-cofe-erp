@@ -6,6 +6,7 @@ namespace App\Http\Resources;
 
 use App\Models\CashShift;
 use App\Support\Money\Decimal;
+use App\Support\TenantClock;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -56,6 +57,8 @@ class CashShiftResource extends JsonResource
 
     public function toArray(Request $request): array
     {
+        $clock = app(TenantClock::class);
+
         $data = [
             'id' => $this->id,
             'shift_number' => $this->shift_number,
@@ -66,8 +69,8 @@ class CashShiftResource extends JsonResource
             'store_name' => $this->store?->name,
             'user_id' => $this->user_id,
             'user_name' => $this->user?->name,
-            'opened_at' => $this->opened_at?->toDateTimeString(),
-            'closed_at' => $this->closed_at?->toDateTimeString(),
+            'opened_at' => $clock->toTenant($this->opened_at)?->toDateTimeString(),
+            'closed_at' => $clock->toTenant($this->closed_at)?->toDateTimeString(),
             'opening_cash_balance' => Decimal::normalize((string) $this->opening_cash_balance),
             'total_cash_sales' => Decimal::normalize((string) ($this->total_cash_sales ?? 0)),
             'total_credit_sales' => Decimal::normalize((string) ($this->total_credit_sales ?? 0)),
@@ -79,7 +82,7 @@ class CashShiftResource extends JsonResource
             'actual_cash_balance' => Decimal::normalize((string) ($this->actual_cash_balance ?? 0)),
             'cash_difference' => Decimal::normalize((string) ($this->cash_difference ?? 0)),
             'notes' => $this->notes,
-            'created_at' => $this->created_at?->toDateTimeString(),
+            'created_at' => $clock->toTenant($this->created_at)?->toDateTimeString(),
         ];
 
         if ($this->hideCash) {

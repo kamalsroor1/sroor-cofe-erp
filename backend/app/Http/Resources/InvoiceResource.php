@@ -6,6 +6,7 @@ namespace App\Http\Resources;
 
 use App\Models\Invoice;
 use App\Support\Money\Decimal;
+use App\Support\TenantClock;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -34,7 +35,7 @@ class InvoiceResource extends JsonResource
             'store_name' => $this->store?->name ?? 'الفرع الرئيسي',
             'cashier_name' => $this->user?->name ?? 'الكاشير',
             'invoice_date' => $this->invoice_date ? $this->invoice_date->toDateString() : $this->created_at?->toDateString(),
-            'formatted_created_at' => $this->created_at?->format('Y-m-d H:i'),
+            'formatted_created_at' => app(TenantClock::class)->toTenant($this->created_at)?->format('Y-m-d H:i'),
             'payment_type' => $this->payment_type,
             'payment_method' => $this->payment_method,
             'status' => $this->status,

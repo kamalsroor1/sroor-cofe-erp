@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\Invoice;
 use App\Support\Money\Decimal;
+use App\Support\TenantClock;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -14,6 +15,8 @@ class InvoiceSummaryResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $createdAt = app(TenantClock::class)->toTenant($this->created_at);
+
         return [
             'id' => $this->id,
             'invoice_number' => $this->invoice_number,
@@ -29,8 +32,8 @@ class InvoiceSummaryResource extends JsonResource
             'net_total' => Decimal::normalize((string) $this->net_total),
             'paid_amount' => Decimal::normalize((string) $this->paid_amount),
             'remaining_amount' => Decimal::normalize((string) $this->remaining_amount),
-            'created_at' => $this->created_at?->format('H:i'),
-            'formatted_created_at' => $this->created_at?->format('Y-m-d H:i'),
+            'created_at' => $createdAt?->format('H:i'),
+            'formatted_created_at' => $createdAt?->format('Y-m-d H:i'),
             'invoice_date' => $this->invoice_date?->toDateString(),
             'is_cancelled' => $this->status === 'cancelled',
         ];

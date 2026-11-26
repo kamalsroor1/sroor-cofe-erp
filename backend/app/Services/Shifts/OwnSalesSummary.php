@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\Reports\InvoiceAggregates;
 use App\Services\Reports\ReportDateRange;
 use App\Support\Money\Decimal;
+use App\Support\TenantClock;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -31,6 +32,10 @@ use Illuminate\Database\Eloquent\Model;
  */
 final class OwnSalesSummary
 {
+    public function __construct(
+        private readonly TenantClock $tenantClock,
+    ) {}
+
     /**
      * The shift whose time window frames the caller's figures.
      *
@@ -76,7 +81,7 @@ final class OwnSalesSummary
         $block = [
             'id' => (int) $shift->id,
             'shift_number' => (string) ($shift->shift_number ?? $shift->id),
-            'opened_at' => $shift->opened_at?->toDateTimeString(),
+            'opened_at' => $this->tenantClock->toTenant($shift->opened_at)?->toDateTimeString(),
             'is_own' => $isOwn,
         ];
 

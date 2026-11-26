@@ -591,7 +591,7 @@ class TreasuryService
     {
         return array_merge([
             'date' => $fields['date'],
-            'time' => $createdAt?->format('H:i'),
+            'time' => $createdAt === null ? null : $this->tenantClock->toTenant(CarbonImmutable::instance($createdAt))?->format('H:i'),
             'timestamp' => $createdAt?->getTimestamp() ?? 0,
         ], $fields);
     }

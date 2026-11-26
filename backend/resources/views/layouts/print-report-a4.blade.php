@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+@inject('tenantClock', 'App\Support\TenantClock')
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -83,7 +84,7 @@
                 </h1>
                 <p class="text-xs font-bold text-slate-600">{{ $companySubtitle }}</p>
                 <div class="text-[10px] text-slate-500 font-mono">
-                    {{ __('inventory.report_generated_at') }} {{ now()->format('Y-m-d H:i') }} | {{ __('common.by') }}: {{ auth()->user()?->name ?? __('common.user') }}
+                    {{ __('inventory.report_generated_at') }} {{ $tenantClock->now()->format('Y-m-d H:i') }} | {{ __('common.by') }}: {{ auth()->user()?->name ?? __('common.user') }}
                 </div>
             </div>
 

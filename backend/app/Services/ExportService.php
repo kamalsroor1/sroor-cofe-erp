@@ -15,6 +15,7 @@ use App\Support\Csv\CsvCell;
 use App\Support\Money\Decimal;
 use App\Support\ProfitVisibility;
 use App\Support\StockMovementTypes;
+use App\Support\TenantClock;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExportService
@@ -74,6 +75,10 @@ class ExportService
 
     /** Item columns summed into the top-items totals row. */
     private const ITEM_SUM_KEYS = ['gross_qty', 'returned_qty', 'total_qty', 'gross_revenue', 'returned_value', 'total_revenue', 'total_cogs', 'profit'];
+
+    public function __construct(
+        private readonly TenantClock $tenantClock,
+    ) {}
 
     /**
      * Helper to stream CSV with UTF-8 BOM for perfect Arabic display in Excel
@@ -368,7 +373,7 @@ class ExportService
             };
 
             $rows[] = [
-                $row->created_at->format('Y-m-d H:i'),
+                $this->tenantClock->toTenant($row->created_at)?->format('Y-m-d H:i'),
                 $typeLabel,
                 $row->document_number ?: '—',
                 $row->store?->name ?? __('common.main_store_default'),

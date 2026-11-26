@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\Item;
 use App\Services\Branding\TenantBranding;
 use App\Services\Settings\TenantSettings;
+use App\Support\TenantClock;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 /**
@@ -22,6 +23,7 @@ final class GetPublicReceiptAction
     public function __construct(
         private readonly TenantBranding $branding,
         private readonly TenantSettings $settings,
+        private readonly TenantClock $clock,
     ) {}
 
     /**
@@ -80,7 +82,7 @@ final class GetPublicReceiptAction
             'invoice' => [
                 'number' => (string) $invoice->invoice_number,
                 'date' => $invoice->invoice_date?->format('Y-m-d') ?? '',
-                'time' => $invoice->created_at?->format('H:i') ?? '',
+                'time' => $this->clock->toTenant($invoice->created_at)?->format('H:i') ?? '',
                 'customer' => $invoice->customer?->name,
                 'subtotal' => (string) $invoice->subtotal,
                 'discount' => (string) $invoice->discount_amount,

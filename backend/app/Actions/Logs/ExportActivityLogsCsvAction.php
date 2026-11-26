@@ -7,10 +7,15 @@ namespace App\Actions\Logs;
 use App\DTOs\Logs\ActivityLogStoreScope;
 use App\Filters\ActivityLogs\ReadableStoresFilter;
 use App\Models\ActivityLog;
+use App\Support\TenantClock;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class ExportActivityLogsCsvAction
 {
+    public function __construct(
+        private readonly TenantClock $tenantClock,
+    ) {}
+
     /**
      * Stream CSV export for filtered activity logs.
      */
@@ -80,7 +85,7 @@ final class ExportActivityLogsCsvAction
                 foreach ($logs as $log) {
                     fputcsv($handle, array_map(static fn (mixed $cell): mixed => self::neutralizeFormula($cell), [
                         $log->id,
-                        $log->created_at?->format('Y-m-d H:i:s'),
+                        $this->tenantClock->toTenant($log->created_at)?->format('Y-m-d H:i:s'),
                         $log->user?->name ?? __('common.system'),
                         $log->user?->phone ?? '-',
                         $log->store?->name ?? __('common.main_store_default'),

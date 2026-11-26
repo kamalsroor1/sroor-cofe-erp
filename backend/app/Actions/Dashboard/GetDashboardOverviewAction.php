@@ -126,7 +126,7 @@ final class GetDashboardOverviewAction
                         : ($shift->user?->name ?? __('common.cashier')),
                     'starting_cash' => $openShifts['opening_cash_balance'],
                     'current_cash' => Decimal::normalize((string) $openShifts['expected_cash_balance']),
-                    'opened_at' => $shift->opened_at?->toDateTimeString(),
+                    'opened_at' => $this->tenantClock->toTenant($shift->opened_at)?->toDateTimeString(),
                     'open_shifts_count' => $openShifts['count'],
                 ];
             }

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+@inject('tenantClock', 'App\Support\TenantClock')
 <head>
     @php $currencyLabel = app(\App\Services\Settings\TenantSettings::class)->currencyLabel(); @endphp
     <meta charset="UTF-8">
@@ -85,7 +86,7 @@
                 </h1>
                 <p class="text-xs font-bold text-slate-600">{{ $companySubtitle }}</p>
                 <div class="text-[10px] text-slate-500 font-mono">
-                    {{ __('inventory.report_generated_at') }} {{ now()->format('Y-m-d H:i') }} | {{ __('common.by') }}: {{ auth()->user()?->name ?? __('common.user') }}
+                    {{ __('inventory.report_generated_at') }} {{ $tenantClock->now()->format('Y-m-d H:i') }} | {{ __('common.by') }}: {{ auth()->user()?->name ?? __('common.user') }}
                 </div>
             </div>
 
@@ -181,7 +182,7 @@
             @endphp
             <tr class="{{ $idx % 2 === 0 ? 'bg-white' : 'bg-slate-50' }}">
                 <td class="border border-slate-400 p-1.5 text-center font-mono text-[10px]">{{ $idx + 1 }}</td>
-                <td class="border border-slate-400 p-1.5 font-mono">{{ $row->created_at->format('Y-m-d H:i') }}</td>
+                <td class="border border-slate-400 p-1.5 font-mono">{{ $tenantClock->toTenant($row->created_at)?->format('Y-m-d H:i') }}</td>
                 <td class="border border-slate-400 p-1.5 font-bold">{{ $typeLabel }}</td>
                 <td class="border border-slate-400 p-1.5 font-mono font-bold">{{ $row->document_number ?: '—' }}</td>
                 <td class="border border-slate-400 p-1.5">{{ $row->store?->name ?? __('common.main_store_default') }}</td>

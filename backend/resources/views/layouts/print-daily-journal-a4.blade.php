@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+@inject('tenantClock', 'App\Support\TenantClock')
 <head>
     @php $currencyLabel = app(\App\Services\Settings\TenantSettings::class)->currencyLabel(); @endphp
     <meta charset="UTF-8">
@@ -214,7 +215,7 @@
             <div class="report-meta">
                 <h2 class="report-title">{{ __('treasury.daily_journal') }}</h2>
                 <div class="report-date">📅 {{ __('common.date') }}: {{ $date }}</div>
-                <div style="font-size: 11px; color: #444;">{{ __('treasury.print_time') }}: {{ now()->format('Y-m-d h:i A') }}</div>
+                <div style="font-size: 11px; color: #444;">{{ __('treasury.print_time') }}: {{ $tenantClock->now()->format('Y-m-d h:i A') }}</div>
             </div>
         </div>
 
@@ -309,8 +310,8 @@
                     <td style="font-family: monospace; font-weight: 900;">#{{ $shift->shift_number }}</td>
                     <td>{{ $shift->user?->name ?? __('common.unspecified') }}</td>
                     <td>{{ $shift->store?->name ?? __('common.main_store_default') }}</td>
-                    <td>{{ $shift->opened_at ? $shift->opened_at->format('h:i A') : '-' }}</td>
-                    <td>{{ $shift->closed_at ? $shift->closed_at->format('h:i A') : __('treasury.currently_open') }}</td>
+                    <td>{{ $shift->opened_at ? $tenantClock->toTenant($shift->opened_at)->format('h:i A') : '-' }}</td>
+                    <td>{{ $shift->closed_at ? $tenantClock->toTenant($shift->closed_at)->format('h:i A') : __('treasury.currently_open') }}</td>
                     <td style="font-family: monospace;">{{ number_format((float)$shift->opening_cash_balance, 2) }}</td>
                     <td style="font-family: monospace;">{{ number_format((float)$shift->expected_cash_balance, 2) }}</td>
                     <td style="font-family: monospace; font-weight: 900;">{{ $shift->actual_cash_balance !== null ? number_format((float)$shift->actual_cash_balance, 2) : '-' }}</td>
@@ -393,7 +394,7 @@
                 @foreach($invoices->take(30) as $inv)
                 <tr>
                     <td style="font-family: monospace; font-weight: 900;">#{{ $inv->invoice_number }}</td>
-                    <td>{{ $inv->created_at->format('h:i A') }}</td>
+                    <td>{{ $tenantClock->toTenant($inv->created_at)?->format('h:i A') }}</td>
                     <td style="text-align: right;">{{ $inv->customer?->name ?? __('treasury.cash_customer') }}</td>
                     <td>
                         {{-- #219: show the channel (InstaPay, wallet…), not just the settlement type. --}}

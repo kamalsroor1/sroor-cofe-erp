@@ -114,7 +114,7 @@ final class GetActivityLogsAction
                 'ip_address' => $log->ip_address,
                 'user_agent' => $log->user_agent,
                 'payload' => $log->properties,
-                'created_at' => $log->created_at?->format('Y-m-d H:i:s'),
+                'created_at' => $this->tenantClock->toTenant($log->created_at)?->format('Y-m-d H:i:s'),
                 'time_ago' => $log->created_at?->diffForHumans(),
             ];
         });
