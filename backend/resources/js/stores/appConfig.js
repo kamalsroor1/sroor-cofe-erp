@@ -130,6 +130,19 @@ export const useAppConfigStore = defineStore('appConfig', {
         },
 
         /**
+         * Re-read the branch's active shift after a shift was opened or closed, so every indicator
+         * (top bar badge, sidebar pill) follows the server without a page reload.
+         * Never throws: the shift action already succeeded, a failed refresh must not read as a failed close.
+         */
+        async refreshActiveShift() {
+            try {
+                await this.fetchBootstrapContext();
+            } catch {
+                // The api interceptor already surfaced the error; keep the last known state.
+            }
+        },
+
+        /**
          * Re-read only the onboarding checklist progress from its dedicated endpoint.
          */
         async refreshSetupProgress() {

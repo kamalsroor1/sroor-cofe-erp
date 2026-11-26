@@ -6,6 +6,7 @@ import { normalize } from '../../helpers/decimal';
 import { isValidCountedCash, canCloseShift, isShiftOpenedBy } from '../../helpers/shiftCash';
 import { useShiftCloseFigures } from '../useShiftCloseFigures';
 import { useZReportPrint } from '../useZReportPrint';
+import { useAppConfigStore } from '../../stores/appConfig';
 import { sanitizeDecimalInput } from '../../helpers/posWeight';
 
 /**
@@ -16,6 +17,7 @@ import { sanitizeDecimalInput } from '../../helpers/posWeight';
 export function usePosShift({ authStore, activeShift, requiresShift, isLoading, reloadShift, isOnline }) {
     const router = useRouter();
     const figures = useShiftCloseFigures();
+    const appConfigStore = useAppConfigStore();
     const zPrint = useZReportPrint();
     const showPanel = ref(false);
     const openingCash = ref('0');
@@ -94,7 +96,7 @@ export function usePosShift({ authStore, activeShift, requiresShift, isLoading, 
         try {
             await api.post('/shifts/open', { opening_cash_balance: normalize(openingCash.value || '0') });
             showPanel.value = false;
-            await reloadShift();
+            await Promise.all([reloadShift(), appConfigStore.refreshActiveShift()]);
         } catch (e) {
             if (e.response?.status !== 403) errorMessage.value = e.userMessage || trans('pos.shift_open_failed');
         } finally {
@@ -122,7 +124,7 @@ export function usePosShift({ authStore, activeShift, requiresShift, isLoading, 
             showPanel.value = false;
             // The close succeeded: show the final Z report; a failed report fetch is handled inside that dialog.
             zPrint.presentClosedShift(lastClosedShiftId);
-            await reloadShift();
+            await Promise.all([reloadShift(), appConfigStore.refreshActiveShift()]);
         } catch (e) {
             if (e.response?.status !== 403) errorMessage.value = e.userMessage || trans('pos.shift_close_failed');
         } finally {

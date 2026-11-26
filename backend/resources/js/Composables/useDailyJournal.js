@@ -6,6 +6,7 @@ import { businessToday } from './useBusinessDate';
 import { normalize } from '../helpers/decimal';
 import { isValidCountedCash, canCloseShift } from '../helpers/shiftCash';
 import { useAuthStore } from '../stores/auth';
+import { useAppConfigStore } from '../stores/appConfig';
 import { useShiftCloseFigures } from './useShiftCloseFigures';
 import { useZReportPrint } from './useZReportPrint';
 import { isOwnShiftJournal, canPrintJournal } from '../helpers/journalScope';
@@ -25,6 +26,7 @@ export function useDailyJournal() {
     const canPrint = ref(false);
     const closeFigures = useShiftCloseFigures();
     const authStore = useAuthStore();
+    const appConfigStore = useAppConfigStore();
     const zPrint = useZReportPrint();
     const summary = ref({
         total_sales: 0,
@@ -130,7 +132,7 @@ export function useDailyJournal() {
                 showConfirmButton: false,
             });
             showOpenShiftModal.value = false;
-            await fetchDailyJournal();
+            await Promise.all([fetchDailyJournal(), appConfigStore.refreshActiveShift()]);
         } catch (error) {
             Swal.fire({
                 icon: 'error',
@@ -179,7 +181,7 @@ export function useDailyJournal() {
         // The close succeeded: show the final Z report; a failed report fetch is handled inside the dialog.
         lastClosedShiftId = closedShiftId;
         zPrint.presentClosedShift(closedShiftId);
-        await fetchDailyJournal();
+        await Promise.all([fetchDailyJournal(), appConfigStore.refreshActiveShift()]);
     };
 
     const retryClosedReport = () => zPrint.presentClosedShift(lastClosedShiftId);
