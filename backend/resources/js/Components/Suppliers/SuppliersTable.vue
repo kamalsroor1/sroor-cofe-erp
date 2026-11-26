@@ -97,51 +97,30 @@
 
       <!-- Actions Cell -->
       <template #cell-actions="{ row }">
-        <div class="flex items-center justify-center gap-1">
-          <!-- Pay Supplier Button -->
-          <button
+        <div class="flex items-center justify-center gap-1.5 flex-wrap">
+          <RowAction
             v-if="appConfigStore.hasFeature('payments.manage')"
-            type="button"
+            :icon="CreditCard"
+            :label="$t('contacts.pay_supplier')"
+            variant="primary"
             data-testid="action-pay"
             @click="$emit('pay', row)"
-            class="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0 px-2.5 py-1.5 bg-theme-light hover:bg-theme-hover/20 text-theme-primary border border-theme-border rounded-xl text-xs font-bold transition flex items-center gap-1 font-tajawal cursor-pointer active:scale-95"
-            :title="$t('contacts.pay_supplier')"
-          >
-            <CreditCard class="w-3.5 h-3.5" />
-            <span class="hidden lg:inline">{{ $t('contacts.pay_supplier') }}</span>
-          </button>
-
-          <!-- Statement Button -->
-          <router-link
+          />
+          <RowAction
+            :icon="FileText"
+            :label="$t('contacts.statement')"
             :to="`/suppliers/${row.id}/statement`"
             data-testid="action-statement"
-            class="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0 p-2 text-slate-500 hover:text-theme-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition flex items-center justify-center active:scale-95"
-            :title="$t('contacts.statement')"
-          >
-            <FileText class="w-4 h-4" />
-          </router-link>
-
-          <!-- Edit Button -->
-          <button
-            type="button"
-            data-testid="action-edit"
-            @click="$emit('edit', row)"
-            class="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0 p-2 text-slate-500 hover:text-cyan-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition flex items-center justify-center cursor-pointer active:scale-95"
-            :title="$t('common.edit')"
-          >
-            <Pencil class="w-4 h-4" />
-          </button>
-
-          <!-- Delete Button -->
-          <button
-            type="button"
+          />
+          <RowAction :icon="Pencil" :label="$t('common.edit')" data-testid="action-edit" @click="$emit('edit', row)" />
+          <span class="hidden sm:block w-px h-6 bg-slate-200 dark:bg-slate-700 mx-0.5" aria-hidden="true"></span>
+          <RowAction
+            :icon="Trash2"
+            :label="$t('common.delete')"
+            variant="danger"
             data-testid="action-delete"
             @click="$emit('delete', row)"
-            class="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0 p-2 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition flex items-center justify-center cursor-pointer active:scale-95"
-            :title="$t('common.delete')"
-          >
-            <Trash2 class="w-4 h-4" />
-          </button>
+          />
         </div>
       </template>
     </DataTable>
@@ -152,6 +131,7 @@
 import { computed } from 'vue';
 import { rowNumber } from '@/helpers/rowNumber';
 import { CreditCard, FileText, Pencil, Trash2 } from 'lucide-vue-next';
+import RowAction from '../Common/RowAction.vue';
 import DataTable from '../Common/DataTable.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';

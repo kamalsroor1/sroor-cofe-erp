@@ -266,6 +266,7 @@ const alignClass = (col) => {
 };
 
 const visibleOnMobile = (col) => col.hideOnMobile !== true;
+const lastIsActions = computed(() => props.columns?.[props.columns.length - 1]?.key === 'actions');
 </script>
 
 <template>
@@ -502,8 +503,8 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
                 </div>
               </div>
 
-              <!-- Right Side Badge / Actions of Header -->
-              <div class="shrink-0 flex items-center gap-1 data-table-actions">
+              <!-- Right Side Badge of Header (row actions get their own footer row, see below) -->
+              <div v-if="!lastIsActions" class="shrink-0 flex items-center gap-1 data-table-actions">
                 <slot
                   v-if="columns.length > 1 && $slots[`cell-${columns[columns.length - 1].key}`]"
                   :name="`cell-${columns[columns.length - 1].key}`"
@@ -540,6 +541,15 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
                   {{ getCellValue(row, col.key) ?? '—' }}
                 </span>
               </div>
+            </div>
+
+            <!-- UX-235: row actions carry their words, so they take a full-width row at the card's foot -->
+            <div
+              v-if="lastIsActions && ($slots['cell-actions'] || $slots['actions'])"
+              class="data-table-actions flex flex-wrap items-center justify-end gap-1.5 pt-2.5 border-t border-slate-200 dark:border-slate-800/80"
+            >
+              <slot v-if="$slots['cell-actions']" name="cell-actions" :row="row" :value="null" :index="index" />
+              <slot v-else name="actions" :row="row" :index="index" />
             </div>
           </div>
         </div>

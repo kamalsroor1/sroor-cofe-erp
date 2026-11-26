@@ -92,16 +92,14 @@
     </template>
 
     <template #cell-actions="{ row }">
-      <div class="flex items-center justify-center gap-1">
-        <button
-          type="button"
-          @click="$emit('preview', row)"
-          data-testid="action-preview"
-          class="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0 p-1.5 text-slate-400 hover:text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 rounded-xl transition cursor-pointer"
+      <div class="flex items-center justify-center gap-1.5">
+        <RowAction
+          :icon="Eye"
+          :label="$t('common.preview')"
           :title="$t('invoices.view_details')"
-        >
-          <Eye class="w-4 h-4" />
-        </button>
+          data-testid="action-preview"
+          @click="$emit('preview', row)"
+        />
 
         <ActionMenu
           :items="getInvoiceActions(row)"
@@ -118,6 +116,7 @@ import { computed } from 'vue';
 import { Eye, Printer, Ban, Receipt } from 'lucide-vue-next';
 import DataTable from '@/Components/Common/DataTable.vue';
 import ActionMenu from '../ActionMenu.vue';
+import RowAction from '../Common/RowAction.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { trans } from '../../helpers/trans';
 import { useTrans } from '../../Composables/useTrans';

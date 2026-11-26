@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { rowNumber } from '@/helpers/rowNumber';
 import { Receipt, FileText, Pencil, Trash2, Users } from 'lucide-vue-next';
+import RowAction from '../Common/RowAction.vue';
 import DataTable from '@/Components/Common/DataTable.vue';
 import { useFormatters } from '@/Composables/useFormatters';
 import { useTrans } from '@/Composables/useTrans';
@@ -129,48 +130,32 @@ const columns = computed(() => [
 
     <!-- Actions slot handles both desktop and mobile -->
     <template #actions="{ row }">
-      <div class="flex items-center justify-center gap-1 flex-wrap">
-        <button
+      <div class="flex items-center justify-center gap-1.5 flex-wrap">
+        <RowAction
           v-if="appConfigStore.hasFeature('payments.manage')"
-          type="button"
-          @click="$emit('pay', row)"
-          class="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0 px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold transition flex items-center gap-1 font-tajawal cursor-pointer active:scale-95"
-          :title="$t('contacts.collect_payment')"
+          :icon="Receipt"
+          :label="$t('contacts.collect_payment')"
+          variant="primary"
           data-testid="action-pay"
-        >
-          <Receipt class="w-4 h-4 lg:w-3.5 lg:h-3.5" />
-          <span class="hidden lg:inline">{{ $t('contacts.collect_payment') }}</span>
-        </button>
-
-        <router-link
+          @click="$emit('pay', row)"
+        />
+        <RowAction
+          :icon="FileText"
+          :label="$t('contacts.statement')"
           :to="`/customers/${row.id}/statement`"
-          class="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0 flex items-center justify-center p-2 text-slate-500 hover:text-theme-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition active:scale-95"
-          :title="$t('contacts.statement')"
           data-testid="action-statement"
-        >
-          <FileText class="w-5 h-5 lg:w-4 lg:h-4" />
-        </router-link>
-
-        <button
-          type="button"
-          @click="$emit('edit', row)"
-          class="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0 p-2 text-slate-500 hover:text-cyan-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer active:scale-95"
-          :title="$t('common.edit')"
-          data-testid="action-edit"
-        >
-          <Pencil class="w-5 h-5 lg:w-4 lg:h-4" />
-        </button>
-
-        <button
-          v-if="canDelete"
-          type="button"
-          @click="$emit('delete', row)"
-          class="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0 p-2 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition cursor-pointer active:scale-95"
-          :title="$t('common.delete')"
-          data-testid="action-delete"
-        >
-          <Trash2 class="w-5 h-5 lg:w-4 lg:h-4" />
-        </button>
+        />
+        <RowAction :icon="Pencil" :label="$t('common.edit')" data-testid="action-edit" @click="$emit('edit', row)" />
+        <template v-if="canDelete">
+          <span class="hidden sm:block w-px h-6 bg-slate-200 dark:bg-slate-700 mx-0.5" aria-hidden="true"></span>
+          <RowAction
+            :icon="Trash2"
+            :label="$t('common.delete')"
+            variant="danger"
+            data-testid="action-delete"
+            @click="$emit('delete', row)"
+          />
+        </template>
       </div>
     </template>
   </DataTable>

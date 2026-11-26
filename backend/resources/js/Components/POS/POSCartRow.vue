@@ -146,7 +146,7 @@ const stepClass =
         <button
           type="button"
           tabindex="-1"
-          class="w-9 h-9 pointer-coarse:w-11 pointer-coarse:h-11 shrink-0 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 flex items-center justify-center transition cursor-pointer"
+          class="ms-1 w-9 h-9 pointer-coarse:w-11 pointer-coarse:h-11 shrink-0 rounded-lg border border-rose-500/30 bg-rose-500/5 text-rose-500 hover:bg-rose-500/15 flex items-center justify-center transition cursor-pointer"
           :title="$t('pos.delete_item')"
           :aria-label="$t('pos.delete_item')"
           @click="emit('remove-item', index)"

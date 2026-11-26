@@ -55,6 +55,7 @@ return [
     'return_value' => 'Return Value',
     'view_return_details_hint' => 'View Document Details',
     'archive_return_hint' => 'Archive Document',
+    'archive_short' => 'Archive',
     'no_returns_description' => 'No sales or purchase returns matching the filter.',
     'add_first_return' => 'Record First Return',
     'total_results_returns' => 'Total Results: :count documents',

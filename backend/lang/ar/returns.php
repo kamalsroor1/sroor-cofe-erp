@@ -55,6 +55,7 @@ return [
     'return_value' => 'قيمة المرتجع',
     'view_return_details_hint' => 'عرض تفاصيل المستند',
     'archive_return_hint' => 'أرشفة المستند',
+    'archive_short' => 'أرشفة',
     'no_returns_description' => 'لم يتم تسجيل أي حركات مرتجعات مبيعات أو مشتريات مطابقة للفلاتر المحددة.',
     'add_first_return' => 'تسجيل أول مرتجع',
     'total_results_returns' => 'إجمالي النتائج: :count مستند',
