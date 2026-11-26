@@ -8,6 +8,7 @@ use App\Enums\Billing\BillingCycle;
 use App\Enums\Billing\BillingInvoiceStatus;
 use App\Enums\Billing\BillingInvoiceType;
 use App\Models\Concerns\UsesCentralConnection;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -154,5 +155,17 @@ class BillingInvoice extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(BillingPayment::class);
+    }
+
+    /**
+     * #232 spec A: the earliest accepted actual-transfer moment for a payment of this invoice,
+     * the START of its issue day on the platform clock (config app.timezone). Owner rule: a transfer
+     * is never dated before the invoice was issued; a tolerance before that day is an open decision.
+     */
+    public function earliestTransferAt(): CarbonImmutable
+    {
+        $issued = $this->issued_at ?? $this->created_at ?? Carbon::now();
+
+        return CarbonImmutable::instance($issued)->setTimezone((string) config('app.timezone'))->startOfDay();
     }
 }

@@ -200,6 +200,7 @@ return [
     // SETG-3: same keys as lang/ar/validation.php. Without them English messages fell back
     // to the Arabic attribute names (fallback_locale = ar), e.g. "The الاسم field is required.".
     'attributes' => [
+        'transferred_at' => 'actual transfer date and time',
         // Public signup (PRD-05)
         'business_name' => 'business name',
         'contact_name' => 'contact name',

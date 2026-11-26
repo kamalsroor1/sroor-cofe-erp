@@ -10,6 +10,10 @@ use App\Support\Money\Decimal;
  * Input of IssuePlanChangeInvoiceAction (console). `amount` + `description` apply to a plan-change
  * request (the DIFFERENCE the admin decided); `quantity` + `unitPrice` apply to an add-on request
  * (null = the request quantity / the catalog price of the tenant's plan).
+ *
+ * #232: `withRenewal` (plan change on a running paid term) = "upgrade + renewal" (default false =
+ * upgrade only); `releaseFounderHold` = the owner reviewed a request held for a tenant with an
+ * agreed founder price and issues it anyway.
  */
 final readonly class IssuePlanChangeInvoiceDTO
 {
@@ -20,6 +24,8 @@ final readonly class IssuePlanChangeInvoiceDTO
         public ?int $quantity,
         public ?string $unitPrice,
         public ?string $notes,
+        public bool $withRenewal = false,
+        public bool $releaseFounderHold = false,
     ) {}
 
     /**
@@ -40,6 +46,8 @@ final readonly class IssuePlanChangeInvoiceDTO
             quantity: isset($data['quantity']) ? (int) $data['quantity'] : null,
             unitPrice: isset($data['unit_price']) ? Decimal::normalize((string) $data['unit_price']) : null,
             notes: $text($data['notes'] ?? null),
+            withRenewal: filter_var($data['with_renewal'] ?? false, FILTER_VALIDATE_BOOL),
+            releaseFounderHold: filter_var($data['release_founder_hold'] ?? false, FILTER_VALIDATE_BOOL),
         );
     }
 }

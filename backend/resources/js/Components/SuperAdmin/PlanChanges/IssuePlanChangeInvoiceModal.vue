@@ -3,6 +3,7 @@ import { computed, reactive, watch } from 'vue';
 import { CheckCircle2, Printer } from 'lucide-vue-next';
 import AppModal from '../../Common/AppModal.vue';
 import BaseButton from '../../Common/BaseButton.vue';
+import BaseCheckbox from '../../Form/BaseCheckbox.vue';
 import BaseInput from '../../Form/BaseInput.vue';
 import BaseTextarea from '../../Form/BaseTextarea.vue';
 import { useFormatters } from '../../../Composables/useFormatters';
@@ -20,7 +21,15 @@ const emit = defineEmits(['close', 'submit']);
 
 const { formatMoney } = useFormatters();
 
-const form = reactive({ amount: '', description: '', quantity: '1', unit_price: '', notes: '' });
+const form = reactive({
+  amount: '',
+  description: '',
+  quantity: '1',
+  unit_price: '',
+  notes: '',
+  with_renewal: false,
+  release_founder_hold: false,
+});
 
 const isAddon = computed(() => props.request?.kind.value === 'addon');
 const cycleKey = computed(() => (props.request?.billing_cycle.value === 'yearly' ? 'price_yearly' : 'price_monthly'));
@@ -32,6 +41,8 @@ const currentPrice = computed(() => priceOf(props.request?.current_plan));
 const requestedPrice = computed(() => priceOf(props.request?.requested_plan));
 // #232: a trial / expired shop has no term to price a difference on: the server issues a full plan invoice.
 const fullPlanInvoice = computed(() => !isAddon.value && props.request?.tenant?.has_paid_term === false);
+// #232 C: a request held for the owner's founder-price review is issued only with an explicit release.
+const founderHeld = computed(() => !isAddon.value && !!props.request?.founder_review_held_at);
 
 const firstError = (key) => props.errors[key]?.[0];
 
@@ -44,12 +55,15 @@ watch(
       quantity: String(request?.quantity || 1),
       unit_price: '',
       notes: '',
+      with_renewal: false,
+      release_founder_hold: false,
     });
   }
 );
 
 const onSubmit = () => {
   const notes = form.notes.trim() || undefined;
+  const release = founderHeld.value && form.release_founder_hold ? { release_founder_hold: true } : {};
   emit(
     'submit',
     isAddon.value
@@ -59,8 +73,14 @@ const onSubmit = () => {
           notes,
         }
       : fullPlanInvoice.value
-        ? { notes }
-        : { amount: form.amount.trim(), description: form.description.trim() || undefined, notes }
+        ? { notes, ...release }
+        : {
+            amount: form.amount.trim(),
+            description: form.description.trim() || undefined,
+            with_renewal: form.with_renewal,
+            notes,
+            ...release,
+          }
   );
 };
 </script>
@@ -166,6 +186,21 @@ const onSubmit = () => {
             :label="$t('billing.console.plan_changes.issue.description')"
             :placeholder="$t('billing.console.plan_changes.issue.description_placeholder')"
             :error="firstError('description')"
+          />
+          <BaseCheckbox
+            v-model="form.with_renewal"
+            :label="$t('billing.console.plan_changes.issue.with_renewal')"
+            :error="firstError('with_renewal')"
+          />
+        </template>
+        <template v-if="founderHeld">
+          <p class="text-xs font-bold text-amber-600 dark:text-amber-400">
+            {{ $t('billing.console.plan_changes.issue.founder_held_note') }}
+          </p>
+          <BaseCheckbox
+            v-model="form.release_founder_hold"
+            :label="$t('billing.console.plan_changes.issue.release_founder_hold')"
+            :error="firstError('release_founder_hold')"
           />
         </template>
       </template>

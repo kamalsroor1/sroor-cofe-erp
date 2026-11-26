@@ -44,8 +44,14 @@ use LogicException;
  * invoice(s) -> subscription, see VerifyManualPaymentAction); re-locking it here is a no-op.
  *
  *  - subscription: plan + cycle from the invoice, status active, price = the billed plan line,
- *    period extended by one month / one year from max(now, current paid end, invoice period
- *    start) - the last one is the trial end for the SELL-06 trial-end invoice;
+ *    period = one month / one year from the TERM START (#232 spec A, see termBase()):
+ *      - a paid term still running at the transfer moment: appended after the current paid end
+ *        (a renewal never loses paid days and is never charged twice);
+ *      - no paid term (trial, free plan, expired): the ACTUAL transfer moment the operator entered
+ *        at Verify (`billing_payments.transferred_at`), else the confirmation moment (a gateway
+ *        payment, or a legacy row). The invoice's own period_start (e.g. the SELL-06 trial end) no
+ *        longer moves the start, and remaining trial days are NOT added: whether they should be is
+ *        the owner's open decision (أ). The invoice period is rewritten to the term actually applied;
  *  - tenant: plan_id and subscription_ends_at follow, and the lifecycle status moves to `active`
  *    ONLY through TransitionTenantStatusAction (actor Billing) when it is not already active.
  *    A `violation` suspension is never lifted by a payment: the period is extended and the
@@ -54,17 +60,22 @@ use LogicException;
  *  - entitlement cache: bumped by the model observers and once more here after commit;
  *  - audit: SubscriptionActivated.
  *
- * Two support-driven shapes (owner decision: no proration, separate invoices):
- *  - a DIFFERENCE upgrade (type upgrade, plan line flagged `difference`): the plan switches at
- *    once and the paid term is KEPT (ends_at untouched) while it is still in the future; with no
- *    future end it behaves like a normal plan invoice (extends by the cycle);
+ * Support-driven shapes:
+ *  - an UPGRADE ONLY (type upgrade, ONE plan line flagged `difference`, #232 spec B): the plan
+ *    switches at once and the paid term END is KEPT; it needs a term still running (409 otherwise);
+ *  - an UPGRADE + RENEWAL (type upgrade, the `difference` line plus a plan line flagged `renewal`):
+ *    the plan switches and ONE full cycle of the new plan (the invoice cycle) is appended after the
+ *    current paid end; same running-term and term-changed guards as the upgrade only;
  *  - an ADD-ON invoice (type addon): creates or tops up the `subscription_addons` line (active;
  *    a monthly line runs the months its invoice charged, capped at the subscription end, a yearly
  *    line one year from now) so the add-on counts in TenantEntitlementService. The plan, the term
  *    and the tenant status are untouched.
  *
- * BILL-01 review: a difference invoice is refused (409 difference_term_changed) unless its
- * period_end is still the tenant's subscription_ends_at: a renewal paid in between moved the term.
+ * BILL-01 review: a difference invoice is refused (409 difference_term_changed) unless the term it
+ * priced (pricedTermEnd()) is still the tenant's subscription_ends_at: a renewal paid in between moved it.
+ *
+ * #232 spec C: an upgrade invoice never claims a founder slot (no automatic founder pricing on the
+ * plan-change path); FounderPricingService::claim runs for plan / renewal invoices only.
  *
  * PLAN-10 review: a tenant on a permanent free plan holds an active 0.000 row with no paid term;
  * paying a plan invoice CLOSES that row (expired, ends_at = now) and creates a new paid row (the
@@ -109,15 +120,9 @@ final class ActivateSubscriptionAction
         $now = CarbonImmutable::now();
         $currentEnd = $tenant->subscription_ends_at;
         $hasFutureEnd = $currentEnd !== null && $currentEnd->isAfter($now);
-        $base = $hasFutureEnd ? CarbonImmutable::instance($currentEnd) : $now;
-        // SELL-06: an invoice billed for a period that has not started yet (the trial-end invoice,
-        // period_start = trial end) starts the paid term at that period, so paying early never
-        // eats the rest of the trial; the shop is `active` (full access) in between.
-        $periodStart = $invoice->period_start;
-        if ($periodStart !== null && $periodStart->isAfter($base)) {
-            $base = CarbonImmutable::instance($periodStart);
-        }
+        $base = $this->termBase($currentEnd, $payment, $now);
         $difference = $this->isDifference($invoice);
+        $appendsCycle = $difference && $this->appendsRenewal($invoice);
 
         // BILL-01: a difference prices the REST of a running term; once it ended the shop would get
         // a full cycle for a fraction of the price.
@@ -125,13 +130,12 @@ final class ActivateSubscriptionAction
             throw BillingException::differenceNeedsActiveTerm();
         }
 
-        // BILL-01 review: a difference prices the term that was running when it was issued (its
-        // period_end is that term's end). If the term moved since (a renewal was paid first), paying
-        // the old difference would upgrade the NEW term for the price of the old remainder: refuse,
-        // support re-issues the difference for the current term.
+        // BILL-01 review: a difference prices the term that was running when it was issued. If the
+        // term moved since (a renewal was paid first), paying the old difference would upgrade the
+        // NEW term for the price of the old remainder: refuse, support re-issues it for the current term.
         // ($currentEnd is non-null here: a difference without a future end was refused above.)
-        if ($difference && ($invoice->period_end === null
-            || $invoice->period_end->getTimestamp() !== $currentEnd->getTimestamp())) {
+        $pricedEnd = $difference ? $this->pricedTermEnd($invoice) : null;
+        if ($difference && ($pricedEnd === null || $pricedEnd->getTimestamp() !== $currentEnd->getTimestamp())) {
             throw BillingException::differenceTermChanged();
         }
 
@@ -142,8 +146,9 @@ final class ActivateSubscriptionAction
             throw BillingException::renewalPlanMismatch();
         }
 
-        // A difference invoice without a running term was rejected above, so it always keeps its term.
-        $keepsTerm = $difference;
+        // Upgrade only keeps the term end; upgrade + renewal appends one cycle after it (a running
+        // term was enforced above, so $base is the current end for both).
+        $keepsTerm = $difference && ! $appendsCycle;
         $newEnd = $keepsTerm
             ? $base
             : ($cycle === BillingCycle::Yearly ? $base->addYearNoOverflow() : $base->addMonthNoOverflow());
@@ -168,15 +173,17 @@ final class ActivateSubscriptionAction
 
         $subscription->fill([
             'plan_id' => $plan->getKey(),
-            // A kept term keeps its cycle: the end date is still the old cycle's end.
+            // A kept term keeps its cycle: the end date is still the old cycle's end. An appended
+            // cycle (upgrade + renewal) moves to the invoice cycle like any plan invoice.
             'billing_cycle' => $keepsTerm && $subscription->exists && $subscription->billing_cycle->isSellable()
                 ? $subscription->billing_cycle
                 : $cycle,
             'status' => SubscriptionStatus::Active,
-            // A difference invoice bills only the gap: the subscription price is the plan's catalog price.
-            'amount' => $difference ? Decimal::normalize($cycle === BillingCycle::Yearly ? $plan->price_yearly : $plan->price_monthly) : $this->planAmount($invoice),
+            // An upgrade only bills the gap: the subscription price is the plan's catalog price. With
+            // a renewal, the full-cycle line on the new plan is the price.
+            'amount' => $keepsTerm ? Decimal::normalize($cycle === BillingCycle::Yearly ? $plan->price_yearly : $plan->price_monthly) : $this->planAmount($invoice),
             'currency' => $invoice->currency,
-            'starts_at' => $wasPaying ? $subscription->starts_at : $now,
+            'starts_at' => $wasPaying ? $subscription->starts_at : $base,
             'ends_at' => $newEnd,
             'cancelled_at' => null,
             'payment_method' => 'manual',
@@ -186,6 +193,14 @@ final class ActivateSubscriptionAction
         // Keeps the invoice pointing at the subscription it activated (older rows may have none).
         if ($invoice->subscription_id === null) {
             $invoice->subscription_id = $subscription->getKey();
+        }
+        // #232 spec A: a full cycle's invoice states the term it actually bought (e.g. a trial-end
+        // invoice paid early starts at the transfer, not at the trial end). Money is never touched.
+        if (! $difference) {
+            $invoice->period_start = Carbon::instance($base);
+            $invoice->period_end = Carbon::instance($newEnd);
+        }
+        if ($invoice->isDirty()) {
             $invoice->save();
         }
 
@@ -223,7 +238,8 @@ final class ActivateSubscriptionAction
             ));
         }
 
-        if (! $difference) {
+        // #232 spec C: no automatic founder pricing on the plan-change (upgrade) path.
+        if ($invoice->type !== BillingInvoiceType::Upgrade) {
             $this->founder->claim($subscription, $payment);
         }
 
@@ -239,7 +255,9 @@ final class ActivateSubscriptionAction
                 'plan_id' => (int) $plan->getKey(),
                 'billing_cycle' => $cycle->value,
                 'period_end' => $newEnd->toIso8601String(),
-                'kind' => $difference ? 'upgrade_difference' : 'plan',
+                'kind' => $appendsCycle ? 'upgrade_with_renewal' : ($difference ? 'upgrade_difference' : 'plan'),
+                'term_start' => $base->toIso8601String(),
+                'transferred_at' => $payment->transferred_at?->toIso8601String(),
                 'term_kept' => $keepsTerm,
                 'status_kept_for_violation' => $statusKept,
             ],
@@ -526,6 +544,50 @@ final class ActivateSubscriptionAction
         return $months;
     }
 
+    /**
+     * #232 spec A: where the new term starts. The transfer moment is the operator-entered actual
+     * transfer (manual) or the confirmation moment (gateway / no date). A paid term still running at
+     * that moment is extended from its end (appended, no paid day lost); otherwise the term starts
+     * at the transfer. Remaining trial days are not added (open owner decision أ).
+     */
+    private function termBase(?\DateTimeInterface $currentEnd, BillingPayment $payment, CarbonImmutable $now): CarbonImmutable
+    {
+        $transfer = $payment->transferred_at !== null ? CarbonImmutable::instance($payment->transferred_at) : $now;
+
+        if ($currentEnd !== null && $currentEnd > $transfer) {
+            return CarbonImmutable::instance($currentEnd);
+        }
+
+        return $transfer;
+    }
+
+    /**
+     * The paid-term end a difference invoice priced: its difference line's `term_end` (#232), else
+     * (invoices issued before that) the invoice period_end, which was that end.
+     */
+    private function pricedTermEnd(BillingInvoice $invoice): ?CarbonImmutable
+    {
+        foreach ($invoice->lines as $line) {
+            if (($line['type'] ?? null) === 'plan' && ($line['difference'] ?? false) === true && is_string($line['term_end'] ?? null)) {
+                return CarbonImmutable::parse($line['term_end']);
+            }
+        }
+
+        return $invoice->period_end === null ? null : CarbonImmutable::instance($invoice->period_end);
+    }
+
+    /** #232 spec B: the upgrade invoice also carries a full cycle of the new plan after the current end. */
+    private function appendsRenewal(BillingInvoice $invoice): bool
+    {
+        foreach ($invoice->lines as $line) {
+            if (($line['type'] ?? null) === 'plan' && ($line['renewal'] ?? false) === true && ($line['difference'] ?? false) !== true) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /** True for the single "difference" plan line a support-decided upgrade carries. */
     private function isDifference(BillingInvoice $invoice): bool
     {
@@ -560,10 +622,11 @@ final class ActivateSubscriptionAction
         return null;
     }
 
+    /** The full-cycle plan line's amount (never the upgrade difference line). */
     private function planAmount(BillingInvoice $invoice): string
     {
         foreach ($invoice->lines as $line) {
-            if (($line['type'] ?? null) === 'plan') {
+            if (($line['type'] ?? null) === 'plan' && ($line['difference'] ?? false) !== true) {
                 return bcadd((string) ($line['amount'] ?? '0'), '0', 3);
             }
         }

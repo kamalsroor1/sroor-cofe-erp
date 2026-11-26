@@ -8,6 +8,7 @@ use App\Models\BillingInvoice;
 use App\Models\CentralUser;
 use App\Models\PlanChangeRequest;
 use App\Models\Tenant;
+use Carbon\CarbonImmutable;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
@@ -151,8 +152,15 @@ final class TrialPlanChangeInvoiceTest extends PlanChangeTestCase
         $this->assertSame(1, BillingInvoice::query()->count());
     }
 
-    public function test_paying_the_trial_upgrade_invoice_switches_the_plan_and_keeps_the_rest_of_the_trial(): void
+    /**
+     * #232 spec A replaces 12799fd3 ("an early trial upgrade keeps the rest of the trial"): the paid
+     * month starts at the ACTUAL transfer moment entered at Verify; the 5 trial days left are NOT
+     * added (open owner decision أ), and the invoice period follows the term actually bought.
+     */
+    public function test_paying_the_trial_upgrade_invoice_switches_the_plan_and_starts_the_term_at_the_transfer(): void
     {
+        $this->travelTo(CarbonImmutable::parse('2026-11-26 12:00:00', (string) config('app.timezone')));
+        $this->admin = $this->steppedUpCentralHeaders($this->operator); // fresh step-up at the frozen clock
         $big = $this->plan(['max_users' => 50]);
         $tenant = $this->trialTenant();
 
@@ -172,18 +180,21 @@ final class TrialPlanChangeInvoiceTest extends PlanChangeTestCase
             'payer_reference' => '01000000888',
             'paid_at' => now()->toDateString(),
         ], $this->multipart($this->tenantHeaders($tenant)))->assertCreated()->json('data.id');
-        $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', [], $this->admin)->assertOk();
+
+        $transferredAt = CarbonImmutable::parse('2026-11-26 09:15:00', (string) config('app.timezone'));
+        $this->travel(3)->hours(); // verified later than the transfer
+        $this->admin = $this->steppedUpCentralHeaders($this->operator);
+        $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', $this->verifyBody($transferredAt), $this->admin)->assertOk();
 
         $tenant = Tenant::query()->findOrFail($tenant->getKey());
         $this->assertSame($big->getKey(), $tenant->plan_id);
         $this->assertSame('active', $tenant->status);
-        $this->assertNotNull($tenant->subscription_ends_at);
-        // #232 review: like the trial-end invoice, paying early keeps the 5 trial days left: the paid
-        // month starts at trial end, not today.
-        $this->assertNotNull($invoice->period_start);
-        $this->assertLessThan(120, abs(now()->addDays(5)->diffInSeconds($invoice->period_start, true)));
-        $this->assertLessThan(120, abs(now()->addDays(5)->addMonthNoOverflow()->diffInSeconds($tenant->subscription_ends_at, true)));
-        $this->assertSame('paid', $invoice->fresh()->status->value);
+        $this->assertSame('2026-12-26T09:15:00+02:00', $tenant->subscription_ends_at?->toIso8601String());
+        $invoice->refresh();
+        $this->assertSame('paid', $invoice->status->value);
+        $this->assertSame('2026-11-26T09:15:00+02:00', $invoice->period_start?->toIso8601String());
+        $this->assertSame('2026-12-26T09:15:00+02:00', $invoice->period_end?->toIso8601String());
+        $this->assertFalse((bool) ($invoice->lines[0]['founder'] ?? true), 'spec C: no automatic founder price on a plan change');
         $this->assertSame('completed', PlanChangeRequest::query()->findOrFail($requestId)->status->value);
 
         $this->getJson('/api/v1/billing/subscription', $this->tenantHeaders($tenant))

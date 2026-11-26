@@ -23,6 +23,7 @@ const DIFFERENCE_CONFLICTS = Object.freeze([
     'billing.difference_term_changed',
     'billing.renewal_in_flight',
 ]);
+const FOUNDER_HELD = 'billing.upgrade_held_for_founder_review';
 const errorCodeOf = (e) => e.response?.data?.error_code || null;
 
 /** Console queue of tenant plan-change / add-on requests: tabs, paging, issue invoice and reject. */
@@ -115,6 +116,11 @@ export function usePlanChangeQueue() {
             } else if (e.response?.status === 409 && errorCodeOf(e) === NOT_PENDING) {
                 notifyWarning(t('billing.console.plan_changes.reject.already_handled'), e.userMessage);
                 closeIssue();
+                afterAction();
+            } else if (e.response?.status === 409 && errorCodeOf(e) === FOUNDER_HELD) {
+                // #232 C: held for the owner's founder-price review; the modal now offers the release option.
+                notifyWarning(t('billing.console.plan_changes.issue.founder_held_title'), e.userMessage);
+                target.value = { ...target.value, founder_review_held_at: new Date().toISOString() };
                 afterAction();
             } else if (e.response?.status === 409) {
                 const title = DIFFERENCE_CONFLICTS.includes(errorCodeOf(e))

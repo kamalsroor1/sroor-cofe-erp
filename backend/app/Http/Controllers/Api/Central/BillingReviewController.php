@@ -10,10 +10,12 @@ use App\Actions\Billing\ListBillingPaymentsAction;
 use App\Actions\Billing\RejectManualPaymentAction;
 use App\Actions\Billing\VerifyManualPaymentAction;
 use App\DTOs\Billing\RejectManualPaymentDTO;
+use App\DTOs\Billing\VerifyManualPaymentDTO;
 use App\Http\Controllers\Api\Central\Concerns\ResolvesCentralOperator;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Central\ListBillingPaymentsRequest;
 use App\Http\Requests\Central\RejectBillingPaymentRequest;
+use App\Http\Requests\Central\VerifyBillingPaymentRequest;
 use App\Http\Resources\Billing\BillingPaymentResource;
 use App\Models\BillingPayment;
 use Illuminate\Http\JsonResponse;
@@ -26,7 +28,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  *   GET  /api/v1/super-admin/billing/payments                       super_admin.billing.view
  *   GET  /api/v1/super-admin/billing/payments/{payment}/receipt     super_admin.billing.view  (signed link)
  *   GET  .../payments/{payment}/receipt/file                        signed URL only, SINGLE-USE (streams the file)
- *   POST /api/v1/super-admin/billing/payments/{payment}/verify      super_admin.billing.manage + step-up
+ *   POST /api/v1/super-admin/billing/payments/{payment}/verify      super_admin.billing.manage + step-up  {transferred_at}
  *   POST /api/v1/super-admin/billing/payments/{payment}/reject      super_admin.billing.manage + step-up
  */
 final class BillingReviewController extends Controller
@@ -72,9 +74,9 @@ final class BillingReviewController extends Controller
         ]);
     }
 
-    public function verify(Request $request, int $payment): JsonResponse
+    public function verify(VerifyBillingPaymentRequest $request, int $payment): JsonResponse
     {
-        $verified = $this->verifyAction->execute($payment, $this->operator($request));
+        $verified = $this->verifyAction->execute(VerifyManualPaymentDTO::fromArray($request->validated(), $payment), $this->operator($request));
 
         return $this->respond($verified, __('billing.messages.payment_verified'));
     }

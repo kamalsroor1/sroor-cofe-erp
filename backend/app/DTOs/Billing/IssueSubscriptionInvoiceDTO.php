@@ -26,6 +26,9 @@ use Carbon\CarbonImmutable;
  * the tenant row lock, while ANY pending/draft plan, renewal or upgrade invoice exists for the tenant.
  * `founderPriceIfAvailable` (the trial-end invoice): bill the year-1 founder price when the tenant
  * could claim a slot right now, else the list price; unlike `useFounderPrice` it never refuses.
+ * #232 spec C: the plan-change path never sets it.
+ * `appendRenewal` (#232 spec B, with a `differenceLine` only): "upgrade + renewal" - a second plan
+ * line (flagged `renewal`) bills one full `cycle` of the new plan appended after the current paid end.
  */
 final readonly class IssueSubscriptionInvoiceDTO
 {
@@ -50,6 +53,7 @@ final readonly class IssueSubscriptionInvoiceDTO
         public bool $fromRequest = false,
         public bool $refuseWhenOpenPlanInvoice = false,
         public bool $founderPriceIfAvailable = false,
+        public bool $appendRenewal = false,
     ) {}
 
     /**

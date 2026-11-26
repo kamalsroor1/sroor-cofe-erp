@@ -35,6 +35,7 @@ use Spatie\MediaLibrary\HasMedia;
  * @property string|null $proof_path
  * @property int|null $submitted_by tenant user id
  * @property Carbon|null $paid_at
+ * @property Carbon|null $transferred_at #232: the actual transfer moment entered at Verify (starts a new paid term)
  * @property int|null $verified_by central_users id
  * @property Carbon|null $verified_at
  * @property string|null $rejection_reason
@@ -69,6 +70,7 @@ class BillingPayment extends Model implements HasMedia
         'proof_path',
         'submitted_by',
         'paid_at',
+        'transferred_at',
         'verified_by',
         'verified_at',
         'rejection_reason',
@@ -101,6 +103,7 @@ class BillingPayment extends Model implements HasMedia
             'gateway' => BillingGateway::class,
             'status' => BillingPaymentStatus::class,
             'paid_at' => 'datetime',
+            'transferred_at' => 'datetime',
             'verified_at' => 'datetime',
             'raw_payload' => 'array',
         ];

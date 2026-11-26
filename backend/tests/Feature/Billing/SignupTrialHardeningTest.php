@@ -101,24 +101,36 @@ final class SignupTrialHardeningTest extends BillingTestCase
 
     // --------------------------------------------- 2. early payment keeps the trial
 
-    public function test_paying_the_trial_end_invoice_early_starts_the_month_at_the_trial_end(): void
+    /**
+     * #232 spec A replaces SELL-06's "paid early -> the month starts at the trial end": the paid term
+     * starts at the ACTUAL transfer moment entered at Verify; the remaining trial days are NOT added
+     * (open owner decision أ). The invoice period is rewritten to the term actually bought.
+     */
+    public function test_paying_the_trial_end_invoice_early_starts_the_month_at_the_transfer_not_the_trial_end(): void
     {
+        // Midday, so "two hours ago" is still on the invoice's issue day.
+        $this->travelTo(CarbonImmutable::parse('2026-11-26 12:00:00', (string) config('app.timezone')));
         $basic = $this->catalogPlan('basic');
-        $trialEnd = CarbonImmutable::now()->addDays(3); // day 11 of a 14-day trial
+        $trialEnd = CarbonImmutable::now()->addDays(3)->startOfSecond(); // day 11 of a 14-day trial
         $tenant = $this->trialShop($basic, $trialEnd);
 
         $this->artisan('billing:issue-trial-invoices')->assertSuccessful();
         $invoice = BillingInvoice::query()->where('tenant_id', $tenant->id)->sole();
-        $this->pay($tenant, $invoice); // paid the same day
+        $transferredAt = CarbonImmutable::now()->subHours(2)->startOfSecond();
+        $this->pay($tenant, $invoice, $transferredAt); // transferred two hours ago, verified now
 
+        $expectedEnd = $transferredAt->addMonthNoOverflow()->toIso8601String();
         $fresh = Tenant::query()->findOrFail($tenant->id);
         $this->assertSame(TenantStatus::Active->value, $fresh->status);
-        $this->assertSame($trialEnd->addMonthNoOverflow()->toIso8601String(), $fresh->subscription_ends_at?->toIso8601String());
+        $this->assertSame($expectedEnd, $fresh->subscription_ends_at?->toIso8601String());
         $subscription = Subscription::query()->where('tenant_id', $tenant->id)->orderByDesc('id')->firstOrFail();
         $this->assertSame(SubscriptionStatus::Active, $subscription->status);
-        $this->assertSame($trialEnd->addMonthNoOverflow()->toIso8601String(), $subscription->ends_at->toIso8601String());
+        $this->assertSame($expectedEnd, $subscription->ends_at->toIso8601String());
+        $invoice->refresh();
+        $this->assertSame($transferredAt->toIso8601String(), $invoice->period_start?->toIso8601String());
+        $this->assertSame($expectedEnd, $invoice->period_end?->toIso8601String());
 
-        // Between the payment and the trial end, and well after it: full access, never locked out.
+        // Before and after the old trial end, and well after it: full access, never locked out.
         foreach ([$trialEnd->subDay(), $trialEnd->addDay(), $trialEnd->addDays(20)] as $moment) {
             $this->travelTo($moment);
             $this->assertNotContains($this->postJson('/api/v1/customers', ['name' => 'عميل'], $this->tenantHeaders($tenant))->status(), [403, 423]);
@@ -285,7 +297,7 @@ final class SignupTrialHardeningTest extends BillingTestCase
         return $tenant;
     }
 
-    private function pay(Tenant $tenant, BillingInvoice $invoice): void
+    private function pay(Tenant $tenant, BillingInvoice $invoice, ?CarbonImmutable $transferredAt = null): void
     {
         $paymentId = (int) $this->post('/api/v1/billing/invoices/'.$invoice->getKey().'/payments', [
             'receipt' => $this->receipt(),
@@ -295,7 +307,7 @@ final class SignupTrialHardeningTest extends BillingTestCase
             'paid_at' => now()->toDateString(),
         ], $this->multipart($this->tenantHeaders($tenant)))->assertCreated()->json('data.id');
 
-        $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', [], $this->steppedUpCentralHeaders($this->operator))->assertOk();
+        $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', $this->verifyBody($transferredAt), $this->steppedUpCentralHeaders($this->operator))->assertOk();
     }
 
     /**

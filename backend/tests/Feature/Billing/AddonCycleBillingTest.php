@@ -57,7 +57,7 @@ final class AddonCycleBillingTest extends PlanChangeTestCase
 
     private function verify(int $paymentId): void
     {
-        $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', [], $this->admin)->assertOk();
+        $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', $this->verifyBody(), $this->admin)->assertOk();
     }
 
     private function renewal(Tenant $tenant, Plan $plan, BillingCycle $cycle): BillingInvoice

@@ -43,6 +43,8 @@ final class BillingPaymentResource extends JsonResource
             'status' => ['value' => $this->status->value, 'label' => $this->status->label()],
             'payer_reference' => isset($raw['payer_reference']) ? (string) $raw['payer_reference'] : null,
             'paid_at' => $this->paid_at?->toIso8601String(),
+            // #232 spec A: the actual transfer moment the operator entered at Verify.
+            'transferred_at' => $this->transferred_at?->toIso8601String(),
             'submitted_at' => $this->created_at?->toIso8601String(),
             'verified_at' => $this->verified_at?->toIso8601String(),
             'rejection_reason' => $this->rejection_reason,

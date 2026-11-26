@@ -17,6 +17,7 @@ use App\Models\Plan;
 use App\Models\PlanChangeRequest;
 use App\Models\Subscription;
 use App\Models\Tenant;
+use App\Services\Billing\FounderPricingService;
 use App\Services\Billing\ProrationCalculator;
 use App\Services\CentralAuditLogger;
 use App\Support\Money\Decimal;
@@ -24,14 +25,28 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Console (BILL-02: `amount` may be omitted -> pro-rata suggestion): answer a pending request by issuing its invoice (owner decision: manual, no proration).
+ * Console: answer a pending request by issuing its invoice.
  *
- *  - plan_change: ONE `upgrade` line with the DIFFERENCE the admin typed, plan = the requested
- *    plan, cycle = the request's. Paying it switches the plan and keeps the paid term.
- *    #232: with no paid term running (trial / expired) and no amount typed, a regular full-cycle
- *    plan line for the requested plan instead (the 409 difference_needs_active_term is only for a typed amount).
+ *  - plan_change on a running paid term (#232 spec B):
+ *      - upgrade only (default): ONE `upgrade` difference line, the pro-rata suggestion when no
+ *        amount is typed (ProrationCalculator: (new - current) x remaining days / actual period
+ *        days at the current term's cycle). Paying it switches the plan, the term end is kept;
+ *      - upgrade + renewal (`with_renewal`): the same difference line PLUS a plan line (flagged
+ *        `renewal`) for one full cycle of the new plan at the request's cycle, appended after the
+ *        current paid end; paying it switches the plan and extends the end by that cycle.
+ *  - plan_change with no paid term running (trial / expired) and no amount typed: a regular
+ *    full-cycle plan line for the requested plan (a typed amount stays 409
+ *    difference_needs_active_term; `with_renewal` changes nothing there, it is one full cycle anyway).
+ *    The term starts at the verified transfer (ActivateSubscriptionAction, spec A), not at trial end.
  *  - addon: an `addon` invoice with the add-on line(s), priced from the tenant's plan catalog for
  *    the request's cycle unless the admin overrides the unit price. It is a separate invoice.
+ *
+ * #232 spec C: no automatic founder pricing on this path. A tenant with an AGREED founder price
+ * (FounderPricingService::hasAgreedFounderPrice) has its plan change HELD for the owner's review:
+ * nothing is invoiced, the request stays pending and is stamped `founder_review_held_at` (audited
+ * once) and the call answers 409 `billing.upgrade_held_for_founder_review`. The owner releases it by
+ * issuing again with `release_founder_hold` (optionally with a typed amount). The stamp is committed
+ * before the 409 is thrown, so the console can show the held state.
  *
  * A request whose target is a permanent free plan is never invoiced: it is stored `scheduled`
  * (not pending -> 409 here) and an older pending one is refused (422 free_plan_not_billable).
@@ -46,17 +61,26 @@ final class IssuePlanChangeInvoiceAction
         private readonly IssueSubscriptionInvoiceAction $issue,
         private readonly CentralAuditLogger $audit,
         private readonly ProrationCalculator $proration,
+        private readonly FounderPricingService $founder,
     ) {}
 
     public function execute(IssuePlanChangeInvoiceDTO $dto, CentralUser $operator): PlanChangeRequest
     {
         $connection = DB::connection((string) (new PlanChangeRequest)->getConnectionName());
 
-        return $connection->transaction(function () use ($dto, $operator): PlanChangeRequest {
+        $issued = $connection->transaction(function () use ($dto, $operator): ?PlanChangeRequest {
             $request = PlanChangeRequest::query()->whereKey($dto->requestId)->lockForUpdate()->firstOrFail();
 
             if (! $request->isPending()) {
                 throw BillingException::requestNotPending();
+            }
+
+            if ($request->kind === PlanChangeRequestKind::PlanChange
+                && ! $dto->releaseFounderHold
+                && $this->founder->hasAgreedFounderPrice((string) $request->tenant_id)) {
+                $this->holdForFounderReview($request, $operator);
+
+                return null;
             }
 
             $invoice = $this->issue->execute($this->invoiceDto($dto, $request, $operator), $operator);
@@ -75,6 +99,8 @@ final class IssuePlanChangeInvoiceAction
                     'invoice_id' => (int) $invoice->getKey(),
                     'invoice_number' => $invoice->number,
                     'total' => $invoice->total,
+                    'with_renewal' => $dto->withRenewal,
+                    'founder_hold_released' => $dto->releaseFounderHold && $request->founder_review_held_at !== null,
                 ],
                 $operator,
                 $request,
@@ -83,11 +109,38 @@ final class IssuePlanChangeInvoiceAction
 
             return $request;
         });
+
+        if (! $issued instanceof PlanChangeRequest) {
+            throw BillingException::upgradeHeldForFounderReview($dto->requestId);
+        }
+
+        return $issued;
+    }
+
+    /** #232 spec C: stamp (once) and audit a request held for the owner's founder-price review. */
+    private function holdForFounderReview(PlanChangeRequest $request, CentralUser $operator): void
+    {
+        if ($request->founder_review_held_at !== null) {
+            return;
+        }
+
+        $request->founder_review_held_at = now();
+        $request->save();
+
+        $this->audit->record(
+            CentralAuditEvent::PlanChangeHeldForFounderReview,
+            ['request_id' => (int) $request->getKey(), 'kind' => $request->kind->value, 'requested_plan_id' => $request->requested_plan_id],
+            $operator,
+            $request,
+            (string) $request->tenant_id,
+        );
     }
 
     /**
-     * (new - old) x remaining / total at the subscription's own cycle, the term being the cycle that
-     * ends at tenants.subscription_ends_at. '0.000' when there is no running term or no price gap.
+     * #232 spec B: (new - current) x remaining days / actual days of the current period, both prices
+     * at the subscription's own cycle; the current period is the cycle that ends at
+     * tenants.subscription_ends_at. Days per ProrationCalculator (remaining rounded UP to whole days
+     * on the platform clock). '0.000' when there is no running term or no price gap.
      */
     private function suggestedDifference(Tenant $tenant, ?Plan $current, Plan $target): string
     {
@@ -99,15 +152,14 @@ final class IssuePlanChangeInvoiceAction
         }
 
         $yearly = $subscription->billing_cycle === BillingCycle::Yearly;
-        $termEnd = CarbonImmutable::instance($end);
+        $termEnd = CarbonImmutable::instance($end)->setTimezone((string) config('app.timezone'));
         $termStart = $yearly ? $termEnd->subYearNoOverflow() : $termEnd->subMonthNoOverflow();
-        $now = CarbonImmutable::now();
 
         return $this->proration->difference(
             Decimal::normalize($yearly ? $current->price_yearly : $current->price_monthly),
             Decimal::normalize($yearly ? $target->price_yearly : $target->price_monthly),
-            max(0, $termEnd->getTimestamp() - $now->getTimestamp()),
-            max(1, $termEnd->getTimestamp() - $termStart->getTimestamp()),
+            $this->proration->wholeDaysUp(CarbonImmutable::now(), $termEnd),
+            $this->proration->wholeDaysUp($termStart, $termEnd),
         );
     }
 
@@ -163,9 +215,10 @@ final class IssuePlanChangeInvoiceAction
 
         // #232: no paid term running (a trial, or an expired term) means there is no remainder to
         // price a difference on. With no amount typed, the request is answered with a REGULAR
-        // full-cycle invoice for the requested plan (a plan line priced by IssueSubscriptionInvoiceAction
-        // exactly like a console plan invoice, founder price when the shop could still claim a slot,
-        // as the trial-end invoice does); paying it switches the plan and starts a new paid term.
+        // full-cycle invoice for the requested plan (a plan line priced by IssueSubscriptionInvoiceAction,
+        // list price: spec C, no automatic founder price on a plan change); paying it switches the
+        // plan and starts a new paid term at the verified transfer moment (spec A: not at trial end,
+        // remaining trial days are not added - open owner decision أ).
         // A typed amount is still a difference and stays 409 difference_needs_active_term.
         if ($dto->amount === null && ! $tenant->hasPaidTermRunning()) {
             return new IssueSubscriptionInvoiceDTO(
@@ -177,15 +230,11 @@ final class IssuePlanChangeInvoiceAction
                 serviceLines: [],
                 discount: '0.000',
                 notes: $dto->notes,
-                // #232 review: like the trial-end invoice (SELL-06), a trial that upgrades early keeps
-                // the rest of its trial: the paid term starts at trial end, and the shop has full
-                // access in between (ActivateSubscriptionAction honours a future period_start).
-                periodStart: $this->remainingTrialEnd($tenant),
+                periodStart: null,
                 issuedBy: $issuedBy,
                 fromRequest: true,
                 // SELL-06: an open trial-end / plan invoice paid as well would extend the term twice.
                 refuseWhenOpenPlanInvoice: true,
-                founderPriceIfAvailable: true,
             );
         }
 
@@ -217,16 +266,7 @@ final class IssuePlanChangeInvoiceAction
                 'amount' => $amount,
             ],
             fromRequest: true,
+            appendRenewal: $dto->withRenewal,
         );
-    }
-
-    /** The trial end when the tenant is still in a running trial, else null (period starts today). */
-    private function remainingTrialEnd(Tenant $tenant): ?CarbonImmutable
-    {
-        if ($tenant->status !== 'trial' || $tenant->trial_ends_at === null || ! $tenant->trial_ends_at->isFuture()) {
-            return null;
-        }
-
-        return CarbonImmutable::instance($tenant->trial_ends_at)->startOfSecond();
     }
 }

@@ -190,6 +190,7 @@ return [
     ],
 
     'attributes' => [
+        'transferred_at' => 'تاريخ ووقت التحويل الفعلي',
         // التسجيل العام (PRD-05)
         'business_name' => 'اسم النشاط',
         'contact_name' => 'اسم المسؤول',

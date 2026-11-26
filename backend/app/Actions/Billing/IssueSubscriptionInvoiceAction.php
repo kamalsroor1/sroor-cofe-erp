@@ -35,8 +35,9 @@ use Carbon\CarbonImmutable;
  *
  * Types: plan | renewal | upgrade (a plan line at the chosen cycle), service (one-off lines) and
  * addon (add-on lines priced from the tenant's plan catalog, only from a support request).
- * An upgrade can instead carry ONE "difference" line with the amount the admin decided (no
- * proration). Plan-type invoices may carry extra service lines. Everything is snapshotted into `lines`.
+ * An upgrade can instead carry ONE "difference" line (the pro-rata suggestion or the amount the
+ * admin typed), optionally followed by a `renewal` plan line for one full cycle of the new plan
+ * appended after the current paid end (#232 spec B, upgrade + renewal). Plan-type invoices may carry extra service lines. Everything is snapshotted into `lines`.
  *
  * Plan line price (PRICE-2026-11): FounderPricingService decides the step of the tenant's founder
  * schedule at the PERIOD START of the billed cycle, and a cycle is priced entirely by that step
@@ -89,6 +90,10 @@ final class IssueSubscriptionInvoiceAction
                 $this->assertNoOpenPlanInvoice($tenant);
             }
 
+            // #232 spec B: "upgrade + renewal" bills the appended full cycle at the requested cycle.
+            $renewalCycle = $cycle;
+            $appendRenewal = $dto->differenceLine !== null && $dto->appendRenewal;
+
             // BILL-02: a difference keeps the paid term, so it stays on the subscription's own cycle
             // (monthly -> yearly would otherwise leave a yearly cycle on a monthly end date).
             if ($dto->differenceLine !== null && $subscription instanceof Subscription && $subscription->billing_cycle->isSellable()) {
@@ -96,16 +101,20 @@ final class IssueSubscriptionInvoiceAction
             }
 
             $termEnd = $this->futureEnd($tenant, $subscription);
-            $periodStart = $dto->differenceLine !== null
-                ? CarbonImmutable::now()->startOfSecond()
-                : $this->periodStart($dto, $tenant, $subscription);
-            if (! $dto->fromRequest && $dto->type !== BillingInvoiceType::Addon) {
-                $this->assertNotDuplicate($tenant, $dto->type, $periodStart, $this->futureEnd($tenant, $subscription) === null);
-            }
 
             // A difference bills only the gap on a paid term, so it needs a term still running.
             if ($dto->differenceLine !== null && $termEnd === null) {
                 throw BillingException::differenceNeedsActiveTerm();
+            }
+
+            // Upgrade + renewal: the invoice period is the appended cycle (current end -> + cycle).
+            $periodStart = match (true) {
+                $appendRenewal => $termEnd->startOfSecond(),
+                $dto->differenceLine !== null => CarbonImmutable::now()->startOfSecond(),
+                default => $this->periodStart($dto, $tenant, $subscription),
+            };
+            if (! $dto->fromRequest && $dto->type !== BillingInvoiceType::Addon) {
+                $this->assertNotDuplicate($tenant, $dto->type, $periodStart, $this->futureEnd($tenant, $subscription) === null);
             }
 
             // BILL-01 review: a renewal paid after this difference would move the term it prices.
@@ -116,8 +125,15 @@ final class IssueSubscriptionInvoiceAction
             $lines = [];
             if ($plan instanceof Plan && $cycle instanceof BillingCycle) {
                 $lines[] = $dto->differenceLine !== null
-                    ? $this->differenceLine($dto->differenceLine, $plan, $cycle)
+                    ? $this->differenceLine($dto->differenceLine, $plan, $cycle, $termEnd)
                     : $this->planLine($dto, $plan, $cycle, $tenant, $subscription, $periodStart);
+            }
+            if ($appendRenewal && $plan instanceof Plan && $renewalCycle instanceof BillingCycle) {
+                $lines[] = array_merge($this->planLine($dto, $plan, $renewalCycle, $tenant, $subscription, $periodStart), [
+                    'renewal' => true,
+                    'description' => (string) __('billing.invoice.upgrade_renewal_line', ['plan' => $plan->name, 'cycle' => $renewalCycle->label()]),
+                ]);
+                $cycle = $renewalCycle;
             }
             if ($dto->type === BillingInvoiceType::Renewal && $cycle instanceof BillingCycle && $subscription instanceof Subscription) {
                 foreach ($this->renewalAddonLines($subscription, $tenant, $periodStart, $this->periodEnd($periodStart, $cycle), $cycle) as $renewalLine) {
@@ -171,7 +187,7 @@ final class IssueSubscriptionInvoiceAction
                 'status' => BillingInvoiceStatus::Pending,
                 'billing_cycle' => $cycle,
                 'period_start' => $periodStart,
-                'period_end' => $dto->differenceLine !== null ? $termEnd : $this->periodEnd($periodStart, $cycle),
+                'period_end' => $dto->differenceLine !== null && ! $appendRenewal ? $termEnd : $this->periodEnd($periodStart, $cycle),
                 'lines' => $lines,
                 'subtotal' => $subtotal,
                 'discount' => $dto->discount,
@@ -417,13 +433,15 @@ final class IssueSubscriptionInvoiceAction
     }
 
     /**
-     * The single line of a support-decided upgrade: the admin's difference, not a catalog price.
-     * `difference` tells ActivateSubscriptionAction to switch the plan without extending the term.
+     * The upgrade difference line (the pro-rata suggestion or the amount the admin typed), never a
+     * catalog / founder price. `difference` tells ActivateSubscriptionAction to switch the plan
+     * without extending the term (unless a `renewal` line follows); `term_end` is the paid-term end
+     * it priced (#232), so a renewal paid in between is detected even on an upgrade + renewal invoice.
      *
      * @param  array{description: string, amount: string}  $difference
      * @return array<string, mixed>
      */
-    private function differenceLine(array $difference, Plan $plan, BillingCycle $cycle): array
+    private function differenceLine(array $difference, Plan $plan, BillingCycle $cycle, ?CarbonImmutable $termEnd): array
     {
         $amount = Decimal::normalize($difference['amount']);
 
@@ -434,6 +452,7 @@ final class IssueSubscriptionInvoiceAction
             'plan_name' => $plan->name,
             'billing_cycle' => $cycle->value,
             'description' => $difference['description'],
+            'term_end' => $termEnd?->toIso8601String(),
             'quantity' => 1,
             'unit_price' => $amount,
             'amount' => $amount,

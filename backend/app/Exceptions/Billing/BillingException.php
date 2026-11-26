@@ -45,6 +45,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * | differenceTermChanged()  | 409  | billing.difference_term_changed  |
  * | renewalInFlight()        | 409  | billing.renewal_in_flight (details.invoice_id/number) |
  * | duplicatePayment()       | 409  | billing.payment_duplicate        |
+ * | upgradeHeldForFounderReview() #232 C | 409 | billing.upgrade_held_for_founder_review (details.request_id) |
  */
 final class BillingException extends HttpException
 {
@@ -227,6 +228,18 @@ final class BillingException extends HttpException
     public static function differenceRequired(): self
     {
         return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'difference_required');
+    }
+
+    /**
+     * #232 spec C: the tenant has an agreed founder price, so a plan-change invoice is not issued
+     * automatically. The request stays pending and is flagged `founder_review_held_at`; the owner
+     * reviews it and issues it with `release_founder_hold`.
+     */
+    public static function upgradeHeldForFounderReview(int $requestId): self
+    {
+        return new self(Response::HTTP_CONFLICT, 'billing.upgrade_held_for_founder_review', (string) __('billing.errors.upgrade_held_for_founder_review'), [
+            'request_id' => $requestId,
+        ]);
     }
 
     public function render(Request $request): JsonResponse

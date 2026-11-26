@@ -32,6 +32,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $requested_by_user_id tenant-side user id (another database, no FK)
  * @property int|null $reviewed_by central_users id
  * @property Carbon|null $reviewed_at
+ * @property Carbon|null $founder_review_held_at #232 C: held for the owner's review (agreed founder price)
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Tenant|null $tenant
@@ -62,6 +63,7 @@ class PlanChangeRequest extends Model
         'requested_by_user_id',
         'reviewed_by',
         'reviewed_at',
+        'founder_review_held_at',
     ];
 
     /**
@@ -86,6 +88,7 @@ class PlanChangeRequest extends Model
             'requested_by_user_id' => 'integer',
             'reviewed_by' => 'integer',
             'reviewed_at' => 'datetime',
+            'founder_review_held_at' => 'datetime',
         ];
     }
 

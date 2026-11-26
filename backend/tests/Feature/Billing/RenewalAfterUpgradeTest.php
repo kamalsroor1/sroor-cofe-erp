@@ -48,7 +48,7 @@ final class RenewalAfterUpgradeTest extends PlanChangeTestCase
 
     private function verify(int $paymentId)
     {
-        return $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', [], $this->admin);
+        return $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', $this->verifyBody(), $this->admin);
     }
 
     private function renewal(Tenant $tenant, int $planId): BillingInvoice

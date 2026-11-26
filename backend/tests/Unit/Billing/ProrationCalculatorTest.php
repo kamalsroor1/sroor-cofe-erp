@@ -32,4 +32,14 @@ final class ProrationCalculatorTest extends TestCase
         $this->assertSame('0.000', $calc->difference('899.000', '449.000', 1000, 2678400));
         $this->assertSame('0.000', $calc->difference('449.000', '899.000', 1000, 0));
     }
+
+    /** #232 spec B: (new - current) x remaining days / actual period days, half-up at scale 3. */
+    public function test_the_spec_examples_on_a_days_basis(): void
+    {
+        $calc = new ProrationCalculator;
+
+        $this->assertSame('166.667', $calc->difference('499.000', '999.000', 10, 30));
+        $this->assertSame('1369.863', $calc->difference('4990.000', '9990.000', 100, 365));
+        $this->assertSame('500.000', $calc->difference('499.000', '999.000', 31, 30), 'never more than the full gap');
+    }
 }

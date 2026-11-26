@@ -9,6 +9,7 @@ use App\Actions\Billing\RecordManualPaymentAction;
 use App\Actions\Billing\VerifyManualPaymentAction;
 use App\DTOs\Billing\IssueSubscriptionInvoiceDTO;
 use App\DTOs\Billing\RecordManualPaymentDTO;
+use App\DTOs\Billing\VerifyManualPaymentDTO;
 use App\Enums\Billing\BillingCycle;
 use App\Enums\Billing\BillingGateway;
 use App\Enums\Billing\BillingInvoiceType;
@@ -17,6 +18,7 @@ use App\Enums\Billing\BillingPaymentStatus;
 use App\Models\BillingInvoice;
 use App\Models\BillingPayment;
 use App\Models\CentralUser;
+use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\DB;
@@ -50,7 +52,7 @@ final class BillingLockOrderTest extends BillingTestCase
         $invoice = $this->pendingInvoice($tenant);
         $payment = $this->pendingPayment($invoice);
 
-        $order = $this->lockedTablesDuring(fn () => app(VerifyManualPaymentAction::class)->execute((int) $payment->getKey(), $this->operator));
+        $order = $this->lockedTablesDuring(fn () => app(VerifyManualPaymentAction::class)->execute(new VerifyManualPaymentDTO((int) $payment->getKey(), CarbonImmutable::now()), $this->operator));
 
         $this->assertSame(['tenants', 'billing_payments', 'billing_invoices'], array_slice($order, 0, 3));
         $this->assertSame(BillingPaymentStatus::Verified, $payment->refresh()->status);

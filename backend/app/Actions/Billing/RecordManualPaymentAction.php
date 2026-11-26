@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Billing;
 
 use App\DTOs\Billing\RecordManualPaymentDTO;
+use App\DTOs\Billing\VerifyManualPaymentDTO;
 use App\Enums\Billing\BillingGateway;
 use App\Enums\Billing\BillingInvoiceStatus;
 use App\Enums\Billing\BillingPaymentStatus;
@@ -17,6 +18,7 @@ use App\Models\Tenant;
 use App\Services\CentralAuditLogger;
 use App\Support\Database\TransactionRetry;
 use App\Support\Money\Decimal;
+use Illuminate\Validation\ValidationException;
 
 /**
  * OPS-20: an operator records a payment received outside the system (cash, a transfer reported
@@ -85,6 +87,11 @@ final class RecordManualPaymentAction
 
             $this->assertNotDuplicate($invoice, $dto);
 
+            // #232 spec A: a payment is never dated before the invoice's issue day (start of that day).
+            if ($dto->paidAt->lessThan($invoice->earliestTransferAt())) {
+                throw ValidationException::withMessages(['paid_at' => __('billing.errors.transferred_at_before_invoice')]);
+            }
+
             $remaining = $this->remaining($invoice);
 
             if (bccomp($dto->amount, '0', 3) <= 0 || bccomp($dto->amount, $remaining, 3) > 0) {
@@ -125,7 +132,9 @@ final class RecordManualPaymentAction
                 (string) $invoice->tenant_id,
             );
 
-            return $this->verify->execute((int) $payment->getKey(), $operator);
+            // #232 spec A: the operator-entered payment date is the actual transfer moment that starts
+            // a new paid term (VerifyManualPaymentAction re-checks it against the invoice issue day).
+            return $this->verify->execute(new VerifyManualPaymentDTO((int) $payment->getKey(), $dto->paidAt), $operator);
         }, connectionName: $connection);
     }
 

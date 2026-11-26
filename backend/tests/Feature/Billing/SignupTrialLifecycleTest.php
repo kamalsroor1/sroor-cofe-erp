@@ -203,7 +203,7 @@ final class SignupTrialLifecycleTest extends BillingTestCase
             'payer_reference' => '01000000888',
             'paid_at' => now()->toDateString(),
         ], $this->multipart($owner))->assertCreated()->json('data.id');
-        $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', [], $this->operatorHeaders())->assertOk();
+        $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', $this->verifyBody(), $this->operatorHeaders())->assertOk();
 
         $tenant = Tenant::query()->findOrFail($slug);
         $this->assertSame(TenantStatus::Active->value, $tenant->status);

@@ -74,7 +74,7 @@ final class ManualBillingFlowTest extends BillingTestCase
         $paymentId = $this->submit($tenant, $invoiceId, '449.000');
 
         $url = '/api/v1/super-admin/billing/payments/'.$paymentId.'/verify';
-        $this->postJson($url, [], $this->admin)
+        $this->postJson($url, $this->verifyBody(), $this->admin)
             ->assertOk()
             ->assertJsonPath('data.status.value', 'verified')
             ->assertJsonPath('data.reviewed_by.id', $this->operator->getKey());
@@ -97,7 +97,7 @@ final class ManualBillingFlowTest extends BillingTestCase
         $this->assertSame($subscription->getKey(), $invoice->subscription_id);
 
         // Verifying again (double click, retry) changes nothing: one extension only.
-        $this->postJson($url, [], $this->admin)->assertOk()->assertJsonPath('data.status.value', 'verified');
+        $this->postJson($url, $this->verifyBody(), $this->admin)->assertOk()->assertJsonPath('data.status.value', 'verified');
         $tenant->refresh();
         $this->assertSame($firstEnd->toIso8601String(), $tenant->subscription_ends_at->toIso8601String());
         $this->assertSame(1, Subscription::query()->where('tenant_id', $tenant->getKey())->count());
@@ -123,7 +123,7 @@ final class ManualBillingFlowTest extends BillingTestCase
         $this->assertAbout($end, BillingInvoice::query()->findOrFail($invoiceId)->period_start, 2);
 
         $paymentId = $this->submit($tenant, $invoiceId, '4490.000');
-        $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', [], $this->admin)->assertOk();
+        $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', $this->verifyBody(), $this->admin)->assertOk();
 
         $this->assertAbout($end->copy()->addYear(), Tenant::query()->findOrFail($tenant->getKey())->subscription_ends_at, 2);
     }
@@ -137,7 +137,7 @@ final class ManualBillingFlowTest extends BillingTestCase
         ]]);
         $payment = $this->pendingPayment($invoice, '100.000');
 
-        $this->postJson('/api/v1/super-admin/billing/payments/'.$payment->getKey().'/verify', [], $this->admin)->assertOk();
+        $this->postJson('/api/v1/super-admin/billing/payments/'.$payment->getKey().'/verify', $this->verifyBody(), $this->admin)->assertOk();
 
         $tenant->refresh();
         $this->assertSame('active', $tenant->status);
@@ -154,7 +154,7 @@ final class ManualBillingFlowTest extends BillingTestCase
         ]]);
         $payment = $this->pendingPayment($invoice, '100.000');
 
-        $this->postJson('/api/v1/super-admin/billing/payments/'.$payment->getKey().'/verify', [], $this->admin)->assertOk();
+        $this->postJson('/api/v1/super-admin/billing/payments/'.$payment->getKey().'/verify', $this->verifyBody(), $this->admin)->assertOk();
 
         $this->assertSame('suspended', Tenant::query()->findOrFail($tenant->getKey())->status);
         $this->assertSame('paid', $invoice->refresh()->status->value);
@@ -169,7 +169,7 @@ final class ManualBillingFlowTest extends BillingTestCase
         ]]);
         $payment = $this->pendingPayment($invoice, '100.000');
 
-        $this->postJson('/api/v1/super-admin/billing/payments/'.$payment->getKey().'/verify', [], $this->admin)
+        $this->postJson('/api/v1/super-admin/billing/payments/'.$payment->getKey().'/verify', $this->verifyBody(), $this->admin)
             ->assertStatus(409)->assertJsonPath('error_code', 'billing.tenant_not_activatable');
 
         $this->assertSame('pending', $payment->refresh()->status->value);
@@ -187,7 +187,7 @@ final class ManualBillingFlowTest extends BillingTestCase
         ], $this->admin)->assertCreated()->json('data.id');
 
         $paymentId = $this->submit($tenant, $invoiceId, '300.000');
-        $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', [], $this->admin)->assertOk();
+        $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', $this->verifyBody(), $this->admin)->assertOk();
 
         $this->assertSame('paid', BillingInvoice::query()->findOrFail($invoiceId)->status->value);
         $this->assertSame($end->toIso8601String(), Tenant::query()->findOrFail($tenant->getKey())->subscription_ends_at->toIso8601String());
@@ -201,7 +201,7 @@ final class ManualBillingFlowTest extends BillingTestCase
         $invoice = $this->pendingInvoice($tenant);
 
         $first = $this->submit($tenant, $invoice->getKey(), '40.000');
-        $this->postJson('/api/v1/super-admin/billing/payments/'.$first.'/verify', [], $this->admin)->assertOk();
+        $this->postJson('/api/v1/super-admin/billing/payments/'.$first.'/verify', $this->verifyBody(), $this->admin)->assertOk();
         $this->assertSame('pending', $invoice->refresh()->status->value);
 
         $this->getJson('/api/v1/billing/invoices/'.$invoice->getKey(), $this->tenantHeaders($tenant))
@@ -212,7 +212,7 @@ final class ManualBillingFlowTest extends BillingTestCase
         ], $this->multipart($this->tenantHeaders($tenant)))->assertStatus(422)->assertJsonPath('details.remaining', '60.000');
 
         $second = $this->submit($tenant, $invoice->getKey(), '60.000');
-        $this->postJson('/api/v1/super-admin/billing/payments/'.$second.'/verify', [], $this->admin)->assertOk();
+        $this->postJson('/api/v1/super-admin/billing/payments/'.$second.'/verify', $this->verifyBody(), $this->admin)->assertOk();
         $this->assertSame('paid', $invoice->refresh()->status->value);
     }
 
@@ -243,7 +243,7 @@ final class ManualBillingFlowTest extends BillingTestCase
         $this->submit($tenant, $invoice->getKey(), '100.000');
 
         // A rejected payment can be neither verified nor rejected again.
-        $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', [], $this->admin)->assertStatus(409)->assertJsonPath('error_code', 'billing.payment_not_pending');
+        $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', $this->verifyBody(), $this->admin)->assertStatus(409)->assertJsonPath('error_code', 'billing.payment_not_pending');
         $this->postJson($url, ['reason' => 'again again'], $this->admin)->assertStatus(409);
     }
 
@@ -266,7 +266,7 @@ final class ManualBillingFlowTest extends BillingTestCase
         $payment = $this->pendingPayment($invoice, '100.000');
         $invoice->update(['status' => 'void', 'voided_at' => now()]);
 
-        $this->postJson('/api/v1/super-admin/billing/payments/'.$payment->getKey().'/verify', [], $this->admin)
+        $this->postJson('/api/v1/super-admin/billing/payments/'.$payment->getKey().'/verify', $this->verifyBody(), $this->admin)
             ->assertStatus(409)->assertJsonPath('error_code', 'billing.invoice_not_payable');
     }
 

@@ -420,11 +420,48 @@ final class FounderPricingService
         return null;
     }
 
-    /** @param  BillingInvoice  $invoice  with `lines` */
+    /**
+     * An upgrade ONLY (a lone difference line): it bills no schedule month. An upgrade + renewal
+     * (#232, a `renewal` plan line next to the difference) bills one cycle like a renewal.
+     *
+     * @param  BillingInvoice  $invoice  with `lines`
+     */
     private function isDifferenceInvoice(BillingInvoice $invoice): bool
     {
+        $difference = false;
+
         foreach ($invoice->lines as $line) {
-            if (($line['type'] ?? null) === 'plan' && ($line['difference'] ?? false) === true) {
+            if (($line['type'] ?? null) !== 'plan') {
+                continue;
+            }
+            if (($line['difference'] ?? false) === true) {
+                $difference = true;
+            } elseif (($line['renewal'] ?? false) === true) {
+                return false;
+            }
+        }
+
+        return $difference;
+    }
+
+    /**
+     * #232 spec C: the tenant holds an agreed founder price - a founder subscription whose schedule
+     * (founder step, then transition step) has not ended at $at. A plan change for such a tenant is
+     * held for the owner's manual review instead of being invoiced automatically.
+     */
+    public function hasAgreedFounderPrice(string $tenantId, ?CarbonInterface $at = null): bool
+    {
+        $at ??= Carbon::now();
+
+        $founders = Subscription::query()
+            ->where('tenant_id', $tenantId)
+            ->where('is_founder', true)
+            ->whereNotNull('founder_price_until')
+            ->get();
+
+        foreach ($founders as $subscription) {
+            $until = $this->transitionUntil($subscription);
+            if ($until !== null && $until->greaterThan($at)) {
                 return true;
             }
         }

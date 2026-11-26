@@ -8,6 +8,7 @@ use App\Models\BillingInvoice;
 use App\Models\Plan;
 use App\Models\Tenant;
 use App\Services\Branding\PlatformBranding;
+use Carbon\CarbonImmutable;
 use Database\Seeders\Catalog\FeatureCatalog;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
@@ -108,6 +109,17 @@ abstract class BillingTestCase extends TenantTestCase
             'issued_at' => now(),
             'due_at' => now()->addDays(7),
         ], $overrides));
+    }
+
+    /**
+     * #232 spec A: the Verify body. The operator enters the actual transfer moment; "now" keeps the
+     * old meaning (term from the verification moment) for tests that are not about the transfer date.
+     *
+     * @return array{transferred_at: string}
+     */
+    protected function verifyBody(?\DateTimeInterface $transferredAt = null): array
+    {
+        return ['transferred_at' => CarbonImmutable::instance($transferredAt ?? now())->toIso8601String()];
     }
 
     /**

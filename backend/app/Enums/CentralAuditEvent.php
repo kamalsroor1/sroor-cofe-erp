@@ -106,6 +106,8 @@ enum CentralAuditEvent: string
     case PlanChangeCancelled = 'plan_change_cancelled';
     case PlanChangeInvoiced = 'plan_change_invoiced';
     case PlanChangeRejected = 'plan_change_rejected';
+    // #232 spec C: a plan change of a tenant with an agreed founder price held for the owner's review
+    case PlanChangeHeldForFounderReview = 'plan_change_held_for_founder_review';
     // PRD-05: assisted signup review
     case SignupRequestApproved = 'signup_request_approved';
     case SignupRequestRejected = 'signup_request_rejected';

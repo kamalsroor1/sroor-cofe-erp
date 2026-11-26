@@ -5,7 +5,7 @@ import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
 import DarkSwal, {
     DANGER_CONFIRM_BUTTON_CLASS,
     DARK_SWAL_CUSTOM_CLASS,
-    confirmDialog,
+    PRIMARY_CONFIRM_BUTTON_CLASS,
     notifyError,
     notifySuccess,
     notifyWarning,
@@ -13,12 +13,15 @@ import DarkSwal, {
 import { useTrans } from './useTrans';
 import { useMoney } from './useMoney';
 import { useBillingPendingCount } from './useBillingPendingCount';
+import { fromDatetimeLocal, toDatetimeLocal } from '../helpers/planEditor';
 
 /**
  * Manual payment review queue (super-admin console), Api\Central\BillingReviewController:
  *   GET  /super-admin/billing/payments?status=&page=&per_page=
  *   GET  /super-admin/billing/payments/{id}/receipt        -> { url, expires_at } (signed, 5 min)
- *   POST /super-admin/billing/payments/{id}/verify | reject {reason}
+ *   POST /super-admin/billing/payments/{id}/verify {transferred_at} | reject {reason}
+ * #232: transferred_at = the ACTUAL transfer date-time from the receipt (required, not in the future),
+ * typed in browser local time and sent as ISO 8601 with the browser offset (same as the plan editor).
  * Step-up (fresh 2FA) on writes is handled by centralApi.
  */
 
@@ -102,17 +105,40 @@ export function useBillingPayments() {
         notifyError(t('billing.console.queue.action_failed'), error.userMessage || '');
     };
 
-    const verifyPayment = async (payment) => {
-        if (!canManage.value || busyId.value) return;
-        const confirmed = await confirmDialog({
+    // #232: the verify dialog asks for the actual transfer date-time (no default: read it off the receipt).
+    const askTransferredAt = async (payment) => {
+        const result = await DarkSwal.fire({
             title: t('billing.console.queue.verify_title'),
             text: t('billing.console.queue.verify_text', describe(payment)),
+            icon: 'question',
+            input: 'datetime-local',
+            inputLabel: t('billing.console.queue.transferred_at_label'),
+            inputAttributes: { max: toDatetimeLocal(new Date()), required: 'required' },
+            footer: t('billing.console.queue.transferred_at_hint'),
+            showCancelButton: true,
             confirmButtonText: t('billing.console.queue.verify_confirm'),
+            cancelButtonText: t('common.cancel'),
+            reverseButtons: true,
+            customClass: { ...DARK_SWAL_CUSTOM_CLASS, confirmButton: PRIMARY_CONFIRM_BUTTON_CLASS },
+            inputValidator: (value) => {
+                const iso = fromDatetimeLocal(value);
+                if (!iso) return t('billing.console.queue.transferred_at_required');
+                if (Date.parse(iso) > Date.now()) return t('billing.console.queue.transferred_at_future');
+                return undefined;
+            },
         });
-        if (!confirmed) return;
+        return result.isConfirmed ? fromDatetimeLocal(result.value) : null;
+    };
+
+    const verifyPayment = async (payment) => {
+        if (!canManage.value || busyId.value) return;
+        const transferredAt = await askTransferredAt(payment);
+        if (!transferredAt) return;
         busyId.value = payment.id;
         try {
-            const response = await centralApi.post(`${ENDPOINT}/${payment.id}/verify`);
+            const response = await centralApi.post(`${ENDPOINT}/${payment.id}/verify`, {
+                transferred_at: transferredAt,
+            });
             await afterReview(response.data?.message || '');
         } catch (error) {
             reportFailure(error);

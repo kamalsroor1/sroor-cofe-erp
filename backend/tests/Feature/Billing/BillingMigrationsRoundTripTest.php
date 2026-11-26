@@ -50,6 +50,9 @@ final class BillingMigrationsRoundTripTest extends TenantTestCase
         // rolled back first and re-applied after it, or the recreated tables lose them.
         '2026_11_14_100000_add_feature_keys_to_addons_table',
         '2026_11_15_100200_add_included_billing_cycle_to_plan_addon_table',
+        // #232: billing_payments (recreated by the chain) and plan_change_requests (dependent above).
+        '2026_11_26_100000_add_transferred_at_to_billing_payments_table',
+        '2026_11_26_100100_add_founder_review_held_at_to_plan_change_requests_table',
     ];
 
     private const TABLES = [

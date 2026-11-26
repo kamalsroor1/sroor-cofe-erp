@@ -59,7 +59,7 @@ final class PlanChangeRequestConsoleApiTest extends PlanChangeTestCase
 
     private function verify(int $paymentId): void
     {
-        $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', [], $this->admin)->assertOk();
+        $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentId.'/verify', $this->verifyBody(), $this->admin)->assertOk();
     }
 
     public function test_the_queue_lists_requests_with_filters(): void

@@ -58,6 +58,8 @@ final class PlanChangeRequestResource extends JsonResource
                 'name' => $this->reviewer->name,
             ]),
             'reviewed_at' => $this->reviewed_at?->toIso8601String(),
+            // #232 spec C: held for the owner's founder-price review (issue again with release_founder_hold).
+            'founder_review_held_at' => $this->founder_review_held_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

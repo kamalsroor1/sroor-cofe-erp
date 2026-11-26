@@ -16,6 +16,8 @@ use Illuminate\Foundation\Http\FormRequest;
  * is optional (default: translated "difference of upgrade from X to Y").
  * addon: `quantity` (default: the request's) and `unit_price` (default: the plan's catalog price)
  * are optional. `notes` are internal operator notes.
+ * #232: `with_renewal` (boolean, default false = upgrade only) adds one full cycle of the new plan
+ * after the current paid end; `release_founder_hold` (boolean) issues a request held for founder review.
  */
 final class InvoicePlanChangeRequestRequest extends FormRequest
 {
@@ -39,6 +41,8 @@ final class InvoicePlanChangeRequestRequest extends FormRequest
             'quantity' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:50'],
             'unit_price' => ['sometimes', 'nullable', 'numeric', 'gt:0', self::MONEY],
             'notes' => ['sometimes', 'nullable', 'string', 'max:1000', 'not_regex:/[<>]/'],
+            'with_renewal' => ['sometimes', 'boolean'],
+            'release_founder_hold' => ['sometimes', 'boolean'],
         ];
     }
 }
