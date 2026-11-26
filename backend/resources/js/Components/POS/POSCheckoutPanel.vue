@@ -371,35 +371,62 @@
         <span>{{ $t('connectivity.checkout_blocked') }}</span>
       </p>
 
+      <!-- UX-233: printing is a labelled choice, not a second "save" button competing with the main one -->
+      <button
+        type="button"
+        role="switch"
+        data-testid="pos-checkout-print-toggle"
+        :aria-checked="printAfterSave"
+        :disabled="isSubmitting"
+        class="w-full min-h-11 px-3 rounded-xl border flex items-center justify-between gap-2 text-sm font-bold transition cursor-pointer disabled:opacity-40"
+        :class="[
+          printAfterSave
+            ? 'border-theme-primary bg-theme-primary/10 text-slate-900 dark:text-white'
+            : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
+          compact ? 'col-span-5' : '',
+        ]"
+        @click="printAfterSave = !printAfterSave"
+      >
+        <span class="flex items-center gap-2 min-w-0">
+          <Printer class="w-4 h-4 shrink-0" aria-hidden="true" />
+          <span class="truncate">{{ $t('pos.print_after_save') }}</span>
+        </span>
+        <span
+          class="relative shrink-0 w-10 h-6 rounded-full transition-colors"
+          :class="printAfterSave ? 'bg-theme-primary' : 'bg-slate-300 dark:bg-slate-600'"
+          aria-hidden="true"
+        >
+          <span
+            class="absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all"
+            :class="printAfterSave ? 'start-5' : 'start-1'"
+          ></span>
+        </span>
+      </button>
+
       <button
         type="button"
         data-testid="pos-checkout-submit"
-        @click="$emit('submit', false)"
+        :aria-busy="isSubmitting"
+        @click="$emit('submit', printAfterSave)"
         :disabled="cartEmpty || isSubmitting || offline"
-        class="w-full min-h-12 bg-theme-primary hover:opacity-95 text-slate-950 rounded-xl font-black text-sm transition-all duration-150 active:scale-[0.98] shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30"
-        :class="compact ? 'col-span-3 min-h-11!' : ''"
+        class="w-full min-h-14 bg-theme-primary hover:opacity-95 text-slate-950 rounded-xl font-black text-base transition-all duration-150 active:scale-[0.98] shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30"
+        :class="compact ? 'col-span-5 min-h-12!' : ''"
       >
         <span
           v-if="isSubmitting"
           class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"
         ></span>
-        <CheckCircle2 v-else class="w-4 h-4 shrink-0 text-slate-950 stroke-[2.5]" />
-        <!-- The F9 / Enter hint is for a keyboard: touch screens show the plain action -->
-        <span class="text-center leading-tight text-balance">{{
-          isTouch ? $t('pos.confirm_and_approve') : $t('pos.confirm_and_approve_f9')
-        }}</span>
-      </button>
-
-      <button
-        type="button"
-        data-testid="pos-checkout-save-print"
-        @click="$emit('submit', true)"
-        :disabled="cartEmpty || isSubmitting || offline"
-        class="w-full min-h-11 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-bold text-xs transition border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30"
-        :class="compact ? 'col-span-2' : ''"
-      >
-        <Printer class="w-3.5 h-3.5 shrink-0" />
-        <span class="text-center leading-tight text-balance">{{ $t('pos.save_and_print_btn') }}</span>
+        <CheckCircle2 v-else class="w-5 h-5 shrink-0 text-slate-950 stroke-[2.5]" />
+        <!-- The F9 hint is for a keyboard: touch screens show the plain action -->
+        <span class="text-center leading-tight text-balance"
+          >{{ submitLabel }}
+          <kbd
+            v-if="!isTouch"
+            class="ms-1 px-1.5 rounded-md bg-slate-950/10 text-xs font-mono font-bold text-slate-900"
+            aria-hidden="true"
+            >F9</kbd
+          ></span
+        >
       </button>
     </div>
   </aside>
@@ -428,11 +455,14 @@ import { useTrans } from '../../Composables/useTrans';
 import POSDiscountBox from './POSDiscountBox.vue';
 import { usePosSaleSettings, tenderGridLayout } from '../../Composables/POS/usePosSaleSettings';
 import { sanitizeAmountInput } from '../../helpers/posCheckout';
+import { usePrintAfterSave } from '../../Composables/POS/usePrintAfterSave';
 import { normalize, dAdd, dSub, dCmp, dMax0, isZero, isPositive } from '../../helpers/decimal';
 
 const { formatMoney, currencyLabel } = useFormatters();
 const isTouch = useMediaQuery('(pointer: coarse)');
 const { t } = useTrans();
+const { printAfterSave } = usePrintAfterSave();
+const submitLabel = computed(() => (printAfterSave.value ? t('pos.save_and_print_btn') : t('pos.save_invoice_btn')));
 
 const { enabledMethods, cashDenominations: denominations } = usePosSaleSettings();
 // SET-01: the tender row holds up to 6 denominations + the exact/clear button; keep the columns even.

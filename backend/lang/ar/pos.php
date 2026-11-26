@@ -174,8 +174,9 @@ return [
     'quick_cash_exact' => 'المبلغ بالظبط',
     'received_from_cust' => 'المستلم من العميل:',
     'change_to_cust' => 'الباقي للعميل:',
-    'confirm_and_approve_f9' => 'حفظ واعتماد الفاتورة (F9 / Enter)',
     'save_and_print_btn' => 'حفظ وطباعة الفاتورة',
+    'save_invoice_btn' => 'حفظ الفاتورة',
+    'print_after_save' => 'اطبع الإيصال بعد الحفظ',
     'quick_customer_add_title' => 'إضافة عميل سريع:',
     'save_and_pick_customer' => 'حفظ واختيار العميل',
     'balance_label' => 'رصيد:',
@@ -472,7 +473,6 @@ return [
     // Item cards, touch checkout and the phone cart row (UI-02 / UI-03)
     'stock_out_short' => 'نفد',
     'stock_low_short' => 'قليل',
-    'confirm_and_approve' => 'حفظ واعتماد الفاتورة',
     'line_more_actions' => 'خيارات الصنف',
 
     // SHOP-01: stock check when an item is added to the cart

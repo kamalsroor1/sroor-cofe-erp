@@ -116,7 +116,7 @@ test.describe('UI-01: POS cart column layout', () => {
 
             const controls = [
                 page.getByTestId('pos-checkout-submit'),
-                page.getByTestId('pos-checkout-save-print'),
+                page.getByTestId('pos-checkout-print-toggle'),
                 page.getByTestId('pos-cash-received'),
                 page.getByTestId('pos-split-payment-btn'),
                 page.getByTestId('pos-tender-50'),

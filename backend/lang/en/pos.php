@@ -174,8 +174,9 @@ return [
     'quick_cash_exact' => 'Exact Amount',
     'received_from_cust' => 'Received from Customer:',
     'change_to_cust' => 'Change Due:',
-    'confirm_and_approve_f9' => 'Save & Confirm Invoice (F9 / Enter)',
     'save_and_print_btn' => 'Save & Print Invoice',
+    'save_invoice_btn' => 'Save invoice',
+    'print_after_save' => 'Print receipt after saving',
     'quick_customer_add_title' => 'Quick Add Customer:',
     'save_and_pick_customer' => 'Save & Pick Customer',
     'balance_label' => 'Balance:',
@@ -472,7 +473,6 @@ return [
     // Item cards, touch checkout and the phone cart row (UI-02 / UI-03)
     'stock_out_short' => 'Out',
     'stock_low_short' => 'Low',
-    'confirm_and_approve' => 'Save & confirm invoice',
     'line_more_actions' => 'Item options',
 
     // SHOP-01: stock check when an item is added to the cart
