@@ -6,10 +6,12 @@ import BaseButton from '@/Components/Common/BaseButton.vue';
 import EmptyState from '@/Components/Common/EmptyState.vue';
 import BaseInput from '@/Components/Form/BaseInput.vue';
 import BaseSelect from '@/Components/Form/BaseSelect.vue';
+import BaseSwitch from '@/Components/Form/BaseSwitch.vue';
 import BaseTextarea from '@/Components/Form/BaseTextarea.vue';
 import SupportContact from './SupportContact.vue';
 import { useFormatters } from '@/Composables/useFormatters';
 import { useTrans } from '@/Composables/useTrans';
+import { renewTooKey } from '@/helpers/billingChange';
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -17,6 +19,8 @@ const props = defineProps({
   addons: { type: Array, default: () => [] },
   hasPendingPlan: { type: Boolean, default: false },
   hasPendingAddon: { type: Boolean, default: false },
+  // A paid term is running: a plan change may also renew one cycle of the new plan (`renew`).
+  canRenewToo: { type: Boolean, default: false },
   support: { type: Object, default: () => ({}) },
   isSubmitting: { type: Boolean, default: false },
   errors: { type: Object, default: () => ({}) },
@@ -28,7 +32,7 @@ const { t } = useTrans();
 const { formatMoney } = useFormatters();
 
 const tab = ref('plan_change');
-const form = reactive({ plan: '', addon: '', quantity: '1', cycle: 'monthly', notes: '' });
+const form = reactive({ plan: '', addon: '', quantity: '1', cycle: 'monthly', notes: '', renew: false });
 
 const plan = computed(() => props.plans.find((p) => p.code === form.plan) || null);
 const addon = computed(() => props.addons.find((a) => a.key === form.addon) || null);
@@ -58,7 +62,7 @@ watch(
   () => props.show,
   (open) => {
     if (!open) return;
-    Object.assign(form, { plan: '', addon: '', quantity: '1', cycle: 'monthly', notes: '' });
+    Object.assign(form, { plan: '', addon: '', quantity: '1', cycle: 'monthly', notes: '', renew: false });
     tab.value = props.hasPendingPlan && !props.hasPendingAddon ? 'addon' : 'plan_change';
   }
 );
@@ -83,7 +87,13 @@ const onSubmit = () => {
           billing_cycle: form.cycle,
           notes,
         }
-      : { kind: 'plan_change', requested_plan_code: form.plan, billing_cycle: form.cycle, notes }
+      : {
+          kind: 'plan_change',
+          requested_plan_code: form.plan,
+          billing_cycle: form.cycle,
+          ...(props.canRenewToo && form.renew ? { renew: true } : {}),
+          notes,
+        }
   );
 };
 </script>
@@ -177,6 +187,12 @@ const onSubmit = () => {
             required
           />
         </div>
+
+        <BaseSwitch
+          v-if="!isAddon && canRenewToo"
+          v-model="form.renew"
+          :label="$t(`subscription.billing.change.${renewTooKey(form.cycle)}`)"
+        />
 
         <p v-if="estimate" class="text-xs font-black text-slate-900 dark:text-white">
           {{

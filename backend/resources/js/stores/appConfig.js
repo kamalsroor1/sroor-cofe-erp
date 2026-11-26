@@ -27,6 +27,9 @@ export const useAppConfigStore = defineStore('appConfig', {
         tenant: null,
         entitlements: null,
         subscriptionBanner: null,
+        // #232 UI §3: `subscription_temporary_access` of /system/context (null when there is none) and when it was read.
+        temporaryAccess: null,
+        temporaryAccessFetchedAtMs: 0,
         activeShift: null,
         setupProgress: null,
         setupProgressBooted: false,
@@ -70,6 +73,12 @@ export const useAppConfigStore = defineStore('appConfig', {
     },
 
     actions: {
+        /** Keeps the 48h banner window and the moment it was read (its countdown is relative to it). */
+        setTemporaryAccess(window) {
+            this.temporaryAccess = window;
+            this.temporaryAccessFetchedAtMs = Date.now();
+        },
+
         /**
          * Fetch full bootstrap context from API
          */
@@ -90,6 +99,7 @@ export const useAppConfigStore = defineStore('appConfig', {
                     if (data.tenant) this.tenant = data.tenant;
                     if (data.entitlements) this.entitlements = data.entitlements;
                     this.subscriptionBanner = data.subscription_banner ?? null;
+                    this.setTemporaryAccess(data.subscription_temporary_access ?? null);
                     this.activeShift = data.active_shift ?? null;
                     this.setupProgress = data.setup_progress ?? null;
                     this.setupProgressBooted = false;

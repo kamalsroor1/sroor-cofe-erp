@@ -1,7 +1,7 @@
 import { compareDecimalStrings, isValidDecimal } from './billing.js';
 import { canRequestRenewal } from './billingRenewal.js';
 
-export const CHANGE_ACTIONS = Object.freeze({ UPGRADE: 'upgrade', RENEW: 'renew' });
+export const CHANGE_ACTIONS = Object.freeze({ UPGRADE: 'upgrade', RENEW: 'renew', SUBSCRIBE: 'subscribe' });
 
 const priceOf = (plan, cycle) => (cycle === 'yearly' ? plan?.price_yearly : plan?.price_monthly);
 
@@ -15,12 +15,13 @@ export const isSubscribeFlow = (data) => data?.subscription?.has_paid_term === f
 export const showsActionSwitch = (data) => canRequestRenewal(data);
 
 /**
- * Plans the shop may upgrade to. With a paid term: only plans priced above the current one in the
- * active cycle (never the current or a lower plan). Without one: every paid plan except the current.
+ * Plans the shop may move to. With a paid term: only plans priced above the current one in the
+ * active cycle (never the current or a lower plan). Without one (trial / lapsed): every paid plan,
+ * the shop's own included, because it may subscribe to the plan it is on.
  */
 export const upgradeCandidates = (data, cycle = currentCycle(data)) => {
+    if (isSubscribeFlow(data)) return (data?.available_plans || []).filter((plan) => !plan.is_free);
     const plans = (data?.available_plans || []).filter((plan) => !plan.is_free && !plan.is_current);
-    if (isSubscribeFlow(data)) return plans;
     const current = (data?.available_plans || []).find((plan) => plan.is_current);
     const base = priceOf(current, cycle);
     if (!current || !isValidDecimal(base)) return plans;
@@ -34,11 +35,66 @@ export const upgradeCandidates = (data, cycle = currentCycle(data)) => {
 export const defaultAction = (data) =>
     !showsActionSwitch(data) || upgradeCandidates(data).length > 0 ? CHANGE_ACTIONS.UPGRADE : CHANGE_ACTIONS.RENEW;
 
-/** Query for GET /billing/change-preview; plan_id and renew exist only for an upgrade. */
-export const previewQuery = ({ action, planId, cycle, renew }) =>
-    action === CHANGE_ACTIONS.UPGRADE
-        ? { action, plan_id: planId, cycle, renew: renew ? 1 : 0 }
-        : { action: CHANGE_ACTIONS.RENEW, cycle };
+/** The action the API knows: the screen's "upgrade" is a "subscribe" when no paid term is running. */
+export const apiAction = ({ action, subscribe = false }) => {
+    if (action !== CHANGE_ACTIONS.UPGRADE) return CHANGE_ACTIONS.RENEW;
+    return subscribe ? CHANGE_ACTIONS.SUBSCRIBE : CHANGE_ACTIONS.UPGRADE;
+};
+
+/** Query for GET /billing/change-preview; plan_id and renew exist only for an upgrade / subscribe. */
+export const previewQuery = ({ action, planId, cycle, renew, subscribe = false }) => {
+    const effective = apiAction({ action, subscribe });
+    return effective === CHANGE_ACTIONS.RENEW
+        ? { action: effective, cycle }
+        : { action: effective, plan_id: planId, cycle, renew: renew && !subscribe ? 1 : 0 };
+};
+
+/** Body of POST /billing/change-invoice (upgrade or subscribe only). */
+export const changeInvoiceBody = ({ action, planId, cycle, renew, subscribe = false }) => ({
+    action: apiAction({ action, subscribe }),
+    plan_id: planId,
+    cycle,
+    renew: renew && !subscribe,
+});
+
+const REFUSAL_CODES = [
+    'billing.request_plan_unavailable',
+    'billing.free_plan_not_billable',
+    'billing.request_same_plan',
+    'billing.upgrade_not_higher',
+    'billing.request_already_pending',
+];
+
+/**
+ * Maps the answer of POST /billing/change-invoice to what the screen does next:
+ *  - invoice: 201 with an invoice, open its payment screen;
+ *  - held:    201 without one (agreed founder price), show the held state;
+ *  - duplicate: 409 billing.invoice_duplicate, open the existing invoice the payload points to;
+ *  - refused: one of the 422 codes, show the server's (translated) message and re-read the state;
+ *  - failed:  anything else (the interceptor's message is shown as is).
+ * @param {{status?:number, data?:object}|null} response  axios response, or `error.response`
+ */
+export const changeOutcome = (response) => {
+    const status = response?.status ?? null;
+    const body = response?.data || {};
+    if (status === 201) {
+        const invoice = body.data?.invoice || null;
+        if (invoice?.id) return { type: 'invoice', invoiceId: invoice.id, message: body.message || '' };
+        if (body.data?.held_for_price_review === true) return { type: 'held', message: body.message || '' };
+        return { type: 'failed', message: '' };
+    }
+    if (status === 409 && body.error_code === 'billing.invoice_duplicate') {
+        return {
+            type: 'duplicate',
+            invoiceId: body.details?.invoice_id ?? null,
+            number: body.details?.invoice_number ?? '',
+        };
+    }
+    if (status === 422 && REFUSAL_CODES.includes(body.error_code)) {
+        return { type: 'refused', code: body.error_code, message: body.message || '' };
+    }
+    return { type: 'failed', message: body.message || '' };
+};
 
 /** True when the preview can be requested: an upgrade needs a chosen plan. */
 export const canPreview = ({ action, planId }) => action === CHANGE_ACTIONS.RENEW || !!planId;

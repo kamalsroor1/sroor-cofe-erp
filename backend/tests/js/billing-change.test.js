@@ -2,6 +2,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+    apiAction,
+    changeInvoiceBody,
+    changeOutcome,
     ctaKey,
     canPreview,
     defaultAction,
@@ -36,11 +39,11 @@ test('the yearly cycle compares yearly prices', () => {
     );
 });
 
-test('without a paid term every paid plan except the current one is offered', () => {
+test('without a paid term every paid plan is offered, the shops own included (subscribe)', () => {
     const data = paid({ has_paid_term: false, can_request_renewal: false });
     assert.deepEqual(
         upgradeCandidates(data).map((p) => p.id),
-        [2, 4]
+        [2, 3, 4]
     );
 });
 
@@ -110,4 +113,85 @@ test('plan card status chip: grace beats everything, lapsed is expired, trial an
     assert.equal(planStatus(tenant({ value: 'past_due' })).key, 'expired');
     assert.equal(planStatus(tenant({ value: 'trial' })).key, 'trial');
     assert.equal(planStatus(tenant({})).key, 'active');
+});
+
+test('the screen upgrade is a subscribe without a paid term, and renew stays renew', () => {
+    assert.equal(apiAction({ action: 'upgrade', subscribe: false }), 'upgrade');
+    assert.equal(apiAction({ action: 'upgrade', subscribe: true }), 'subscribe');
+    assert.equal(apiAction({ action: 'renew', subscribe: true }), 'renew');
+    assert.deepEqual(previewQuery({ action: 'upgrade', planId: 3, cycle: 'monthly', renew: true, subscribe: true }), {
+        action: 'subscribe',
+        plan_id: 3,
+        cycle: 'monthly',
+        renew: 0,
+    });
+});
+
+test('the change-invoice body carries action, plan, cycle and renew', () => {
+    assert.deepEqual(changeInvoiceBody({ action: 'upgrade', planId: 4, cycle: 'yearly', renew: true }), {
+        action: 'upgrade',
+        plan_id: 4,
+        cycle: 'yearly',
+        renew: true,
+    });
+    assert.deepEqual(
+        changeInvoiceBody({ action: 'upgrade', planId: 3, cycle: 'monthly', renew: true, subscribe: true }),
+        {
+            action: 'subscribe',
+            plan_id: 3,
+            cycle: 'monthly',
+            renew: false,
+        }
+    );
+});
+
+test('201 with an invoice opens its payment screen', () => {
+    assert.deepEqual(
+        changeOutcome({
+            status: 201,
+            data: { message: 'ok', data: { held_for_price_review: false, invoice: { id: 9 } } },
+        }),
+        { type: 'invoice', invoiceId: 9, message: 'ok' }
+    );
+});
+
+test('201 held for a price review without an invoice is the held state', () => {
+    const outcome = changeOutcome({
+        status: 201,
+        data: { message: 'filed', data: { held_for_price_review: true, invoice: null } },
+    });
+    assert.equal(outcome.type, 'held');
+});
+
+test('409 duplicate points at the existing invoice', () => {
+    assert.deepEqual(
+        changeOutcome({
+            status: 409,
+            data: { error_code: 'billing.invoice_duplicate', details: { invoice_id: 5, invoice_number: 'INV-5' } },
+        }),
+        { type: 'duplicate', invoiceId: 5, number: 'INV-5' }
+    );
+});
+
+test('each 422 refusal code keeps the server message', () => {
+    for (const code of [
+        'billing.request_plan_unavailable',
+        'billing.free_plan_not_billable',
+        'billing.request_same_plan',
+        'billing.upgrade_not_higher',
+        'billing.request_already_pending',
+    ]) {
+        assert.deepEqual(changeOutcome({ status: 422, data: { error_code: code, message: 'no' } }), {
+            type: 'refused',
+            code,
+            message: 'no',
+        });
+    }
+});
+
+test('anything else is a plain failure', () => {
+    assert.equal(changeOutcome({ status: 422, data: { message: 'bad', errors: {} } }).type, 'failed');
+    assert.equal(changeOutcome({ status: 500, data: {} }).type, 'failed');
+    assert.equal(changeOutcome({ status: 201, data: { data: { invoice: null } } }).type, 'failed');
+    assert.equal(changeOutcome(null).type, 'failed');
 });

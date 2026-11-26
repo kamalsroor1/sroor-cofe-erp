@@ -18,24 +18,15 @@ const open = ref(false);
 
 // A server or local error on a hidden field must not stay invisible.
 watch(
-  () => [props.errors.amount, props.errors.paid_at],
-  ([a, p]) => {
-    if (a || p) open.value = true;
+  () => [props.errors.amount, props.errors.paid_at, props.errors.payer_reference],
+  ([a, p, r]) => {
+    if (a || p || r) open.value = true;
   }
 );
 </script>
 
 <template>
   <div class="space-y-3">
-    <!-- Slot of the optional transfer reference (card #241). The API still requires one, so it stays visible. -->
-    <BaseInput
-      v-model="reference"
-      :label="$t('subscription.billing.pay.payer_reference')"
-      maxlength="100"
-      :error="errors.payer_reference"
-      required
-    />
-
     <div class="rounded-xl border border-slate-200 dark:border-slate-700">
       <button
         type="button"
@@ -61,6 +52,13 @@ watch(
           :max="nowLocalInput()"
           :label="$t('subscription.billing.pay.transfer_time_optional')"
           :error="errors.paid_at"
+        />
+        <BaseInput
+          v-model="reference"
+          class="sm:col-span-2"
+          :label="$t('subscription.billing.pay.payer_reference_optional')"
+          maxlength="100"
+          :error="errors.payer_reference"
         />
         <p v-if="isPartial" class="sm:col-span-2 text-xs font-bold text-amber-700 dark:text-amber-400">
           {{ $t('subscription.billing.pay.partial_warning', { remaining: remainingLabel }) }}

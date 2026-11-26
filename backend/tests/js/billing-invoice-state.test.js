@@ -9,7 +9,7 @@ import {
     rejectionReasonOf,
     showsPaySteps,
 } from '../../resources/js/helpers/billingInvoiceState.js';
-import { nowLocalInput } from '../../resources/js/helpers/billing.js';
+import { nowLocalInput, paidAtPayload } from '../../resources/js/helpers/billing.js';
 
 test('awaiting payment has no status card (the steps are shown)', () => {
     assert.equal(invoiceStatusCard('awaiting_payment'), null);
@@ -66,4 +66,12 @@ test('a partly paid pending invoice is detected from the paid and remaining amou
 
 test('datetime-local value is built from local time parts', () => {
     assert.equal(nowLocalInput(new Date(2026, 10, 5, 9, 7)), '2026-11-05T09:07');
+});
+
+test('paid_at: an untouched default is "now" a minute back, a picked time is an absolute instant', () => {
+    const now = new Date('2026-11-26T10:00:00Z');
+    assert.equal(paidAtPayload('', now), '2026-11-26T09:59:00.000Z');
+    const local = '2026-11-25T14:30';
+    assert.equal(paidAtPayload(local, now), new Date(local).toISOString());
+    assert.equal(paidAtPayload('not a date', now), '2026-11-26T09:59:00.000Z');
 });

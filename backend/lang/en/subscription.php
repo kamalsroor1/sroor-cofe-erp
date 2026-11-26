@@ -378,6 +378,7 @@ return [
             'amount' => 'Amount paid',
             'method' => 'Payment method',
             'payer_reference' => 'Transfer reference or sender number',
+            'payer_reference_optional' => 'Transfer reference or sender number (optional)',
             'paid_at' => 'Payment date',
             'receipt' => 'Receipt',
             'choose_receipt' => 'Choose receipt file',

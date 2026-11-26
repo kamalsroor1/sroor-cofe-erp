@@ -1,7 +1,13 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useFormatters } from '@/Composables/useFormatters';
 import { useTrans } from '@/Composables/useTrans';
-import { compareDecimalStrings, isValidDecimal, nowLocalInput, receiptErrorKey, todayIso } from '@/helpers/billing';
+import {
+    compareDecimalStrings,
+    isValidDecimal,
+    nowLocalInput,
+    paidAtPayload,
+    receiptErrorKey,
+} from '@/helpers/billing';
 
 /**
  * #232 UI §2 / §2b: form state of the invoice screen (method, receipt, extras), validation that mirrors the
@@ -72,8 +78,9 @@ export function useBillingPaymentForm(invoice, methods, submitter, onPaid) {
                 remaining: formatMoney(remaining.value),
             });
         if (!selectedMethod.value) next.method = t('subscription.billing.pay.errors.method_required');
+        // The transfer reference is optional (card #241): only a filled one is checked.
         const reference = form.payer_reference.trim();
-        if (reference.length < 3 || reference.length > 100)
+        if (reference && (reference.length < 3 || reference.length > 100))
             next.payer_reference = t('subscription.billing.pay.errors.reference_length');
         if (form.paid_at && form.paid_at > nowLocalInput())
             next.paid_at = t('subscription.billing.pay.errors.paid_at_future');
@@ -95,8 +102,8 @@ export function useBillingPaymentForm(invoice, methods, submitter, onPaid) {
                 ...form,
                 method: selectedMethod.value.key,
                 payer_reference: form.payer_reference.trim(),
-                // The transfer time is only a hint for the reviewer: blank means "today".
-                paid_at: form.paid_at || todayIso(),
+                // The transfer time is only a hint for the reviewer: untouched means "now".
+                paid_at: paidAtPayload(form.paid_at),
             },
             { onProgress: (value) => (percent.value = value), signal: controller.signal }
         );

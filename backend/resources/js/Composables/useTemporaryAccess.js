@@ -1,23 +1,17 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import api from '@/Services/api';
-import { useAuthStore } from '@/stores/auth';
+import { useAppConfigStore } from '@/stores/appConfig';
 import { describeTemporaryAccess, dismiss, isDismissed } from '@/helpers/temporaryAccess';
 
 const TICK_MS = 60 * 1000;
-const REFRESH_MS = 5 * 60 * 1000;
 
-// One shared snapshot: the app shell banner and the /billing page read and refresh the same window.
-const snapshot = ref(null);
 const dismissedIds = ref(new Set());
 
-/** Stores the window of a GET /billing/subscription payload (called by every reader of that endpoint). */
+/**
+ * Stores the window of a GET /billing/subscription payload as the banner's window. The /billing page
+ * calls this after it loads and after a receipt upload, so the banner follows what the page just read.
+ */
 export function publishTemporaryAccess(data) {
-    snapshot.value = {
-        window: data?.temporary_access || null,
-        planName: data?.plan?.name || '',
-        endsAt: data?.subscription?.ends_at || null,
-        fetchedAtMs: Date.now(),
-    };
+    useAppConfigStore().setTemporaryAccess(data?.temporary_access || null);
 }
 
 const storage = () => {
@@ -29,43 +23,27 @@ const storage = () => {
 };
 
 /**
- * #232 UI §3: banner state for the app shell. Loads the window itself (once, then every 5 minutes) for
- * users who may open /billing, and recomputes the countdown every 60 seconds.
- * A 403 (e.g. a quick-login session) is accepted silently so no permission alert is raised.
+ * #232 UI §3: banner state for the app shell. The window comes with the bootstrap context
+ * (`subscription_temporary_access` of /system/context, stored in the appConfig store), so no request is
+ * made here; the countdown is recomputed every 60 seconds.
  */
 export function useTemporaryAccess() {
-    const auth = useAuthStore();
+    const appConfig = useAppConfigStore();
     const nowMs = ref(Date.now());
     let tick = null;
-    let refresh = null;
-
-    const load = async () => {
-        if (!auth.hasPermission('billing.manage')) return;
-        try {
-            const res = await api.get('/billing/subscription', { validateStatus: (s) => s === 200 || s === 403 });
-            if (res.status === 200) {
-                publishTemporaryAccess(res.data.data);
-                nowMs.value = Date.now();
-            }
-        } catch {
-            // The banner is informational: a failed refresh keeps the last snapshot.
-        }
-    };
 
     const banner = computed(() => {
-        const current = snapshot.value;
-        if (!current?.window) return null;
-        const id = current.window.invoice_id;
-        return describeTemporaryAccess(current.window, {
+        const current = appConfig.temporaryAccess;
+        if (!current) return null;
+        const id = current.invoice_id;
+        return describeTemporaryAccess(current, {
             nowMs: nowMs.value,
-            fetchedAtMs: current.fetchedAtMs,
-            planName: current.planName,
-            endsAt: current.endsAt,
+            fetchedAtMs: appConfig.temporaryAccessFetchedAtMs,
             dismissed: dismissedIds.value.has(id) || (storage() ? isDismissed(id, storage()) : false),
         });
     });
 
-    const invoiceId = computed(() => snapshot.value?.window?.invoice_id ?? null);
+    const invoiceId = computed(() => appConfig.temporaryAccess?.invoice_id ?? null);
 
     const dismissBanner = () => {
         const id = invoiceId.value;
@@ -75,16 +53,11 @@ export function useTemporaryAccess() {
     };
 
     onMounted(() => {
-        load();
         tick = setInterval(() => {
             nowMs.value = Date.now();
         }, TICK_MS);
-        refresh = setInterval(load, REFRESH_MS);
     });
-    onBeforeUnmount(() => {
-        clearInterval(tick);
-        clearInterval(refresh);
-    });
+    onBeforeUnmount(() => clearInterval(tick));
 
     return { banner, invoiceId, dismissBanner };
 }

@@ -1,8 +1,12 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import api from '@/Services/api';
+import { notifyError, notifySuccess } from '@/helpers/alert';
+import { trans } from '@/helpers/trans';
 import {
     CHANGE_ACTIONS,
     canPreview,
+    changeInvoiceBody,
+    changeOutcome,
     ctaKey,
     currentCycle,
     defaultAction,
@@ -16,6 +20,8 @@ import {
  * #232 UI §1: state of the /billing upgrade / renew panel. The price preview is always the server's
  * (GET /billing/change-preview); nothing is computed here. A newer request wins over an older one,
  * and the previous numbers stay while a new preview loads.
+ * `submit()` issues the invoice (POST /billing/change-invoice) and returns the mapped outcome
+ * (see `changeOutcome`) so the page can open the payment screen or re-read its state.
  * @param {import('vue').Ref<object|null>} subscription  GET /billing/subscription payload
  */
 export function useBillingChange(subscription) {
@@ -32,6 +38,9 @@ export function useBillingChange(subscription) {
     const previewLoading = ref(false);
     const previewFailed = ref(false);
     const previewMessage = ref('');
+    const submitting = ref(false);
+    // The request was filed for a founder-price review: the amber "held" card replaces the action area.
+    const heldSubmitted = ref(false);
     let sequence = 0;
 
     const plan = computed(() => candidates.value.find((p) => p.id === planId.value) || null);
@@ -45,8 +54,16 @@ export function useBillingChange(subscription) {
         ctaKey({ held: held.value, action: action.value, subscribe: subscribeFlow.value })
     );
 
+    const queryState = () => ({
+        action: action.value,
+        planId: planId.value,
+        cycle: cycle.value,
+        renew: renew.value,
+        subscribe: subscribeFlow.value,
+    });
+
     const loadPreview = async () => {
-        const query = { action: action.value, planId: planId.value, cycle: cycle.value, renew: renew.value };
+        const query = queryState();
         if (!canPreview(query)) {
             sequence += 1;
             preview.value = null;
@@ -89,6 +106,33 @@ export function useBillingChange(subscription) {
         sequence += 1;
     });
 
+    const submit = async () => {
+        if (submitting.value || !isUpgrade.value || !planId.value) return null;
+        submitting.value = true;
+        let outcome;
+        try {
+            const res = await api.post('/billing/change-invoice', changeInvoiceBody(queryState()));
+            outcome = changeOutcome(res);
+        } catch (e) {
+            outcome = e.response ? changeOutcome(e.response) : { type: 'failed', message: '' };
+            if (outcome.type === 'failed') outcome.message = e.userMessage || outcome.message;
+        } finally {
+            submitting.value = false;
+        }
+        announce(outcome);
+        return outcome;
+    };
+
+    const announce = (outcome) => {
+        if (outcome.type === 'invoice') notifySuccess(outcome.message);
+        else if (outcome.type === 'held') {
+            heldSubmitted.value = true;
+            notifySuccess(outcome.message);
+        } else if (outcome.type === 'duplicate') {
+            notifySuccess(trans('subscription.billing.renewal.existing_opened', { number: outcome.number }));
+        } else notifyError(outcome.message);
+    };
+
     const selectAction = (next) => {
         if (next === CHANGE_ACTIONS.UPGRADE && onTopPlan.value) return;
         action.value = next;
@@ -114,7 +158,10 @@ export function useBillingChange(subscription) {
         previewLoading,
         previewFailed,
         previewMessage,
+        submitting,
+        heldSubmitted,
         loadPreview,
         selectAction,
+        submit,
     };
 }

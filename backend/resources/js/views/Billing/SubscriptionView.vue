@@ -41,6 +41,12 @@ const onRenew = async (cycle) => {
   if (result?.invoiceId) openById(result.invoiceId);
 };
 
+// The new invoice must be in the list before its payment screen can open.
+const onIssued = async (invoiceId) => {
+  await refreshInvoices().catch(() => null);
+  if (invoiceId) openById(invoiceId);
+};
+
 const onWithdraw = async (payment) => {
   if (!payment) return;
   withdrawing.value = true;
@@ -77,6 +83,7 @@ onMounted(async () => {
         :renewing="renewing"
         @changed="refreshInvoices().catch(() => null)"
         @open-invoice="openById"
+        @issued="onIssued"
         @renew="onRenew"
       />
       <SubscriptionPriceSchedule :schedule="subscription.subscription?.price_schedule" />

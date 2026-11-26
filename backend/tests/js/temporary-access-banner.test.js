@@ -66,6 +66,17 @@ test('confirmed is dismissible, names plan and end, differs for an upgrade, and 
     assert.equal(describeTemporaryAccess({ state: 'verified' }, { ...ctx, dismissed: true }), null);
 });
 
+test('confirmed names the plan and the period end the server sent, ahead of the fallbacks', () => {
+    const window = {
+        state: 'verified',
+        invoice_type: 'upgrade',
+        plan: { id: 4, name: 'Pro' },
+        period_end: '2026-12-11',
+    };
+    const d = describeTemporaryAccess(window, { nowMs: NOW, planName: 'Old', endsAt: '2026-01-01' });
+    assert.deepEqual(d.params, { plan: 'Pro', end: '2026-12-11' });
+});
+
 test('no window, voided or none state show nothing', () => {
     assert.equal(describeTemporaryAccess(null, { nowMs: NOW }), null);
     assert.equal(describeTemporaryAccess({ state: 'none' }, { nowMs: NOW }), null);

@@ -109,8 +109,10 @@ const { formatMoney, formatDate, formatDateTime } = useFormatters();
               <BillingStatusBadge :label="payment.status.label" :tone="paymentTone(payment.status.value)" />
             </div>
             <p class="font-bold text-slate-500 dark:text-slate-400">
-              {{ payment.method.label }} - {{ $t('subscription.billing.details.reference') }}:
-              {{ payment.payer_reference }}
+              {{ payment.method.label }}
+              <template v-if="payment.payer_reference">
+                - {{ $t('subscription.billing.details.reference') }}: {{ payment.payer_reference }}
+              </template>
             </p>
             <p v-if="payment.submitted_at" class="font-medium text-slate-500 dark:text-slate-400">
               {{ $t('subscription.billing.details.submitted_at') }}: {{ formatDateTime(payment.submitted_at) }}

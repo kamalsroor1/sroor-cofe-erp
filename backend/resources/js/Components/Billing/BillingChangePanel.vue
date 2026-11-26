@@ -18,7 +18,8 @@ const props = defineProps({
   busy: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['request-plan', 'renew', 'open-invoice']);
+// `outcome` carries the mapped answer of the change-invoice call (invoice / held / duplicate / refused / failed).
+const emit = defineEmits(['outcome', 'renew', 'open-invoice']);
 
 const { formatCurrency } = useFormatters();
 
@@ -42,8 +43,11 @@ const {
   previewLoading,
   previewFailed,
   previewMessage,
+  submitting,
+  heldSubmitted,
   loadPreview,
   selectAction,
+  submit,
 } = useBillingChange(toRef(props, 'subscription'));
 
 const noPlans = computed(() => subscribeFlow.value && candidates.value.length === 0);
@@ -57,16 +61,18 @@ const canSend = computed(
     !previewFailed.value &&
     !upgradeBlocked.value &&
     !props.busy &&
+    !submitting.value &&
     (!isUpgrade.value || !!plan.value)
 );
 
-const send = () => {
+const send = async () => {
   if (!canSend.value) return;
-  if (isUpgrade.value) {
-    emit('request-plan', { requested_plan_code: plan.value.code, billing_cycle: cycle.value });
-  } else {
+  if (!isUpgrade.value) {
     emit('renew', cycle.value);
+    return;
   }
+  const outcome = await submit();
+  if (outcome) emit('outcome', outcome);
 };
 </script>
 
@@ -110,6 +116,19 @@ const send = () => {
         >
           {{ $t('subscription.billing.change.continue_payment') }}
         </BaseButton>
+      </div>
+
+      <!-- Filed for a founder-price review: no invoice yet, the pending request card above tracks it. -->
+      <div
+        v-else-if="heldSubmitted"
+        class="rounded-xl border border-amber-500 bg-amber-50 dark:bg-amber-500/10 p-3 space-y-1 text-amber-900 dark:text-amber-200"
+        role="status"
+      >
+        <p class="flex items-start gap-2 text-sm font-black">
+          <Lock class="w-5 h-5 shrink-0" />
+          <span>{{ $t('subscription.billing.change.held_title') }}</span>
+        </p>
+        <p class="text-xs font-bold ps-7">{{ $t('subscription.billing.change.founder_note') }}</p>
       </div>
 
       <template v-else>
@@ -181,7 +200,7 @@ const send = () => {
           size="lg"
           full-width
           custom-class="min-h-14"
-          :loading="busy"
+          :loading="busy || submitting"
           :disabled="!canSend"
           @click="send"
         >

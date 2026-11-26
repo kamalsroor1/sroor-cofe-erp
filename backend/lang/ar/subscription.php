@@ -378,6 +378,7 @@ return [
             'amount' => 'المبلغ المدفوع',
             'method' => 'طريقة الدفع',
             'payer_reference' => 'رقم العملية أو رقم المحوِّل',
+            'payer_reference_optional' => 'رقم العملية أو رقم المحوِّل (اختياري)',
             'paid_at' => 'تاريخ الدفع',
             'receipt' => 'الإيصال',
             'choose_receipt' => 'اختر ملف الإيصال',

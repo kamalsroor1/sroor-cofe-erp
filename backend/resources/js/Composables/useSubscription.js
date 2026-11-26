@@ -63,7 +63,7 @@ export function useSubscription() {
         body.append('receipt', form.receipt);
         body.append('method', form.method);
         body.append('amount', String(form.amount));
-        body.append('payer_reference', form.payer_reference);
+        if (form.payer_reference) body.append('payer_reference', form.payer_reference);
         body.append('paid_at', form.paid_at);
         try {
             const res = await api.post(`/billing/invoices/${invoiceId}/payments`, body, {

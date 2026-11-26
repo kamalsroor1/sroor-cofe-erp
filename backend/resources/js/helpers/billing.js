@@ -85,6 +85,20 @@ export const todayIso = (now = new Date()) => {
     return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 };
 
+// The API refuses a transfer time after "now": keep the default a little in the past so a device clock
+// that runs ahead of the server's never turns the untouched default into a 422.
+const PAID_AT_SKEW_MS = 60 * 1000;
+
+/**
+ * `paid_at` to send: the extras' `datetime-local` value as an absolute instant, or "now" when untouched.
+ * @param {string} value  `YYYY-MM-DDTHH:mm` in the shop's local time, or ''
+ */
+export const paidAtPayload = (value, now = new Date()) => {
+    const picked = value ? new Date(value) : null;
+    if (picked && !Number.isNaN(picked.getTime())) return picked.toISOString();
+    return new Date(now.getTime() - PAID_AT_SKEW_MS).toISOString();
+};
+
 /** Current local time as a `datetime-local` value (YYYY-MM-DDTHH:mm). */
 export const nowLocalInput = (now = new Date()) => {
     const pad = (n) => String(n).padStart(2, '0');

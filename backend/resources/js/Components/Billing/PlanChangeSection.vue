@@ -13,7 +13,7 @@ const props = defineProps({
   renewing: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['update:open', 'changed', 'open-invoice', 'renew']);
+const emit = defineEmits(['update:open', 'changed', 'open-invoice', 'renew', 'issued']);
 
 const {
   requests,
@@ -35,9 +35,16 @@ const onSubmit = async (payload) => {
   if (await submit(payload)) emit('update:open', false);
 };
 
-// #232: no self-service invoice endpoint for a plan change yet, so the panel's primary action files the
-// request support turns into an invoice (the pending card below is the "waiting for invoice" state).
-const onRequestPlan = (payload) => submit({ kind: 'plan_change', ...payload });
+// #232: the panel issues the invoice itself. A new invoice or the existing one it points to opens on the
+// payment screen; a held request or a refusal changes what the page shows, so re-read it all.
+const onOutcome = async (outcome) => {
+  if (outcome.type === 'invoice' || outcome.type === 'duplicate') {
+    emit('issued', outcome.invoiceId);
+    return;
+  }
+  emit('changed');
+  await loadRequests();
+};
 
 // PLAN-13: the downgrade request lands in the history list too, so re-read it together with the summary.
 const onDowngraded = async () => {
@@ -69,7 +76,7 @@ onMounted(loadRequests);
       :subscription="subscription"
       :has-pending-request="!!pendingPlanChange"
       :busy="isSubmitting || renewing"
-      @request-plan="onRequestPlan"
+      @outcome="onOutcome"
       @renew="$emit('renew', $event)"
       @open-invoice="$emit('open-invoice', $event)"
     />
@@ -91,6 +98,7 @@ onMounted(loadRequests);
       :addons="availableAddons"
       :has-pending-plan="!!pendingPlanChange"
       :has-pending-addon="!!pendingAddon"
+      :can-renew-too="subscription.subscription?.has_paid_term !== false"
       :support="subscription.support"
       :is-submitting="isSubmitting"
       :errors="errors"

@@ -42,7 +42,7 @@ export const dismiss = (invoiceId, storage) => {
 };
 
 /**
- * @param {object|null} window  `temporary_access` of /billing/subscription
+ * @param {object|null} window  `subscription_temporary_access` of /system/context or `temporary_access` of /billing/subscription
  * @param {{nowMs:number, fetchedAtMs?:number|null, planName?:string, endsAt?:string|null, dismissed?:boolean}} ctx
  * @returns {{state:string, tone:string, textKey:string, params:object, countdown:string|null, action:string|null, dismissible:boolean}|null}
  */
@@ -86,7 +86,8 @@ export const describeTemporaryAccess = (window, ctx) => {
                 textKey: upgrade
                     ? 'subscription.billing.grace.confirmed_upgrade'
                     : 'subscription.billing.grace.confirmed_renewal',
-                params: { plan: ctx.planName || '', end: ctx.endsAt || '' },
+                // The window names the plan it billed and the period end (#232 item 9); ctx is the fallback.
+                params: { plan: window.plan?.name || ctx.planName || '', end: window.period_end || ctx.endsAt || '' },
                 dismissible: true,
             };
         }
