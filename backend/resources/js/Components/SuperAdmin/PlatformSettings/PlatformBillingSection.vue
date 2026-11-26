@@ -1,8 +1,10 @@
 <script setup>
-import { Landmark, Smartphone, UserRound, Percent, Hourglass } from 'lucide-vue-next';
+import { ref } from 'vue';
+import { Hourglass, Landmark, Percent } from 'lucide-vue-next';
 import DashboardSectionCard from '../../Common/DashboardSectionCard.vue';
 import BaseInput from '../../Form/BaseInput.vue';
-import BaseTextarea from '../../Form/BaseTextarea.vue';
+import PaymentMethodCard from './PaymentMethodCard.vue';
+import PaymentMethodPreview from './PaymentMethodPreview.vue';
 
 defineProps({
   form: { type: Object, required: true },
@@ -11,96 +13,78 @@ defineProps({
 });
 
 defineEmits(['update:field']);
+
+const METHODS = ['vodafone_cash', 'instapay', 'bank_transfer'];
+// The card being edited: its preview sits beside the cards (desktop) or under the card (phone/tablet).
+const activeMethod = ref(METHODS[0]);
 </script>
 
 <template>
-  <DashboardSectionCard
-    :title="$t('billing.console.settings.title')"
-    :subtitle="$t('billing.console.settings.subtitle')"
-    :icon="Landmark"
-    icon-bg="bg-emerald-100 dark:bg-emerald-500/15"
-    icon-color="text-emerald-600 dark:text-emerald-400"
-    wrapper-class="shadow-sm dark:shadow-xl"
-  >
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <BaseInput
-        :model-value="form.billing_instapay_address"
-        dir="ltr"
-        :leading-icon="Landmark"
-        :label="$t('billing.console.settings.instapay_address')"
-        :placeholder="$t('billing.console.settings.instapay_address_placeholder')"
-        :hint="$t('billing.console.settings.shown_to_shops_hint')"
-        :error="errors.billing_instapay_address"
-        :readonly="readonly"
-        maxlength="100"
-        @update:model-value="$emit('update:field', 'billing_instapay_address', $event)"
-      />
-      <BaseInput
-        :model-value="form.billing_vodafone_cash_number"
-        type="tel"
-        dir="ltr"
-        inputmode="tel"
-        :leading-icon="Smartphone"
-        :label="$t('billing.console.settings.vodafone_cash_number')"
-        :placeholder="$t('billing.console.settings.vodafone_cash_number_placeholder')"
-        :hint="$t('billing.console.settings.shown_to_shops_hint')"
-        :error="errors.billing_vodafone_cash_number"
-        :readonly="readonly"
-        maxlength="30"
-        @update:model-value="$emit('update:field', 'billing_vodafone_cash_number', $event)"
-      />
-      <BaseInput
-        :model-value="form.billing_account_name"
-        :leading-icon="UserRound"
-        :label="$t('billing.console.settings.account_name')"
-        :placeholder="$t('billing.console.settings.account_name_placeholder')"
-        :hint="$t('billing.console.settings.shown_to_shops_hint')"
-        :error="errors.billing_account_name"
-        :readonly="readonly"
-        maxlength="100"
-        @update:model-value="$emit('update:field', 'billing_account_name', $event)"
-      />
-      <BaseInput
-        :model-value="form.billing_tax_rate"
-        dir="ltr"
-        inputmode="decimal"
-        :leading-icon="Percent"
-        :label="$t('billing.console.settings.tax_rate')"
-        :placeholder="$t('billing.console.settings.tax_rate_placeholder')"
-        :hint="$t('billing.console.settings.tax_rate_hint')"
-        :error="errors.billing_tax_rate"
-        :readonly="readonly"
-        maxlength="7"
-        @update:model-value="$emit('update:field', 'billing_tax_rate', $event)"
-      />
-      <BaseInput
-        :model-value="form.signup_trial_days"
-        type="number"
-        dir="ltr"
-        inputmode="numeric"
-        min="1"
-        max="90"
-        :leading-icon="Hourglass"
-        :label="$t('billing.console.settings.signup_trial_days')"
-        :placeholder="$t('billing.console.settings.signup_trial_days_placeholder')"
-        :hint="$t('billing.console.settings.signup_trial_days_hint')"
-        :error="errors.signup_trial_days"
-        :readonly="readonly"
-        data-testid="platform-signup-trial-days"
-        @update:model-value="$emit('update:field', 'signup_trial_days', $event)"
-      />
-      <BaseTextarea
-        :model-value="form.billing_payment_note"
-        wrapper-class="sm:col-span-2"
-        rows="3"
-        :label="$t('billing.console.settings.payment_note')"
-        :placeholder="$t('billing.console.settings.payment_note_placeholder')"
-        :hint="$t('billing.console.settings.shown_to_shops_hint')"
-        :error="errors.billing_payment_note"
-        :readonly="readonly"
-        maxlength="500"
-        @update:model-value="$emit('update:field', 'billing_payment_note', $event)"
-      />
-    </div>
-  </DashboardSectionCard>
+  <div class="space-y-6">
+    <DashboardSectionCard
+      :title="$t('billing.console.settings.methods_title')"
+      :subtitle="$t('billing.console.settings.methods_subtitle')"
+      :icon="Landmark"
+      icon-bg="bg-emerald-100 dark:bg-emerald-500/15"
+      icon-color="text-emerald-600 dark:text-emerald-400"
+      wrapper-class="shadow-sm dark:shadow-xl"
+    >
+      <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div class="space-y-4">
+          <PaymentMethodCard
+            v-for="method in METHODS"
+            :key="method"
+            :method="method"
+            :form="form"
+            :errors="errors"
+            :readonly="readonly"
+            :active="activeMethod === method"
+            @focus-method="activeMethod = $event"
+            @update:field="(key, value) => $emit('update:field', key, value)"
+          />
+        </div>
+        <PaymentMethodPreview class="hidden lg:block lg:sticky lg:top-20" :method="activeMethod" :form="form" />
+      </div>
+    </DashboardSectionCard>
+
+    <DashboardSectionCard
+      :title="$t('billing.console.settings.general_title')"
+      :icon="Percent"
+      icon-bg="bg-indigo-100 dark:bg-indigo-500/15"
+      icon-color="text-indigo-600 dark:text-indigo-400"
+      wrapper-class="shadow-sm dark:shadow-xl"
+    >
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <BaseInput
+          :model-value="form.billing_tax_rate"
+          dir="ltr"
+          inputmode="decimal"
+          :leading-icon="Percent"
+          :label="$t('billing.console.settings.tax_rate')"
+          :placeholder="$t('billing.console.settings.tax_rate_placeholder')"
+          :hint="$t('billing.console.settings.tax_rate_hint')"
+          :error="errors.billing_tax_rate"
+          :readonly="readonly"
+          maxlength="7"
+          @update:model-value="$emit('update:field', 'billing_tax_rate', $event)"
+        />
+        <BaseInput
+          :model-value="form.signup_trial_days"
+          type="number"
+          dir="ltr"
+          inputmode="numeric"
+          min="1"
+          max="90"
+          :leading-icon="Hourglass"
+          :label="$t('billing.console.settings.signup_trial_days')"
+          :placeholder="$t('billing.console.settings.signup_trial_days_placeholder')"
+          :hint="$t('billing.console.settings.signup_trial_days_hint')"
+          :error="errors.signup_trial_days"
+          :readonly="readonly"
+          data-testid="platform-signup-trial-days"
+          @update:model-value="$emit('update:field', 'signup_trial_days', $event)"
+        />
+      </div>
+    </DashboardSectionCard>
+  </div>
 </template>

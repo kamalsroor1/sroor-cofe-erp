@@ -183,6 +183,9 @@
     <!-- SELL-02: permanent subscription strip (not on the POS selling screen) -->
     <SubscriptionBanner v-if="!isPosView" />
 
+    <!-- #232: 48-hour temporary access (own state, same slot) -->
+    <TemporaryAccessBanner v-if="!isPosView" />
+
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- 🖥️ MAIN BODY: DYNAMIC SIDEBAR + STAGE                        -->
     <!-- ═══════════════════════════════════════════════════════════ -->
@@ -513,6 +516,7 @@ import DesktopSidebar from '../Components/Navigation/DesktopSidebar.vue';
 import BrandMark from '../Components/Brand/BrandMark.vue';
 import OfflineBanner from '../Components/Layout/OfflineBanner.vue';
 import SubscriptionBanner from '../Components/Layout/SubscriptionBanner.vue';
+import TemporaryAccessBanner from '../Components/Layout/TemporaryAccessBanner.vue';
 import NotificationsBell from '../Components/Layout/NotificationsBell.vue';
 import StoreShiftSwitcher from '../Components/Layout/StoreShiftSwitcher.vue';
 import Swal from 'sweetalert2';

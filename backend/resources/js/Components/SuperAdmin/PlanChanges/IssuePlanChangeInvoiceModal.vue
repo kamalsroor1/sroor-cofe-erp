@@ -1,9 +1,9 @@
 <script setup>
 import { computed, reactive, watch } from 'vue';
-import { CheckCircle2, Printer } from 'lucide-vue-next';
+import { CheckCircle2, Lock, Printer } from 'lucide-vue-next';
 import AppModal from '../../Common/AppModal.vue';
 import BaseButton from '../../Common/BaseButton.vue';
-import BaseCheckbox from '../../Form/BaseCheckbox.vue';
+import BaseSwitch from '../../Form/BaseSwitch.vue';
 import BaseInput from '../../Form/BaseInput.vue';
 import BaseTextarea from '../../Form/BaseTextarea.vue';
 import { useFormatters } from '../../../Composables/useFormatters';
@@ -28,7 +28,6 @@ const form = reactive({
   unit_price: '',
   notes: '',
   with_renewal: false,
-  release_founder_hold: false,
 });
 
 const isAddon = computed(() => props.request?.kind.value === 'addon');
@@ -41,8 +40,12 @@ const currentPrice = computed(() => priceOf(props.request?.current_plan));
 const requestedPrice = computed(() => priceOf(props.request?.requested_plan));
 // #232: a trial / expired shop has no term to price a difference on: the server issues a full plan invoice.
 const fullPlanInvoice = computed(() => !isAddon.value && props.request?.tenant?.has_paid_term === false);
-// #232 C: a request held for the owner's founder-price review is issued only with an explicit release.
+// #232 C / UI 4.3: a request held for the owner's founder-price review is issued only after the operator types the
+// agreed amount; sending it releases the hold. (A shop with no paid term gets the list-price plan invoice: the API
+// refuses a typed amount there, so no amount is asked.)
 const founderHeld = computed(() => !isAddon.value && !!props.request?.founder_review_held_at);
+const needsAgreedAmount = computed(() => founderHeld.value && !fullPlanInvoice.value);
+const canSubmit = computed(() => !needsAgreedAmount.value || form.amount.trim() !== '');
 
 const firstError = (key) => props.errors[key]?.[0];
 
@@ -56,14 +59,13 @@ watch(
       unit_price: '',
       notes: '',
       with_renewal: false,
-      release_founder_hold: false,
     });
   }
 );
 
 const onSubmit = () => {
   const notes = form.notes.trim() || undefined;
-  const release = founderHeld.value && form.release_founder_hold ? { release_founder_hold: true } : {};
+  const release = founderHeld.value ? { release_founder_hold: true } : {};
   emit(
     'submit',
     isAddon.value
@@ -175,8 +177,14 @@ const onSubmit = () => {
             v-model="form.amount"
             dir="ltr"
             inputmode="decimal"
-            :label="$t('billing.console.plan_changes.issue.amount')"
-            :hint="$t('billing.console.plan_changes.issue.amount_hint')"
+            :label="
+              founderHeld ? $t('billing.console.verify.agreed_amount') : $t('billing.console.plan_changes.issue.amount')
+            "
+            :hint="
+              founderHeld
+                ? $t('billing.console.verify.agreed_amount_hint')
+                : $t('billing.console.plan_changes.issue.amount_hint')
+            "
             :error="firstError('amount')"
             required
           />
@@ -187,22 +195,22 @@ const onSubmit = () => {
             :placeholder="$t('billing.console.plan_changes.issue.description_placeholder')"
             :error="firstError('description')"
           />
-          <BaseCheckbox
+          <BaseSwitch
             v-model="form.with_renewal"
+            role="switch"
             :label="$t('billing.console.plan_changes.issue.with_renewal')"
             :error="firstError('with_renewal')"
           />
         </template>
-        <template v-if="founderHeld">
-          <p class="text-xs font-bold text-amber-600 dark:text-amber-400">
-            {{ $t('billing.console.plan_changes.issue.founder_held_note') }}
-          </p>
-          <BaseCheckbox
-            v-model="form.release_founder_hold"
-            :label="$t('billing.console.plan_changes.issue.release_founder_hold')"
-            :error="firstError('release_founder_hold')"
-          />
-        </template>
+        <p
+          v-if="founderHeld"
+          class="flex items-start gap-2 rounded-xl border border-amber-500 bg-amber-50 p-3 text-xs font-bold text-amber-900 dark:bg-amber-500/10 dark:text-amber-200"
+          role="status"
+          data-testid="plan-change-founder-note"
+        >
+          <Lock class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>{{ $t('billing.console.plan_changes.issue.founder_held_note') }}</span>
+        </p>
       </template>
 
       <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -246,7 +254,12 @@ const onSubmit = () => {
           type="submit"
           variant="primary"
           :loading="isSubmitting"
-          :label="$t('billing.console.plan_changes.issue.submit')"
+          :disabled="!canSubmit"
+          :label="
+            founderHeld
+              ? $t('billing.console.verify.review_and_issue')
+              : $t('billing.console.plan_changes.issue.submit')
+          "
         />
       </div>
     </form>

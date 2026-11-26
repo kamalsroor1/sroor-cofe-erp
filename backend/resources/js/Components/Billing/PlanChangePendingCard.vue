@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { Hourglass, CalendarClock, X } from 'lucide-vue-next';
+import { Hourglass, CalendarClock, Lock, X } from 'lucide-vue-next';
 import BaseButton from '@/Components/Common/BaseButton.vue';
 import { useFormatters } from '@/Composables/useFormatters';
 
@@ -19,6 +19,8 @@ const { formatDate } = useFormatters();
 
 // PLAN-13: a downgrade to the free plan waits for the end of the term instead of an invoice from support.
 const isScheduled = computed(() => props.request.status?.value === 'scheduled');
+// #232: held for the manual founder-price review: no invoice until support confirms the price.
+const isHeld = computed(() => !!props.request.founder_review_held_at);
 const hintKey = computed(() =>
   props.request.kind.value === 'plan_change' && !props.hasPaidTerm
     ? 'subscription.billing.requests.pending.hint_plan_invoice'
@@ -33,7 +35,7 @@ const hintKey = computed(() =>
   >
     <div class="flex items-start gap-2.5 min-w-0">
       <component
-        :is="isScheduled ? CalendarClock : Hourglass"
+        :is="isScheduled ? CalendarClock : isHeld ? Lock : Hourglass"
         class="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400"
       />
       <div class="min-w-0 space-y-0.5">
@@ -41,7 +43,9 @@ const hintKey = computed(() =>
           {{
             isScheduled
               ? $t('subscription.downgrade.scheduled_title')
-              : `${$t('subscription.billing.requests.pending.title')} - ${request.kind.label}`
+              : isHeld
+                ? $t('subscription.billing.change.held_title')
+                : `${$t('subscription.billing.requests.pending.title')} - ${request.kind.label}`
           }}
         </p>
         <p class="text-sm font-black text-slate-900 dark:text-white">

@@ -10,6 +10,7 @@ import versionData from '../version.json';
 import BrandMark from '../Components/Brand/BrandMark.vue';
 import DynamicIcon from '../Components/Common/DynamicIcon.vue';
 import StepUpPrompt from '../Components/SuperAdmin/StepUpPrompt.vue';
+import NotificationBell from '../Components/SuperAdmin/Notifications/NotificationBell.vue';
 import {
   BarChart3,
   Store,
@@ -196,6 +197,7 @@ const handleLogout = async () => {
 
       <!-- Top Actions -->
       <div class="flex items-center gap-2 sm:gap-3">
+        <NotificationBell v-if="centralAuth.can(CENTRAL_PERMISSIONS.billingView)" />
         <div class="text-end hidden md:block ps-3 border-s border-slate-200 dark:border-slate-800">
           <div class="text-xs font-black text-slate-900 dark:text-white">
             {{ user?.name || $t('super.platform_admin') }}

@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { Check, FileText, X } from 'lucide-vue-next';
+import { Check, FileText, Lock, X } from 'lucide-vue-next';
 import BaseButton from '../../Common/BaseButton.vue';
 import StatusBadge from '../../Common/StatusBadge.vue';
 import { useFormatters } from '../../../Composables/useFormatters';
@@ -18,6 +18,7 @@ const STATUS_VARIANTS = { pending: 'warning', invoiced: 'success', rejected: 'da
 
 const isAddon = computed(() => props.request.kind.value === 'addon');
 const isPending = computed(() => props.request.status.value === 'pending');
+const isHeld = computed(() => isPending.value && !isAddon.value && !!props.request.founder_review_held_at);
 </script>
 
 <template>
@@ -32,7 +33,17 @@ const isPending = computed(() => props.request.status.value === 'pending');
           {{ request.kind.label }} - {{ formatDateTime(request.created_at) }}
         </p>
       </div>
-      <StatusBadge :label="request.status.label" :variant="STATUS_VARIANTS[request.status.value] || 'slate'" />
+      <div class="flex flex-wrap items-center gap-2">
+        <span
+          v-if="isHeld"
+          class="inline-flex items-center gap-1.5 rounded-full border border-amber-500 bg-amber-50 px-2.5 py-1 text-xs font-black text-amber-900 dark:bg-amber-500/10 dark:text-amber-200"
+          data-testid="plan-change-held-pill"
+        >
+          <Lock class="h-3.5 w-3.5" aria-hidden="true" />
+          {{ $t('billing.console.verify.held_price') }}
+        </span>
+        <StatusBadge :label="request.status.label" :variant="STATUS_VARIANTS[request.status.value] || 'slate'" />
+      </div>
     </header>
 
     <p class="text-sm font-black text-slate-900 dark:text-white">
@@ -94,7 +105,9 @@ const isPending = computed(() => props.request.status.value === 'pending');
     <footer class="flex flex-wrap gap-2 pt-1">
       <template v-if="canManage && isPending">
         <BaseButton variant="success" :icon="Check" @click="$emit('issue', request)">
-          {{ $t('billing.console.plan_changes.actions.issue') }}
+          {{
+            isHeld ? $t('billing.console.verify.review_and_issue') : $t('billing.console.plan_changes.actions.issue')
+          }}
         </BaseButton>
         <BaseButton variant="danger" :icon="X" @click="$emit('reject', request)">
           {{ $t('billing.console.plan_changes.actions.reject') }}

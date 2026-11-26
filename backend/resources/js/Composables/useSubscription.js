@@ -1,12 +1,12 @@
 import { ref } from 'vue';
-import DarkSwal from '../helpers/alert';
 import api from '@/Services/api';
 import { trans } from '@/helpers/trans';
 import { notifySuccess, notifyError } from '@/helpers/alert';
+import { publishTemporaryAccess } from '@/Composables/useTemporaryAccess';
 
 const INVOICES_PER_PAGE = 50;
 
-/** Subscription & billing page state: plan/usage, invoice list, renewal request and payment submit. */
+/** Subscription & billing page state: plan/usage, invoice list, renewal invoice and payment submit. */
 export function useSubscription() {
     const subscription = ref(null);
     const invoices = ref([]);
@@ -19,6 +19,7 @@ export function useSubscription() {
             api.get('/billing/invoices', { params: { per_page: INVOICES_PER_PAGE } }),
         ]);
         subscription.value = subRes.data.data;
+        publishTemporaryAccess(subRes.data.data);
         invoices.value = invRes.data.data || [];
     };
 
@@ -56,30 +57,8 @@ export function useSubscription() {
         }
     };
 
-    /** Asks for the cycle (SweetAlert), then issues or re-opens the renewal invoice; returns its id or null. */
-    const renew = async () => {
-        const { value: cycle, isConfirmed } = await DarkSwal.fire({
-            title: trans('subscription.billing.renewal.dialog_title'),
-            text: trans('subscription.billing.renewal.dialog_text'),
-            input: 'radio',
-            inputOptions: {
-                monthly: trans('billing.billing_cycle.monthly'),
-                yearly: trans('billing.billing_cycle.yearly'),
-            },
-            inputValue: subscription.value?.subscription?.billing_cycle?.value === 'yearly' ? 'yearly' : 'monthly',
-            inputValidator: (value) => (value ? null : trans('subscription.billing.renewal.cycle_required')),
-            showCancelButton: true,
-            confirmButtonText: trans('subscription.billing.renewal.confirm'),
-            cancelButtonText: trans('common.cancel'),
-            reverseButtons: true,
-        });
-        if (!isConfirmed) return null;
-        const result = await requestRenewal(cycle);
-        return result ? result.invoiceId : null;
-    };
-
-    /** Returns { ok, message, remaining? }: server 422 text is handed back for inline display. */
-    const submitPayment = async (invoiceId, form) => {
+    /** Returns { ok, message, fields, networkFailed, canceled }: server 422 text is handed back for inline display. */
+    const submitPayment = async (invoiceId, form, { onProgress, signal } = {}) => {
         const body = new FormData();
         body.append('receipt', form.receipt);
         body.append('method', form.method);
@@ -87,12 +66,24 @@ export function useSubscription() {
         body.append('payer_reference', form.payer_reference);
         body.append('paid_at', form.paid_at);
         try {
-            const res = await api.post(`/billing/invoices/${invoiceId}/payments`, body);
+            const res = await api.post(`/billing/invoices/${invoiceId}/payments`, body, {
+                signal,
+                onUploadProgress: (event) => {
+                    if (onProgress && event.total)
+                        onProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)));
+                },
+            });
             notifySuccess(res.data.message);
             await refreshInvoices();
             return { ok: true };
         } catch (e) {
-            return { ok: false, message: e.userMessage, fields: e.response?.data?.errors || {} };
+            return {
+                ok: false,
+                message: e.userMessage,
+                fields: e.response?.data?.errors || {},
+                canceled: e.code === 'ERR_CANCELED',
+                networkFailed: !e.response && e.code !== 'ERR_CANCELED',
+            };
         }
     };
 
@@ -109,5 +100,15 @@ export function useSubscription() {
         }
     };
 
-    return { subscription, invoices, isLoading, error, load, renew, refreshInvoices, submitPayment, cancelPayment };
+    return {
+        subscription,
+        invoices,
+        isLoading,
+        error,
+        load,
+        requestRenewal,
+        refreshInvoices,
+        submitPayment,
+        cancelPayment,
+    };
 }

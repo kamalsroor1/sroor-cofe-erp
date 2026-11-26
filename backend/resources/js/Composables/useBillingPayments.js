@@ -1,42 +1,34 @@
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import centralApi from '../Services/centralApi';
 import { useCentralAuthStore } from '../stores/centralAuth';
 import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
-import DarkSwal, {
-    DANGER_CONFIRM_BUTTON_CLASS,
-    DARK_SWAL_CUSTOM_CLASS,
-    PRIMARY_CONFIRM_BUTTON_CLASS,
-    notifyError,
-    notifySuccess,
-    notifyWarning,
-} from '../helpers/alert';
+import { notifyWarning } from '../helpers/alert';
+import { nextSelection, paymentIdFromQuery } from '../helpers/billingReview';
 import { useTrans } from './useTrans';
-import { useMoney } from './useMoney';
 import { useBillingPendingCount } from './useBillingPendingCount';
-import { fromDatetimeLocal, toDatetimeLocal } from '../helpers/planEditor';
+import { useCompactViewport } from './useMediaQuery';
 
 /**
- * Manual payment review queue (super-admin console), Api\Central\BillingReviewController:
- *   GET  /super-admin/billing/payments?status=&page=&per_page=
- *   GET  /super-admin/billing/payments/{id}/receipt        -> { url, expires_at } (signed, 5 min)
- *   POST /super-admin/billing/payments/{id}/verify {transferred_at} | reject {reason}
- * #232: transferred_at = the ACTUAL transfer date-time from the receipt (required, not in the future),
- * typed in browser local time and sent as ISO 8601 with the browser offset (same as the plan editor).
- * Step-up (fresh 2FA) on writes is handled by centralApi.
+ * Payment review workspace (super-admin console), Api\Central\BillingReviewController:
+ *   GET /super-admin/billing/payments?status=&page=&per_page=
+ * Owns the queue, the selection (mirrored in `?payment=` so e-mail / bell links open the detail) and the refresh
+ * after a decision. The decision form lives in useVerifyDecision, the receipt in useBillingReceipt.
  */
 
 const ENDPOINT = '/super-admin/billing/payments';
 const PER_PAGE = 20;
+const LOCATE_PER_PAGE = 100;
 
 export const PAYMENT_TABS = Object.freeze(['pending', 'verified', 'rejected']);
-export const REJECT_REASON_MIN = 3;
-export const REJECT_REASON_MAX = 500;
 
 export function useBillingPayments() {
     const { t } = useTrans();
-    const { formatMoney } = useMoney();
+    const route = useRoute();
+    const router = useRouter();
     const centralAuth = useCentralAuthStore();
-    const { refreshPendingCount } = useBillingPendingCount();
+    const { pendingCount, refreshPendingCount } = useBillingPendingCount();
+    const compact = useCompactViewport();
 
     const status = ref('pending');
     const page = ref(1);
@@ -44,21 +36,33 @@ export function useBillingPayments() {
     const meta = ref({});
     const isLoading = ref(true);
     const loadError = ref('');
-    const busyId = ref(null);
-
-    const receiptPayment = ref(null);
-    const receipt = ref({ state: 'idle', objectUrl: '', kind: '' });
+    const selectedId = ref(null);
 
     const canManage = computed(() => centralAuth.can(CENTRAL_PERMISSIONS.billingManage));
     const lastPage = computed(() => Number(meta.value?.last_page) || 1);
+    const total = computed(() => Number(meta.value?.total) || payments.value.length);
+    const selected = computed(() => payments.value.find((item) => item.id === selectedId.value) || null);
+
+    const syncQuery = (id) => {
+        const query = { ...route.query };
+        if (id) query.payment = String(id);
+        else delete query.payment;
+        router.replace({ query });
+    };
+
+    const select = (id) => {
+        selectedId.value = id;
+        syncQuery(id);
+    };
+
+    const fetchStatus = (state, pageNumber, perPage) =>
+        centralApi.get(ENDPOINT, { params: { status: state, page: pageNumber, per_page: perPage } });
 
     const fetchPayments = async () => {
         isLoading.value = true;
         loadError.value = '';
         try {
-            const response = await centralApi.get(ENDPOINT, {
-                params: { status: status.value, page: page.value, per_page: PER_PAGE },
-            });
+            const response = await fetchStatus(status.value, page.value, PER_PAGE);
             payments.value = response.data?.data || [];
             meta.value = response.data?.meta || {};
         } catch (error) {
@@ -67,189 +71,100 @@ export function useBillingPayments() {
         } finally {
             isLoading.value = false;
         }
+        if (selectedId.value && !selected.value) selectedId.value = null;
+        // Desktop shows the detail pane next to the queue: never leave it empty while rows exist.
+        if (!selectedId.value && !compact.value && payments.value.length && !paymentIdFromQuery(route.query.payment))
+            selectedId.value = payments.value[0].id;
     };
 
     const setStatus = (next) => {
         if (next === status.value) return;
         status.value = next;
         page.value = 1;
+        selectedId.value = null;
+        syncQuery(null);
         fetchPayments();
     };
 
     const goToPage = (next) => {
         if (next < 1 || next > lastPage.value || next === page.value) return;
         page.value = next;
+        selectedId.value = null;
         fetchPayments();
     };
 
-    const describe = (payment) => ({
-        tenant: payment.tenant?.name || '',
-        amount: formatMoney(payment.amount, 3),
-        currency: payment.currency || '',
-        invoice: payment.invoice_number || '',
-    });
-
-    const afterReview = async (message) => {
-        notifySuccess(message);
-        // A page that just lost its last row would be empty: step back one page.
-        if (payments.value.length === 1 && page.value > 1) page.value -= 1;
-        await Promise.all([fetchPayments(), refreshPendingCount()]);
+    // The API has no single-payment read or id filter: a deep link looks in the first 100 rows of each tab.
+    const locate = async (id) => {
+        for (const state of PAYMENT_TABS) {
+            try {
+                const response = await fetchStatus(state, 1, LOCATE_PER_PAGE);
+                if ((response.data?.data || []).some((item) => item.id === id)) {
+                    status.value = state;
+                    page.value = 1;
+                    selectedId.value = id;
+                    return true;
+                }
+            } catch {
+                return false;
+            }
+        }
+        return false;
     };
 
-    const reportFailure = (error) => {
-        if (error.stepUpCancelled) {
-            notifyWarning(error.userMessage);
+    const openDeepLink = async () => {
+        const id = paymentIdFromQuery(route.query.payment);
+        if (!id) return;
+        selectedId.value = id;
+        if (payments.value.some((item) => item.id === id)) return;
+        if (await locate(id)) {
+            await fetchPayments();
             return;
         }
-        if (error.response?.status === 403 && !error.response?.data?.error_code) return;
-        notifyError(t('billing.console.queue.action_failed'), error.userMessage || '');
+        selectedId.value = null;
+        syncQuery(null);
+        notifyWarning(t('billing.console.verify.deep_link_not_found'));
     };
 
-    // #232: the verify dialog asks for the actual transfer date-time (no default: read it off the receipt).
-    const askTransferredAt = async (payment) => {
-        const result = await DarkSwal.fire({
-            title: t('billing.console.queue.verify_title'),
-            text: t('billing.console.queue.verify_text', describe(payment)),
-            icon: 'question',
-            input: 'datetime-local',
-            inputLabel: t('billing.console.queue.transferred_at_label'),
-            inputAttributes: { max: toDatetimeLocal(new Date()), required: 'required' },
-            footer: t('billing.console.queue.transferred_at_hint'),
-            showCancelButton: true,
-            confirmButtonText: t('billing.console.queue.verify_confirm'),
-            cancelButtonText: t('common.cancel'),
-            reverseButtons: true,
-            customClass: { ...DARK_SWAL_CUSTOM_CLASS, confirmButton: PRIMARY_CONFIRM_BUTTON_CLASS },
-            inputValidator: (value) => {
-                const iso = fromDatetimeLocal(value);
-                if (!iso) return t('billing.console.queue.transferred_at_required');
-                if (Date.parse(iso) > Date.now()) return t('billing.console.queue.transferred_at_future');
-                return undefined;
-            },
-        });
-        return result.isConfirmed ? fromDatetimeLocal(result.value) : null;
+    // After a decision: reload and move to the neighbour row (desktop) or back to the queue (compact).
+    const afterDecision = async (decidedId) => {
+        const neighbour = nextSelection(payments.value, decidedId);
+        if (payments.value.length === 1 && page.value > 1) page.value -= 1;
+        selectedId.value = !compact.value && neighbour ? neighbour.id : null;
+        await Promise.all([fetchPayments(), refreshPendingCount()]);
+        syncQuery(selectedId.value);
     };
 
-    const verifyPayment = async (payment) => {
-        if (!canManage.value || busyId.value) return;
-        const transferredAt = await askTransferredAt(payment);
-        if (!transferredAt) return;
-        busyId.value = payment.id;
-        try {
-            const response = await centralApi.post(`${ENDPOINT}/${payment.id}/verify`, {
-                transferred_at: transferredAt,
-            });
-            await afterReview(response.data?.message || '');
-        } catch (error) {
-            reportFailure(error);
-        } finally {
-            busyId.value = null;
+    // A notification clicked while the page is already open.
+    watch(
+        () => route.query.payment,
+        (value) => {
+            const id = paymentIdFromQuery(value);
+            if (id && id !== selectedId.value) openDeepLink();
         }
-    };
+    );
 
-    const askRejectReason = async (payment) => {
-        const result = await DarkSwal.fire({
-            title: t('billing.console.queue.reject_title'),
-            text: t('billing.console.queue.reject_text', describe(payment)),
-            icon: 'warning',
-            input: 'textarea',
-            inputLabel: t('billing.console.queue.reason_label'),
-            inputPlaceholder: t('billing.console.queue.reason_placeholder'),
-            inputAttributes: { maxlength: String(REJECT_REASON_MAX) },
-            showCancelButton: true,
-            confirmButtonText: t('billing.console.queue.reject_confirm'),
-            cancelButtonText: t('common.cancel'),
-            reverseButtons: true,
-            customClass: { ...DARK_SWAL_CUSTOM_CLASS, confirmButton: DANGER_CONFIRM_BUTTON_CLASS },
-            inputValidator: (value) => {
-                const length = String(value || '').trim().length;
-                if (length < REJECT_REASON_MIN) return t('billing.console.queue.reason_required');
-                if (length > REJECT_REASON_MAX) return t('billing.console.queue.reason_too_long');
-                return undefined;
-            },
-        });
-        return result.isConfirmed ? String(result.value).trim() : null;
-    };
-
-    const rejectPayment = async (payment) => {
-        if (!canManage.value || busyId.value) return;
-        const reason = await askRejectReason(payment);
-        if (!reason) return;
-        busyId.value = payment.id;
-        try {
-            const response = await centralApi.post(`${ENDPOINT}/${payment.id}/reject`, { reason });
-            await afterReview(response.data?.message || '');
-        } catch (error) {
-            reportFailure(error);
-        } finally {
-            busyId.value = null;
-        }
-    };
-
-    const releaseReceipt = () => {
-        if (receipt.value.objectUrl) URL.revokeObjectURL(receipt.value.objectUrl);
-    };
-
-    const closeReceipt = () => {
-        releaseReceipt();
-        receiptPayment.value = null;
-        receipt.value = { state: 'idle', objectUrl: '', kind: '' };
-    };
-
-    // The signed link is single-use: minted and consumed once here, never exposed to the UI.
-    // Retry re-mints a fresh link; "open in new tab" uses the blob URL. The link is fetched on open; the file is read once into a blob so the viewer can tell an
-    // image from a PDF by its real content type and keep working after the 5-minute link expires.
-    const openReceipt = async (payment) => {
-        closeReceipt();
-        receiptPayment.value = payment;
-        receipt.value = { state: 'loading', objectUrl: '', kind: '' };
-        const target = payment.id;
-        try {
-            const link = await centralApi.get(`${ENDPOINT}/${payment.id}/receipt`);
-            const url = link.data?.data?.url;
-            const file = await fetch(url);
-            if (!file.ok) throw new Error('receipt');
-            const blob = await file.blob();
-            const kind = blob.type === 'application/pdf' ? 'pdf' : blob.type.startsWith('image/') ? 'image' : '';
-            if (receiptPayment.value?.id !== target) return;
-            if (!kind) throw new Error('receipt');
-            receipt.value = { state: 'ready', objectUrl: URL.createObjectURL(blob), kind };
-        } catch (error) {
-            if (receiptPayment.value?.id !== target) return;
-            receipt.value = { state: 'error', objectUrl: '', kind: '' };
-            if (error?.userMessage) notifyError(t('billing.console.receipt.load_failed'), error.userMessage);
-        }
-    };
-
-    const retryReceipt = () => {
-        if (receiptPayment.value) openReceipt(receiptPayment.value);
-    };
-
-    onMounted(() => {
-        fetchPayments();
+    onMounted(async () => {
         refreshPendingCount();
+        await fetchPayments();
+        await openDeepLink();
     });
-
-    onBeforeUnmount(releaseReceipt);
 
     return {
         status,
         page,
         lastPage,
+        total,
         payments,
         isLoading,
         loadError,
-        busyId,
+        selectedId,
+        selected,
         canManage,
-        receiptPayment,
-        receipt,
+        pendingCount,
         fetchPayments,
         setStatus,
         goToPage,
-        verifyPayment,
-        rejectPayment,
-        openReceipt,
-        retryReceipt,
-        closeReceipt,
+        select,
+        afterDecision,
     };
 }

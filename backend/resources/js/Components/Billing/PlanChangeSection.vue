@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted, toRef } from 'vue';
+import BillingChangePanel from './BillingChangePanel.vue';
 import PlanChangePendingCard from './PlanChangePendingCard.vue';
 import PlanChangeRequestModal from './PlanChangeRequestModal.vue';
 import PlanChangeRequestsList from './PlanChangeRequestsList.vue';
@@ -9,9 +10,10 @@ import { usePlanChangeRequests } from '@/Composables/usePlanChangeRequests';
 const props = defineProps({
   subscription: { type: Object, required: true },
   open: { type: Boolean, default: false },
+  renewing: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['update:open', 'changed', 'open-invoice']);
+const emit = defineEmits(['update:open', 'changed', 'open-invoice', 'renew']);
 
 const {
   requests,
@@ -32,6 +34,10 @@ const {
 const onSubmit = async (payload) => {
   if (await submit(payload)) emit('update:open', false);
 };
+
+// #232: no self-service invoice endpoint for a plan change yet, so the panel's primary action files the
+// request support turns into an invoice (the pending card below is the "waiting for invoice" state).
+const onRequestPlan = (payload) => submit({ kind: 'plan_change', ...payload });
 
 // PLAN-13: the downgrade request lands in the history list too, so re-read it together with the summary.
 const onDowngraded = async () => {
@@ -57,6 +63,15 @@ onMounted(loadRequests);
       :request="pendingAddon"
       :busy="cancellingId === pendingAddon.id"
       @cancel="cancel"
+    />
+
+    <BillingChangePanel
+      :subscription="subscription"
+      :has-pending-request="!!pendingPlanChange"
+      :busy="isSubmitting || renewing"
+      @request-plan="onRequestPlan"
+      @renew="$emit('renew', $event)"
+      @open-invoice="$emit('open-invoice', $event)"
     />
 
     <SubscriptionDowngradeCard :subscription="subscription" @changed="onDowngraded" />

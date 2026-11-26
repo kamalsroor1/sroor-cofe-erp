@@ -1,4 +1,4 @@
-import { rowUsageLevel, usageLevel } from './planLimit';
+import { rowUsageLevel, usageLevel } from './planLimit.js';
 
 export const RECEIPT_MAX_BYTES = 5 * 1024 * 1024;
 export const RECEIPT_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
@@ -80,10 +80,15 @@ export const compareDecimalStrings = (a, b) => {
     return fl > fr ? 1 : -1;
 };
 
-export const todayIso = () => {
-    const now = new Date();
+export const todayIso = (now = new Date()) => {
     const pad = (n) => String(n).padStart(2, '0');
     return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+};
+
+/** Current local time as a `datetime-local` value (YYYY-MM-DDTHH:mm). */
+export const nowLocalInput = (now = new Date()) => {
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${todayIso(now)}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
 };
 
 export const isPayable = (invoice) =>
