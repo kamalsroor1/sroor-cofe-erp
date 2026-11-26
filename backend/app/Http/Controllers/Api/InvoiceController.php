@@ -48,7 +48,7 @@ final class InvoiceController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('invoices.view') && ! $user->can('pos.access')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $perPage = max(1, min(200, (int) $request->input('per_page', 15)));
@@ -99,7 +99,7 @@ final class InvoiceController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('invoices.view') && ! $user->can('pos.access')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $this->findInvoiceOr404($user, $id, 'view');

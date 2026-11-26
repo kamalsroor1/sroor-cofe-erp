@@ -30,7 +30,7 @@ final class TrashController extends Controller
         /** @var User $user */
         $user = $request->user();
         if (! $user->hasRole('admin') && ! $user->can('trash.access')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $tab = (string) $request->input('tab', 'items');
@@ -56,7 +56,7 @@ final class TrashController extends Controller
         /** @var User $user */
         $user = $request->user();
         if (! $user->hasRole('admin') && ! $user->can('trash.access')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         try {
@@ -80,7 +80,7 @@ final class TrashController extends Controller
         /** @var User $user */
         $user = $request->user();
         if (! $user->hasRole('admin') && ! $user->can('trash.access')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         try {

@@ -26,7 +26,7 @@ final class RoleController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('roles.manage')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $roleId = $request->input('role_id') ? (int) $request->input('role_id') : null;

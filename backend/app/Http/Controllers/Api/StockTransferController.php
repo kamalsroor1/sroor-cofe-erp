@@ -34,7 +34,7 @@ final class StockTransferController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('stores.manage') && ! $user->can('transfers.view')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $search = trim((string) $request->input('search', ''));
@@ -121,7 +121,7 @@ final class StockTransferController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('stores.manage') && ! $user->can('transfers.view')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $this->findTransferOr404($request, $id, 'view');

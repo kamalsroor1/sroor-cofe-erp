@@ -170,7 +170,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 // SEC-1 (L5): never append spatie's message (it names the missing role/permission).
                 return response()->json([
                     'success' => false,
-                    'message' => __('auth.unauthorized'),
+                    'message' => __('auth.forbidden'),
                 ], 403);
             }
         });
@@ -184,7 +184,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 return response()->json([
                     'success' => false,
-                    'message' => $isFrameworkDefault ? __('auth.unauthorized') : $message,
+                    'message' => $isFrameworkDefault ? __('auth.forbidden') : $message,
                 ], 403);
             }
         });

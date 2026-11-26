@@ -40,7 +40,7 @@ final class SupplierController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('suppliers.manage')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $search = trim((string) $request->input('search', ''));
@@ -116,7 +116,7 @@ final class SupplierController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('suppliers.manage')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $supplier = Supplier::withCount(['purchases', 'payments'])->findOrFail($id);
@@ -168,7 +168,7 @@ final class SupplierController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('suppliers.manage') && ! $user->can('suppliers.statement')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $supplier = Supplier::findOrFail($id);
@@ -190,7 +190,7 @@ final class SupplierController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('suppliers.manage')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $supplier = Supplier::findOrFail($id);
@@ -210,7 +210,7 @@ final class SupplierController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('suppliers.manage')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $supplier = Supplier::findOrFail($id);

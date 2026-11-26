@@ -16,7 +16,7 @@
           :icon="FileUp"
           :label="$t('import.ui.import_button')"
         />
-        <FeatureGate feature="items.manage">
+        <FeatureGate v-if="authStore.can('items.create')" feature="items.manage">
           <BaseButton
             type="button"
             variant="gradient"
@@ -220,6 +220,7 @@ const fetchItems = async (page = 1) => {
 };
 
 const openCreateModal = () => {
+  if (!authStore.can('items.create')) return;
   editingItem.value = null;
   form.name = '';
   form.code = '';

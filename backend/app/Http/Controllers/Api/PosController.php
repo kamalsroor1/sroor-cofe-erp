@@ -50,7 +50,7 @@ final class PosController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('pos.access') && ! $user->can('invoices.create')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $data = $this->getPOSBootstrapDataAction->execute(
@@ -180,7 +180,7 @@ final class PosController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('pos.access') && ! $user->can('invoices.create')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $customerId = (int) $request->query('customer_id');

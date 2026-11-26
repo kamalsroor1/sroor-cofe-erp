@@ -47,6 +47,7 @@ return [
     'user_status_updated_success' => 'User status updated successfully',
     'account_disabled' => 'This account is disabled, please contact administrator',
     'unauthorized' => 'Unauthorized - Please sign in first',
+    'forbidden' => 'Not allowed: you do not have permission for this action',
     'session_expired' => 'Session expired, please sign in again',
     'tenant_not_found' => 'Store not found or cancelled.',
     'workspace_selection_title' => 'Connect to Workspace',

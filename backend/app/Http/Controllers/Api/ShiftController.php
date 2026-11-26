@@ -43,7 +43,7 @@ final class ShiftController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('daily_journal.view') && ! $user->can('pos.access')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         // STOR-2: active store (or an access-checked store_id filter); every store only for a verified `all`.
@@ -83,7 +83,7 @@ final class ShiftController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('daily_journal.view') && ! $user->can('pos.access')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $storeId = $activeStore->singleStoreId($request);
@@ -192,7 +192,7 @@ final class ShiftController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('daily_journal.view') && ! $user->can('pos.access')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $this->findShiftOr404($request, $id, 'zReport');

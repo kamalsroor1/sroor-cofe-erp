@@ -44,7 +44,7 @@ final class CustomerController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('customers.manage') && ! $user->can('pos.access') && ! $user->can('invoices.create')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $search = trim((string) $request->input('search', ''));
@@ -123,7 +123,7 @@ final class CustomerController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('customers.manage') && ! $user->can('pos.access') && ! $user->can('invoices.create')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $customer = Customer::withCount(['invoices', 'payments'])->findOrFail($id);
@@ -189,7 +189,7 @@ final class CustomerController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('customers.manage')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $customer = Customer::findOrFail($id);
@@ -210,7 +210,7 @@ final class CustomerController extends Controller
         $user = $request->user();
         // ROLE-01: deleting needs customers.delete (admin only by default), not customers.manage.
         if ($user && ! $user->hasRole('admin') && ! $user->can('customers.delete')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $customer = Customer::findOrFail($id);

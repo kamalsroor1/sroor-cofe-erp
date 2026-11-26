@@ -32,7 +32,7 @@ final class PaymentController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('daily_journal.view') && ! $user->can('customers.manage') && ! $user->can('suppliers.manage')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $type = (string) $request->input('type', 'all'); // customer, supplier, all

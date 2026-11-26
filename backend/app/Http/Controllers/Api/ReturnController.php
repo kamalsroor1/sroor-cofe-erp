@@ -35,7 +35,7 @@ final class ReturnController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('returns.manage')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $search = trim((string) $request->input('search', ''));
@@ -106,7 +106,7 @@ final class ReturnController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('returns.manage')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         if ($user instanceof User) {
@@ -149,7 +149,7 @@ final class ReturnController extends Controller
         $user = $request->user();
         // ROLE-01: a missing permission is 403 (returns.manage + returns.delete); a store denial stays 404 below.
         if ($user instanceof User && ! ReturnPolicy::canDeleteAny($user)) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         if ($user instanceof User) {

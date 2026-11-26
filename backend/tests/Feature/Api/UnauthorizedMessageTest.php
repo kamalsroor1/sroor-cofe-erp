@@ -23,12 +23,12 @@ final class UnauthorizedMessageTest extends TenantTestCase
         $this->getJson('/api/v1/_test-authorize-denial', ['X-Locale' => 'ar'])
             ->assertStatus(403)
             ->assertJsonPath('success', false)
-            ->assertJsonPath('message', __('auth.unauthorized', [], 'ar'));
+            ->assertJsonPath('message', __('auth.forbidden', [], 'ar'));
 
         $this->getJson('/api/v1/_test-authorize-denial', ['X-Locale' => 'en'])
             ->assertStatus(403)
             ->assertJsonPath('success', false)
-            ->assertJsonPath('message', __('auth.unauthorized', [], 'en'));
+            ->assertJsonPath('message', __('auth.forbidden', [], 'en'));
     }
 
     public function test_unauthorized_transfer_post_returns_translated_403(): void
@@ -40,11 +40,28 @@ final class UnauthorizedMessageTest extends TenantTestCase
         $arResponse = $this->postJson('/api/v1/transfers', [], $headers + ['X-Locale' => 'ar'])
             ->assertStatus(403);
         $this->assertNotSame('This action is unauthorized.', $arResponse->json('message'));
-        $this->assertSame(__('auth.unauthorized', [], 'ar'), $arResponse->json('message'));
+        $this->assertSame(__('auth.forbidden', [], 'ar'), $arResponse->json('message'));
 
         $enResponse = $this->postJson('/api/v1/transfers', [], $headers + ['X-Locale' => 'en'])
             ->assertStatus(403);
         $this->assertNotSame('This action is unauthorized.', $enResponse->json('message'));
-        $this->assertSame(__('auth.unauthorized', [], 'en'), $enResponse->json('message'));
+        $this->assertSame(__('auth.forbidden', [], 'en'), $enResponse->json('message'));
+    }
+
+    public function test_cashier_without_items_create_gets_permission_403_not_the_login_message(): void
+    {
+        $tenant = $this->createTenant();
+        $user = $this->createTenantUser($tenant, attributes: ['name' => 'كاشير']);
+        $headers = $this->tenantHeaders($tenant, $user);
+
+        $response = $this->postJson('/api/v1/items', [
+            'name' => 'صنف جديد',
+            'unit' => 'كجم',
+            'cost_price' => '10.000',
+            'selling_price' => '15.000',
+        ], $headers + ['X-Locale' => 'ar'])->assertStatus(403);
+
+        $this->assertSame(__('auth.forbidden', [], 'ar'), $response->json('message'));
+        $this->assertNotSame(__('auth.unauthorized', [], 'ar'), $response->json('message'));
     }
 }

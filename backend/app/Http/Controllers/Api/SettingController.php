@@ -43,7 +43,7 @@ final class SettingController extends Controller
         // R2: the settings dictionary carries secrets (Telegram bot token): settings.manage or admin only,
         // like UpdateSettingsRequest. roles.manage alone (user administration) does not read it.
         if ($user && ! $user->hasRole('admin') && ! $user->can('settings.manage')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $tenant = function_exists('tenant') ? tenant() : null;

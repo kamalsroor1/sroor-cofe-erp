@@ -149,7 +149,7 @@ final class StoreController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('stores.manage')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $store = Store::findOrFail($id);
@@ -185,7 +185,7 @@ final class StoreController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('stores.manage')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $store = Store::findOrFail($id);
@@ -205,7 +205,7 @@ final class StoreController extends Controller
         // SEC-1 (M6): branch stock is an items.view read (admin passes through Gate::before).
         $user = $request->user();
         if (! $user instanceof User || ! $user->can('items.view')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         // store_id is the branch picked on the stores screen (explicit filter, wins over the header);

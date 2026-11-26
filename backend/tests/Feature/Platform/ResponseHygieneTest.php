@@ -55,7 +55,7 @@ final class ResponseHygieneTest extends TenantTestCase
 
         $response = $this->getJson('/api/__qa/spatie-unauthorized')
             ->assertStatus(403)
-            ->assertExactJson(['success' => false, 'message' => __('auth.unauthorized')]);
+            ->assertExactJson(['success' => false, 'message' => __('auth.forbidden')]);
 
         $this->assertStringNotContainsString('logs.view', (string) $response->getContent());
     }

@@ -27,7 +27,7 @@ final class TreasuryController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('daily_journal.view') && ! $user->can('reports.view')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         // STOR-2: one branch: the active store (a store_id is access-checked, 403; `all` is 422).

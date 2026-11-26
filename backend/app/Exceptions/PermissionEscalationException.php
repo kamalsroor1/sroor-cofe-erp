@@ -24,7 +24,7 @@ final class PermissionEscalationException extends AuthorizationException
 
         return response()->json([
             'success' => false,
-            'message' => $this->getMessage() !== '' ? $this->getMessage() : __('auth.unauthorized'),
+            'message' => $this->getMessage() !== '' ? $this->getMessage() : __('auth.forbidden'),
         ], 403);
     }
 }

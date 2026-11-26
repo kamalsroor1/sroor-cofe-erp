@@ -40,7 +40,7 @@ final class ForceDeleteTrashRecordAction
         // ROLE-01: purging a customer or a return is a deletion too; it needs the same permission as
         // DELETE /customers/{id} and /returns/{id} (customers.delete / returns.delete), not trash.access alone.
         if (($model instanceof Customer || $model instanceof ReturnDocument) && ! Gate::forUser($actor)->allows('delete', $model)) {
-            throw new AuthorizationException(__('auth.unauthorized'));
+            throw new AuthorizationException(__('auth.forbidden'));
         }
 
         return (bool) $model->forceDelete();

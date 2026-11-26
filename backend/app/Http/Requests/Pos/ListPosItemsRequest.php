@@ -83,7 +83,7 @@ final class ListPosItemsRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'success' => false,
-            'message' => __('auth.unauthorized'),
+            'message' => __('auth.forbidden'),
         ], 403));
     }
 }

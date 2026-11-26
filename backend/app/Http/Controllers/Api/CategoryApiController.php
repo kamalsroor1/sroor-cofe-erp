@@ -30,7 +30,7 @@ final class CategoryApiController extends Controller
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('items.view') && ! $user->can('pos.access')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         // Auto-seed missing categories or auto-link items where category_id is null
@@ -117,7 +117,7 @@ final class CategoryApiController extends Controller
 
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('items.delete')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
         }
 
         $this->deleteCategoryAction->execute($category);
