@@ -17,7 +17,7 @@
         "
       >
         <ShoppingCart class="w-4 h-4" />
-        <span>{{ $t('treasury.journal_invoices_tab') }} ({{ invoices.length }})</span>
+        <span>{{ $t('treasury.journal_invoices_tab') }} ({{ salesCount }})</span>
       </button>
 
       <button
@@ -87,9 +87,11 @@
                 </td>
                 <td class="py-3.5 px-4 text-center">
                   <span
-                    class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-tajawal border bg-emerald-500/10 border-emerald-500/30 text-emerald-500 dark:text-emerald-400"
+                    class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-tajawal border"
+                    :class="statusClass(inv)"
+                    data-testid="journal-invoice-status"
                   >
-                    {{ $t('treasury.approved_status') }}
+                    {{ statusLabel(inv) }}
                   </span>
                 </td>
               </tr>
@@ -118,11 +120,16 @@
             </div>
 
             <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-              <span
-                class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-              >
-                {{ formatPaymentMethod(inv.payment_method) }}
-              </span>
+              <div class="flex items-center gap-1.5">
+                <span
+                  class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                >
+                  {{ formatPaymentMethod(inv.payment_method) }}
+                </span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border" :class="statusClass(inv)">
+                  {{ statusLabel(inv) }}
+                </span>
+              </div>
               <span class="text-slate-500"
                 >{{ $t('common.total') }}:
                 <span class="font-mono font-bold text-slate-900 dark:text-white">{{
@@ -224,6 +231,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { ShoppingCart, Receipt } from 'lucide-vue-next';
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
@@ -233,14 +241,26 @@ import { useTrans } from '../../Composables/useTrans';
 const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
 
-defineProps({
+const props = defineProps({
   activeTab: { type: String, default: 'invoices' },
   invoices: { type: Array, default: () => [] },
+  // #220: the day's sales invoices without the cancelled ones (summary.sales_invoices_count).
+  salesInvoicesCount: { type: Number, default: null },
   expenses: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
 });
 
 defineEmits(['update:activeTab']);
+
+// #220: cancelled invoices stay listed (with their status) but are not counted as sales.
+const salesCount = computed(() => props.salesInvoicesCount ?? props.invoices.filter((inv) => !inv.is_cancelled).length);
+
+// Same labels and colours as the invoices list (InvoicesTable).
+const statusLabel = (inv) => (inv.is_cancelled ? t('invoices.cancelled_badge') : t('invoices.confirmed_badge'));
+const statusClass = (inv) =>
+  inv.is_cancelled
+    ? 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+    : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500 dark:text-emerald-400';
 
 const formatPaymentMethod = (method) => {
   const map = {

@@ -121,6 +121,8 @@ final class GetDailyJournalAction
             'store_id' => $storeId,
             'active_shift' => $activeShift ? $this->activeShiftBlock($activeShift, $viewer, $ownScope) : null,
             'summary' => [
+                // #220: the day's sales invoices without the cancelled ones (they stay in `invoices`).
+                'sales_invoices_count' => $confirmedInvoices->count(),
                 'total_sales' => Decimal::normalize((string) $totalSales),
                 'cash_sales' => Decimal::normalize((string) $cashSales),
                 'credit_sales' => Decimal::normalize((string) $creditSales),
@@ -153,6 +155,7 @@ final class GetDailyJournalAction
                 'remaining_amount' => Decimal::normalize((string) $inv->remaining_amount),
                 'payment_method' => $inv->payment_type ?? $inv->payment_method,
                 'status' => $inv->status,
+                'is_cancelled' => $inv->status === 'cancelled',
                 'time' => $this->tenantClock->toTenant($inv->created_at)?->format('H:i A'),
             ]),
             'expenses' => $expenses->map(fn ($e) => [

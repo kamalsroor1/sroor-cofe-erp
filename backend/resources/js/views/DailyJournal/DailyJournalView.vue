@@ -53,7 +53,13 @@
       <DailyJournalMetricsGrid :summary="summary" :loading="isLoading" />
 
       <!-- Journal Tabs (Invoices vs Expenses) -->
-      <DailyJournalTabs v-model:active-tab="activeTab" :invoices="invoices" :expenses="expenses" :loading="isLoading" />
+      <DailyJournalTabs
+        v-model:active-tab="activeTab"
+        :invoices="invoices"
+        :sales-invoices-count="summary.sales_invoices_count ?? null"
+        :expenses="expenses"
+        :loading="isLoading"
+      />
 
       <!-- SHOP-06: transfers between treasury accounts on the selected day -->
       <TreasuryTransfersList

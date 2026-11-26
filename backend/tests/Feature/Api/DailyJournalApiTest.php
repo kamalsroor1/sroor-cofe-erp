@@ -275,4 +275,53 @@ class DailyJournalApiTest extends TenantTestCase
             ->getJson('/api/v1/daily-journal?date='.$today)
             ->assertStatus(401);
     }
+
+    /**
+     * Trello #220: a cancelled sale stays listed with its cancelled status, but it is not
+     * counted among the day's sales invoices nor in total_sales.
+     */
+    public function test_cancelled_invoice_is_listed_as_cancelled_and_not_counted(): void
+    {
+        $today = now()->toDateString();
+
+        $customer = Customer::create([
+            'name' => 'عميل الإلغاء',
+            'phone' => '01000002200',
+            'current_balance' => '0.000',
+            'is_active' => true,
+        ]);
+
+        $base = [
+            'store_id' => $this->mainStore->id,
+            'customer_id' => $customer->id,
+            'user_id' => $this->adminUser->id,
+            'invoice_date' => $today,
+            'subtotal' => '100.000',
+            'discount_amount' => '0.000',
+            'tax_amount' => '0.000',
+            'net_total' => '100.000',
+            'paid_amount' => '100.000',
+            'remaining_amount' => '0.000',
+            'payment_type' => 'cash',
+        ];
+        $confirmed = Invoice::create($base + ['invoice_number' => 'INV-220-A', 'status' => 'confirmed']);
+        $cancelled = Invoice::create($base + ['invoice_number' => 'INV-220-B', 'status' => 'cancelled']);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer '.$this->adminToken,
+            'X-Store-Id' => (string) $this->mainStore->id,
+        ])->getJson('/api/v1/daily-journal?date='.$today);
+
+        $response->assertStatus(200);
+
+        $rows = collect($response->json('data.invoices'))->keyBy('id');
+        $this->assertCount(2, $rows, 'The cancelled invoice stays visible in the journal list.');
+        $this->assertSame('cancelled', $rows[$cancelled->id]['status']);
+        $this->assertTrue($rows[$cancelled->id]['is_cancelled']);
+        $this->assertSame('confirmed', $rows[$confirmed->id]['status']);
+        $this->assertFalse($rows[$confirmed->id]['is_cancelled']);
+
+        $this->assertSame(1, $response->json('data.summary.sales_invoices_count'));
+        $this->assertEquals(100, $response->json('data.summary.total_sales'));
+    }
 }
