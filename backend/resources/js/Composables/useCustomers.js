@@ -191,7 +191,7 @@ export function useCustomers() {
 
         isSubmittingPayment.value = true;
         try {
-            await api.post(`/customers/${targetCustomer.value.id}/payments`, paymentForm);
+            await api.post(`/customers/${targetCustomer.value.id}/collect-payment`, paymentForm);
             Swal.fire({
                 icon: 'success',
                 title: t('common.success'),
