@@ -12,8 +12,7 @@
         v-if="peakHour && parseFloat(peakHour.sales) > 0"
         class="flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 text-xs font-bold font-tajawal"
       >
-        <span>{{ $t('dashboard.peak_hour_badge') }}:</span>
-        <span class="font-black font-mono">({{ peakHour.label }})</span>
+        <span class="font-black">{{ $t('dashboard.peak_hour_badge', { hour: peakHour.label }) }}</span>
         <span class="font-mono text-emerald-500 font-bold"
           >[{{ formatMoney(peakHour.sales) }} {{ currencyLabel }}]</span
         >
