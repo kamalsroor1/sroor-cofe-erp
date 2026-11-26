@@ -382,7 +382,7 @@
                     <th>{{ __('invoices.invoice_number') }}</th>
                     <th>{{ __('common.time') }}</th>
                     <th>{{ __('invoices.customer') }}</th>
-                    <th>{{ __('invoices.payment_type') }}</th>
+                    <th>{{ __('invoices.payment_method') }}</th>
                     <th>{{ __('common.total') }}</th>
                     <th>{{ __('treasury.cash_paid_col') }}</th>
                     <th>{{ __('treasury.credit_remaining_col') }}</th>
@@ -396,9 +396,12 @@
                     <td>{{ $inv->created_at->format('h:i A') }}</td>
                     <td style="text-align: right;">{{ $inv->customer?->name ?? __('treasury.cash_customer') }}</td>
                     <td>
-                        @if($inv->payment_type === 'cash') {{ __('invoices.cash') }}
-                        @elseif($inv->payment_type === 'credit') {{ __('invoices.credit') }}
-                        @else {{ __('invoices.partial') }}
+                        {{-- #219: show the channel (InstaPay, wallet…), not just the settlement type. --}}
+                        @php($pm = \App\Enums\PaymentMethod::tryFrom((string) ($inv->payment_method ?: 'cash')) ?? \App\Enums\PaymentMethod::Other)
+                        @if($inv->payment_type === 'credit') {{ __('invoices.credit') }}
+                        @else
+                            {{ $pm === \App\Enums\PaymentMethod::Cash ? __('invoices.cash') : $pm->shortLabel() }}
+                            @if($inv->payment_type === 'partial') ({{ __('invoices.partial') }}) @endif
                         @endif
                     </td>
                     <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$inv->net_total, 2) }}</td>

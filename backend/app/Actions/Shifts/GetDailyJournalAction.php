@@ -153,7 +153,10 @@ final class GetDailyJournalAction
                 'net_total' => Decimal::normalize((string) $inv->net_total),
                 'paid_amount' => Decimal::normalize((string) $inv->paid_amount),
                 'remaining_amount' => Decimal::normalize((string) $inv->remaining_amount),
-                'payment_method' => $inv->payment_type ?? $inv->payment_method,
+                // #219: the channel (cash / instapay / e_wallet…) and the settlement (cash / credit /
+                // partial) are separate fields; payment_type is never null, so it hid the channel.
+                'payment_method' => $inv->payment_method ?: 'cash',
+                'payment_type' => $inv->payment_type,
                 'status' => $inv->status,
                 'is_cancelled' => $inv->status === 'cancelled',
                 'time' => $this->tenantClock->toTenant($inv->created_at)?->format('H:i A'),

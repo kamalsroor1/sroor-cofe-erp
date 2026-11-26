@@ -48,11 +48,16 @@
     </template>
 
     <template #cell-payment_method="{ row }">
-      <span
-        class="px-2 py-0.5 rounded-lg text-[11px] font-bold font-tajawal bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200"
-      >
-        {{ formatPaymentType(row.payment_type) }}
-      </span>
+      <div class="inline-flex flex-wrap items-center justify-center gap-1">
+        <span
+          v-for="label in invoicePaymentLabels(row, t)"
+          :key="label"
+          class="px-2 py-0.5 rounded-lg text-[11px] font-bold font-tajawal bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200"
+          data-testid="invoice-payment-label"
+        >
+          {{ label }}
+        </span>
+      </div>
     </template>
 
     <template #cell-net_total="{ row }">
@@ -117,6 +122,7 @@ import { useFormatters } from '../../Composables/useFormatters';
 import { trans } from '../../helpers/trans';
 import { useTrans } from '../../Composables/useTrans';
 import { useAuthStore } from '../../stores/auth';
+import { invoicePaymentLabels } from '../../helpers/paymentMethod.js';
 
 const { t } = useTrans();
 const { formatMoney, currencyLabel } = useFormatters();
@@ -137,18 +143,6 @@ const emit = defineEmits(['toggle-select', 'toggle-select-all', 'preview', 'prin
 const isAllSelected = computed(() => {
   return props.invoices.length > 0 && props.invoices.every((inv) => props.selectedIds.includes(inv.id));
 });
-
-const formatPaymentType = (type) => {
-  const map = {
-    cash: trans('invoices.payment_cash'),
-    credit: trans('invoices.payment_credit'),
-    partial: trans('invoices.payment_partial'),
-    card: trans('invoices.payment_card'),
-    e_wallet: trans('invoices.payment_ewallet'),
-    instapay: trans('invoices.payment_instapay'),
-  };
-  return map[type] || type || trans('invoices.payment_cash');
-};
 
 const getInvoiceActions = (inv) => [
   {

@@ -77,7 +77,7 @@
         </div>
         <div class="flex justify-between items-center text-xs pt-1 border-t border-dashed border-black/50">
           <span class="font-bold">{{ $t('invoices.payment_method') }}:</span>
-          <span class="font-black">{{ invoice?.payment_method }}</span>
+          <span class="font-black">{{ invoicePaymentLabels(invoice, t).join(' · ') }}</span>
         </div>
         <div v-if="parseFloat(invoice?.paid_amount || 0) > 0" class="flex justify-between items-center text-xs">
           <span>{{ $t('invoices.amount_paid_label') }}</span>
@@ -105,7 +105,10 @@
 
 <script setup>
 import { useFormatters } from '../../../Composables/useFormatters';
+import { useTrans } from '../../../Composables/useTrans';
+import { invoicePaymentLabels } from '../../../helpers/paymentMethod.js';
 const { formatMoney, currencyLabel } = useFormatters();
+const { t } = useTrans();
 defineProps({
   invoice: { type: Object, default: null },
   items: { type: Array, default: () => [] },

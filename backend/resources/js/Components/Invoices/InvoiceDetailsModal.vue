@@ -23,7 +23,7 @@
         </div>
         <div>
           <span class="text-slate-400 block font-bold">{{ $t('invoices.payment_method') }}:</span>
-          <span class="font-bold text-theme-primary">{{ formatPaymentType(invoice.payment_type) }}</span>
+          <span class="font-bold text-theme-primary">{{ invoicePaymentLabels(invoice, trans).join(' · ') }}</span>
         </div>
       </div>
 
@@ -122,6 +122,7 @@ import { Share2, Printer, ExternalLink } from 'lucide-vue-next';
 import AppModal from '../Common/AppModal.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { trans } from '../../helpers/trans';
+import { invoicePaymentLabels } from '../../helpers/paymentMethod.js';
 
 const { formatMoney, currencyLabel } = useFormatters();
 
@@ -132,14 +133,4 @@ defineProps({
 });
 
 defineEmits(['close', 'print']);
-
-const formatPaymentType = (type) => {
-  const map = {
-    cash: trans('invoices.cash'),
-    credit: trans('invoices.credit'),
-    partial: trans('invoices.partial'),
-    bank_transfer: trans('invoices.electronic_transfer'),
-  };
-  return map[type] || type;
-};
 </script>

@@ -179,7 +179,7 @@
 
         <div class="flex justify-between items-center text-xs pt-1 border-t border-dashed border-black/50">
           <span class="font-bold">{{ $t('invoices.payment_method') }}:</span>
-          <span class="font-black">{{ formatPaymentType(invoice.payment_type || invoice.invoice_type) }}</span>
+          <span class="font-black">{{ invoicePaymentLabels(invoice, t).join(' · ') }}</span>
         </div>
 
         <div v-if="parseFloat(invoice.paid_amount) > 0" class="flex justify-between items-center text-xs">
@@ -227,6 +227,7 @@ import api from '../../Services/api';
 import { useAppConfigStore } from '../../stores/appConfig';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
+import { invoicePaymentLabels } from '../../helpers/paymentMethod.js';
 
 const route = useRoute();
 const router = useRouter();
@@ -278,19 +279,6 @@ const calculatedShipping = computed(() => {
 const calculatedNetTotal = computed(() => {
   return parseFloat(invoice.value?.net_total || invoice.value?.final_total || 0);
 });
-
-const formatPaymentType = (type) => {
-  const map = {
-    cash: t('invoices.payment_cash'),
-    credit: t('invoices.payment_credit'),
-    partial: t('invoices.payment_partial'),
-    instapay: t('invoices.payment_instapay'),
-    wallet: t('invoices.payment_wallet'),
-    card: t('invoices.payment_card'),
-    bank: t('invoices.payment_bank'),
-  };
-  return map[type] || t('invoices.payment_cash');
-};
 
 const triggerPrint = () => {
   window.print();

@@ -16,7 +16,7 @@
           class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 text-xs"
         >
           <div>
-            <div class="font-bold text-slate-900 dark:text-white">{{ p.payment_method }}</div>
+            <div class="font-bold text-slate-900 dark:text-white">{{ t(paymentMethodKey(p.payment_method)) }}</div>
             <div class="text-[10px] text-slate-400 font-mono mt-0.5">{{ p.payment_date }} • {{ p.user_name }}</div>
           </div>
           <div class="font-mono font-black text-emerald-500 text-sm">
@@ -50,8 +50,11 @@
 <script setup>
 import { CreditCard, FileText } from 'lucide-vue-next';
 import { useFormatters } from '../../../Composables/useFormatters';
+import { useTrans } from '../../../Composables/useTrans';
+import { paymentMethodKey } from '../../../helpers/paymentMethod.js';
 
 const { formatMoney, currencyLabel } = useFormatters();
+const { t } = useTrans();
 
 defineProps({
   invoice: { type: Object, default: null },

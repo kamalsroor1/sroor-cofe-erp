@@ -90,7 +90,7 @@
             {{ $t('invoices.cashier') }}: <strong>{{ invoice?.cashier_name }}</strong>
           </div>
           <div class="text-slate-700 mt-0.5">
-            {{ $t('invoices.payment_method') }}: <strong>{{ invoice?.payment_method }}</strong>
+            {{ $t('invoices.payment_method') }}: <strong>{{ invoicePaymentLabels(invoice, t).join(' · ') }}</strong>
           </div>
         </div>
       </div>
@@ -236,7 +236,10 @@
 import { Coffee, MapPin, Phone } from 'lucide-vue-next';
 import { useFormatters } from '../../../Composables/useFormatters';
 import { useUnits } from '../../../Composables/useUnits';
+import { useTrans } from '../../../Composables/useTrans';
+import { invoicePaymentLabels } from '../../../helpers/paymentMethod.js';
 const { formatMoney, currencyLabel } = useFormatters();
+const { t } = useTrans();
 const { unitLabel } = useUnits();
 defineProps({
   invoice: { type: Object, default: null },

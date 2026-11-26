@@ -73,11 +73,16 @@
                 </td>
                 <td class="py-3.5 px-4 font-mono text-slate-500 dark:text-slate-400">{{ inv.time || '—' }}</td>
                 <td class="py-3.5 px-4 text-center">
-                  <span
-                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold font-tajawal bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
-                  >
-                    {{ formatPaymentMethod(inv.payment_method) }}
-                  </span>
+                  <div class="inline-flex flex-wrap items-center justify-center gap-1">
+                    <span
+                      v-for="label in invoicePaymentLabels(inv)"
+                      :key="label"
+                      class="px-2.5 py-0.5 rounded-md text-[10px] font-bold font-tajawal bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+                      data-testid="journal-invoice-payment"
+                    >
+                      {{ label }}
+                    </span>
+                  </div>
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono font-bold text-slate-900 dark:text-slate-200">
                   {{ formatMoney(inv.net_total) }} {{ currencyLabel }}
@@ -122,9 +127,11 @@
             <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
               <div class="flex items-center gap-1.5">
                 <span
+                  v-for="label in invoicePaymentLabels(inv)"
+                  :key="label"
                   class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
                 >
-                  {{ formatPaymentMethod(inv.payment_method) }}
+                  {{ label }}
                 </span>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border" :class="statusClass(inv)">
                   {{ statusLabel(inv) }}
@@ -237,6 +244,7 @@ import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
+import { invoicePaymentLabels as paymentLabels, paymentMethodKey } from '../../helpers/paymentMethod.js';
 
 const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
@@ -262,15 +270,8 @@ const statusClass = (inv) =>
     ? 'bg-rose-500/10 border-rose-500/30 text-rose-400'
     : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500 dark:text-emerald-400';
 
-const formatPaymentMethod = (method) => {
-  const map = {
-    cash: t('contacts.cash'),
-    instapay: t('contacts.instapay'),
-    e_wallet: t('contacts.wallet'),
-    visa: 'Visa',
-    credit: t('invoices.credit'),
-    partial: t('invoices.partial'),
-  };
-  return map[method] || method;
-};
+// #219: invoices are labelled by their channel (InstaPay, wallet…), plus credit/partial when relevant.
+const invoicePaymentLabels = (inv) => paymentLabels(inv, t);
+
+const formatPaymentMethod = (method) => t(paymentMethodKey(method));
 </script>

@@ -28,7 +28,7 @@
         <span class="text-slate-500 dark:text-slate-400 font-bold">{{ $t('invoices.payment_method') }}:</span>
         <span class="font-black text-theme-primary flex items-center gap-1">
           <component :is="paymentMethodIcon(invoice?.payment_method)" class="w-3.5 h-3.5" />
-          <span>{{ formatPaymentMethod(invoice?.payment_method) }}</span>
+          <span data-testid="invoice-show-payment">{{ invoicePaymentLabels(invoice, t).join(' · ') }}</span>
         </span>
       </div>
     </div>
@@ -38,6 +38,7 @@
 <script setup>
 import { Store, Banknote, Zap, Smartphone, CreditCard, Building2 } from 'lucide-vue-next';
 import { useTrans } from '../../../Composables/useTrans';
+import { invoicePaymentLabels, normalizePaymentMethod } from '../../../helpers/paymentMethod.js';
 
 const { t } = useTrans();
 
@@ -45,25 +46,13 @@ defineProps({
   invoice: { type: Object, default: null },
 });
 
-const paymentMethodIcon = (method) => {
-  const map = {
-    cash: Banknote,
-    instapay: Zap,
-    wallet: Smartphone,
-    card: CreditCard,
-    bank: Building2,
-  };
-  return map[method] || Banknote;
+const ICONS = {
+  cash: Banknote,
+  instapay: Zap,
+  e_wallet: Smartphone,
+  visa: CreditCard,
+  bank_transfer: Building2,
 };
 
-const formatPaymentMethod = (method) => {
-  const map = {
-    cash: t('invoices.payment_cash'),
-    instapay: t('invoices.payment_instapay'),
-    wallet: t('invoices.payment_wallet'),
-    card: t('invoices.payment_card'),
-    bank: t('invoices.payment_bank'),
-  };
-  return map[method] || (method ? method : t('invoices.payment_cash'));
-};
+const paymentMethodIcon = (method) => ICONS[normalizePaymentMethod(method)] || Banknote;
 </script>

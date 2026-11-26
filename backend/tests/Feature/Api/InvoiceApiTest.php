@@ -404,6 +404,44 @@ class InvoiceApiTest extends TenantTestCase
             ]);
     }
 
+    public function test_instapay_invoice_reports_its_channel_in_index_and_show(): void
+    {
+        // #219: an InstaPay sale is settled in full (payment_type cash) but its channel is InstaPay.
+        $createResponse = $this->withHeaders([
+            'Authorization' => 'Bearer '.$this->adminToken,
+            'X-Store-Id' => (string) $this->mainStore->id,
+        ])->postJson('/api/v1/invoices', [
+            'customer_id' => $this->customer->id,
+            'store_id' => $this->mainStore->id,
+            'payment_type' => 'cash',
+            'payment_method' => 'instapay',
+            'items' => [
+                ['item_id' => $this->itemA->id, 'quantity' => 1.000, 'unit_price' => 550.000],
+            ],
+        ]);
+
+        $createResponse->assertStatus(201);
+        $invoiceId = $createResponse->json('data.id');
+        $this->assertDatabaseHas('invoices', ['id' => $invoiceId, 'payment_type' => 'cash', 'payment_method' => 'instapay']);
+
+        $list = $this->withHeaders([
+            'Authorization' => 'Bearer '.$this->adminToken,
+            'X-Store-Id' => (string) $this->mainStore->id,
+        ])->getJson('/api/v1/invoices');
+
+        $list->assertStatus(200);
+        $row = collect($list->json('data'))->firstWhere('id', $invoiceId);
+        $this->assertNotNull($row);
+        $this->assertSame('instapay', $row['payment_method']);
+        $this->assertSame('cash', $row['payment_type']);
+
+        $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/invoices/'.$invoiceId)
+            ->assertStatus(200)
+            ->assertJsonPath('data.payment_method', 'instapay')
+            ->assertJsonPath('data.payment_type', 'cash');
+    }
+
     public function test_can_cancel_sales_invoice_and_restore_inventory(): void
     {
         $payload = [

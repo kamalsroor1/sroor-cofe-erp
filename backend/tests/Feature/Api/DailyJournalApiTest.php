@@ -92,6 +92,66 @@ class DailyJournalApiTest extends TenantTestCase
         $response->assertStatus(403);
     }
 
+    public function test_journal_lists_each_invoice_with_its_payment_channel_and_type(): void
+    {
+        // #219: payment_type (cash / credit / partial) used to overwrite the channel, so an
+        // InstaPay sale was listed as cash.
+        $today = now()->toDateString();
+        $customer = Customer::create([
+            'name' => 'عميل إنستاباي',
+            'phone' => '01000002190',
+            'current_balance' => '0.000',
+            'is_active' => true,
+        ]);
+        $base = [
+            'customer_id' => $customer->id,
+            'store_id' => $this->mainStore->id,
+            'user_id' => $this->adminUser->id,
+            'invoice_date' => $today,
+            'subtotal' => '100.000',
+            'discount_amount' => '0.000',
+            'tax_amount' => '0.000',
+            'net_total' => '100.000',
+            'status' => 'confirmed',
+        ];
+        $instapay = Invoice::create($base + [
+            'invoice_number' => 'INV-219-IP',
+            'paid_amount' => '100.000',
+            'remaining_amount' => '0.000',
+            'payment_type' => 'cash',
+            'payment_method' => 'instapay',
+        ]);
+        $wallet = Invoice::create($base + [
+            'invoice_number' => 'INV-219-EW',
+            'paid_amount' => '40.000',
+            'remaining_amount' => '60.000',
+            'payment_type' => 'partial',
+            'payment_method' => 'e_wallet',
+        ]);
+        $cash = Invoice::create($base + [
+            'invoice_number' => 'INV-219-CA',
+            'paid_amount' => '100.000',
+            'remaining_amount' => '0.000',
+            'payment_type' => 'cash',
+            'payment_method' => 'cash',
+        ]);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer '.$this->adminToken,
+            'X-Store-Id' => (string) $this->mainStore->id,
+        ])->getJson('/api/v1/daily-journal?date='.$today);
+
+        $response->assertStatus(200);
+        $rows = collect($response->json('data.invoices'))->keyBy('id');
+
+        $this->assertSame('instapay', $rows[$instapay->id]['payment_method']);
+        $this->assertSame('cash', $rows[$instapay->id]['payment_type']);
+        $this->assertSame('e_wallet', $rows[$wallet->id]['payment_method']);
+        $this->assertSame('partial', $rows[$wallet->id]['payment_type']);
+        $this->assertSame('cash', $rows[$cash->id]['payment_method']);
+        $this->assertSame('cash', $rows[$cash->id]['payment_type']);
+    }
+
     public function test_can_fetch_daily_journal_with_complete_ledger_and_accurate_metrics(): void
     {
         $today = now()->toDateString();
