@@ -640,13 +640,16 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             return 'no_plan';
         }
 
-        $decision = app(TenantLifecyclePolicy::class)->evaluate($this->lifecycleSnapshot(), CarbonImmutable::now());
-
-        if ($decision->effectiveStatus === TenantStatus::Trial) {
-            return 'trial';
+        // #230: only a FREE-flagged plan cannot be renewed. A trial on a free plan (the catalog
+        // "Trial") gets the trial message; a trial on a PAID plan may still pay its plan early
+        // (SELL-06), and the CTA policy for trials is an open owner decision.
+        if (! Plan::query()->whereKey($this->plan_id)->where('is_free', true)->exists()) {
+            return null;
         }
 
-        return Plan::query()->whereKey($this->plan_id)->where('is_free', true)->exists() ? 'free_plan' : null;
+        $decision = app(TenantLifecyclePolicy::class)->evaluate($this->lifecycleSnapshot(), CarbonImmutable::now());
+
+        return $decision->effectiveStatus === TenantStatus::Trial ? 'trial' : 'free_plan';
     }
 
     /**

@@ -37,14 +37,16 @@ final class TrialRenewalRefusalTest extends BillingTestCase
         $this->assertSame(0, BillingInvoice::query()->count());
     }
 
-    public function test_a_trial_on_a_paid_plan_is_also_pointed_to_a_plan_change(): void
+    public function test_a_trial_on_a_paid_plan_can_still_pay_its_plan_early(): void
     {
+        // SELL-06: a trial on a PAID plan may request its plan invoice early; only free-flagged
+        // plans are refused (#230). The trial CTA policy itself is an open owner decision.
         $tenant = $this->tenantOn($this->plan(), ['status' => 'trial', 'trial_ends_at' => now()->addDays(5), 'subscription_ends_at' => null]);
 
         $this->getJson(self::SUBSCRIPTION, $this->tenantHeaders($tenant))
-            ->assertJsonPath('data.subscription.can_request_renewal', false);
+            ->assertJsonPath('data.subscription.can_request_renewal', true);
         $this->postJson(self::RENEWAL, ['cycle' => 'yearly'], $this->tenantHeaders($tenant))
-            ->assertStatus(422)->assertJsonPath('error_code', 'billing.renewal_not_for_trial');
+            ->assertCreated();
     }
 
     public function test_a_permanent_free_shop_cannot_renew(): void
