@@ -152,6 +152,7 @@ final class AdminHostIsolationTest extends TenantTestCase
             // Their vendor views inline scripts without our nonce; every other directive stays strict.
             $this->assertStringContainsString("script-src 'self' 'unsafe-inline' 'unsafe-eval'", $csp, $path);
             $this->assertStringContainsString('https://fonts.bunny.net', $csp, $path);
+            $this->assertStringContainsString("img-src 'self' data: blob: https:", $csp, $path);
             $this->assertStringContainsString("frame-ancestors 'none'", $csp, $path);
             $this->assertStringContainsString("object-src 'none'", $csp, $path);
         }
@@ -180,8 +181,12 @@ final class AdminHostIsolationTest extends TenantTestCase
 
     public function test_super_admin_spa_paths_are_404_off_the_admin_host(): void
     {
+        $tenant = $this->createTenant();
+
         $this->get('http://localhost/super-admin/login')->assertNotFound();
         $this->get('http://localhost/super-admin')->assertNotFound();
+        $this->get($this->tenantUrl($tenant, '/super-admin/login'))->assertNotFound();
+        $this->get($this->tenantUrl($tenant, '/super-admin'))->assertNotFound();
     }
 
     public function test_production_without_admin_hosts_fails_closed(): void

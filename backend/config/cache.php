@@ -1,5 +1,7 @@
 <?php
 
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 return [
@@ -136,6 +138,15 @@ return [
     |
     */
 
-    'serializable_classes' => false,
+    // Only the plain data shapes the Pulse dashboard caches for its cards (query results are
+    // Collections of stdClass rows with Carbon dates). Without them every Pulse poll fails with
+    // "__PHP_Incomplete_Class". Keep this list to inert value classes: no gadget-chain risk.
+    'serializable_classes' => [
+        stdClass::class,
+        Collection::class,
+        Illuminate\Support\Carbon::class,
+        Carbon\Carbon::class,
+        CarbonImmutable::class,
+    ],
 
 ];

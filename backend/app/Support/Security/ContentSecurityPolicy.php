@@ -34,7 +34,8 @@ final class ContentSecurityPolicy
      */
     public static function monitoring(): string
     {
-        $directives = self::baseDirectives('', ["'self'", 'data:', 'blob:']);
+        // Pulse's user cards show avatars from external https: hosts (images cannot run code).
+        $directives = self::baseDirectives('', ["'self'", 'data:', 'blob:', 'https:']);
         $directives['script-src'] = ["'self'", "'unsafe-inline'", "'unsafe-eval'"];
         $directives['style-src'] = ["'self'", "'unsafe-inline'", self::BUNNY_FONTS];
         $directives['font-src'] = ["'self'", 'data:', self::BUNNY_FONTS];
