@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Support\TenantClock;
 use Closure;
+use Illuminate\Database\Connection;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
@@ -238,7 +239,13 @@ final class DocumentNumberService
 
     private function allocate(string $prefix, int $pad, ?callable $existsCheck, ?callable $seed, string $scope): string
     {
-        // Seed only on first use, and only read the existing documents once.
+        $connection = DB::connection();
+
+        if (in_array($connection->getDriverName(), ['mysql', 'mariadb'], true)) {
+            return $this->allocateAtomicMysql($connection, $prefix, $pad, $existsCheck, $seed, $scope);
+        }
+
+        // SQLite / non-MySQL path: seed first, then lock and advance the counter row.
         $this->ensureScopeRow($scope, $seed);
 
         $row = DB::table(self::TABLE)->where('scope', $scope)->lockForUpdate()->first();
@@ -251,6 +258,63 @@ final class DocumentNumberService
         } while ($taken);
 
         DB::table(self::TABLE)->where('scope', $scope)->update(['last_value' => $value, 'updated_at' => Carbon::now()]);
+
+        return $candidate;
+    }
+
+    /**
+     * MySQL/MariaDB hot path: atomically advance `last_value` in a single UPDATE using
+     * LAST_INSERT_ID(last_value + 1), avoiding an extra EXISTS check and prior SELECT FOR UPDATE.
+     * The UPDATE still holds the row X-lock until commit, so numbers remain gapless on rollback.
+     *
+     * @param  (callable(string): bool)|null  $existsCheck
+     * @param  (callable(): int)|null  $seed
+     */
+    private function allocateAtomicMysql(
+        Connection $connection,
+        string $prefix,
+        int $pad,
+        ?callable $existsCheck,
+        ?callable $seed,
+        string $scope,
+    ): string {
+        $affected = $connection->table(self::TABLE)
+            ->where('scope', $scope)
+            ->update([
+                'last_value' => DB::raw('LAST_INSERT_ID(last_value + 1)'),
+                'updated_at' => Carbon::now(),
+            ]);
+
+        if ($affected === 0) {
+            $this->ensureScopeRow($scope, $seed);
+
+            $connection->table(self::TABLE)
+                ->where('scope', $scope)
+                ->update([
+                    'last_value' => DB::raw('LAST_INSERT_ID(last_value + 1)'),
+                    'updated_at' => Carbon::now(),
+                ]);
+        }
+
+        $value = (int) $connection->getPdo()->lastInsertId();
+        if ($value <= 0) {
+            $value = (int) ($connection->table(self::TABLE)->where('scope', $scope)->lockForUpdate()->value('last_value') ?? 1);
+        }
+
+        $candidate = $prefix.'-'.str_pad((string) $value, $pad, '0', STR_PAD_LEFT);
+
+        while ($existsCheck !== null && $existsCheck($candidate)) {
+            $connection->table(self::TABLE)
+                ->where('scope', $scope)
+                ->update([
+                    'last_value' => DB::raw('LAST_INSERT_ID(last_value + 1)'),
+                    'updated_at' => Carbon::now(),
+                ]);
+
+            $nextValue = (int) $connection->getPdo()->lastInsertId();
+            $value = $nextValue > $value ? $nextValue : ($value + 1);
+            $candidate = $prefix.'-'.str_pad((string) $value, $pad, '0', STR_PAD_LEFT);
+        }
 
         return $candidate;
     }
