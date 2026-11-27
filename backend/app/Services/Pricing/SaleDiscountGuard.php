@@ -29,6 +29,9 @@ use Illuminate\Validation\ValidationException;
  */
 final class SaleDiscountGuard
 {
+    /** @var array<string, array<int, Item>> */
+    private array $itemsByScope = [];
+
     public function __construct(
         private readonly ?User $actor,
         private readonly SalePriceGuard $priceGuard,
@@ -50,7 +53,7 @@ final class SaleDiscountGuard
      */
     public function resolveLineDiscounts(Customer $customer, ?int $storeId, array $lines): array
     {
-        $items = $this->loadItems($lines);
+        $items = $this->loadItems($lines, $storeId);
 
         foreach ($lines as $index => $line) {
             $percent = isset($line['discount_percent']) && $line['discount_percent'] !== '' ? (string) $line['discount_percent'] : null;
@@ -82,7 +85,7 @@ final class SaleDiscountGuard
             return;
         }
 
-        $items = $this->loadItems($lines);
+        $items = $this->loadItems($lines, $storeId);
         $gross = '0.000';
         $lineDiscounts = '0.000';
         $rows = [];
@@ -187,10 +190,21 @@ final class SaleDiscountGuard
      * @param  array<int, array<string, mixed>>  $lines
      * @return array<int, Item>
      */
-    private function loadItems(array $lines): array
+    private function loadItems(array $lines, ?int $storeId = null): array
     {
-        $ids = array_values(array_unique(array_map(static fn (array $line): int => (int) ($line['item_id'] ?? 0), $lines)));
+        $ids = array_values(array_unique(array_filter(array_map(static fn (array $line): int => (int) ($line['item_id'] ?? 0), $lines), static fn (int $id): bool => $id > 0)));
+        if ($ids === []) {
+            return [];
+        }
 
-        return Item::query()->whereIn('id', $ids)->get()->keyBy('id')->all();
+        sort($ids);
+        $scopeKey = ($storeId ?? 'none').':'.implode(',', $ids);
+
+        return $this->itemsByScope[$scopeKey] ??= Item::query()
+            ->whereIn('id', $ids)
+            ->when($storeId !== null, fn ($q) => $q->with(['storeStocks' => fn ($sq) => $sq->where('store_id', $storeId)]))
+            ->get()
+            ->keyBy('id')
+            ->all();
     }
 }

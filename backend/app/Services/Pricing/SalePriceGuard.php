@@ -133,8 +133,22 @@ final class SalePriceGuard
             return;
         }
 
+        $ids = array_values(array_unique(array_filter(array_map(
+            static fn (array $line): int => (int) ($line['item_id'] ?? 0),
+            $lines,
+        ), static fn (int $id): bool => $id > 0)));
+        if ($ids === []) {
+            return;
+        }
+
+        $items = Item::query()
+            ->whereIn('id', $ids)
+            ->when($storeId !== null, fn ($q) => $q->with(['storeStocks' => fn ($sq) => $sq->where('store_id', $storeId)]))
+            ->get()
+            ->keyBy('id');
+
         foreach ($lines as $index => $line) {
-            $item = Item::query()->find($line['item_id'] ?? 0);
+            $item = $items->get((int) ($line['item_id'] ?? 0));
             if (! $item instanceof Item) {
                 continue;
             }

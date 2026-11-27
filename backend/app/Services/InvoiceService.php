@@ -7,9 +7,11 @@ use App\Actions\Invoices\ReverseInvoicePaymentsAction;
 use App\Enums\LimitResource;
 use App\Enums\PaymentMethod;
 use App\Exceptions\BusinessRuleException;
+use App\Exceptions\Stock\InsufficientStockException;
 use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\Item;
 use App\Models\Payment;
 use App\Models\StockMovement;
@@ -26,8 +28,11 @@ use App\Services\Settings\TenantSettings;
 use App\Support\Database\TransactionRetry;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class InvoiceService
@@ -71,6 +76,17 @@ class InvoiceService
     public function confirmInvoice(array $data, bool $requireOpenShift = false): Invoice
     {
         $clientUuid = ! empty($data['client_uuid']) ? (string) $data['client_uuid'] : null;
+        $storeId = $this->resolveInvoiceStoreId($data);
+
+        // P0-4: fast idempotency replay before any preflight queries or transactions.
+        if ($clientUuid !== null) {
+            $existing = Invoice::where('client_uuid', $clientUuid)->first();
+            if ($existing instanceof Invoice) {
+                $this->assertReplayMatches($existing, (int) ($data['customer_id'] ?? 0), $storeId);
+
+                return $existing;
+            }
+        }
 
         // BE-08: the server resolves and validates every line price (authenticated callers only). A manager
         // PIN is verified here, before the transaction, so rate-limiter hits are never rolled back.
@@ -82,13 +98,13 @@ class InvoiceService
         $discountGuard = new SaleDiscountGuard($actor instanceof User ? $actor : null, $priceGuard);
         $priceCustomer = Customer::query()->find($data['customer_id'] ?? 0);
         if ($priceCustomer instanceof Customer) {
-            $priceStoreId = $this->resolveInvoiceStoreId($data);
+            $this->assertWalkInPaidInFull($priceCustomer, (string) ($data['payment_type'] ?? 'cash'));
             // POS-07: percent line discounts become amounts first, so the floor and the cap see real money.
-            $data['items'] = $discountGuard->resolveLineDiscounts($priceCustomer, $priceStoreId, (array) ($data['items'] ?? []));
-            $priceGuard->preflight($priceCustomer, $priceStoreId, $data['items']);
+            $data['items'] = $discountGuard->resolveLineDiscounts($priceCustomer, $storeId, (array) ($data['items'] ?? []));
+            $priceGuard->preflight($priceCustomer, $storeId, $data['items']);
             $discountGuard->preflight(
                 $priceCustomer,
-                $priceStoreId,
+                $storeId,
                 $data['items'],
                 (string) ($data['discount_type'] ?? 'fixed'),
                 (string) ($data['discount_value'] ?? '0.000'),
@@ -99,14 +115,16 @@ class InvoiceService
         // price / discount approvals, whose verified PIN it reuses), before the transaction.
         $creditGuard = new CustomerCreditLimitGuard($actor instanceof User ? $actor : null, $priceGuard);
         if ($priceCustomer instanceof Customer) {
-            $creditGuard->preflight($priceCustomer, $this->resolveInvoiceStoreId($data), $data);
+            $creditGuard->preflight($priceCustomer, $storeId, $data);
         }
 
+        $invoicePrefix = empty($data['invoice_number']) ? $this->invoiceNumberPrefix($storeId) : null;
+
         // BUG-04: the day's counter rows exist before the transaction takes its first read.
-        $this->prepareNumberScopes($data);
+        $this->prepareNumberScopes($data, $storeId, $invoicePrefix);
 
         try {
-            return $this->persistConfirmedInvoice($data, $clientUuid, $priceGuard, $discountGuard, $creditGuard, $requireOpenShift);
+            return $this->persistConfirmedInvoice($data, $clientUuid, $storeId, $invoicePrefix, $priceGuard, $discountGuard, $creditGuard, $requireOpenShift);
         } catch (UniqueConstraintViolationException $e) {
             // Backstop for a concurrent insert of the same client_uuid that slipped past the
             // replay check. Any other unique violation (e.g. invoice_number) is rethrown.
@@ -119,7 +137,7 @@ class InvoiceService
                 throw $e;
             }
 
-            $this->assertReplayMatches($existing, (int) $data['customer_id'], $this->resolveInvoiceStoreId($data));
+            $this->assertReplayMatches($existing, (int) $data['customer_id'], $storeId);
 
             return $existing;
         }
@@ -144,12 +162,13 @@ class InvoiceService
      * BUG-04: create the counter rows this checkout will allocate from (invoice, payment, and
      * expense numbers) before its transaction. Consumes no number.
      */
-    private function prepareNumberScopes(array $data): void
+    private function prepareNumberScopes(array $data, ?int $storeId = null, ?string $invoicePrefix = null): void
     {
         $numbers = app(DocumentNumberService::class);
+        $resolvedStoreId = $storeId ?? $this->resolveInvoiceStoreId($data);
 
         if (empty($data['invoice_number'])) {
-            $numbers->prepareFor($this->invoiceNumberPrefix($this->resolveInvoiceStoreId($data)), Invoice::class, 'invoice_number');
+            $numbers->prepareFor($invoicePrefix ?? $this->invoiceNumberPrefix($resolvedStoreId), Invoice::class, 'invoice_number');
         }
         if (($data['payment_type'] ?? 'cash') !== 'credit') {
             $numbers->prepareDated('PAY-INV', Payment::class, 'payment_number');
@@ -165,308 +184,417 @@ class InvoiceService
      * memoised (a retry re-reads the same approver, no new PIN/limiter hit); every row is read
      * again inside, and the invoice/payment numbers of a failed attempt roll back with it.
      */
-    private function persistConfirmedInvoice(array $data, ?string $clientUuid, SalePriceGuard $priceGuard, SaleDiscountGuard $discountGuard, CustomerCreditLimitGuard $creditGuard, bool $requireOpenShift): Invoice
-    {
-        return TransactionRetry::run(function () use ($data, $clientUuid, $priceGuard, $discountGuard, $creditGuard, $requireOpenShift) {
-            $customer = Customer::where('id', $data['customer_id'])->lockForUpdate()->firstOrFail();
+    private function persistConfirmedInvoice(
+        array $data,
+        ?string $clientUuid,
+        ?int $storeId,
+        ?string $invoicePrefix,
+        SalePriceGuard $priceGuard,
+        SaleDiscountGuard $discountGuard,
+        CustomerCreditLimitGuard $creditGuard,
+        bool $requireOpenShift,
+    ): Invoice {
+        $storeName = $storeId !== null ? (string) (Store::query()->whereKey($storeId)->value('name') ?? "#{$storeId}") : null;
+        $allowNegativeStock = app(TenantSettings::class)->allowNegativeStock();
+        $currencyLabel = app(TenantSettings::class)->currencyLabel();
+        $actorId = $this->actorId($data);
 
-            $subtotal = '0.000';
-            $grossTotal = '0.000';
-            $lineDiscountsTotal = '0.000';
-            $totalCost = '0.000';
+        return TransactionRetry::run(
+            function () use ($data, $clientUuid, $storeId, $invoicePrefix, $storeName, $allowNegativeStock, $currencyLabel, $actorId, $priceGuard, $discountGuard, $creditGuard, $requireOpenShift) {
+                $paymentType = (string) ($data['payment_type'] ?? 'cash');
+                $affectsCustomerBalance = in_array($paymentType, ['credit', 'partial'], true);
 
-            $storeId = $this->resolveInvoiceStoreId($data);
+                // P0-1: Only lock the customer row when the sale affects customer receivables (credit / partial).
+                // Cash sales (including the shared walk-in customer) leave the customer balance unchanged and
+                // avoid serializing concurrent cashiers on one customer row.
+                $customer = $affectsCustomerBalance
+                    ? Customer::where('id', $data['customer_id'])->lockForUpdate()->firstOrFail()
+                    : Customer::where('id', $data['customer_id'])->firstOrFail();
 
-            // BUG-07 lock order: customer -> items / store_stocks (sorted) -> number sequences.
-            $this->stockService->lockStockRows(array_column((array) ($data['items'] ?? []), 'item_id'), [$storeId]);
+                $lines = (array) ($data['items'] ?? []);
+                $itemIds = array_column($lines, 'item_id');
 
-            if ($clientUuid !== null) {
-                // Plain read on purpose. The customer row lock above already serialises replays of the
-                // same sale (same customer, and this read starts its snapshot after that lock), and a
-                // FOR UPDATE on a key that does not exist yet takes a gap lock on the unique index: with
-                // several first-time checkouts in flight each one blocks the others' insert (MySQL 1213).
-                // A concurrent insert of the same key by another customer ends in the unique-violation
-                // backstop in confirmInvoice().
-                $existing = Invoice::where('client_uuid', $clientUuid)->first();
-                if ($existing) {
-                    $this->assertReplayMatches($existing, (int) $customer->id, $storeId);
+                // BUG-07 / P0-3 lock order: (optional) customer -> items / store_stocks (sorted ascending by item_id) -> number sequences.
+                $this->stockService->lockStockRows($itemIds, [$storeId]);
 
-                    return $existing;
+                if ($clientUuid !== null) {
+                    // Plain read on purpose: a FOR UPDATE on a key that does not exist yet takes a gap lock
+                    // on the unique index (MySQL 1213). Concurrent same-key inserts hit UniqueConstraintViolationException
+                    // in confirmInvoice().
+                    $existing = Invoice::where('client_uuid', $clientUuid)->first();
+                    if ($existing) {
+                        $this->assertReplayMatches($existing, (int) $customer->id, $storeId);
+
+                        return $existing;
+                    }
                 }
-            }
 
-            // POS-02: after the idempotency replay, so an offline retry of a saved invoice replays.
-            $this->assertWalkInPaidInFull($customer, (string) ($data['payment_type'] ?? 'cash'));
+                // POS-02: after the idempotency replay, so an offline retry of a saved invoice replays.
+                $this->assertWalkInPaidInFull($customer, $paymentType);
 
-            // PLAN-ENF: the monthly sales-invoice cap (max_invoices_per_month). Every creator of a sales
-            // invoice (POST /invoices, POS checkout, mixes invoice) ends here. After the replay above, so
-            // an offline retry of a saved invoice still replays at the cap. The tenant mutex is the
-            // oldest `stores` row: lock-order step 4 (branch rows, lowest id first), after the
-            // customer and the stock rows and before any number is allocated. On a capped plan this
-            // serialises the tenant's sales on that row until commit (accepted for the trial tier);
-            // unlimited plans return before taking the lock and keep selling concurrently.
-            $this->planEnforcer->assertWithinLimit(
-                LimitResource::InvoicesMonth,
-                fn (): int => $this->monthlyInvoiceCounter->count(),
-            );
+                // PLAN-ENF: the monthly sales-invoice cap (max_invoices_per_month). Unlimited plans return before locking.
+                $this->planEnforcer->assertWithinLimit(
+                    LimitResource::InvoicesMonth,
+                    fn (): int => $this->monthlyInvoiceCounter->count(),
+                );
 
-            $invoiceNumber = $data['invoice_number'] ?? $this->generateUniqueNumber($storeId);
+                // P0-3: Batch load already-locked items and store stocks in deterministic order (0 N+1 queries).
+                $lockedItems = $this->stockService->loadLockedItems($itemIds);
+                $lockedStoreStocks = $storeId !== null
+                    ? $this->stockService->loadLockedStoreStocks($storeId, $lockedItems)
+                    : [];
 
-            // DEC-SHIFT: a sale subject to the shift rule (POS-10) is refused (409, everything above
-            // rolls back) when its store's shift was closed after the pre-transaction check. Same
-            // shared lock and same point as the DATE-01 stamp of the invoice below.
-            if ($requireOpenShift) {
-                // SHIFT-01: in a per-cashier branch, the seller's own shift (the invoice's user_id).
-                app(SaleShiftGuard::class)->assertShiftStillOpen($storeId !== null ? (int) $storeId : null, $this->actorId($data));
-            }
+                foreach ($lockedItems as $lockedItemId => $lockedItem) {
+                    $storeStock = $lockedStoreStocks[$lockedItemId] ?? null;
+                    $lockedItem->setRelation(
+                        'storeStocks',
+                        new EloquentCollection($storeStock !== null ? [$storeStock] : []),
+                    );
+                }
 
-            $invoice = Invoice::create([
-                'invoice_number' => $invoiceNumber,
-                'client_uuid' => $clientUuid,
-                'customer_id' => $customer->id,
-                'user_id' => $this->actorId($data),
-                'store_id' => $storeId,
-                // SETG-2 ext: the business date on the tenant clock (cutoff-aware), never the server date.
-                'invoice_date' => $data['invoice_date'] ?? $this->tenantClock->businessDate(),
-                'payment_type' => $data['payment_type'] ?? 'cash',
-                'payment_method' => $data['payment_method'] ?? 'cash',
-                'status' => 'confirmed',
-                'payment_status' => 'unpaid',
-                'subtotal' => '0.000',
-                'discount_type' => $data['discount_type'] ?? 'fixed',
-                'discount_value' => $data['discount_value'] ?? '0.000',
-                'discount_amount' => '0.000',
-                'net_total' => '0.000',
-                'paid_amount' => '0.000',
-                'remaining_amount' => '0.000',
-                'total_cost' => '0.000',
-                'notes' => $data['notes'] ?? null,
-            ]);
+                $itemStocks = [];
+                foreach ($lockedItems as $lockedItemId => $lockedItem) {
+                    $itemStocks[$lockedItemId] = (string) $lockedItem->current_stock;
+                }
+                $storeStockQuantities = [];
+                foreach ($lockedStoreStocks as $lockedItemId => $storeStock) {
+                    $storeStockQuantities[$lockedItemId] = (string) $storeStock->quantity;
+                }
 
-            foreach ($data['items'] as $lineIndex => $line) {
-                // S1: Lock item row and verify stock
-                $item = Item::where('id', $line['item_id'])->lockForUpdate()->firstOrFail();
-
-                $qty = (string) $line['quantity'];
-
-                // Enforce integer-only quantity for discrete units
+                // P0-4 / P0-2: Validate every line, evaluate pricing, check stock, compute discounts,
+                // expenses and payments BEFORE allocating any document number (keeps sequence locks minimal).
                 $discreteUnits = ['قطعة', 'حبة', 'علبة', 'باكت', 'كرتونة', 'شيكارة', 'طرد', 'دستة', 'جوال', 'piece', 'pcs', 'box', 'carton', 'pack', 'unit'];
-                $itemUnit = trim(mb_strtolower((string) $item->unit));
-                if (in_array($itemUnit, $discreteUnits, true) && fmod((float) $qty, 1.0) != 0.0) {
-                    throw BusinessRuleException::make('invoices.discrete_unit_integer_only', ['item' => $item->name, 'quantity' => $qty, 'unit' => $item->unit]);
+                $subtotal = '0.000';
+                $grossTotal = '0.000';
+                $lineDiscountsTotal = '0.000';
+                $totalCost = '0.000';
+                $preparedItems = [];
+                $preparedMovements = [];
+                $dirtyItems = [];
+                $dirtyStoreStocks = [];
+
+                foreach ($lines as $lineIndex => $line) {
+                    $itemId = (int) ($line['item_id'] ?? 0);
+                    $item = $lockedItems[$itemId] ?? Item::where('id', $itemId)->lockForUpdate()->firstOrFail();
+
+                    $qty = Decimal::normalize((string) $line['quantity']);
+
+                    // Enforce integer-only quantity for discrete units
+                    $itemUnit = trim(mb_strtolower((string) $item->unit));
+                    if (in_array($itemUnit, $discreteUnits, true) && fmod((float) $qty, 1.0) != 0.0) {
+                        throw BusinessRuleException::make('invoices.discrete_unit_integer_only', ['item' => $item->name, 'quantity' => $qty, 'unit' => $item->unit]);
+                    }
+
+                    $itemDiscount = Decimal::normalize((string) ($line['discount_amount'] ?? '0.000'));
+
+                    $priceAudit = $priceGuard->evaluate(
+                        $item,
+                        $customer,
+                        $storeId,
+                        $qty,
+                        isset($line['unit_price']) ? (string) $line['unit_price'] : null,
+                        $itemDiscount,
+                        (int) $lineIndex,
+                    );
+                    $unitPrice = $priceAudit['unit_price'];
+
+                    // Check stock availability atomically against current locked balances
+                    $stockBefore = $itemStocks[$itemId] ?? (string) $item->current_stock;
+                    if (! $allowNegativeStock && bccomp($stockBefore, $qty, 3) < 0) {
+                        throw InsufficientStockException::forItem($item->name, $stockBefore);
+                    }
+                    $stockAfter = bcsub($stockBefore, $qty, 3);
+                    $itemStocks[$itemId] = $stockAfter;
+                    $dirtyItems[$itemId] = $item;
+
+                    if ($storeId !== null) {
+                        $storeStock = $lockedStoreStocks[$itemId] ?? null;
+                        if ($storeStock === null) {
+                            throw InsufficientStockException::forStore($item->name, $storeName ?? "#{$storeId}", '0.000', (string) $item->unit);
+                        }
+                        $branchBefore = $storeStockQuantities[$itemId] ?? (string) $storeStock->quantity;
+                        if (! $allowNegativeStock && bccomp($branchBefore, $qty, 3) < 0) {
+                            throw InsufficientStockException::forStore(
+                                $item->name,
+                                $storeName ?? "#{$storeId}",
+                                $branchBefore,
+                                (string) $item->unit,
+                            );
+                        }
+                        $storeStockQuantities[$itemId] = bcsub($branchBefore, $qty, 3);
+                        $dirtyStoreStocks[$itemId] = $storeStock;
+                    }
+
+                    // Line Total = (Quantity * Unit Price) - Item Discount
+                    // SETG-13: half-up at scale 3, identical to the POS (helpers/decimal.js dMul).
+                    $grossLineTotal = Decimal::mul($qty, $unitPrice);
+                    $netLineTotal = bcsub($grossLineTotal, $itemDiscount, 3);
+                    if (bccomp($netLineTotal, '0.000', 3) < 0) {
+                        $netLineTotal = '0.000';
+                    }
+
+                    $effectiveCost = bccomp($item->weighted_avg_cost, '0.000', 3) > 0
+                        ? $item->weighted_avg_cost
+                        : $item->cost_price;
+
+                    $lineCost = Decimal::mul($qty, $effectiveCost);
+                    $totalCost = bcadd($totalCost, $lineCost, 3);
+
+                    $entrySequence = isset($line['entry_sequence']) && $line['entry_sequence'] !== ''
+                        ? (int) $line['entry_sequence']
+                        : ((int) $lineIndex + 1);
+
+                    $preparedItems[] = [
+                        'item_id' => $item->id,
+                        'entry_sequence' => $entrySequence,
+                        'quantity' => $qty,
+                        'cost_price' => Decimal::normalize((string) $effectiveCost),
+                        'unit_price' => Decimal::normalize((string) $unitPrice),
+                        'list_unit_price' => Decimal::normalize((string) $priceAudit['list_unit_price']),
+                        'price_source' => $priceAudit['price_source'],
+                        'override_approved_by' => $priceAudit['override_approved_by'],
+                        'discount_amount' => $itemDiscount,
+                        'total_price' => $netLineTotal,
+                    ];
+
+                    $preparedMovements[] = [
+                        'item_id' => $item->id,
+                        'store_id' => $storeId,
+                        'movement_type' => 'sales_out',
+                        'quantity' => $qty,
+                        'stock_before' => Decimal::normalize($stockBefore),
+                        'stock_after' => Decimal::normalize($stockAfter),
+                        'unit_cost' => Decimal::normalize((string) $item->cost_price),
+                        'source_type' => Invoice::class,
+                        'user_id' => $actorId,
+                    ];
+
+                    $subtotal = bcadd($subtotal, $netLineTotal, 3);
+                    $grossTotal = bcadd($grossTotal, $grossLineTotal, 3);
+                    $lineDiscountsTotal = bcadd($lineDiscountsTotal, $itemDiscount, 3);
                 }
 
-                $itemDiscount = Decimal::normalize((string) ($line['discount_amount'] ?? '0.000'));
+                // S3: Invoice-level Discount Calculation
+                $discountType = $data['discount_type'] ?? 'fixed';
+                $discountValue = $data['discount_value'] ?? '0.000';
+                $invoiceDiscountAmount = SaleDiscountGuard::invoiceDiscountAmount($subtotal, (string) $discountType, (string) $discountValue);
 
-                $priceAudit = $priceGuard->evaluate(
-                    $item,
-                    $customer,
-                    $storeId,
-                    $qty,
-                    isset($line['unit_price']) ? (string) $line['unit_price'] : null,
-                    $itemDiscount,
-                    (int) $lineIndex,
-                );
-                $unitPrice = $priceAudit['unit_price'];
+                // POS-07: the cap on the exact totals (the approver, if any, was resolved before the transaction).
+                $discountGuard->assertWithinCap($storeId, $grossTotal, bcadd($lineDiscountsTotal, $invoiceDiscountAmount, 3));
 
-                // Line Total = (Quantity * Unit Price) - Item Discount
-                // SETG-13: half-up at scale 3, identical to the POS (helpers/decimal.js dMul).
-                $grossLineTotal = Decimal::mul($qty, $unitPrice);
-                $netLineTotal = bcsub($grossLineTotal, $itemDiscount, 3);
-                if (bccomp($netLineTotal, '0.000', 3) < 0) {
-                    $netLineTotal = '0.000';
+                // S3.5: Prepare Dynamic Additional Expenses
+                $rawExpenses = $data['additional_expenses'] ?? [];
+                $customerExpensesTotal = '0.000';
+                $preparedExpenses = [];
+
+                if (! empty($data['shipping_cost']) && bccomp((string) $data['shipping_cost'], '0.000', 3) > 0 && empty($rawExpenses)) {
+                    $rawExpenses[] = [
+                        'title' => 'مصاريف شحن وتوصيل',
+                        'amount' => (string) $data['shipping_cost'],
+                        'allocation_method' => 'by_quantity',
+                        'paid_by' => 'customer_account',
+                    ];
                 }
 
-                $effectiveCost = bccomp($item->weighted_avg_cost, '0.000', 3) > 0
-                    ? $item->weighted_avg_cost
-                    : $item->cost_price;
-
-                $lineCost = Decimal::mul($qty, $effectiveCost);
-                $totalCost = bcadd($totalCost, $lineCost, 3);
-
-                $entrySequence = isset($line['entry_sequence']) && $line['entry_sequence'] !== ''
-                    ? (int) $line['entry_sequence']
-                    : ((int) $lineIndex + 1);
-
-                // Create invoice item row
-                $invoice->items()->create([
-                    'item_id' => $item->id,
-                    'entry_sequence' => $entrySequence,
-                    'quantity' => $qty,
-                    'cost_price' => $effectiveCost,
-                    'unit_price' => $unitPrice,
-                    'list_unit_price' => $priceAudit['list_unit_price'],
-                    'price_source' => $priceAudit['price_source'],
-                    'override_approved_by' => $priceAudit['override_approved_by'],
-                    'discount_amount' => $itemDiscount,
-                    'total_price' => $netLineTotal,
-                ]);
-
-                // S2: Deduct stock atomically and log movement
-                $this->stockService->deductStock(
-                    item: $item,
-                    quantity: $qty,
-                    source: $invoice,
-                    documentNumber: $invoice->invoice_number,
-                    movementType: 'sales_out',
-                    notes: "صرف مبيعات بالفاتورة رقم {$invoice->invoice_number}",
-                    storeId: $storeId,
-                    actorId: $this->actorId($data),
-                );
-
-                $subtotal = bcadd($subtotal, $netLineTotal, 3);
-                $grossTotal = bcadd($grossTotal, $grossLineTotal, 3);
-                $lineDiscountsTotal = bcadd($lineDiscountsTotal, $itemDiscount, 3);
-            }
-
-            // S3: Invoice-level Discount Calculation
-            $discountType = $data['discount_type'] ?? 'fixed';
-            $discountValue = $data['discount_value'] ?? '0.000';
-            $invoiceDiscountAmount = '0.000';
-
-            // SETG-13 / POS-07: half-up, identical to dPercent(); never above the subtotal.
-            $invoiceDiscountAmount = SaleDiscountGuard::invoiceDiscountAmount($subtotal, (string) $discountType, (string) $discountValue);
-
-            // POS-07: the cap on the exact totals (the approver, if any, was resolved before the transaction).
-            $discountGuard->assertWithinCap($storeId, $grossTotal, bcadd($lineDiscountsTotal, $invoiceDiscountAmount, 3));
-
-            // S3.5: Process Dynamic Additional Expenses
-            $rawExpenses = $data['additional_expenses'] ?? [];
-            $additionalExpensesTotal = '0.000';
-            $customerExpensesTotal = '0.000';
-
-            if (! empty($data['shipping_cost']) && bccomp((string) $data['shipping_cost'], '0.000', 3) > 0 && empty($rawExpenses)) {
-                $rawExpenses[] = [
-                    'title' => 'مصاريف شحن وتوصيل',
-                    'amount' => (string) $data['shipping_cost'],
-                    'allocation_method' => 'by_quantity',
-                    'paid_by' => 'customer_account',
-                ];
-            }
-
-            foreach ($rawExpenses as $exp) {
-                $expAmount = (string) ($exp['amount'] ?? '0.000');
-                if (bccomp($expAmount, '0.000', 3) <= 0) {
-                    continue;
-                }
-                $title = trim($exp['title'] ?? 'مصاريف إضافية');
-                $method = $exp['allocation_method'] ?? 'by_quantity';
-                $paidBy = $exp['paid_by'] ?? 'customer_account';
-                $expNotes = $exp['notes'] ?? null;
-
-                $additionalExpensesTotal = bcadd($additionalExpensesTotal, $expAmount, 3);
-
-                $expenseRecord = $invoice->additionalExpenses()->create([
-                    'title' => $title,
-                    'amount' => $expAmount,
-                    'allocation_method' => $method,
-                    'paid_by' => $paidBy,
-                    'notes' => $expNotes,
-                ]);
-
-                if ($paidBy === 'customer_account' || $paidBy === 'supplier_account') {
-                    $customerExpensesTotal = bcadd($customerExpensesTotal, $expAmount, 3);
-                } else {
-                    $paymentMethod = str_replace('treasury_', '', $paidBy) ?: 'cash';
-                    $expenseNumber = app(DocumentNumberService::class)->nextDated('EXP', 4, Expense::class, 'expense_number');
-                    $expense = Expense::create([
-                        'expense_number' => $expenseNumber,
-                        'category' => 'shipping',
-                        'title' => "مصروف فاتورة [{$invoice->invoice_number}]: {$title}",
+                foreach ($rawExpenses as $exp) {
+                    $expAmount = (string) ($exp['amount'] ?? '0.000');
+                    if (bccomp($expAmount, '0.000', 3) <= 0) {
+                        continue;
+                    }
+                    $paidBy = $exp['paid_by'] ?? 'customer_account';
+                    if ($paidBy === 'customer_account' || $paidBy === 'supplier_account') {
+                        $customerExpensesTotal = bcadd($customerExpensesTotal, $expAmount, 3);
+                    }
+                    $preparedExpenses[] = [
+                        'title' => trim($exp['title'] ?? 'مصاريف إضافية'),
                         'amount' => $expAmount,
-                        'payment_method' => $paymentMethod,
-                        'expense_date' => $invoice->invoice_date,
-                        'store_id' => $invoice->store_id,
-                        'user_id' => $this->actorId($data),
-                        'notes' => "مصروف خدمات/شحن مسدد من الخزينة لفاتورة مبيعات رقم {$invoice->invoice_number}",
-                    ]);
-
-                    $expenseRecord->update(['notes' => ($expNotes ? "{$expNotes} | " : '')."رقم المصروف: {$expenseNumber}"]);
+                        'allocation_method' => $exp['allocation_method'] ?? 'by_quantity',
+                        'paid_by' => $paidBy,
+                        'notes' => $exp['notes'] ?? null,
+                    ];
                 }
-            }
 
-            $afterDiscount = bcsub($subtotal, $invoiceDiscountAmount, 3);
-            $netTotal = bcadd($afterDiscount, $customerExpensesTotal, 3);
+                $afterDiscount = bcsub($subtotal, $invoiceDiscountAmount, 3);
+                $netTotal = bcadd($afterDiscount, $customerExpensesTotal, 3);
 
-            // S4: Payments and Remaining Amounts (bounds enforced; a violation rolls back the whole transaction)
-            $checkout = $this->resolveCheckoutPayments(
-                paymentType: (string) ($data['payment_type'] ?? 'cash'),
-                payments: $this->normalizeSplitPayments($data['payments'] ?? []),
-                netTotal: $netTotal,
-                paidAmountInput: isset($data['paid_amount']) ? (string) $data['paid_amount'] : null,
-                fallbackMethod: (string) ($data['payment_method'] ?? PaymentMethod::Cash->value),
-            );
-            $paidAmount = $checkout['paid'];
+                // S4: Payments and Remaining Amounts (bounds enforced; a violation rolls back the whole transaction)
+                $checkout = $this->resolveCheckoutPayments(
+                    paymentType: $paymentType,
+                    payments: $this->normalizeSplitPayments($data['payments'] ?? []),
+                    netTotal: $netTotal,
+                    paidAmountInput: isset($data['paid_amount']) ? (string) $data['paid_amount'] : null,
+                    fallbackMethod: (string) ($data['payment_method'] ?? PaymentMethod::Cash->value),
+                );
+                $paidAmount = $checkout['paid'];
+                $remainingAmount = bcsub($netTotal, $paidAmount, 3);
 
-            $remainingAmount = bcsub($netTotal, $paidAmount, 3);
+                if (! $affectsCustomerBalance && bccomp($remainingAmount, '0.000', 3) !== 0) {
+                    throw new \LogicException('Non-credit invoice unexpectedly has a remaining balance.');
+                }
 
-            $paymentStatus = 'unpaid';
-            if (bccomp($remainingAmount, '0.000', 3) === 0) {
-                $paymentStatus = 'paid';
-            } elseif (bccomp($paidAmount, '0.000', 3) > 0) {
-                $paymentStatus = 'partially_paid';
-            }
+                $paymentStatus = 'unpaid';
+                if (bccomp($remainingAmount, '0.000', 3) === 0) {
+                    $paymentStatus = 'paid';
+                } elseif (bccomp($paidAmount, '0.000', 3) > 0) {
+                    $paymentStatus = 'partially_paid';
+                }
 
-            $invoice->update([
-                'subtotal' => $subtotal,
-                'discount_type' => $discountType,
-                'discount_value' => $discountValue,
-                'discount_amount' => $invoiceDiscountAmount,
-                'discount_override_by' => $priceGuard->discountApproverId() ?? $priceGuard->invoiceDiscountFloorApproverId(),
-                'shipping_cost' => $customerExpensesTotal,
-                'net_total' => $netTotal,
-                'paid_amount' => $paidAmount,
-                'remaining_amount' => $remainingAmount,
-                'change_amount' => $checkout['change'],
-                'payment_status' => $paymentStatus,
-                'total_cost' => $totalCost,
-            ]);
+                // DEC-SHIFT: a sale subject to the shift rule (POS-10) is refused (409, everything above
+                // rolls back) when its store's shift was closed after the pre-transaction check.
+                if ($requireOpenShift) {
+                    // SHIFT-01: in a per-cashier branch, the seller's own shift (the invoice's user_id).
+                    app(SaleShiftGuard::class)->assertShiftStillOpen($storeId, $actorId);
+                }
 
-            // S5: One voucher per resolved line. Lines already exclude the change, so the
-            // recorded payments sum exactly to paid_amount (never inflating balance/treasury).
-            $voucherNote = $checkout['split']
-                ? __('invoices.payment_note_split', ['number' => $invoice->invoice_number])
-                : __('invoices.payment_note_on_issue', ['number' => $invoice->invoice_number]);
+                // P0-2: Allocate document numbers as late as possible in the transaction, after all
+                // validations, stock checks, pricing, discount caps, shift checks and payments succeeded.
+                $invoiceDate = $data['invoice_date'] ?? $this->tenantClock->businessDate();
+                $invoiceNumber = $data['invoice_number']
+                    ?? ($invoicePrefix !== null
+                        ? app(DocumentNumberService::class)->nextFor($invoicePrefix, 4, Invoice::class, 'invoice_number')
+                        : $this->generateUniqueNumber($storeId));
 
-            foreach ($checkout['lines'] as $line) {
-                Payment::create([
-                    'payment_number' => app(DocumentNumberService::class)->nextDated('PAY-INV', 6, Payment::class, 'payment_number'),
+                $invoice = Invoice::create([
+                    'invoice_number' => $invoiceNumber,
+                    'client_uuid' => $clientUuid,
                     'customer_id' => $customer->id,
-                    'invoice_id' => $invoice->id,
-                    'store_id' => $invoice->store_id,
-                    'user_id' => $this->actorId($data),
-                    'amount' => $line['amount'],
-                    'payment_date' => $invoice->invoice_date,
-                    'payment_method' => $line['method'],
-                    'notes' => $voucherNote,
+                    'user_id' => $actorId,
+                    'store_id' => $storeId,
+                    // SETG-2 ext: the business date on the tenant clock (cutoff-aware), never the server date.
+                    'invoice_date' => $invoiceDate,
+                    'payment_type' => $paymentType,
+                    'payment_method' => $data['payment_method'] ?? 'cash',
+                    'status' => 'confirmed',
+                    'payment_status' => $paymentStatus,
+                    'subtotal' => $subtotal,
+                    'discount_type' => $discountType,
+                    'discount_value' => $discountValue,
+                    'discount_amount' => $invoiceDiscountAmount,
+                    'discount_override_by' => $priceGuard->discountApproverId() ?? $priceGuard->invoiceDiscountFloorApproverId(),
+                    'shipping_cost' => $customerExpensesTotal,
+                    'net_total' => $netTotal,
+                    'paid_amount' => $paidAmount,
+                    'remaining_amount' => $remainingAmount,
+                    'change_amount' => $checkout['change'],
+                    'total_cost' => $totalCost,
+                    'notes' => $data['notes'] ?? null,
                 ]);
-            }
 
-            // S6: Update Customer balance
-            $balanceAfter = $this->customerBalanceService->updateBalance($customer->id);
+                // Persist updated stock balances once per touched item / store_stock.
+                foreach ($dirtyStoreStocks as $itemId => $storeStock) {
+                    $storeStock->quantity = $storeStockQuantities[$itemId];
+                    $storeStock->save();
+                }
+                foreach ($dirtyItems as $itemId => $item) {
+                    $item->current_stock = $itemStocks[$itemId];
+                    $item->save();
+                }
 
-            // SHOP-03: the credit limit, on the customer row locked above and the exact new balance. This
-            // invoice adds exactly its remaining amount, so the balance before it is after - remaining.
-            // A refusal rolls back the whole sale (stock, payments, numbers).
-            $creditGuard->assertWithinLimit($customer, bcsub($balanceAfter, $remainingAmount, 3), $balanceAfter, $invoice);
+                $now = Carbon::now();
+                if ($preparedItems !== []) {
+                    $invoiceItemRows = array_map(
+                        static fn (array $row): array => [
+                            ...$row,
+                            'invoice_id' => $invoice->id,
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ],
+                        $preparedItems,
+                    );
+                    InvoiceItem::insert($invoiceItemRows);
+                }
 
-            // S7: Audit & Activity Log
-            $this->auditLogService->log(
-                action: 'invoice_confirmed',
-                auditable: $invoice,
-                oldValues: null,
-                newValues: $invoice->toArray(),
-                actorId: $this->actorId($data),
-            );
+                if ($preparedMovements !== []) {
+                    $movementNotes = "صرف مبيعات بالفاتورة رقم {$invoiceNumber}";
+                    $stockMovementRows = array_map(
+                        static fn (array $row): array => [
+                            ...$row,
+                            'source_id' => $invoice->id,
+                            'document_number' => $invoiceNumber,
+                            'notes' => $movementNotes,
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ],
+                        $preparedMovements,
+                    );
+                    StockMovement::insert($stockMovementRows);
+                }
 
-            $this->activityLogService->logSales(
-                action: 'created',
-                invoice: $invoice,
-                description: "تم إنشاء واعتماد فاتورة مبيعات جديدة رقم [{$invoice->invoice_number}] للعميل ({$customer->name}) بقيمة ".number_format((float) $invoice->net_total, 2).' '.app(TenantSettings::class)->currencyLabel()
-            );
+                foreach ($preparedExpenses as $exp) {
+                    $expenseRecord = $invoice->additionalExpenses()->create($exp);
+                    if ($exp['paid_by'] !== 'customer_account' && $exp['paid_by'] !== 'supplier_account') {
+                        $paymentMethod = str_replace('treasury_', '', $exp['paid_by']) ?: 'cash';
+                        $expenseNumber = app(DocumentNumberService::class)->nextDated('EXP', 4, Expense::class, 'expense_number');
+                        Expense::create([
+                            'expense_number' => $expenseNumber,
+                            'category' => 'shipping',
+                            'title' => "مصروف فاتورة [{$invoiceNumber}]: {$exp['title']}",
+                            'amount' => $exp['amount'],
+                            'payment_method' => $paymentMethod,
+                            'expense_date' => $invoice->invoice_date,
+                            'store_id' => $invoice->store_id,
+                            'user_id' => $actorId,
+                            'notes' => "مصروف خدمات/شحن مسدد من الخزينة لفاتورة مبيعات رقم {$invoiceNumber}",
+                        ]);
 
-            return $invoice;
-        });
+                        $expenseRecord->update([
+                            'notes' => ($exp['notes'] ? "{$exp['notes']} | " : '')."رقم المصروف: {$expenseNumber}",
+                        ]);
+                    }
+                }
+
+                // S5: One voucher per resolved line. Lines already exclude the change, so the
+                // recorded payments sum exactly to paid_amount (never inflating balance/treasury).
+                $voucherNote = $checkout['split']
+                    ? __('invoices.payment_note_split', ['number' => $invoiceNumber])
+                    : __('invoices.payment_note_on_issue', ['number' => $invoiceNumber]);
+
+                foreach ($checkout['lines'] as $line) {
+                    Payment::create([
+                        'payment_number' => app(DocumentNumberService::class)->nextDated('PAY-INV', 6, Payment::class, 'payment_number'),
+                        'customer_id' => $customer->id,
+                        'invoice_id' => $invoice->id,
+                        'store_id' => $invoice->store_id,
+                        'user_id' => $actorId,
+                        'amount' => $line['amount'],
+                        'payment_date' => $invoice->invoice_date,
+                        'payment_method' => $line['method'],
+                        'notes' => $voucherNote,
+                    ]);
+                }
+
+                // S6 / P0-1: Only credit/partial sales change customer receivables and touch the customer balance.
+                if ($affectsCustomerBalance) {
+                    $balanceAfter = $this->customerBalanceService->updateBalance($customer->id);
+
+                    // SHOP-03: the credit limit, on the customer row locked above and the exact new balance.
+                    $creditGuard->assertWithinLimit($customer, bcsub($balanceAfter, $remainingAmount, 3), $balanceAfter, $invoice);
+                }
+
+                // S7 / P0-4: Defer audit and activity logging until after commit so locks are already released.
+                $auditPayload = $invoice->toArray();
+                $customerName = (string) $customer->name;
+                DB::afterCommit(function () use ($invoice, $customer, $customerName, $auditPayload, $actorId, $currencyLabel): void {
+                    $invoice->setRelation('customer', $customer);
+                    $this->auditLogService->log(
+                        action: 'invoice_confirmed',
+                        auditable: $invoice,
+                        oldValues: null,
+                        newValues: $auditPayload,
+                        actorId: $actorId,
+                    );
+
+                    $this->activityLogService->logSales(
+                        action: 'created',
+                        invoice: $invoice,
+                        description: "تم إنشاء واعتماد فاتورة مبيعات جديدة رقم [{$invoice->invoice_number}] للعميل ({$customerName}) بقيمة ".number_format((float) $invoice->net_total, 2).' '.$currencyLabel,
+                    );
+                });
+
+                return $invoice;
+            },
+            lockWaitTimeoutSeconds: TransactionRetry::checkoutLockWaitTimeout(),
+        );
     }
 
     private function resolveInvoiceStoreId(array $data): ?int

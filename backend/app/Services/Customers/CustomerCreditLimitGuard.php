@@ -136,6 +136,7 @@ final class CustomerCreditLimitGuard
         $total = '0.000';
         $items = Item::query()
             ->whereIn('id', array_map('intval', array_column((array) ($data['items'] ?? []), 'item_id')))
+            ->when($storeId !== null, fn ($q) => $q->with(['storeStocks' => fn ($sq) => $sq->where('store_id', $storeId)]))
             ->get()
             ->keyBy('id');
 
