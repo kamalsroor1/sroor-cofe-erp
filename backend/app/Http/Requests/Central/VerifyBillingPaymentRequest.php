@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Requests\Central;
 
 use App\Enums\CentralPermission;
+use App\Models\BillingInvoice;
 use App\Support\PlatformSuperAdmin;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -24,12 +26,12 @@ final class VerifyBillingPaymentRequest extends FormRequest
     }
 
     /**
-     * @return array<string, list<string>>
+     * @return array<string, list<string|Closure>>
      */
     public function rules(): array
     {
         return [
-            'transferred_at' => ['sometimes', 'nullable', 'date', 'before_or_equal:now'],
+            'transferred_at' => ['sometimes', 'nullable', 'bail', 'date', BillingInvoice::notInFutureRule()],
         ];
     }
 }

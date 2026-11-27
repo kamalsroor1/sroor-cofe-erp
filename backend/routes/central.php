@@ -313,8 +313,10 @@ Route::prefix('v1/super-admin')
         Route::post('/app-versions', [SuperAdminAppVersionController::class, 'store'])
             ->middleware([$can(CentralPermission::AppVersionsManage), RequireRecentTwoFactor::class])->name('app_versions.store');
         Route::patch('/app-versions/{appVersion}/toggle-active', [SuperAdminAppVersionController::class, 'toggleActive'])
+            ->whereNumber('appVersion')
             ->middleware([$can(CentralPermission::AppVersionsManage), RequireRecentTwoFactor::class])->name('app_versions.toggle_active');
         Route::delete('/app-versions/{appVersion}', [SuperAdminAppVersionController::class, 'destroy'])
+            ->whereNumber('appVersion')
             ->middleware([$can(CentralPermission::AppVersionsManage), RequireRecentTwoFactor::class])->name('app_versions.destroy');
     });
 

@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Policies\ReturnPolicy;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
+use App\Support\Database\LikePattern;
 use App\Support\Money\Decimal;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -68,10 +69,10 @@ final class ReturnController extends Controller
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->where('return_number', 'like', "%{$search}%")
-                    ->orWhere('reason', 'like', "%{$search}%")
-                    ->orWhereHas('customer', fn ($cq) => $cq->where('name', 'like', "%{$search}%"))
-                    ->orWhereHas('supplier', fn ($sq) => $sq->where('name', 'like', "%{$search}%"));
+                LikePattern::whereContains($q, 'return_number', $search);
+                LikePattern::orWhereContains($q, 'reason', $search);
+                $q->orWhereHas('customer', fn ($cq) => LikePattern::whereContains($cq, 'name', $search))
+                    ->orWhereHas('supplier', fn ($sq) => LikePattern::whereContains($sq, 'name', $search));
             });
         }
 

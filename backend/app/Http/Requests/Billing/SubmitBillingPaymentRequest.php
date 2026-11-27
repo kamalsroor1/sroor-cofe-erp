@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Billing;
 
 use App\Enums\Billing\BillingPaymentMethod;
+use App\Models\BillingInvoice;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -44,8 +45,11 @@ final class SubmitBillingPaymentRequest extends FormRequest
                 BillingPaymentMethod::BankTransfer->value,
             ])],
             'amount' => ['required', 'numeric', 'gt:0', 'regex:/^\d{1,9}(\.\d{1,3})?$/'],
-            'payer_reference' => ['sometimes', 'nullable', 'string', 'min:3', 'max:100', 'not_regex:/[<>]/'],
-            'paid_at' => ['required', 'date', 'before_or_equal:now'],
+            'payer_reference' => ['sometimes', 'nullable', 'string', 'min:2', 'max:100', 'not_regex:/[<>]/'],
+            'reference' => ['sometimes', 'nullable', 'string', 'min:2', 'max:100', 'not_regex:/[<>]/'],
+            'note' => ['sometimes', 'nullable', 'string', 'max:500', 'not_regex:/[<>]/'],
+            'notes' => ['sometimes', 'nullable', 'string', 'max:500', 'not_regex:/[<>]/'],
+            'paid_at' => ['required', 'bail', 'date', BillingInvoice::notInFutureRule()],
         ];
     }
 }

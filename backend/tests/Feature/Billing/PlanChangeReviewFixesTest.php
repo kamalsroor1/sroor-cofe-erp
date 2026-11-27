@@ -95,12 +95,9 @@ final class PlanChangeReviewFixesTest extends PlanChangeTestCase
         Subscription::query()->where('tenant_id', $tenant->getKey())->update(['is_founder' => true, 'founder_price_until' => now()->addMonths(6)]);
     }
 
-    private function holdThenRelease(PlanChangeRequest $row, array $body = []): BillingInvoice
+    private function issueFounder(PlanChangeRequest $row, array $body = []): BillingInvoice
     {
-        $this->postJson(self::QUEUE.'/'.$row->getKey().'/invoice', [], $this->admin)->assertStatus(409)
-            ->assertJsonPath('error_code', 'billing.upgrade_held_for_founder_review');
-
-        return $this->issue($row, ['release_founder_hold' => true] + $body);
+        return $this->issue($row, $body);
     }
 
     // ------------------------------------------------------------------ 1. founder claim
@@ -139,9 +136,9 @@ final class PlanChangeReviewFixesTest extends PlanChangeTestCase
         $this->assertSame($slots, app(FounderPricingService::class)->claimedSlots());
     }
 
-    // ------------------------------------------------------------------ 2. list price on the plan-change path
+    // ------------------------------------------------------------------ 2. founder price on automated plan-change path
 
-    public function test_a_released_founder_upgrade_with_renewal_bills_the_renewal_at_the_list_price(): void
+    public function test_a_founder_upgrade_with_renewal_bills_automatically_at_the_founder_price(): void
     {
         $this->setTaxRate('14.000');
         $small = $this->plan(['price_monthly' => '499.000', 'founder_price_monthly' => '299.000']);
@@ -149,20 +146,23 @@ final class PlanChangeReviewFixesTest extends PlanChangeTestCase
         $tenant = $this->subscribedTenant($small, 10);
         $this->makeFounder($tenant);
 
-        $invoice = $this->holdThenRelease($this->requestRow($tenant, ['requested_plan_id' => $big->getKey()]), ['with_renewal' => true]);
+        $invoice = $this->issueFounder($this->requestRow($tenant, ['requested_plan_id' => $big->getKey()]), ['with_renewal' => true]);
 
-        // Difference: (999 - 499) x 10 / 30 = 166.667 (list prices); renewal: list 999, never 699 / 849.
+        // Difference: (699 - 299) x 10 / 30 = 133.333 (founder prices); renewal: founder 699.
         $this->assertCount(2, $invoice->lines);
-        $this->assertSame('166.667', $invoice->lines[0]['amount']);
-        $this->assertSame('999.000', $invoice->lines[1]['amount']);
-        $this->assertFalse($invoice->lines[1]['founder']);
-        $this->assertSame('list', $invoice->lines[1]['price_step']);
-        $this->assertTrue($invoice->lines[1]['founder_excluded']);
-        // 1165.667 + 14% (163.193) = 1328.860
-        $this->assertSame('1328.860', $invoice->total);
+        $this->assertSame('133.333', $invoice->lines[0]['amount']);
+        $this->assertSame('299.000', $invoice->lines[0]['old_price']);
+        $this->assertSame('699.000', $invoice->lines[0]['new_price']);
+        $this->assertTrue($invoice->lines[0]['founder']);
+        $this->assertSame('699.000', $invoice->lines[1]['amount']);
+        $this->assertTrue($invoice->lines[1]['founder']);
+        $this->assertSame('founder', $invoice->lines[1]['price_step']);
+        $this->assertArrayNotHasKey('founder_excluded', $invoice->lines[1]);
+        // 832.333 + 14% (116.527) = 948.860
+        $this->assertSame('948.860', $invoice->total);
     }
 
-    public function test_a_lapsed_founder_full_cycle_plan_change_is_billed_at_the_list_price(): void
+    public function test_a_lapsed_founder_full_cycle_plan_change_bills_automatically_at_the_founder_price(): void
     {
         $small = $this->plan(['price_monthly' => '499.000', 'founder_price_monthly' => '299.000']);
         $big = $this->plan(['price_monthly' => '999.000', 'founder_price_monthly' => '699.000']);
@@ -172,32 +172,58 @@ final class PlanChangeReviewFixesTest extends PlanChangeTestCase
         Tenant::query()->whereKey($tenant->getKey())->update(['subscription_ends_at' => now()->subDays(3), 'status' => 'past_due']);
         $slots = app(FounderPricingService::class)->claimedSlots();
 
-        $invoice = $this->holdThenRelease($this->requestRow(Tenant::query()->findOrFail($tenant->getKey()), ['requested_plan_id' => $big->getKey()]));
+        $invoice = $this->issueFounder($this->requestRow(Tenant::query()->findOrFail($tenant->getKey()), ['requested_plan_id' => $big->getKey()]));
 
         $this->assertCount(1, $invoice->lines);
-        $this->assertSame('999.000', $invoice->lines[0]['amount']);
-        $this->assertFalse($invoice->lines[0]['founder']);
-        $this->assertTrue($invoice->lines[0]['founder_excluded']);
+        $this->assertSame('699.000', $invoice->lines[0]['amount']);
+        $this->assertTrue($invoice->lines[0]['founder']);
+        $this->assertSame('founder', $invoice->lines[0]['price_step']);
+        $this->assertArrayNotHasKey('founder_excluded', $invoice->lines[0]);
 
         $this->verify($this->payment($invoice), $this->verifyBody())->assertOk();
         $this->assertSame($slots, app(FounderPricingService::class)->claimedSlots());
     }
 
-    // ------------------------------------------------------------------ 3. release guard
+    public function test_qa_founder_starter_to_growth_upgrade_uses_founder_prices_and_updates_subscription_amount(): void
+    {
+        $starter = $this->plan(['price_monthly' => '499.000', 'founder_price_monthly' => '349.000']);
+        $growth = $this->plan(['price_monthly' => '999.000', 'founder_price_monthly' => '699.000']);
+        $tenant = $this->subscribedTenant($starter, 30);
+        $this->makeFounder($tenant);
 
-    public function test_releasing_a_founder_hold_on_a_request_that_was_never_held_is_a_coded_409(): void
+        $invoice = $this->issueFounder($this->requestRow($tenant, ['requested_plan_id' => $growth->getKey()]));
+
+        // Full 30/30 days remaining: 699.000 - 349.000 = 350.000, founder=true.
+        $this->assertSame('350.000', $invoice->lines[0]['amount']);
+        $this->assertSame('349.000', $invoice->lines[0]['old_price']);
+        $this->assertSame('699.000', $invoice->lines[0]['new_price']);
+        $this->assertTrue($invoice->lines[0]['founder']);
+
+        $this->getJson('/api/v1/super-admin/billing-invoices/'.$invoice->getKey(), $this->centralHeaders($this->operator))
+            ->assertOk()
+            ->assertJsonPath('data.lines.0.amount', '350.000')
+            ->assertJsonPath('data.lines.0.founder', true);
+
+        $this->verify($this->payment($invoice), $this->verifyBody())->assertOk();
+
+        $subscription = Subscription::query()->where('tenant_id', $tenant->getKey())->sole();
+        $this->assertSame((int) $growth->getKey(), (int) $subscription->plan_id);
+        $this->assertSame('699.000', $subscription->amount);
+        $this->assertTrue((bool) $subscription->is_founder);
+    }
+
+    // ------------------------------------------------------------------ 3. backward-compatible release flag
+
+    public function test_optional_release_founder_hold_flag_is_accepted_gracefully(): void
     {
         $tenant = $this->subscribedTenant($this->plan(['price_monthly' => '499.000']), 10);
         $row = $this->requestRow($tenant, ['requested_plan_id' => $this->plan(['price_monthly' => '999.000'])->getKey()]);
 
         $this->postJson(self::QUEUE.'/'.$row->getKey().'/invoice', ['release_founder_hold' => true], $this->admin)
-            ->assertStatus(409)
-            ->assertJsonPath('error_code', 'billing.founder_hold_not_set')
-            ->assertJsonPath('message', __('billing.errors.founder_hold_not_set'))
-            ->assertJsonPath('details.request_id', $row->getKey());
+            ->assertCreated();
 
-        $this->assertSame(0, BillingInvoice::query()->count());
-        $this->assertTrue($row->fresh()?->isPending());
+        $this->assertSame(1, BillingInvoice::query()->count());
+        $this->assertSame('invoiced', $row->fresh()?->status->value);
     }
 
     // ------------------------------------------------------------------ 4. actual period days

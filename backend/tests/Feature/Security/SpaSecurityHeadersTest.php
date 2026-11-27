@@ -61,6 +61,9 @@ final class SpaSecurityHeadersTest extends TenantTestCase
 
         $response->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->assertHeader('X-Content-Type-Options', 'nosniff');
+        $this->assertCount(1, (array) $response->headers->all('Referrer-Policy'));
+        $this->assertCount(1, (array) $response->headers->all('X-Content-Type-Options'));
+        $this->assertCount(1, (array) $response->headers->all('Content-Security-Policy'));
         $this->assertStringContainsString('camera=()', (string) $response->headers->get('Permissions-Policy'));
         $this->assertFalse($response->headers->has('Strict-Transport-Security'), 'HSTS is sent by nginx');
     }
@@ -162,7 +165,13 @@ final class SpaSecurityHeadersTest extends TenantTestCase
         $response = $this->get('http://admin.csp-harness.test/super-admin/login')->assertOk();
 
         $this->assertCount(1, (array) $response->headers->all('Content-Security-Policy'));
+        $this->assertCount(1, (array) $response->headers->all('Referrer-Policy'));
+        $this->assertCount(1, (array) $response->headers->all('X-Content-Type-Options'));
+        $this->assertCount(1, (array) $response->headers->all('X-Frame-Options'));
+        $this->assertCount(1, (array) $response->headers->all('Strict-Transport-Security'));
         $response->assertHeader('Referrer-Policy', 'no-referrer');
+        $response->assertHeader('X-Content-Type-Options', 'nosniff');
+        $response->assertHeader('X-Frame-Options', 'DENY');
         $this->assertStringNotContainsString('frame-src', (string) $response->headers->get('Content-Security-Policy'));
     }
 }

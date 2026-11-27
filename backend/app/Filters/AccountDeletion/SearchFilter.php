@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filters\AccountDeletion;
 
 use App\Models\AccountDeletionRequest;
+use App\Support\Database\LikePattern;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -28,13 +29,8 @@ final class SearchFilter
         $search = $this->request->query('search');
 
         if (is_string($search) && trim($search) !== '') {
-            $term = '%'.addcslashes(mb_substr(trim($search), 0, 100), '%_\\').'%';
-            $query->where(static function (Builder $where) use ($term): void {
-                $where->where('contact_name', 'like', $term)
-                    ->orWhere('phone', 'like', $term)
-                    ->orWhere('email', 'like', $term)
-                    ->orWhere('shop_code', 'like', $term);
-            });
+            $term = mb_substr(trim($search), 0, 100);
+            LikePattern::whereContainsAny($query, ['contact_name', 'phone', 'email', 'shop_code'], $term);
         }
 
         return $next($query);

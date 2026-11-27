@@ -3,7 +3,6 @@ import { computed } from 'vue';
 import { Info } from 'lucide-vue-next';
 import AppModal from '../Common/AppModal.vue';
 import BaseButton from '../Common/BaseButton.vue';
-import BaseInput from '../Form/BaseInput.vue';
 import BaseSelect from '../Form/BaseSelect.vue';
 import BaseTextarea from '../Form/BaseTextarea.vue';
 import { useTrans } from '../../Composables/useTrans';
@@ -11,8 +10,6 @@ import {
   STATUS_NOTE_MAX_LENGTH,
   TENANT_STATUS_TARGETS,
   TENANT_SUSPENSION_REASONS,
-  TRIAL_EXTEND_MAX_DAYS,
-  statusAcceptsExtendDays,
   statusAcceptsReason,
   statusRequiresReason,
 } from '../../helpers/tenantStatusForm';
@@ -42,7 +39,6 @@ const currentStatusLabel = computed(() =>
   props.currentStatus ? t(`subscription.statuses.${props.currentStatus}`) : ''
 );
 
-const showExtendDays = computed(() => statusAcceptsExtendDays(props.form.status));
 const showReason = computed(() => statusAcceptsReason(props.form.status));
 const reasonRequired = computed(() => statusRequiresReason(props.form.status));
 
@@ -87,22 +83,6 @@ const update = (field, value) => emit('update:field', field, value);
         <Info class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
         <span>{{ $t('super.tenant_status.activation_hint') }}</span>
       </p>
-
-      <BaseInput
-        v-if="showExtendDays"
-        :model-value="form.extend_days"
-        :label="$t('super.tenant_status.trial_days_label')"
-        :placeholder="$t('super.extend_days_placeholder')"
-        :hint="$t('super.tenant_status.trial_days_hint')"
-        :error="errors.extend_days || null"
-        type="number"
-        inputmode="numeric"
-        min="0"
-        :max="TRIAL_EXTEND_MAX_DAYS"
-        input-class="font-mono"
-        data-testid="tenant-status-extend-days"
-        @update:model-value="update('extend_days', $event)"
-      />
 
       <BaseSelect
         v-if="showReason"

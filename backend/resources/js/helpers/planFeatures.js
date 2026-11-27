@@ -1,4 +1,17 @@
 /**
+ * Route / page-level entitlement check matching FeatureGate.vue and /system/context entitlements:
+ * allowed while entitlements are not loaded or not enforced (legacy planless tenants), or when no
+ * feature key is required; otherwise at least one canonical key must be present in `features`.
+ */
+export function hasEntitlementFeature(entitlements, keyOrKeys) {
+    const keys = (Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys]).filter(Boolean);
+    if (keys.length === 0) return true;
+    if (!entitlements || !entitlements.enforced) return true;
+    const features = Array.isArray(entitlements.features) ? entitlements.features : [];
+    return keys.some((key) => features.includes(key));
+}
+
+/**
  * Whether the tenant's plan / overrides include a feature. Same rules as FeatureGate.vue;
  * unknown features (or no tenant info yet) are allowed, the server stays the authority.
  */

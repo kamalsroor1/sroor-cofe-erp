@@ -47,7 +47,9 @@ class StoreReturnRequest extends FormRequest
             'refund_method' => ['nullable', 'string', 'in:cash,balance'],
             // Deprecated and IGNORED: still accepted so the current frontend does not get a 422
             // until the UI commit that sends refund_method. Never used as an amount.
-            'refund_amount' => ['nullable', 'numeric', 'min:0'],
+            'refund_amount' => ['nullable', 'numeric', 'min:0', 'decimal:0,3'],
+            'discount' => ['nullable', 'numeric', 'min:0', 'decimal:0,3'],
+            'discount_amount' => ['nullable', 'numeric', 'min:0', 'decimal:0,3'],
             'reason' => ['nullable', 'string', 'max:500'],
             'items' => ['required', 'array', 'min:1'],
             // Against a source document the line decides item and price (a client unit_price is
@@ -58,8 +60,10 @@ class StoreReturnRequest extends FormRequest
                 : ['prohibited'],
             // The other kind of link never applies to this return type.
             'items.*.'.($isSales ? 'purchase_item_id' : 'invoice_item_id') => ['prohibited'],
-            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
-            'items.*.unit_price' => [Rule::requiredIf(! $hasSource), 'nullable', 'numeric', 'min:0'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.001', 'decimal:0,3'],
+            'items.*.unit_price' => [Rule::requiredIf(! $hasSource), 'nullable', 'numeric', 'min:0', 'decimal:0,3'],
+            'items.*.discount' => ['nullable', 'numeric', 'min:0', 'decimal:0,3'],
+            'items.*.discount_amount' => ['nullable', 'numeric', 'min:0', 'decimal:0,3'],
             ...$this->priceOverrideRules(),
         ];
     }

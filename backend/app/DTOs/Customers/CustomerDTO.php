@@ -20,10 +20,16 @@ final class CustomerDTO
         // not send the field: create then uses the shop default and update keeps the stored limit.
         public readonly ?string $credit_limit = null,
         public readonly bool $credit_limit_provided = false,
+        public readonly string $price_tier = 'retail',
+        public readonly bool $price_tier_provided = false,
     ) {}
 
     public static function fromArray(array $data): self
     {
+        $priceTier = isset($data['price_tier']) && is_string($data['price_tier']) && $data['price_tier'] !== ''
+            ? $data['price_tier']
+            : null;
+
         return new self(
             name: (string) $data['name'],
             phone: isset($data['phone']) && $data['phone'] !== '' ? (string) $data['phone'] : null,
@@ -34,6 +40,8 @@ final class CustomerDTO
             is_active: ! isset($data['is_active']) || (bool) $data['is_active'],
             credit_limit: isset($data['credit_limit']) && $data['credit_limit'] !== '' ? Decimal::normalize((string) $data['credit_limit']) : null,
             credit_limit_provided: array_key_exists('credit_limit', $data),
+            price_tier: $priceTier ?? 'retail',
+            price_tier_provided: $priceTier !== null,
         );
     }
 
@@ -48,6 +56,7 @@ final class CustomerDTO
             'notes' => $this->notes,
             'is_active' => $this->is_active,
             'credit_limit' => $this->credit_limit,
+            'price_tier' => $this->price_tier,
         ];
     }
 }

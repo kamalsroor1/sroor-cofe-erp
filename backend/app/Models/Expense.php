@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property string $expense_number
+ * @property string|null $client_uuid
  * @property string $category
  * @property string $title
  * @property string $amount
@@ -31,6 +32,7 @@ class Expense extends Model
 
     protected $fillable = [
         'expense_number',
+        'client_uuid',
         'category',
         'cost_center',
         'title',

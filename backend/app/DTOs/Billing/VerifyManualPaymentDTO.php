@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\DTOs\Billing;
 
+use App\Models\BillingInvoice;
 use Carbon\CarbonImmutable;
 
 /**
@@ -27,12 +28,13 @@ final readonly class VerifyManualPaymentDTO
     public static function fromArray(array $data, int $paymentId): self
     {
         $raw = trim((string) ($data['transferred_at'] ?? ''));
+        $tz = BillingInvoice::platformTimezone();
 
         return new self(
             paymentId: $paymentId,
             transferredAt: $raw === ''
                 ? null
-                : CarbonImmutable::parse($raw)->setTimezone((string) config('app.timezone'))->startOfSecond(),
+                : CarbonImmutable::parse($raw, $tz)->setTimezone((string) config('app.timezone'))->startOfSecond(),
         );
     }
 }

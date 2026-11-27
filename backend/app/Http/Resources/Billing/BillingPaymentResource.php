@@ -113,6 +113,6 @@ final class BillingPaymentResource extends JsonResource
      */
     private function planRef(int $id, ?Plan $plan): array
     {
-        return ['id' => $id, 'name' => $plan?->name];
+        return ['id' => $id, 'name' => $plan?->localizedName()];
     }
 }

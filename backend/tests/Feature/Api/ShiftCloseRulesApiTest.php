@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
+use App\Models\ActivityLog;
 use App\Models\CashShift;
 use App\Models\Customer;
 use App\Models\Item;
@@ -210,6 +211,52 @@ final class ShiftCloseRulesApiTest extends TenantTestCase
             ->assertJsonPath('report.is_provisional', false)
             ->assertJsonPath('report.expected_cash_balance', '105.000')
             ->assertJsonPath('report.cash_difference', '-4.500');
+    }
+
+    public function test_closing_an_already_closed_shift_is_idempotent_without_duplicate_activity(): void
+    {
+        $opener = $this->createTenantUser($this->tenant, 'cashier');
+        $otherCashier = $this->createTenantUser($this->tenant, 'cashier');
+        $shiftId = $this->openShiftFor($opener, $this->storeA);
+        $this->sale($opener, '0.250'); // 5.000 cash -> expected 105.000
+
+        $first = $this->close($opener, $shiftId, '105.000')->assertOk()
+            ->assertJsonPath('data.id', $shiftId)
+            ->assertJsonPath('data.status', 'closed')
+            ->assertJsonPath('data.expected_cash_balance', '105.000')
+            ->assertJsonPath('data.actual_cash_balance', '105.000')
+            ->assertJsonPath('data.cash_difference', '0.000');
+
+        // Second device / double-click sends close again (even with different counted cash):
+        // must return 200 with the original closed shift without mutating balances or logging twice.
+        $second = $this->close($opener, $shiftId, '999.000')->assertOk()
+            ->assertJsonPath('data.id', $shiftId)
+            ->assertJsonPath('data.status', 'closed')
+            ->assertJsonPath('data.expected_cash_balance', '105.000')
+            ->assertJsonPath('data.actual_cash_balance', '105.000')
+            ->assertJsonPath('data.cash_difference', '0.000');
+
+        $this->assertSame($first->json('data.closed_at'), $second->json('data.closed_at'));
+
+        // Unauthorized cashier still receives 403, and other tenant/nonexistent shifts still receive 404.
+        $this->close($otherCashier, $shiftId, '105.000')->assertForbidden();
+        $this->close(null, 999999, '105.000')->assertNotFound();
+
+        $otherTenant = $this->createTenant();
+        $this->postJson(
+            '/api/v1/shifts/close',
+            ['shift_id' => $shiftId, 'actual_cash_balance' => '105.000'],
+            $this->tenantHeaders($otherTenant, $this->tenantAdmin($otherTenant)),
+        )->assertNotFound();
+
+        $this->inTenant($this->tenant, function () use ($shiftId): void {
+            $closedLogs = ActivityLog::query()
+                ->where('module', 'shifts')
+                ->where('action', 'shift_closed')
+                ->where('subject_id', $shiftId)
+                ->count();
+            $this->assertSame(1, $closedLogs);
+        });
     }
 
     // ------------------------------------------------------------------ helpers

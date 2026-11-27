@@ -87,8 +87,8 @@ final class RecordManualPaymentAction
 
             $this->assertNotDuplicate($invoice, $dto);
 
-            // #232 spec A: a payment is never dated before the invoice's issue day (start of that day).
-            if ($dto->paidAt->lessThan($invoice->earliestTransferAt())) {
+            // #232 spec A: a payment is never dated before the invoice's issue day (in platform timezone).
+            if ($invoice->isBeforeIssueDay($dto->paidAt)) {
                 throw ValidationException::withMessages(['paid_at' => __('billing.errors.transferred_at_before_invoice')]);
             }
 

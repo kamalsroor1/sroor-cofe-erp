@@ -86,20 +86,11 @@ final class SettingController extends Controller
         $stores = Store::where('is_active', true)->select('id', 'name', 'code')->get();
         $usersCount = User::count();
 
-        $systemInfo = [
-            'php_version' => PHP_VERSION,
-            'laravel_version' => app()->version(),
-            'environment' => app()->environment(),
-            'db_driver' => config('database.default'),
-            'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Local/Laragon',
-        ];
-
         return response()->json([
             'success' => true,
             'settings' => $settings,
             'stores' => $stores,
             'users_count' => $usersCount,
-            'system_info' => $systemInfo,
         ], 200);
     }
 

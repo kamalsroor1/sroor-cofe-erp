@@ -18,6 +18,9 @@ class ReorderAssistantService
      */
     public function getReorderSuggestions(?int $storeId = null, int $analysisDays = 14, int $targetCoverDays = 15): array
     {
+        $analysisDays = max(1, $analysisDays);
+        $targetCoverDays = max(1, $targetCoverDays);
+
         // Analysis window in tenant calendar days (SETG-2); invoice_date is a business DATE.
         $tenantNow = $this->tenantClock->now();
         $startDate = $tenantNow->subDays($analysisDays)->toDateString();

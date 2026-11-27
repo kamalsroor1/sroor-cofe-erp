@@ -9,6 +9,7 @@ use App\DTOs\Billing\RequestPlanChangeDTO;
 use App\Enums\Billing\AddonType;
 use App\Enums\Billing\PlanChangeRequestKind;
 use App\Enums\Billing\PlanChangeRequestStatus;
+use App\Enums\Billing\SubscriptionStatus;
 use App\Enums\CentralAuditEvent;
 use App\Enums\TenantStatus;
 use App\Exceptions\Billing\BillingException;
@@ -19,6 +20,7 @@ use App\Models\PlanChangeRequest;
 use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Services\CentralAuditLogger;
+use App\Services\Plans\FreePlanIds;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -162,24 +164,34 @@ final class RequestPlanChangeAction
             ->where('type', AddonType::Recurring->value)
             ->first();
 
-        $offered = $addon instanceof Addon && $tenant->plan_id !== null && PlanAddon::query()
-            ->where('plan_id', $tenant->plan_id)
-            ->where('addon_id', $addon->getKey())
-            ->where('is_available', true)
-            ->exists();
-
-        if (! $addon instanceof Addon || ! $offered) {
+        if (! $addon instanceof Addon) {
             throw BillingException::requestAddonUnavailable();
         }
 
         $subscription = Subscription::query()->where('tenant_id', $tenant->getKey())->orderByDesc('id')->first();
 
-        if (! $subscription instanceof Subscription) {
+        if (! $subscription instanceof Subscription
+            || $subscription->isFreePlanRow()
+            || $subscription->status === SubscriptionStatus::Trialing) {
             throw BillingException::addonNeedsSubscription();
         }
 
         if (! $subscription->isInForce()) {
+            if (app(FreePlanIds::class)->contains($tenant->plan_id)) {
+                throw BillingException::addonNeedsSubscription();
+            }
+
             throw BillingException::addonNeedsActiveSubscription();
+        }
+
+        $offered = $tenant->plan_id !== null && PlanAddon::query()
+            ->where('plan_id', $tenant->plan_id)
+            ->where('addon_id', $addon->getKey())
+            ->where('is_available', true)
+            ->exists();
+
+        if (! $offered) {
+            throw BillingException::requestAddonUnavailable();
         }
 
         return $addon;

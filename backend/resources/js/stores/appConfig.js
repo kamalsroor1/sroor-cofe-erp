@@ -3,6 +3,7 @@ import api from '../Services/api';
 import { applyThemeColor } from '../helpers/themeHelper';
 import { trans, setTranslations, loadBundledTranslations } from '../helpers/trans';
 import { applyDocumentLocale, directionFor, isSupportedLocale } from '../helpers/locale';
+import { hasEntitlementFeature } from '../helpers/planFeatures';
 import { isCentralAppContext } from '../Services/centralApi';
 
 function initialLocale() {
@@ -61,14 +62,7 @@ export const useAppConfigStore = defineStore('appConfig', {
          * (legacy planless tenants); otherwise the canonical key must be in `features`.
          * Accepts a key or an any-of array.
          */
-        hasFeature: (state) => (keyOrKeys) => {
-            const keys = (Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys]).filter(Boolean);
-            if (keys.length === 0) return true;
-            const ent = state.entitlements;
-            if (!ent || !ent.enforced) return true;
-            const features = Array.isArray(ent.features) ? ent.features : [];
-            return keys.some((key) => features.includes(key));
-        },
+        hasFeature: (state) => (keyOrKeys) => hasEntitlementFeature(state.entitlements, keyOrKeys),
         alertsCount: (state) => state.notifications.length,
     },
 

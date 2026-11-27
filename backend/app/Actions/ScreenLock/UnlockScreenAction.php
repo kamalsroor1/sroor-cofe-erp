@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\ScreenLock;
 
 use App\DTOs\Auth\UnlockScreenDTO;
+use App\Exceptions\ManagerPinThrottledException;
 use App\Models\User;
 use App\Services\Approvals\ManagerPinVerifier;
 use App\Support\Auth\CurrentPasswordVerifier;
@@ -60,6 +61,14 @@ final class UnlockScreenAction
                 $user,
                 null,
                 static fn (User $candidate): bool => (int) $candidate->id === (int) $user->id,
+            );
+        } catch (ManagerPinThrottledException $e) {
+            $retryAfter = $e->getHeaders()['Retry-After'] ?? 1;
+
+            throw ManagerPinThrottledException::forWait(
+                is_numeric($retryAfter) ? (int) $retryAfter : 1,
+                __('screen_lock.too_many_attempts'),
+                'screen_lock.too_many_attempts',
             );
         } catch (ValidationException) {
             throw ValidationException::withMessages(['pin' => __('screen_lock.pin_invalid')]);

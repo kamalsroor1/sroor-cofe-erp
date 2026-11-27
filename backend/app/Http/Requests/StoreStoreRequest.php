@@ -8,6 +8,17 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreStoreRequest extends FormRequest
 {
+    /**
+     * Store types are matched exactly when plan limits count stores (StoreLimitBucket), so a
+     * "VAN" or " van " would escape the vans limit and count as a branch: normalize it first.
+     */
+    protected function prepareForValidation(): void
+    {
+        if (is_string($this->input('type'))) {
+            $this->merge(['type' => strtolower(trim($this->input('type')))]);
+        }
+    }
+
     public function authorize(): bool
     {
         return $this->user()?->hasRole('admin') || $this->user()?->can('stores.manage') ?? false;

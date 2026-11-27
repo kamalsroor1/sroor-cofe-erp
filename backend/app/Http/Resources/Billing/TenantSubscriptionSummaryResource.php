@@ -41,7 +41,7 @@ final class TenantSubscriptionSummaryResource extends JsonResource
                 // SELL-06: the status the shop is really in now (the stored one may lag the daily sweep).
                 'effective_status' => ['value' => $effective->value, 'label' => $effective->label(), 'access' => $decision->access()->value],
             ],
-            'plan' => $plan === null ? null : ['id' => (int) $plan->getKey(), 'name' => $plan->name, 'code' => $plan->slug, 'is_free' => $plan->is_free],
+            'plan' => $plan === null ? null : ['id' => (int) $plan->getKey(), 'name' => $plan->localizedName(), 'code' => $plan->slug, 'is_free' => $plan->is_free],
             // PLAN-10 review: a row on a permanent free plan has no paid term (never "expired").
             'is_free' => $subscription !== null && $subscription->isFreePlanRow(),
             'status' => $subscription === null ? null : ['value' => $subscription->status->value, 'label' => $subscription->status->label()],

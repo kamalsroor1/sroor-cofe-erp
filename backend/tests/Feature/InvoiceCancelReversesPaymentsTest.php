@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Actions\Customers\ResolveWalkInCustomerAction;
+use App\Actions\Invoices\CancelSalesInvoiceAction;
+use App\DTOs\Invoices\CancelInvoiceDTO;
 use App\Exceptions\BusinessRuleException;
 use App\Models\CashShift;
 use App\Models\Customer;
@@ -554,6 +556,49 @@ final class InvoiceCancelReversesPaymentsTest extends TenantTestCase
 
         $this->assertSame($before, $this->snapshot($this->customerId));
         $this->inTenant($this->tenant, fn () => $this->assertSame(0, Payment::query()->count()));
+    }
+
+    /**
+     * SAL-170 (#867): cancelling an invoice via the API requires a non-empty reason (blank / missing
+     * / whitespace-only returns 422 and never writes the system default), while internal callers of
+     * CancelSalesInvoiceAction still retain the default reason.
+     */
+    public function test_api_cancel_requires_non_empty_reason_and_internal_action_keeps_default(): void
+    {
+        $this->openShift();
+        $invoiceId = $this->sell($this->customerId, '5.000', 'credit');
+
+        foreach ([[], ['reason' => ''], ['reason' => '   '], ['reason' => null], ['cancellation_reason' => '   ']] as $badPayload) {
+            $this->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', $badPayload, $this->headers)
+                ->assertStatus(422)
+                ->assertJsonValidationErrors(['reason']);
+
+            $this->inTenant($this->tenant, function () use ($invoiceId): void {
+                $invoice = Invoice::findOrFail($invoiceId);
+                $this->assertSame('confirmed', $invoice->status);
+                $this->assertStringNotContainsString('إلغاء من النظام', (string) $invoice->notes);
+            });
+        }
+
+        // Legacy cancellation_reason field still succeeds when non-empty.
+        $this->postJson('/api/v1/invoices/'.$invoiceId.'/cancel', [
+            'cancellation_reason' => 'طلب العميل استبدال الصنف',
+        ], $this->headers)->assertOk();
+
+        $this->inTenant($this->tenant, function () use ($invoiceId): void {
+            $invoice = Invoice::findOrFail($invoiceId);
+            $this->assertSame('cancelled', $invoice->status);
+            $this->assertStringContainsString('طلب العميل استبدال الصنف', (string) $invoice->notes);
+        });
+
+        // Internal callers using CancelInvoiceDTO default keep 'إلغاء من النظام'.
+        $internalInvoiceId = $this->sell($this->customerId, '2.000', 'credit');
+        $this->inTenant($this->tenant, function () use ($internalInvoiceId): void {
+            $this->actingAs(User::query()->orderBy('id')->firstOrFail());
+            $cancelled = app(CancelSalesInvoiceAction::class)->execute(new CancelInvoiceDTO(invoice_id: $internalInvoiceId));
+            $this->assertSame('cancelled', $cancelled->status);
+            $this->assertStringContainsString('إلغاء من النظام', (string) $cancelled->notes);
+        });
     }
 
     /**

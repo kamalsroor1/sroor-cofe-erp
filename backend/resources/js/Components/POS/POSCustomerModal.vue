@@ -230,7 +230,7 @@ const quickCustomerPhone = ref('');
 const isPhone = (val) => {
   if (!val) return false;
   const cleaned = val.replace(/[\s+\-()]/g, '');
-  return /^\d{5,}$/.test(cleaned);
+  return /^\d{7,}$/.test(cleaned);
 };
 
 const toggleAddNewCustomer = () => {

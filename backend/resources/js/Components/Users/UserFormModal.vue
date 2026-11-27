@@ -4,7 +4,7 @@
     :title="isEditing ? $t('users.edit_user_title') : $t('users.create_user_title')"
     @close="$emit('close')"
   >
-    <form @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
+    <form id="user-form" @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
       <BaseInput
         :model-value="form.name"
         @update:model-value="$emit('update:field', 'name', $event)"
@@ -156,14 +156,17 @@
           </BaseButton>
         </div>
       </div>
+    </form>
 
-      <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+    <template #footer>
+      <div class="flex items-center justify-end gap-3">
         <BaseButton type="button" variant="secondary" size="md" @click="$emit('close')">
           {{ $t('common.cancel') }}
         </BaseButton>
 
         <BaseButton
           type="submit"
+          form="user-form"
           variant="primary"
           size="md"
           :loading="submitting"
@@ -172,7 +175,7 @@
           {{ $t('common.save') }}
         </BaseButton>
       </div>
-    </form>
+    </template>
   </AppModal>
 </template>
 

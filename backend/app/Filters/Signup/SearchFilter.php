@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filters\Signup;
 
 use App\Models\SignupRequest;
+use App\Support\Database\LikePattern;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -28,14 +29,8 @@ final class SearchFilter
         $search = $this->request->query('search');
 
         if (is_string($search) && trim($search) !== '') {
-            // Wildcards typed by the operator only widen their own search; the value is always bound.
-            $like = '%'.mb_substr(trim($search), 0, 100).'%';
-
-            $query->where(function (Builder $q) use ($like): void {
-                $q->where('business_name', 'like', $like)
-                    ->orWhere('contact_name', 'like', $like)
-                    ->orWhere('phone', 'like', $like);
-            });
+            $term = mb_substr(trim($search), 0, 100);
+            LikePattern::whereContainsAny($query, ['business_name', 'contact_name', 'phone'], $term);
         }
 
         return $next($query);

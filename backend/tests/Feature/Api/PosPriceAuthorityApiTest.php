@@ -314,6 +314,21 @@ final class PosPriceAuthorityApiTest extends TenantTestCase
         $this->checkout($this->cashier, ['unit_price' => '60.000'], [], null, '/api/v1/invoices')->assertStatus(422);
         $this->checkout($this->cashier, ['unit_price' => '60.000'], ['override' => ['user_id' => $this->manager->id, 'pin' => '4321']], null, '/api/v1/invoices')->assertCreated();
         $this->assertSame($this->manager->id, (int) $this->lastLine()->override_approved_by);
+
+        // SAL-037 (#912): mixed invoice records override_approved_by per line only where price < min_selling_price.
+        $created = $this->checkout($this->cashier, [], [
+            'items' => [
+                ['item_id' => $this->item->id, 'quantity' => '1.000', 'unit_price' => '60.000'],
+                ['item_id' => $this->item->id, 'quantity' => '1.000', 'unit_price' => '100.000'],
+            ],
+            'override' => ['user_id' => $this->manager->id, 'pin' => '4321'],
+        ], null, '/api/v1/invoices')->assertCreated();
+
+        $invoiceId = (int) $created->json('data.id');
+        $lines = InvoiceItem::query()->where('invoice_id', $invoiceId)->orderBy('id')->get();
+        $this->assertCount(2, $lines);
+        $this->assertSame($this->manager->id, (int) $lines[0]->override_approved_by);
+        $this->assertNull($lines[1]->override_approved_by);
     }
 
     // ------------------------------------------------------------- sanity
@@ -686,5 +701,84 @@ final class PosPriceAuthorityApiTest extends TenantTestCase
         $this->assertSame('55.500', (string) Item::query()->findOrFail($this->item->id)->cost_price);
 
         $this->withHeaders($headers)->postJson('/api/v1/items', $base)->assertStatus(422)->assertJsonValidationErrors(['cost_price']);
+    }
+
+    public function test_wholesale_customer_created_via_api_gets_wholesale_price_and_price_source_on_pos_checkout(): void
+    {
+        $this->flushHeaders();
+        $this->app['auth']->forgetGuards();
+        $headers = [
+            'X-Tenant' => (string) $this->tenant->getTenantKey(),
+            'Authorization' => 'Bearer '.$this->admin->createToken('t')->plainTextToken,
+            'X-Store-Id' => (string) $this->store->id,
+            'Accept' => 'application/json',
+        ];
+
+        $customerId = (int) $this->withHeaders($headers)->postJson('/api/v1/customers', [
+            'name' => 'Wholesale API Customer',
+            'phone' => '01000000071',
+            'price_tier' => 'wholesale',
+        ])->assertCreated()->assertJsonPath('data.price_tier', 'wholesale')->json('data.id');
+
+        $itemId = (int) $this->withHeaders($headers)->postJson('/api/v1/items', [
+            'name' => 'Wholesale Item',
+            'unit' => 'كجم',
+            'cost_price' => '50.000',
+            'selling_price' => '100.000',
+            'price_wholesale' => '80.000',
+        ])->assertCreated()->assertJsonPath('data.wholesale_price', '80.000')->json('data.id');
+
+        Item::query()->whereKey($itemId)->update(['current_stock' => '20.000']);
+        StoreStock::query()->updateOrCreate(
+            ['store_id' => $this->store->id, 'item_id' => $itemId],
+            ['quantity' => '20.000'],
+        );
+
+        $checkout = $this->withHeaders($headers)->postJson('/api/v1/pos/checkout', [
+            'customer_id' => $customerId,
+            'payment_type' => 'cash',
+            'payment_method' => 'cash',
+            'items' => [
+                ['item_id' => $itemId, 'quantity' => '1.000'],
+            ],
+        ])->assertCreated();
+
+        $checkout
+            ->assertJsonPath('data.items.0.unit_price', '80.000')
+            ->assertJsonPath('data.items.0.list_unit_price', '80.000')
+            ->assertJsonPath('data.items.0.price_source', 'wholesale');
+
+        $line = $this->lastLine();
+        $this->assertSame('80.000', (string) $line->unit_price);
+        $this->assertSame('80.000', (string) $line->list_unit_price);
+        $this->assertSame('wholesale', $line->price_source);
+    }
+
+    public function test_six_manager_pin_attempts_return_429_with_pin_specific_localized_message(): void
+    {
+        RateLimiter::clear('manager-pin:'.RateLimitKey::scope().':approver:'.$this->manager->id);
+        RateLimiter::clear('manager-pin:'.RateLimitKey::scope().':actor:'.$this->cashier->id);
+
+        for ($i = 1; $i <= 5; $i++) {
+            $this->checkout(
+                $this->cashier,
+                ['unit_price' => '60.000'],
+                ['override' => ['user_id' => $this->manager->id, 'pin' => '0000']],
+            )->assertStatus(422);
+        }
+
+        $throttled = $this->checkout(
+            $this->cashier,
+            ['unit_price' => '60.000'],
+            ['override' => ['user_id' => $this->manager->id, 'pin' => '0000']],
+        );
+
+        $throttled->assertStatus(429)
+            ->assertHeader('Retry-After')
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'pos.override_throttled')
+            ->assertJsonPath('message', __('pos.override_throttled'));
+
+        $this->assertNotSame(__('auth.too_many_requests'), $throttled->json('message'));
     }
 }

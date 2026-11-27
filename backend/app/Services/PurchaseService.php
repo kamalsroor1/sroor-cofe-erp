@@ -19,6 +19,7 @@ use App\Support\TenantClock;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class PurchaseService
 {
@@ -70,15 +71,108 @@ class PurchaseService
     }
 
     /**
+     * Calculate purchase subtotal, supplier-charged expenses, discount, and net total
+     * using exact DECIMAL(12,3) bcmath / half-up arithmetic.
+     *
+     * @param  array<int, array<string, mixed>>  $items
+     * @param  array<int, array<string, mixed>>  $additionalExpenses
+     * @return array{subtotal: string, discount_amount: string, supplier_expenses_total: string, net_total: string}
+     */
+    public static function calculateTotals(
+        array $items,
+        string|int|float|null $discountAmount = null,
+        array $additionalExpenses = [],
+    ): array {
+        $subtotal = '0.000';
+        foreach ($items as $line) {
+            $qty = (string) ($line['quantity'] ?? '0.000');
+            $baseCost = (string) ($line['cost_price'] ?? $line['unit_cost'] ?? '0.000');
+            $subtotal = bcadd($subtotal, Decimal::mul($qty, $baseCost), 3);
+        }
+
+        $supplierExpensesTotal = '0.000';
+        foreach ($additionalExpenses as $exp) {
+            $expAmount = Decimal::normalize((string) ($exp['amount'] ?? '0.000'));
+            if (bccomp($expAmount, '0.000', 3) <= 0) {
+                continue;
+            }
+            $paidBy = $exp['paid_by'] ?? 'supplier_account';
+            if ($paidBy === 'supplier_account') {
+                $supplierExpensesTotal = bcadd($supplierExpensesTotal, $expAmount, 3);
+            }
+        }
+
+        $normalizedDiscount = Decimal::normalize($discountAmount !== null ? (string) $discountAmount : '0.000');
+        $netTotal = bcsub($subtotal, $normalizedDiscount, 3);
+        if (bccomp($supplierExpensesTotal, '0.000', 3) > 0) {
+            $netTotal = bcadd($netTotal, $supplierExpensesTotal, 3);
+        }
+
+        return [
+            'subtotal' => $subtotal,
+            'discount_amount' => $normalizedDiscount,
+            'supplier_expenses_total' => $supplierExpensesTotal,
+            'net_total' => $netTotal,
+        ];
+    }
+
+    /**
      * Create and confirm purchase invoice with landed costs allocation
      */
     public function createPurchase(array $data): Purchase
     {
+        $discountInput = isset($data['discount_amount']) && $data['discount_amount'] !== ''
+            ? $data['discount_amount']
+            : ($data['discount'] ?? '0.000');
+
+        $totals = self::calculateTotals(
+            items: (array) ($data['items'] ?? []),
+            discountAmount: $discountInput,
+            additionalExpenses: (array) ($data['additional_expenses'] ?? []),
+        );
+        $paidAmount = Decimal::normalize(isset($data['paid_amount']) ? (string) $data['paid_amount'] : '0.000');
+
+        if (bccomp($totals['discount_amount'], '0.000', 3) < 0) {
+            throw ValidationException::withMessages([
+                'discount_amount' => [__('validation.min.numeric', [
+                    'attribute' => __('validation.attributes.discount_amount'),
+                    'min' => 0,
+                ])],
+            ]);
+        }
+
+        if (bccomp($paidAmount, '0.000', 3) < 0) {
+            throw ValidationException::withMessages([
+                'paid_amount' => [__('validation.min.numeric', [
+                    'attribute' => __('validation.attributes.paid_amount'),
+                    'min' => 0,
+                ])],
+            ]);
+        }
+
+        if (bccomp($totals['discount_amount'], $totals['subtotal'], 3) > 0) {
+            throw ValidationException::withMessages([
+                'discount_amount' => [__('purchases.discount_exceeds_subtotal', [
+                    'discount' => $totals['discount_amount'],
+                    'subtotal' => $totals['subtotal'],
+                ])],
+            ]);
+        }
+
+        if (bccomp($paidAmount, $totals['net_total'], 3) > 0) {
+            throw ValidationException::withMessages([
+                'paid_amount' => [__('purchases.paid_exceeds_net_total', [
+                    'paid' => $paidAmount,
+                    'net' => $totals['net_total'],
+                ])],
+            ]);
+        }
+
         // BUG-04: the day's counter rows exist before the transaction takes its first read.
         if (empty($data['purchase_number'])) {
             $this->documentNumbers->prepareFor($this->purchaseNumberPrefix(), Purchase::class, 'purchase_number');
         }
-        if (is_numeric($data['paid_amount'] ?? null) && bccomp((string) $data['paid_amount'], '0.000', 3) > 0) {
+        if (bccomp($paidAmount, '0.000', 3) > 0) {
             $this->documentNumbers->prepareDated('PAY-PUR', Payment::class, 'payment_number');
         }
         if (! empty($data['additional_expenses'])) {
@@ -87,7 +181,7 @@ class PurchaseService
 
         // BUG-07: restarted as a whole on a lock conflict (1213/1205/1020); only plain input is
         // captured, every row is read again inside and a failed attempt's numbers roll back.
-        return TransactionRetry::run(function () use ($data) {
+        return TransactionRetry::run(function () use ($data, $totals) {
             $baseSubtotal = '0.000';
             $storeId = $data['store_id'] ?? Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
 
@@ -106,7 +200,7 @@ class PurchaseService
                 'status' => 'confirmed',
                 'payment_status' => 'unpaid',
                 'subtotal' => '0.000',
-                'discount_amount' => $data['discount_amount'] ?? '0.000',
+                'discount_amount' => $totals['discount_amount'],
                 'additional_expenses_total' => '0.000',
                 'net_total' => '0.000',
                 'paid_amount' => '0.000',
@@ -211,7 +305,7 @@ class PurchaseService
 
             // 3. Process and Save Additional Expenses & Generate Treasury Vouchers
             foreach ($rawExpenses as $exp) {
-                $expAmount = (string) ($exp['amount'] ?? '0.000');
+                $expAmount = Decimal::normalize((string) ($exp['amount'] ?? '0.000'));
                 if (bccomp($expAmount, '0.000', 3) <= 0) {
                     continue;
                 }
@@ -253,13 +347,13 @@ class PurchaseService
             }
 
             // 4. Calculate Net Total
-            $discountAmount = (string) ($data['discount_amount'] ?? '0.000');
+            $discountAmount = Decimal::normalize(isset($data['discount_amount']) ? (string) $data['discount_amount'] : '0.000');
             $netTotal = bcsub($baseSubtotal, $discountAmount, 3);
             if (bccomp($supplierExpensesTotal, '0.000', 3) > 0) {
                 $netTotal = bcadd($netTotal, $supplierExpensesTotal, 3);
             }
 
-            $paidAmount = (string) ($data['paid_amount'] ?? '0.000');
+            $paidAmount = Decimal::normalize(isset($data['paid_amount']) ? (string) $data['paid_amount'] : '0.000');
             $remainingAmount = bcsub($netTotal, $paidAmount, 3);
 
             $paymentStatus = 'unpaid';

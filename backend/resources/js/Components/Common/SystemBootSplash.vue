@@ -1,5 +1,5 @@
 <template>
-  <Transition name="splash-fade">
+  <Transition name="splash-fade" @after-leave="emit('hidden')">
     <div
       v-if="show"
       class="fixed inset-0 z-[999999] flex flex-col items-center justify-center bg-[var(--brand-surface)] text-slate-900 dark:text-white select-none px-4"
@@ -66,6 +66,8 @@ import versionData from '../../version.json';
 import BrandMark from '../Brand/BrandMark.vue';
 
 const appConfigStore = useAppConfigStore();
+
+const emit = defineEmits(['hidden']);
 
 defineProps({
   show: {

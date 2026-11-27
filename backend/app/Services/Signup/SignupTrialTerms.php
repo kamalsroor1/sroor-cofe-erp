@@ -112,7 +112,7 @@ final class SignupTrialTerms
         $subscriptionStatus = $free ? SubscriptionStatus::Active : SubscriptionStatus::Trialing;
 
         return [
-            'plan' => ['id' => (int) $plan->getKey(), 'code' => $plan->slug, 'name' => $plan->name, 'trial_days' => $plan->trial_days, 'is_free' => $free],
+            'plan' => ['id' => (int) $plan->getKey(), 'code' => $plan->slug, 'name' => $plan->localizedName(), 'trial_days' => $plan->trial_days, 'is_free' => $free],
             'default_trial_days' => $this->defaultTrialDays(),
             'trial_days' => $days,
             'tenant_status' => ['value' => $tenantStatus->value, 'label' => $tenantStatus->label()],

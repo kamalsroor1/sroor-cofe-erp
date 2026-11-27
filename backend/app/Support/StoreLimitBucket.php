@@ -15,15 +15,19 @@ use App\Models\Store;
  */
 final class StoreLimitBucket
 {
-    private const WAREHOUSE_TYPE = 'main_warehouse';
+    /** @var list<string> */
+    public const WAREHOUSE_TYPES = ['main_warehouse', 'warehouse'];
 
-    private const VAN_TYPE = 'wholesale_van';
+    /** @var list<string> */
+    public const VAN_TYPES = ['wholesale_van', 'van'];
 
     public static function resourceFor(string $type): LimitResource
     {
-        return match ($type) {
-            self::WAREHOUSE_TYPE => LimitResource::Warehouses,
-            self::VAN_TYPE => LimitResource::Vans,
+        $normalized = strtolower(trim($type));
+
+        return match (true) {
+            in_array($normalized, self::WAREHOUSE_TYPES, true) => LimitResource::Warehouses,
+            in_array($normalized, self::VAN_TYPES, true) => LimitResource::Vans,
             default => LimitResource::Stores,
         };
     }
@@ -33,9 +37,9 @@ final class StoreLimitBucket
         $query = Store::query();
 
         match ($resource) {
-            LimitResource::Warehouses => $query->where('type', self::WAREHOUSE_TYPE),
-            LimitResource::Vans => $query->where('type', self::VAN_TYPE),
-            default => $query->where(fn ($q) => $q->whereNotIn('type', [self::WAREHOUSE_TYPE, self::VAN_TYPE])->orWhereNull('type')),
+            LimitResource::Warehouses => $query->whereIn('type', self::WAREHOUSE_TYPES),
+            LimitResource::Vans => $query->whereIn('type', self::VAN_TYPES),
+            default => $query->where(fn ($q) => $q->whereNotIn('type', array_merge(self::WAREHOUSE_TYPES, self::VAN_TYPES))->orWhereNull('type')),
         };
 
         return $query->count();

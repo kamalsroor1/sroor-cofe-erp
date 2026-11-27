@@ -6,6 +6,7 @@ namespace App\Filters\Pos;
 
 use App\DTOs\POS\ListPosItemsDTO;
 use App\Models\Item;
+use App\Support\Database\LikePattern;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -25,12 +26,10 @@ final class PosItemSearchFilter
         $search = $this->dto->search;
 
         if ($search !== null) {
-            // '!' is the LIKE escape char: portable (MySQL and SQLite), unlike backslash.
-            $escaped = preg_replace('/[!%_]/', '!$0', $search) ?? $search;
-            $query->where(function (Builder $q) use ($search, $escaped): void {
-                $q->where('items.code', $search)
-                    ->orWhereRaw("items.code LIKE ? ESCAPE '!'", [$escaped.'%'])
-                    ->orWhereRaw("items.name LIKE ? ESCAPE '!'", ['%'.$escaped.'%']);
+            $query->where(function (Builder $q) use ($search): void {
+                $q->where('items.code', $search);
+                LikePattern::orWherePrefix($q, 'items.code', $search);
+                LikePattern::orWhereContains($q, 'items.name', $search);
             });
         }
 

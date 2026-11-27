@@ -7,7 +7,9 @@ namespace Tests\Feature\Api;
 use App\Models\ActivityLog;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\Auth\AccountLockout;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Testing\TestResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -255,6 +257,70 @@ final class PasswordPolicyAndLockoutApiTest extends TenantTestCase
 
         $this->travel(16)->minutes();
         $this->putJson('/api/v1/profile', $payload + ['current_password' => 'real-pass-1'], $headers)->assertStatus(200);
+    }
+
+    public function test_failures_spread_over_ninety_seconds_lock_the_account_even_for_valid_password(): void
+    {
+        $this->createTenantUser($this->tenant, 'cashier', attributes: ['email' => self::LOGIN]);
+
+        for ($i = 1; $i <= 3; $i++) {
+            $this->tenantLogin($this->tenant, self::LOGIN, 'wrong-pass')->assertStatus(422);
+        }
+
+        // Past the 60s IP-failure window, but well inside the 15-minute account-lockout window.
+        $this->travel(95)->seconds();
+
+        for ($i = 4; $i <= 5; $i++) {
+            $this->tenantLogin($this->tenant, self::LOGIN, 'wrong-pass')->assertStatus(422);
+        }
+
+        $this->tenantLogin($this->tenant, self::LOGIN, 'password')
+            ->assertStatus(422)
+            ->assertJsonPath('errors.login.0', __('auth.account_locked', ['seconds' => 900, 'minutes' => 15]));
+
+        $this->travel(16)->minutes();
+
+        $this->tenantLogin($this->tenant, self::LOGIN, 'password')->assertStatus(200);
+    }
+
+    public function test_lockout_on_email_also_locks_phone_login_for_the_same_user(): void
+    {
+        $user = $this->createTenantUser($this->tenant, 'cashier', attributes: [
+            'phone' => '01000008811',
+            'email' => self::LOGIN,
+        ]);
+
+        for ($i = 1; $i <= 5; $i++) {
+            $this->withServerVariables(['REMOTE_ADDR' => "10.8.0.{$i}"]);
+            $this->tenantLogin($this->tenant, self::LOGIN, 'wrong-pass')->assertStatus(422);
+        }
+
+        $this->withServerVariables(['REMOTE_ADDR' => '10.8.0.99']);
+        $this->tenantLogin($this->tenant, (string) $user->phone, 'password')
+            ->assertStatus(422)
+            ->assertJsonPath('errors.login.0', __('auth.account_locked', ['seconds' => 900, 'minutes' => 15]));
+    }
+
+    public function test_lockout_recognizes_numeric_string_timestamps_returned_by_redis_cache(): void
+    {
+        $user = $this->createTenantUser($this->tenant, 'cashier', attributes: ['email' => self::LOGIN]);
+        $until = now()->getTimestamp() + 900;
+
+        $this->inTenant($this->tenant, function () use ($until): void {
+            // RedisStore stores ints unserialized and reads them back as numeric strings.
+            Cache::put(AccountLockout::lockKey(self::LOGIN), (string) $until, 900);
+
+            $this->assertSame($until, AccountLockout::lockedUntil(self::LOGIN));
+            $this->assertSame([self::LOGIN => $until], AccountLockout::lockedUntilMany([self::LOGIN]));
+        });
+
+        $this->tenantLogin($this->tenant, self::LOGIN, 'password')
+            ->assertStatus(422)
+            ->assertJsonPath('errors.login.0', __('auth.account_locked', ['seconds' => 900, 'minutes' => 15]));
+
+        $this->getJson("/api/v1/users/{$user->id}", $this->tenantHeaders($this->tenant, $this->tenantAdmin($this->tenant)))
+            ->assertOk()
+            ->assertJsonPath('data.login_locked', true);
     }
 
     /**

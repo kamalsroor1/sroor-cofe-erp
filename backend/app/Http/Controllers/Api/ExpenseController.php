@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Policies\ExpensePolicy;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
+use App\Support\Database\LikePattern;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -67,12 +68,7 @@ final class ExpenseController extends Controller
         }
 
         if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('expense_number', 'like', "%{$search}%")
-                    ->orWhere('title', 'like', "%{$search}%")
-                    ->orWhere('notes', 'like', "%{$search}%")
-                    ->orWhere('category', 'like', "%{$search}%");
-            });
+            LikePattern::whereContainsAny($query, ['expense_number', 'title', 'notes', 'category'], $search);
         }
 
         if ($category !== 'all' && $category !== '') {
@@ -151,12 +147,14 @@ final class ExpenseController extends Controller
         $userId = (int) auth()->id();
 
         $expense = $this->createExpenseAction->execute($dto, $userId);
+        $replayed = ! $expense->wasRecentlyCreated;
+        $expense->loadMissing(['user', 'store']);
 
         return response()->json([
             'success' => true,
             'message' => __('expenses.recorded_success'),
             'data' => (new ExpenseResource($expense))->resolve(),
-        ], 201);
+        ], $replayed ? 200 : 201, $replayed ? ['Idempotent-Replayed' => 'true'] : []);
     }
 
     /**

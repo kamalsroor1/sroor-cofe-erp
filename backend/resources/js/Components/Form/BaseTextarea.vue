@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full flex flex-col gap-1.5" :class="wrapperClass">
+  <div class="w-full min-w-0 flex flex-col gap-1.5" :class="wrapperClass">
     <!-- Header with Label & Character Counter -->
     <div class="flex items-center justify-between">
       <label
@@ -31,7 +31,7 @@
       :maxlength="maxlength"
       :aria-invalid="hasError ? 'true' : 'false'"
       :aria-describedby="hasError ? `${textareaId}-error` : hint ? `${textareaId}-hint` : undefined"
-      class="w-full px-3.5 py-2.5 text-base sm:text-sm font-bold rounded-xl border bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 outline-hidden resize-y disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-900/50"
+      class="w-full min-w-0 px-3.5 py-2.5 text-base sm:text-sm font-bold rounded-xl border bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 outline-hidden resize-y disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-900/50"
       :class="[
         hasError
           ? 'border-rose-500 dark:border-rose-500/80 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 text-rose-900 dark:text-rose-100'

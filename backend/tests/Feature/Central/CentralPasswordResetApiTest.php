@@ -14,6 +14,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TenantTestCase;
 
@@ -50,6 +51,7 @@ final class CentralPasswordResetApiTest extends TenantTestCase
         $this->seed(CentralPermissionsSeeder::class);
         config(['central.password_reset_url' => self::RESET_URL]);
         Mail::fake();
+        Notification::fake();
     }
 
     /** @param array<string, mixed> $attributes */
@@ -142,6 +144,8 @@ final class CentralPasswordResetApiTest extends TenantTestCase
         $this->postJson(self::FORGOT, ['email' => $inactive->email])->assertOk()->assertExactJson($expected);
 
         Mail::assertQueuedCount(1);
+        Mail::assertNothingSent();
+        Notification::assertNothingSent();
 
         $outcomes = CentralAuditLog::query()
             ->where('event', CentralAuditEvent::PasswordResetRequested->value)
@@ -150,6 +154,24 @@ final class CentralPasswordResetApiTest extends TenantTestCase
             ->map(static fn (CentralAuditLog $log): mixed => $log->properties['outcome'] ?? null)
             ->all();
         $this->assertSame(['sent', 'throttled', 'unknown_email', 'inactive'], $outcomes);
+    }
+
+    public function test_forgot_password_for_inactive_operator_alone_sends_no_mail_or_notification(): void
+    {
+        $inactive = $this->operator(['is_active' => false]);
+        $expected = ['success' => true, 'message' => __('central_auth.password_reset_link_sent')];
+
+        $this->postJson(self::FORGOT, ['email' => $inactive->email])
+            ->assertOk()
+            ->assertExactJson($expected);
+
+        Mail::assertNothingQueued();
+        Mail::assertNothingSent();
+        Notification::assertNothingSent();
+        $this->assertSame(
+            0,
+            DB::connection((string) $inactive->getConnectionName())->table('central_password_reset_tokens')->count()
+        );
     }
 
     public function test_forgot_password_without_a_configured_url_sends_nothing_but_answers_the_same(): void

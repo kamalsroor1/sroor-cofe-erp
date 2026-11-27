@@ -460,4 +460,10 @@ return [
         'request_failed' => 'تعذّر بدء التصدير، جرّب تاني.',
         'admin_only' => 'التصدير متاح لمدير المحل بس.',
     ],
+    'attr_company_name' => 'اسم النشاط أو المنشأة',
+    'attr_company_subtitle' => 'الوصف الفرعي',
+    'attr_company_phone' => 'رقم الهاتف الرسمي',
+    'attr_company_address' => 'العنوان الرسمي',
+    'attr_invoice_footer_note' => 'ملاحظة تذييل الفاتورة',
+    'plain_text_no_markup' => 'حقل :attribute لازم يكون نص عادي بدون علامات < أو >.',
 ];

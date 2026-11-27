@@ -143,7 +143,7 @@ final class SelfSignupOutcomes
             businessName: $signup->business_name,
             loginUrl: self::loginUrl($slug),
             loginEmail: (string) $tenant->email,
-            planName: $plan instanceof Plan ? $plan->name : '',
+            planName: $plan instanceof Plan ? $plan->localizedName($signup->locale) : '',
             trialEndsAt: $trialEndsAt,
             helpUrl: PlatformHosts::url(PlatformHosts::tenantHost($slug), '/help'),
             forgotPasswordUrl: self::forgotPasswordUrl($slug),

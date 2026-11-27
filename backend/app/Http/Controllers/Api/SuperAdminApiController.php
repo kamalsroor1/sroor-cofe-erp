@@ -88,7 +88,7 @@ final class SuperAdminApiController extends Controller
      */
     public function tenants(Request $request): JsonResponse
     {
-        $plans = Plan::select('id', 'name', 'slug')->get();
+        $plans = Plan::query()->orderBy('sort_order')->orderBy('id')->get();
         $data = $this->getTenantsIndexAction->execute($request);
 
         return response()->json([

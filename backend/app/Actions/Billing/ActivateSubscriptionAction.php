@@ -185,18 +185,25 @@ final class ActivateSubscriptionAction
 
         $wasPaying = $subscription instanceof Subscription && $subscription->status === SubscriptionStatus::Active;
         $subscription ??= new Subscription(['tenant_id' => (string) $tenant->getKey()]);
+        $effectiveCycle = $keepsTerm && $subscription->exists && $subscription->billing_cycle->isSellable()
+            ? $subscription->billing_cycle
+            : $cycle;
+        $keptTermAmount = Decimal::normalize($this->founder->stepPrice(
+            $plan,
+            $effectiveCycle,
+            $this->founder->stepFor($subscription, $plan, $effectiveCycle, $now),
+        ));
 
         $subscription->fill([
             'plan_id' => $plan->getKey(),
             // A kept term keeps its cycle: the end date is still the old cycle's end. An appended
             // cycle (upgrade + renewal) moves to the invoice cycle like any plan invoice.
-            'billing_cycle' => $keepsTerm && $subscription->exists && $subscription->billing_cycle->isSellable()
-                ? $subscription->billing_cycle
-                : $cycle,
+            'billing_cycle' => $effectiveCycle,
             'status' => SubscriptionStatus::Active,
-            // An upgrade only bills the gap: the subscription price is the plan's catalog price. With
-            // a renewal, the full-cycle line on the new plan is the price.
-            'amount' => $keepsTerm ? Decimal::normalize($cycle === BillingCycle::Yearly ? $plan->price_yearly : $plan->price_monthly) : $this->planAmount($invoice),
+            // An upgrade only bills the gap: the subscription price tracks the plan's effective
+            // schedule price (founder/transition/list). With a renewal, the full-cycle line on the
+            // new plan is the price.
+            'amount' => $keepsTerm ? $keptTermAmount : $this->planAmount($invoice),
             'currency' => $invoice->currency,
             'starts_at' => $wasPaying ? $subscription->starts_at : $base,
             'ends_at' => $newEnd,

@@ -25,6 +25,7 @@ class TenantResource extends JsonResource
             'phone' => $this->phone,
             'domain' => $this->domains->first()?->domain ?? PlatformHosts::tenantHost((string) $this->slug),
             'plan' => $this->plan ? new PlanResource($this->plan) : null,
+            'plan_name' => $this->plan?->localizedName(),
             'status' => $this->status,
             'trial_ends_at' => $this->trial_ends_at?->toDateString(),
             'subscription_ends_at' => $this->subscription_ends_at?->toDateString(),

@@ -2,6 +2,7 @@
 
 namespace App\Filters\Tenants;
 
+use App\Support\Database\LikePattern;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -14,15 +15,10 @@ class SearchFilter
 
     public function handle(Builder $query, Closure $next)
     {
-        $search = $this->request->query('search') ?? $this->request->input('search');
+        $search = trim((string) ($this->request->query('search') ?? $this->request->input('search') ?? ''));
 
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('slug', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%");
-            });
+        if ($search !== '') {
+            LikePattern::whereContainsAny($query, ['name', 'slug', 'email', 'phone'], $search);
         }
 
         return $next($query);

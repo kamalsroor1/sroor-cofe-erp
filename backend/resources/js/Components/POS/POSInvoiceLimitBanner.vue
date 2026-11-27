@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { AlertTriangle, Lock, TrendingUp } from 'lucide-vue-next';
 import BaseButton from '@/Components/Common/BaseButton.vue';
 import { useFormatters } from '@/Composables/useFormatters';
+import { isPosInvoiceBannerVisible } from '@/helpers/planLimit';
 
 const props = defineProps({
   // GET /pos/invoice-limit: { limit, used, remaining, percent, reached, resets_at }
@@ -14,7 +15,7 @@ const props = defineProps({
 
 const { formatNumber, formatDate } = useFormatters();
 
-const isVisible = computed(() => !!props.status && (props.reached || props.nearLimit));
+const isVisible = computed(() => isPosInvoiceBannerVisible(props.status, props.reached, props.nearLimit));
 </script>
 
 <template>

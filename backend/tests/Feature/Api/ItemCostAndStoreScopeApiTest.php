@@ -86,6 +86,7 @@ final class ItemCostAndStoreScopeApiTest extends TenantTestCase
 
         $this->assertSame([$this->storeAId], array_column($data['store_stocks'], 'store_id'));
         $this->assertNull($data['cost_price']);
+        $this->assertNull($data['weighted_avg_cost']);
         $this->assertSame(500.0, (float) $data['selling_price']);
         // BE-08: the floor value is hidden without items.view_cost; has_min_price says one exists.
         $this->assertNull($data['min_selling_price']);
@@ -163,6 +164,7 @@ final class ItemCostAndStoreScopeApiTest extends TenantTestCase
         sort($stores);
         $this->assertSame([$this->storeAId, $this->storeBId], $stores);
         $this->assertSame(300.0, (float) $data['cost_price']);
+        $this->assertArrayHasKey('weighted_avg_cost', $data);
 
         $all = $this->getJson("/api/v1/items/{$this->itemId}/movements?store_id=all", $headers)->assertOk();
         $this->assertCount(2, $all->json('data.data'));
@@ -178,6 +180,7 @@ final class ItemCostAndStoreScopeApiTest extends TenantTestCase
         $row = collect($response->json('data'))->firstWhere('id', $this->itemId);
         $this->assertSame([$this->storeAId], array_column($row['store_stocks'], 'store_id'));
         $this->assertNull($row['cost_price']);
+        $this->assertNull($row['weighted_avg_cost']);
         $this->assertNull($response->json('summary.total_stock_value'));
     }
 
@@ -260,7 +263,7 @@ final class ItemCostAndStoreScopeApiTest extends TenantTestCase
             ->assertOk();
 
         $this->assertNull($response->json('item.cost_price'));
-        $this->assertArrayNotHasKey('weighted_avg_cost', $response->json('item'));
+        $this->assertNull($response->json('item.weighted_avg_cost'));
         $this->assertArrayHasKey('store_stocks', $response->json('item'));
         $this->assertArrayNotHasKey('unit_cost', $response->json('movements.0'));
     }

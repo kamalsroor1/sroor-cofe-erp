@@ -88,10 +88,22 @@ final class SubmitManualPaymentAction
                 throw BillingException::paymentAlreadyPending();
             }
 
+            if ($invoice->isBeforeIssueDay($dto->paidAt)) {
+                throw ValidationException::withMessages(['paid_at' => __('billing.errors.transferred_at_before_invoice')]);
+            }
+
             $remaining = $this->remaining($invoice);
 
             if (bccomp($dto->amount, '0', 3) <= 0 || bccomp($dto->amount, $remaining, 3) > 0) {
                 throw BillingException::amountOutOfRange($remaining);
+            }
+
+            $rawPayload = [];
+            if ($dto->payerReference !== null) {
+                $rawPayload['payer_reference'] = $dto->payerReference;
+            }
+            if ($dto->note !== null) {
+                $rawPayload['note'] = $dto->note;
             }
 
             $payment = BillingPayment::query()->create([
@@ -104,7 +116,7 @@ final class SubmitManualPaymentAction
                 'status' => BillingPaymentStatus::Pending,
                 'submitted_by' => $dto->submittedBy,
                 'paid_at' => $dto->paidAt,
-                'raw_payload' => $dto->payerReference === null ? [] : ['payer_reference' => $dto->payerReference],
+                'raw_payload' => $rawPayload,
                 'receipt_classification' => $classification->classification,
                 'receipt_classification_reason' => $classification->reason,
             ]);

@@ -38,9 +38,14 @@
     <TenantsTable
       :tenants="tenants"
       :loading="isLoading"
+      :error="error"
+      :error-message="errorMessage"
+      :status-code="statusCode"
+      :can-retry="canRetry"
       :can-manage="canManageTenants"
       :is-archiving="isArchiving"
       :is-unarchiving="isUnarchiving"
+      @retry="retry"
       @open-status="openStatusModal"
       @open-create="openCreateModal"
       @archive-tenant="confirmDeleteTenant"
@@ -86,6 +91,10 @@ const {
   tenants,
   plansList,
   isLoading,
+  error,
+  errorMessage,
+  statusCode,
+  canRetry,
   isSubmitting,
   filters,
   statusOptions,
@@ -97,6 +106,7 @@ const {
   statusForm,
   statusErrors,
   isSubmittingStatus,
+  retry,
   updateSearch,
   updateStatusFilter,
   updatePlanFilter,

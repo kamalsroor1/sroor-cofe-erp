@@ -21,11 +21,8 @@
             <h2 class="font-black text-sm text-slate-900 dark:text-white tracking-tight truncate">
               {{ appConfigStore.companyName || $t('dashboard.company_title') }}
             </h2>
-            <p
-              v-if="appConfigStore.companySubtitle"
-              class="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate"
-            >
-              {{ appConfigStore.companySubtitle }}
+            <p v-if="companySubtitle" class="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate">
+              {{ companySubtitle }}
             </p>
           </div>
         </div>
@@ -418,6 +415,7 @@ import { useRoute } from 'vue-router';
 import { useNavigation } from '../../Composables/useNavigation';
 import { useRoutePermission } from '../../Composables/useRoutePermission';
 import { useAppConfigStore } from '../../stores/appConfig';
+import { useTrans } from '../../Composables/useTrans';
 import BrandMark from '../Brand/BrandMark.vue';
 import { useAppUpdate } from '../../Composables/useAppUpdate';
 import versionData from '../../version.json';
@@ -433,11 +431,26 @@ const emit = defineEmits(['toggle-collapse']);
 
 const route = useRoute();
 const appConfigStore = useAppConfigStore();
+const { t } = useTrans();
 const { navigationSections } = useNavigation();
 const { canAccessPath } = useRoutePermission();
 const { checkForUpdates } = useAppUpdate();
 
 const currentVersionName = ref(versionData?.version || '1.0.10');
+
+// Tenant DB seeds company_subtitle with the Arabic default; translate that default to the active locale.
+const DEFAULT_COMPANY_SUBTITLES = new Set([
+  '\u0644\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0645\u0628\u064a\u0639\u0627\u062a \u0648\u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0648\u0627\u0644\u0641\u0631\u0648\u0639',
+  'Sales, inventory and branch management',
+]);
+
+const companySubtitle = computed(() => {
+  const raw = (appConfigStore.companySubtitle || '').trim();
+  if (!raw || DEFAULT_COMPANY_SUBTITLES.has(raw)) {
+    return t('common.default_company_subtitle');
+  }
+  return raw;
+});
 
 // 📂 Accordion state for categories
 const expandedSections = ref({

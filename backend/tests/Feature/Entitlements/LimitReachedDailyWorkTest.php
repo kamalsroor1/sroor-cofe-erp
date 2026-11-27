@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Tests\Feature\Entitlements;
 
 use App\Models\Customer;
+use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Item;
 use App\Models\Plan;
 use App\Models\StoreStock;
+use App\Models\Supplier;
 use App\Models\Tenant;
+use App\Models\User;
 use Database\Seeders\Catalog\FeatureCatalog;
 use Database\Seeders\PlansAndFeaturesSeeder;
 use Illuminate\Support\Facades\Http;
@@ -142,6 +145,136 @@ final class LimitReachedDailyWorkTest extends TenantTestCase
         $this->postJson('/api/v1/items', $this->item('D'), $this->tenantHeaders($tenant))->assertStatus(403)->assertJsonPath('details.max', 1);
         $this->getJson('/api/v1/items', $this->tenantHeaders($tenant))->assertOk();
         $this->assertSame(3, $this->inTenant($tenant, fn (): int => Item::query()->count()));
+    }
+
+    public function test_credit_receipt_voucher_and_editing_existing_records_work_at_invoice_limit(): void
+    {
+        $tenant = $this->tenantOn($this->plan(['max_invoices_per_month' => 2]));
+        $headers = $this->tenantHeaders($tenant);
+        [$itemId, $customerId] = $this->saleFixture($tenant);
+        $storeId = (int) $this->tenantStore($tenant)->getKey();
+
+        [$supplierId, $expenseId, $cashierId] = $this->inTenant($tenant, function () use ($storeId): array {
+            $supplier = Supplier::query()->create(['name' => 'مورد قديم', 'phone' => '01000001111', 'current_balance' => '0.000', 'is_active' => true]);
+            $expense = Expense::query()->create([
+                'expense_number' => 'EXP-'.Str::upper(Str::random(6)),
+                'store_id' => $storeId,
+                'user_id' => User::query()->value('id'),
+                'title' => 'إيجار المحل',
+                'category' => 'rent',
+                'cost_center' => 'general',
+                'amount' => '100.000',
+                'expense_date' => now()->toDateString(),
+                'payment_method' => 'cash',
+            ]);
+            $cashier = User::query()->create([
+                'name' => 'كاشير أول',
+                'phone' => '01000000072',
+                'password' => bcrypt('secret123'),
+                'default_store_id' => $storeId,
+                'is_active' => true,
+            ]);
+            $cashier->assignRole('cashier');
+            $cashier->stores()->sync([$storeId]);
+
+            return [(int) $supplier->id, (int) $expense->id, (int) $cashier->id];
+        });
+
+        // Two credit/cash invoices reach the monthly limit (credit invoice = 40.000 owed).
+        $creditId = (int) $this->postJson('/api/v1/invoices', $this->sale($itemId, $customerId, 'credit', '2.000'), $headers)->assertCreated()->json('data.id');
+        $this->postJson('/api/v1/pos/checkout', $this->sale($itemId, $customerId, 'cash', '1.000'), $headers)->assertCreated();
+
+        // Confirm creating another invoice returns 403 subscription.limit_reached.
+        $this->postJson('/api/v1/invoices', $this->sale($itemId, $customerId, 'cash', '1.000'), $headers)
+            ->assertStatus(403)
+            ->assertJsonPath('error_code', 'subscription.limit_reached')
+            ->assertJsonPath('details.limit', 'invoices_month');
+
+        // Credit collection via receipt voucher (linked to the credit invoice) succeeds at limit.
+        $this->postJson('/api/v1/payments/customer-receipt', [
+            'customer_id' => $customerId,
+            'invoice_id' => $creditId,
+            'amount' => '15.000',
+            'payment_method' => 'cash',
+            'payment_date' => now()->toDateString(),
+        ], $headers)->assertCreated()->assertJsonPath('customer_current_balance', '25.000');
+
+        // Credit collection via customer endpoint settles the rest cleanly.
+        $this->postJson("/api/v1/customers/{$customerId}/collect-payment", [
+            'amount' => '25.000',
+            'payment_method' => 'cash',
+            'payment_date' => now()->toDateString(),
+        ], $headers)->assertOk();
+        $this->assertSame('0.000', $this->inTenant($tenant, fn (): string => (string) Customer::query()->findOrFail($customerId)->current_balance));
+
+        // Editing existing records of every kind succeeds at the monthly invoice limit.
+        $this->putJson("/api/v1/items/{$itemId}", ['name' => 'بن معدل', 'unit' => 'كجم', 'cost_price' => '10.000', 'selling_price' => '22.000'], $headers)->assertOk();
+        $this->putJson("/api/v1/suppliers/{$supplierId}", ['name' => 'مورد معدل', 'phone' => '01000002222'], $headers)->assertOk();
+        $this->putJson("/api/v1/customers/{$customerId}", ['name' => 'عميل محدث', 'phone' => '01000003333'], $headers)->assertOk();
+        $this->putJson("/api/v1/expenses/{$expenseId}", [
+            'title' => 'إيجار معدل',
+            'category' => 'rent',
+            'cost_center' => 'general',
+            'amount' => '120.000',
+            'expense_date' => now()->toDateString(),
+            'payment_method' => 'cash',
+        ], $headers)->assertOk();
+        $this->putJson("/api/v1/users/{$cashierId}", [
+            'name' => 'كاشير معدل',
+            'phone' => '01000000072',
+            'role' => 'cashier',
+            'store_ids' => [$storeId],
+            'is_active' => true,
+        ], $headers)->assertOk();
+        $this->putJson("/api/v1/stores/{$storeId}", ['name' => 'الفرع الرئيسي المعدل', 'type' => 'retail_shop'], $headers)->assertOk();
+
+        // Still only the 2 invoices created before hitting the cap.
+        $this->assertSame(2, $this->inTenant($tenant, fn (): int => Invoice::withTrashed()->count()));
+    }
+
+    public function test_editing_existing_records_is_never_blocked_by_their_own_resource_limits(): void
+    {
+        $tenant = $this->tenantOn($this->plan([
+            'max_items' => 1,
+            'max_customers' => 1,
+            'max_suppliers' => 1,
+            'max_stores' => 1,
+            'max_users' => 1,
+        ]));
+        $headers = $this->tenantHeaders($tenant);
+        $storeId = (int) $this->tenantStore($tenant)->getKey();
+        $adminId = (int) $this->inTenant($tenant, fn (): int => (int) User::query()->value('id'));
+
+        $itemId = (int) $this->postJson('/api/v1/items', $this->item('One'), $headers)->assertCreated()->json('data.id');
+        $customerId = (int) $this->postJson('/api/v1/customers', ['name' => 'First Customer'], $headers)->assertCreated()->json('data.id');
+        $supplierId = (int) $this->postJson('/api/v1/suppliers', ['name' => 'First Supplier'], $headers)->assertCreated()->json('data.id');
+
+        // Creating one more of each capped resource returns 403 subscription.limit_reached.
+        $this->postJson('/api/v1/items', $this->item('Two'), $headers)->assertStatus(403)->assertJsonPath('error_code', 'subscription.limit_reached');
+        $this->postJson('/api/v1/customers', ['name' => 'Second Customer'], $headers)->assertStatus(403)->assertJsonPath('error_code', 'subscription.limit_reached');
+        $this->postJson('/api/v1/suppliers', ['name' => 'Second Supplier'], $headers)->assertStatus(403)->assertJsonPath('error_code', 'subscription.limit_reached');
+        $this->postJson('/api/v1/stores', ['name' => 'Second Branch', 'type' => 'retail_shop'], $headers)->assertStatus(403)->assertJsonPath('error_code', 'subscription.limit_reached');
+        $this->postJson('/api/v1/users', [
+            'name' => 'Second User',
+            'phone' => '01000000073',
+            'password' => 'secret123',
+            'role' => 'cashier',
+            'store_ids' => [$storeId],
+        ], $headers)->assertStatus(403)->assertJsonPath('error_code', 'subscription.limit_reached');
+
+        // Editing each existing record at 100% of its own cap continues to succeed.
+        $this->putJson("/api/v1/items/{$itemId}", $this->item('One Updated'), $headers)->assertOk();
+        $this->putJson("/api/v1/customers/{$customerId}", ['name' => 'First Customer Updated'], $headers)->assertOk();
+        $this->putJson("/api/v1/suppliers/{$supplierId}", ['name' => 'First Supplier Updated'], $headers)->assertOk();
+        $this->putJson("/api/v1/stores/{$storeId}", ['name' => 'Main Branch Updated', 'type' => 'retail_shop'], $headers)->assertOk();
+        $this->putJson("/api/v1/users/{$adminId}", [
+            'name' => 'Admin Updated',
+            'phone' => '01000000074',
+            'email' => $this->inTenant($tenant, fn (): string => (string) User::query()->findOrFail($adminId)->email),
+            'role' => 'admin',
+            'store_ids' => [$storeId],
+            'is_active' => true,
+        ], $headers)->assertOk();
     }
 
     // ----------------------------------------------------------------- helpers

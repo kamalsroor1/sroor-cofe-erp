@@ -10,6 +10,8 @@ import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
 import { isPublicLandingHost } from '../helpers/platformHosts';
 import { PASSWORD_CHANGE_ROUTE, safeInternalRedirect } from '../helpers/passwordChange';
 import { DASHBOARD_PATH, landingPathFor } from '../helpers/landingPath';
+import { deniedRouteRedirect } from '../helpers/routeAccess';
+import { flushPendingRouteNotice, isAppReady, queueRouteNotice } from '../helpers/pendingRouteNotice';
 import { isNoStoreAssigned } from '../helpers/storeNotice';
 
 /**
@@ -567,7 +569,10 @@ const tenantRoutes = [
     {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
-        redirect: '/',
+        component: () => import('../views/NotFoundView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.not_found',
+        },
     },
 ];
 
@@ -741,6 +746,11 @@ async function tenantGuard(to, from, next) {
     const appName = appConfigStore.platformName || trans('nav.page_titles.default_app_name');
     document.title = to.meta.titleKey ? `${trans(to.meta.titleKey)} - ${appName}` : appName;
 
+    // GEN-103: NotFound renders inside SpaLayout when authenticated, standalone when guest.
+    if (to.name === 'not-found') {
+        to.meta.layout = authStore.isAuthenticated ? undefined : 'blank';
+    }
+
     // 2b. SELL-01: a flagged account sees only the change screen; an unflagged one never sees it.
     if (authStore.mustChangePassword && !to.meta.passwordChange) {
         const redirect = safeInternalRedirect(to.name === 'login' ? to.query.redirect : to.fullPath);
@@ -778,19 +788,10 @@ async function tenantGuard(to, from, next) {
     }
 
     // 6. Permission / Role Check (plan gating via meta.feature is rendered by App.vue as a FeatureGate upsell)
-    if (to.meta.permission && !authStore.hasPermission(to.meta.permission)) {
-        notifyError(trans('common.no_access'));
-        return next({ name: 'dashboard' });
-    }
-
-    if (to.meta.permissionAny && !to.meta.permissionAny.some((permission) => authStore.hasPermission(permission))) {
-        notifyError(trans('common.no_access'));
-        return next({ name: 'dashboard' });
-    }
-
-    if (to.meta.role && !authStore.hasRole(to.meta.role)) {
-        notifyError(trans('common.no_access'));
-        return next({ name: 'dashboard' });
+    const denied = deniedRouteRedirect(to.meta, authStore);
+    if (denied) {
+        queueRouteNotice(denied.messageKey);
+        return next(denied.redirect);
     }
 
     next();
@@ -868,6 +869,11 @@ if (CENTRAL_MODE) {
     router.beforeEach(centralGuard);
 } else {
     router.beforeEach(tenantGuard);
+    router.afterEach(() => {
+        if (isAppReady()) {
+            flushPendingRouteNotice((key) => notifyError(trans(key)));
+        }
+    });
 }
 
 export default router;

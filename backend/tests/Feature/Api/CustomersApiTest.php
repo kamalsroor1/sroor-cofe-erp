@@ -384,6 +384,154 @@ class CustomersApiTest extends TenantTestCase
         });
     }
 
+    public function test_can_create_and_update_customer_with_wholesale_price_tier(): void
+    {
+        $created = $this->postJson('/api/v1/customers', [
+            'name' => 'عميل جملة',
+            'phone' => '01000007099',
+            'price_tier' => 'wholesale',
+        ], $this->adminHeaders);
+
+        $created->assertStatus(201)
+            ->assertJsonPath('data.price_tier', 'wholesale');
+
+        $customerId = (int) $created->json('data.id');
+        $this->inTenant($this->tenant, function () use ($customerId): void {
+            $this->assertSame('wholesale', Customer::findOrFail($customerId)->price_tier);
+        });
+
+        // Omitting price_tier on update keeps the stored tier.
+        $this->putJson('/api/v1/customers/'.$customerId, [
+            'name' => 'عميل جملة محدث',
+        ], $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonPath('data.price_tier', 'wholesale');
+
+        // Explicitly updating price_tier to retail persists the change.
+        $this->putJson('/api/v1/customers/'.$customerId, [
+            'name' => 'عميل تجزئة',
+            'price_tier' => 'retail',
+        ], $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonPath('data.price_tier', 'retail');
+
+        // Updating back to wholesale persists wholesale.
+        $this->putJson('/api/v1/customers/'.$customerId, [
+            'name' => 'عميل جملة مجدداً',
+            'price_tier' => 'wholesale',
+        ], $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonPath('data.price_tier', 'wholesale');
+
+        $this->inTenant($this->tenant, function () use ($customerId): void {
+            $this->assertSame('wholesale', Customer::findOrFail($customerId)->price_tier);
+        });
+
+        // Invalid price_tier is rejected with 422.
+        $this->postJson('/api/v1/customers', [
+            'name' => 'عميل غير صالح',
+            'price_tier' => 'vip',
+        ], $this->adminHeaders)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['price_tier']);
+    }
+
+    /**
+     * SAL-290 (#744): customer phone must reject non-numeric values, HTML tags, and short numbers
+     * with localized AR/EN 422 errors across create, update, and POS quick-create, while allowing
+     * valid local/international formats and preserving GEN-183 HTML-in-name handling.
+     */
+    public function test_customer_phone_validation_rejects_invalid_values_and_accepts_valid_phones(): void
+    {
+        $existingId = (int) $this->postJson('/api/v1/customers', [
+            'name' => 'عميل هاتف صالح',
+            'phone' => '01012345678',
+        ], $this->adminHeaders)->assertCreated()->json('data.id');
+
+        $invalidPhones = ['abc12', '12', '<b>x</b>', '123456', str_repeat('1', 16), '-01012345678', '01012345678-', '01000000001 / abc'];
+
+        foreach ($invalidPhones as $badPhone) {
+            foreach (['ar', 'en'] as $locale) {
+                $headers = [...$this->adminHeaders, 'X-Locale' => $locale];
+                $expectedMsg = trans('validation.phone', [
+                    'attribute' => trans('validation.attributes.phone', [], $locale),
+                ], $locale);
+
+                $this->postJson('/api/v1/customers', [
+                    'name' => 'عميل تجربة',
+                    'phone' => $badPhone,
+                ], $headers)
+                    ->assertStatus(422)
+                    ->assertJsonValidationErrors(['phone'])
+                    ->assertJsonPath('errors.phone.0', $expectedMsg);
+
+                $this->putJson('/api/v1/customers/'.$existingId, [
+                    'name' => 'عميل هاتف صالح',
+                    'phone' => $badPhone,
+                ], $headers)
+                    ->assertStatus(422)
+                    ->assertJsonValidationErrors(['phone'])
+                    ->assertJsonPath('errors.phone.0', $expectedMsg);
+
+                $this->postJson('/api/v1/pos/quick-customer', [
+                    'name' => 'عميل سريع',
+                    'phone' => $badPhone,
+                ], $headers)
+                    ->assertStatus(422)
+                    ->assertJsonValidationErrors(['phone'])
+                    ->assertJsonPath('errors.phone.0', $expectedMsg);
+            }
+        }
+
+        // Valid local, formatted, international, Arabic-Indic, and empty/null phones succeed.
+        foreach (['01012345678', '+201012345678', '010-1234-5678', '010 1234 5678', '+20 100 123 4567', '٠١٠١٢٣٤٥٦٧٨', "\u{200F}01012345678\u{200E}", "010\u{00A0}1234\u{00A0}5678", '01000000001 / 01100000002', '01000000001، 01100000002', null, ''] as $index => $goodPhone) {
+            $this->postJson('/api/v1/customers', [
+                'name' => 'عميل رقم '.$index,
+                'phone' => $goodPhone,
+            ], $this->adminHeaders)->assertCreated();
+
+            $this->postJson('/api/v1/pos/quick-customer', [
+                'name' => 'عميل سريع '.$index,
+                'phone' => $goodPhone,
+            ], $this->adminHeaders)->assertCreated();
+        }
+
+        $this->putJson('/api/v1/customers/'.$existingId, [
+            'name' => 'عميل محدث',
+            'phone' => '+20 100 123 4567',
+        ], $this->adminHeaders)->assertOk();
+
+        // GEN-183: HTML characters in customer name remain accepted by API (escaped on render).
+        $this->postJson('/api/v1/customers', [
+            'name' => '<img src=x onerror=alert(1)>',
+            'phone' => '01012345678',
+        ], $this->adminHeaders)->assertCreated();
+    }
+
+    /**
+     * SAL-294 (#869): Arabic 422 validation errors on customers must translate credit_limit and price_tier.
+     */
+    public function test_arabic_validation_messages_translate_credit_limit_and_price_tier(): void
+    {
+        $headers = [...$this->adminHeaders, 'X-Locale' => 'ar'];
+
+        $response = $this->postJson('/api/v1/customers', [
+            'name' => 'عميل اختبار',
+            'credit_limit' => '-5',
+            'price_tier' => 'vip',
+        ], $headers)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['credit_limit', 'price_tier']);
+
+        $creditErr = (string) $response->json('errors.credit_limit.0');
+        $tierErr = (string) $response->json('errors.price_tier.0');
+
+        $this->assertStringContainsString('حد الائتمان', $creditErr);
+        $this->assertStringNotContainsString('credit limit', $creditErr);
+        $this->assertStringContainsString('فئة السعر', $tierErr);
+        $this->assertStringNotContainsString('price tier', $tierErr);
+    }
+
     /** Runs inside the tenant. */
     private function createCreditInvoice(int $customerId, string $number, string $total): void
     {

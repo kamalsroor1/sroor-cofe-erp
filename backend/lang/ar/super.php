@@ -78,6 +78,8 @@ return [
     'loading_metrics' => 'جاري تحميل مؤشرات المنصة المركزية...',
     'platform_accounts' => 'حسابات المنصة',
     'active_subscriptions' => 'اشتراكات مفعلة',
+    'free_plan_tenants' => 'الباقة المجانية',
+    'free_plan_accounts' => 'حسابات على الباقة المجانية',
     'under_trial' => 'قيد التجربة (Trial)',
     'suspended_or_expired' => 'معطلة أو منتهية',
     'tenants_distribution' => 'توزيع الباقات والاشتراكات',
@@ -565,4 +567,8 @@ return [
     'plan_addons_empty' => 'لا توجد إضافات في الكتالوج.',
     'plan_addon_included_qty_label' => 'الكمية المضمّنة',
     'plan_addon_yearly_only_label' => 'مضمّنة مع الاشتراك السنوي فقط',
+    'dashboard_load_failed' => 'تعذر تحميل بيانات لوحة المنصة.',
+    'tenants_load_failed' => 'تعذر تحميل قائمة المستأجرين.',
+    'units_load_failed' => 'تعذر تحميل وحدات القياس.',
+    'app_versions_load_failed' => 'تعذر تحميل إصدارات التطبيق.',
 ];

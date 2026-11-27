@@ -163,6 +163,7 @@ return [
         'import_index' => 'Import data',
         'trash_index' => 'Recycle bin',
         'help_index' => 'Help Center & Support',
+        'not_found' => 'Page not found',
     ],
 
     // Sidebar / drawer menu labels (Composables/useNavigation.js)

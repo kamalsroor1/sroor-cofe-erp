@@ -1,8 +1,8 @@
 <script setup>
 import { X } from 'lucide-vue-next';
-import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { ref, useId } from 'vue';
 import { useNativeBridge } from '@/Composables/useNativeBridge';
-import { useBodyScrollLock } from '@/Composables/useBodyScrollLock';
+import { useFocusTrap } from '@/Composables/useFocusTrap';
 
 const props = defineProps({
   show: {
@@ -42,6 +42,9 @@ const props = defineProps({
 const emit = defineEmits(['close']);
 const { triggerHaptic } = useNativeBridge();
 
+const titleId = `${useId()}-title`;
+const panelRef = ref(null);
+
 // Touch Drag-to-Close State for Mobile Bottom Sheet
 const touchStartY = ref(0);
 const touchCurrentY = ref(0);
@@ -67,13 +70,20 @@ const close = () => {
   }
 };
 
-const handleKeyDown = (e) => {
-  if (e.key === 'Escape' && props.show && props.closeable) {
+useFocusTrap(panelRef, () => props.show, {
+  // Focus the panel, not the header close button (Enter would close it) or the first input
+  // (it would pop the on-screen keyboard on every open).
+  initialFocus: 'panel',
+  onEscape: (e) => {
     // Marks the key as handled so window-level shortcut handlers don't close a second layer.
     e.preventDefault();
     close();
-  }
-};
+  },
+  onDeactivate: () => {
+    dragOffset.value = 0;
+    isDragging.value = false;
+  },
+});
 
 // Drag gesture handlers (Mobile only)
 const onTouchStart = (e) => {
@@ -102,27 +112,6 @@ const onTouchEnd = () => {
   }
   isDragging.value = false;
 };
-
-const { lock: lockScroll, unlock: unlockScroll } = useBodyScrollLock();
-
-onMounted(() => {
-  document.addEventListener('keydown', handleKeyDown);
-  if (props.show) lockScroll();
-});
-
-onUnmounted(() => {
-  document.removeEventListener('keydown', handleKeyDown);
-  unlockScroll();
-});
-
-watch(
-  () => props.show,
-  (val) => {
-    dragOffset.value = 0;
-    if (val) lockScroll();
-    else unlockScroll();
-  }
-);
 </script>
 
 <template>
@@ -136,7 +125,12 @@ watch(
       >
         <!-- Sheet Panel Container -->
         <div
-          class="w-full bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 text-slate-900 dark:text-white max-h-[90vh] sm:max-h-[85vh] flex flex-col transition-transform duration-150 ease-out pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] sm:pb-6"
+          ref="panelRef"
+          role="dialog"
+          aria-modal="true"
+          :aria-labelledby="title ? titleId : undefined"
+          tabindex="-1"
+          class="w-full bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 text-slate-900 dark:text-white max-h-[90dvh] sm:max-h-[85dvh] flex flex-col transition-transform duration-150 ease-out pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] sm:pb-6 outline-none"
           :class="maxWidthClass"
           :style="dragOffset > 0 ? { transform: `translateY(${dragOffset}px)` } : {}"
           @click.stop
@@ -144,6 +138,7 @@ watch(
           <!-- Native Mobile Drag Handle (Touch Target for Drag-to-Close) -->
           <div
             class="sm:hidden flex flex-col items-center justify-center -mt-2 -mb-1 py-1 cursor-grab active:cursor-grabbing shrink-0"
+            aria-hidden="true"
             @touchstart="onTouchStart"
             @touchmove="onTouchMove"
             @touchend="onTouchEnd"
@@ -164,7 +159,10 @@ watch(
                 <span v-if="typeof icon === 'string'" class="text-xl shrink-0">{{ icon }}</span>
                 <component :is="icon" v-else-if="icon" class="w-5 h-5 text-theme-primary shrink-0" />
                 <div>
-                  <h3 class="font-black text-sm sm:text-base text-slate-900 dark:text-white leading-tight">
+                  <h3
+                    :id="titleId"
+                    class="font-black text-sm sm:text-base text-slate-900 dark:text-white leading-tight"
+                  >
                     {{ title }}
                   </h3>
                   <p v-if="subtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
@@ -177,15 +175,16 @@ watch(
             <button
               v-if="closeable"
               type="button"
+              :aria-label="$t('common.close')"
               class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white text-xs font-bold flex items-center justify-center transition active:scale-90 cursor-pointer shrink-0 shadow-xs"
               @click="close"
             >
-              <X class="w-4 h-4" />
+              <X class="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
 
           <!-- Body / Content (Scrollable) -->
-          <div class="flex-1 overflow-y-auto ps-0.5">
+          <div class="flex-1 min-h-0 overflow-y-auto ps-0.5">
             <slot />
           </div>
 

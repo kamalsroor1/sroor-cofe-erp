@@ -206,9 +206,6 @@ final class BillingConsoleGapsTest extends PlanChangeTestCase
 
         $row = $this->requestRow(Tenant::query()->findOrFail($tenant->getKey()), ['requested_plan_id' => $big->getKey()]);
 
-        $this->postJson(self::QUEUE.'/'.$row->getKey().'/invoice', ['amount' => '700.000'], $this->admin)
-            ->assertStatus(409)->assertJsonPath('error_code', 'billing.upgrade_held_for_founder_review');
-
         return [$tenant, $row];
     }
 
@@ -261,14 +258,14 @@ final class BillingConsoleGapsTest extends PlanChangeTestCase
         $this->assertTrue($tenantRow->hasPaidTermRunning());
     }
 
-    public function test_without_release_a_typed_amount_on_no_paid_term_is_still_held_then_unchanged(): void
+    public function test_without_release_flag_a_typed_amount_on_lapsed_founder_bills_agreed_amount_while_trial_keeps_409(): void
     {
         [, $row] = $this->lapsedFounder();
 
-        // Held again, nothing issued.
-        $this->postJson(self::QUEUE.'/'.$row->getKey().'/invoice', ['amount' => '700.000'], $this->admin)
-            ->assertStatus(409)->assertJsonPath('error_code', 'billing.upgrade_held_for_founder_review');
-        $this->assertSame(0, BillingInvoice::query()->count());
+        // Lapsed founder with a typed amount issues immediately without needing release_founder_hold.
+        $invoice = $this->issue($row, ['amount' => '700.000']);
+        $this->assertSame('700.000', $invoice->subtotal);
+        $this->assertTrue($invoice->lines[0]['agreed_price']);
 
         // A non-founder trial with a typed amount keeps the old 409.
         $big = $this->plan(['price_monthly' => '999.000']);
@@ -278,14 +275,15 @@ final class BillingConsoleGapsTest extends PlanChangeTestCase
             ->assertStatus(409)->assertJsonPath('error_code', 'billing.difference_needs_active_term');
     }
 
-    public function test_a_released_hold_without_an_amount_and_no_paid_term_stays_at_the_list_price(): void
+    public function test_a_lapsed_founder_without_an_amount_and_no_paid_term_uses_founder_price(): void
     {
         [, $row] = $this->lapsedFounder();
 
-        $invoice = $this->issue($row, ['release_founder_hold' => true]);
+        $invoice = $this->issue($row);
 
-        $this->assertSame('999.000', $invoice->lines[0]['amount']);
-        $this->assertSame('list', $invoice->lines[0]['price_step']);
+        $this->assertSame('699.000', $invoice->lines[0]['amount']);
+        $this->assertSame('founder', $invoice->lines[0]['price_step']);
+        $this->assertTrue($invoice->lines[0]['founder']);
         $this->assertArrayNotHasKey('agreed_price', $invoice->lines[0]);
     }
 }

@@ -1,6 +1,7 @@
 import router from '../router';
 import { useAuthStore } from '../stores/auth';
 import { useAppConfigStore } from '../stores/appConfig';
+import { canAccessMatchedRoute } from '../helpers/routeAccess';
 
 /**
  * Single source of truth for page access: `meta.permission` (user role) and `meta.feature` (tenant plan)
@@ -13,12 +14,7 @@ export function useRoutePermission() {
 
     const canAccessPath = (path) => {
         const { matched } = router.resolve(path);
-        const required = matched.map((record) => record.meta?.permission).find(Boolean);
-        if (required && !authStore.hasPermission(required)) return false;
-        const requiredAny = matched.map((record) => record.meta?.permissionAny).find(Boolean);
-        if (requiredAny && !requiredAny.some((permission) => authStore.hasPermission(permission))) return false;
-        const feature = matched.map((record) => record.meta?.feature).find(Boolean);
-        return !feature || appConfigStore.hasFeature(feature);
+        return canAccessMatchedRoute(matched, authStore, appConfigStore);
     };
 
     return { canAccessPath };

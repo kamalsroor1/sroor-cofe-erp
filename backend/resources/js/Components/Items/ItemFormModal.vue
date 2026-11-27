@@ -6,7 +6,7 @@
     max-width="3xl"
     @close="$emit('close')"
   >
-    <form @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
+    <form id="item-form" @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
       <!-- Row 1: Name & Code/Barcode -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <BaseInput
@@ -119,14 +119,22 @@
         :placeholder="$t('inventory.item_notes_placeholder')"
         :rows="2"
       />
+    </form>
 
-      <!-- Modal Footer Actions -->
-      <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
+    <template #footer>
+      <div class="flex items-center justify-end gap-2">
         <BaseButton type="button" variant="ghost" size="md" :label="$t('common.cancel')" @click="$emit('close')" />
 
-        <BaseButton type="submit" variant="gradient" size="md" :loading="isSubmitting" :label="$t('common.save')" />
+        <BaseButton
+          type="submit"
+          form="item-form"
+          variant="gradient"
+          size="md"
+          :loading="isSubmitting"
+          :label="$t('common.save')"
+        />
       </div>
-    </form>
+    </template>
   </AppModal>
 </template>
 

@@ -13,6 +13,15 @@ export const TENANT_STATUSES = Object.freeze([
     'archived',
 ]);
 
+export const TENANT_FILTER_STATUSES = Object.freeze([
+    'active',
+    'past_due',
+    'read_only',
+    'suspended',
+    'cancelled',
+    'archived',
+]);
+
 const BADGE_CLASSES = Object.freeze({
     active: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400',
     trial: 'bg-theme-light border-theme-border text-theme-primary',

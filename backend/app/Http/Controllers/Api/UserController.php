@@ -24,6 +24,7 @@ use App\Http\Resources\UserResource;
 use App\Models\Store;
 use App\Models\User;
 use App\Support\Auth\AccountLockout;
+use App\Support\Database\LikePattern;
 use App\Support\SafeJsonError;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -59,11 +60,7 @@ final class UserController extends Controller
         $query = User::with(['roles', 'defaultStore', 'stores']);
 
         if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            });
+            LikePattern::whereContainsAny($query, ['name', 'phone', 'email'], $search);
         }
 
         if ($role !== 'all' && $role !== '') {

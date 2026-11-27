@@ -77,8 +77,12 @@ class MultiStorePhase1Test extends TenantTestCase
             $this->assertTrue($mainStore->is_main);
             $this->assertEquals($this->mainStoreId, Store::getMainStore()->id);
 
-            $this->assertCount(1, Store::vans()->get());
-            $this->assertEquals('VAN-01', Store::vans()->first()->code);
+            Store::create(['name' => 'UI Van', 'code' => 'VAN-02', 'type' => 'van', 'is_active' => true, 'is_main' => false]);
+            Store::create(['name' => 'UI Warehouse', 'code' => 'WH-02', 'type' => 'warehouse', 'is_active' => true, 'is_main' => false]);
+            Store::create(['name' => 'Retail Branch', 'code' => 'SHP-01', 'type' => 'retail_shop', 'is_active' => true, 'is_main' => false]);
+
+            $this->assertEqualsCanonicalizing(['VAN-01', 'VAN-02'], Store::vans()->pluck('code')->all());
+            $this->assertEqualsCanonicalizing(['MAIN-01', 'WH-02'], Store::warehouses()->pluck('code')->all());
         });
     }
 

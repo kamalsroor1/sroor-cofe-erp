@@ -27,6 +27,7 @@ export function useImport() {
     const filter = ref('all');
     const skipInvalid = ref(false);
     const isPreviewing = ref(false);
+    const isConfirming = ref(false);
     const isCommitting = ref(false);
     const isDownloading = ref(false);
     const isDownloadingErrors = ref(false);
@@ -62,6 +63,7 @@ export function useImport() {
             importableCount.value > 0 &&
             (!needsSkipConfirmation.value || skipInvalid.value) &&
             (!needsCategoryConfirmation.value || confirmNewCategories.value) &&
+            !isConfirming.value &&
             !isCommitting.value
     );
 
@@ -193,14 +195,19 @@ export function useImport() {
     };
 
     const commit = async () => {
-        if (!canCommit.value) return;
-        const confirmed = await confirmDialog({
-            title: t('import.ui.confirm_title'),
-            text: buildConfirmText(),
-            confirmButtonText: t('import.ui.confirm_button'),
-            icon: 'question',
-        });
-        if (!confirmed) return;
+        if (!canCommit.value || isConfirming.value || isCommitting.value) return;
+        isConfirming.value = true;
+        try {
+            const confirmed = await confirmDialog({
+                title: t('import.ui.confirm_title'),
+                text: buildConfirmText(),
+                confirmButtonText: t('import.ui.confirm_button'),
+                icon: 'question',
+            });
+            if (!confirmed) return;
+        } finally {
+            isConfirming.value = false;
+        }
 
         isCommitting.value = true;
         commitError.value = '';

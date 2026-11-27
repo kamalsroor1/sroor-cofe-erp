@@ -32,7 +32,7 @@ class GetTenantsIndexDataAction
 
         $tenants = $tenantsQuery->latest()->paginate(15)->withQueryString()->through(fn ($t) => (new TenantResource($t))->resolve());
 
-        $plans = PlanResource::collection(Plan::select('id', 'name', 'slug')->get())->resolve();
+        $plans = PlanResource::collection(Plan::query()->orderBy('sort_order')->orderBy('id')->get())->resolve();
 
         return [
             'tenants' => $tenants,

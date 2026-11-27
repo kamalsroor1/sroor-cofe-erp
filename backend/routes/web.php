@@ -6,6 +6,7 @@ use App\Services\Branding\PlatformBranding;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Laravel\Telescope\Http\Middleware\Authorize as TelescopeAuthorize;
 
 /*
 |--------------------------------------------------------------------------
@@ -123,11 +124,25 @@ Route::get('/sw.js', function () {
     ]);
 });
 
+$telescopePath = trim((string) config('telescope.path', 'telescope'), '/');
+$telescopeExclusion = $telescopePath !== '' ? '|'.preg_quote($telescopePath, '/').'(?:/|$)' : '';
+
+// ADM-436: when TELESCOPE_ENABLED=false, Laravel Telescope skips registering its routes, which
+// would otherwise fall into the SPA catch-all and return 200. Keep /telescope and /telescope/*
+// behind EnsureCentralContext (404 on tenant hosts) and Telescope's Authorize (403 without a
+// central_web monitoring session), returning 404 when disabled even to an authorized operator.
+if (! config('telescope.enabled') && $telescopePath !== '') {
+    Route::any('/'.$telescopePath.'/{any?}', static fn () => abort(404))
+        ->where('any', '.*')
+        ->middleware(['web', EnsureCentralContext::class, TelescopeAuthorize::class])
+        ->name('telescope.disabled');
+}
+
 // 🌐 Pure Vue 3 SPA Catch-All Entry Point
-// Never serve the SPA shell for unknown /api/* paths (must 404), nor for the tenant print/export pages
-// registered in routes/tenant.php (loaded after this file, so the catch-all would shadow them), nor for
-// the PRD-22 public signed receipt page (/r/{invoice}).
+// Never serve the SPA shell for unknown /api/* paths (must 404), nor for /telescope/*, nor for the
+// tenant print/export pages registered in routes/tenant.php (loaded after this file, so the
+// catch-all would shadow them), nor for the PRD-22 public signed receipt page (/r/{invoice}).
 Route::get('/{any?}', $spaShell)
-    ->where('any', '(?!api(?:/|$)|reports/print$|items/[^/]+/movements/print$|activity-logs/export-csv$|r/[0-9]+$).*')
+    ->where('any', '(?!api(?:/|$)'.$telescopeExclusion.'|reports/print$|items/[^/]+/movements/print$|activity-logs/export-csv$|r/[0-9]+$).*')
     ->name('app')
     ->middleware('spa.headers');

@@ -10,12 +10,14 @@ use App\Actions\Purchases\GetSmartReorderSuggestionsAction;
 use App\DTOs\Purchases\CancelPurchaseDTO;
 use App\DTOs\Purchases\PurchaseDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SmartReorderRequest;
 use App\Http\Requests\StorePurchaseRequest;
 use App\Http\Resources\PurchaseResource;
 use App\Models\Purchase;
 use App\Models\User;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
+use App\Support\Database\LikePattern;
 use App\Support\Money\Decimal;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -59,10 +61,10 @@ final class PurchaseController extends Controller
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->where('purchase_number', 'like', "%{$search}%")
-                    ->orWhere('supplier_invoice_ref', 'like', "%{$search}%")
-                    ->orWhere('notes', 'like', "%{$search}%")
-                    ->orWhereHas('supplier', fn ($sq) => $sq->where('name', 'like', "%{$search}%")->orWhere('company_name', 'like', "%{$search}%"));
+                LikePattern::whereContains($q, 'purchase_number', $search);
+                LikePattern::orWhereContains($q, 'supplier_invoice_ref', $search);
+                LikePattern::orWhereContains($q, 'notes', $search);
+                $q->orWhereHas('supplier', fn ($sq) => LikePattern::whereContainsAny($sq, ['name', 'company_name'], $search));
             });
         }
 
@@ -176,20 +178,16 @@ final class PurchaseController extends Controller
     /**
      * Smart Reorder AI Suggestions
      */
-    public function smartReorder(Request $request, ActiveStore $activeStore): JsonResponse
+    public function smartReorder(SmartReorderRequest $request, ActiveStore $activeStore): JsonResponse
     {
-        $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('purchases.view')) {
-            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
-        }
-
         // STOR-2: the active store, an access-checked ?store_id, or every store via a verified `all`.
         $storeFilter = $activeStore->readFilter($request);
 
-        $analysisDays = (int) $request->input('analysis_days', 14);
-        $targetCoverDays = (int) $request->input('target_cover_days', 15);
-        $urgency = (string) $request->input('urgency', 'all');
-        $search = trim((string) $request->input('search', ''));
+        $validated = $request->validated();
+        $analysisDays = (int) ($validated['analysis_days'] ?? 14);
+        $targetCoverDays = (int) ($validated['target_cover_days'] ?? 15);
+        $urgency = (string) ($validated['urgency'] ?? 'all');
+        $search = trim((string) ($validated['search'] ?? ''));
 
         $result = $this->getSmartReorderSuggestionsAction->execute(
             storeId: $storeFilter,

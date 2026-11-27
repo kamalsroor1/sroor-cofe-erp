@@ -253,6 +253,93 @@ final class PasswordChangeAndResetApiTest extends TenantTestCase
         $this->assertTrue(Hash::check(self::OLD_PASSWORD, $this->freshUser((int) $user->id)->password));
     }
 
+    public function test_wrong_current_password_lockout_on_change_password_blocks_login_for_fifteen_minutes(): void
+    {
+        $user = $this->createTenantUser($this->tenant, 'cashier', attributes: [
+            'phone' => '01000009911',
+            'email' => 'mgt062@sell01.test',
+            'password' => Hash::make(self::OLD_PASSWORD),
+        ]);
+        $headers = $this->tenantHeaders($this->tenant, $user);
+        $max = (int) config('rate_limits.tenant_login.account_lockout_attempts', 5);
+
+        for ($i = 0; $i < $max; $i++) {
+            $this->postJson(self::CHANGE, $this->changePayload(['current_password' => 'fixtureWrong000']), $headers)
+                ->assertStatus(422)
+                ->assertJsonPath('errors.current_password.0', __('auth.current_password_incorrect'));
+        }
+
+        // 6th attempt shows the account-locked message.
+        $this->postJson(self::CHANGE, $this->changePayload(), $headers)
+            ->assertStatus(422)
+            ->assertJsonPath('errors.current_password.0', __('auth.account_locked', ['minutes' => 15]));
+
+        // Normal login with the CORRECT password (phone or email, even from another IP) must be blocked.
+        $this->withServerVariables(['REMOTE_ADDR' => '10.9.0.10']);
+        $this->login((string) $user->phone, self::OLD_PASSWORD)
+            ->assertStatus(422)
+            ->assertJsonPath('errors.login.0', __('auth.account_locked', ['seconds' => 900, 'minutes' => 15]));
+
+        $this->withServerVariables(['REMOTE_ADDR' => '10.9.0.11']);
+        $this->login((string) $user->email, self::OLD_PASSWORD)
+            ->assertStatus(422)
+            ->assertJsonPath('errors.login.0', __('auth.account_locked', ['seconds' => 900, 'minutes' => 15]));
+
+        // After the 15-minute lockout window expires, both login and change-password recover.
+        $this->travel(16)->minutes();
+
+        $this->login((string) $user->phone, self::OLD_PASSWORD)->assertOk();
+        $this->postJson(self::CHANGE, $this->changePayload(), $this->tenantHeaders($this->tenant, $user))->assertOk();
+    }
+
+    public function test_admin_unlock_clears_lockout_triggered_by_change_password(): void
+    {
+        $user = $this->createTenantUser($this->tenant, 'cashier', attributes: [
+            'phone' => '01000009912',
+            'email' => 'mgt062-unlock@sell01.test',
+            'password' => Hash::make(self::OLD_PASSWORD),
+        ]);
+        $headers = $this->tenantHeaders($this->tenant, $user);
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson(self::CHANGE, $this->changePayload(['current_password' => 'fixtureWrong000']), $headers)
+                ->assertStatus(422);
+        }
+
+        $this->login((string) $user->phone, self::OLD_PASSWORD)->assertStatus(422);
+
+        $this->postJson("/api/v1/users/{$user->id}/unlock-login", [], $this->tenantHeaders($this->tenant))
+            ->assertOk()
+            ->assertJsonPath('message', __('users.unlock_login_success'));
+
+        $this->login((string) $user->phone, self::OLD_PASSWORD)->assertOk();
+        $this->postJson(self::CHANGE, $this->changePayload(), $this->tenantHeaders($this->tenant, $user))->assertOk();
+    }
+
+    public function test_login_lockout_also_blocks_change_password_until_expiry(): void
+    {
+        $user = $this->createTenantUser($this->tenant, 'cashier', attributes: [
+            'phone' => '01000009913',
+            'email' => 'mgt062-reverse@sell01.test',
+            'password' => Hash::make(self::OLD_PASSWORD),
+        ]);
+        $headers = $this->tenantHeaders($this->tenant, $user);
+
+        for ($i = 1; $i <= 5; $i++) {
+            $this->withServerVariables(['REMOTE_ADDR' => "10.9.1.{$i}"]);
+            $this->login((string) $user->phone, 'fixtureWrong000')->assertStatus(422);
+        }
+
+        $this->postJson(self::CHANGE, $this->changePayload(), $headers)
+            ->assertStatus(422)
+            ->assertJsonPath('errors.current_password.0', __('auth.account_locked', ['minutes' => 15]));
+
+        $this->travel(16)->minutes();
+
+        $this->login((string) $user->phone, self::OLD_PASSWORD)->assertOk();
+        $this->postJson(self::CHANGE, $this->changePayload(), $this->tenantHeaders($this->tenant, $user))->assertOk();
+    }
+
     // ------------------------------------------------------------------ in-shop reset
 
     public function test_admin_reset_returns_a_temporary_password_once_flags_the_user_and_revokes_tokens(): void
@@ -291,6 +378,54 @@ final class PasswordChangeAndResetApiTest extends TenantTestCase
 
         // The user signs in with it and is sent straight to the change screen.
         $this->login((string) $target->phone, $temporary)->assertOk()->assertJsonPath('data.must_change_password', true);
+    }
+
+    public function test_admin_reset_enforces_token_revocation_and_blocks_endpoints_until_temporary_password_is_changed(): void
+    {
+        $target = $this->createTenantUser($this->tenant, 'cashier', attributes: ['password' => Hash::make(self::OLD_PASSWORD)]);
+        $firstOldToken = $this->tenantToken($this->tenant, $target);
+        $secondOldToken = $this->tenantToken($this->tenant, $target);
+        $this->assertSame(2, $this->tokenCount((int) $target->id));
+
+        $reset = $this->postJson("/api/v1/users/{$target->id}/reset-password", [], $this->tenantHeaders($this->tenant))
+            ->assertOk()
+            ->assertJsonPath('data.must_change_password', true);
+        $this->assertStringContainsString('no-store', (string) $reset->headers->get('Cache-Control'));
+        $temporary = (string) $reset->json('data.temporary_password');
+
+        // Both previously issued tokens are revoked immediately; old password can no longer log in.
+        $this->assertSame(0, $this->tokenCount((int) $target->id));
+        $this->getJson('/api/v1/auth/me', $this->bearer($firstOldToken))->assertStatus(401);
+        $this->getJson('/api/v1/items', $this->bearer($secondOldToken))->assertStatus(401);
+        $this->login((string) $target->phone, self::OLD_PASSWORD)->assertStatus(422);
+
+        // Logging in with the temporary password flags must_change_password and restricts API access.
+        $login = $this->login((string) $target->phone, $temporary)
+            ->assertOk()
+            ->assertJsonPath('data.must_change_password', true)
+            ->assertJsonPath('data.user.must_change_password', true);
+        $tempSessionHeaders = $this->bearer((string) $login->json('data.token'));
+
+        $this->getJson('/api/v1/auth/me', $tempSessionHeaders)->assertOk()
+            ->assertJsonPath('data.must_change_password', true);
+        $this->getJson('/api/v1/system/context', $tempSessionHeaders)->assertOk();
+
+        $this->assertPasswordChangeRequired($this->getJson('/api/v1/items', $tempSessionHeaders));
+        $this->assertPasswordChangeRequired($this->postJson('/api/v1/customers', ['name' => 'عميل'], $tempSessionHeaders));
+        $this->assertPasswordChangeRequired($this->getJson('/api/v1/profile', $tempSessionHeaders));
+
+        // Changing password with the temporary password clears the flag and restores normal API access.
+        $this->postJson(self::CHANGE, $this->changePayload(['current_password' => $temporary]), $tempSessionHeaders)
+            ->assertOk()
+            ->assertJsonPath('data.must_change_password', false)
+            ->assertJsonPath('data.user.must_change_password', false);
+
+        $this->assertFalse((bool) $this->freshUser((int) $target->id)->must_change_password);
+        $this->getJson('/api/v1/items', $tempSessionHeaders)->assertOk();
+        $this->getJson('/api/v1/profile', $tempSessionHeaders)->assertOk();
+        $this->login((string) $target->phone, self::NEW_PASSWORD)
+            ->assertOk()
+            ->assertJsonPath('data.must_change_password', false);
     }
 
     public function test_a_second_reset_issues_a_different_password(): void

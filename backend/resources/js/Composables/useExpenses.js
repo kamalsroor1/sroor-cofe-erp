@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 import { useLoadError } from './useLoadError';
 import { businessToday } from './useBusinessDate';
+import { newUuid } from '../helpers/uuid';
 
 export function useExpenses() {
     const { t } = useTrans();
@@ -42,6 +43,7 @@ export function useExpenses() {
     });
 
     let debounceTimeout = null;
+    let createIdempotencyKey = null;
 
     // Add / Edit State
     const showExpenseModal = ref(false);
@@ -115,6 +117,7 @@ export function useExpenses() {
 
     const openCreateModal = () => {
         editingExpense.value = null;
+        createIdempotencyKey = newUuid();
         Object.assign(form, {
             title: '',
             category: t('expenses.preset_customs'),
@@ -129,6 +132,7 @@ export function useExpenses() {
 
     const openEditModal = (e) => {
         editingExpense.value = e;
+        createIdempotencyKey = null;
         Object.assign(form, {
             title: e.title,
             category: e.category,
@@ -146,6 +150,7 @@ export function useExpenses() {
     };
 
     const saveExpense = async () => {
+        if (isSubmitting.value) return;
         isSubmitting.value = true;
         try {
             if (editingExpense.value) {
@@ -158,7 +163,11 @@ export function useExpenses() {
                     showConfirmButton: false,
                 });
             } else {
-                await api.post('/expenses', form);
+                if (!createIdempotencyKey) createIdempotencyKey = newUuid();
+                await api.post('/expenses', form, {
+                    headers: { 'Idempotency-Key': createIdempotencyKey },
+                });
+                createIdempotencyKey = null;
                 Swal.fire({
                     icon: 'success',
                     title: t('common.success'),

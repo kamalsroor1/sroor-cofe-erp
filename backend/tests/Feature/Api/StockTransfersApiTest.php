@@ -136,6 +136,60 @@ class StockTransfersApiTest extends TenantTestCase
             ->assertJsonValidationErrors(['from_store_id', 'to_store_id']);
     }
 
+    public function test_transfer_exceeding_source_stock_returns_422_with_translated_message_and_no_stock_moves(): void
+    {
+        $payload = [
+            'from_store_id' => $this->sourceStoreId,
+            'to_store_id' => $this->destStoreId,
+            'transfer_date' => now()->toDateString(),
+            'items' => [
+                [
+                    'item_id' => $this->itemAId,
+                    'quantity' => 150.000,
+                ],
+            ],
+        ];
+
+        $arResponse = $this->postJson('/api/v1/transfers', $payload, [
+            ...$this->adminHeaders,
+            'X-Locale' => 'ar',
+        ]);
+
+        $arResponse->assertStatus(422)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'inventory.insufficient_stock');
+
+        $arMessage = (string) $arResponse->json('message');
+        $this->assertNotSame('inventory.insufficient_stock', $arMessage);
+        $this->assertNotSame('inventory.insufficient_stock_store', $arMessage);
+        $this->assertStringContainsString('بن كولومبي سوبريمو', $arMessage);
+        $this->assertStringContainsString('100.000', $arMessage);
+
+        $enResponse = $this->postJson('/api/v1/transfers', $payload, [
+            ...$this->adminHeaders,
+            'X-Locale' => 'en',
+        ]);
+
+        $enResponse->assertStatus(422)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'inventory.insufficient_stock');
+
+        $enMessage = (string) $enResponse->json('message');
+        $this->assertNotSame('inventory.insufficient_stock', $enMessage);
+        $this->assertNotSame('inventory.insufficient_stock_store', $enMessage);
+        $this->assertStringContainsString('Insufficient stock', $enMessage);
+        $this->assertStringContainsString('بن كولومبي سوبريمو', $enMessage);
+        $this->assertStringContainsString('100.000', $enMessage);
+
+        // No stock moved and no transfer created.
+        $this->assertEquals(100.000, $this->storeQty($this->sourceStoreId, $this->itemAId));
+        $this->assertEquals(0.000, $this->storeQty($this->destStoreId, $this->itemAId));
+        $this->inTenant($this->tenant, function (): void {
+            $this->assertDatabaseCount('stock_transfers', 0);
+            $this->assertDatabaseCount('stock_movements', 0);
+        });
+    }
+
     public function test_can_show_single_stock_transfer(): void
     {
         $payload = [

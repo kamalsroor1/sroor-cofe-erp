@@ -163,7 +163,7 @@ export function useInvoiceShow() {
             DarkSwal.fire({
                 icon: 'warning',
                 title: t('common.error'),
-                text: t('invoices.cancel_reason_label'),
+                text: t('invoices.cancel_reason_required'),
             });
             return;
         }

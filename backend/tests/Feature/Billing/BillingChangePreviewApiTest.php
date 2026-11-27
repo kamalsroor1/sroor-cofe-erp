@@ -231,26 +231,57 @@ final class BillingChangePreviewApiTest extends PlanChangeTestCase
         $this->assertPreviewIsInvoice($preview, $this->issue($this->requestRow($tenant, ['requested_plan_id' => $big->getKey()])));
     }
 
-    public function test_a_founder_with_an_agreed_price_is_held_with_no_total(): void
+    public function test_a_founder_upgrade_preview_is_priced_automatically_with_founder_prices(): void
     {
         $small = $this->plan(['price_monthly' => '499.000', 'founder_price_monthly' => '299.000']);
-        $big = $this->plan(['price_monthly' => '999.000']);
+        $big = $this->plan(['price_monthly' => '999.000', 'founder_price_monthly' => '699.000']);
         $tenant = $this->subscribedTenant($small, 10);
         Subscription::query()->where('tenant_id', $tenant->getKey())->update(['is_founder' => true, 'founder_price_until' => now()->addMonths(6)]);
 
-        $this->preview($tenant, ['action' => 'upgrade', 'plan_id' => $big->getKey(), 'cycle' => 'monthly'])
+        // (699 - 299) x 10 / 30 = 133.333; + 14% VAT (18.667) = 152.000
+        $preview = $this->preview($tenant, ['action' => 'upgrade', 'plan_id' => $big->getKey(), 'cycle' => 'monthly'])
             ->assertOk()
-            ->assertJsonPath('data.held_for_price_review', true)
-            ->assertJsonPath('data.lines', [])
-            ->assertJsonPath('data.subtotal', null)
-            ->assertJsonPath('data.tax', null)
-            ->assertJsonPath('data.total', null);
+            ->assertJsonPath('data.held_for_price_review', false)
+            ->assertJsonCount(2, 'data.lines')
+            ->assertJsonPath('data.lines.0.kind', 'proration')
+            ->assertJsonPath('data.lines.0.founder', true)
+            ->assertJsonPath('data.lines.0.params.old', '299.000')
+            ->assertJsonPath('data.lines.0.params.new', '699.000')
+            ->assertJsonPath('data.lines.0.amount', '133.333')
+            ->assertJsonPath('data.subtotal', '133.333')
+            ->assertJsonPath('data.tax', '18.667')
+            ->assertJsonPath('data.total', '152.000')
+            ->json('data');
 
-        // A renewal is not held: the founder step of the schedule applies (299, + 14% = 340.860).
+        $this->assertPreviewIsInvoice($preview, $this->issue($this->requestRow($tenant, ['requested_plan_id' => $big->getKey()])));
+
+        // Renewal also uses the founder schedule (299, + 14% = 340.860).
         $this->preview($tenant, ['action' => 'renew', 'cycle' => 'monthly'])
             ->assertOk()
             ->assertJsonPath('data.held_for_price_review', false)
+            ->assertJsonPath('data.lines.0.founder', true)
             ->assertJsonPath('data.total', '340.860');
+    }
+
+    public function test_a_founder_downgrade_same_price_or_free_preview_returns_422_upgrade_not_higher(): void
+    {
+        $pro = $this->plan(['price_monthly' => '999.000', 'founder_price_monthly' => '699.000']);
+        $basic = $this->plan(['price_monthly' => '499.000', 'founder_price_monthly' => '299.000']);
+        $samePrice = $this->plan(['price_monthly' => '999.000', 'founder_price_monthly' => '699.000']);
+        $free = $this->plan(['price_monthly' => '0.000', 'price_yearly' => '0.000', 'is_free' => true]);
+        $tenant = $this->subscribedTenant($pro, 10);
+        Subscription::query()->where('tenant_id', $tenant->getKey())->update(['is_founder' => true, 'founder_price_until' => now()->addMonths(6)]);
+
+        foreach ([$basic->getKey(), $samePrice->getKey(), $free->getKey()] as $targetId) {
+            $this->preview($tenant, ['action' => 'upgrade', 'plan_id' => $targetId, 'cycle' => 'monthly'])
+                ->assertStatus(422)
+                ->assertJsonPath('error_code', 'billing.upgrade_not_higher')
+                ->assertJsonPath('message', __('billing.errors.upgrade_not_higher'));
+        }
+
+        $this->preview($tenant, ['action' => 'upgrade', 'plan_id' => $pro->getKey(), 'cycle' => 'monthly'])
+            ->assertStatus(422)
+            ->assertJsonPath('error_code', 'billing.request_same_plan');
     }
 
     public function test_an_open_plan_invoice_is_reported(): void
@@ -269,6 +300,7 @@ final class BillingChangePreviewApiTest extends PlanChangeTestCase
         $small = $this->plan(['price_monthly' => '499.000']);
         $tenant = $this->subscribedTenant($small, 10);
         $cheaper = $this->plan(['price_monthly' => '199.000']);
+        $samePrice = $this->plan(['price_monthly' => '499.000']);
         $free = $this->plan(['price_monthly' => '0.000', 'price_yearly' => '0.000', 'is_free' => true]);
         $hidden = $this->plan(['price_monthly' => '999.000', 'is_public' => false]);
 
@@ -284,7 +316,8 @@ final class BillingChangePreviewApiTest extends PlanChangeTestCase
             [$hidden->getKey(), 'billing.request_plan_unavailable'],
             [$small->getKey(), 'billing.request_same_plan'],
             [$cheaper->getKey(), 'billing.upgrade_not_higher'],
-            [$free->getKey(), 'billing.free_plan_not_billable'],
+            [$samePrice->getKey(), 'billing.upgrade_not_higher'],
+            [$free->getKey(), 'billing.upgrade_not_higher'],
         ];
         foreach ($codes as [$planId, $code]) {
             $this->preview($tenant, ['action' => 'upgrade', 'plan_id' => $planId, 'cycle' => 'monthly'])

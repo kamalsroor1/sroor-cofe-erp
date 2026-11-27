@@ -2,6 +2,27 @@
 # Serves the platform apex, every shop subdomain (<code>.${PLATFORM_DOMAIN}) and
 # the super-admin host from one wildcard certificate (DNS-01).
 
+# GEN-200 / GEN-201: only emit default security headers when PHP-FPM / Laravel did not
+# already send them (e.g. static files, tenant APIs, or HSTS/XFO omitted by SpaSecurityHeaders).
+# AdminSecurityHeaders (admin host) and SpaSecurityHeaders / download controllers keep full
+# control of their stricter or route-specific values without duplicate/conflicting headers.
+map $upstream_http_strict_transport_security $sroor_hsts_header {
+    "" "max-age=${HSTS_MAX_AGE}";
+    default "";
+}
+map $upstream_http_x_content_type_options $sroor_nosniff_header {
+    "" "nosniff";
+    default "";
+}
+map $upstream_http_x_frame_options $sroor_xfo_header {
+    "" "SAMEORIGIN";
+    default "";
+}
+map $upstream_http_referrer_policy $sroor_referrer_header {
+    "" "strict-origin-when-cross-origin";
+    default "";
+}
+
 # Plain HTTP: redirect known hosts to HTTPS, drop everything else.
 server {
     listen 80 default_server;
@@ -71,11 +92,12 @@ server {
     ssl_session_tickets off;
 
     # add_header is NOT inherited by locations that define their own, so no
-    # location below uses add_header.
-    add_header Strict-Transport-Security "max-age=${HSTS_MAX_AGE}" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    # location below uses add_header. Mapped variables evaluate to "" when the
+    # upstream FastCGI response already sets the header (nginx omits empty headers).
+    add_header Strict-Transport-Security $sroor_hsts_header always;
+    add_header X-Content-Type-Options $sroor_nosniff_header always;
+    add_header X-Frame-Options $sroor_xfo_header always;
+    add_header Referrer-Policy $sroor_referrer_header always;
 
     client_max_body_size 25m;
 

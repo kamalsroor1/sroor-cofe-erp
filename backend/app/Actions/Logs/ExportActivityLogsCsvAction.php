@@ -7,6 +7,7 @@ namespace App\Actions\Logs;
 use App\DTOs\Logs\ActivityLogStoreScope;
 use App\Filters\ActivityLogs\ReadableStoresFilter;
 use App\Models\ActivityLog;
+use App\Support\Database\LikePattern;
 use App\Support\TenantClock;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -32,10 +33,10 @@ final class ExportActivityLogsCsvAction
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->where('description', 'like', "%{$search}%")
-                    ->orWhere('ip_address', 'like', "%{$search}%")
-                    ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', "%{$search}%")->orWhere('phone', 'like', "%{$search}%"))
-                    ->orWhereHas('store', fn ($sq) => $sq->where('name', 'like', "%{$search}%"));
+                LikePattern::whereContains($q, 'description', $search);
+                LikePattern::orWhereContains($q, 'ip_address', $search);
+                $q->orWhereHas('user', fn ($uq) => LikePattern::whereContainsAny($uq, ['name', 'phone'], $search))
+                    ->orWhereHas('store', fn ($sq) => LikePattern::whereContains($sq, 'name', $search));
             });
         }
 

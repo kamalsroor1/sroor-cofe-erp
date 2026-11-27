@@ -244,13 +244,21 @@ class UsersApiTest extends TenantTestCase
             'default_store_id' => $this->storeId,
             'is_active' => true,
         ], $this->adminHeaders)->assertNotFound();
-        // Not found in this tenant's DB. (Today toggle/destroy catch every Throwable and answer 422, not 404.)
-        $toggle = $this->patchJson("/api/v1/users/{$foreign->id}/toggle-active", [], $this->adminHeaders);
-        $this->assertContains($toggle->status(), [404, 422]);
-        $toggle->assertJsonPath('success', false);
-        $delete = $this->deleteJson("/api/v1/users/{$foreign->id}", [], $this->adminHeaders);
-        $this->assertContains($delete->status(), [404, 422]);
-        $delete->assertJsonPath('success', false);
+        $this->patchJson("/api/v1/users/{$foreign->id}/toggle-active", [], $this->adminHeaders)
+            ->assertNotFound()
+            ->assertJsonPath('success', false);
+        $this->deleteJson("/api/v1/users/{$foreign->id}", [], $this->adminHeaders)
+            ->assertNotFound()
+            ->assertJsonPath('success', false);
+        $this->postJson("/api/v1/users/{$foreign->id}/reset-password", [], $this->adminHeaders)
+            ->assertNotFound()
+            ->assertJsonPath('success', false);
+        $this->putJson("/api/v1/users/{$foreign->id}/pos-pin", ['pin' => '135790'], $this->adminHeaders)
+            ->assertNotFound()
+            ->assertJsonPath('success', false);
+        $this->postJson("/api/v1/users/{$foreign->id}/unlock-login", [], $this->adminHeaders)
+            ->assertNotFound()
+            ->assertJsonPath('success', false);
 
         $this->inTenant($other, function () use ($foreign): void {
             $user = User::findOrFail($foreign->id);
@@ -258,7 +266,28 @@ class UsersApiTest extends TenantTestCase
             $this->assertTrue((bool) $user->is_active);
             $this->assertTrue($user->hasRole('cashier'));
             $this->assertFalse($user->hasRole('admin'));
+            $this->assertNull($user->deleted_at);
+            $this->assertFalse((bool) $user->must_change_password);
         });
+    }
+
+    public function test_nonexistent_user_id_returns_404_across_all_user_endpoints(): void
+    {
+        $missingId = 999999;
+
+        $this->getJson("/api/v1/users/{$missingId}", $this->adminHeaders)->assertNotFound();
+        $this->putJson("/api/v1/users/{$missingId}", [
+            'name' => 'مستخدم غير موجود',
+            'phone' => '01000009999',
+            'role' => 'cashier',
+            'default_store_id' => $this->storeId,
+            'is_active' => true,
+        ], $this->adminHeaders)->assertNotFound();
+        $this->patchJson("/api/v1/users/{$missingId}/toggle-active", [], $this->adminHeaders)->assertNotFound();
+        $this->deleteJson("/api/v1/users/{$missingId}", [], $this->adminHeaders)->assertNotFound();
+        $this->postJson("/api/v1/users/{$missingId}/reset-password", [], $this->adminHeaders)->assertNotFound();
+        $this->putJson("/api/v1/users/{$missingId}/pos-pin", ['pin' => '135790'], $this->adminHeaders)->assertNotFound();
+        $this->postJson("/api/v1/users/{$missingId}/unlock-login", [], $this->adminHeaders)->assertNotFound();
     }
 
     // ------------------------------------------------------------------ SEC-1 L12 (W2 batch 6)

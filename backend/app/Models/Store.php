@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\StoreLimitBucket;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -50,11 +52,25 @@ class Store extends Model
     }
 
     /**
-     * Scope for wholesale distribution vans
+     * Scope for warehouses (`warehouse` and legacy `main_warehouse`)
+     *
+     * @param  Builder<self>  $query
+     * @return Builder<self>
      */
-    public function scopeVans($query)
+    public function scopeWarehouses(Builder $query): Builder
     {
-        return $query->where('type', 'wholesale_van');
+        return $query->whereIn('type', StoreLimitBucket::WAREHOUSE_TYPES);
+    }
+
+    /**
+     * Scope for distribution vans (`van` and legacy `wholesale_van`)
+     *
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeVans(Builder $query): Builder
+    {
+        return $query->whereIn('type', StoreLimitBucket::VAN_TYPES);
     }
 
     /**

@@ -48,7 +48,8 @@ class SettingsProfileTrashApiTest extends TenantTestCase
 
         $getResponse->assertStatus(200)
             ->assertJson(['success' => true])
-            ->assertJsonStructure(['settings', 'stores', 'users_count', 'system_info']);
+            ->assertJsonStructure(['settings', 'stores', 'users_count'])
+            ->assertJsonMissingPath('system_info');
 
         $payload = [
             'company_name' => 'محامص سرور العالمية',

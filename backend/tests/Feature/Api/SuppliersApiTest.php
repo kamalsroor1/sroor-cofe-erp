@@ -395,6 +395,35 @@ class SuppliersApiTest extends TenantTestCase
         });
     }
 
+    public function test_supplier_phone_validation_rejects_invalid_values_and_accepts_valid_phones(): void
+    {
+        $existingId = (int) $this->postJson('/api/v1/suppliers', [
+            'name' => 'مورد هاتف صالح',
+            'phone' => '01012345678',
+        ], $this->adminHeaders)->assertCreated()->json('data.id');
+
+        foreach (['abc12', '12', '<b>x</b>'] as $badPhone) {
+            $this->postJson('/api/v1/suppliers', [
+                'name' => 'مورد تجربة',
+                'phone' => $badPhone,
+            ], $this->adminHeaders)
+                ->assertStatus(422)
+                ->assertJsonValidationErrors(['phone']);
+
+            $this->putJson('/api/v1/suppliers/'.$existingId, [
+                'name' => 'مورد هاتف صالح',
+                'phone' => $badPhone,
+            ], $this->adminHeaders)
+                ->assertStatus(422)
+                ->assertJsonValidationErrors(['phone']);
+        }
+
+        $this->putJson('/api/v1/suppliers/'.$existingId, [
+            'name' => 'مورد محدث',
+            'phone' => '+20 100 123 4567',
+        ], $this->adminHeaders)->assertOk();
+    }
+
     /** Runs inside the tenant. */
     private function createCreditPurchase(int $supplierId, string $number, string $total): void
     {

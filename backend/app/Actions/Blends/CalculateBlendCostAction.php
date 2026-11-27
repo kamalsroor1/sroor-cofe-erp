@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Blends;
 
 use App\Models\Item;
+use App\Services\Reports\CarryingCost;
 use App\Support\Money\Decimal;
 
 final class CalculateBlendCostAction
@@ -36,7 +37,7 @@ final class CalculateBlendCostAction
             $grams = Decimal::round(bcdiv(bcmul($targetWeightGrams, $percentage, 6), '100', 8), 2);
             $kg = bcdiv($grams, '1000', 4);
 
-            $costPrice = (string) $item->cost_price;
+            $costPrice = CarryingCost::forItem($item);
             $sellingPrice = (string) ($comp['unit_price'] ?? $item->price_retail ?? $item->selling_price);
 
             $lineCost = bcmul($kg, $costPrice, 3);

@@ -117,8 +117,13 @@ class SettingApiTest extends TenantTestCase
                 ],
                 'stores',
                 'users_count',
-                'system_info',
-            ]);
+            ])
+            ->assertJsonMissingPath('system_info')
+            ->assertJsonMissingPath('php_version')
+            ->assertJsonMissingPath('laravel_version');
+
+        $this->assertStringNotContainsString('php_version', (string) $response->getContent());
+        $this->assertStringNotContainsString('laravel_version', (string) $response->getContent());
     }
 
     public function test_can_update_settings(): void
@@ -157,6 +162,50 @@ class SettingApiTest extends TenantTestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['company_name']);
+    }
+
+    public function test_update_settings_rejects_html_tags_in_company_text_fields(): void
+    {
+        $this->inTenant($this->tenant, fn () => Setting::set('company_name', 'محامص سرور'));
+
+        $this->postJson('/api/v1/settings', [
+            'company_name' => '<script>alert(1)</script>',
+            'company_subtitle' => '<b>فرع</b>',
+            'company_phone' => '0100<img src=x>',
+            'company_address' => 'شارع <a href="x">النصر</a>',
+            'invoice_footer_note' => 'شكرا <script>evil()</script>',
+        ], $this->adminHeaders)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors([
+                'company_name',
+                'company_subtitle',
+                'company_phone',
+                'company_address',
+                'invoice_footer_note',
+            ]);
+
+        $this->inTenant($this->tenant, function (): void {
+            $this->assertSame('محامص سرور', Setting::get('company_name'));
+        });
+    }
+
+    public function test_update_settings_accepts_legitimate_arabic_and_english_business_names(): void
+    {
+        $name = 'Sroor & Sons Co. — محامص سرور (فرع 1)';
+
+        $this->postJson('/api/v1/settings', [
+            'company_name' => $name,
+            'company_subtitle' => 'Coffee & Roastery / تحميص وطحن البن',
+            'company_phone' => '+20 100-000-7005',
+            'company_address' => '15 Tahrir St., Cairo / القاهرة',
+            'invoice_footer_note' => 'Thank you for visiting — شكراً لزيارتكم!',
+        ], $this->adminHeaders)
+            ->assertStatus(200)
+            ->assertJson(['success' => true]);
+
+        $this->inTenant($this->tenant, function () use ($name): void {
+            $this->assertSame($name, Setting::get('company_name'));
+        });
     }
 
     public function test_can_send_test_telegram_notification(): void

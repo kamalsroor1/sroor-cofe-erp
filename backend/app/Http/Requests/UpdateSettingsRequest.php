@@ -39,11 +39,11 @@ class UpdateSettingsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_name' => ['required', 'string', 'max:255'],
-            'company_subtitle' => ['nullable', 'string', 'max:255'],
-            'company_phone' => ['nullable', 'string', 'max:50'],
-            'company_address' => ['nullable', 'string', 'max:255'],
-            'invoice_footer_note' => ['nullable', 'string', 'max:500'],
+            'company_name' => ['required', 'string', 'max:255', 'not_regex:'.TenantBranding::MARKUP_PATTERN],
+            'company_subtitle' => ['nullable', 'string', 'max:255', 'not_regex:'.TenantBranding::MARKUP_PATTERN],
+            'company_phone' => ['nullable', 'string', 'max:50', 'not_regex:'.TenantBranding::MARKUP_PATTERN],
+            'company_address' => ['nullable', 'string', 'max:255', 'not_regex:'.TenantBranding::MARKUP_PATTERN],
+            'invoice_footer_note' => ['nullable', 'string', 'max:500', 'not_regex:'.TenantBranding::MARKUP_PATTERN],
             'show_print_company_name' => ['sometimes', 'boolean'],
             'show_print_subtitle' => ['sometimes', 'boolean'],
             'show_print_logo' => ['sometimes', 'boolean'],
@@ -103,6 +103,11 @@ class UpdateSettingsRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'company_name' => __('settings.attr_company_name'),
+            'company_subtitle' => __('settings.attr_company_subtitle'),
+            'company_phone' => __('settings.attr_company_phone'),
+            'company_address' => __('settings.attr_company_address'),
+            'invoice_footer_note' => __('settings.attr_invoice_footer_note'),
             TenantSettings::KEY_CURRENCY => __('settings.currency'),
             TenantSettings::KEY_TIMEZONE => __('settings.timezone'),
             TenantSettings::KEY_DEFAULT_LOCALE => __('settings.default_locale'),
@@ -139,6 +144,11 @@ class UpdateSettingsRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'company_name.not_regex' => __('settings.plain_text_no_markup'),
+            'company_subtitle.not_regex' => __('settings.plain_text_no_markup'),
+            'company_phone.not_regex' => __('settings.plain_text_no_markup'),
+            'company_address.not_regex' => __('settings.plain_text_no_markup'),
+            'invoice_footer_note.not_regex' => __('settings.plain_text_no_markup'),
             TenantSettings::KEY_BUSINESS_DAY_CUTOFF.'.regex' => __('settings.business_day_cutoff_invalid'),
             TenantBranding::KEY_RECEIPT_FOOTER_TEXT.'.not_regex' => __('branding.receipt_text_no_markup'),
         ];

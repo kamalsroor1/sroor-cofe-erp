@@ -180,6 +180,14 @@ return [
     'clear_search_esc' => 'Clear search (Esc)',
     'preview' => 'Preview',
 
+    'not_found' => [
+        'code' => '404',
+        'title' => 'Page not found',
+        'description' => 'The page you requested does not exist or has been moved. You can return to the home page.',
+        'back_home' => 'Back to home',
+        'go_back' => 'Go back',
+    ],
+
     'temporary_password' => [
         'label' => 'Temporary password',
         'copy' => 'Copy password',

@@ -23,12 +23,16 @@ final class PurchaseDTO
 
     public static function fromArray(array $data, ?int $storeId = null): self
     {
+        $discountAmount = isset($data['discount_amount']) && $data['discount_amount'] !== ''
+            ? (string) $data['discount_amount']
+            : (isset($data['discount']) && $data['discount'] !== '' ? (string) $data['discount'] : '0.000');
+
         return new self(
             supplier_id: (int) $data['supplier_id'],
             purchase_date: (string) ($data['purchase_date'] ?? app(TenantClock::class)->businessDate()),
             items: (array) ($data['items'] ?? []),
             paid_amount: isset($data['paid_amount']) ? (string) $data['paid_amount'] : '0.000',
-            discount_amount: isset($data['discount_amount']) ? (string) $data['discount_amount'] : '0.000',
+            discount_amount: $discountAmount,
             payment_method: (string) ($data['payment_method'] ?? 'cash'),
             supplier_invoice_ref: isset($data['supplier_invoice_ref']) && $data['supplier_invoice_ref'] !== '' ? (string) $data['supplier_invoice_ref'] : null,
             notes: isset($data['notes']) && $data['notes'] !== '' ? (string) $data['notes'] : null,

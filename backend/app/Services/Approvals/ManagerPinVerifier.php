@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Approvals;
 
 use App\Exceptions\ManagerPinLockedException;
+use App\Exceptions\ManagerPinThrottledException;
 use App\Jobs\SendManagerPinLockedAlertJob;
 use App\Models\User;
 use App\Services\ActivityLogService;
@@ -129,7 +130,7 @@ final class ManagerPinVerifier
             RateLimiter::decrement($dailyKey, $dailyTtl); // no PIN was tested
             $wait = max(RateLimiter::availableIn($approverKey), RateLimiter::availableIn($actorKey), 1);
 
-            throw new ThrottleRequestsException(__('pos.override_throttled'), null, ['Retry-After' => (string) $wait]);
+            throw ManagerPinThrottledException::forWait($wait);
         }
 
         $approver = User::query()->whereKey($approverId)->where('is_active', true)->first();

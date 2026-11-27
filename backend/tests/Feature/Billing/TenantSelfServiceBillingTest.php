@@ -191,6 +191,7 @@ final class TenantSelfServiceBillingTest extends PlanChangeTestCase
     {
         $small = $this->plan(['price_monthly' => '499.000']);
         $cheaper = $this->plan(['price_monthly' => '299.000']);
+        $samePrice = $this->plan(['price_monthly' => '499.000']);
         $hidden = $this->plan(['price_monthly' => '999.000', 'is_public' => false]);
         $free = $this->plan(['price_monthly' => '0.000', 'price_yearly' => '0.000', 'is_free' => true]);
         $tenant = $this->subscribedTenant($small, 10);
@@ -200,18 +201,33 @@ final class TenantSelfServiceBillingTest extends PlanChangeTestCase
             [$hidden->getKey(), 'billing.request_plan_unavailable'],
             [$small->getKey(), 'billing.request_same_plan'],
             [$cheaper->getKey(), 'billing.upgrade_not_higher'],
-            [$free->getKey(), 'billing.free_plan_not_billable'],
+            [$samePrice->getKey(), 'billing.upgrade_not_higher'],
+            [$free->getKey(), 'billing.upgrade_not_higher'],
         ];
         foreach ($codes as [$planId, $code]) {
             $this->changeInvoice($tenant, ['action' => 'upgrade', 'plan_id' => $planId, 'cycle' => 'monthly'])
                 ->assertStatus(422)->assertJsonPath('error_code', $code);
         }
 
+        // Founder tenant downgrading or moving to free/same-price plan is also 422 upgrade_not_higher (not held).
+        $pro = $this->plan(['price_monthly' => '999.000', 'founder_price_monthly' => '699.000']);
+        $founder = $this->subscribedTenant($pro, 10);
+        Subscription::query()->where('tenant_id', $founder->getKey())->update(['is_founder' => true, 'founder_price_until' => now()->addMonths(6)]);
+        foreach ([$small->getKey(), $free->getKey()] as $targetId) {
+            $this->changeInvoice($founder, ['action' => 'upgrade', 'plan_id' => $targetId, 'cycle' => 'monthly'])
+                ->assertStatus(422)->assertJsonPath('error_code', 'billing.upgrade_not_higher');
+        }
+
+        // Trial tenant without a running paid term still receives free_plan_not_billable for the free plan.
+        $trial = $this->tenantOn($small, ['status' => 'trial', 'trial_ends_at' => now()->addDays(5), 'subscription_ends_at' => null]);
+        $this->changeInvoice($trial, ['action' => 'upgrade', 'plan_id' => $free->getKey(), 'cycle' => 'monthly'])
+            ->assertStatus(422)->assertJsonPath('error_code', 'billing.free_plan_not_billable');
+
         $this->assertSame(0, PlanChangeRequest::query()->count());
         $this->assertSame(0, BillingInvoice::query()->count());
     }
 
-    public function test_an_agreed_founder_price_is_held_for_review_with_no_invoice(): void
+    public function test_a_founder_upgrade_issues_an_automated_invoice_matching_the_preview(): void
     {
         $small = $this->plan(['price_monthly' => '499.000', 'founder_price_monthly' => '299.000']);
         $big = $this->plan(['price_monthly' => '999.000', 'founder_price_monthly' => '699.000']);
@@ -219,26 +235,34 @@ final class TenantSelfServiceBillingTest extends PlanChangeTestCase
         Subscription::query()->where('tenant_id', $tenant->getKey())->update(['is_founder' => true, 'founder_price_until' => now()->addMonths(6)]);
         $body = ['action' => 'upgrade', 'plan_id' => $big->getKey(), 'cycle' => 'monthly', 'renew' => true];
 
-        $this->assertTrue($this->preview($tenant, $body)['held_for_price_review']);
+        $preview = $this->preview($tenant, $body);
+        $this->assertFalse($preview['held_for_price_review']);
+        $this->assertSame('832.333', $preview['subtotal']);
+        $this->assertSame('116.527', $preview['tax']);
+        $this->assertSame('948.860', $preview['total']);
 
-        $this->changeInvoice($tenant, $body)
+        $response = $this->changeInvoice($tenant, $body)
             ->assertCreated()
-            ->assertJsonPath('message', __('billing.messages.plan_change_requested'))
-            ->assertJsonPath('data.held_for_price_review', true)
-            ->assertJsonPath('data.invoice', null)
-            ->assertJsonPath('data.request.status.value', 'pending')
-            ->assertJsonPath('data.request.renew', true);
+            ->assertJsonPath('message', __('billing.messages.invoice_issued'))
+            ->assertJsonPath('data.held_for_price_review', false)
+            ->assertJsonPath('data.invoice.type.value', 'upgrade')
+            ->assertJsonPath('data.request.status.value', 'invoiced')
+            ->assertJsonPath('data.request.renew', true)
+            ->assertJsonPath('data.request.founder_review_held_at', null);
+
+        $invoice = $this->invoiceFrom($response);
+        $this->assertPreviewIsInvoice($preview, $invoice);
+        $this->assertCount(2, $invoice->lines);
+        $this->assertSame('133.333', $invoice->lines[0]['amount']);
+        $this->assertTrue($invoice->lines[0]['founder']);
+        $this->assertSame('699.000', $invoice->lines[1]['amount']);
+        $this->assertTrue($invoice->lines[1]['founder']);
+        $this->assertSame('948.860', $invoice->total);
 
         $request = PlanChangeRequest::query()->sole();
-        $this->assertNotNull($request->founder_review_held_at);
-        $this->assertSame(0, BillingInvoice::query()->count());
-        $this->assertSame(1, CentralAuditLog::query()->where('event', CentralAuditEvent::PlanChangeHeldForFounderReview->value)->count());
-
-        // The owner releases it from the console; the shop's `renew` choice is used.
-        $headers = $this->steppedUpCentralHeaders($this->centralSuperAdmin());
-        $this->postJson('/api/v1/super-admin/billing/plan-change-requests/'.$request->getKey().'/invoice', ['release_founder_hold' => true], $headers)
-            ->assertCreated();
-        $this->assertCount(2, BillingInvoice::query()->sole()->lines);
+        $this->assertNull($request->founder_review_held_at);
+        $this->assertSame(0, CentralAuditLog::query()->where('event', CentralAuditEvent::PlanChangeHeldForFounderReview->value)->count());
+        $this->assertTrue(CentralAuditLog::query()->where('event', CentralAuditEvent::PlanChangeInvoiced->value)->sole()->properties['self_service']);
     }
 
     public function test_it_is_401_for_guests_403_without_the_permission_and_422_on_bad_input(): void
@@ -388,7 +412,7 @@ final class TenantSelfServiceBillingTest extends PlanChangeTestCase
         $headers = $this->multipart($this->tenantHeaders($tenant));
         $payload = ['receipt' => $this->receipt(), 'method' => 'instapay', 'amount' => '100.000', 'paid_at' => now()->toDateString()];
 
-        $this->post($url, $payload + ['payer_reference' => 'ab'], $headers)->assertStatus(422)->assertJsonValidationErrors(['payer_reference']);
+        $this->post($url, $payload + ['payer_reference' => 'a'], $headers)->assertStatus(422)->assertJsonValidationErrors(['payer_reference']);
 
         $this->post($url, $payload + ['payer_reference' => ''], $headers)
             ->assertCreated()

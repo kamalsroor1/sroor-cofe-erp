@@ -62,6 +62,7 @@ return [
     'recorded_success' => 'Expense recorded in accounts successfully',
     'updated_success' => 'Expense details updated successfully',
     'deleted_success' => 'Expense moved to trash successfully',
+    'idempotency_key_conflict' => 'This idempotency key was already used for a different expense, user, or store',
     'subtitle' => 'Operational expenses, cost centers, and petty cash',
     'total_month_expenses' => 'Total Expenses This Month',
     'total_month_sub' => 'Total expenses and sundries for the current month',

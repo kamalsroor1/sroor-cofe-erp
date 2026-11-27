@@ -7,10 +7,8 @@ namespace Tests\Feature\Billing;
 use App\Enums\Billing\BillingGateway;
 use App\Enums\Billing\BillingPaymentMethod;
 use App\Enums\Billing\BillingPaymentStatus;
-use App\Enums\CentralAuditEvent;
 use App\Models\BillingInvoice;
 use App\Models\BillingPayment;
-use App\Models\CentralAuditLog;
 use App\Models\CentralUser;
 use App\Models\Plan;
 use App\Models\PlanChangeRequest;
@@ -18,6 +16,7 @@ use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Services\Billing\FounderPricingService;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Carbon;
 use Illuminate\Testing\TestResponse;
 use PHPUnit\Framework\Attributes\Group;
 
@@ -216,6 +215,45 @@ final class BillingTermAndProrationTest extends PlanChangeTestCase
         $this->assertSame(0, BillingPayment::query()->count());
     }
 
+    public function test_verify_and_preview_compare_issue_day_in_cairo_timezone_even_when_app_timezone_is_utc(): void
+    {
+        $prevAppTz = (string) config('app.timezone');
+        $prevPhpTz = date_default_timezone_get();
+
+        try {
+            config(['app.timezone' => 'UTC', 'billing.timezone' => 'Africa/Cairo']);
+            date_default_timezone_set('UTC');
+            Carbon::setTestNow(CarbonImmutable::parse('2026-11-27 12:00:00', 'Africa/Cairo'));
+            $admin = $this->steppedUpCentralHeaders($this->operator);
+
+            $plan = $this->plan();
+            $tenant = $this->tenantOn($plan, ['status' => 'trial', 'trial_ends_at' => now()->addDays(3), 'subscription_ends_at' => null]);
+            $invoice = $this->planInvoice($tenant, $plan);
+
+            // Day before in Cairo (2026-11-26 23:59:59+02:00) is refused on both preview and verify.
+            $paymentBefore = $this->payment($invoice);
+            $this->getJson('/api/v1/super-admin/billing/payments/'.$paymentBefore->getKey().'/verify-preview?transferred_at='.urlencode('2026-11-26T23:59:59+02:00'), $admin)
+                ->assertStatus(422)
+                ->assertJsonPath('errors.transferred_at.0', __('billing.errors.transferred_at_before_invoice'));
+            $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentBefore->getKey().'/verify', ['transferred_at' => '2026-11-26T23:59:59+02:00'], $admin)
+                ->assertStatus(422)
+                ->assertJsonPath('errors.transferred_at.0', __('billing.errors.transferred_at_before_invoice'));
+
+            // 00:00, 01:59:59 and 02:00 Cairo on the issue day are all valid on preview and verify.
+            foreach (['2026-11-27T00:00:00+02:00', '2026-11-27T01:59:59+02:00', '2026-11-27T02:00:00+02:00'] as $moment) {
+                $this->getJson('/api/v1/super-admin/billing/payments/'.$paymentBefore->getKey().'/verify-preview?transferred_at='.urlencode($moment), $admin)
+                    ->assertOk();
+            }
+
+            $this->postJson('/api/v1/super-admin/billing/payments/'.$paymentBefore->getKey().'/verify', ['transferred_at' => '2026-11-27T01:59:59+02:00'], $admin)
+                ->assertOk();
+        } finally {
+            Carbon::setTestNow();
+            config(['app.timezone' => $prevAppTz]);
+            date_default_timezone_set($prevPhpTz);
+        }
+    }
+
     // ------------------------------------------------------------------ B. proration
 
     public function test_a_monthly_mid_term_upgrade_bills_the_remaining_days_difference_plus_vat(): void
@@ -356,33 +394,28 @@ final class BillingTermAndProrationTest extends PlanChangeTestCase
         $this->assertSame($slotsBefore, app(FounderPricingService::class)->claimedSlots());
     }
 
-    public function test_a_tenant_with_an_agreed_founder_price_is_held_for_review_then_released(): void
+    public function test_a_tenant_with_an_active_founder_schedule_is_invoiced_automatically_without_hold(): void
     {
         $small = $this->plan(['price_monthly' => '499.000', 'founder_price_monthly' => '299.000']);
-        $big = $this->plan(['price_monthly' => '999.000']);
+        $big = $this->plan(['price_monthly' => '999.000', 'founder_price_monthly' => '599.000']);
         $tenant = $this->subscribedTenant($small, 10);
         Subscription::query()->where('tenant_id', $tenant->getKey())->update(['is_founder' => true, 'founder_price_until' => now()->addMonths(6)]);
         $row = $this->requestRow($tenant, ['requested_plan_id' => $big->getKey()]);
 
-        foreach ([1, 2] as $attempt) {
-            $this->postJson(self::QUEUE.'/'.$row->getKey().'/invoice', [], $this->admin)
-                ->assertStatus(409)
-                ->assertJsonPath('error_code', 'billing.upgrade_held_for_founder_review')
-                ->assertJsonPath('details.request_id', $row->getKey());
-        }
+        // Founder upgrades bill automatically using the founder schedule (no 409 manual-review hold):
+        // (599 - 299) * 10 / 30 = 100.000.
+        $invoice = $this->issue($row);
+        $this->assertSame('100.000', $invoice->subtotal);
+        $this->assertTrue((bool) $invoice->lines[0]['founder']);
+        $fresh = PlanChangeRequest::query()->findOrFail($row->getKey());
+        $this->assertSame('invoiced', $fresh->status->value);
+        $this->assertNull($fresh->founder_review_held_at);
 
-        $held = PlanChangeRequest::query()->findOrFail($row->getKey());
-        $this->assertTrue($held->isPending());
-        $this->assertNotNull($held->founder_review_held_at);
-        $this->assertSame(0, BillingInvoice::query()->count());
-        $this->assertSame(1, CentralAuditLog::query()->where('event', CentralAuditEvent::PlanChangeHeldForFounderReview->value)->count());
-        $this->getJson(self::QUEUE.'?status=pending', $this->admin)
-            ->assertOk()->assertJsonPath('data.0.founder_review_held_at', $held->founder_review_held_at->toIso8601String());
-
-        // The owner reviewed it and issues it (here with the amount he agreed).
-        $invoice = $this->issue($row, ['release_founder_hold' => true, 'amount' => '120.000']);
-        $this->assertSame('120.000', $invoice->subtotal);
-        $this->assertSame('invoiced', $row->fresh()?->status->value);
+        // Passing optional release_founder_hold / explicit agreed amount still works cleanly.
+        $row2 = $this->requestRow($tenant, ['requested_plan_id' => $big->getKey()]);
+        $invoice2 = $this->issue($row2, ['release_founder_hold' => true, 'amount' => '120.000']);
+        $this->assertSame('120.000', $invoice2->subtotal);
+        $this->assertSame('invoiced', PlanChangeRequest::query()->findOrFail($row2->getKey())->status->value);
     }
 
     public function test_an_ended_founder_schedule_is_not_held(): void

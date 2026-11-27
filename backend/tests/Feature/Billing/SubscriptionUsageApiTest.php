@@ -169,4 +169,28 @@ final class SubscriptionUsageApiTest extends BillingTestCase
         $this->assertSame('Plan A', $this->getJson('/api/v1/billing/subscription', $this->tenantHeaders($a))->json('data.plan.name'));
         $this->assertSame('Plan B', $this->getJson('/api/v1/billing/subscription', $this->tenantHeaders($b))->json('data.plan.name'));
     }
+
+    public function test_bil_010_store_usage_counts_branches_warehouses_and_vans_in_separate_buckets(): void
+    {
+        $plan = $this->plan(['max_stores' => 10, 'max_warehouses' => 5, 'max_vans' => 5]);
+        $tenant = $this->tenantOn($plan);
+        $headers = $this->tenantHeaders($tenant);
+
+        // Tenant starts with 1 main branch store; add 2 more branches, 2 warehouses (UI + legacy), 2 vans (UI + legacy).
+        $this->postJson('/api/v1/stores', ['name' => 'Branch 2', 'type' => 'retail_shop'], $headers)->assertCreated();
+        $this->postJson('/api/v1/stores', ['name' => 'Branch 3', 'type' => 'retail_shop'], $headers)->assertCreated();
+        $this->postJson('/api/v1/stores', ['name' => 'WH UI', 'type' => 'warehouse'], $headers)->assertCreated();
+        $this->postJson('/api/v1/stores', ['name' => 'WH Legacy', 'type' => 'main_warehouse'], $headers)->assertCreated();
+        $this->postJson('/api/v1/stores', ['name' => 'Van UI', 'type' => 'van'], $headers)->assertCreated();
+        $this->postJson('/api/v1/stores', ['name' => 'Van Legacy', 'type' => 'wholesale_van'], $headers)->assertCreated();
+
+        $usage = collect($this->getJson('/api/v1/billing/subscription', $headers)->assertOk()->json('data.usage'))->keyBy('resource');
+
+        $this->assertSame(3, $usage['stores']['used']);
+        $this->assertSame(10, $usage['stores']['limit']);
+        $this->assertSame(2, $usage['warehouses']['used']);
+        $this->assertSame(5, $usage['warehouses']['limit']);
+        $this->assertSame(2, $usage['vans']['used']);
+        $this->assertSame(5, $usage['vans']['limit']);
+    }
 }

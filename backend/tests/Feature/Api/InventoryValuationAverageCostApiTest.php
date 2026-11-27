@@ -118,11 +118,13 @@ final class InventoryValuationAverageCostApiTest extends TenantTestCase
 
         $this->getJson('/api/v1/items/'.$this->itemId, $this->headers)->assertOk()
             ->assertJsonPath('data.average_cost', '181.205')
+            ->assertJsonPath('data.weighted_avg_cost', '181.205')
             ->assertJsonPath('data.last_purchase_price', '200.000')
             ->assertJsonPath('data.cost_price', '200.000');
 
         $row = $this->rowFor($this->getJson('/api/v1/items', $this->headers)->assertOk()->json('data'), 'id', $this->itemId);
         $this->assertSame('181.205', $row['average_cost']);
+        $this->assertSame('181.205', $row['weighted_avg_cost']);
         $this->assertSame('200.000', $row['last_purchase_price']);
 
         $posRow = $this->rowFor($this->getJson('/api/v1/pos/bootstrap', $this->headers)->assertOk()->json('data.items'), 'id', $this->itemId);
@@ -151,12 +153,14 @@ final class InventoryValuationAverageCostApiTest extends TenantTestCase
 
         $this->getJson('/api/v1/items/'.$this->itemId, $headers)->assertOk()
             ->assertJsonPath('data.average_cost', null)
+            ->assertJsonPath('data.weighted_avg_cost', null)
             ->assertJsonPath('data.last_purchase_price', null)
             ->assertJsonPath('data.cost_price', null);
 
         $index = $this->getJson('/api/v1/items', $headers)->assertOk()->assertJsonPath('summary.total_stock_value', null);
         $row = $this->rowFor($index->json('data'), 'id', $this->itemId);
         $this->assertNull($row['average_cost']);
+        $this->assertNull($row['weighted_avg_cost']);
         $this->assertNull($row['last_purchase_price']);
         $this->assertNull($row['cost_price']);
 

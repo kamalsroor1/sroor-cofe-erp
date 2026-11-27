@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full flex flex-col gap-1.5" :class="wrapperClass">
+  <div class="w-full min-w-0 flex flex-col gap-1.5" :class="wrapperClass">
     <!-- Label -->
     <label
       v-if="label"
@@ -12,7 +12,7 @@
     </label>
 
     <!-- Number Input Container -->
-    <div class="relative flex items-center w-full">
+    <div class="relative flex items-center w-full min-w-0">
       <!-- Native Number / Decimal Input -->
       <input
         :id="inputId"
@@ -30,7 +30,7 @@
         inputmode="decimal"
         :aria-invalid="hasError ? 'true' : 'false'"
         :aria-describedby="hasError ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined"
-        class="w-full min-h-[44px] px-3.5 py-2.5 text-base sm:text-sm font-bold font-mono rounded-xl border bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 outline-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-900/50"
+        class="w-full min-w-0 min-h-[44px] px-3.5 py-2.5 text-base sm:text-sm font-bold font-mono rounded-xl border bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 outline-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-900/50"
         :class="[
           hasError
             ? 'border-rose-500 dark:border-rose-500/80 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 text-rose-900 dark:text-rose-100'

@@ -78,6 +78,8 @@ return [
     'loading_metrics' => 'Loading central platform metrics...',
     'platform_accounts' => 'Platform Accounts',
     'active_subscriptions' => 'Active Subscriptions',
+    'free_plan_tenants' => 'Free Plan',
+    'free_plan_accounts' => 'Accounts on Free Plan',
     'under_trial' => 'Under Trial',
     'suspended_or_expired' => 'Suspended or Expired',
     'tenants_distribution' => 'Plan & Subscription Distribution',
@@ -565,4 +567,8 @@ return [
     'plan_addons_empty' => 'The add-on catalog is empty.',
     'plan_addon_included_qty_label' => 'Included quantity',
     'plan_addon_yearly_only_label' => 'Included with the yearly plan only',
+    'dashboard_load_failed' => 'Could not load the platform dashboard.',
+    'tenants_load_failed' => 'Could not load the tenants list.',
+    'units_load_failed' => 'Could not load the units of measurement.',
+    'app_versions_load_failed' => 'Could not load the app releases.',
 ];

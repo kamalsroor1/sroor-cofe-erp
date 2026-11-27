@@ -200,7 +200,7 @@ final class ShiftReportAuthorizationApiTest extends TenantTestCase
         $this->getJson('/api/v1/shifts/'.$shiftId.'/z-report', $this->tenantHeaders($this->tenant))->assertNotFound();
     }
 
-    public function test_closing_by_id_an_already_closed_shift_is_not_found_and_keeps_its_figures(): void
+    public function test_closing_by_id_an_already_closed_shift_is_idempotent_and_keeps_its_figures(): void
     {
         $shiftId = $this->openShiftFor($this->tenantAdmin($this->tenant), $this->storeA);
         $this->postJson('/api/v1/shifts/close', ['shift_id' => $shiftId, 'actual_cash_balance' => '100.000'], $this->tenantHeaders($this->tenant))
@@ -208,7 +208,7 @@ final class ShiftReportAuthorizationApiTest extends TenantTestCase
         $before = $this->shiftFigures($shiftId);
 
         $this->postJson('/api/v1/shifts/close', ['shift_id' => $shiftId, 'actual_cash_balance' => '999.000', 'notes' => 'again'], $this->tenantHeaders($this->tenant))
-            ->assertNotFound();
+            ->assertOk(); // SHOP-06 / BE-19: a second close returns the closed shift unchanged.
 
         $this->assertSame($before, $this->shiftFigures($shiftId));
         $this->assertSame('100.000', $this->inTenant($this->tenant, fn (): string => CashShift::query()->findOrFail($shiftId)->actual_cash_balance));

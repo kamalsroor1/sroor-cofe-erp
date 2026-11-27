@@ -15,6 +15,7 @@ use App\Http\Resources\StockTransferResource;
 use App\Models\StockTransfer;
 use App\Models\User;
 use App\Support\ActiveStore;
+use App\Support\Database\LikePattern;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -84,10 +85,10 @@ final class StockTransferController extends Controller
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->where('transfer_number', 'like', "%{$search}%")
-                    ->orWhere('notes', 'like', "%{$search}%")
-                    ->orWhereHas('fromStore', fn ($sq) => $sq->where('name', 'like', "%{$search}%"))
-                    ->orWhereHas('toStore', fn ($sq) => $sq->where('name', 'like', "%{$search}%"));
+                LikePattern::whereContains($q, 'transfer_number', $search);
+                LikePattern::orWhereContains($q, 'notes', $search);
+                $q->orWhereHas('fromStore', fn ($sq) => LikePattern::whereContains($sq, 'name', $search))
+                    ->orWhereHas('toStore', fn ($sq) => LikePattern::whereContains($sq, 'name', $search));
             });
         }
 

@@ -4,7 +4,7 @@
     :title="editingExpense ? $t('expenses.edit_expense') : $t('expenses.add_expense')"
     @close="$emit('close')"
   >
-    <form @submit.prevent="$emit('save')" class="space-y-4 font-tajawal">
+    <form id="expense-form" @submit.prevent="$emit('save')" class="space-y-4 font-tajawal">
       <!-- Title -->
       <BaseInput
         :model-value="form.title"
@@ -56,6 +56,7 @@
             @update:model-value="$emit('update:field', 'amount', $event)"
             :label="$t('common.amount')"
             :decimals="3"
+            inputmode="decimal"
             class="font-mono text-rose-600 dark:text-rose-400 font-bold"
             required
           />
@@ -93,15 +94,17 @@
         :rows="2"
         :placeholder="$t('expenses.notes_placeholder')"
       />
+    </form>
 
-      <!-- Modal Actions -->
-      <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
+    <template #footer>
+      <div class="flex items-center justify-end gap-2">
         <BaseButton type="button" variant="secondary" size="md" @click="$emit('close')">
           {{ $t('common.cancel') }}
         </BaseButton>
 
         <BaseButton
           type="submit"
+          form="expense-form"
           variant="primary"
           size="md"
           :loading="submitting"
@@ -110,7 +113,7 @@
           {{ editingExpense ? $t('common.save') : $t('expenses.add_expense') }}
         </BaseButton>
       </div>
-    </form>
+    </template>
   </AppModal>
 </template>
 

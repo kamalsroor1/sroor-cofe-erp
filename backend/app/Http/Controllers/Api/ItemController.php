@@ -14,6 +14,7 @@ use App\DTOs\Items\AdjustStockDTO;
 use App\DTOs\Items\ItemDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdjustStockRequest;
+use App\Http\Requests\ListItemsRequest;
 use App\Http\Requests\StoreItemRequest;
 use App\Http\Requests\UpdateItemRequest;
 use App\Http\Resources\ItemResource;
@@ -26,6 +27,7 @@ use App\Services\Settings\TenantSettings;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use App\Support\CostVisibility;
+use App\Support\Database\LikePattern;
 use App\Support\ItemCostFields;
 use App\Support\Money\Decimal;
 use Closure;
@@ -48,12 +50,10 @@ final class ItemController extends Controller
     /**
      * List items with stock, filters & valuation metrics
      */
-    public function index(Request $request): JsonResponse
+    public function index(ListItemsRequest $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('items.view') && ! $user->can('pos.access')) {
-            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
-        }
+        $sort = $request->resolveSort(ListItemsRequest::SORT_COLUMNS);
 
         $search = trim((string) $request->input('search', ''));
         $category = (string) $request->input('category', 'all');
@@ -72,11 +72,7 @@ final class ItemController extends Controller
         $query = Item::with($this->readableStoreStocks($user))->withDeletionBlockers();
 
         if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%")
-                    ->orWhere('notes', 'like', "%{$search}%");
-            });
+            LikePattern::whereContainsAny($query, ['name', 'code', 'notes'], $search);
         }
 
         if ($category !== 'all' && $category !== '') {
@@ -88,10 +84,8 @@ final class ItemController extends Controller
                 $this->tenantSettings->whereLowStock($query)->where('current_stock', '>', 0);
             } elseif ($categoryId === 'in_stock') {
                 $query->where('current_stock', '>', 0);
-            } elseif ($categoryId === 'favorites') {
+            } elseif ($categoryId === 'favorites' && ! $sort['explicit']) {
                 $query->orderByDesc('pos_sales_count');
-            } elseif ($categoryId === 'newest') {
-                $query->latest('id');
             } elseif (is_numeric($categoryId)) {
                 $query->where('category_id', (int) $categoryId);
             }
@@ -111,7 +105,12 @@ final class ItemController extends Controller
             $query->where('is_active', false);
         }
 
-        $items = $query->latest('id')->paginate($perPage);
+        $query->orderBy($sort['column'], $sort['direction']);
+        if ($sort['column'] !== 'id') {
+            $query->orderBy('id', $sort['direction']);
+        }
+
+        $items = $query->paginate($perPage);
 
         $categories = Item::whereNotNull('category')->where('category', '!=', '')->distinct()->pluck('category')->values();
 

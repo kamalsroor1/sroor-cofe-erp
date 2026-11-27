@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Purchase;
 use App\Services\ReturnSourceService;
+use App\Support\Database\LikePattern;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
@@ -30,15 +31,15 @@ final class ListReturnSourcesAction
     public function execute(string $type, int $storeId, string $search, int $perPage): LengthAwarePaginator
     {
         $perPage = max(1, min(50, $perPage));
-        $like = '%'.$search.'%';
 
         if ($type === ReturnSourceService::SALES) {
             $page = Invoice::query()
                 ->with('customer:id,name,phone')
                 ->where('store_id', $storeId)->where('status', 'confirmed')
-                ->when($search !== '', fn ($q) => $q->where(fn ($w) => $w
-                    ->where('invoice_number', 'like', $like)
-                    ->orWhereHas('customer', fn ($c) => $c->where('name', 'like', $like))))
+                ->when($search !== '', fn ($q) => $q->where(function ($w) use ($search): void {
+                    LikePattern::whereContains($w, 'invoice_number', $search);
+                    $w->orWhereHas('customer', fn ($c) => LikePattern::whereContains($c, 'name', $search));
+                }))
                 ->latest('invoice_date')->latest('id')
                 ->paginate($perPage, ['id', 'invoice_number', 'invoice_date', 'customer_id', 'net_total']);
 
@@ -51,9 +52,10 @@ final class ListReturnSourcesAction
         $page = Purchase::query()
             ->with('supplier:id,name')
             ->where('store_id', $storeId)->where('status', 'confirmed')
-            ->when($search !== '', fn ($q) => $q->where(fn ($w) => $w
-                ->where('purchase_number', 'like', $like)
-                ->orWhereHas('supplier', fn ($s) => $s->where('name', 'like', $like))))
+            ->when($search !== '', fn ($q) => $q->where(function ($w) use ($search): void {
+                LikePattern::whereContains($w, 'purchase_number', $search);
+                $w->orWhereHas('supplier', fn ($s) => LikePattern::whereContains($s, 'name', $search));
+            }))
             ->latest('purchase_date')->latest('id')
             ->paginate($perPage, ['id', 'purchase_number', 'purchase_date', 'supplier_id', 'net_total']);
 

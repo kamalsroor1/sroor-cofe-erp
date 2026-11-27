@@ -1,5 +1,5 @@
-import { dAdd, dSub, dCmp } from './decimal.js';
-import { limitQuantityText } from './posWeight.js';
+import { dAdd, dSub, dCmp, dRoundTo, isPositive } from './decimal.js';
+import { limitQuantityText, sanitizeDecimalInput } from './posWeight.js';
 import { DISCOUNT_FIXED, DISCOUNT_PERCENT } from './posDiscount.js';
 import { sanitizeAmountInput } from './posCheckout.js';
 
@@ -21,17 +21,18 @@ const hasLine = (cart, index) => Array.isArray(cart) && index >= 0 && index < ca
 /** Set the quantity from a typed value; ignores empty, non-numeric and non-positive input. Weighted lines keep decimals (3 max), others are whole. */
 export function updateLineQty(cart, { index, value }) {
     if (!hasLine(cart, index)) return false;
-    const parsed = parseFloat(value);
-    if (isNaN(parsed) || parsed <= 0) return false;
+    const raw = String(value ?? '').trim();
+    if (!raw || raw.startsWith('-')) return false;
     if (cart[index].is_weighted) {
-        const text = limitQuantityText(String(value));
-        if (!(parseFloat(text) > 0)) return false;
+        const text = limitQuantityText(raw);
+        if (!isPositive(text)) return false;
         cart[index].quantity = text;
         return true;
     }
-    const whole = Math.round(parsed);
-    if (whole < 1) return false;
-    cart[index].quantity = whole;
+    const clean = sanitizeDecimalInput(raw);
+    const whole = dRoundTo(clean, 0);
+    if (!isPositive(whole)) return false;
+    cart[index].quantity = Number(whole);
     return true;
 }
 
@@ -76,7 +77,7 @@ export function increaseLineQty(cart, index) {
         cart[index].quantity = dAdd(cart[index].quantity, String(WEIGHT_STEP));
         return true;
     }
-    cart[index].quantity = parseFloat(cart[index].quantity) + 1;
+    cart[index].quantity = Number(dRoundTo(dAdd(cart[index].quantity, '1'), 0));
     return true;
 }
 
@@ -89,8 +90,8 @@ export function decreaseLineQty(cart, index) {
         cart[index].quantity = next;
         return true;
     }
-    if (parseFloat(cart[index].quantity) > 1) {
-        cart[index].quantity = parseFloat(cart[index].quantity) - 1;
+    if (dCmp(cart[index].quantity, '1') > 0) {
+        cart[index].quantity = Number(dRoundTo(dSub(cart[index].quantity, '1'), 0));
         return true;
     }
     return removeLine(cart, index);
@@ -101,14 +102,13 @@ export function decreaseLineQty(cart, index) {
  * Returns null when decreasing at or below the minimum, meaning "remove the line".
  */
 export function stepQuantity(quantity, { weightBased = false, direction = 1 } = {}) {
-    const current = Number(quantity) || 0;
-    const step = weightBased ? WEIGHT_STEP : 1;
+    const step = weightBased ? String(WEIGHT_STEP) : '1';
     if (direction < 0) {
-        const min = weightBased ? WEIGHT_MIN : 1;
-        if (current <= min) return null;
-        return Number((current - step).toFixed(3));
+        const min = weightBased ? String(WEIGHT_MIN) : '1';
+        if (dCmp(quantity, min) <= 0) return null;
+        return Number(dSub(quantity, step));
     }
-    return Number((current + step).toFixed(3));
+    return Number(dAdd(quantity, step));
 }
 
 const positive = (v) => {

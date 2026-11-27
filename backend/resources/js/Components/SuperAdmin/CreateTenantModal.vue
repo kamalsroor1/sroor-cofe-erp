@@ -18,7 +18,11 @@
             @update:model-value="$emit('update:field', 'slug', $event)"
             :label="$t('super.slug_label')"
             :placeholder="$t('super.slug_placeholder')"
-            class="font-mono"
+            dir="ltr"
+            autocapitalize="off"
+            autocomplete="off"
+            spellcheck="false"
+            input-class="font-mono text-start"
             required
           />
         </div>
@@ -63,29 +67,16 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <BaseInput
-            :model-value="form.password"
-            @update:model-value="$emit('update:field', 'password', $event)"
-            :label="$t('super.initial_password_label')"
-            :placeholder="$t('super.initial_password_placeholder')"
-            type="password"
-            :minlength="8"
-            required
-          />
-        </div>
-
-        <div>
-          <BaseInput
-            :model-value="form.trial_days"
-            @update:model-value="$emit('update:field', 'trial_days', Number($event))"
-            :label="$t('super.trial_days_label')"
-            type="number"
-            min="0"
-            class="font-mono"
-          />
-        </div>
+      <div>
+        <BaseInput
+          :model-value="form.password"
+          @update:model-value="$emit('update:field', 'password', $event)"
+          :label="$t('super.initial_password_label')"
+          :placeholder="$t('super.initial_password_placeholder')"
+          type="password"
+          :minlength="8"
+          required
+        />
       </div>
 
       <!-- Advanced Custom Database Settings Toggle -->

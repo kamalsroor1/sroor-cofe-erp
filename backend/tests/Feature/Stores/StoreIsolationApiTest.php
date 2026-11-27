@@ -14,6 +14,7 @@ use App\Models\StoreStock;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TenantTestCase;
 
@@ -430,6 +431,19 @@ final class StoreIsolationApiTest extends TenantTestCase
 
         $this->assertSame($seed['a'], (int) $this->inTenant($tenant, fn () => Invoice::query()->whereKey($invoiceId)->value('store_id')));
         $this->assertSame('9.750', $this->stockOf($tenant, $seed['a'], $seed['item']));
+        $this->assertSame('20.000', $this->stockOf($tenant, $seed['b'], $seed['item']));
+
+        // SAL-089 (#854): same guarantee on POST /api/v1/invoices.
+        $genericInvoiceId = (int) $this->postJson(
+            '/api/v1/invoices',
+            [...$this->checkoutPayload($seed, '0.250', $seed['b']), 'client_uuid' => (string) Str::uuid()],
+            $this->tenantHeaders($tenant, $cashier, $seed['a']),
+        )
+            ->assertStatus(201)
+            ->json('data.id');
+
+        $this->assertSame($seed['a'], (int) $this->inTenant($tenant, fn () => Invoice::query()->whereKey($genericInvoiceId)->value('store_id')));
+        $this->assertSame('9.500', $this->stockOf($tenant, $seed['a'], $seed['item']));
         $this->assertSame('20.000', $this->stockOf($tenant, $seed['b'], $seed['item']));
     }
 }

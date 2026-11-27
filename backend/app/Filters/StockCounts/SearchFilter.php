@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filters\StockCounts;
 
+use App\Support\Database\LikePattern;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -20,8 +21,7 @@ final class SearchFilter
         $search = trim((string) $this->request->input('search', ''));
 
         if ($search !== '') {
-            $like = '%'.addcslashes($search, '%_\\').'%';
-            $query->where(fn (Builder $q) => $q->where('count_number', 'like', $like)->orWhere('notes', 'like', $like));
+            LikePattern::whereContainsAny($query, ['count_number', 'notes'], $search);
         }
 
         return $next($query);

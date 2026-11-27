@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Rules\ValidPhoneNumber;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class StoreQuickCustomerRequest extends FormRequest
@@ -19,7 +20,7 @@ final class StoreQuickCustomerRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'phone' => ['nullable', 'string', 'max:50', new ValidPhoneNumber],
             'price_tier' => ['nullable', 'in:retail,wholesale'],
             'address' => ['nullable', 'string', 'max:255'],
         ];

@@ -4,6 +4,7 @@ import { AlertTriangle, RefreshCw, MessageCircle } from 'lucide-vue-next';
 import DynamicIcon from './DynamicIcon.vue';
 import BaseButton from './BaseButton.vue';
 import { useSupportContact } from '../../Composables/useSupportContact';
+import { useTrans } from '../../Composables/useTrans';
 
 const props = defineProps({
   icon: {
@@ -43,11 +44,30 @@ const props = defineProps({
 defineEmits(['retry']);
 
 const { supportHref } = useSupportContact();
+const { t } = useTrans();
+
+const numericStatus = computed(() =>
+  props.statusCode != null && props.statusCode !== '' ? Number(props.statusCode) : null
+);
+const isNotFound = computed(() => numericStatus.value === 404);
+const isForbidden = computed(() => numericStatus.value === 403);
+
+const effectiveTitle = computed(() => {
+  if (props.title) return props.title;
+  if (isNotFound.value) return props.message || t('common.record_not_found');
+  if (isForbidden.value) return t('common.no_access');
+  return t('common.server_error');
+});
+
+const effectiveMessage = computed(() => {
+  if (!props.message) return '';
+  if (!props.title && isNotFound.value && props.message === effectiveTitle.value) return '';
+  return props.message;
+});
 
 const effectiveCanRetry = computed(() => {
   if (!props.canRetry) return false;
-  const status = Number(props.statusCode);
-  if (status === 403) return false;
+  if (isForbidden.value) return false;
   return true;
 });
 </script>
@@ -70,14 +90,14 @@ const effectiveCanRetry = computed(() => {
         class="font-black text-slate-800 dark:text-slate-200"
         :class="[compact ? 'text-xs sm:text-sm' : 'text-sm sm:text-base']"
       >
-        {{ title || $t('common.server_error') }}
+        {{ effectiveTitle }}
       </p>
       <p
-        v-if="message"
+        v-if="effectiveMessage"
         class="text-slate-500 dark:text-slate-400 font-medium leading-relaxed"
         :class="[compact ? 'text-xs' : 'text-xs sm:text-sm']"
       >
-        {{ message }}
+        {{ effectiveMessage }}
       </p>
     </div>
 

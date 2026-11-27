@@ -9,6 +9,7 @@ use App\Models\BillingPayment;
 use App\Models\CentralAuditLog;
 use App\Models\CentralMedia;
 use App\Models\Tenant;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -367,5 +368,93 @@ final class TenantBillingApiTest extends BillingTestCase
 
         $this->assertInstanceOf(Tenant::class, $tenant);
         $this->getJson('/api/v1/super-admin/billing/payments', $this->tenantHeaders($tenant))->assertStatus(404);
+    }
+
+    public function test_reference_and_notes_validation_on_tenant_payment_upload(): void
+    {
+        $tenant = $this->createTenant();
+        $invoice = $this->pendingInvoice($tenant);
+        $url = $this->paymentUrl($invoice);
+        $headers = $this->multipart($this->tenantHeaders($tenant));
+
+        // reference: 1 char ("a"), 101 chars, and angle brackets -> 422 with translated message (ar & en).
+        $payload = function (array $overrides = []): array {
+            $data = $this->paymentPayload($overrides);
+            unset($data['payer_reference']);
+
+            return $data;
+        };
+
+        $this->post($url, $payload(['reference' => 'a']), $headers)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['reference'])
+            ->assertJsonPath('errors.reference.0', __('validation.min.string', ['attribute' => __('validation.attributes.reference'), 'min' => 2]));
+
+        $this->post($url, $payload(['reference' => str_repeat('a', 101)]), $headers + ['X-Locale' => 'en'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['reference'])
+            ->assertJsonPath('errors.reference.0', __('validation.max.string', ['attribute' => __('validation.attributes.reference', [], 'en'), 'max' => 100], 'en'));
+
+        $this->post($url, $payload(['reference' => 'bad<ref']), $headers)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['reference']);
+
+        // notes & note > 500 chars -> 422.
+        $this->post($url, $payload(['notes' => str_repeat('n', 501)]), $headers)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['notes']);
+
+        $this->post($url, $payload(['note' => str_repeat('n', 501)]), $headers)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['note']);
+
+        // Empty reference is allowed; valid 2-char reference and 500-char notes -> 201.
+        $this->post($url, $payload(['reference' => '']), $headers)
+            ->assertCreated()
+            ->assertJsonPath('data.payer_reference', null);
+
+        BillingPayment::query()->delete();
+
+        $this->post($url, $payload([
+            'reference' => 'ab',
+            'notes' => str_repeat('n', 500),
+        ]), $headers)
+            ->assertCreated()
+            ->assertJsonPath('data.payer_reference', 'ab');
+
+        $this->assertSame(str_repeat('n', 500), BillingPayment::query()->sole()->raw_payload['note']);
+    }
+
+    public function test_tenant_payment_upload_compares_issue_day_in_cairo_timezone_even_when_app_timezone_is_utc(): void
+    {
+        $prevAppTz = (string) config('app.timezone');
+        $prevPhpTz = date_default_timezone_get();
+
+        try {
+            config(['app.timezone' => 'UTC', 'billing.timezone' => 'Africa/Cairo']);
+            date_default_timezone_set('UTC');
+            Carbon::setTestNow(CarbonImmutable::parse('2026-11-27 12:00:00', 'Africa/Cairo'));
+
+            $tenant = $this->createTenant();
+            $invoice = $this->pendingInvoice($tenant, ['issued_at' => CarbonImmutable::parse('2026-11-27 10:00:00', 'Africa/Cairo')]);
+            $url = $this->paymentUrl($invoice);
+            $headers = $this->multipart($this->tenantHeaders($tenant));
+
+            // Day before in Cairo -> 422.
+            $this->post($url, $this->paymentPayload(['paid_at' => '2026-11-26T23:59:59+02:00']), $headers)
+                ->assertStatus(422)
+                ->assertJsonValidationErrors(['paid_at'])
+                ->assertJsonPath('errors.paid_at.0', __('billing.errors.transferred_at_before_invoice'));
+
+            // 00:00, 01:59:59, and 02:00 Cairo on the issue day -> 201.
+            foreach (['2026-11-27T00:00:00+02:00', '2026-11-27T01:59:59+02:00', '2026-11-27T02:00:00+02:00'] as $moment) {
+                BillingPayment::query()->delete();
+                $this->post($url, $this->paymentPayload(['paid_at' => $moment]), $headers)->assertCreated();
+            }
+        } finally {
+            Carbon::setTestNow();
+            config(['app.timezone' => $prevAppTz]);
+            date_default_timezone_set($prevPhpTz);
+        }
     }
 }

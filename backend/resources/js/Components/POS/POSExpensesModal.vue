@@ -100,6 +100,7 @@
                   <BaseInput
                     v-model="newExpense.amount"
                     type="number"
+                    inputmode="decimal"
                     min="0"
                     step="0.001"
                     :label="$t('pos.expense_amount')"
@@ -164,6 +165,7 @@
                       <input
                         v-model.number="expense.amount"
                         type="number"
+                        inputmode="decimal"
                         min="0"
                         step="0.001"
                         class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 min-h-11 py-1.5 text-xs text-slate-900 dark:text-white font-mono font-bold focus:border-theme-primary focus:ring-1 focus:ring-theme-primary outline-hidden transition-colors"

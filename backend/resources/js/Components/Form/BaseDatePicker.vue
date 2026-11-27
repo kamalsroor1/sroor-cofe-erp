@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full flex flex-col gap-1.5 font-tajawal" :class="wrapperClass">
+  <div class="w-full min-w-0 flex flex-col gap-1.5 font-tajawal" :class="wrapperClass">
     <!-- Label -->
     <label
       v-if="label"
@@ -11,8 +11,8 @@
     </label>
 
     <!-- Input Wrapper with Icon & Clear button -->
-    <div class="relative w-full select-none" :class="{ 'opacity-60 pointer-events-none': disabled }">
-      <div class="relative flex items-center">
+    <div class="relative w-full min-w-0 select-none" :class="{ 'opacity-60 pointer-events-none': disabled }">
+      <div class="relative flex items-center min-w-0">
         <!-- Calendar Icon -->
         <span class="absolute start-3.5 text-sm text-slate-400 pointer-events-none z-10">
           <Calendar class="w-4 h-4 text-slate-400 dark:text-slate-500" />
@@ -25,7 +25,7 @@
           :placeholder="placeholder || $t('common.select_date')"
           :disabled="disabled"
           readonly
-          class="w-full min-h-[44px] ps-10 pe-9 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 font-mono text-xs cursor-pointer focus:ring-2 focus:ring-theme-primary/50 focus:border-theme-primary focus:outline-none transition shadow-xs"
+          class="w-full min-w-0 min-h-[44px] ps-10 pe-9 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 font-mono text-xs cursor-pointer focus:ring-2 focus:ring-theme-primary/50 focus:border-theme-primary focus:outline-none transition shadow-xs"
           :class="[
             modelValue ? 'font-bold text-theme-primary' : '',
             hasError ? 'border-rose-500 dark:border-rose-500 focus:ring-rose-500/20' : '',

@@ -36,6 +36,23 @@ test('receipt escapes a <script> item name and every user-controlled text', () =
     assert.ok(html.includes('&lt;i&gt;EGP&lt;/i&gt;'));
 });
 
+test('receipt escapes <img src=x onerror=alert(1)> payloads in item name, company name, and invoice number', () => {
+    const xss = '<img src=x onerror=alert(1)>';
+    const html = buildThermalHtml(
+        {
+            invoice_number: xss,
+            invoice_date: '2026-11-27',
+            net_total: '15.000',
+            items: [{ item_name: xss, quantity: '1.000', total_price: '15.000' }],
+        },
+        options({ companyName: xss })
+    );
+
+    assert.ok(!html.includes(xss), 'raw <img src=x onerror=alert(1)> must never appear in receipt HTML');
+    assert.ok(!html.includes('onerror=alert(1)>'), 'raw onerror handler must not be emitted unescaped');
+    assert.ok(html.includes('&lt;img src=x onerror=alert(1)&gt;'));
+});
+
 test('receipt formats amounts exactly with half-up rounding, never through floats', () => {
     const html = buildThermalHtml(
         {

@@ -6,6 +6,7 @@ namespace App\Http\Requests;
 
 use App\Enums\CentralPermission;
 use App\Http\Requests\Signup\StoreSignupRequestRequest;
+use App\Rules\AvailableSubdomain;
 use App\Rules\TenantDatabaseName;
 use App\Support\PasswordPolicy;
 use App\Support\PlatformSuperAdmin;
@@ -34,7 +35,13 @@ class StoreTenantRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:50|alpha_dash|unique:tenants,slug',
+            'slug' => [
+                'required',
+                'string',
+                'bail',
+                new AvailableSubdomain(checkTaken: true),
+                'unique:tenants,slug',
+            ],
             'email' => 'required|email|max:255|unique:tenants,email',
             'phone' => 'nullable|string|max:20',
             'plan_id' => 'required|exists:plans,id',

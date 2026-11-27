@@ -177,12 +177,25 @@ final class PlanEnforcementApiTest extends TenantTestCase
             ->assertJsonPath('details.limit', 'stores')
             ->assertJsonPath('details.max', 2);
 
-        // Warehouses and vans have their own buckets.
+        // Warehouses and vans have their own buckets (both UI and legacy store type names).
+        $this->postJson('/api/v1/stores', ['name' => 'WH UI', 'type' => 'warehouse'], $headers)
+            ->assertStatus(403)
+            ->assertJsonPath('error_code', 'subscription.limit_reached')
+            ->assertJsonPath('details.limit', 'warehouses')
+            ->assertJsonPath('details.max', 0)
+            ->assertJsonPath('message', __('subscription.errors.limit_reached', [
+                'resource' => __('subscription.limit_resources.warehouses'),
+                'max' => 0,
+            ]));
         $this->postJson('/api/v1/stores', ['name' => 'WH', 'type' => 'main_warehouse'], $headers)
             ->assertStatus(403)
             ->assertJsonPath('details.limit', 'warehouses')
             ->assertJsonPath('details.max', 0);
-        $this->postJson('/api/v1/stores', ['name' => 'Van', 'type' => 'wholesale_van'], $headers)->assertStatus(201);
+        $this->postJson('/api/v1/stores', ['name' => 'Van', 'type' => 'van'], $headers)->assertStatus(201);
+        $this->postJson('/api/v1/stores', ['name' => 'Van 2', 'type' => 'wholesale_van'], $headers)
+            ->assertStatus(403)
+            ->assertJsonPath('details.limit', 'vans')
+            ->assertJsonPath('details.max', 1);
 
         $this->assertSame(3, $this->inTenant($tenant, fn (): int => Store::query()->count()));
     }
@@ -233,11 +246,33 @@ final class PlanEnforcementApiTest extends TenantTestCase
             ->assertJsonPath('details.max', 2);
         // free: 1 branch, the main (retail) store already uses it.
         $this->postJson('/api/v1/stores', ['name' => 'Branch', 'type' => 'retail_shop'], $headers)->assertStatus(403);
-        // free: 0 extra warehouses and 0 vans.
+        // free: 0 extra warehouses and 0 vans (both legacy and UI store type values).
         $this->postJson('/api/v1/stores', ['name' => 'Depot', 'type' => 'main_warehouse'], $headers)
             ->assertStatus(403)
+            ->assertJsonPath('details.limit', 'warehouses')
             ->assertJsonPath('details.max', 0);
-        $this->postJson('/api/v1/stores', ['name' => 'Van', 'type' => 'wholesale_van'], $headers)->assertStatus(403);
+        $this->postJson('/api/v1/stores', ['name' => 'Depot UI', 'type' => 'warehouse'], $headers)
+            ->assertStatus(403)
+            ->assertJsonPath('error_code', 'subscription.limit_reached')
+            ->assertJsonPath('details.limit', 'warehouses')
+            ->assertJsonPath('details.max', 0)
+            ->assertJsonPath('message', __('subscription.errors.limit_reached', [
+                'resource' => __('subscription.limit_resources.warehouses'),
+                'max' => 0,
+            ]));
+        $this->postJson('/api/v1/stores', ['name' => 'Van', 'type' => 'wholesale_van'], $headers)
+            ->assertStatus(403)
+            ->assertJsonPath('details.limit', 'vans')
+            ->assertJsonPath('details.max', 0);
+        $this->postJson('/api/v1/stores', ['name' => 'Van UI', 'type' => 'van'], $headers)
+            ->assertStatus(403)
+            ->assertJsonPath('error_code', 'subscription.limit_reached')
+            ->assertJsonPath('details.limit', 'vans')
+            ->assertJsonPath('details.max', 0)
+            ->assertJsonPath('message', __('subscription.errors.limit_reached', [
+                'resource' => __('subscription.limit_resources.vans'),
+                'max' => 0,
+            ]));
         // The main store the tenant was born with is a retail store: it never counts as a warehouse.
         $this->assertSame(0, $this->inTenant($tenant, fn (): int => StoreLimitBucket::count(LimitResource::Warehouses)));
     }
@@ -277,6 +312,93 @@ final class PlanEnforcementApiTest extends TenantTestCase
         // Same bucket (a rename / shop -> shop) is always fine.
         $this->putJson("/api/v1/stores/{$shopId}", ['name' => 'Shop B2', 'type' => 'retail_shop'], $headers)->assertOk();
         $this->assertSame('retail_shop', $this->inTenant($tenant, fn (): string => (string) Store::query()->findOrFail($shopId)->type));
+    }
+
+    public function test_bil_010_plans_with_full_branches_can_still_add_warehouses_and_vans_and_usage_is_per_bucket(): void
+    {
+        // Free (1 branch, 0 warehouses, 0 vans): branch #1 already exists, adding another branch fails on stores,
+        // adding warehouse/van fails on warehouses/vans (never on stores).
+        $freeDef = collect(PlanCatalog::all())->firstWhere('slug', 'free');
+        $freePlan = $this->plan(array_intersect_key($freeDef, array_flip([
+            'max_users', 'max_stores', 'max_warehouses', 'max_vans', 'max_items', 'max_invoices_per_month', 'max_storage_mb', 'features', 'is_free',
+        ])));
+        $freeTenant = $this->tenantOn($freePlan, ['status' => 'active']);
+        $freeHeaders = $this->tenantHeaders($freeTenant);
+
+        $this->postJson('/api/v1/stores', ['name' => 'Branch 2', 'type' => 'retail_shop'], $freeHeaders)
+            ->assertStatus(403)->assertJsonPath('details.limit', 'stores');
+        $this->postJson('/api/v1/stores', ['name' => 'WH 1', 'type' => 'warehouse'], $freeHeaders)
+            ->assertStatus(403)->assertJsonPath('details.limit', 'warehouses');
+        $this->postJson('/api/v1/stores', ['name' => 'Van 1', 'type' => 'van'], $freeHeaders)
+            ->assertStatus(403)->assertJsonPath('details.limit', 'vans');
+
+        // Basic (1 branch, 1 warehouse, 0 vans): branch is FULL (1/1), warehouse succeeds, van blocked on vans.
+        $basicDef = collect(PlanCatalog::all())->firstWhere('slug', 'basic');
+        $basicPlan = $this->plan(array_intersect_key($basicDef, array_flip([
+            'max_users', 'max_stores', 'max_warehouses', 'max_vans', 'max_items', 'max_invoices_per_month', 'max_storage_mb', 'features', 'is_free',
+        ])));
+        $basicTenant = $this->tenantOn($basicPlan, ['status' => 'active']);
+        $basicHeaders = $this->tenantHeaders($basicTenant);
+
+        $this->postJson('/api/v1/stores', ['name' => 'Branch Extra', 'type' => 'retail_shop'], $basicHeaders)
+            ->assertStatus(403)->assertJsonPath('details.limit', 'stores');
+        $this->postJson('/api/v1/stores', ['name' => 'Basic WH', 'type' => 'warehouse'], $basicHeaders)
+            ->assertStatus(201);
+        $this->postJson('/api/v1/stores', ['name' => 'Basic WH 2', 'type' => 'warehouse'], $basicHeaders)
+            ->assertStatus(403)->assertJsonPath('details.limit', 'warehouses');
+        $this->postJson('/api/v1/stores', ['name' => 'Basic Van', 'type' => 'van'], $basicHeaders)
+            ->assertStatus(403)->assertJsonPath('details.limit', 'vans');
+
+        $basicUsage = collect($this->getJson('/api/v1/billing/subscription', $basicHeaders)->assertOk()->json('data.usage'))->keyBy('resource');
+        $this->assertSame(1, $basicUsage['stores']['used']);
+        $this->assertSame(1, $basicUsage['warehouses']['used']);
+        $this->assertSame(0, $basicUsage['vans']['used']);
+
+        // Pro (3 branches, 2 warehouses, 1 van): fill all 3 branches, still able to add 2 warehouses + 1 van.
+        $proDef = collect(PlanCatalog::all())->firstWhere('slug', 'pro');
+        $proPlan = $this->plan(array_intersect_key($proDef, array_flip([
+            'max_users', 'max_stores', 'max_warehouses', 'max_vans', 'max_items', 'max_invoices_per_month', 'max_storage_mb', 'features', 'is_free',
+        ])));
+        $proTenant = $this->tenantOn($proPlan, ['status' => 'active']);
+        $proHeaders = $this->tenantHeaders($proTenant);
+
+        $this->postJson('/api/v1/stores', ['name' => 'Pro Branch 2', 'type' => 'retail_shop'], $proHeaders)->assertStatus(201);
+        $this->postJson('/api/v1/stores', ['name' => 'Pro Branch 3', 'type' => 'retail_shop'], $proHeaders)->assertStatus(201);
+        $this->postJson('/api/v1/stores', ['name' => 'Pro Branch 4', 'type' => 'retail_shop'], $proHeaders)
+            ->assertStatus(403)->assertJsonPath('details.limit', 'stores');
+        $this->postJson('/api/v1/stores', ['name' => 'Pro WH 1', 'type' => 'warehouse'], $proHeaders)->assertStatus(201);
+        $this->postJson('/api/v1/stores', ['name' => 'Pro WH 2', 'type' => 'main_warehouse'], $proHeaders)->assertStatus(201);
+        $this->postJson('/api/v1/stores', ['name' => 'Pro WH 3', 'type' => 'warehouse'], $proHeaders)
+            ->assertStatus(403)->assertJsonPath('details.limit', 'warehouses');
+        $this->postJson('/api/v1/stores', ['name' => 'Pro Van 1', 'type' => 'van'], $proHeaders)->assertStatus(201);
+        $this->postJson('/api/v1/stores', ['name' => 'Pro Van 2', 'type' => 'wholesale_van'], $proHeaders)
+            ->assertStatus(403)->assertJsonPath('details.limit', 'vans');
+
+        $proUsage = collect($this->getJson('/api/v1/billing/subscription', $proHeaders)->assertOk()->json('data.usage'))->keyBy('resource');
+        $this->assertSame(3, $proUsage['stores']['used']);
+        $this->assertSame(2, $proUsage['warehouses']['used']);
+        $this->assertSame(1, $proUsage['vans']['used']);
+
+        // Enterprise (10 branches, 5 warehouses, 5 vans): after branches + warehouse + van, usage shows exact per-bucket counts.
+        $entDef = collect(PlanCatalog::all())->firstWhere('slug', 'enterprise');
+        $entPlan = $this->plan(array_intersect_key($entDef, array_flip([
+            'max_users', 'max_stores', 'max_warehouses', 'max_vans', 'max_items', 'max_invoices_per_month', 'max_storage_mb', 'features', 'is_free',
+        ])));
+        $entTenant = $this->tenantOn($entPlan, ['status' => 'active']);
+        $entHeaders = $this->tenantHeaders($entTenant);
+
+        $this->postJson('/api/v1/stores', ['name' => 'Ent Branch 2', 'type' => 'retail_shop'], $entHeaders)->assertStatus(201);
+        $this->postJson('/api/v1/stores', ['name' => 'Ent Branch 3', 'type' => 'retail_shop'], $entHeaders)->assertStatus(201);
+        $this->postJson('/api/v1/stores', ['name' => 'Ent WH 1', 'type' => 'warehouse'], $entHeaders)->assertStatus(201);
+        $this->postJson('/api/v1/stores', ['name' => 'Ent Van 1', 'type' => 'van'], $entHeaders)->assertStatus(201);
+
+        $entUsage = collect($this->getJson('/api/v1/billing/subscription', $entHeaders)->assertOk()->json('data.usage'))->keyBy('resource');
+        $this->assertSame(3, $entUsage['stores']['used']);
+        $this->assertSame(10, $entUsage['stores']['limit']);
+        $this->assertSame(1, $entUsage['warehouses']['used']);
+        $this->assertSame(5, $entUsage['warehouses']['limit']);
+        $this->assertSame(1, $entUsage['vans']['used']);
+        $this->assertSame(5, $entUsage['vans']['limit']);
     }
 
     public function test_the_limit_check_has_a_fallback_lock_when_no_store_row_exists(): void

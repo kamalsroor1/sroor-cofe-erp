@@ -259,6 +259,13 @@
                 <div class="summary-val" style="color: #991b1b;">{{ number_format((float)$totalSupplierPaid, 2) }} {{ $currencyLabel }}</div>
             </div>
 
+            @if(bccomp((string) ($totalCashRefunds ?? '0.000'), '0.000', 3) > 0)
+            <div class="summary-card" style="background: #fef2f2;">
+                <div class="summary-label">{{ __('treasury.cash_refunds_label') }}</div>
+                <div class="summary-val" style="color: #991b1b;">-{{ number_format((float)$totalCashRefunds, 2) }} {{ $currencyLabel }}</div>
+            </div>
+            @endif
+
             <div class="summary-card">
                 <div class="summary-label">{{ __('treasury.opening_float') }}</div>
                 <div class="summary-val">{{ number_format((float)$openingCashBalance, 2) }} {{ $currencyLabel }}</div>

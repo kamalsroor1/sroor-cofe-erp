@@ -20,7 +20,7 @@
         class="w-full flex items-center justify-center sm:justify-between rounded-xl p-2 sm:p-2.5 pointer-coarse:min-h-11 cursor-pointer transition-all duration-150 border-e-4"
         :class="
           activeCategoryId === 'favorites'
-            ? 'bg-[#fef3c7] dark:bg-amber-500/20 border-amber-500 font-bold'
+            ? 'bg-amber-50 dark:bg-amber-500/20 border-amber-500 font-bold'
             : 'bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 border-transparent'
         "
         :title="$t('pos.favorites_tab')"

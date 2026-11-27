@@ -11,6 +11,8 @@ use App\Models\CentralAuditLog;
 use App\Models\CentralUser;
 use App\Models\Subscription;
 use App\Models\Tenant;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Carbon;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
@@ -250,5 +252,106 @@ final class RecordManualPaymentApiTest extends BillingTestCase
         $this->postJson($this->url($invoice->id), $this->body('10'), ['Accept' => 'application/json', 'Authorization' => 'Bearer '.$this->tenantToken($tenant)])
             ->assertUnauthorized();
         $this->assertSame(0, BillingPayment::query()->where('billing_invoice_id', $invoice->id)->count());
+    }
+
+    public function test_reference_is_optional_and_must_be_2_to_100_chars_without_angle_brackets(): void
+    {
+        $tenant = $this->tenantOn($this->plan());
+        $invoice = $this->pendingInvoice($tenant);
+
+        // 1 char, 101 chars, and angle brackets are 422 with translated message (ar & en).
+        $this->postJson($this->url($invoice->id), $this->body('10.000', ['reference' => 'a']), $this->admin)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['reference'])
+            ->assertJsonPath('errors.reference.0', __('validation.min.string', ['attribute' => __('validation.attributes.reference'), 'min' => 2]));
+
+        $this->postJson($this->url($invoice->id), $this->body('10.000', ['reference' => str_repeat('a', 101)]), $this->admin + ['X-Locale' => 'en'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['reference'])
+            ->assertJsonPath('errors.reference.0', __('validation.max.string', ['attribute' => __('validation.attributes.reference', [], 'en'), 'max' => 100], 'en'));
+
+        $this->postJson($this->url($invoice->id), $this->body('10.000', ['reference' => 'bad<ref']), $this->admin)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['reference']);
+
+        // Nullable/empty, 2 chars, and 100 chars succeed.
+        $this->postJson($this->url($invoice->id), $this->body('10.000', ['reference' => '']), $this->admin)->assertOk();
+        $this->postJson($this->url($invoice->id), $this->body('10.000', ['reference' => 'ab']), $this->admin)->assertOk();
+        $this->postJson($this->url($invoice->id), $this->body('10.000', ['reference' => str_repeat('r', 100)]), $this->admin)->assertOk();
+    }
+
+    public function test_note_and_notes_enforce_max_500_characters(): void
+    {
+        $tenant = $this->tenantOn($this->plan());
+        $invoice = $this->pendingInvoice($tenant);
+
+        $this->postJson($this->url($invoice->id), $this->body('10.000', ['note' => str_repeat('n', 501)]), $this->admin)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['note']);
+
+        $payload501Notes = $this->body('10.000', ['notes' => str_repeat('n', 501)]);
+        unset($payload501Notes['note']);
+        $this->postJson($this->url($invoice->id), $payload501Notes, $this->admin)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['notes']);
+
+        // 500 chars via notes succeeds and persists in raw_payload['note'].
+        $payload500Notes = $this->body('10.000', ['notes' => str_repeat('n', 500)]);
+        unset($payload500Notes['note']);
+        $this->postJson($this->url($invoice->id), $payload500Notes, $this->admin)->assertOk();
+        $this->assertSame(str_repeat('n', 500), BillingPayment::query()->latest('id')->firstOrFail()->raw_payload['note']);
+    }
+
+    public function test_paid_at_compares_calendar_days_in_cairo_timezone_even_when_app_timezone_is_utc(): void
+    {
+        $prevAppTz = (string) config('app.timezone');
+        $prevPhpTz = date_default_timezone_get();
+
+        try {
+            config(['app.timezone' => 'UTC', 'billing.timezone' => 'Africa/Cairo']);
+            date_default_timezone_set('UTC');
+
+            // Midday Cairo on 2026-11-27: invoice issued the same day.
+            Carbon::setTestNow(CarbonImmutable::parse('2026-11-27 12:00:00', 'Africa/Cairo'));
+            $tenant = $this->tenantOn($this->plan());
+            $invoice = $this->pendingInvoice($tenant, ['issued_at' => CarbonImmutable::parse('2026-11-27 10:00:00', 'Africa/Cairo')]);
+
+            // Day before in Cairo (2026-11-26 23:59:59+02:00) is rejected.
+            $this->postJson($this->url($invoice->id), $this->body('10.000', ['paid_at' => '2026-11-26T23:59:59+02:00']), $this->admin)
+                ->assertStatus(422)
+                ->assertJsonValidationErrors(['paid_at'])
+                ->assertJsonPath('errors.paid_at.0', __('billing.errors.transferred_at_before_invoice'));
+
+            // 00:00:00, 01:59:59, and 02:00:00 Cairo on the issue day must all be accepted.
+            foreach (['2026-11-27T00:00:00+02:00', '2026-11-27T01:59:59+02:00', '2026-11-27T02:00:00+02:00'] as $index => $paidAt) {
+                $this->postJson($this->url($invoice->id), $this->body('10.000', [
+                    'reference' => 'CAIRO-'.$index,
+                    'paid_at' => $paidAt,
+                ]), $this->admin)->assertOk();
+            }
+
+            // The stored instant is the one sent (no 2h shift when app.timezone is UTC).
+            $stored = BillingPayment::query()->where('billing_invoice_id', $invoice->id)->latest('id')->firstOrFail();
+            $this->assertSame(
+                CarbonImmutable::parse('2026-11-27T02:00:00+02:00')->utc()->toIso8601String(),
+                CarbonImmutable::instance($stored->fresh()->paid_at)->utc()->toIso8601String(),
+            );
+
+            // Also verify 00:30 Cairo (22:30 UTC previous day): date-only "2026-11-27" and "00:00+02:00" succeed.
+            Carbon::setTestNow(CarbonImmutable::parse('2026-11-27 00:30:00', 'Africa/Cairo'));
+            $earlyInvoice = $this->pendingInvoice($tenant, ['issued_at' => CarbonImmutable::parse('2026-11-27 00:15:00', 'Africa/Cairo')]);
+            $this->postJson($this->url($earlyInvoice->id), $this->body('10.000', [
+                'reference' => 'EARLY-0',
+                'paid_at' => '2026-11-27T00:00:00+02:00',
+            ]), $this->admin)->assertOk();
+            $this->postJson($this->url($earlyInvoice->id), $this->body('10.000', [
+                'reference' => 'EARLY-DAY',
+                'paid_at' => '2026-11-27',
+            ]), $this->admin)->assertOk();
+        } finally {
+            Carbon::setTestNow();
+            config(['app.timezone' => $prevAppTz]);
+            date_default_timezone_set($prevPhpTz);
+        }
     }
 }

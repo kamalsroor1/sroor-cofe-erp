@@ -68,7 +68,10 @@ final class CollectDueLifecycleRemindersAction
 
             $planId = $tenant->plan_id;
             if ($planId !== null && ! array_key_exists($planId, $planNames)) {
-                $planNames[$planId] = Plan::query()->whereKey($planId)->value('name');
+                $planNames[$planId] = Plan::query()
+                    ->whereKey($planId)
+                    ->first(['id', 'name', 'name_key', 'slug', 'is_free'])
+                    ?->localizedName();
             }
 
             $due[] = new DueLifecycleReminder(

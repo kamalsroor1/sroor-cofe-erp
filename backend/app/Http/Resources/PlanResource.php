@@ -27,10 +27,10 @@ class PlanResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
+            'name' => $this->resource->localizedName(),
             'name_key' => $this->name_key,
             'slug' => $this->slug,
-            'description' => $this->description,
+            'description' => $this->resource->localizedDescription(),
             'price_monthly' => $this->price_monthly,
             'price_yearly' => $this->price_yearly,
             'founder_price_monthly' => $this->founder_price_monthly,

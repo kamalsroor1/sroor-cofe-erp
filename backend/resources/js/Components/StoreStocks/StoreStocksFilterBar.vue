@@ -5,12 +5,14 @@
     <!-- Store Selector Dropdown -->
     <div class="w-full md:w-64">
       <BaseSelect
-        :model-value="selectedStoreId"
+        :model-value="storeOptions.length > 0 ? selectedStoreId : null"
         @update:model-value="
           $emit('update:selectedStoreId', Number($event));
           $emit('store-change');
         "
         :label="$t('inventory.store')"
+        :placeholder="storesLoading ? $t('common.loading') : $t('common.select_placeholder')"
+        :disabled="storesLoading"
         :options="storeOptions"
       />
     </div>
@@ -82,6 +84,7 @@ import BaseSearchInput from '../Form/BaseSearchInput.vue';
 defineProps({
   selectedStoreId: { type: Number, default: null },
   storeOptions: { type: Array, default: () => [] },
+  storesLoading: { type: Boolean, default: false },
   searchQuery: { type: String, default: '' },
   stockStatus: { type: String, default: 'all' },
 });

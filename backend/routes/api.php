@@ -148,11 +148,11 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::post('/stores', [StoreController::class, 'store'])->name('api.stores.store');
         Route::get('/stores/stocks', [StoreController::class, 'stocks'])->name('api.stores.stocks');
         Route::post('/stores/switch', [StoreController::class, 'switchStore'])->name('api.stores.switch');
-        Route::get('/stores/{id}', [StoreController::class, 'show'])->name('api.stores.show');
-        Route::put('/stores/{id}', [StoreController::class, 'update'])->name('api.stores.update');
-        Route::delete('/stores/{id}', [StoreController::class, 'destroy'])->name('api.stores.destroy');
-        Route::patch('/stores/{id}/toggle-active', [StoreController::class, 'toggleActive'])->name('api.stores.toggle_active');
-        Route::post('/stores/{id}/assign-users', [StoreController::class, 'assignUsers'])->name('api.stores.assign_users');
+        Route::get('/stores/{id}', [StoreController::class, 'show'])->whereNumber('id')->name('api.stores.show');
+        Route::put('/stores/{id}', [StoreController::class, 'update'])->whereNumber('id')->name('api.stores.update');
+        Route::delete('/stores/{id}', [StoreController::class, 'destroy'])->whereNumber('id')->name('api.stores.destroy');
+        Route::patch('/stores/{id}/toggle-active', [StoreController::class, 'toggleActive'])->whereNumber('id')->name('api.stores.toggle_active');
+        Route::post('/stores/{id}/assign-users', [StoreController::class, 'assignUsers'])->whereNumber('id')->name('api.stores.assign_users');
 
         // POSB-2: per-store POS settings (scale-label parser + max discount). settings.manage + store access.
         Route::middleware(DenyQuickLoginToken::class)->group(function () {
@@ -167,46 +167,46 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
 
         // Customers & Statements
         Route::get('/customers', [CustomerController::class, 'index'])->name('api.customers.index');
-        Route::get('/customers/{id}', [CustomerController::class, 'show'])->name('api.customers.show');
+        Route::get('/customers/{id}', [CustomerController::class, 'show'])->whereNumber('id')->name('api.customers.show');
         Route::post('/customers', [CustomerController::class, 'store'])->name('api.customers.store');
-        Route::put('/customers/{id}', [CustomerController::class, 'update'])->name('api.customers.update');
-        Route::delete('/customers/{id}', [CustomerController::class, 'destroy'])->name('api.customers.destroy');
-        Route::patch('/customers/{id}/toggle-active', [CustomerController::class, 'toggleActive'])->name('api.customers.toggle_active');
-        Route::post('/customers/{id}/collect-payment', [CustomerController::class, 'collectPayment'])->name('api.customers.collect_payment')->middleware('store.active:concrete')->middleware('feature:payments.manage');
-        Route::get('/customers/{id}/statement', [CustomerController::class, 'statement'])->name('api.customers.statement');
+        Route::put('/customers/{id}', [CustomerController::class, 'update'])->whereNumber('id')->name('api.customers.update');
+        Route::delete('/customers/{id}', [CustomerController::class, 'destroy'])->whereNumber('id')->name('api.customers.destroy');
+        Route::patch('/customers/{id}/toggle-active', [CustomerController::class, 'toggleActive'])->whereNumber('id')->name('api.customers.toggle_active');
+        Route::post('/customers/{id}/collect-payment', [CustomerController::class, 'collectPayment'])->whereNumber('id')->name('api.customers.collect_payment')->middleware('store.active:concrete')->middleware('feature:payments.manage');
+        Route::get('/customers/{id}/statement', [CustomerController::class, 'statement'])->whereNumber('id')->name('api.customers.statement');
 
         // Suppliers & Statements
         Route::get('/suppliers', [SupplierController::class, 'index'])->name('api.suppliers.index');
-        Route::get('/suppliers/{id}', [SupplierController::class, 'show'])->name('api.suppliers.show');
+        Route::get('/suppliers/{id}', [SupplierController::class, 'show'])->whereNumber('id')->name('api.suppliers.show');
         Route::post('/suppliers', [SupplierController::class, 'store'])->name('api.suppliers.store');
-        Route::put('/suppliers/{id}', [SupplierController::class, 'update'])->name('api.suppliers.update');
-        Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy'])->name('api.suppliers.destroy');
-        Route::patch('/suppliers/{id}/toggle-active', [SupplierController::class, 'toggleActive'])->name('api.suppliers.toggle_active');
-        Route::post('/suppliers/{id}/pay', [SupplierController::class, 'pay'])->name('api.suppliers.pay')->middleware('store.active:concrete')->middleware('feature:payments.manage');
-        Route::get('/suppliers/{id}/statement', [SupplierController::class, 'statement'])->name('api.suppliers.statement');
+        Route::put('/suppliers/{id}', [SupplierController::class, 'update'])->whereNumber('id')->name('api.suppliers.update');
+        Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy'])->whereNumber('id')->name('api.suppliers.destroy');
+        Route::patch('/suppliers/{id}/toggle-active', [SupplierController::class, 'toggleActive'])->whereNumber('id')->name('api.suppliers.toggle_active');
+        Route::post('/suppliers/{id}/pay', [SupplierController::class, 'pay'])->whereNumber('id')->name('api.suppliers.pay')->middleware('store.active:concrete')->middleware('feature:payments.manage');
+        Route::get('/suppliers/{id}/statement', [SupplierController::class, 'statement'])->whereNumber('id')->name('api.suppliers.statement');
         // Purchases & Coffee Bean Inbound & Smart Reorder
         Route::get('/purchases', [PurchaseController::class, 'index'])->name('api.purchases.index')->middleware('store.active')->middleware('feature:purchases.manage');
         Route::get('/purchases/smart-reorder', [PurchaseController::class, 'smartReorder'])->name('api.purchases.smart_reorder')->middleware('store.active')->middleware('feature:purchases.reorder');
-        Route::get('/purchases/{id}', [PurchaseController::class, 'show'])->name('api.purchases.show')->middleware('store.active')->middleware('feature:purchases.manage');
+        Route::get('/purchases/{id}', [PurchaseController::class, 'show'])->whereNumber('id')->name('api.purchases.show')->middleware('store.active')->middleware('feature:purchases.manage');
         Route::post('/purchases', [PurchaseController::class, 'store'])->name('api.purchases.store')->middleware('store.active:concrete')->middleware('feature:purchases.manage');
-        Route::post('/purchases/{id}/cancel', [PurchaseController::class, 'cancel'])->name('api.purchases.cancel')->middleware('store.active')->middleware('feature:purchases.manage');
+        Route::post('/purchases/{id}/cancel', [PurchaseController::class, 'cancel'])->whereNumber('id')->name('api.purchases.cancel')->middleware('store.active')->middleware('feature:purchases.manage');
 
         // Items & Stock by Branch & Low Stock Radar & Movements
         Route::get('/items', [ItemController::class, 'index'])->name('api.items.index');
         Route::get('/items/low-stock', [ItemController::class, 'lowStock'])->name('api.items.low_stock');
-        Route::get('/items/{id}', [ItemController::class, 'show'])->name('api.items.show')->middleware('store.active');
+        Route::get('/items/{id}', [ItemController::class, 'show'])->whereNumber('id')->name('api.items.show')->middleware('store.active');
         Route::post('/items', [ItemController::class, 'store'])->name('api.items.store')->middleware('feature:items.manage');
-        Route::put('/items/{id}', [ItemController::class, 'update'])->name('api.items.update')->middleware('feature:items.manage');
-        Route::delete('/items/{id}', [ItemController::class, 'destroy'])->name('api.items.destroy')->middleware('feature:items.manage');
-        Route::patch('/items/{id}/toggle-active', [ItemController::class, 'toggleActive'])->name('api.items.toggle_active')->middleware('feature:items.manage');
-        Route::post('/items/{id}/adjust-stock', [ItemController::class, 'adjustStock'])->name('api.items.adjust_stock')->middleware('feature:items.manage');
-        Route::get('/items/{id}/movements', [ItemController::class, 'movements'])->name('api.items.movements')->middleware('store.active')->middleware('feature:items.movements');
+        Route::put('/items/{id}', [ItemController::class, 'update'])->whereNumber('id')->name('api.items.update')->middleware('feature:items.manage');
+        Route::delete('/items/{id}', [ItemController::class, 'destroy'])->whereNumber('id')->name('api.items.destroy')->middleware('feature:items.manage');
+        Route::patch('/items/{id}/toggle-active', [ItemController::class, 'toggleActive'])->whereNumber('id')->name('api.items.toggle_active')->middleware('feature:items.manage');
+        Route::post('/items/{id}/adjust-stock', [ItemController::class, 'adjustStock'])->whereNumber('id')->name('api.items.adjust_stock')->middleware('feature:items.manage');
+        Route::get('/items/{id}/movements', [ItemController::class, 'movements'])->whereNumber('id')->name('api.items.movements')->middleware('store.active')->middleware('feature:items.movements');
 
         // Categories Management
         Route::get('/categories', [CategoryApiController::class, 'index'])->name('api.categories.index');
         Route::post('/categories', [CategoryApiController::class, 'store'])->name('api.categories.store');
-        Route::put('/categories/{id}', [CategoryApiController::class, 'update'])->name('api.categories.update');
-        Route::delete('/categories/{id}', [CategoryApiController::class, 'destroy'])->name('api.categories.destroy');
+        Route::put('/categories/{id}', [CategoryApiController::class, 'update'])->whereNumber('id')->name('api.categories.update');
+        Route::delete('/categories/{id}', [CategoryApiController::class, 'destroy'])->whereNumber('id')->name('api.categories.destroy');
 
         // PRD-06: Excel/CSV import wizard. Permission per {type} is enforced in the Form Requests;
         // preview/commit need one concrete branch (opening stock lands in the X-Store-Id store).
@@ -220,9 +220,9 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         // POS & Sales Invoices & WhatsApp
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('api.invoices.index')->middleware('store.active');
         Route::get('/invoices/export', [InvoiceController::class, 'export'])->name('api.invoices.export')->middleware(['store.active', 'feature:reports.export', 'throttle:exports']);
-        Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('api.invoices.show')->middleware('store.active');
+        Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->whereNumber('id')->name('api.invoices.show')->middleware('store.active');
         Route::post('/invoices', [InvoiceController::class, 'store'])->name('api.invoices.store')->middleware('store.active:concrete')->middleware('feature:invoices.create');
-        Route::post('/invoices/{id}/cancel', [InvoiceController::class, 'cancel'])->name('api.invoices.cancel')->middleware('store.active');
+        Route::post('/invoices/{id}/cancel', [InvoiceController::class, 'cancel'])->whereNumber('id')->name('api.invoices.cancel')->middleware('store.active');
         // PRD-22: signed public receipt link (WhatsApp share), valid config('invoices.receipt_links.ttl_days').
         Route::post('/invoices/{id}/receipt-link', [InvoiceReceiptLinkController::class, 'store'])->whereNumber('id')->name('api.invoices.receipt_link')->middleware(['store.active', 'throttle:60,1']);
 
@@ -248,15 +248,15 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         // QA-2 / Q10 (CTO): opening and closing a shift requires daily_journal.close_shift.
         Route::post('/shifts/open', [ShiftController::class, 'open'])->name('api.shifts.open')->middleware('store.active:concrete')->middleware('can:daily_journal.close_shift')->middleware('feature:shifts.manage');
         Route::post('/shifts/close', [ShiftController::class, 'close'])->name('api.shifts.close')->middleware('store.active:concrete')->middleware('can:daily_journal.close_shift')->middleware('feature:shifts.manage');
-        Route::get('/shifts/{id}/z-report', [ShiftController::class, 'zReport'])->name('api.shifts.z_report')->middleware('store.active')->middleware('feature:shifts.manage');
+        Route::get('/shifts/{id}/z-report', [ShiftController::class, 'zReport'])->whereNumber('id')->name('api.shifts.z_report')->middleware('store.active')->middleware('feature:shifts.manage');
         Route::get('/daily-journal', [DailyJournalController::class, 'index'])->name('api.daily_journal.index')->middleware('store.active');
 
         // Expenses & Petty Cash
         Route::get('/expenses', [ExpenseController::class, 'index'])->name('api.expenses.index')->middleware('store.active')->middleware('feature:expenses.manage');
-        Route::get('/expenses/{id}', [ExpenseController::class, 'show'])->name('api.expenses.show')->middleware('store.active')->middleware('feature:expenses.manage');
+        Route::get('/expenses/{id}', [ExpenseController::class, 'show'])->whereNumber('id')->name('api.expenses.show')->middleware('store.active')->middleware('feature:expenses.manage');
         Route::post('/expenses', [ExpenseController::class, 'store'])->name('api.expenses.store')->middleware('store.active:concrete')->middleware('feature:expenses.manage');
-        Route::put('/expenses/{id}', [ExpenseController::class, 'update'])->name('api.expenses.update')->middleware('store.active')->middleware('feature:expenses.manage');
-        Route::delete('/expenses/{id}', [ExpenseController::class, 'destroy'])->name('api.expenses.destroy')->middleware('store.active')->middleware('feature:expenses.manage');
+        Route::put('/expenses/{id}', [ExpenseController::class, 'update'])->whereNumber('id')->name('api.expenses.update')->middleware('store.active')->middleware('feature:expenses.manage');
+        Route::delete('/expenses/{id}', [ExpenseController::class, 'destroy'])->whereNumber('id')->name('api.expenses.destroy')->middleware('store.active')->middleware('feature:expenses.manage');
 
         // Treasury & Quick Financial Stats
         Route::get('/treasury/summary', [TreasuryController::class, 'summary'])->name('api.treasury.summary')->middleware('store.active')->middleware('feature:treasury.view');
@@ -277,7 +277,7 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::get('/reports/treasury', [ReportController::class, 'treasury'])->name('api.reports.treasury')->middleware('store.active')->middleware('feature:reports.basic');
         Route::get('/reports/top-items', [ReportController::class, 'topItems'])->name('api.reports.top_items')->middleware('store.active')->middleware('feature:reports.basic');
         Route::get('/reports/stock-drift', [ReportController::class, 'stockDrift'])->name('api.reports.stock_drift')->middleware('store.active')->middleware('feature:reports.basic');
-        Route::get('/reports/items/{id}/card', [ReportController::class, 'itemCard'])->name('api.reports.item_card')->middleware('store.active')->middleware('feature:reports.basic');
+        Route::get('/reports/items/{id}/card', [ReportController::class, 'itemCard'])->whereNumber('id')->name('api.reports.item_card')->middleware('store.active')->middleware('feature:reports.basic');
         // SHOP-05: sales by cashier / category, customer debt aging, supplier payables (+ CSV), and
         // the CSV of the P&L summary, top items and item profitability.
         Route::middleware(['store.active', 'feature:reports.basic'])->group(function () {
@@ -299,18 +299,18 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
 
         // Returns (Sales & Purchase Returns)
         Route::get('/returns', [ReturnController::class, 'index'])->name('api.returns.index')->middleware('store.active')->middleware('feature:returns.manage');
-        Route::get('/returns/{id}', [ReturnController::class, 'show'])->name('api.returns.show')->middleware('store.active')->middleware('feature:returns.manage');
+        Route::get('/returns/{id}', [ReturnController::class, 'show'])->whereNumber('id')->name('api.returns.show')->middleware('store.active')->middleware('feature:returns.manage');
         Route::post('/returns', [ReturnController::class, 'store'])->name('api.returns.store')->middleware('store.active:concrete')->middleware('feature:returns.manage');
-        Route::delete('/returns/{id}', [ReturnController::class, 'destroy'])->name('api.returns.destroy')->middleware('store.active')->middleware('feature:returns.manage');
+        Route::delete('/returns/{id}', [ReturnController::class, 'destroy'])->whereNumber('id')->name('api.returns.destroy')->middleware('store.active')->middleware('feature:returns.manage');
         // BE-01: source invoices/purchases (+ returnable lines) of the active store to book a return against.
         Route::get('/return-sources/{type}', [ReturnSourceController::class, 'index'])->name('api.return_sources.index')->middleware('store.active:concrete')->middleware('feature:returns.manage');
         Route::get('/return-sources/{type}/{id}', [ReturnSourceController::class, 'show'])->whereNumber('id')->name('api.return_sources.show')->middleware('store.active:concrete')->middleware('feature:returns.manage');
 
         // Stock Transfers between stores/branches
         Route::get('/transfers', [StockTransferController::class, 'index'])->name('api.transfers.index')->middleware('store.active')->middleware('feature:transfers.manage');
-        Route::get('/transfers/{id}', [StockTransferController::class, 'show'])->name('api.transfers.show')->middleware('store.active')->middleware('feature:transfers.manage');
+        Route::get('/transfers/{id}', [StockTransferController::class, 'show'])->whereNumber('id')->name('api.transfers.show')->middleware('store.active')->middleware('feature:transfers.manage');
         Route::post('/transfers', [StockTransferController::class, 'store'])->name('api.transfers.store')->middleware('store.active:concrete')->middleware('feature:transfers.manage');
-        Route::post('/transfers/{id}/cancel', [StockTransferController::class, 'cancel'])->name('api.transfers.cancel')->middleware('store.active')->middleware('feature:transfers.manage');
+        Route::post('/transfers/{id}/cancel', [StockTransferController::class, 'cancel'])->whereNumber('id')->name('api.transfers.cancel')->middleware('store.active')->middleware('feature:transfers.manage');
 
         // SHOP-02: stocktake sessions. Every plan (no plan feature); permission `stock.count` in the Form Requests.
         Route::get('/stock-counts', [StockCountController::class, 'index'])->name('api.stock_counts.index')->middleware('store.active');
@@ -333,11 +333,11 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::middleware(DenyQuickLoginToken::class)->group(function () {
             // Users & Employees Management
             Route::get('/users', [UserController::class, 'index'])->name('api.users.index');
-            Route::get('/users/{id}', [UserController::class, 'show'])->name('api.users.show');
+            Route::get('/users/{id}', [UserController::class, 'show'])->whereNumber('id')->name('api.users.show');
             Route::post('/users', [UserController::class, 'store'])->name('api.users.store');
-            Route::put('/users/{id}', [UserController::class, 'update'])->name('api.users.update');
-            Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('api.users.destroy');
-            Route::patch('/users/{id}/toggle-active', [UserController::class, 'toggleActive'])->name('api.users.toggle_active');
+            Route::put('/users/{id}', [UserController::class, 'update'])->whereNumber('id')->name('api.users.update');
+            Route::delete('/users/{id}', [UserController::class, 'destroy'])->whereNumber('id')->name('api.users.destroy');
+            Route::patch('/users/{id}/toggle-active', [UserController::class, 'toggleActive'])->whereNumber('id')->name('api.users.toggle_active');
             // SEC-05: lift a sign-in lockout.
             Route::post('/users/{id}/unlock-login', [UserController::class, 'unlockLogin'])->whereNumber('id')->name('api.users.unlock_login')->middleware('throttle:20,1');
             // BE-08: manager approval PIN for below-minimum-price sales.
@@ -347,7 +347,7 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
 
             // Roles & Permissions Matrix
             Route::get('/roles', [RoleController::class, 'index'])->name('api.roles.index');
-            Route::put('/roles/{id}/permissions', [RoleController::class, 'updatePermissions'])->name('api.roles.update_permissions');
+            Route::put('/roles/{id}/permissions', [RoleController::class, 'updatePermissions'])->whereNumber('id')->name('api.roles.update_permissions');
         });
 
         // PRD-04 / ENTI-3.3: the shop's own subscription & billing. billing.manage on every route; the two
@@ -417,8 +417,8 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
 
             // Trash Bin (Soft-deleted records recovery)
             Route::get('/trash', [TrashController::class, 'index'])->name('api.trash.index');
-            Route::post('/trash/{type}/{id}/restore', [TrashController::class, 'restore'])->name('api.trash.restore');
-            Route::delete('/trash/{type}/{id}/force', [TrashController::class, 'forceDelete'])->name('api.trash.force_delete');
+            Route::post('/trash/{type}/{id}/restore', [TrashController::class, 'restore'])->whereNumber('id')->name('api.trash.restore');
+            Route::delete('/trash/{type}/{id}/force', [TrashController::class, 'forceDelete'])->whereNumber('id')->name('api.trash.force_delete');
         });
 
     });

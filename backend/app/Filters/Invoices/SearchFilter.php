@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filters\Invoices;
 
+use App\Support\Database\LikePattern;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -18,11 +19,11 @@ final class SearchFilter
 
         if ($search !== '') {
             $query->where(function (Builder $q) use ($search): void {
-                $q->where('invoice_number', 'like', "%{$search}%")
-                    ->orWhereHas('customer', function (Builder $cq) use ($search): void {
-                        $cq->where('name', 'like', "%{$search}%")
-                            ->orWhere('phone', 'like', "%{$search}%");
-                    });
+                LikePattern::whereContains($q, 'invoice_number', $search);
+                $q->orWhereHas('customer', function (Builder $cq) use ($search): void {
+                    LikePattern::whereContains($cq, 'name', $search);
+                    LikePattern::orWhereContains($cq, 'phone', $search);
+                });
             });
         }
 

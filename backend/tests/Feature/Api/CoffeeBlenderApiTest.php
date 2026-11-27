@@ -236,6 +236,66 @@ class CoffeeBlenderApiTest extends TenantTestCase
             ->assertJsonPath('data.components.0.selling_price', '600.000');
     }
 
+    public function test_can_calculate_250g_sixty_forty_mix_reference_numbers(): void
+    {
+        [$itemAId, $itemBId] = $this->inTenant($this->tenant, function (): array {
+            $itemA = Item::create([
+                'name' => 'صنف خلطة أ',
+                'code' => 'MIX-REF-A',
+                'category' => 'coffee_beans',
+                'unit' => 'كجم',
+                'cost_price' => '200.000',
+                'weighted_avg_cost' => '200.000',
+                'selling_price' => '300.000',
+                'price_retail' => '300.000',
+                'current_stock' => '10.000',
+                'is_active' => true,
+            ]);
+
+            $itemB = Item::create([
+                'name' => 'صنف خلطة ب',
+                'code' => 'MIX-REF-B',
+                'category' => 'coffee_beans',
+                'unit' => 'كجم',
+                'cost_price' => '150.000',
+                'weighted_avg_cost' => '150.000',
+                'selling_price' => '250.000',
+                'price_retail' => '250.000',
+                'current_stock' => '10.000',
+                'is_active' => true,
+            ]);
+
+            return [(int) $itemA->id, (int) $itemB->id];
+        });
+
+        $response = $this->withHeaders($this->adminHeaders)
+            ->postJson('/api/v1/mixes/calculate', [
+                'target_weight_grams' => 250,
+                'cardamom_grams' => 0,
+                'components' => [
+                    ['item_id' => $itemAId, 'percentage' => 60],
+                    ['item_id' => $itemBId, 'percentage' => 40],
+                ],
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.target_weight_grams', '250.000')
+            ->assertJsonPath('data.total_percentage', '100.000')
+            ->assertJsonPath('data.components.0.grams', '150.00')
+            ->assertJsonPath('data.components.0.kg', '0.1500')
+            ->assertJsonPath('data.components.0.line_cost', '30.000')
+            ->assertJsonPath('data.components.0.line_price', '45.000')
+            ->assertJsonPath('data.components.1.grams', '100.00')
+            ->assertJsonPath('data.components.1.kg', '0.1000')
+            ->assertJsonPath('data.components.1.line_cost', '15.000')
+            ->assertJsonPath('data.components.1.line_price', '25.000')
+            ->assertJsonPath('data.total_cost', '45.000')
+            ->assertJsonPath('data.total_price', '70.000')
+            ->assertJsonPath('data.profit_amount', '25.000')
+            ->assertJsonPath('data.profit_margin', '35.7');
+    }
+
     public function test_blend_grams_round_half_up_and_cardamom_is_exact_at_three_decimals(): void
     {
         // 125 g x 4.02% = 5.025 g -> 5.03 (half-up; float math used to give 5.02).

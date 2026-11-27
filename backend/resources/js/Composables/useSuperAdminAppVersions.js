@@ -2,13 +2,13 @@ import { ref, onMounted } from 'vue';
 import api from '../Services/centralApi';
 import { useTrans } from './useTrans';
 import DarkSwal from '../helpers/alert';
+import { useSuperAdminLoader } from './useSuperAdminLoader';
 
 export function useSuperAdminAppVersions() {
     const { t } = useTrans();
 
     const versions = ref([]);
     const summary = ref({});
-    const isLoading = ref(false);
     const isCreateModalOpen = ref(false);
     const isSubmitting = ref(false);
     const selectedApkFile = ref(null);
@@ -43,18 +43,20 @@ export function useSuperAdminAppVersions() {
         clearFieldError('apk_file');
     };
 
-    const fetchVersions = async () => {
-        isLoading.value = true;
-        try {
-            const res = await api.get('/super-admin/app-versions');
-            versions.value = res.data?.versions?.data || [];
-            summary.value = res.data?.summary || {};
-        } catch (e) {
-            console.error('Failed to load app versions:', e);
-        } finally {
-            isLoading.value = false;
-        }
-    };
+    const {
+        isLoading,
+        hasLoaded,
+        error,
+        errorMessage,
+        statusCode,
+        canRetry,
+        load: fetchVersions,
+        retry,
+    } = useSuperAdminLoader(async () => {
+        const res = await api.get('/super-admin/app-versions');
+        versions.value = res.data?.versions?.data || [];
+        summary.value = res.data?.summary || {};
+    });
 
     const openCreateModal = () => {
         const nextCode = versions.value.length ? Math.max(...versions.value.map((v) => v.version_code)) + 1 : 2;
@@ -165,12 +167,18 @@ export function useSuperAdminAppVersions() {
         versions,
         summary,
         isLoading,
+        hasLoaded,
+        error,
+        errorMessage,
+        statusCode,
+        canRetry,
         isCreateModalOpen,
         isSubmitting,
         form,
         formErrors,
         formGeneralError,
         fetchVersions,
+        retry,
         openCreateModal,
         updateFormField,
         handleFileUpload,

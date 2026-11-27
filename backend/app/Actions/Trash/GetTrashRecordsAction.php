@@ -12,6 +12,7 @@ use App\Models\Store;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Services\Settings\TenantSettings;
+use App\Support\Database\LikePattern;
 use App\Support\Trash\TrashScope;
 
 final class GetTrashRecordsAction
@@ -48,7 +49,7 @@ final class GetTrashRecordsAction
         if ($tab === 'items') {
             $q = TrashScope::scope(Item::onlyTrashed(), $actor);
             if ($search !== '') {
-                $q->where(fn ($sub) => $sub->where('name', 'like', "%{$search}%")->orWhere('code', 'like', "%{$search}%"));
+                LikePattern::whereContainsAny($q, ['name', 'code'], $search);
             }
             $paged = $q->latest('deleted_at')->paginate($perPage);
             $records = collect($paged->items())->map(fn ($i) => [
@@ -67,7 +68,7 @@ final class GetTrashRecordsAction
         } elseif ($tab === 'customers') {
             $q = TrashScope::scope(Customer::onlyTrashed(), $actor);
             if ($search !== '') {
-                $q->where(fn ($sub) => $sub->where('name', 'like', "%{$search}%")->orWhere('phone', 'like', "%{$search}%"));
+                LikePattern::whereContainsAny($q, ['name', 'phone'], $search);
             }
             $paged = $q->latest('deleted_at')->paginate($perPage);
             $records = collect($paged->items())->map(fn ($c) => [
@@ -85,7 +86,7 @@ final class GetTrashRecordsAction
         } elseif ($tab === 'suppliers') {
             $q = TrashScope::scope(Supplier::onlyTrashed(), $actor);
             if ($search !== '') {
-                $q->where(fn ($sub) => $sub->where('name', 'like', "%{$search}%")->orWhere('company_name', 'like', "%{$search}%"));
+                LikePattern::whereContainsAny($q, ['name', 'company_name'], $search);
             }
             $paged = $q->latest('deleted_at')->paginate($perPage);
             $records = collect($paged->items())->map(fn ($s) => [
@@ -103,7 +104,7 @@ final class GetTrashRecordsAction
         } elseif ($tab === 'stores') {
             $q = TrashScope::scope(Store::onlyTrashed(), $actor);
             if ($search !== '') {
-                $q->where('name', 'like', "%{$search}%");
+                LikePattern::whereContains($q, 'name', $search);
             }
             $paged = $q->latest('deleted_at')->paginate($perPage);
             $records = collect($paged->items())->map(fn ($st) => [
@@ -122,7 +123,7 @@ final class GetTrashRecordsAction
         } elseif ($tab === 'expenses') {
             $q = TrashScope::scope(Expense::onlyTrashed(), $actor);
             if ($search !== '') {
-                $q->where('title', 'like', "%{$search}%");
+                LikePattern::whereContains($q, 'title', $search);
             }
             $paged = $q->latest('deleted_at')->paginate($perPage);
             $records = collect($paged->items())->map(fn ($e) => [
@@ -141,7 +142,7 @@ final class GetTrashRecordsAction
         } elseif ($tab === 'returns') {
             $q = TrashScope::scope(ReturnDocument::onlyTrashed(), $actor);
             if ($search !== '') {
-                $q->where('return_number', 'like', "%{$search}%");
+                LikePattern::whereContains($q, 'return_number', $search);
             }
             $paged = $q->latest('deleted_at')->paginate($perPage);
             $records = collect($paged->items())->map(fn ($r) => [

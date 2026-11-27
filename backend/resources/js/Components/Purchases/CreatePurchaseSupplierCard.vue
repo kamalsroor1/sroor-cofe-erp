@@ -1,15 +1,15 @@
 <template>
   <div
-    class="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg space-y-4 font-tajawal"
+    class="p-4 sm:p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg space-y-4 font-tajawal min-w-0"
   >
-    <h2 class="text-xs font-black text-theme-primary flex items-center gap-2">
-      <Factory class="w-4 h-4" />
-      <span>{{ $t('purchases.supplier_po_section') }}</span>
+    <h2 class="text-xs font-black text-theme-primary flex items-center gap-2 min-w-0">
+      <Factory class="w-4 h-4 shrink-0" />
+      <span class="break-words">{{ $t('purchases.supplier_po_section') }}</span>
     </h2>
 
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 min-w-0">
       <!-- Supplier Select -->
-      <div>
+      <div class="min-w-0">
         <BaseSelect
           :model-value="supplierId"
           @update:model-value="$emit('update:supplierId', $event)"
@@ -21,7 +21,7 @@
       </div>
 
       <!-- Purchase Date -->
-      <div>
+      <div class="min-w-0">
         <BaseDatePicker
           :model-value="purchaseDate"
           :min-date="minDate"
@@ -33,7 +33,7 @@
       </div>
 
       <!-- Supplier Invoice Ref -->
-      <div>
+      <div class="min-w-0">
         <BaseInput
           :model-value="supplierInvoiceRef"
           @update:model-value="$emit('update:supplierInvoiceRef', $event)"

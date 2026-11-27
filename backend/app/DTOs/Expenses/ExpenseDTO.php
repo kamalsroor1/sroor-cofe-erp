@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\DTOs\Expenses;
 
+use Illuminate\Support\Str;
+
 final class ExpenseDTO
 {
     public function __construct(
@@ -15,10 +17,18 @@ final class ExpenseDTO
         public readonly string $payment_method = 'cash',
         public readonly ?int $store_id = null,
         public readonly ?string $notes = null,
+        public readonly ?string $client_uuid = null,
     ) {}
 
     public static function fromArray(array $data, ?int $storeId = null): self
     {
+        $rawClientUuid = isset($data['client_uuid']) && is_string($data['client_uuid'])
+            ? trim($data['client_uuid'])
+            : '';
+        $clientUuid = $rawClientUuid !== ''
+            ? (Str::isUuid($rawClientUuid) ? strtolower($rawClientUuid) : $rawClientUuid)
+            : null;
+
         return new self(
             title: (string) $data['title'],
             category: (string) $data['category'],
@@ -28,6 +38,7 @@ final class ExpenseDTO
             payment_method: (string) ($data['payment_method'] ?? 'cash'),
             store_id: isset($data['store_id']) ? (int) $data['store_id'] : $storeId,
             notes: isset($data['notes']) && $data['notes'] !== '' ? (string) $data['notes'] : null,
+            client_uuid: $clientUuid,
         );
     }
 
@@ -42,6 +53,7 @@ final class ExpenseDTO
             'payment_method' => $this->payment_method,
             'store_id' => $this->store_id,
             'notes' => $this->notes,
+            'client_uuid' => $this->client_uuid,
         ];
     }
 }

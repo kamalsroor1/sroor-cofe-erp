@@ -3,7 +3,7 @@ import api from '../../Services/api';
 import { useAuthStore } from '../../stores/auth';
 import { trans } from '../../helpers/trans';
 import { showUpgradeAlert } from '../../helpers/planLimitAlert';
-import { USAGE_WARN_PERCENT } from '../../helpers/planLimit';
+import { isPosInvoiceLimitNear, isPosInvoiceLimitReached } from '../../helpers/planLimit';
 import { useFormatters } from '../useFormatters';
 
 /**
@@ -17,10 +17,8 @@ export function usePosInvoiceLimit() {
     const { formatDate } = useFormatters();
     const status = ref(null);
 
-    const reached = computed(() => status.value?.limit != null && status.value.reached === true);
-    const nearLimit = computed(
-        () => status.value?.limit != null && !reached.value && Number(status.value.percent) >= USAGE_WARN_PERCENT
-    );
+    const reached = computed(() => isPosInvoiceLimitReached(status.value));
+    const nearLimit = computed(() => isPosInvoiceLimitNear(status.value));
     const canUpgrade = computed(() => auth.hasPermission('billing.manage'));
 
     const refresh = async () => {

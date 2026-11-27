@@ -724,6 +724,7 @@ class InvoicePrintRoutesTest extends TenantTestCase
             'app.webmanifest',     // PWA manifest (dynamic platform branding)
             'sw.js',               // service worker
             'telescope-access',    // super-admin bridge, gated by PlatformSuperAdmin
+            'telescope/{any?}',    // ADM-436: 404 stub when Telescope is disabled, behind EnsureCentralContext + Telescope Authorize
             'login',               // guest auth
             'logout',              // ends session only
             'up',                  // health check

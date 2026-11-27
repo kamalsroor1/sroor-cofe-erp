@@ -14,28 +14,16 @@
       :rows="3"
       @update:model-value="$emit('update:field', 'description', $event)"
     />
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <BaseInput
-        :model-value="form.sort_order"
-        :label="$t('super.plan_sort_order_label')"
-        :error="errors.sort_order"
-        type="number"
-        inputmode="numeric"
-        min="0"
-        input-class="font-mono text-start"
-        @update:model-value="$emit('update:field', 'sort_order', $event)"
-      />
-      <BaseInput
-        :model-value="form.trial_days"
-        :label="$t('super.plan_trial_days_label')"
-        :error="errors.trial_days"
-        type="number"
-        inputmode="numeric"
-        min="0"
-        input-class="font-mono text-start"
-        @update:model-value="$emit('update:field', 'trial_days', $event)"
-      />
-    </div>
+    <BaseInput
+      :model-value="form.sort_order"
+      :label="$t('super.plan_sort_order_label')"
+      :error="errors.sort_order"
+      type="number"
+      inputmode="numeric"
+      min="0"
+      input-class="font-mono text-start"
+      @update:model-value="$emit('update:field', 'sort_order', $event)"
+    />
     <BaseSwitch
       :model-value="form.is_free"
       :label="$t('plan_console.free_plan_label')"

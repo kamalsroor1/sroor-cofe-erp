@@ -11,12 +11,15 @@ use App\Enums\Billing\TemporaryAccessOutcome;
 use App\Enums\Billing\TemporaryAccessState;
 use App\Models\Concerns\UsesCentralConnection;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
+use Closure;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
+use Throwable;
 
 /**
  * Central DB: a SaaS subscription invoice (`billing_invoices`, ENTI-1.6).
@@ -194,16 +197,62 @@ class BillingInvoice extends Model
         return $this->hasOne(PlanChangeRequest::class, 'billing_invoice_id');
     }
 
+    public static function platformTimezone(): string
+    {
+        $timezone = config('billing.timezone');
+
+        return is_string($timezone) && $timezone !== '' ? $timezone : 'Africa/Cairo';
+    }
+
+    /**
+     * Validate that an incoming transfer/payment date string is not in the future, interpreting
+     * date-only inputs in the platform timezone while preserving explicit ISO 8601 offsets.
+     *
+     * @return Closure(string, mixed, Closure): void
+     */
+    public static function notInFutureRule(): Closure
+    {
+        return static function (string $attribute, mixed $value, Closure $fail): void {
+            if (! is_string($value) || trim($value) === '') {
+                return;
+            }
+
+            try {
+                $moment = CarbonImmutable::parse($value, self::platformTimezone());
+            } catch (Throwable) {
+                return;
+            }
+
+            if ($moment->greaterThan(CarbonImmutable::now())) {
+                $fail('billing.errors.transferred_at_future')->translate();
+            }
+        };
+    }
+
     /**
      * #232 spec A: the earliest accepted actual-transfer moment for a payment of this invoice,
-     * the START of its issue day on the platform clock (config app.timezone). Owner rule: a transfer
-     * is never dated before the invoice was issued; a tolerance before that day is an open decision.
+     * the START of its issue day on the platform clock (billing.timezone / Africa/Cairo). Owner
+     * rule: a transfer is never dated before the invoice was issued; a tolerance before that day
+     * is an open decision.
      */
     public function earliestTransferAt(): CarbonImmutable
     {
         $issued = $this->issued_at ?? $this->created_at ?? Carbon::now();
 
-        return CarbonImmutable::instance($issued)->setTimezone((string) config('app.timezone'))->startOfDay();
+        return CarbonImmutable::instance($issued)->setTimezone(self::platformTimezone())->startOfDay();
+    }
+
+    /**
+     * Compare calendar days in the platform timezone so transfers at 00:00-01:59 Cairo on the
+     * issue day are never rejected when app.timezone runs in UTC.
+     */
+    public function isBeforeIssueDay(CarbonInterface $moment): bool
+    {
+        $timezone = self::platformTimezone();
+        $issued = $this->issued_at ?? $this->created_at ?? Carbon::now();
+
+        return CarbonImmutable::instance($moment)->setTimezone($timezone)->toDateString()
+            < CarbonImmutable::instance($issued)->setTimezone($timezone)->toDateString();
     }
 
     /**

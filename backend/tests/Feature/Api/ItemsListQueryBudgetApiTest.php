@@ -74,6 +74,7 @@ final class ItemsListQueryBudgetApiTest extends TenantTestCase
             'cost_price' => '8.125',
             'average_cost' => '4.000',
             'last_purchase_price' => '8.125',
+            'weighted_avg_cost' => '4.000',
             'min_selling_price' => '9.000',
             'has_min_price' => true,
             'wholesale_price' => null,

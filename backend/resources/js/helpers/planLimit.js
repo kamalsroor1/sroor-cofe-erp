@@ -58,3 +58,18 @@ export function worstUsageLevel(rows) {
         return order.indexOf(level) > order.indexOf(worst) ? level : worst;
     }, 'none');
 }
+
+/** True when `/pos/invoice-limit` reports a finite limit that has been reached. */
+export function isPosInvoiceLimitReached(status) {
+    return status?.limit != null && status.reached === true;
+}
+
+/** True when `/pos/invoice-limit` is below the cap but at or above the warning threshold (80%). */
+export function isPosInvoiceLimitNear(status) {
+    return status?.limit != null && !isPosInvoiceLimitReached(status) && Number(status.percent) >= USAGE_WARN_PERCENT;
+}
+
+/** True when the POS monthly-invoice limit banner should be displayed. */
+export function isPosInvoiceBannerVisible(status, reached, nearLimit) {
+    return Boolean(status) && Boolean(reached || nearLimit);
+}

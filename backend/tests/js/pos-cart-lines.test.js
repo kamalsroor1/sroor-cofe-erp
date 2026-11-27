@@ -6,8 +6,10 @@ import {
     priceFor,
     displayPrice,
     repriceLines,
+    updateLineQty,
     increaseLineQty,
     decreaseLineQty,
+    stepQuantity,
 } from '../../resources/js/helpers/posCartLines.js';
 
 test('tier prices are read from decimal strings', () => {
@@ -56,6 +58,30 @@ test('quantity steppers never concatenate string quantities', () => {
     decreaseLineQty(cart, 1);
     assert.equal(cart[0].quantity, '1.500');
     assert.equal(cart[1].quantity, 2);
+});
+
+test('typed and stepped weighted quantities preserve 3-decimal precision without float drift', () => {
+    const cart = [
+        { is_weighted: true, quantity: '0.100' },
+        { is_weighted: false, quantity: 2 },
+    ];
+    assert.equal(updateLineQty(cart, { index: 0, value: '0.255' }), true);
+    assert.equal(cart[0].quantity, '0.255');
+    // Stepping +0.250 from 0.255 -> 0.505 (no float 0.5050000000000001)
+    assert.equal(increaseLineQty(cart, 0), true);
+    assert.equal(cart[0].quantity, '0.505');
+    // More than 3 decimals rounds half-up via decimal.js
+    assert.equal(updateLineQty(cart, { index: 0, value: '1.2345' }), true);
+    assert.equal(cart[0].quantity, '1.235');
+    // Zero, empty, or negative input is rejected
+    assert.equal(updateLineQty(cart, { index: 0, value: '0' }), false);
+    assert.equal(updateLineQty(cart, { index: 0, value: '-1.5' }), false);
+    assert.equal(cart[0].quantity, '1.235');
+    // Non-weighted keeps whole integers
+    assert.equal(updateLineQty(cart, { index: 1, value: '5' }), true);
+    assert.equal(cart[1].quantity, 5);
+    assert.equal(stepQuantity('0.100', { weightBased: true, direction: 1 }), 0.35);
+    assert.equal(stepQuantity('0.125', { weightBased: true, direction: -1 }), null);
 });
 
 test('an item card shows one price: the tier price, and the tier it really belongs to', () => {

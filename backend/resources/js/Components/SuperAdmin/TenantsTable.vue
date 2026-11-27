@@ -6,7 +6,26 @@
       <TableSkeleton :rows="8" :cols="6" />
     </div>
 
+    <ErrorState
+      v-else-if="error && !tenants.length"
+      :title="$t('super.tenants_load_failed')"
+      :message="errorMessage"
+      :status-code="statusCode"
+      :can-retry="canRetry"
+      :loading="loading"
+      @retry="$emit('retry')"
+    />
+
     <div v-else-if="tenants.length > 0">
+      <div v-if="error" class="p-4 pb-0">
+        <InlineErrorBar
+          :message="errorMessage"
+          :status-code="statusCode"
+          :can-retry="canRetry"
+          @retry="$emit('retry')"
+        />
+      </div>
+
       <!-- Desktop Table -->
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-start text-xs">
@@ -50,7 +69,7 @@
                 <span
                   class="px-2.5 py-1 bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 rounded-full font-bold"
                 >
-                  {{ t.plan_name }}
+                  {{ t.plan?.name || t.plan_name || $t('common.unspecified') }}
                 </span>
               </td>
 
@@ -153,7 +172,7 @@
             <span
               class="px-2 py-0.5 bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 rounded-full font-bold text-[10px]"
             >
-              {{ t.plan_name }}
+              {{ t.plan?.name || t.plan_name || $t('common.unspecified') }}
             </span>
             <span class="text-slate-500 font-mono text-[11px]">{{ t.email }}</span>
           </div>
@@ -228,16 +247,22 @@
 import { ExternalLink, Building2, Search, Settings, Archive, ArchiveRestore } from 'lucide-vue-next';
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
+import ErrorState from '../Common/ErrorState.vue';
+import InlineErrorBar from '../Common/InlineErrorBar.vue';
 import { canRestoreFromArchive, tenantStatusBadgeClass, tenantStatusLabel } from '../../helpers/tenantStatus';
 
 defineProps({
   tenants: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
+  error: { type: Boolean, default: false },
+  errorMessage: { type: String, default: '' },
+  statusCode: { type: [Number, String], default: null },
+  canRetry: { type: Boolean, default: true },
   // super_admin.tenants.manage: archive / unarchive buttons are hidden without it.
   canManage: { type: Boolean, default: false },
   isArchiving: { type: Boolean, default: false },
   isUnarchiving: { type: Boolean, default: false },
 });
 
-defineEmits(['open-status', 'open-create', 'archive-tenant', 'unarchive-tenant']);
+defineEmits(['retry', 'open-status', 'open-create', 'archive-tenant', 'unarchive-tenant']);
 </script>

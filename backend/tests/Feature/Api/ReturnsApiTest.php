@@ -280,6 +280,97 @@ class ReturnsApiTest extends TenantTestCase
         $this->assertEquals(100.000, $this->itemStock());
     }
 
+    /**
+     * SAL-234 (#869): Arabic 422 validation errors on returns must use Arabic attribute labels
+     * instead of raw English names like "return type", "invoice id", or "customer id".
+     */
+    public function test_arabic_validation_messages_use_translated_return_attributes(): void
+    {
+        $headers = [...$this->adminHeaders, 'X-Locale' => 'ar'];
+
+        $missingReturnType = $this->postJson('/api/v1/returns', [], $headers)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['return_type']);
+        $this->assertStringContainsString('نوع المرتجع', (string) $missingReturnType->json('errors.return_type.0'));
+        $this->assertStringNotContainsString('return type', (string) $missingReturnType->json('errors.return_type.0'));
+
+        $salesMissingCustomer = $this->postJson('/api/v1/returns', [
+            'return_type' => 'sales_return',
+            'return_date' => now()->toDateString(),
+            'items' => [['item_id' => $this->itemId, 'quantity' => 1, 'unit_price' => 10]],
+        ], $headers)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['customer_id']);
+        $customerErr = (string) $salesMissingCustomer->json('errors.customer_id.0');
+        $this->assertStringContainsString('العميل', $customerErr);
+        $this->assertStringContainsString('نوع المرتجع', $customerErr);
+        $this->assertStringNotContainsString('customer id', $customerErr);
+        $this->assertStringNotContainsString('return type', $customerErr);
+
+        $prohibitedInvoice = $this->postJson('/api/v1/returns', [
+            'return_type' => 'purchase_return',
+            'supplier_id' => $this->supplierId,
+            'invoice_id' => 1,
+            'return_date' => now()->toDateString(),
+            'items' => [['item_id' => $this->itemId, 'quantity' => 1, 'unit_price' => 10]],
+            'override' => ['user_id' => $this->adminUser->id, 'pin' => '12'],
+        ], $headers)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['invoice_id', 'override.pin']);
+        $invoiceErr = (string) $prohibitedInvoice->json('errors.invoice_id.0');
+        $this->assertStringContainsString('الفاتورة', $invoiceErr);
+        $this->assertStringContainsString('نوع المرتجع', $invoiceErr);
+        $this->assertStringNotContainsString('invoice id', $invoiceErr);
+        $this->assertStringNotContainsString('return type', $invoiceErr);
+        $this->assertStringContainsString('الرمز السري للمدير', (string) $prohibitedInvoice->json('errors')['override.pin'][0]);
+    }
+
+    public function test_inv_266_rejects_negative_or_over_precision_discounts_and_amounts_on_returns(): void
+    {
+        $base = [
+            'return_type' => 'purchase_return',
+            'supplier_id' => $this->supplierId,
+            'return_date' => now()->toDateString(),
+            'items' => [
+                ['item_id' => $this->itemId, 'quantity' => '1.000', 'unit_price' => '100.000'],
+            ],
+        ];
+
+        $this->postJson('/api/v1/returns', [...$base, 'discount' => -1], $this->adminHeaders)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['discount']);
+
+        $this->postJson('/api/v1/returns', [...$base, 'discount_amount' => '-0.500'], $this->adminHeaders)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['discount_amount']);
+
+        $this->postJson('/api/v1/returns', [...$base, 'refund_amount' => -1], $this->adminHeaders)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['refund_amount']);
+
+        $this->postJson('/api/v1/returns', [
+            ...$base,
+            'items' => [
+                ['item_id' => $this->itemId, 'quantity' => '1.000', 'unit_price' => '100.000', 'discount' => -1, 'discount_amount' => -2],
+            ],
+        ], $this->adminHeaders)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['items.0.discount', 'items.0.discount_amount']);
+
+        $this->postJson('/api/v1/returns', [
+            ...$base,
+            'discount' => '1.1234',
+            'items' => [
+                ['item_id' => $this->itemId, 'quantity' => '1.1234', 'unit_price' => '100.1234', 'discount_amount' => '0.1234'],
+            ],
+        ], $this->adminHeaders)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['discount', 'items.0.quantity', 'items.0.unit_price', 'items.0.discount_amount']);
+
+        $this->inTenant($this->tenant, fn () => $this->assertSame(0, ReturnDocument::query()->count()));
+        $this->assertEquals(100.000, $this->itemStock());
+    }
+
     private function itemStock(): float
     {
         return $this->inTenant($this->tenant, fn (): float => (float) Item::find($this->itemId)->current_stock);

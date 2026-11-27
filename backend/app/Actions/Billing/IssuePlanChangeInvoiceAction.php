@@ -42,15 +42,11 @@ use Illuminate\Support\Facades\DB;
  *  - addon: an `addon` invoice with the add-on line(s), priced from the tenant's plan catalog for
  *    the request's cycle unless the admin overrides the unit price. It is a separate invoice.
  *
- * #232 spec C: no automatic founder pricing on this path. A tenant with an AGREED founder price
- * (FounderPricingService::hasAgreedFounderPrice) has its plan change HELD for the owner's review:
- * nothing is invoiced, the request stays pending and is stamped `founder_review_held_at` (audited
- * once) and the call answers 409 `billing.upgrade_held_for_founder_review`. The owner releases it by
- * issuing again with `release_founder_hold` (optionally with a typed amount). The stamp is committed
- * before the 409 is thrown, so the console can show the held state.
- * `release_founder_hold` on a request that was never held is refused with 409
- * `billing.founder_hold_not_set`. Released or not, every plan line of a plan change is billed at the
- * LIST price (`listPriceOnly`): a founder step never applies to an upgrade automatically.
+ * #232 spec C (superseded by automated billing decision): active founders (FounderPricingService::hasAgreedFounderPrice)
+ * are billed automatically using their founder schedule (or an explicit console `amount` when typed),
+ * without holding for manual review. The optional `release_founder_hold` flag is accepted for
+ * backward compatibility with older pending requests/callers, without failing when omitted or set.
+ * Non-founder plan changes continue to bill full-cycle plan lines at LIST price (`listPriceOnly`).
  *
  * A request whose target is a permanent free plan is never invoiced: it is stored `scheduled`
  * (not pending -> 409 here) and an older pending one is refused (422 free_plan_not_billable).
@@ -75,7 +71,7 @@ final class IssuePlanChangeInvoiceAction
     {
         $connection = DB::connection((string) (new PlanChangeRequest)->getConnectionName());
 
-        $issued = $connection->transaction(function () use ($dto, $operator): ?PlanChangeRequest {
+        return $connection->transaction(function () use ($dto, $operator): PlanChangeRequest {
             // #232 review: the billing lock order is tenant -> payment -> invoice(s) -> subscription ->
             // plan_change_requests (ActivateSubscriptionAction completes the request last). Lock the
             // tenant FIRST (its id read unlocked; a request never changes tenant), then the request.
@@ -86,19 +82,6 @@ final class IssuePlanChangeInvoiceAction
 
             if (! $request->isPending()) {
                 throw BillingException::requestNotPending();
-            }
-
-            // #232 review: releasing a founder hold is only meaningful for a request that was held.
-            if ($dto->releaseFounderHold && $request->founder_review_held_at === null) {
-                throw BillingException::founderHoldNotSet($dto->requestId);
-            }
-
-            if ($request->kind === PlanChangeRequestKind::PlanChange
-                && ! $dto->releaseFounderHold
-                && $this->founder->hasAgreedFounderPrice((string) $request->tenant_id)) {
-                $this->holdForFounderReview($request, $operator);
-
-                return null;
             }
 
             $invoice = $this->issue->execute($this->invoiceDto($dto, $request, $operator), $operator);
@@ -120,8 +103,7 @@ final class IssuePlanChangeInvoiceAction
                     'total' => $invoice->total,
                     'with_renewal' => $this->withRenewal($dto, $request),
                     'self_service' => $operator === null,
-                    // A release is only accepted for a held request (founder_hold_not_set otherwise).
-                    'founder_hold_released' => $dto->releaseFounderHold,
+                    'founder_hold_released' => $dto->releaseFounderHold || $request->founder_review_held_at !== null,
                     'agreed_price' => $this->agreedPrice($invoice),
                 ],
                 $operator,
@@ -131,12 +113,6 @@ final class IssuePlanChangeInvoiceAction
 
             return $request;
         });
-
-        if (! $issued instanceof PlanChangeRequest) {
-            throw BillingException::upgradeHeldForFounderReview($dto->requestId);
-        }
-
-        return $issued;
     }
 
     /** #232: the operator's explicit `with_renewal`, else the shop's choice stored on the request. */
@@ -155,25 +131,6 @@ final class IssuePlanChangeInvoiceAction
         }
 
         return null;
-    }
-
-    /** #232 spec C: stamp (once) and audit a request held for the owner's founder-price review. */
-    private function holdForFounderReview(PlanChangeRequest $request, ?CentralUser $operator): void
-    {
-        if ($request->founder_review_held_at !== null) {
-            return;
-        }
-
-        $request->founder_review_held_at = now();
-        $request->save();
-
-        $this->audit->record(
-            CentralAuditEvent::PlanChangeHeldForFounderReview,
-            ['request_id' => (int) $request->getKey(), 'kind' => $request->kind->value, 'requested_plan_id' => $request->requested_plan_id],
-            $operator,
-            $request,
-            (string) $request->tenant_id,
-        );
     }
 
     private function invoiceDto(IssuePlanChangeInvoiceDTO $dto, PlanChangeRequest $request, ?CentralUser $operator): IssueSubscriptionInvoiceDTO
@@ -228,16 +185,15 @@ final class IssuePlanChangeInvoiceAction
             throw BillingException::requestSamePlan();
         }
 
+        $isFounder = $this->founder->hasAgreedFounderPrice($tenantId);
+
         // #232: no paid term running (a trial, or an expired term) means there is no remainder to
-        // price a difference on. With no amount typed, the request is answered with a REGULAR
-        // full-cycle invoice for the requested plan (a plan line priced by IssueSubscriptionInvoiceAction,
-        // list price: spec C, no automatic founder price on a plan change); paying it switches the
-        // plan and starts a new paid term at the verified transfer moment (spec A: not at trial end,
-        // remaining trial days are not added - open owner decision أ).
-        // A typed amount is still a difference and stays 409 difference_needs_active_term, unless it
-        // releases a founder hold: spec C, the owner reviewed the agreed founder price before issue, so
-        // the typed amount IS the full-cycle price (agreedPlanPrice; release needs a held request).
-        $agreedPrice = $dto->releaseFounderHold ? $dto->amount : null;
+        // price a difference on. With no amount typed, the request is answered with a full-cycle
+        // invoice for the requested plan (at the active founder schedule for founders, else list
+        // price; paying it starts a new paid term at the verified transfer moment, spec A).
+        // A typed amount on a non-founder stays a difference and returns 409 difference_needs_active_term;
+        // on an active founder it bills the full cycle at that agreed amount (`agreedPlanPrice`).
+        $agreedPrice = $isFounder ? $dto->amount : null;
         if (($dto->amount === null || $agreedPrice !== null) && ! $tenant->hasPaidTermRunning()) {
             return new IssueSubscriptionInvoiceDTO(
                 tenantId: $tenantId,
@@ -253,9 +209,8 @@ final class IssuePlanChangeInvoiceAction
                 fromRequest: true,
                 // SELL-06: an open trial-end / plan invoice paid as well would extend the term twice.
                 refuseWhenOpenPlanInvoice: true,
-                // #232 spec C: list price only, even for a founder whose hold was released...
-                listPriceOnly: true,
-                // ...unless the release typed the agreed price for this full cycle.
+                // Active founders use their founder schedule step unless an explicit agreed amount was typed.
+                listPriceOnly: ! $isFounder || $agreedPrice !== null,
                 agreedPlanPrice: $agreedPrice,
             );
         }
@@ -286,10 +241,11 @@ final class IssuePlanChangeInvoiceAction
             issuedBy: $issuedBy,
             differenceLine: [
                 'description' => $dto->description ?? (string) __('billing.invoice.upgrade_difference', [
-                    'from' => $current instanceof Plan ? $current->name : (string) __('billing.invoice.no_plan_name'),
-                    'to' => $target->name,
+                    'from' => $current instanceof Plan ? $current->localizedName() : (string) __('billing.invoice.no_plan_name'),
+                    'to' => $target->localizedName(),
                 ]),
                 'amount' => $amount,
+                'founder' => $suggested !== null && (bool) $suggested['founder'],
             ] + ($suggested === null ? [] : ['proration' => [
                 'old_price' => $suggested['old_price'],
                 'new_price' => $suggested['new_price'],
@@ -299,8 +255,7 @@ final class IssuePlanChangeInvoiceAction
             ]]),
             fromRequest: true,
             appendRenewal: $this->withRenewal($dto, $request),
-            // #232 spec C: the appended renewal cycle is billed at the list price (no founder step).
-            listPriceOnly: true,
+            listPriceOnly: ! $isFounder,
         );
     }
 }

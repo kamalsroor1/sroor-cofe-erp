@@ -15,6 +15,7 @@ use App\DTOs\Invoices\CreateInvoiceDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CancelInvoiceRequest;
 use App\Http\Requests\ExportInvoicesRequest;
+use App\Http\Requests\ListInvoicesRequest;
 use App\Http\Requests\StoreSalesInvoiceRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Http\Resources\InvoiceSummaryResource;
@@ -44,13 +45,9 @@ final class InvoiceController extends Controller
     /**
      * List Invoices for active store with filters and summary totals
      */
-    public function index(Request $request): JsonResponse
+    public function index(ListInvoicesRequest $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('invoices.view') && ! $user->can('pos.access')) {
-            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
-        }
-
         $perPage = max(1, min(200, (int) $request->input('per_page', 15)));
 
         $query = $this->buildInvoiceListQueryAction->execute();
@@ -58,7 +55,13 @@ final class InvoiceController extends Controller
         // ROLE-01 (owner 2026-11-12): aggregate money figures only for a reports.view reader.
         $summary = $user && $user->can('reports.view') ? $this->getInvoicesSummaryAction->execute($query) : null;
 
-        $invoices = $query->latest('id')->paginate($perPage);
+        $sort = $request->resolveSort(ListInvoicesRequest::SORT_COLUMNS);
+        $query->orderBy($sort['column'], $sort['direction']);
+        if ($sort['column'] !== 'id') {
+            $query->orderBy('id', $sort['direction']);
+        }
+
+        $invoices = $query->paginate($perPage);
 
         return response()->json([
             'success' => true,

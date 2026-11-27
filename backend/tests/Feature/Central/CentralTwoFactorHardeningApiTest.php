@@ -7,6 +7,7 @@ namespace Tests\Feature\Central;
 use App\Enums\CentralAuditEvent;
 use App\Enums\CentralPermission;
 use App\Models\CentralAuditLog;
+use App\Models\CentralPersonalAccessToken;
 use App\Models\CentralUser;
 use Database\Seeders\CentralPermissionsSeeder;
 use Illuminate\Http\JsonResponse;
@@ -88,6 +89,36 @@ final class CentralTwoFactorHardeningApiTest extends TenantTestCase
         $this->withHeaders($this->bearer($token))->postJson(self::STEP_UP, ['code' => $this->otp($secret)])->assertOk();
         $this->withHeaders($this->bearer($token))->getJson(self::RECOVERY_CODES)->assertOk();
         $this->assertSame(2, $this->auditCount(CentralAuditEvent::RecoveryCodesViewed));
+    }
+
+    public function test_recovery_codes_of_a_confirmed_operator_reject_a_token_without_step_up_timestamp(): void
+    {
+        [$user, $secret] = $this->operatorWithTwoFactor();
+        $unsteppedToken = (string) $this->completeChallenge($this->challengeFor($user), ['code' => $this->otp($secret)])
+            ->assertOk()
+            ->json('data.token');
+
+        CentralPersonalAccessToken::query()
+            ->where('tokenable_id', $user->getKey())
+            ->update(['two_factor_verified_at' => null]);
+
+        $this->withHeaders($this->bearer($unsteppedToken))
+            ->getJson(self::RECOVERY_CODES)
+            ->assertStatus(403)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'central_auth.step_up_required')
+            ->assertJsonMissingPath('data.recovery_codes');
+        $this->assertSame(0, $this->auditCount(CentralAuditEvent::RecoveryCodesViewed));
+
+        $this->withHeaders($this->bearer($unsteppedToken))
+            ->postJson(self::STEP_UP, ['code' => $this->otp($secret, 1)])
+            ->assertOk();
+
+        $this->withHeaders($this->bearer($unsteppedToken))
+            ->getJson(self::RECOVERY_CODES)
+            ->assertOk()
+            ->assertJsonCount(8, 'data.recovery_codes');
+        $this->assertSame(1, $this->auditCount(CentralAuditEvent::RecoveryCodesViewed));
     }
 
     public function test_setup_token_still_reads_recovery_codes_during_enrollment_and_the_read_is_audited(): void

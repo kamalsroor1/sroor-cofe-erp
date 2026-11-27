@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
 use Tests\TenantTestCase;
 
@@ -43,6 +44,7 @@ final class TenantPasswordResetApiTest extends TenantTestCase
 
         Cache::flush();
         Mail::fake();
+        Notification::fake();
         $this->tenant = $this->createTenant();
     }
 
@@ -136,16 +138,25 @@ final class TenantPasswordResetApiTest extends TenantTestCase
     public function test_forgot_password_answers_the_same_for_unknown_and_inactive_accounts(): void
     {
         $this->owner(['email' => 'inactive@shop.harness.test', 'is_active' => false]);
+        $expected = ['success' => true, 'message' => __('auth.password_reset.link_sent')];
 
         foreach (['nobody@shop.harness.test', 'inactive@shop.harness.test'] as $email) {
             $this->forgot($email)
                 ->assertOk()
-                ->assertJsonPath('success', true)
-                ->assertJsonPath('message', __('auth.password_reset.link_sent'));
+                ->assertExactJson($expected);
         }
 
         Mail::assertNothingQueued();
+        Mail::assertNothingSent();
+        Notification::assertNothingSent();
         $this->assertSame(0, $this->inTenant($this->tenant, fn (): int => DB::table('password_reset_tokens')->count()));
+
+        // Active account receives the exact same 200 payload shape & message.
+        $this->owner(['email' => 'active@shop.harness.test', 'is_active' => true]);
+        $this->forgot('active@shop.harness.test')
+            ->assertOk()
+            ->assertExactJson($expected);
+        Mail::assertQueued(TenantPasswordResetMail::class, 1);
     }
 
     public function test_forgot_password_validates_the_email(): void

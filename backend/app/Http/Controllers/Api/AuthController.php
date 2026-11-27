@@ -10,6 +10,7 @@ use App\Actions\Auth\ApiMeAction;
 use App\Actions\Auth\ChangePasswordAction;
 use App\Actions\Auth\DispatchAccountLockAlertAction;
 use App\Actions\Auth\ListQuickLoginUsersAction;
+use App\Actions\Auth\LockUserLoginIdentifiersAction;
 use App\Actions\Auth\QuickLoginAction;
 use App\DTOs\Auth\ApiLoginDTO;
 use App\DTOs\Auth\ChangePasswordDTO;
@@ -35,6 +36,7 @@ final class AuthController extends Controller
         private readonly ApiLogoutAction $logoutAction,
         private readonly ApiMeAction $meAction,
         private readonly DispatchAccountLockAlertAction $lockAlertAction,
+        private readonly LockUserLoginIdentifiersAction $lockUserIdentifiersAction,
         private readonly QuickLoginAction $quickLoginAction,
         private readonly ListQuickLoginUsersAction $listQuickLoginUsersAction,
         private readonly ChangePasswordAction $changePasswordAction,
@@ -62,6 +64,7 @@ final class AuthController extends Controller
             $request->hitRateLimit();
 
             if ($request->hitAccountFailure()) {
+                $this->lockUserIdentifiersAction->execute($request->submittedLogin());
                 $this->activityLogService->log(
                     module: 'auth',
                     action: 'account_locked',

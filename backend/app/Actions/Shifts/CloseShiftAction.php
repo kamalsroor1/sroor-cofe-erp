@@ -19,7 +19,7 @@ final class CloseShiftAction
      */
     public function execute(CloseShiftDTO $dto): CashShift
     {
-        $shift = CashShift::where('status', 'open')->findOrFail($dto->shift_id);
+        $shift = CashShift::findOrFail($dto->shift_id);
 
         return $this->shiftService->closeShift(
             shift: $shift,

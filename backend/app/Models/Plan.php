@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -193,6 +194,64 @@ class Plan extends Model
     public function hasFeature(string $key): bool
     {
         return isset($this->features[$key]) && $this->features[$key] === true;
+    }
+
+    /**
+     * Legacy free-plan names that should always display as the Free plan label (`المجانية` / `Free`).
+     *
+     * @var list<string>
+     */
+    private const LEGACY_FREE_PLAN_NAMES = ['التجربة', 'Trial', 'trial'];
+
+    /**
+     * Localized display name: uses `name_key` when present (matching PublicPlanResource),
+     * maps legacy free-plan trial names ("التجربة" / "Trial") to `plans.plans.free.name`,
+     * maps catalog plans with missing `name_key` and default catalog names to `plans.plans.<slug>.name`,
+     * and falls back to the stored `name` column.
+     */
+    public function localizedName(?string $locale = null): string
+    {
+        if (is_string($this->name_key) && $this->name_key !== '' && Lang::has($this->name_key, $locale)) {
+            return (string) __($this->name_key, [], $locale);
+        }
+
+        $stored = (string) $this->name;
+
+        if (($this->slug === 'free' || $this->is_free)
+            && ($stored === '' || in_array($stored, self::LEGACY_FREE_PLAN_NAMES, true))
+            && Lang::has('plans.plans.free.name', $locale)
+        ) {
+            return (string) __('plans.plans.free.name', [], $locale);
+        }
+
+        if (in_array((string) $this->slug, self::CATALOG_SLUGS, true)) {
+            $catalogKey = 'plans.plans.'.$this->slug.'.name';
+            if (Lang::has($catalogKey, $locale) && (
+                $stored === ''
+                || $stored === (string) __($catalogKey, [], 'ar')
+                || $stored === (string) __($catalogKey, [], 'en')
+            )) {
+                return (string) __($catalogKey, [], $locale);
+            }
+        }
+
+        return $stored;
+    }
+
+    /**
+     * Localized description derived from `name_key` sibling (`*.name` -> `*.description`),
+     * falling back to the stored `description` column.
+     */
+    public function localizedDescription(?string $locale = null): ?string
+    {
+        if (is_string($this->name_key) && str_ends_with($this->name_key, '.name')) {
+            $descKey = substr($this->name_key, 0, -strlen('name')).'description';
+            if (Lang::has($descKey, $locale)) {
+                return (string) __($descKey, [], $locale);
+            }
+        }
+
+        return $this->description;
     }
 
     /**

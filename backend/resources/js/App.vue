@@ -6,7 +6,7 @@
     <DesktopTitlebar @open-hardware="isDesktopHardwareOpen = true" @open-shortcuts="isDesktopShortcutsOpen = true" />
 
     <!-- 0. ☕ Global System Initial Boot Splash Screen (Facebook/Native-App Shimmer Loader) -->
-    <SystemBootSplash :show="isBooting" />
+    <SystemBootSplash :show="isBooting" @hidden="revealAppReady" />
 
     <!-- 1. Standalone / Print / Guest Views (Completely Isolated with ZERO Sidebar or Navbars) -->
     <template v-if="isStandaloneRoute">
@@ -75,6 +75,9 @@ import { useAppUpdate } from './Composables/useAppUpdate';
 import { useLocaleSync } from './Composables/useLocale';
 import { useDesktopHardware } from './Composables/useDesktopHardware';
 import { useIdleLock } from './Composables/useIdleLock';
+import { markAppReady } from './helpers/pendingRouteNotice';
+import { notifyError } from './helpers/alert';
+import { trans } from './helpers/trans';
 import FeatureGate from './Components/FeatureGate.vue';
 import NoStoreNotice from './Components/Auth/NoStoreNotice.vue';
 import SpaLayout from './Layouts/SpaLayout.vue';
@@ -99,6 +102,15 @@ const isDesktopHardwareOpen = ref(false);
 const isDesktopShortcutsOpen = ref(false);
 
 const isBooting = ref(true);
+let bootNoticeFallbackTimer = null;
+
+const revealAppReady = () => {
+  if (bootNoticeFallbackTimer) {
+    clearTimeout(bootNoticeFallbackTimer);
+    bootNoticeFallbackTimer = null;
+  }
+  markAppReady((key) => notifyError(trans(key)));
+};
 
 const isStandaloneRoute = computed(() => {
   const path = route.path || (typeof window !== 'undefined' ? window.location.pathname : '');
@@ -148,6 +160,8 @@ onMounted(async () => {
     // Smooth transition out of boot splash
     setTimeout(() => {
       isBooting.value = false;
+      // Fallback in case the leave transition does not emit after-leave (e.g. reduced motion).
+      bootNoticeFallbackTimer = setTimeout(revealAppReady, 450);
     }, 350);
   }
 
@@ -171,6 +185,10 @@ const handleDesktopGlobalKeydown = (e) => {
 };
 
 onUnmounted(() => {
+  if (bootNoticeFallbackTimer) {
+    clearTimeout(bootNoticeFallbackTimer);
+    bootNoticeFallbackTimer = null;
+  }
   if (typeof window !== 'undefined') {
     window.removeEventListener('keydown', handleDesktopGlobalKeydown);
   }

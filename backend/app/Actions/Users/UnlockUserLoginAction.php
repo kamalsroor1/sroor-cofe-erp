@@ -7,12 +7,14 @@ namespace App\Actions\Users;
 use App\Models\User;
 use App\Services\ActivityLogService;
 use App\Support\Auth\AccountLockout;
+use App\Support\Auth\CurrentPasswordVerifier;
 use Illuminate\Auth\Access\AuthorizationException;
 
 final class UnlockUserLoginAction
 {
     public function __construct(
         private readonly ActivityLogService $activityLogService,
+        private readonly CurrentPasswordVerifier $currentPasswordVerifier,
     ) {}
 
     /**
@@ -31,6 +33,7 @@ final class UnlockUserLoginAction
         }
 
         $wasLocked = AccountLockout::clearForIdentifiers($user->phone, $user->email);
+        $this->currentPasswordVerifier->passed($user);
 
         $this->activityLogService->log(
             module: 'users',

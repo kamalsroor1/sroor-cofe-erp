@@ -4,7 +4,7 @@
     :title="editingStore ? $t('inventory.edit_store') : $t('inventory.add_new_store')"
     @close="$emit('close')"
   >
-    <form @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
+    <form id="store-form" @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
       <!-- Store Name -->
       <BaseInput
         :model-value="form.name"
@@ -83,15 +83,17 @@
         />
         <p class="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('pos.shift_setting_hint') }}</p>
       </div>
+    </form>
 
-      <!-- Form Actions Footer -->
-      <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+    <template #footer>
+      <div class="flex items-center justify-end gap-3">
         <BaseButton type="button" variant="secondary" size="md" @click="$emit('close')">
           {{ $t('common.cancel') }}
         </BaseButton>
 
         <BaseButton
           type="submit"
+          form="store-form"
           variant="primary"
           size="md"
           :loading="submitting"
@@ -102,7 +104,7 @@
           <span>{{ editingStore ? $t('common.save_changes') : $t('inventory.create_store') }}</span>
         </BaseButton>
       </div>
-    </form>
+    </template>
   </AppModal>
 </template>
 

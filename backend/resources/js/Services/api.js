@@ -155,7 +155,11 @@ apiClient.interceptors.response.use(
 
         const status = error.response ? error.response.status : null;
         const data = error.response ? error.response.data : null;
-        const message = data?.message || error.message || trans('common.unexpected_error');
+        const message =
+            data?.message ||
+            (status === 404 ? trans('common.record_not_found') : null) ||
+            error.message ||
+            trans('common.unexpected_error');
 
         // 401 Unauthorized: Session Expired / Invalid Token
         if (status === 401 && !isCentralMode) {

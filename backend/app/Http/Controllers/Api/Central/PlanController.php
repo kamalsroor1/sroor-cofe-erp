@@ -45,7 +45,7 @@ final class PlanController extends Controller
     {
         $result = $this->createPlan->execute(PlanDTO::fromArray($request->validated()), $this->operator($request));
 
-        return $this->written($result, (string) __('super.plan_created_success', ['name' => $result->plan->name]), 201);
+        return $this->written($result, (string) __('super.plan_created_success', ['name' => $result->plan->localizedName()]), 201);
     }
 
     public function update(UpdatePlanRequest $request, int $id): JsonResponse
@@ -54,7 +54,7 @@ final class PlanController extends Controller
 
         $result = $this->updatePlan->execute($id, PlanDTO::fromArray($request->validated()), $this->operator($request));
 
-        return $this->written($result, (string) __('super.plan_updated_success', ['name' => $result->plan->name]), 200);
+        return $this->written($result, (string) __('super.plan_updated_success', ['name' => $result->plan->localizedName()]), 200);
     }
 
     private function written(PlanWriteResult $result, string $message, int $status): JsonResponse

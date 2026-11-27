@@ -1,11 +1,11 @@
 <template>
   <div
-    class="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg space-y-4"
+    class="p-4 sm:p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg space-y-4 min-w-0"
   >
-    <div class="flex items-center justify-between">
-      <h2 class="text-xs font-black text-theme-primary flex items-center gap-2">
-        <Package class="w-4 h-4" />
-        <span>{{ $t('purchases.supply_items_section') }}</span>
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h2 class="text-xs font-black text-theme-primary flex items-center gap-2 min-w-0">
+        <Package class="w-4 h-4 shrink-0" />
+        <span class="break-words">{{ $t('purchases.supply_items_section') }}</span>
       </h2>
 
       <BaseButton
@@ -13,7 +13,7 @@
         variant="secondary"
         size="sm"
         @click="$emit('add-line')"
-        class="font-bold flex items-center gap-1.5"
+        class="font-bold flex items-center gap-1.5 shrink-0"
       >
         <Plus class="w-3.5 h-3.5" />
         <span>{{ $t('purchases.add_item_line') }}</span>
@@ -21,7 +21,7 @@
     </div>
 
     <!-- 1. Desktop & Tablet Table (hidden md:block) -->
-    <div class="hidden md:block">
+    <div class="hidden md:block overflow-x-auto">
       <table class="w-full text-start text-xs border-collapse">
         <thead>
           <tr
@@ -91,25 +91,25 @@
     </div>
 
     <!-- 2. Mobile Responsive Tactile Cards (block md:hidden) -->
-    <div class="block md:hidden space-y-3">
+    <div class="block md:hidden space-y-3 min-w-0">
       <div
         v-for="(line, idx) in items"
         :key="idx"
-        class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 space-y-3"
+        class="p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 space-y-3 min-w-0"
       >
-        <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center justify-between gap-2 min-w-0">
           <span class="text-xs font-bold text-slate-500 font-mono">#{{ idx + 1 }}</span>
           <button
             type="button"
             @click="$emit('remove-line', idx)"
             :disabled="items.length <= 1"
-            class="p-1.5 text-rose-500 bg-rose-500/10 rounded-lg transition disabled:opacity-20 active:scale-90"
+            class="min-w-[44px] min-h-[44px] flex items-center justify-center p-1.5 text-rose-500 bg-rose-500/10 rounded-lg transition disabled:opacity-20 active:scale-90 shrink-0"
           >
             <Trash2 class="w-4 h-4" />
           </button>
         </div>
 
-        <div>
+        <div class="min-w-0">
           <label class="block text-[11px] font-bold text-slate-500 mb-1">{{ $t('purchases.item_material') }}</label>
           <BaseSelect
             v-model="line.item_id"
@@ -120,36 +120,38 @@
           />
         </div>
 
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block text-[11px] font-bold text-slate-500 mb-1">{{ $t('common.quantity') }}</label>
+        <div class="grid grid-cols-2 gap-2 min-w-0">
+          <div class="min-w-0">
+            <label class="block text-[11px] font-bold text-slate-500 mb-1 truncate">{{ $t('common.quantity') }}</label>
             <input
               v-model="line.quantity"
               type="number"
               step="0.001"
               min="0.001"
               required
-              class="w-full h-10 px-2 text-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-theme-primary font-mono font-bold focus:ring-2 focus:ring-theme-primary focus:outline-none"
+              class="w-full min-w-0 min-h-[44px] px-2 text-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-theme-primary font-mono font-bold focus:ring-2 focus:ring-theme-primary focus:outline-none"
             />
           </div>
-          <div>
-            <label class="block text-[11px] font-bold text-slate-500 mb-1">{{ $t('inventory.purchase_price') }}</label>
+          <div class="min-w-0">
+            <label class="block text-[11px] font-bold text-slate-500 mb-1 truncate">{{
+              $t('inventory.purchase_price')
+            }}</label>
             <input
               v-model="line.cost_price"
               type="number"
               step="0.001"
               min="0"
               required
-              class="w-full h-10 px-2 text-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-emerald-500 font-mono font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              class="w-full min-w-0 min-h-[44px] px-2 text-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-emerald-500 font-mono font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             />
           </div>
         </div>
 
         <div
-          class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800 text-xs font-mono"
+          class="flex items-center justify-between gap-2 pt-2 border-t border-slate-200 dark:border-slate-800 text-xs font-mono min-w-0"
         >
-          <span class="font-sans font-bold text-slate-500">{{ $t('common.total') }}:</span>
-          <span class="font-black text-slate-900 dark:text-white">
+          <span class="font-sans font-bold text-slate-500 shrink-0">{{ $t('common.total') }}:</span>
+          <span class="font-black text-slate-900 dark:text-white truncate min-w-0">
             {{ formatMoney((parseFloat(line.quantity) || 0) * (parseFloat(line.cost_price) || 0)) }}
             {{ currencyLabel }}
           </span>

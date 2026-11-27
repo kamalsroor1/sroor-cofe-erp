@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Reports;
 
 use App\Models\Item;
+use App\Support\Database\LikePattern;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -84,10 +85,7 @@ final class GetStockDriftReportAction
 
         $trimmed = trim((string) $search);
         if ($trimmed !== '') {
-            $query->where(function ($q) use ($trimmed): void {
-                $q->where('name', 'like', "%{$trimmed}%")
-                    ->orWhere('code', 'like', "%{$trimmed}%");
-            });
+            LikePattern::whereContainsAny($query, ['name', 'code'], $trimmed);
         }
 
         $drifted = [];

@@ -11,7 +11,8 @@ import DarkSwal, {
 } from '../helpers/alert';
 import { useTenantStatusForm } from './useTenantStatusForm';
 import { useCentralAuthStore } from '../stores/centralAuth';
-import { TENANT_STATUSES, tenantStatusLabel } from '../helpers/tenantStatus';
+import { TENANT_FILTER_STATUSES, tenantStatusLabel } from '../helpers/tenantStatus';
+import { useSuperAdminLoader } from './useSuperAdminLoader';
 
 const TENANTS_MANAGE_PERMISSION = 'super_admin.tenants.manage';
 
@@ -155,7 +156,6 @@ export function useSuperAdminTenants() {
 
     const tenants = ref([]);
     const plansList = ref([]);
-    const isLoading = ref(false);
     const isSubmitting = ref(false);
 
     const filters = ref({
@@ -166,7 +166,7 @@ export function useSuperAdminTenants() {
 
     const statusOptions = computed(() => [
         { value: 'all', label: t('super.all_statuses') },
-        ...TENANT_STATUSES.map((status) => ({ value: status, label: tenantStatusLabel(status, t) })),
+        ...TENANT_FILTER_STATUSES.map((status) => ({ value: status, label: tenantStatusLabel(status, t) })),
     ]);
 
     const planOptions = computed(() => [
@@ -185,7 +185,6 @@ export function useSuperAdminTenants() {
         phone: '',
         password: '',
         plan_id: null,
-        trial_days: 14,
         tenancy_db_name: '',
         tenancy_db_username: '',
         tenancy_db_password: '',
@@ -197,21 +196,23 @@ export function useSuperAdminTenants() {
 
     let debounceTimer = null;
 
-    const fetchTenants = async () => {
-        isLoading.value = true;
-        try {
-            const res = await api.get('/super-admin/tenants', { params: filters.value });
-            tenants.value = res.data?.tenants?.data || res.data?.tenants || [];
-            plansList.value = res.data?.plans || [];
-            if (!createForm.value.plan_id && plansList.value.length > 0) {
-                createForm.value.plan_id = plansList.value[0].id;
-            }
-        } catch (e) {
-            console.error('Failed to load tenants:', e);
-        } finally {
-            isLoading.value = false;
+    const {
+        isLoading,
+        hasLoaded,
+        error,
+        errorMessage,
+        statusCode,
+        canRetry,
+        load: fetchTenants,
+        retry,
+    } = useSuperAdminLoader(async () => {
+        const res = await api.get('/super-admin/tenants', { params: filters.value });
+        tenants.value = res.data?.tenants?.data || res.data?.tenants || [];
+        plansList.value = res.data?.plans || [];
+        if (!createForm.value.plan_id && plansList.value.length > 0) {
+            createForm.value.plan_id = plansList.value[0].id;
         }
-    };
+    });
 
     const updateSearch = (val) => {
         filters.value.search = val;
@@ -239,7 +240,6 @@ export function useSuperAdminTenants() {
             phone: '',
             password: '',
             plan_id: plansList.value[0]?.id || null,
-            trial_days: 14,
             tenancy_db_name: '',
             tenancy_db_username: '',
             tenancy_db_password: '',
@@ -306,6 +306,11 @@ export function useSuperAdminTenants() {
         tenants,
         plansList,
         isLoading,
+        hasLoaded,
+        error,
+        errorMessage,
+        statusCode,
+        canRetry,
         isSubmitting,
         filters,
         statusOptions,
@@ -318,6 +323,7 @@ export function useSuperAdminTenants() {
         statusErrors,
         isSubmittingStatus,
         fetchTenants,
+        retry,
         updateSearch,
         updateStatusFilter,
         updatePlanFilter,

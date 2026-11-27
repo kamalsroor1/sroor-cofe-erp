@@ -8,7 +8,6 @@ import { useUnits } from '../../Composables/useUnits';
 import { useCartQtyField } from '../../Composables/POS/useCartQtyField';
 import { isPositive } from '../../helpers/decimal';
 import { lineGross, lineNet, lineDiscountAmount } from '../../helpers/posDiscount';
-import { focusLineField } from '../../helpers/posFocus';
 
 const props = defineProps({
   line: { type: Object, required: true },
@@ -29,7 +28,7 @@ const emit = defineEmits([
 
 const { formatMoney, currencyLabel } = useFormatters();
 const { unitLabel } = useUnits();
-const { onNumberInput, onFieldBlur, onFieldFocus, revertField } = useCartQtyField({
+const { onNumberInput, onFieldBlur, onFieldEnter, onFieldFocus, revertField } = useCartQtyField({
   emit,
   getLine: () => props.line,
 });
@@ -100,11 +99,11 @@ const stepClass =
         :data-line-id="line.id"
         data-line-field="qty"
         :aria-label="$t('pos.item_qty')"
-        class="w-12 h-9 pointer-coarse:h-11 shrink-0 text-center font-mono font-black text-sm bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
+        class="w-14 h-9 pointer-coarse:h-11 shrink-0 text-center font-mono font-black text-sm bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
         @focus="onFieldFocus"
         @blur="onFieldBlur($event, index, 'quantity')"
         @input="onNumberInput($event, index, 'update-qty')"
-        @keydown.enter.prevent="focusLineField(line.id, 'price')"
+        @keydown.enter.prevent="onFieldEnter($event, index, 'quantity')"
         @keydown.esc.prevent="revertField($event, index, 'update-qty')"
       />
       <button

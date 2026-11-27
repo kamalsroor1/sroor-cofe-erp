@@ -45,6 +45,7 @@ final class CreateCustomerAction
                 'current_balance' => '0.000',
                 // SHOP-03: no credit_limit field in the request = the shop default (null = no limit).
                 'credit_limit' => $dto->credit_limit_provided ? $dto->credit_limit : $this->settings->customersDefaultCreditLimit(),
+                'price_tier' => $dto->price_tier,
                 'is_active' => $dto->is_active,
                 'notes' => $dto->notes,
             ]);

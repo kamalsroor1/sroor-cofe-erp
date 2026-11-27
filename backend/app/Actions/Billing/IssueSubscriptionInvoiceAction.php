@@ -132,7 +132,7 @@ final class IssueSubscriptionInvoiceAction
             if ($appendRenewal && $plan instanceof Plan && $renewalCycle instanceof BillingCycle) {
                 $lines[] = array_merge($this->pricer->planLine($plan, $renewalCycle, $tenant, $subscription, $periodStart, $dto->useFounderPrice, $dto->founderPriceIfAvailable, $dto->listPriceOnly), [
                     'renewal' => true,
-                    'description' => (string) __('billing.invoice.upgrade_renewal_line', ['plan' => $plan->name, 'cycle' => $renewalCycle->label()]),
+                    'description' => (string) __('billing.invoice.upgrade_renewal_line', ['plan' => $plan->localizedName(), 'cycle' => $renewalCycle->label()]),
                 ]);
                 $cycle = $renewalCycle;
             }
@@ -338,7 +338,7 @@ final class IssueSubscriptionInvoiceAction
      * with the same ProrationCalculator (UpgradeDifferenceRepricer). A typed amount has no
      * `proration` and is never re-priced.
      *
-     * @param  array{description: string, amount: string, proration?: array{old_price: string, new_price: string, remaining_days: int, period_days: int, priced_at: string}}  $difference
+     * @param  array{description: string, amount: string, founder?: bool, proration?: array{old_price: string, new_price: string, remaining_days: int, period_days: int, priced_at: string}}  $difference
      * @return array<string, mixed>
      */
     private function differenceLine(array $difference, Plan $plan, BillingCycle $cycle, ?CarbonImmutable $termEnd): array
@@ -349,14 +349,14 @@ final class IssueSubscriptionInvoiceAction
             'type' => 'plan',
             'difference' => true,
             'plan_id' => (int) $plan->getKey(),
-            'plan_name' => $plan->name,
+            'plan_name' => $plan->localizedName(),
             'billing_cycle' => $cycle->value,
             'description' => $difference['description'],
             'term_end' => $termEnd?->toIso8601String(),
             'quantity' => 1,
             'unit_price' => $amount,
             'amount' => $amount,
-            'founder' => false,
+            'founder' => (bool) ($difference['founder'] ?? false),
         ] + (isset($difference['proration']) ? ['prorated' => true] + $difference['proration'] : []);
     }
 

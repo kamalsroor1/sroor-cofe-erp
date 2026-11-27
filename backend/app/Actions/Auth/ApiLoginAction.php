@@ -10,6 +10,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\ActivityLogService;
 use App\Services\Tenancy\TenantActivityTracker;
+use App\Support\Auth\AccountLockout;
 use App\Support\Tenancy\TenantLifecyclePolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Hash;
@@ -94,11 +95,12 @@ final class ApiLoginAction
             now()->addMinutes(max(1, (int) config('auth.tokens.tenant_ttl_minutes', 720))),
         )->plainTextToken;
 
-        // 5. Update user metadata
+        // 5. Update user metadata and reset any partial failure counters across identifiers
         $user->update([
             'api_token' => null,
             'last_login_at' => now(),
         ]);
+        AccountLockout::clearFailuresForIdentifiers($user->phone, $user->email);
 
         // FREE-15: a successful login always restarts the dormant free shop clock.
         $tenant = tenant();

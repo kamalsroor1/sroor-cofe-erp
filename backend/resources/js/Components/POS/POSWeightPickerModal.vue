@@ -154,7 +154,7 @@ const confirm = (qty) => {
             type="button"
             :disabled="!canConfirm"
             data-testid="pos-weight-confirm"
-            class="min-h-[48px] px-5 rounded-xl btn-primary-theme font-black text-sm transition active:scale-95 cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+            class="min-h-[48px] px-5 rounded-xl bg-theme-primary hover:bg-theme-hover text-white font-black text-sm transition active:scale-95 cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
             @click="confirm(quantity)"
           >
             {{ $t('pos.weight_add_to_cart') }}

@@ -384,4 +384,46 @@ class DailyJournalApiTest extends TenantTestCase
         $this->assertSame(1, $response->json('data.summary.sales_invoices_count'));
         $this->assertEquals(100, $response->json('data.summary.total_sales'));
     }
+
+    public function test_daily_journal_returns_403_for_existing_unauthorized_store_id_query(): void
+    {
+        $today = now()->toDateString();
+
+        Expense::create([
+            'store_id' => $this->branchStore->id,
+            'user_id' => $this->adminUser->id,
+            'expense_number' => 'EXP-MAADI-403',
+            'title' => 'مصروف فرع المعادي السري',
+            'amount' => '750.000',
+            'category' => 'إيجارات',
+            'cost_center' => 'rent',
+            'expense_date' => $today,
+            'payment_method' => 'cash',
+        ]);
+
+        foreach (['cashier', 'accountant'] as $role) {
+            $user = $this->createTenantUser($this->tenant, $role, [], ['default_store_id' => $this->mainStore->id]);
+            $headersWithStore = $this->tenantHeaders($this->tenant, $user, $this->mainStore->id);
+            $headersWithoutStore = $headersWithStore;
+            unset($headersWithoutStore['X-Store-Id']);
+
+            foreach ([$headersWithStore, $headersWithoutStore] as $headers) {
+                $response = $this->getJson('/api/v1/daily-journal?date='.$today.'&store_id='.$this->branchStore->id, $headers);
+
+                $response->assertStatus(403)
+                    ->assertJsonPath('success', false)
+                    ->assertJsonPath('error_code', 'store_access_denied');
+                $this->assertStringNotContainsString('مصروف فرع المعادي السري', (string) $response->getContent());
+            }
+        }
+
+        // Nonexistent store_id still fails validation with 422, while admin retains access.
+        $this->getJson('/api/v1/daily-journal?date='.$today.'&store_id=999999', $this->tenantHeaders($this->tenant))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['store_id']);
+
+        $this->getJson('/api/v1/daily-journal?date='.$today.'&store_id='.$this->branchStore->id, $this->tenantHeaders($this->tenant, null, $this->branchStore->id))
+            ->assertOk()
+            ->assertJsonPath('data.store_id', $this->branchStore->id);
+    }
 }

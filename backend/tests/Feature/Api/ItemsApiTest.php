@@ -8,8 +8,10 @@ use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Models\Supplier;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\PurchaseService;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Tests\TenantTestCase;
@@ -568,5 +570,69 @@ class ItemsApiTest extends TenantTestCase
             $this->assertSame('20.000', (string) $item->current_stock);
             $this->assertSame(0, StockMovement::query()->count());
         });
+    }
+
+    public function test_item_api_exposes_weighted_avg_cost_and_hides_it_without_view_cost(): void
+    {
+        $item = Item::create([
+            'name' => 'صنف متوسط التكلفة',
+            'code' => 'INV-252-WAC',
+            'category' => 'بن حبوب',
+            'unit' => 'كجم',
+            'cost_price' => '100.000',
+            'weighted_avg_cost' => '100.000',
+            'selling_price' => '150.000',
+            'current_stock' => '10.000',
+            'min_stock_level' => '2.000',
+            'is_active' => true,
+        ]);
+
+        StoreStock::create([
+            'store_id' => $this->store->id,
+            'item_id' => $item->id,
+            'quantity' => '10.000',
+        ]);
+
+        $supplier = Supplier::create([
+            'name' => 'مورد اختبار التكلفة',
+            'phone' => '01000001252',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->adminUser);
+        app(PurchaseService::class)->createPurchase([
+            'supplier_id' => $supplier->id,
+            'store_id' => $this->store->id,
+            'paid_amount' => '0.000',
+            'items' => [
+                [
+                    'item_id' => $item->id,
+                    'quantity' => '10.000',
+                    'cost_price' => '120.000',
+                ],
+            ],
+        ]);
+
+        $auth = ['Authorization' => 'Bearer '.$this->adminToken, 'X-Store-Id' => (string) $this->store->id];
+
+        $this->withHeaders($auth)
+            ->getJson('/api/v1/items/'.$item->id)
+            ->assertOk()
+            ->assertJsonPath('data.cost_price', '120.000')
+            ->assertJsonPath('data.weighted_avg_cost', '110.000')
+            ->assertJsonPath('data.average_cost', '110.000');
+
+        $indexRow = collect($this->withHeaders($auth)->getJson('/api/v1/items')->assertOk()->json('data'))
+            ->firstWhere('id', $item->id);
+        $this->assertIsArray($indexRow);
+        $this->assertSame('120.000', $indexRow['cost_price']);
+        $this->assertSame('110.000', $indexRow['weighted_avg_cost']);
+
+        $cashier = $this->createTenantUser($this->tenant, 'cashier');
+        $cashierHeaders = $this->tenantHeaders($this->tenant, $cashier, $this->store->id);
+        $this->getJson('/api/v1/items/'.$item->id, $cashierHeaders)
+            ->assertOk()
+            ->assertJsonPath('data.cost_price', null)
+            ->assertJsonPath('data.weighted_avg_cost', null);
     }
 }

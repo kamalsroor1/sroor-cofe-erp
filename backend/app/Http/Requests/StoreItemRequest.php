@@ -18,6 +18,13 @@ class StoreItemRequest extends FormRequest
         return $this->user()?->hasRole('admin') || $this->user()?->can('items.create') ?? false;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (! $this->exists('wholesale_price') && $this->exists('price_wholesale')) {
+            $this->merge(['wholesale_price' => $this->input('price_wholesale')]);
+        }
+    }
+
     public function withValidator(Validator $validator): void
     {
         $this->validateWholesaleAgainstFloor($validator, null);

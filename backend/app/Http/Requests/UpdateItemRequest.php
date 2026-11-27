@@ -23,6 +23,10 @@ class UpdateItemRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if (! $this->exists('wholesale_price') && $this->exists('price_wholesale')) {
+            $this->merge(['wholesale_price' => $this->input('price_wholesale')]);
+        }
+
         // Only users who can see the cost may change it; for everyone else the key is silently ignored.
         if (! CostVisibility::allows($this->user())) {
             $this->replace(Arr::except($this->all(), ['cost_price']));

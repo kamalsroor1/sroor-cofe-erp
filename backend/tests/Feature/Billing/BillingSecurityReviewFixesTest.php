@@ -318,6 +318,29 @@ final class BillingSecurityReviewFixesTest extends BillingTestCase
         $this->postJson('/api/v1/billing/payments/999999/cancel', [], $this->tenantHeaders($tenant))->assertStatus(429);
     }
 
+    public function test_withdrawing_another_tenants_payment_as_owner_returns_404_while_cashier_gets_403(): void
+    {
+        $tenantA = $this->expiredTrialTenant();
+        $tenantB = $this->tenantOn($this->plan());
+        $invoiceA = $this->pendingInvoice($tenantA, ['type' => 'plan']);
+        $paymentA = $this->upload($tenantA, $invoiceA);
+
+        $tenantBAdmin = $this->tenantAdmin($tenantB);
+        $tenantBCashier = $this->createTenantUser($tenantB, 'cashier');
+
+        // An owner/admin of Tenant B (who holds billing.manage) gets 404 — no cross-tenant leak or state change.
+        $this->postJson('/api/v1/billing/payments/'.$paymentA->getKey().'/cancel', [], $this->tenantHeaders($tenantB, $tenantBAdmin))
+            ->assertNotFound();
+
+        // A cashier lacking billing.manage fails permission middleware with 403 (root cause of QA confusion).
+        $this->postJson('/api/v1/billing/payments/'.$paymentA->getKey().'/cancel', [], $this->tenantHeaders($tenantB, $tenantBCashier))
+            ->assertForbidden();
+
+        $paymentA->refresh();
+        $this->assertSame('pending', $paymentA->status->value);
+        $this->assertNull($paymentA->rejection_reason);
+    }
+
     // ---- S3 ----------------------------------------------------------------------------------
 
     public function test_the_sweep_ignores_a_window_the_policy_does_not_grant(): void

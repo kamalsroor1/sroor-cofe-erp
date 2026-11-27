@@ -106,7 +106,9 @@ final class ListShopsNearLimitAction
             ->get();
 
         $capped = $tenants->count() > self::SCAN_CAP;
-        $plans = Plan::query()->pluck('name', 'id');
+        $plans = Plan::query()
+            ->get(['id', 'name', 'name_key', 'slug', 'is_free'])
+            ->mapWithKeys(fn (Plan $plan): array => [$plan->id => $plan->localizedName()]);
         $rows = [];
         $scanned = 0;
         $failed = 0;

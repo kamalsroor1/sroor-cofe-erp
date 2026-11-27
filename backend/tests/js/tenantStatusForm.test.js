@@ -11,13 +11,13 @@ import {
     validateTenantStatusForm,
 } from '../../resources/js/helpers/tenantStatusForm.js';
 
-test('super-admin targets exclude active (billing only) and pending (invalid)', () => {
-    assert.deepEqual([...TENANT_STATUS_TARGETS], ['trial', 'read_only', 'suspended', 'cancelled']);
+test('super-admin targets exclude active (billing only), trial (removed), and pending (invalid)', () => {
+    assert.deepEqual([...TENANT_STATUS_TARGETS], ['read_only', 'suspended', 'cancelled']);
     assert.deepEqual([...TENANT_SUSPENSION_REASONS], ['non_payment', 'violation', 'customer_request', 'other']);
 });
 
 test('the form starts on the current status only when it is a valid target', () => {
-    assert.equal(emptyTenantStatusForm('trial').status, 'trial');
+    assert.equal(emptyTenantStatusForm('trial').status, '');
     assert.equal(emptyTenantStatusForm('active').status, '');
     assert.equal(emptyTenantStatusForm(null).status, '');
     assert.deepEqual(emptyTenantStatusForm('suspended'), {
@@ -37,24 +37,13 @@ test('suspension requires a reason; cancellation does not', () => {
     assert.deepEqual(validateTenantStatusForm({ status: 'active' }), {
         status: 'super.tenant_status.status_required',
     });
+    assert.deepEqual(validateTenantStatusForm({ status: 'trial' }), {
+        status: 'super.tenant_status.status_required',
+    });
 });
 
-test('extend_days is validated only for trial', () => {
-    assert.deepEqual(validateTenantStatusForm({ status: 'trial', extend_days: '-1' }), {
-        extend_days: 'super.tenant_status.extend_days_invalid',
-    });
-    assert.deepEqual(validateTenantStatusForm({ status: 'trial', extend_days: '3651' }), {
-        extend_days: 'super.tenant_status.extend_days_invalid',
-    });
-    assert.deepEqual(validateTenantStatusForm({ status: 'trial', extend_days: '30' }), {});
+test('extend_days is never sent for any target status', () => {
     assert.deepEqual(validateTenantStatusForm({ status: 'read_only', extend_days: '-5' }), {});
-});
-
-test('payload sends extend_days only with trial and reason only with suspended/cancelled', () => {
-    assert.deepEqual(buildTenantStatusPayload({ status: 'trial', extend_days: '14', reason: 'other', note: '  ' }), {
-        status: 'trial',
-        extend_days: 14,
-    });
     assert.deepEqual(
         buildTenantStatusPayload({ status: 'suspended', extend_days: 30, reason: 'non_payment', note: ' late ' }),
         { status: 'suspended', reason: 'non_payment', note: 'late' }

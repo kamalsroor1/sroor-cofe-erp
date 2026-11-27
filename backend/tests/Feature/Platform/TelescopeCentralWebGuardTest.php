@@ -62,6 +62,10 @@ final class TelescopeCentralWebGuardTest extends TenantTestCase
         $catchAll = [];
 
         foreach ($router->getRoutes()->getRoutes() as $route) {
+            if ($route->getName() === 'telescope.disabled') {
+                continue;
+            }
+
             if ($route->uri() === '{any?}') {
                 $catchAll[] = $route;
 

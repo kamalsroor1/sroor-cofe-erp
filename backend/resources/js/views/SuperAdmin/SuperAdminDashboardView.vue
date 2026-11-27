@@ -23,22 +23,57 @@
       </template>
     </PageHeader>
 
-    <!-- 5 Platform Metric Cards -->
-    <SuperAdminMetricsGrid :metrics="metrics" :loading="isLoading" />
-
-    <!-- Plans Distribution & Recent Tenants (2 Cols) -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <SuperAdminPlansDistribution :plan-stats="planStats" />
-
-      <div class="lg:col-span-2">
-        <SuperAdminRecentTenants :recent-tenants="recentTenants" />
+    <template v-if="isLoading && !hasLoaded">
+      <SuperAdminMetricsGrid :metrics="metrics" :loading="true" />
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <CardSkeleton :rows="3" />
+        <div class="lg:col-span-2">
+          <CardSkeleton :rows="4" />
+        </div>
       </div>
+      <CardSkeleton :rows="2" />
+    </template>
+
+    <div
+      v-else-if="error && !hasLoaded"
+      class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm"
+    >
+      <ErrorState
+        :title="$t('super.dashboard_load_failed')"
+        :message="errorMessage"
+        :status-code="statusCode"
+        :can-retry="canRetry"
+        :loading="isLoading"
+        @retry="retry"
+      />
     </div>
 
-    <PlatformSettingsLinkCard v-if="canViewSettings" />
+    <template v-else>
+      <InlineErrorBar
+        v-if="error"
+        :message="errorMessage"
+        :status-code="statusCode"
+        :can-retry="canRetry"
+        @retry="retry"
+      />
 
-    <!-- Central Server & System Information Section -->
-    <SuperAdminServerSpecsCard :system-info="systemInfo" />
+      <!-- 5 Platform Metric Cards -->
+      <SuperAdminMetricsGrid :metrics="metrics" :loading="isLoading" />
+
+      <!-- Plans Distribution & Recent Tenants (2 Cols) -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <SuperAdminPlansDistribution :plan-stats="planStats" />
+
+        <div class="lg:col-span-2">
+          <SuperAdminRecentTenants :recent-tenants="recentTenants" />
+        </div>
+      </div>
+
+      <PlatformSettingsLinkCard v-if="canViewSettings" />
+
+      <!-- Central Server & System Information Section -->
+      <SuperAdminServerSpecsCard :system-info="systemInfo" />
+    </template>
   </div>
 </template>
 
@@ -46,6 +81,9 @@
 import { computed } from 'vue';
 import { Building2, Layers, Crown } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
+import ErrorState from '../../Components/Common/ErrorState.vue';
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
+import CardSkeleton from '../../Components/Common/Skeletons/CardSkeleton.vue';
 import SuperAdminMetricsGrid from '../../Components/SuperAdmin/SuperAdminMetricsGrid.vue';
 import SuperAdminPlansDistribution from '../../Components/SuperAdmin/SuperAdminPlansDistribution.vue';
 import SuperAdminRecentTenants from '../../Components/SuperAdmin/SuperAdminRecentTenants.vue';
@@ -55,7 +93,19 @@ import { useSuperAdminDashboard } from '../../Composables/useSuperAdminDashboard
 import { useCentralAuthStore } from '../../stores/centralAuth';
 import { CENTRAL_PERMISSIONS } from '../../helpers/centralPermissions';
 
-const { metrics, planStats, recentTenants, systemInfo, isLoading } = useSuperAdminDashboard();
+const {
+  metrics,
+  planStats,
+  recentTenants,
+  systemInfo,
+  isLoading,
+  hasLoaded,
+  error,
+  errorMessage,
+  statusCode,
+  canRetry,
+  retry,
+} = useSuperAdminDashboard();
 
 const centralAuth = useCentralAuthStore();
 const canViewSettings = computed(() => centralAuth.can(CENTRAL_PERMISSIONS.settingsView));

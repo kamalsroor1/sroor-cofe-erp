@@ -188,4 +188,6 @@ return [
     'cancel_stock_sold' => 'تعذر إلغاء الفاتورة: رصيد الصنف [:item] الحالي (:current :unit) أقل من الكمية المطلوب عكسها (:required :unit)، لوجود مبيعات تمت من هذه الشحنة.',
     'cancel_store_stock_insufficient' => 'تعذر إلغاء الفاتورة: رصيد الصنف [:item] في [:store] (:current :unit) غير كافٍ لخصم الكمية (:required :unit).',
     'cannot_pay_cancelled' => 'لا يمكن تسجيل سداد على فاتورة مشتريات ملغاة',
+    'discount_exceeds_subtotal' => 'مبلغ الخصم (:discount) لا يمكن أن يتجاوز إجمالي الفاتورة الفرعي (:subtotal).',
+    'paid_exceeds_net_total' => 'المبلغ المدفوع (:paid) لا يمكن أن يتجاوز صافي إجمالي الفاتورة (:net).',
 ];

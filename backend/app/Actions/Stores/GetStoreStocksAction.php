@@ -7,6 +7,7 @@ namespace App\Actions\Stores;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Services\Settings\TenantSettings;
+use App\Support\Database\LikePattern;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 final class GetStoreStocksAction
@@ -28,10 +29,7 @@ final class GetStoreStocksAction
             ->where('store_id', $storeId);
 
         if ($search !== '') {
-            $query->whereHas('item', function ($iq) use ($search) {
-                $iq->where('name', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%");
-            });
+            $query->whereHas('item', fn ($iq) => LikePattern::whereContainsAny($iq, ['name', 'code'], $search));
         }
 
         if ($stockStatus === 'low') {

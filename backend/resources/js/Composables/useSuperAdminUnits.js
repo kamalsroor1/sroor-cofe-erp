@@ -2,6 +2,7 @@ import { ref, onMounted } from 'vue';
 import api from '../Services/centralApi';
 import { useTrans } from './useTrans';
 import DarkSwal from '../helpers/alert';
+import { useSuperAdminLoader } from './useSuperAdminLoader';
 
 export function useSuperAdminUnits() {
     const { t } = useTrans();
@@ -12,22 +13,23 @@ export function useSuperAdminUnits() {
     // loaded, so a unit removed by mistake can be added back before saving.
     const presets = ref([]);
     const newUnitInput = ref('');
-    const isLoading = ref(true);
     const isSaving = ref(false);
 
-    const fetchUnits = async () => {
-        isLoading.value = true;
-        try {
-            const res = await api.get('/super-admin/units');
-            const loaded = Array.isArray(res.data?.units) ? res.data.units : [];
-            units.value = [...loaded];
-            presets.value = Array.isArray(res.data?.presets) ? res.data.presets : [...loaded];
-        } catch (e) {
-            console.error('Failed to load super admin units:', e);
-        } finally {
-            isLoading.value = false;
-        }
-    };
+    const {
+        isLoading,
+        hasLoaded,
+        error,
+        errorMessage,
+        statusCode,
+        canRetry,
+        load: fetchUnits,
+        retry,
+    } = useSuperAdminLoader(async () => {
+        const res = await api.get('/super-admin/units');
+        const loaded = Array.isArray(res.data?.units) ? res.data.units : [];
+        units.value = [...loaded];
+        presets.value = Array.isArray(res.data?.presets) ? res.data.presets : [...loaded];
+    });
 
     const addCustomUnit = () => {
         const u = newUnitInput.value.trim();
@@ -91,8 +93,14 @@ export function useSuperAdminUnits() {
         presets,
         newUnitInput,
         isLoading,
+        hasLoaded,
+        error,
+        errorMessage,
+        statusCode,
+        canRetry,
         isSaving,
         fetchUnits,
+        retry,
         addCustomUnit,
         addPreset,
         removeUnit,

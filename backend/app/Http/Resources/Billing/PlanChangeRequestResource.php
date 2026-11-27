@@ -71,6 +71,6 @@ final class PlanChangeRequestResource extends JsonResource
      */
     private function planSummary(?Plan $plan): ?array
     {
-        return $plan === null ? null : ['id' => (int) $plan->getKey(), 'name' => $plan->name, 'code' => $plan->slug];
+        return $plan === null ? null : ['id' => (int) $plan->getKey(), 'name' => $plan->localizedName(), 'code' => $plan->slug];
     }
 }

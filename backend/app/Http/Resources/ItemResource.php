@@ -46,6 +46,8 @@ class ItemResource extends JsonResource
             'unit' => $this->unit ?? 'كجم',
             // BUG-02: cost_price (= last_purchase_price) + average_cost, items.view_cost only.
             ...ItemCostFields::forItem($this->resource, $request->user()),
+            // INV-252: expose weighted_avg_cost on ItemResource, hidden without items.view_cost.
+            'weighted_avg_cost' => $showCost ? Decimal::normalize((string) ($this->weighted_avg_cost ?? '0')) : null,
             'min_selling_price' => $minSellingPrice,
             'has_min_price' => bccomp((string) ($this->min_selling_price ?? '0'), '0', 3) > 0,
             // BE-08: NULL/0 = not set (wholesale customers pay retail).

@@ -8,6 +8,7 @@ use App\DTOs\Users\TemporaryPasswordResult;
 use App\Models\User;
 use App\Services\ActivityLogService;
 use App\Support\Auth\AccountLockout;
+use App\Support\Auth\CurrentPasswordVerifier;
 use App\Support\Auth\TemporaryPassword;
 use App\Support\Roles\RoleGrantGuard;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -32,6 +33,7 @@ final class ResetUserPasswordAction
     public function __construct(
         private readonly RoleGrantGuard $roleGrantGuard,
         private readonly ActivityLogService $activityLogService,
+        private readonly CurrentPasswordVerifier $currentPasswordVerifier,
     ) {}
 
     public function execute(int $userId, User $actor): TemporaryPasswordResult
@@ -72,6 +74,7 @@ final class ResetUserPasswordAction
         });
 
         AccountLockout::clearForIdentifiers($result->user->phone, $result->user->email);
+        $this->currentPasswordVerifier->passed($result->user);
 
         return $result;
     }

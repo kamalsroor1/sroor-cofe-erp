@@ -32,15 +32,15 @@ use Carbon\CarbonImmutable;
  *    start like any renewal, plus the add-ons the renewal charges for; appended after a running paid
  *    end, else starting at the payment;
  *  - upgrade with a running paid term (IssuePlanChangeInvoiceAction): the pro-rata difference
- *    (ProrationCalculator) for the rest of the term, end kept; with `renew`, plus one full cycle of the
- *    new plan at the LIST price appended after the current end;
- *  - upgrade / subscribe with no paid term (trial / expired): one full cycle of the plan at the LIST
- *    price, the term starting at the verified payment (spec A). The tenant's OWN paid plan is
- *    accepted here (a trial subscribing to the plan it tries); with a running term it is 422
- *    request_same_plan (use renew). Remaining trial days are NOT added: open
- *    owner decision (أ), reported as `trial_days_policy = pending` during a trial.
- * A founder with an agreed price (FounderPricingService::hasAgreedFounderPrice) is held for a manual
- * price review on the upgrade path (spec C): `held_for_price_review` true, no lines, no total.
+ *    (ProrationCalculator) for the rest of the term, end kept (using the tenant's active founder
+ *    schedule when applicable); with `renew`, plus one full cycle of the new plan appended after the
+ *    current end;
+ *  - upgrade / subscribe with no paid term (trial / expired): one full cycle of the plan (at the
+ *    active founder schedule for existing founders, else LIST price), the term starting at the
+ *    verified payment (spec A). The tenant's OWN paid plan is accepted here (a trial subscribing to
+ *    the plan it tries); with a running term it is 422 request_same_plan (use renew). Remaining trial
+ *    days are NOT added: open owner decision (أ), reported as `trial_days_policy = pending` during a
+ *    trial.
  *
  * The upgrade difference shown is an ESTIMATE as of now: it is final at Verify, re-priced from the
  * verified transfer moment (owner decision 2026-11-26, UpgradeDifferenceRepricer) - `estimate` true.
@@ -100,33 +100,39 @@ final class PreviewBillingChangeAction
         if (! $target instanceof Plan) {
             throw BillingException::requestPlanUnavailable();
         }
-        if ($target->is_free) {
+
+        $difference = null;
+
+        if ($termEnd !== null) {
+            // #232 item 8: with no paid term running the same (paid) plan is a subscribe, not a no-op.
+            if ($current instanceof Plan && (int) $current->getKey() === (int) $target->getKey()) {
+                throw BillingException::requestSamePlan();
+            }
+
+            if ($target->is_free) {
+                throw BillingException::upgradeNotHigher();
+            }
+
+            $difference = $this->pricer->upgradeDifference($tenant, $current, $target);
+
+            if (bccomp($difference['new_price'], $difference['old_price'], 3) <= 0
+                || bccomp($difference['amount'], '0', 3) <= 0) {
+                throw BillingException::upgradeNotHigher();
+            }
+        } elseif ($target->is_free) {
             throw BillingException::freePlanNotBillable();
         }
-        // #232 item 8: with no paid term running the same (paid) plan is a subscribe, not a no-op.
-        if ($current instanceof Plan && (int) $current->getKey() === (int) $target->getKey() && $termEnd !== null) {
-            throw BillingException::requestSamePlan();
-        }
 
-        if ($this->founder->hasAgreedFounderPrice((string) $tenant->getKey())) {
-            return ['kind' => $termEnd === null ? BillingChangePreview::KIND_SUBSCRIBE : ($dto->renew ? BillingChangePreview::KIND_UPGRADE_RENEWAL : BillingChangePreview::KIND_UPGRADE),
-                'plan' => $target, 'lines' => [], 'tax_rate' => null, 'subtotal' => null, 'tax' => null, 'total' => null,
-                'new_period_end' => null, 'estimate' => false, 'held' => true];
-        }
+        $isFounder = $this->founder->hasAgreedFounderPrice((string) $tenant->getKey());
 
-        // No paid term: IssuePlanChangeInvoiceAction answers with a full-cycle plan invoice (list price).
+        // No paid term: IssuePlanChangeInvoiceAction answers with a full-cycle plan invoice
+        // (at the tenant's active founder schedule for existing founders, else list price).
         if ($termEnd === null) {
-            $line = $this->pricer->planLine($target, $dto->cycle, $tenant, $subscription, $now->startOfDay(), listPriceOnly: true);
+            $line = $this->pricer->planLine($target, $dto->cycle, $tenant, $subscription, $now->startOfDay(), listPriceOnly: ! $isFounder);
 
             return $this->priced(BillingChangePreview::KIND_SUBSCRIBE, $target, [
-                $this->previewLine('plan', 'subscription.billing.change.line_plan', ['plan' => $target->name, 'cycle' => $dto->cycle->label()], $line),
+                $this->previewLine('plan', 'subscription.billing.change.line_plan', ['plan' => $target->localizedName(), 'cycle' => $dto->cycle->label()], $line),
             ], $this->pricer->periodEnd($now, $dto->cycle), false);
-        }
-
-        $difference = $this->pricer->upgradeDifference($tenant, $current, $target);
-
-        if (bccomp($difference['amount'], '0', 3) <= 0) {
-            throw BillingException::upgradeNotHigher();
         }
 
         $lines = [$this->previewLine('proration', 'subscription.billing.change.line_proration', [
@@ -134,16 +140,16 @@ final class PreviewBillingChangeAction
             'period_days' => $difference['period_days'],
             'new' => $difference['new_price'],
             'old' => $difference['old_price'],
-            'plan' => $target->name,
-            'from_plan' => $current?->name,
-        ], ['amount' => $difference['amount']])];
+            'plan' => $target->localizedName(),
+            'from_plan' => $current?->localizedName(),
+        ], ['amount' => $difference['amount'], 'founder' => $difference['founder']])];
 
         if (! $dto->renew) {
             return $this->priced(BillingChangePreview::KIND_UPGRADE, $target, $lines, null, true);
         }
 
-        $renewal = $this->pricer->planLine($target, $dto->cycle, $tenant, $subscription, $termEnd->startOfSecond(), listPriceOnly: true);
-        $lines[] = $this->previewLine('renewal', $this->renewalKey($dto->cycle), ['plan' => $target->name], $renewal);
+        $renewal = $this->pricer->planLine($target, $dto->cycle, $tenant, $subscription, $termEnd->startOfSecond(), listPriceOnly: ! $isFounder);
+        $lines[] = $this->previewLine('renewal', $this->renewalKey($dto->cycle), ['plan' => $target->localizedName()], $renewal);
 
         return $this->priced(BillingChangePreview::KIND_UPGRADE_RENEWAL, $target, $lines, $this->pricer->periodEnd($termEnd->startOfSecond(), $dto->cycle), true);
     }
@@ -167,7 +173,7 @@ final class PreviewBillingChangeAction
         // Same period start as IssueSubscriptionInvoiceAction::periodStart() for a renewal.
         $periodStart = $termEnd?->startOfSecond() ?? $now->startOfDay();
         $line = $this->pricer->planLine($current, $dto->cycle, $tenant, $subscription, $periodStart);
-        $lines = [$this->previewLine('renewal', $this->renewalKey($dto->cycle), ['plan' => $current->name], $line)];
+        $lines = [$this->previewLine('renewal', $this->renewalKey($dto->cycle), ['plan' => $current->localizedName()], $line)];
 
         if ($subscription instanceof Subscription) {
             foreach ($this->pricer->renewalAddonLines($subscription, $tenant, $periodStart, $this->pricer->periodEnd($periodStart, $dto->cycle), $dto->cycle) as $addon) {
@@ -206,7 +212,7 @@ final class PreviewBillingChangeAction
     /**
      * @param  array<string, int|string|null>  $params
      * @param  array<string, mixed>  $priced  an invoice line (or ['amount' => ...])
-     * @return array{kind: string, label_key: string, label: string, params: array<string, int|string|null>, amount: string}
+     * @return array{kind: string, label_key: string, label: string, params: array<string, int|string|null>, amount: string, founder: bool}
      */
     private function previewLine(string $kind, string $labelKey, array $params, array $priced): array
     {
@@ -216,6 +222,7 @@ final class PreviewBillingChangeAction
             'label' => (string) __($labelKey, array_map(static fn (int|string|null $value): string => (string) $value, $params)),
             'params' => $params,
             'amount' => Decimal::normalize((string) $priced['amount']),
+            'founder' => (bool) ($priced['founder'] ?? false),
         ];
     }
 

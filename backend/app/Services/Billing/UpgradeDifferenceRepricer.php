@@ -68,7 +68,7 @@ final class UpgradeDifferenceRepricer
             throw ValidationException::withMessages(['transferred_at' => __('billing.errors.transferred_at_future')]);
         }
 
-        if ($transferredAt->lessThan($invoice->earliestTransferAt())) {
+        if ($invoice->isBeforeIssueDay($transferredAt)) {
             throw ValidationException::withMessages(['transferred_at' => __('billing.errors.transferred_at_before_invoice')]);
         }
     }

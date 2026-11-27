@@ -14,7 +14,7 @@
             class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50"
           >
             <div class="flex items-center gap-3">
-              <div class="p-2 bg-primary/10 text-primary rounded-xl">
+              <div class="p-2 bg-theme-light text-theme-primary rounded-xl">
                 <CreditCard class="w-5 h-5" />
               </div>
               <h3 class="text-lg font-bold text-slate-800 dark:text-slate-200">
@@ -62,7 +62,7 @@
                   <select
                     v-model="entry.method"
                     data-testid="pos-split-method"
-                    class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block p-2.5 min-h-11"
+                    class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-2 focus:ring-theme-primary focus:border-theme-primary block p-2.5 min-h-11"
                   >
                     <option v-for="method in paymentMethods" :key="method.key" :value="method.key">
                       {{ method.label }}
@@ -81,7 +81,7 @@
                       data-testid="pos-split-amount"
                       min="0"
                       step="0.001"
-                      class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block p-2.5 min-h-11"
+                      class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-2 focus:ring-theme-primary focus:border-theme-primary block p-2.5 min-h-11"
                     />
                   </div>
                 </div>
@@ -89,7 +89,7 @@
                 <div class="flex flex-col gap-2 pt-5">
                   <button
                     @click="fillRemaining(index)"
-                    class="px-2 min-h-11 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors whitespace-nowrap"
+                    class="px-2 min-h-11 text-xs font-medium text-theme-primary bg-theme-light hover:bg-theme-primary/20 rounded-lg transition-colors whitespace-nowrap"
                   >
                     {{ $t('pos.fill_remaining') }}
                   </button>
@@ -114,7 +114,7 @@
                   v-for="method in paymentMethods"
                   :key="'add-' + method.key"
                   @click="addPaymentEntry(method.key)"
-                  class="flex items-center gap-1.5 px-3 min-h-11 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full hover:border-primary hover:text-primary dark:hover:border-primary transition-colors"
+                  class="flex items-center gap-1.5 px-3 min-h-11 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full hover:border-theme-primary hover:text-theme-primary transition-colors"
                 >
                   <component :is="method.icon" class="w-4 h-4" />
                   <span>{{ method.label }}</span>
@@ -180,7 +180,7 @@
               data-testid="pos-split-confirm"
               @click="handleConfirm"
               :disabled="!isValid"
-              class="w-full flex items-center justify-center gap-2 py-3 px-4 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              class="w-full flex items-center justify-center gap-2 py-3 px-4 bg-theme-primary hover:bg-theme-hover text-white rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <CheckCircle2 class="w-5 h-5" />
               {{ $t('pos.confirm_multi_payment') }}

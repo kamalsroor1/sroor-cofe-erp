@@ -85,7 +85,7 @@ Route::middleware([
         // W2 3F: moved from routes/web.php, which never initialised tenancy (500 on tenant hosts).
         // The SPA catch-all in routes/web.php excludes these two print paths so they are reachable.
         // 🖨️ Item Movements Audit Ledger Print
-        Route::get('/items/{id}/movements/print', ItemMovementsPrintController::class)->name('items.movements.print')->middleware(['can:items.view', 'store.access', 'feature:items.movements']);
+        Route::get('/items/{id}/movements/print', ItemMovementsPrintController::class)->whereNumber('id')->name('items.movements.print')->middleware(['can:items.view', 'store.access', 'feature:items.movements']);
 
         // 🖨️ General Reports A4 Print
         Route::get('/reports/print', function (Request $request) {

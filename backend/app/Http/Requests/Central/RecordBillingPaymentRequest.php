@@ -6,6 +6,7 @@ namespace App\Http\Requests\Central;
 
 use App\Enums\Billing\BillingPaymentMethod;
 use App\Enums\CentralPermission;
+use App\Models\BillingInvoice;
 use App\Support\PlatformSuperAdmin;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -36,9 +37,11 @@ final class RecordBillingPaymentRequest extends FormRequest
                 BillingPaymentMethod::BankTransfer->value,
                 BillingPaymentMethod::Cash->value,
             ])],
-            'reference' => ['nullable', 'string', 'max:100', 'not_regex:/[<>]/'],
+            'reference' => ['nullable', 'string', 'min:2', 'max:100', 'not_regex:/[<>]/'],
+            'payer_reference' => ['sometimes', 'nullable', 'string', 'min:2', 'max:100', 'not_regex:/[<>]/'],
             'note' => ['nullable', 'string', 'max:500', 'not_regex:/[<>]/'],
-            'paid_at' => ['required', 'date', 'before_or_equal:now'],
+            'notes' => ['sometimes', 'nullable', 'string', 'max:500', 'not_regex:/[<>]/'],
+            'paid_at' => ['required', 'bail', 'date', BillingInvoice::notInFutureRule()],
             // OPS-20: one UUID per opened "record payment" dialog; a retry with it records nothing new.
             'idempotency_key' => ['nullable', 'string', 'uuid'],
         ];

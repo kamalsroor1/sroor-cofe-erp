@@ -24,7 +24,12 @@
           >
             <div
               v-if="isOpen"
-              class="w-screen max-w-sm sm:max-w-md bg-white dark:bg-slate-900 border-e border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col justify-between pointer-events-auto"
+              ref="panelRef"
+              role="dialog"
+              aria-modal="true"
+              :aria-labelledby="titleId"
+              tabindex="-1"
+              class="w-screen max-w-sm sm:max-w-md bg-white dark:bg-slate-900 border-e border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col justify-between pointer-events-auto outline-none"
             >
               <!-- Drawer Header -->
               <div
@@ -38,7 +43,7 @@
                   </div>
                   <div>
                     <div class="flex items-center gap-2">
-                      <h3 class="font-black text-sm sm:text-base text-slate-900 dark:text-white">
+                      <h3 :id="titleId" class="font-black text-sm sm:text-base text-slate-900 dark:text-white">
                         {{ title || $t('common.filter_search') }}
                       </h3>
                       <span
@@ -56,10 +61,11 @@
 
                 <button
                   type="button"
+                  :aria-label="$t('common.close')"
                   @click="close"
                   class="min-h-[44px] min-w-[44px] rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white flex items-center justify-center transition active:scale-95 cursor-pointer shadow-xs"
                 >
-                  <X class="w-5 h-5" />
+                  <X class="w-5 h-5" aria-hidden="true" />
                 </button>
               </div>
 
@@ -102,9 +108,10 @@
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount } from 'vue';
+import { ref, useId } from 'vue';
 import { SlidersHorizontal, X, RotateCcw, Check } from 'lucide-vue-next';
 import BaseButton from './BaseButton.vue';
+import { useFocusTrap } from '@/Composables/useFocusTrap';
 
 const props = defineProps({
   isOpen: { type: Boolean, default: false },
@@ -115,21 +122,17 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'apply', 'reset']);
 
+const titleId = `${useId()}-title`;
+const panelRef = ref(null);
+
 const close = () => emit('close');
 const apply = () => emit('apply');
 const reset = () => emit('reset');
 
-const handleEscape = (e) => {
-  if (e.key === 'Escape' && props.isOpen) {
+useFocusTrap(panelRef, () => props.isOpen, {
+  onEscape: (e) => {
+    e.preventDefault();
     close();
-  }
-};
-
-onMounted(() => {
-  document.addEventListener('keydown', handleEscape);
-});
-
-onBeforeUnmount(() => {
-  document.removeEventListener('keydown', handleEscape);
+  },
 });
 </script>

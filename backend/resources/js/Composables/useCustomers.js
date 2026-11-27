@@ -41,6 +41,7 @@ export function useCustomers() {
         phone: '',
         address: '',
         tax_number: '',
+        price_tier: 'retail',
         opening_balance: '0.000',
         // SHOP-03: empty = no limit.
         credit_limit: '',
@@ -112,6 +113,7 @@ export function useCustomers() {
             phone: '',
             address: '',
             tax_number: '',
+            price_tier: 'retail',
             opening_balance: '0.000',
             // SHOP-03: pre-filled with the shop default (settings); the user may change or clear it.
             credit_limit: creditLimitInput(appConfigStore.system?.customers_default_credit_limit),
@@ -128,6 +130,7 @@ export function useCustomers() {
             phone: customer.phone || '',
             address: customer.address || '',
             tax_number: customer.tax_number || '',
+            price_tier: customer.price_tier || 'retail',
             opening_balance: '0.000',
             credit_limit: creditLimitInput(customer.credit_limit),
             notes: customer.notes || '',

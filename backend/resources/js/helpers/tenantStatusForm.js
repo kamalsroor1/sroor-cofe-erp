@@ -12,7 +12,7 @@
  * Pure module (no Vue, no translations): validation returns translation KEYS.
  */
 
-export const TENANT_STATUS_TARGETS = Object.freeze(['trial', 'read_only', 'suspended', 'cancelled']);
+export const TENANT_STATUS_TARGETS = Object.freeze(['read_only', 'suspended', 'cancelled']);
 
 export const TENANT_SUSPENSION_REASONS = Object.freeze(['non_payment', 'violation', 'customer_request', 'other']);
 
@@ -38,8 +38,8 @@ export function statusRequiresReason(status) {
     return status === 'suspended';
 }
 
-export function statusAcceptsExtendDays(status) {
-    return status === 'trial';
+export function statusAcceptsExtendDays() {
+    return false;
 }
 
 function toDays(value) {

@@ -32,9 +32,9 @@ final class AccountLockout
     /** Unix timestamp the lock ends at, or null when the account is not locked. */
     public static function lockedUntil(mixed $login): ?int
     {
-        $until = Cache::get(self::lockKey($login));
+        $until = self::parseTimestamp(Cache::get(self::lockKey($login)));
 
-        return is_int($until) && $until > now()->getTimestamp() ? $until : null;
+        return $until !== null && $until > now()->getTimestamp() ? $until : null;
     }
 
     /**
@@ -78,8 +78,8 @@ final class AccountLockout
         $locked = [];
 
         foreach ($keys as $login => $key) {
-            $until = $values[$key] ?? null;
-            if (is_int($until) && $until > $now) {
+            $until = self::parseTimestamp($values[$key] ?? null);
+            if ($until !== null && $until > $now) {
                 $locked[$login] = $until;
             }
         }
@@ -98,6 +98,40 @@ final class AccountLockout
             'login_locked' => $until !== null,
             'login_locked_until' => $until !== null ? Carbon::createFromTimestamp($until)->toIso8601String() : null,
         ];
+    }
+
+    public static function isLockedForIdentifiers(?string ...$logins): bool
+    {
+        return self::lockedUntilForIdentifiers(...$logins) !== null;
+    }
+
+    /**
+     * Lock every login identifier of an account for the configured lockout window.
+     */
+    public static function lockForIdentifiers(?string ...$logins): bool
+    {
+        $usable = self::usable($logins);
+        if ($usable === []) {
+            return false;
+        }
+
+        $decay = self::lockoutSeconds();
+        $until = now()->getTimestamp() + $decay;
+
+        foreach ($usable as $login) {
+            Cache::put(self::lockKey($login), $until, $decay);
+            RateLimiter::clear(self::failuresKey($login));
+        }
+
+        return true;
+    }
+
+    /** Drop failure counters across all usable login identifiers (successful login). */
+    public static function clearFailuresForIdentifiers(?string ...$logins): void
+    {
+        foreach (self::usable($logins) as $login) {
+            self::clearFailures($login);
+        }
     }
 
     /** Admin unlock for every identifier a user can sign in with. Returns true if any was locked. */
@@ -124,9 +158,9 @@ final class AccountLockout
     public static function hit(mixed $login): bool
     {
         $decay = self::lockoutSeconds();
-        RateLimiter::hit(self::failuresKey($login), $decay);
+        $hits = (int) RateLimiter::hit(self::failuresKey($login), $decay);
 
-        if (RateLimiter::attempts(self::failuresKey($login)) < self::maxAttempts()) {
+        if ($hits < self::maxAttempts()) {
             return false;
         }
 
@@ -161,6 +195,23 @@ final class AccountLockout
         $value = config('rate_limits.tenant_login.account_lockout_minutes', 15);
 
         return max(1, is_numeric($value) ? (int) $value : 15);
+    }
+
+    /**
+     * RedisStore returns unserialized integers as numeric strings, whereas array/database
+     * stores preserve PHP ints. Accept both so lockouts work on every cache driver.
+     */
+    private static function parseTimestamp(mixed $value): ?int
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (is_string($value) && ctype_digit($value)) {
+            return (int) $value;
+        }
+
+        return null;
     }
 
     /**

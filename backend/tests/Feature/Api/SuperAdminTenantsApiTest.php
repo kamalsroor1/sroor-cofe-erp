@@ -12,6 +12,7 @@ use App\Models\Tenant;
 use App\Models\TenantLifecycleEvent;
 use App\Models\User;
 use App\Support\Tenancy\TenantSuspensionReason;
+use Database\Seeders\PlansAndFeaturesSeeder;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Tests\Concerns\SeedsCentralPlatformRoles;
@@ -112,10 +113,41 @@ final class SuperAdminTenantsApiTest extends TenantTestCase
 
     public function test_can_get_super_admin_dashboard_metrics(): void
     {
-        $this->getJson('/api/v1/super-admin/dashboard', $this->centralHeaders($this->centralSuperAdmin()))
+        $freePlan = Plan::query()->create([
+            'name' => 'مجاني',
+            'slug' => 'free-'.Str::lower(Str::random(6)),
+            'price_monthly' => '0.000',
+            'price_yearly' => '0.000',
+            'is_free' => true,
+            'is_active' => true,
+            'is_public' => true,
+            'sort_order' => 0,
+            'features' => [],
+        ]);
+
+        $this->createTenant(['plan_id' => $this->plan->id, 'status' => TenantStatus::Active->value]);
+        $this->createTenant(['plan_id' => $freePlan->id, 'status' => TenantStatus::Active->value]);
+        $this->createTenant(['plan_id' => $this->plan->id, 'status' => TenantStatus::Suspended->value]);
+
+        $headers = $this->centralHeaders($this->centralSuperAdmin());
+
+        $response = $this->getJson('/api/v1/super-admin/dashboard', $headers)
             ->assertStatus(200)
             ->assertJson(['success' => true])
-            ->assertJsonStructure(['metrics', 'plan_stats', 'recent_tenants', 'system_info']);
+            ->assertJsonStructure(['metrics', 'plan_stats', 'recent_tenants', 'system_info'])
+            ->assertJsonMissingPath('metrics.trial_tenants');
+
+        $metrics = $response->json('metrics');
+
+        $allTotal = (int) $this->getJson('/api/v1/super-admin/tenants', $headers)->assertOk()->json('tenants.total');
+        $activeTotal = (int) $this->getJson('/api/v1/super-admin/tenants?status=active', $headers)->assertOk()->json('tenants.total');
+        $suspendedTotal = (int) $this->getJson('/api/v1/super-admin/tenants?status=suspended', $headers)->assertOk()->json('tenants.total');
+        $freeTotal = (int) $this->getJson('/api/v1/super-admin/tenants?plan_id='.$freePlan->getKey(), $headers)->assertOk()->json('tenants.total');
+
+        $this->assertSame($allTotal, $metrics['total_tenants']);
+        $this->assertSame($activeTotal, $metrics['active_tenants']);
+        $this->assertSame($suspendedTotal, $metrics['suspended_tenants']);
+        $this->assertSame($freeTotal, $metrics['free_plan_tenants']);
     }
 
     // ------------------------------------------------------------------------ tenants
@@ -235,6 +267,111 @@ final class SuperAdminTenantsApiTest extends TenantTestCase
             ->assertJsonValidationErrors(['name', 'slug', 'email', 'plan_id', 'password', 'trial_days']);
 
         $this->assertSame(1, Tenant::query()->count());
+    }
+
+    public function test_store_tenant_rejects_arabic_and_non_subdomain_slugs_with_422(): void
+    {
+        $headers = $this->steppedUpCentralHeaders($this->centralSuperAdmin());
+        $invalidSlugs = [
+            'arabic' => 'عربي',
+            'mixed arabic' => 'shop-عربي',
+            'space' => 'my shop',
+            'uppercase short' => 'ABC',
+            'uppercase' => 'MyShop',
+            'too short' => 'ab',
+            'too long' => str_repeat('a', 31),
+            'underscore' => 'my_shop',
+            'leading hyphen' => '-shop',
+            'trailing hyphen' => 'shop-',
+            'accented unicode' => 'café',
+        ];
+
+        foreach ($invalidSlugs as $case => $slug) {
+            $response = $this->postJson('/api/v1/super-admin/tenants', [
+                'name' => 'متجر اختبار',
+                'slug' => $slug,
+                'email' => 'slug-test@elbon.test',
+                'phone' => '01000007004',
+                'password' => 'secret1234',
+                'plan_id' => $this->plan->id,
+            ], $headers);
+
+            $response->assertStatus(422)
+                ->assertJsonValidationErrors(['slug'])
+                ->assertJsonPath('errors.slug.0', (string) __('signup.validation.subdomain_format'));
+        }
+
+        // Reserved slugs from public signup are also rejected.
+        foreach (['admin', 'api'] as $reservedSlug) {
+            $this->postJson('/api/v1/super-admin/tenants', [
+                'name' => 'متجر محجوز',
+                'slug' => $reservedSlug,
+                'email' => 'reserved-test@elbon.test',
+                'phone' => '01000007006',
+                'password' => 'secret1234',
+                'plan_id' => $this->plan->id,
+            ], $headers)
+                ->assertStatus(422)
+                ->assertJsonValidationErrors(['slug'])
+                ->assertJsonPath('errors.slug.0', (string) __('signup.validation.subdomain_reserved'));
+        }
+
+        // English locale returns the translated validation message as well.
+        $this->postJson('/api/v1/super-admin/tenants', [
+            'name' => 'Test Shop',
+            'slug' => 'ABC',
+            'email' => 'slug-en@elbon.test',
+            'phone' => '01000007005',
+            'password' => 'secret1234',
+            'plan_id' => $this->plan->id,
+        ], $headers + ['X-Locale' => 'en'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['slug'])
+            ->assertJsonPath('errors.slug.0', (string) __('signup.validation.subdomain_format', [], 'en'));
+
+        $this->assertSame(0, Tenant::query()->count());
+    }
+
+    public function test_store_tenant_provisions_free_plan_without_trial_days_as_active_and_paid_defaults_to_zero_trial(): void
+    {
+        $this->seed(PlansAndFeaturesSeeder::class);
+        $free = Plan::query()->where('slug', 'free')->sole();
+        $headers = $this->steppedUpCentralHeaders($this->centralSuperAdmin());
+
+        $freeSlug = 'free-console-'.Str::lower(Str::random(6));
+        $paidSlug = 'paid-console-'.Str::lower(Str::random(6));
+
+        try {
+            $this->postJson('/api/v1/super-admin/tenants', [
+                'name' => 'متجر مجاني',
+                'slug' => $freeSlug,
+                'email' => $freeSlug.'@elbon.test',
+                'phone' => '01000007010',
+                'password' => 'secret1234',
+                'plan_id' => $free->id,
+            ], $headers)
+                ->assertStatus(201)
+                ->assertJsonPath('tenant.status', TenantStatus::Active->value)
+                ->assertJsonPath('tenant.trial_ends_at', null)
+                ->assertJsonPath('tenant.plan_name', 'المجانية')
+                ->assertJsonPath('tenant.plan.name', 'المجانية');
+
+            // Paid plan without trial_days defaults to 0 (never silent 14-day trial).
+            $this->postJson('/api/v1/super-admin/tenants', [
+                'name' => 'متجر مدفوع',
+                'slug' => $paidSlug,
+                'email' => $paidSlug.'@elbon.test',
+                'phone' => '01000007011',
+                'password' => 'secret1234',
+                'plan_id' => $this->plan->id,
+            ], $headers)
+                ->assertStatus(201)
+                ->assertJsonPath('tenant.status', TenantStatus::ReadOnly->value)
+                ->assertJsonPath('tenant.trial_ends_at', null);
+        } finally {
+            $this->dropProvisionedTenant($freeSlug);
+            $this->dropProvisionedTenant($paidSlug);
+        }
     }
 
     public function test_can_show_tenant_and_unknown_tenant_is_a_translated_404(): void

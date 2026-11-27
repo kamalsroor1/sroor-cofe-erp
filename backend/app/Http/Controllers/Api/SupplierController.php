@@ -18,6 +18,7 @@ use App\Http\Requests\StoreSupplierRequest;
 use App\Http\Requests\UpdateSupplierRequest;
 use App\Http\Resources\SupplierResource;
 use App\Models\Supplier;
+use App\Support\Database\LikePattern;
 use App\Support\Money\Decimal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -51,12 +52,7 @@ final class SupplierController extends Controller
         $query = Supplier::withCount(['purchases', 'payments']);
 
         if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('company_name', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('address', 'like', "%{$search}%");
-            });
+            LikePattern::whereContainsAny($query, ['name', 'company_name', 'phone', 'address'], $search);
         }
 
         if ($debtStatus === 'creditor') {

@@ -16,10 +16,12 @@ use App\DTOs\Customers\CustomerStatementFilterDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CollectCustomerPaymentRequest;
 use App\Http\Requests\CustomerStatementRequest;
+use App\Http\Requests\ListCustomersRequest;
 use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Requests\UpdateCustomerRequest;
 use App\Http\Resources\CustomerResource;
 use App\Models\Customer;
+use App\Support\Database\LikePattern;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Illuminate\Http\JsonResponse;
@@ -40,13 +42,8 @@ final class CustomerController extends Controller
     /**
      * List / Search Customers with filters & metrics
      */
-    public function index(Request $request): JsonResponse
+    public function index(ListCustomersRequest $request): JsonResponse
     {
-        $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('customers.manage') && ! $user->can('pos.access') && ! $user->can('invoices.create')) {
-            return response()->json(['success' => false, 'message' => __('auth.forbidden')], 403);
-        }
-
         $search = trim((string) $request->input('search', ''));
         $debtStatus = (string) $request->input('debt_status', 'all');
         $status = (string) $request->input('status', 'all');
@@ -55,12 +52,7 @@ final class CustomerController extends Controller
         $query = Customer::withCount(['invoices', 'payments']);
 
         if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('address', 'like', "%{$search}%")
-                    ->orWhere('tax_number', 'like', "%{$search}%");
-            });
+            LikePattern::whereContainsAny($query, ['name', 'phone', 'address', 'tax_number'], $search);
         }
 
         if ($debtStatus === 'debtor') {
@@ -77,7 +69,13 @@ final class CustomerController extends Controller
             $query->where('is_active', false);
         }
 
-        $customers = $query->latest('id')->paginate($perPage);
+        $sort = $request->resolveSort(ListCustomersRequest::SORT_COLUMNS);
+        $query->orderBy($sort['column'], $sort['direction']);
+        if ($sort['column'] !== 'id') {
+            $query->orderBy('id', $sort['direction']);
+        }
+
+        $customers = $query->paginate($perPage);
 
         // ROLE-01 (owner 2026-11-12): debt totals only for a reports.view reader.
         $summary = ['total_customers' => Customer::count()];

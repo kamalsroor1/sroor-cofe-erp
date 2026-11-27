@@ -122,3 +122,7 @@ __pycache__/
 
 # Capacitor webDir (APP-2): generated allow-listed shell, see backend/scripts/capacitor/
 /backend/capacitor-www/
+
+# QA agent run evidence (screenshots)
+/docs/04-testing/agent-brief/evidence/
+/docs/04-testing/ibraa-qa-package.zip

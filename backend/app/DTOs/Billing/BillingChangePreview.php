@@ -30,7 +30,7 @@ final readonly class BillingChangePreview
     public const TRIAL_DAYS_NOT_APPLICABLE = 'n/a';
 
     /**
-     * @param  list<array{kind: string, label_key: string, label: string, params: array<string, int|string|null>, amount: string}>  $lines
+     * @param  list<array{kind: string, label_key: string, label: string, params: array<string, int|string|null>, amount: string, founder?: bool}>  $lines
      * @param  array{id: int, number: string, total: string}|null  $openInvoice
      */
     public function __construct(
@@ -63,8 +63,8 @@ final readonly class BillingChangePreview
         return [
             'action' => $this->action,
             'kind' => $this->kind,
-            'plan' => ['id' => (int) $this->plan->getKey(), 'code' => $this->plan->slug, 'name' => $this->plan->name],
-            'current_plan' => $this->currentPlan === null ? null : ['id' => (int) $this->currentPlan->getKey(), 'code' => $this->currentPlan->slug, 'name' => $this->currentPlan->name],
+            'plan' => ['id' => (int) $this->plan->getKey(), 'code' => $this->plan->slug, 'name' => $this->plan->localizedName()],
+            'current_plan' => $this->currentPlan === null ? null : ['id' => (int) $this->currentPlan->getKey(), 'code' => $this->currentPlan->slug, 'name' => $this->currentPlan->localizedName()],
             'cycle' => ['value' => $this->cycle->value, 'label' => $this->cycle->label()],
             'lines' => $this->lines,
             'subtotal' => $this->subtotal,

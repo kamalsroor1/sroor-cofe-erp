@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Import;
 
+use App\Actions\Imports\CommitImportAction;
+use App\DTOs\Imports\CommitImportDTO;
+use App\Enums\ImportType;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Item;
@@ -29,6 +32,7 @@ use OpenSpout\Common\Entity\Row;
 use OpenSpout\Reader\XLSX\Reader;
 use OpenSpout\Writer\XLSX\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TenantTestCase;
 
 /**
@@ -512,6 +516,70 @@ class ImportApiTest extends TenantTestCase
             ->assertJsonPath('data.created', 0)
             ->assertJsonPath('data.duplicates', 1);
         $this->assertSame(1, $this->inTenant($this->tenant, fn (): int => Category::query()->count()));
+    }
+
+    public function test_concurrent_overlapping_items_commit_returns_409_and_prevents_duplicates(): void
+    {
+        $sheet = $this->itemsSheet();
+        $firstTabToken = $this->previewToken('items', $this->xlsx($sheet));
+        $secondTabToken = $this->previewToken('items', $this->xlsx($sheet));
+
+        $adminId = (int) $this->tenantAdmin($this->tenant)->id;
+        $storeId = (int) $this->tenantStore($this->tenant)->id;
+
+        $overlappingStatuses = [];
+        $overlappingMessages = [];
+        $triggered = false;
+
+        Event::listen(QueryExecuted::class, function (QueryExecuted $query) use (
+            &$triggered,
+            &$overlappingStatuses,
+            &$overlappingMessages,
+            $firstTabToken,
+            $secondTabToken,
+            $adminId,
+            $storeId,
+        ): void {
+            if (! $triggered && preg_match('/^insert into [`"]items[`"]/i', $query->sql) === 1) {
+                $triggered = true;
+
+                // Simulate double-click (same token) and second browser tab (second token) while commit #1 holds the lock.
+                foreach ([$firstTabToken, $secondTabToken] as $token) {
+                    try {
+                        app(CommitImportAction::class)->execute(new CommitImportDTO(
+                            type: ImportType::Items,
+                            token: $token,
+                            skipInvalid: false,
+                            userId: $adminId,
+                            storeId: $storeId,
+                            confirmNewCategories: true,
+                        ));
+                    } catch (HttpException $e) {
+                        $overlappingStatuses[] = $e->getStatusCode();
+                        $overlappingMessages[] = $e->getMessage();
+                    }
+                }
+            }
+        });
+
+        $this->commit('items', $firstTabToken)->assertOk()
+            ->assertJsonPath('data.created', 2);
+
+        Event::forget(QueryExecuted::class);
+
+        $this->assertTrue($triggered);
+        $this->assertSame([409, 409], $overlappingStatuses);
+        $this->assertSame([
+            __('import.errors.already_running'),
+            __('import.errors.already_running'),
+        ], $overlappingMessages);
+
+        // No duplicate items or categories were created during the overlapping commits.
+        $this->inTenant($this->tenant, function (): void {
+            $this->assertSame(2, Item::query()->count());
+            $this->assertSame(1, Item::query()->where('code', 'A-1')->count());
+            $this->assertSame(1, Item::query()->where('code', 'A-2')->count());
+        });
     }
 
     public function test_a_database_failure_after_the_first_chunk_is_a_translated_422_rolls_back_and_keeps_the_token(): void

@@ -39,6 +39,9 @@ final class UpdateCustomerAction
             if ($dto->credit_limit_provided) {
                 $attributes['credit_limit'] = $dto->credit_limit;
             }
+            if ($dto->price_tier_provided) {
+                $attributes['price_tier'] = $dto->price_tier;
+            }
 
             $customer->update($attributes);
 

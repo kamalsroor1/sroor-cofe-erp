@@ -430,7 +430,7 @@
       >
         <span
           v-if="isSubmitting"
-          class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"
+          class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"
         ></span>
         <CheckCircle2 v-else class="w-5 h-5 shrink-0 text-slate-950 stroke-[2.5]" />
         <!-- The F9 hint is for a keyboard: touch screens show the plain action -->
@@ -438,7 +438,7 @@
           >{{ submitLabel }}
           <kbd
             v-if="!isTouch"
-            class="ms-1 px-1.5 rounded-md bg-slate-950/10 text-xs font-mono font-bold text-slate-900"
+            class="ms-1 px-1.5 rounded-md bg-black/15 text-xs font-mono font-bold text-slate-900"
             aria-hidden="true"
             >F9</kbd
           ></span

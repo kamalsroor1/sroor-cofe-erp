@@ -61,7 +61,7 @@ final class GetItemMovementsAction
             ? Decimal::normalize((string) (StoreStock::where('store_id', $storeId)->where('item_id', $item->id)->value('quantity') ?: 0))
             : Decimal::normalize((string) $item->current_stock);
 
-        $movements = $query->latest('id')->paginate($perPage);
+        $movements = $query->orderByDesc('created_at')->orderByDesc('id')->paginate($perPage);
 
         return [
             'item' => [

@@ -460,4 +460,10 @@ return [
         'request_failed' => 'Could not start the export. Please try again.',
         'admin_only' => 'Only the shop admin can export the data.',
     ],
+    'attr_company_name' => 'business name',
+    'attr_company_subtitle' => 'subtitle',
+    'attr_company_phone' => 'official phone number',
+    'attr_company_address' => 'official address',
+    'attr_invoice_footer_note' => 'invoice footer note',
+    'plain_text_no_markup' => 'The :attribute must be plain text without < or > characters.',
 ];

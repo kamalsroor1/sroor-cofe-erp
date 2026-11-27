@@ -105,9 +105,25 @@ class StockCountsApiTest extends TenantTestCase
     {
         $this->startCount();
 
-        $this->postJson('/api/v1/stock-counts', [], $this->tenantHeaders($this->tenant))
-            ->assertStatus(422)
+        $arResponse = $this->postJson('/api/v1/stock-counts', [], [
+            ...$this->tenantHeaders($this->tenant),
+            'X-Locale' => 'ar',
+        ]);
+        $arResponse->assertStatus(422)
+            ->assertJsonPath('success', false)
             ->assertJsonPath('error_code', 'stock_counts.already_open');
+        $this->assertNotSame('stock_counts.already_open', $arResponse->json('message'));
+        $this->assertSame(__('stock_counts.already_open', [], 'ar'), $arResponse->json('message'));
+
+        $enResponse = $this->postJson('/api/v1/stock-counts', [], [
+            ...$this->tenantHeaders($this->tenant),
+            'X-Locale' => 'en',
+        ]);
+        $enResponse->assertStatus(422)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'stock_counts.already_open');
+        $this->assertNotSame('stock_counts.already_open', $enResponse->json('message'));
+        $this->assertSame(__('stock_counts.already_open', [], 'en'), $enResponse->json('message'));
 
         // Another branch may count at the same time.
         $this->postJson('/api/v1/stock-counts', [], $this->tenantHeaders($this->tenant, store: $this->branchStoreId))
@@ -214,17 +230,66 @@ class StockCountsApiTest extends TenantTestCase
         $this->saveCounts($count, [$this->items['a'] => '90']);
         $this->postJson("/api/v1/stock-counts/{$count}/post", [], $this->tenantHeaders($this->tenant))->assertOk();
 
-        $this->postJson("/api/v1/stock-counts/{$count}/post", [], $this->tenantHeaders($this->tenant))
-            ->assertStatus(422)
+        // INV-235: double-post in Arabic & English.
+        $doublePostAr = $this->postJson("/api/v1/stock-counts/{$count}/post", [], [
+            ...$this->tenantHeaders($this->tenant),
+            'X-Locale' => 'ar',
+        ]);
+        $doublePostAr->assertStatus(422)
+            ->assertJsonPath('success', false)
             ->assertJsonPath('error_code', 'stock_counts.already_posted');
-        $this->saveCounts($count, [$this->items['a'] => '1'])
+        $this->assertNotSame('stock_counts.already_posted', $doublePostAr->json('message'));
+        $this->assertSame(__('stock_counts.already_posted', [], 'ar'), $doublePostAr->json('message'));
+
+        $doublePostEn = $this->postJson("/api/v1/stock-counts/{$count}/post", [], [
+            ...$this->tenantHeaders($this->tenant),
+            'X-Locale' => 'en',
+        ]);
+        $doublePostEn->assertStatus(422)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'stock_counts.already_posted');
+        $this->assertNotSame('stock_counts.already_posted', $doublePostEn->json('message'));
+        $this->assertSame(__('stock_counts.already_posted', [], 'en'), $doublePostEn->json('message'));
+
+        // INV-236: editing lines after posting in Arabic & English.
+        $editPostedAr = $this->putJson("/api/v1/stock-counts/{$count}/lines", ['lines' => [['item_id' => $this->items['a'], 'counted_qty' => '1']]], [
+            ...$this->tenantHeaders($this->tenant),
+            'X-Locale' => 'ar',
+        ]);
+        $editPostedAr->assertStatus(422)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'stock_counts.not_open');
+        $this->assertNotSame('stock_counts.not_open', $editPostedAr->json('message'));
+        $this->assertSame(__('stock_counts.not_open', [], 'ar'), $editPostedAr->json('message'));
+
+        $editPostedEn = $this->putJson("/api/v1/stock-counts/{$count}/lines", ['lines' => [['item_id' => $this->items['a'], 'counted_qty' => '1']]], [
+            ...$this->tenantHeaders($this->tenant),
+            'X-Locale' => 'en',
+        ]);
+        $editPostedEn->assertStatus(422)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'stock_counts.not_open');
+        $this->assertNotSame('stock_counts.not_open', $editPostedEn->json('message'));
+        $this->assertSame(__('stock_counts.not_open', [], 'en'), $editPostedEn->json('message'));
+
+        $this->postJson("/api/v1/stock-counts/{$count}/cancel", [], $this->tenantHeaders($this->tenant))
             ->assertStatus(422)
             ->assertJsonPath('error_code', 'stock_counts.not_open');
-        $this->postJson("/api/v1/stock-counts/{$count}/cancel", [], $this->tenantHeaders($this->tenant))
-            ->assertStatus(422);
 
         $this->assertSame('90.000', $this->storeQty($this->mainStoreId, $this->items['a']));
         $this->assertSame(1, $this->movementCount());
+
+        // INV-236: editing lines on a cancelled count also returns translated stock_counts.not_open.
+        $cancelledCount = $this->startCount();
+        $this->postJson("/api/v1/stock-counts/{$cancelledCount}/cancel", [], $this->tenantHeaders($this->tenant))->assertOk();
+
+        $editCancelledAr = $this->putJson("/api/v1/stock-counts/{$cancelledCount}/lines", ['lines' => [['item_id' => $this->items['a'], 'counted_qty' => '2']]], [
+            ...$this->tenantHeaders($this->tenant),
+            'X-Locale' => 'ar',
+        ]);
+        $editCancelledAr->assertStatus(422)
+            ->assertJsonPath('error_code', 'stock_counts.not_open')
+            ->assertJsonPath('message', __('stock_counts.not_open', [], 'ar'));
     }
 
     public function test_a_sale_between_snapshot_and_post_is_absorbed(): void

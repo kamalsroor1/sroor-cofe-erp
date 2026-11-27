@@ -26,6 +26,8 @@ final class InvoiceItemResource extends JsonResource
             'unit' => $this->item->unit ?? __('common.unit_piece'),
             'quantity' => Decimal::normalize((string) $this->quantity),
             'unit_price' => Decimal::normalize((string) $this->unit_price),
+            'list_unit_price' => $this->list_unit_price !== null ? Decimal::normalize((string) $this->list_unit_price) : null,
+            'price_source' => $this->price_source,
             'discount_amount' => Decimal::normalize((string) ($this->discount_amount ?? 0)),
             'total_price' => Decimal::normalize((string) $this->total_price),
         ];

@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full flex flex-col gap-1.5" :class="wrapperClass" ref="dropdownRef" @focusout="onFocusOut">
+  <div class="w-full min-w-0 flex flex-col gap-1.5" :class="wrapperClass" ref="dropdownRef" @focusout="onFocusOut">
     <!-- Label -->
     <label
       v-if="label"
@@ -12,7 +12,7 @@
     </label>
 
     <!-- Custom Searchable Dropdown or Native Select -->
-    <div class="relative w-full" :class="{ 'z-50': isOpen }">
+    <div class="relative w-full min-w-0" :class="{ 'z-50': isOpen }">
       <!-- Interactive Trigger Button -->
       <button
         :id="selectId"
@@ -24,7 +24,8 @@
         :aria-expanded="isOpen"
         aria-haspopup="listbox"
         :aria-invalid="hasError ? 'true' : 'false'"
-        class="w-full min-h-[44px] px-3.5 py-2.5 text-base sm:text-sm font-bold rounded-xl border bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 transition-all duration-200 flex items-center justify-between gap-2 text-start outline-hidden cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-900/50"
+        :aria-describedby="hasError ? `${selectId}-error` : hint ? `${selectId}-hint` : undefined"
+        class="w-full min-w-0 min-h-[44px] px-3.5 py-2.5 text-base sm:text-sm font-bold rounded-xl border bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 transition-all duration-200 flex items-center justify-between gap-2 text-start outline-hidden cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-900/50"
         :class="[
           hasError
             ? 'border-rose-500 dark:border-rose-500/80 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 text-rose-900 dark:text-rose-100'
@@ -32,7 +33,10 @@
           selectClass,
         ]"
       >
-        <span class="truncate" :class="{ 'text-slate-400 dark:text-slate-500 font-medium': !selectedLabel }">
+        <span
+          class="truncate min-w-0 flex-1"
+          :class="{ 'text-slate-400 dark:text-slate-500 font-medium': !selectedLabel }"
+        >
           {{ selectedLabel || placeholder || t('common.select_placeholder') }}
         </span>
 

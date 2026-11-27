@@ -86,12 +86,12 @@ class ApiLoginRequest extends FormRequest
             return;
         }
 
-        $seconds = $until - now()->getTimestamp();
+        $seconds = max(1, $until - now()->getTimestamp());
 
         throw ValidationException::withMessages([
             'login' => trans('auth.account_locked', [
                 'seconds' => $seconds,
-                'minutes' => (int) ceil($seconds / 60),
+                'minutes' => max(1, (int) ceil($seconds / 60)),
             ]),
         ]);
     }

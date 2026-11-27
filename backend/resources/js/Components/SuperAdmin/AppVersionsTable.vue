@@ -22,6 +22,17 @@
       <TableSkeleton :rows="5" :cols="8" />
     </div>
 
+    <!-- Error State -->
+    <ErrorState
+      v-else-if="error && !versions.length"
+      :title="$t('super.app_versions_load_failed')"
+      :message="errorMessage"
+      :status-code="statusCode"
+      :can-retry="canRetry"
+      :loading="loading"
+      @retry="$emit('retry')"
+    />
+
     <!-- Empty State -->
     <EmptyState
       v-else-if="!versions.length"
@@ -43,6 +54,14 @@
     </EmptyState>
 
     <div v-else>
+      <InlineErrorBar
+        v-if="error"
+        :message="errorMessage"
+        :status-code="statusCode"
+        :can-retry="canRetry"
+        @retry="$emit('retry')"
+      />
+
       <!-- Desktop Table -->
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-xs text-start">
@@ -220,14 +239,20 @@
 import { HardDrive, RefreshCw, Download, Trash2, Rocket, Monitor, Smartphone } from 'lucide-vue-next';
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
+import ErrorState from '../Common/ErrorState.vue';
+import InlineErrorBar from '../Common/InlineErrorBar.vue';
 import BaseButton from '../Common/BaseButton.vue';
 
 defineProps({
   versions: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
+  error: { type: Boolean, default: false },
+  errorMessage: { type: String, default: '' },
+  statusCode: { type: [Number, String], default: null },
+  canRetry: { type: Boolean, default: true },
 });
 
-defineEmits(['refresh', 'open-create', 'toggle-active', 'delete-version']);
+defineEmits(['retry', 'refresh', 'open-create', 'toggle-active', 'delete-version']);
 
 const formatBytes = (bytes) => {
   if (!bytes) return '0 B';

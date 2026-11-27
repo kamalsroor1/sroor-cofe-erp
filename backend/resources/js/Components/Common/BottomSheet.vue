@@ -1,16 +1,8 @@
-<script>
-// Shared across every open sheet: only the top one reacts to Esc, and the page scroll stays locked until the last closes.
-const openSheets = [];
-
-const FOCUSABLE =
-  'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
-</script>
-
 <script setup>
-import { nextTick, onBeforeUnmount, ref, useId, watch } from 'vue';
+import { ref, useId } from 'vue';
 import { X } from 'lucide-vue-next';
 import { useNativeBridge } from '@/Composables/useNativeBridge';
-import { useBodyScrollLock } from '@/Composables/useBodyScrollLock';
+import { useFocusTrap } from '@/Composables/useFocusTrap';
 import { openSheetCount } from '@/Composables/useOpenSheets';
 
 const props = defineProps({
@@ -24,16 +16,12 @@ const props = defineProps({
 
 const emit = defineEmits(['close']);
 const { triggerHaptic } = useNativeBridge();
-const { lock: lockScroll, unlock: unlockScroll } = useBodyScrollLock();
 
-const sheetId = useId();
-const titleId = `${sheetId}-title`;
+const titleId = `${useId()}-title`;
 const panelRef = ref(null);
 const dragOffset = ref(0);
 let dragStartY = 0;
 const isDragging = ref(false);
-let previousFocus = null;
-let isOpen = false;
 
 const close = () => {
   if (!props.closeable) return;
@@ -41,38 +29,21 @@ const close = () => {
   emit('close');
 };
 
-const focusables = () =>
-  Array.from(panelRef.value?.querySelectorAll(FOCUSABLE) ?? []).filter((el) => el.offsetParent !== null);
-
-const onKeydown = (event) => {
-  if (openSheets[openSheets.length - 1] !== sheetId) return;
-
-  if (event.key === 'Escape') {
-    // A nested modal that already consumed Esc keeps priority.
-    if (event.defaultPrevented) return;
+useFocusTrap(panelRef, () => props.show, {
+  initialFocus: 'panel',
+  onEscape: (event) => {
     event.preventDefault();
     close();
-    return;
-  }
-
-  if (event.key !== 'Tab') return;
-  const items = focusables();
-  if (items.length === 0) {
-    event.preventDefault();
-    panelRef.value?.focus();
-    return;
-  }
-  const first = items[0];
-  const last = items[items.length - 1];
-  const active = document.activeElement;
-  if (event.shiftKey && (active === first || active === panelRef.value)) {
-    event.preventDefault();
-    last.focus();
-  } else if (!event.shiftKey && active === last) {
-    event.preventDefault();
-    first.focus();
-  }
-};
+  },
+  onActivate: () => {
+    openSheetCount.value += 1;
+  },
+  onDeactivate: () => {
+    openSheetCount.value = Math.max(0, openSheetCount.value - 1);
+    isDragging.value = false;
+    dragOffset.value = 0;
+  },
+});
 
 const onTouchStart = (event) => {
   if (!props.closeable) return;
@@ -101,41 +72,6 @@ const onTouchCancel = () => {
   isDragging.value = false;
   dragOffset.value = 0;
 };
-
-const activate = () => {
-  if (isOpen) return;
-  isOpen = true;
-  previousFocus = document.activeElement;
-  openSheets.push(sheetId);
-  openSheetCount.value = openSheets.length;
-  lockScroll();
-  document.addEventListener('keydown', onKeydown);
-  nextTick(() => panelRef.value?.focus({ preventScroll: true }));
-};
-
-const deactivate = () => {
-  if (!isOpen) return;
-  isOpen = false;
-  const index = openSheets.indexOf(sheetId);
-  if (index !== -1) openSheets.splice(index, 1);
-  openSheetCount.value = openSheets.length;
-  unlockScroll();
-  document.removeEventListener('keydown', onKeydown);
-  isDragging.value = false;
-  dragOffset.value = 0;
-  if (previousFocus && typeof previousFocus.focus === 'function' && document.contains(previousFocus)) {
-    previousFocus.focus({ preventScroll: true });
-  }
-  previousFocus = null;
-};
-
-watch(
-  () => props.show,
-  (visible) => (visible ? activate() : deactivate()),
-  { immediate: true }
-);
-
-onBeforeUnmount(deactivate);
 </script>
 
 <template>

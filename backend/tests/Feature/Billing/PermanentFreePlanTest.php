@@ -532,6 +532,63 @@ final class PermanentFreePlanTest extends BillingTestCase
         ], $operator)->assertCreated();
     }
 
+    public function test_free_plan_name_is_free_never_trial_across_console_tenant_and_public_endpoints(): void
+    {
+        $tenant = $this->tenantOn($this->free, ['status' => 'active', 'subscription_ends_at' => null]);
+        $headers = $this->centralHeaders($this->centralSuperAdmin());
+
+        // Simulate a legacy production DB row where plans.name was still 'التجربة' and name_key was null.
+        DB::table('plans')->where('id', $this->free->id)->update([
+            'name' => 'التجربة',
+            'name_key' => null,
+        ]);
+
+        // Console plans (Arabic + English)
+        $arPlan = collect($this->getJson(self::PLANS, $headers)->assertOk()->json('data.plans'))
+            ->firstWhere('slug', 'free');
+        $this->assertSame('المجانية', $arPlan['name'] ?? null);
+
+        $enPlan = collect($this->getJson(self::PLANS, $headers + ['X-Locale' => 'en'])->assertOk()->json('data.plans'))
+            ->firstWhere('slug', 'free');
+        $this->assertSame('Free', $enPlan['name'] ?? null);
+
+        // Console tenants list & show
+        $tenantsPayload = $this->getJson('/api/v1/super-admin/tenants', $headers)->assertOk()->json();
+        $listedPlan = collect($tenantsPayload['plans'] ?? [])->firstWhere('slug', 'free');
+        $this->assertSame('المجانية', $listedPlan['name'] ?? null);
+
+        $listedTenant = collect($tenantsPayload['tenants']['data'] ?? [])->firstWhere('id', $tenant->id);
+        $this->assertSame('المجانية', $listedTenant['plan_name'] ?? null);
+        $this->assertSame('المجانية', $listedTenant['plan']['name'] ?? null);
+
+        $this->getJson('/api/v1/super-admin/tenants/'.$tenant->id, $headers)
+            ->assertOk()
+            ->assertJsonPath('data.tenant.plan.name', 'المجانية')
+            ->assertJsonPath('data.tenant.plan_name', 'المجانية');
+
+        // Console dashboard metrics + plan_stats + recent_tenants
+        $dashboard = $this->getJson('/api/v1/super-admin/dashboard', $headers)->assertOk()->json();
+        $this->assertSame(1, $dashboard['metrics']['free_plan_tenants'] ?? null);
+        $this->assertSame('المجانية', collect($dashboard['plan_stats'] ?? [])->firstWhere('slug', 'free')['name'] ?? null);
+        $this->assertSame('المجانية', collect($dashboard['recent_tenants'] ?? [])->firstWhere('id', $tenant->id)['plan_name'] ?? null);
+
+        // Tenant billing subscription context
+        $sub = $this->getJson('/api/v1/billing/subscription', $this->tenantHeaders($tenant))
+            ->assertOk()
+            ->json('data');
+        $this->assertSame('المجانية', $sub['plan']['name'] ?? null);
+        $this->assertSame('المجانية', collect($sub['available_plans'] ?? [])->firstWhere('code', 'free')['name'] ?? null);
+
+        // Data migration repairs the legacy DB row idempotently.
+        $migration = require database_path('migrations/2026_11_27_000100_rename_free_plan_from_trial.php');
+        $migration->up();
+        $migration->up();
+
+        $fresh = $this->free->fresh();
+        $this->assertSame('المجانية', $fresh?->name);
+        $this->assertSame('plans.plans.free.name', $fresh?->name_key);
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private function selfSignupTrial(CarbonImmutable $trialEnd): Tenant

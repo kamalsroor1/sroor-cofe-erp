@@ -24,13 +24,13 @@
         <div class="text-[10px] text-slate-400">{{ $t('super.active_subscriptions') }}</div>
       </div>
 
-      <!-- Trial Tenants -->
+      <!-- Free Plan Tenants -->
       <div
         class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-md space-y-1"
       >
-        <span class="text-theme-primary text-xs font-bold">{{ $t('super.trial_tenants') }}</span>
-        <div class="text-2xl font-black text-theme-primary font-mono">{{ metrics.trial_tenants || 0 }}</div>
-        <div class="text-[10px] text-slate-400">{{ $t('super.under_trial') }}</div>
+        <span class="text-theme-primary text-xs font-bold">{{ $t('super.free_plan_tenants') }}</span>
+        <div class="text-2xl font-black text-theme-primary font-mono">{{ metrics.free_plan_tenants || 0 }}</div>
+        <div class="text-[10px] text-slate-400">{{ $t('super.free_plan_accounts') }}</div>
       </div>
 
       <!-- Suspended Tenants -->

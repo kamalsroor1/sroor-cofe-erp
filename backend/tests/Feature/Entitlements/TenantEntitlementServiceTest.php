@@ -110,6 +110,40 @@ final class TenantEntitlementServiceTest extends TenantTestCase
         $this->assertTrue($this->service()->isFeatureEnabled($tenant, 'mixes.manage'));
     }
 
+    public function test_retired_inactive_addons_still_grant_entitlements_to_existing_subscribers(): void
+    {
+        $plan = $this->plan(['max_items' => 500, 'features' => ['reports.advanced' => false]]);
+        $tenant = $this->createTenant(['plan_id' => $plan->id]);
+        $subscription = $this->subscription($tenant, $plan);
+
+        $items5k = Addon::query()->create([
+            'key' => 'addon.items_5k',
+            'name_key' => 'plans.addons.items_5k.name',
+            'type' => 'recurring',
+            'bundled_limits' => ['items' => 5000],
+            'unit_price' => '99.000',
+            'yearly_price' => '990.000',
+            'is_active' => false,
+            'is_public' => true,
+        ]);
+        $reportsAdvanced = Addon::query()->create([
+            'key' => 'reports.advanced',
+            'name_key' => 'plans.addons.reports_advanced.name',
+            'type' => 'recurring',
+            'feature_key' => 'reports.advanced',
+            'unit_price' => '149.000',
+            'yearly_price' => '1490.000',
+            'is_active' => false,
+            'is_public' => true,
+        ]);
+
+        $this->addonLine($subscription, $items5k);
+        $this->addonLine($subscription, $reportsAdvanced);
+
+        $this->assertSame(5500, $this->service()->limit($tenant, LimitResource::Items));
+        $this->assertTrue($this->service()->isFeatureEnabled($tenant, 'reports.advanced'));
+    }
+
     /**
      * @return iterable<string, array{0: TenantStatus}>
      */

@@ -170,7 +170,15 @@ final class ShopPoliciesApiTest extends TenantTestCase
             $this->postJson('/api/v1/auth/unlock-screen', ['pin' => '000000'], $headers)->assertStatus(422);
         }
 
-        $this->postJson('/api/v1/auth/unlock-screen', ['pin' => '482916'], $headers)->assertStatus(429);
+        $response = $this->postJson('/api/v1/auth/unlock-screen', ['pin' => '482916'], $headers);
+
+        $response->assertStatus(429)
+            ->assertHeader('Retry-After')
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'screen_lock.too_many_attempts')
+            ->assertJsonPath('message', __('screen_lock.too_many_attempts'));
+
+        $this->assertNotSame(__('auth.too_many_requests'), $response->json('message'));
     }
 
     public function test_unlock_validation(): void

@@ -29,7 +29,7 @@ class StockMovementResource extends JsonResource
             'stock_after' => Decimal::normalize((string) $this->stock_after),
             'unit_cost' => Decimal::normalize((string) $this->unit_cost),
             'document_number' => $this->document_number,
-            'user_name' => $this->user?->name ?: 'النظام',
+            'user_name' => $this->user?->name ?: __('common.system'),
             'notes' => $this->notes,
             'created_at' => $this->created_at?->toDateTimeString(),
         ];

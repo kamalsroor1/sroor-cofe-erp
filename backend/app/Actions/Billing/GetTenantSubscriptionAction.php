@@ -78,7 +78,7 @@ final class GetTenantSubscriptionAction
         }
 
         return [
-            'plan' => $plan === null ? null : ['id' => (int) $plan->getKey(), 'name' => $plan->name, 'code' => $plan->slug, 'is_free' => $plan->is_free],
+            'plan' => $plan === null ? null : ['id' => (int) $plan->getKey(), 'name' => $plan->localizedName(), 'code' => $plan->slug, 'is_free' => $plan->is_free],
             'subscription' => [
                 // PLAN-10 review: a row on a permanent free plan has no paid term (its stored ends_at
                 // equals starts_at): never show it as expired; ends_at / days_left stay null.
@@ -293,7 +293,7 @@ final class GetTenantSubscriptionAction
                 // #232: the change preview takes `plan_id`.
                 'id' => (int) $plan->getKey(),
                 'code' => $plan->slug,
-                'name' => $plan->name,
+                'name' => $plan->localizedName(),
                 'price_monthly' => $plan->price_monthly,
                 'price_yearly' => $plan->price_yearly,
                 // PLAN-10 review: choosing a free plan is a scheduled downgrade, never an invoice.

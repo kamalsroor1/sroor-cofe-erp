@@ -6,7 +6,7 @@
     max-width="md"
     @close="$emit('close')"
   >
-    <form @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
+    <form id="category-form" @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
       <!-- Name -->
       <BaseInput
         :model-value="form.name"
@@ -68,20 +68,22 @@
         :label="$t('common.status')"
         :description="$t('inventory.category_active_desc')"
       />
+    </form>
 
-      <!-- Modal Footer Actions -->
-      <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
+    <template #footer>
+      <div class="flex items-center justify-end gap-2">
         <BaseButton type="button" variant="ghost" size="md" :label="$t('common.cancel')" @click="$emit('close')" />
 
         <BaseButton
           type="submit"
+          form="category-form"
           variant="gradient"
           size="md"
           :loading="isSubmitting"
           :label="editingCategory ? $t('common.save_changes') : $t('inventory.create_category_btn')"
         />
       </div>
-    </form>
+    </template>
   </AppModal>
 </template>
 

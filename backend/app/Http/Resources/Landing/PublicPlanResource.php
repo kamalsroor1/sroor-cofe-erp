@@ -43,8 +43,8 @@ final class PublicPlanResource extends JsonResource
 
         return [
             'code' => $plan->slug,
-            'name' => self::translate($plan->name_key, $plan->name),
-            'description' => self::translate(self::sibling($plan->name_key, 'description'), $plan->description),
+            'name' => self::translate($plan->name_key, $plan->localizedName()),
+            'description' => self::translate(self::sibling($plan->name_key, 'description'), $plan->localizedDescription()),
             'is_popular' => $plan->is_popular,
             'sort_order' => $plan->sort_order,
             'trial_days' => $plan->trial_days,

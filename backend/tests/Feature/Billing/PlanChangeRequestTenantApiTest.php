@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Billing;
 
+use App\Enums\Billing\BillingCycle;
+use App\Enums\Billing\SubscriptionStatus;
 use App\Models\CentralAuditLog;
 use App\Models\PlanChangeRequest;
+use App\Models\Subscription;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
@@ -118,6 +121,44 @@ final class PlanChangeRequestTenantApiTest extends PlanChangeTestCase
             ->assertJsonPath('data.requested_plan', null);
     }
 
+    public function test_a_free_plan_shop_requesting_an_addon_gets_addon_needs_subscription(): void
+    {
+        $paid = $this->plan();
+        $free = $this->plan([
+            'is_free' => true,
+            'price_monthly' => '0.000',
+            'price_yearly' => '0.000',
+            'founder_price_monthly' => null,
+            'founder_price_yearly' => null,
+            'trial_days' => 0,
+        ]);
+        $addon = $this->addonOn($paid, 'addon-store');
+
+        // Free-plan tenant without any subscription row.
+        $noRowTenant = $this->tenantOn($free, ['status' => 'active']);
+        $this->postJson(self::URL, ['kind' => 'addon', 'addon_key' => $addon->key, 'billing_cycle' => 'monthly'], $this->tenantHeaders($noRowTenant))
+            ->assertStatus(422)
+            ->assertJsonPath('error_code', 'billing.addon_needs_subscription');
+
+        // Free-plan tenant with the 0.000 placeholder subscription row created by MoveTenantToFreePlanAction / provisioner.
+        $freeRowTenant = $this->tenantOn($free, ['status' => 'active']);
+        Subscription::query()->create([
+            'tenant_id' => $freeRowTenant->getKey(),
+            'plan_id' => $free->getKey(),
+            'billing_cycle' => BillingCycle::Monthly,
+            'status' => SubscriptionStatus::Active,
+            'amount' => '0.000',
+            'starts_at' => now(),
+            'ends_at' => now(),
+        ]);
+
+        $this->postJson(self::URL, ['kind' => 'addon', 'addon_key' => $addon->key, 'billing_cycle' => 'monthly'], $this->tenantHeaders($freeRowTenant))
+            ->assertStatus(422)
+            ->assertJsonPath('error_code', 'billing.addon_needs_subscription');
+
+        $this->assertSame(0, PlanChangeRequest::query()->count());
+    }
+
     public function test_validation_errors_are_422(): void
     {
         $tenant = $this->tenantOn($this->plan());
@@ -227,5 +268,24 @@ final class PlanChangeRequestTenantApiTest extends PlanChangeTestCase
         $this->getJson('/api/v1/billing/subscription', $headers)->assertOk()
             ->assertJsonPath('data.pending_plan_change.requested_plan.code', $big->slug)
             ->assertJsonPath('data.pending_plan_change.status.value', 'pending');
+    }
+
+    public function test_the_subscription_payload_localizes_plan_names_in_english(): void
+    {
+        $pro = $this->plan(['name' => 'النمو', 'name_key' => 'plans.plans.pro.name', 'slug' => 'pro']);
+        $basic = $this->plan(['name' => 'البداية', 'name_key' => null, 'slug' => 'basic']);
+        $tenant = $this->subscribedTenant($pro);
+        $headers = $this->tenantHeaders($tenant) + ['X-Locale' => 'en'];
+
+        $this->postJson(self::URL, ['kind' => 'plan_change', 'requested_plan_code' => 'basic', 'billing_cycle' => 'yearly'], $headers)->assertCreated();
+
+        $response = $this->getJson('/api/v1/billing/subscription', $headers)->assertOk();
+        $response->assertJsonPath('data.plan.name', 'Growth');
+        $response->assertJsonPath('data.pending_plan_change.current_plan.name', 'Growth');
+        $response->assertJsonPath('data.pending_plan_change.requested_plan.name', 'Starter');
+
+        $listed = collect($response->json('data.available_plans'))->keyBy('code');
+        $this->assertSame('Growth', $listed['pro']['name'] ?? null);
+        $this->assertSame('Starter', $listed['basic']['name'] ?? null);
     }
 }

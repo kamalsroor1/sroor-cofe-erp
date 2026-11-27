@@ -29,18 +29,39 @@
       </template>
     </PageHeader>
 
-    <!-- KPI Summary Cards -->
-    <AppVersionsSummaryGrid :summary="summary" />
+    <div
+      v-if="error && !hasLoaded"
+      class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm"
+    >
+      <ErrorState
+        :title="$t('super.app_versions_load_failed')"
+        :message="errorMessage"
+        :status-code="statusCode"
+        :can-retry="canRetry"
+        :loading="isLoading"
+        @retry="retry"
+      />
+    </div>
 
-    <!-- Releases List Table & Mobile Cards -->
-    <AppVersionsTable
-      :versions="versions"
-      :loading="isLoading"
-      @refresh="fetchVersions"
-      @open-create="openCreateModal"
-      @toggle-active="toggleActive"
-      @delete-version="deleteVersion"
-    />
+    <template v-else>
+      <!-- KPI Summary Cards -->
+      <AppVersionsSummaryGrid :summary="summary" :loading="isLoading && !hasLoaded" />
+
+      <!-- Releases List Table & Mobile Cards -->
+      <AppVersionsTable
+        :versions="versions"
+        :loading="isLoading"
+        :error="error"
+        :error-message="errorMessage"
+        :status-code="statusCode"
+        :can-retry="canRetry"
+        @retry="retry"
+        @refresh="fetchVersions"
+        @open-create="openCreateModal"
+        @toggle-active="toggleActive"
+        @delete-version="deleteVersion"
+      />
+    </template>
 
     <!-- Upload New APK Release Modal -->
     <UploadApkModal
@@ -60,6 +81,7 @@
 <script setup>
 import { Crown, Plus } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import AppVersionsSummaryGrid from '../../Components/SuperAdmin/AppVersionsSummaryGrid.vue';
 import AppVersionsTable from '../../Components/SuperAdmin/AppVersionsTable.vue';
 import UploadApkModal from '../../Components/SuperAdmin/UploadApkModal.vue';
@@ -69,12 +91,18 @@ const {
   versions,
   summary,
   isLoading,
+  hasLoaded,
+  error,
+  errorMessage,
+  statusCode,
+  canRetry,
   isCreateModalOpen,
   isSubmitting,
   form,
   formErrors,
   formGeneralError,
   fetchVersions,
+  retry,
   openCreateModal,
   updateFormField,
   handleFileUpload,

@@ -37,7 +37,7 @@ final class GetItemMovementsPrintDataAction
             ->when($filterType === 'out', fn ($q) => $q->whereIn('movement_type', StockMovementTypes::OUTBOUND))
             ->when($filterType === 'adjustments', fn ($q) => $q->whereIn('movement_type', StockMovementTypes::ADJUSTMENTS));
 
-        $movements = $baseQuery->oldest('created_at')->get();
+        $movements = $baseQuery->orderBy('created_at')->orderBy('id')->get();
 
         $totalIn = '0.000';
         $totalOut = '0.000';

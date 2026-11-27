@@ -1,9 +1,10 @@
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 import { businessToday } from './useBusinessDate';
 import { normalize } from '../helpers/decimal';
+import { newUuid } from '../helpers/uuid';
 import { isValidCountedCash, canCloseShift } from '../helpers/shiftCash';
 import { useAuthStore } from '../stores/auth';
 import { useAppConfigStore } from '../stores/appConfig';
@@ -59,6 +60,12 @@ export function useDailyJournal() {
     });
 
     const showExpenseModal = ref(false);
+    let expenseIdempotencyKey = null;
+    watch(showExpenseModal, (open) => {
+        if (open) {
+            expenseIdempotencyKey = newUuid();
+        }
+    });
     const expenseForm = reactive({
         title: '',
         amount: '',
@@ -188,13 +195,20 @@ export function useDailyJournal() {
     const printClosedReport = () => zPrint.printReport(zPrint.closedReport.value);
 
     const submitExpense = async () => {
+        if (isSubmitting.value) return;
         isSubmitting.value = true;
         try {
-            await api.post('/expenses', {
-                ...expenseForm,
-                category: t('expenses.daily_category'),
-                expense_date: selectedDate.value,
-            });
+            if (!expenseIdempotencyKey) expenseIdempotencyKey = newUuid();
+            await api.post(
+                '/expenses',
+                {
+                    ...expenseForm,
+                    category: t('expenses.daily_category'),
+                    expense_date: selectedDate.value,
+                },
+                { headers: { 'Idempotency-Key': expenseIdempotencyKey } }
+            );
+            expenseIdempotencyKey = null;
             Swal.fire({
                 icon: 'success',
                 title: t('common.success'),

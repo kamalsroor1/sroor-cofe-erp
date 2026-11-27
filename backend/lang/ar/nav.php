@@ -163,6 +163,7 @@ return [
         'import_index' => 'استيراد البيانات',
         'trash_index' => 'سلة المحذوفات',
         'help_index' => 'مركز المساعدة والدعم الفني',
+        'not_found' => 'الصفحة غير موجودة',
     ],
 
     // Sidebar / drawer menu labels (Composables/useNavigation.js)

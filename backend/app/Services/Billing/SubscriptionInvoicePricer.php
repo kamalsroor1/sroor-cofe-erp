@@ -74,7 +74,7 @@ final class SubscriptionInvoicePricer
             return [
                 'type' => 'plan',
                 'plan_id' => (int) $plan->getKey(),
-                'plan_name' => $plan->name,
+                'plan_name' => $plan->localizedName(),
                 'billing_cycle' => $cycle->value,
                 'quantity' => 1,
                 'unit_price' => $price,
@@ -103,7 +103,7 @@ final class SubscriptionInvoicePricer
         return [
             'type' => 'plan',
             'plan_id' => (int) $plan->getKey(),
-            'plan_name' => $plan->name,
+            'plan_name' => $plan->localizedName(),
             'billing_cycle' => $cycle->value,
             'quantity' => 1,
             'unit_price' => $price,
@@ -197,7 +197,7 @@ final class SubscriptionInvoicePricer
      * verified transfer moment (or the approval moment when that is more than 48h later), never
      * above this issue-time amount; any excess paid is stored as overpaid_amount.
      *
-     * @return array{amount: string, remaining_days: int, period_days: int, old_price: string, new_price: string, cycle: BillingCycle|null, term_end: CarbonImmutable|null}
+     * @return array{amount: string, remaining_days: int, period_days: int, old_price: string, new_price: string, cycle: BillingCycle|null, term_end: CarbonImmutable|null, founder: bool}
      */
     public function upgradeDifference(Tenant $tenant, ?Plan $current, Plan $target): array
     {
@@ -205,15 +205,18 @@ final class SubscriptionInvoicePricer
         $subscription = Subscription::query()->where('tenant_id', $tenant->getKey())->orderByDesc('id')->first();
 
         if ($end === null || ! $end->isFuture() || ! $current instanceof Plan || ! $subscription instanceof Subscription || ! $subscription->billing_cycle->isSellable()) {
-            return ['amount' => '0.000', 'remaining_days' => 0, 'period_days' => 0, 'old_price' => '0.000', 'new_price' => '0.000', 'cycle' => null, 'term_end' => null];
+            return ['amount' => '0.000', 'remaining_days' => 0, 'period_days' => 0, 'old_price' => '0.000', 'new_price' => '0.000', 'cycle' => null, 'term_end' => null, 'founder' => false];
         }
 
-        $yearly = $subscription->billing_cycle === BillingCycle::Yearly;
+        $cycle = $subscription->billing_cycle;
+        $yearly = $cycle === BillingCycle::Yearly;
         $termEnd = CarbonImmutable::instance($end)->setTimezone((string) config('app.timezone'));
         $termStart = $this->currentTermStart($tenant, $termEnd)
-            ?? ($yearly ? $termEnd->subYearNoOverflow() : $termEnd->subMonthNoOverflow());
-        $oldPrice = Decimal::normalize($yearly ? $current->price_yearly : $current->price_monthly);
-        $newPrice = Decimal::normalize($yearly ? $target->price_yearly : $target->price_monthly);
+            ?? $this->fallbackTermStart($subscription, $termEnd, $yearly);
+        $oldStep = $this->founder->stepFor($subscription, $current, $cycle, $termStart);
+        $newStep = $this->founder->stepFor($subscription, $target, $cycle, $termStart);
+        $oldPrice = Decimal::normalize($this->founder->stepPrice($current, $cycle, $oldStep));
+        $newPrice = Decimal::normalize($this->founder->stepPrice($target, $cycle, $newStep));
         $remaining = $this->proration->wholeDaysUp(CarbonImmutable::now(), $termEnd);
         $periodDays = $this->proration->wholeDaysUp($termStart, $termEnd);
 
@@ -223,8 +226,9 @@ final class SubscriptionInvoicePricer
             'period_days' => $periodDays,
             'old_price' => $oldPrice,
             'new_price' => $newPrice,
-            'cycle' => $subscription->billing_cycle,
+            'cycle' => $cycle,
             'term_end' => $termEnd,
+            'founder' => $oldStep->isDiscounted() || $newStep->isDiscounted(),
         ];
     }
 
@@ -271,6 +275,24 @@ final class SubscriptionInvoicePricer
             BillingCycle::Yearly => $start->addYearNoOverflow(),
             default => null,
         };
+    }
+
+    /**
+     * Fallback start of the term ending at $termEnd when no paid invoice row matches: if the
+     * subscription's own starts_at plus one cycle equals $termEnd (e.g. a hand-seeded Jan 31 ->
+     * Feb 28 clamped term), keep starts_at so the clamped cycle keeps its actual 28 days instead of
+     * subtracting a month from Feb 28 (Jan 28 = 31 days).
+     */
+    private function fallbackTermStart(Subscription $subscription, CarbonImmutable $termEnd, bool $yearly): CarbonImmutable
+    {
+        $subStart = CarbonImmutable::instance($subscription->starts_at)->setTimezone((string) config('app.timezone'));
+        $expectedEnd = $yearly ? $subStart->addYearNoOverflow() : $subStart->addMonthNoOverflow();
+
+        if ($expectedEnd->getTimestamp() === $termEnd->getTimestamp()) {
+            return $subStart;
+        }
+
+        return $yearly ? $termEnd->subYearNoOverflow() : $termEnd->subMonthNoOverflow();
     }
 
     /**

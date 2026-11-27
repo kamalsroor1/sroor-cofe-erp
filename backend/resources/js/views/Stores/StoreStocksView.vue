@@ -22,8 +22,9 @@
       v-model:selected-store-id="selectedStoreId"
       v-model:search-query="searchQuery"
       :store-options="storeOptions"
+      :stores-loading="storesLoading"
       :stock-status="stockStatus"
-      @store-change="fetchStocks(1)"
+      @store-change="onStoreChange"
       @search="debounceSearch"
       @set-status="setStockStatus"
     />
@@ -34,11 +35,19 @@
       <ErrorState
         data-testid="error-state"
         :message="errorMessage"
-        @retry="fetchStocks(pagination?.current_page || 1)"
+        :status-code="errorStatusCode"
+        :can-retry="canRetry"
+        @retry="retry"
       />
     </template>
     <template v-else>
-      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchStocks(pagination?.current_page || 1)" />
+      <InlineErrorBar
+        v-if="error"
+        :message="errorMessage"
+        :status-code="errorStatusCode"
+        :can-retry="canRetry"
+        @retry="retry"
+      />
       <StoreStocksTable :stocks="stocks" :pagination="pagination" :loading="isLoading" @page-change="fetchStocks" />
     </template>
   </div>
@@ -59,11 +68,16 @@ const {
   stockStatus,
   error,
   errorMessage,
+  errorStatusCode,
+  canRetry,
+  storesLoading,
   isLoading,
   stocks,
   pagination,
   storeOptions,
   fetchStocks,
+  onStoreChange,
+  retry,
   debounceSearch,
   setStockStatus,
 } = useStoreStocks();
