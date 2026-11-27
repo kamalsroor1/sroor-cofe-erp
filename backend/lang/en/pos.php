@@ -481,4 +481,5 @@ return [
     // SHOP-01: stock check when an item is added to the cart
     'stock_insufficient_blocked' => 'Not enough stock for :name (available: :qty :unit). Negative stock is not allowed.',
     'stock_insufficient_warning' => 'Low stock for :name (available: :qty :unit). This sale will take the stock below zero.',
+    'too_many_concurrent_checkouts' => 'Too many checkout requests are being processed at the same time. Please try again in a moment.',
 ];

@@ -468,6 +468,10 @@ class AppServiceProvider extends ServiceProvider
         // PRD-06: spreadsheet import wizard (template / preview / commit), per tenant and user.
         RateLimiter::for('imports', fn (Request $request): Limit => Limit::perMinute($this->limit('rate_limits.imports.per_minute', 20))
             ->by('imports|'.RateLimitKey::scope().'|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
+
+        // Heavy POS / invoice write routes: per-tenant cap so one busy shop cannot saturate shared workers.
+        RateLimiter::for('pos-checkout', fn (Request $request): Limit => Limit::perMinute($this->limit('rate_limits.pos_checkout.per_tenant_per_minute', 300))
+            ->by('pos-checkout|'.RateLimitKey::scope()));
     }
 
     /**

@@ -95,13 +95,18 @@ final class TransactionRetry
      * @param  string|null  $connectionName  the connection that owns the transaction (null = the default
      *                                       one). Central billing passes the central connection so the
      *                                       retry wraps the right transaction even inside a tenant request.
+     * @param  int|null  $lockWaitTimeoutSeconds  optional MySQL/MariaDB innodb_lock_wait_timeout override for this call (restored in finally)
      * @return TResult
      *
      * @throws DatabaseBusyException when the attempts ran out on lock conflicts, or at once on 1205
      * @throws Throwable anything else the callback throws, rethrown untouched (validation, domain rules...)
      */
-    public static function run(Closure $callback, ?int $attempts = null, ?string $connectionName = null): mixed
-    {
+    public static function run(
+        Closure $callback,
+        ?int $attempts = null,
+        ?string $connectionName = null,
+        ?int $lockWaitTimeoutSeconds = null,
+    ): mixed {
         $connection = DB::connection($connectionName);
 
         if ($connection->transactionLevel() > 0) {
@@ -110,21 +115,66 @@ final class TransactionRetry
 
         $attempts = max(1, $attempts ?? self::configuredAttempts());
 
-        for ($attempt = 1; ; $attempt++) {
+        return self::withLockWaitTimeout($connection, $lockWaitTimeoutSeconds, function () use ($connection, $callback, $attempts) {
+            for ($attempt = 1; ; $attempt++) {
+                try {
+                    self::applyIsolation($connection);
+
+                    return $connection->transaction($callback);
+                } catch (Throwable $e) {
+                    if (! self::isLockConflict($e)) {
+                        throw $e;
+                    }
+
+                    if (! self::isRetryable($e) || $attempt >= $attempts) {
+                        throw DatabaseBusyException::fromThrowable($e, $attempt);
+                    }
+
+                    Sleep::usleep(self::BACKOFF_BASE_US * (2 ** ($attempt - 1)) + random_int(0, self::BACKOFF_JITTER_US));
+                }
+            }
+        });
+    }
+
+    /**
+     * Configured MySQL/MariaDB innodb_lock_wait_timeout (seconds) for POS checkout transactions, or null to disable.
+     */
+    public static function checkoutLockWaitTimeout(): ?int
+    {
+        $configured = config('database.transaction_retry.checkout_lock_wait_timeout', 5);
+
+        return is_numeric($configured) && (int) $configured > 0 ? (int) $configured : null;
+    }
+
+    /**
+     * Temporarily shorten innodb_lock_wait_timeout on MySQL/MariaDB and always restore the prior
+     * session value in finally so persistent workers never leak connection state. Guarded for sqlite.
+     *
+     * @template TResult
+     *
+     * @param  Closure(): TResult  $callback
+     * @return TResult
+     */
+    private static function withLockWaitTimeout(Connection $connection, ?int $seconds, Closure $callback): mixed
+    {
+        if ($seconds === null || $seconds <= 0 || ! in_array($connection->getDriverName(), ['mysql', 'mariadb'], true)) {
+            return $callback();
+        }
+
+        $previous = $connection->scalar('SELECT @@SESSION.innodb_lock_wait_timeout');
+        $connection->statement('SET SESSION innodb_lock_wait_timeout = '.(int) $seconds);
+
+        try {
+            return $callback();
+        } finally {
             try {
-                self::applyIsolation($connection);
-
-                return $connection->transaction($callback);
-            } catch (Throwable $e) {
-                if (! self::isLockConflict($e)) {
-                    throw $e;
+                if (is_numeric($previous)) {
+                    $connection->statement('SET SESSION innodb_lock_wait_timeout = '.(int) $previous);
+                } else {
+                    $connection->statement('SET SESSION innodb_lock_wait_timeout = DEFAULT');
                 }
-
-                if (! self::isRetryable($e) || $attempt >= $attempts) {
-                    throw DatabaseBusyException::fromThrowable($e, $attempt);
-                }
-
-                Sleep::usleep(self::BACKOFF_BASE_US * (2 ** ($attempt - 1)) + random_int(0, self::BACKOFF_JITTER_US));
+            } catch (Throwable) {
+                // Connection already broken or closed; nothing left to restore.
             }
         }
     }

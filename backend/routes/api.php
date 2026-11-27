@@ -221,7 +221,7 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('api.invoices.index')->middleware('store.active');
         Route::get('/invoices/export', [InvoiceController::class, 'export'])->name('api.invoices.export')->middleware(['store.active', 'feature:reports.export', 'throttle:exports']);
         Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->whereNumber('id')->name('api.invoices.show')->middleware('store.active');
-        Route::post('/invoices', [InvoiceController::class, 'store'])->name('api.invoices.store')->middleware('store.active:concrete')->middleware('feature:invoices.create');
+        Route::post('/invoices', [InvoiceController::class, 'store'])->name('api.invoices.store')->middleware(['store.active:concrete', 'feature:invoices.create', 'throttle:pos-checkout', 'checkout.concurrency']);
         Route::post('/invoices/{id}/cancel', [InvoiceController::class, 'cancel'])->whereNumber('id')->name('api.invoices.cancel')->middleware('store.active');
         // PRD-22: signed public receipt link (WhatsApp share), valid config('invoices.receipt_links.ttl_days').
         Route::post('/invoices/{id}/receipt-link', [InvoiceReceiptLinkController::class, 'store'])->whereNumber('id')->name('api.invoices.receipt_link')->middleware(['store.active', 'throttle:60,1']);
@@ -231,7 +231,7 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::get('/pos/invoice-limit', [PosController::class, 'invoiceLimit'])->name('api.pos.invoice_limit')->middleware('feature:pos.access');
         Route::get('/pos/items', [PosController::class, 'items'])->name('api.pos.items')->middleware('store.active')->middleware('feature:pos.access');
         Route::get('/pos/lookup', [PosController::class, 'lookup'])->name('api.pos.lookup')->middleware('store.active')->middleware('feature:pos.access');
-        Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('api.pos.checkout')->middleware('store.active:concrete')->middleware('feature:pos.access');
+        Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('api.pos.checkout')->middleware(['store.active:concrete', 'feature:pos.access', 'throttle:pos-checkout', 'checkout.concurrency']);
         Route::post('/pos/quick-customer', [PosController::class, 'quickCustomer'])->name('api.pos.quick_customer')->middleware('feature:pos.access');
         Route::get('/pos/last-price', [PosController::class, 'lastPrice'])->name('api.pos.last_price')->middleware('store.active')->middleware('feature:pos.access');
         // POSB-6: quick keys of the active store (pos.access + store access).
@@ -324,10 +324,10 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         // Recipes / product assembly (MIX-01). `/mixes/*` is canonical; `/coffee-blender/*` is a
         // deprecated alias kept for old Android/desktop builds (same controller, same behaviour).
         Route::post('/mixes/calculate', [MixController::class, 'calculate'])->name('api.mixes.calculate')->middleware('feature:mixes.manage');
-        Route::post('/mixes/invoice', [MixController::class, 'createInvoice'])->name('api.mixes.invoice')->middleware('store.active:concrete')->middleware('feature:mixes.manage');
+        Route::post('/mixes/invoice', [MixController::class, 'createInvoice'])->name('api.mixes.invoice')->middleware(['store.active:concrete', 'feature:mixes.manage', 'throttle:pos-checkout', 'checkout.concurrency']);
         // @deprecated alias of /mixes/* - remove once old app builds are retired
         Route::post('/coffee-blender/calculate', [MixController::class, 'calculate'])->name('api.coffee_blender.calculate')->middleware('feature:mixes.manage');
-        Route::post('/coffee-blender/invoice', [MixController::class, 'createInvoice'])->name('api.coffee_blender.invoice')->middleware('store.active:concrete')->middleware('feature:mixes.manage');
+        Route::post('/coffee-blender/invoice', [MixController::class, 'createInvoice'])->name('api.coffee_blender.invoice')->middleware(['store.active:concrete', 'feature:mixes.manage', 'throttle:pos-checkout', 'checkout.concurrency']);
 
         // Administrative areas: never reachable with a testing-only quick-login token.
         Route::middleware(DenyQuickLoginToken::class)->group(function () {

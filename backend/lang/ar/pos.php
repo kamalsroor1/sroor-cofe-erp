@@ -481,4 +481,5 @@ return [
     // SHOP-01: stock check when an item is added to the cart
     'stock_insufficient_blocked' => 'الكمية المتاحة من :name غير كافية (المتاح: :qty :unit). البيع بالسالب غير مسموح.',
     'stock_insufficient_warning' => 'رصيد :name منخفض (المتاح: :qty :unit). هذا البيع سيجعل الرصيد بالسالب.',
+    'too_many_concurrent_checkouts' => 'توجد طلبات إتمام بيع كثيرة قيد التنفيذ في الوقت نفسه. يرجى المحاولة مرة أخرى بعد لحظة.',
 ];

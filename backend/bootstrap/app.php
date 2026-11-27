@@ -15,6 +15,7 @@ use App\Http\Middleware\RestrictLivewireToConsole;
 use App\Http\Middleware\SpaSecurityHeaders;
 use App\Http\Middleware\StoreAccess;
 use App\Http\Middleware\StoreScope;
+use App\Http\Middleware\ThrottleTenantCheckoutConcurrency;
 use App\Http\Middleware\ThrottleTenantMisses;
 use App\Support\Database\TransactionRetry;
 use Illuminate\Auth\AuthenticationException;
@@ -115,6 +116,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'store.active' => ResolveActiveStore::class,
             // SEC-06 / BE-12: plan feature gate, `feature:<key>`.
             'feature' => EnsureTenantFeature::class,
+            'checkout.concurrency' => ThrottleTenantCheckoutConcurrency::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

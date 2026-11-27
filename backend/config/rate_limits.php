@@ -163,4 +163,13 @@ return [
         'status_per_minute' => (int) (env('RATE_LIMIT_SELF_SIGNUP_STATUS_PER_MINUTE') ?: 60),
     ],
 
+    // Noisy-neighbour isolation on heavy checkout write routes (POST /pos/checkout, POST /invoices,
+    // POST /mixes/invoice, POST /coffee-blender/invoice): per-tenant throughput + in-flight slot cap
+    // so one busy shop cannot exhaust shared php-fpm workers.
+    'pos_checkout' => [
+        'per_tenant_per_minute' => (int) env('RATE_LIMIT_POS_CHECKOUT_PER_TENANT', 300),
+        'max_concurrent_per_tenant' => (int) env('CONCURRENCY_LIMIT_POS_CHECKOUT_PER_TENANT', 10),
+        'lock_ttl_seconds' => (int) env('CONCURRENCY_LIMIT_POS_CHECKOUT_LOCK_TTL', 30),
+    ],
+
 ];
