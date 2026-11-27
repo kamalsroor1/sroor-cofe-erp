@@ -166,10 +166,11 @@ return [
     // Noisy-neighbour isolation on heavy checkout write routes (POST /pos/checkout, POST /invoices,
     // POST /mixes/invoice, POST /coffee-blender/invoice): per-tenant throughput + in-flight slot cap
     // so one busy shop cannot exhaust shared php-fpm workers.
+    // An empty env value falls back to the default; an explicit 0 disables the concurrency cap.
     'pos_checkout' => [
-        'per_tenant_per_minute' => (int) env('RATE_LIMIT_POS_CHECKOUT_PER_TENANT', 300),
-        'max_concurrent_per_tenant' => (int) env('CONCURRENCY_LIMIT_POS_CHECKOUT_PER_TENANT', 10),
-        'lock_ttl_seconds' => (int) env('CONCURRENCY_LIMIT_POS_CHECKOUT_LOCK_TTL', 30),
+        'per_tenant_per_minute' => is_numeric(env('RATE_LIMIT_POS_CHECKOUT_PER_TENANT')) ? (int) env('RATE_LIMIT_POS_CHECKOUT_PER_TENANT') : 300,
+        'max_concurrent_per_tenant' => is_numeric(env('CONCURRENCY_LIMIT_POS_CHECKOUT_PER_TENANT')) ? (int) env('CONCURRENCY_LIMIT_POS_CHECKOUT_PER_TENANT') : 10,
+        'lock_ttl_seconds' => is_numeric(env('CONCURRENCY_LIMIT_POS_CHECKOUT_LOCK_TTL')) ? (int) env('CONCURRENCY_LIMIT_POS_CHECKOUT_LOCK_TTL') : 30,
     ],
 
 ];

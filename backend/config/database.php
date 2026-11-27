@@ -229,9 +229,10 @@ return [
         'isolation' => env('DB_WRITE_ISOLATION', 'READ COMMITTED'),
         // P0-5: short InnoDB lock wait timeout (seconds) for POS checkout on MySQL/MariaDB so a
         // lock contention spike returns 409 quickly instead of pinning php-fpm workers for 50s.
-        'checkout_lock_wait_timeout' => is_numeric(env('DB_CHECKOUT_LOCK_WAIT_TIMEOUT', 5))
-            ? max(1, (int) env('DB_CHECKOUT_LOCK_WAIT_TIMEOUT', 5))
-            : null,
+        // Empty value = default 5s; an explicit 0 disables the override (server default applies).
+        'checkout_lock_wait_timeout' => is_numeric(env('DB_CHECKOUT_LOCK_WAIT_TIMEOUT'))
+            ? (int) env('DB_CHECKOUT_LOCK_WAIT_TIMEOUT')
+            : 5,
     ],
 
     /*

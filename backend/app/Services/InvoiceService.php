@@ -34,6 +34,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class InvoiceService
 {
@@ -204,12 +205,15 @@ class InvoiceService
                 $paymentType = (string) ($data['payment_type'] ?? 'cash');
                 $affectsCustomerBalance = in_array($paymentType, ['credit', 'partial'], true);
 
-                // P0-1: Only lock the customer row when the sale affects customer receivables (credit / partial).
-                // Cash sales (including the shared walk-in customer) leave the customer balance unchanged and
-                // avoid serializing concurrent cashiers on one customer row.
+                // P0-1: Only take an EXCLUSIVE customer lock when the sale changes receivables (credit / partial).
+                // Cash sales (including the shared walk-in customer) take a SHARED lock instead: shared locks do
+                // not conflict with each other, so concurrent cashiers no longer serialise on one row, while the
+                // lock order stays customer -> stock. A plain read would not do: the invoice/payment INSERTs
+                // S-lock the customer row through its foreign key AFTER the stock rows, which deadlocks against a
+                // return that X-locks the same customer first and the stock second (ConcurrentBusinessDayTest).
                 $customer = $affectsCustomerBalance
                     ? Customer::where('id', $data['customer_id'])->lockForUpdate()->firstOrFail()
-                    : Customer::where('id', $data['customer_id'])->firstOrFail();
+                    : Customer::where('id', $data['customer_id'])->sharedLock()->firstOrFail();
 
                 $lines = (array) ($data['items'] ?? []);
                 $itemIds = array_column($lines, 'item_id');
@@ -246,9 +250,12 @@ class InvoiceService
 
                 foreach ($lockedItems as $lockedItemId => $lockedItem) {
                     $storeStock = $lockedStoreStocks[$lockedItemId] ?? null;
+                    // Pricing must see what the pre-transaction guards saw: a soft-deleted branch row
+                    // (loaded withTrashed() for the stock write) never contributes its custom price.
+                    $pricingStock = $storeStock !== null && ! $storeStock->trashed() ? $storeStock : null;
                     $lockedItem->setRelation(
                         'storeStocks',
-                        new EloquentCollection($storeStock !== null ? [$storeStock] : []),
+                        new EloquentCollection($pricingStock !== null ? [$pricingStock] : []),
                     );
                 }
 
@@ -574,26 +581,41 @@ class InvoiceService
                 // S7 / P0-4: Defer audit and activity logging until after commit so locks are already released.
                 $auditPayload = $invoice->toArray();
                 $customerName = (string) $customer->name;
+                // Audit/activity logs are best-effort AFTER the commit: the sale is already saved, so a
+                // failing log write must never surface as an error (a cashier retry would duplicate the
+                // sale, and TransactionRetry would re-run the whole closure on a 1213). Report and move on.
                 DB::afterCommit(function () use ($invoice, $customer, $customerName, $auditPayload, $actorId, $currencyLabel): void {
-                    $invoice->setRelation('customer', $customer);
-                    $this->auditLogService->log(
-                        action: 'invoice_confirmed',
-                        auditable: $invoice,
-                        oldValues: null,
-                        newValues: $auditPayload,
-                        actorId: $actorId,
-                    );
-
-                    $this->activityLogService->logSales(
-                        action: 'created',
-                        invoice: $invoice,
-                        description: "تم إنشاء واعتماد فاتورة مبيعات جديدة رقم [{$invoice->invoice_number}] للعميل ({$customerName}) بقيمة ".number_format((float) $invoice->net_total, 2).' '.$currencyLabel,
-                    );
+                    try {
+                        $this->writeConfirmedInvoiceLogs($invoice, $customer, $customerName, $auditPayload, $actorId, $currencyLabel);
+                    } catch (Throwable $e) {
+                        report($e);
+                    }
                 });
 
                 return $invoice;
             },
             lockWaitTimeoutSeconds: TransactionRetry::checkoutLockWaitTimeout(),
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $auditPayload
+     */
+    private function writeConfirmedInvoiceLogs(Invoice $invoice, Customer $customer, string $customerName, array $auditPayload, ?int $actorId, string $currencyLabel): void
+    {
+        $invoice->setRelation('customer', $customer);
+        $this->auditLogService->log(
+            action: 'invoice_confirmed',
+            auditable: $invoice,
+            oldValues: null,
+            newValues: $auditPayload,
+            actorId: $actorId,
+        );
+
+        $this->activityLogService->logSales(
+            action: 'created',
+            invoice: $invoice,
+            description: "تم إنشاء واعتماد فاتورة مبيعات جديدة رقم [{$invoice->invoice_number}] للعميل ({$customerName}) بقيمة ".number_format((float) $invoice->net_total, 2).' '.$currencyLabel,
         );
     }
 

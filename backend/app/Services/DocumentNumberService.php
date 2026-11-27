@@ -264,7 +264,8 @@ final class DocumentNumberService
 
     /**
      * MySQL/MariaDB hot path: atomically advance `last_value` in a single UPDATE using
-     * LAST_INSERT_ID(last_value + 1), avoiding an extra EXISTS check and prior SELECT FOR UPDATE.
+     * LAST_INSERT_ID(`last_value` + 1) (backticked: LAST_VALUE is reserved in MySQL 8), avoiding the prior SELECT FOR UPDATE.
+     * The EXISTS check still runs, only to skip numbers a user typed by hand.
      * The UPDATE still holds the row X-lock until commit, so numbers remain gapless on rollback.
      *
      * @param  (callable(string): bool)|null  $existsCheck
@@ -278,23 +279,17 @@ final class DocumentNumberService
         ?callable $seed,
         string $scope,
     ): string {
-        $affected = $connection->table(self::TABLE)
+        // Seed BEFORE the UPDATE, never after a 0-row one: an UPDATE that matches no row still takes a
+        // next-key (gap) lock on the scope index, and the side-connection seed insert of ensureScopeRow()
+        // would then wait on this very transaction's gap lock until innodb_lock_wait_timeout (1205).
+        $this->ensureScopeRow($scope, $seed);
+
+        $connection->table(self::TABLE)
             ->where('scope', $scope)
             ->update([
-                'last_value' => DB::raw('LAST_INSERT_ID(last_value + 1)'),
+                'last_value' => DB::raw('LAST_INSERT_ID(`last_value` + 1)'),
                 'updated_at' => Carbon::now(),
             ]);
-
-        if ($affected === 0) {
-            $this->ensureScopeRow($scope, $seed);
-
-            $connection->table(self::TABLE)
-                ->where('scope', $scope)
-                ->update([
-                    'last_value' => DB::raw('LAST_INSERT_ID(last_value + 1)'),
-                    'updated_at' => Carbon::now(),
-                ]);
-        }
 
         $value = (int) $connection->getPdo()->lastInsertId();
         if ($value <= 0) {
@@ -307,7 +302,7 @@ final class DocumentNumberService
             $connection->table(self::TABLE)
                 ->where('scope', $scope)
                 ->update([
-                    'last_value' => DB::raw('LAST_INSERT_ID(last_value + 1)'),
+                    'last_value' => DB::raw('LAST_INSERT_ID(`last_value` + 1)'),
                     'updated_at' => Carbon::now(),
                 ]);
 

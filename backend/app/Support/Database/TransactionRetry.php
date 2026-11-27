@@ -23,10 +23,9 @@ use Throwable;
  *  - 1205 lock wait timeout                                                -> NOT retried, 409 at once.
  *    It means another transaction kept the row for the whole innodb_lock_wait_timeout (50 s by
  *    default): a holder that slow is not a race a retry can win, and three attempts would keep
- *    the cashier waiting up to 150 s for the same 409. Shortening the session timeout instead
- *    would need a SET SESSION before and a restore after every transaction (state that leaks on
- *    persistent queue/Octane connections when the restore is skipped) and would also cut short
- *    legitimate long waits of the same session.
+ *    the cashier waiting up to 150 s for the same 409. Only callers that opt in (POS checkout,
+ *    via $lockWaitTimeoutSeconds) shorten the session timeout, and withLockWaitTimeout() always
+ *    restores the previous value in finally so persistent connections never keep it.
  * The chain walk matters: a conflict raised inside a NESTED DB::transaction (e.g. a balance
  * recompute that opens its own transaction) reaches us as Illuminate\Database\DeadlockException,
  * a PDOException without errorInfo whose previous exception is the QueryException with the code.
