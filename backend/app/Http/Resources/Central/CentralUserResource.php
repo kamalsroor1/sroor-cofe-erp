@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Resources\Central;
 
 use App\Enums\CentralPermission;
+use App\Enums\MonitoringTool;
 use App\Models\CentralUser;
+use App\Support\PlatformSuperAdmin;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -40,6 +42,11 @@ final class CentralUserResource extends JsonResource
                 ->sort()
                 ->values()
                 ->all(),
+            // Which monitoring dashboards this environment serves, for the console menu
+            // (Telescope is off in production). Only shown to operators who may open them.
+            'monitoring_tools' => PlatformSuperAdmin::can($user, CentralPermission::MonitoringView)
+                ? MonitoringTool::enabledValues()
+                : [],
         ];
     }
 }

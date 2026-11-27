@@ -75,6 +75,7 @@ return [
     'fast_demo_login_button' => 'Quick Demo Sign In (Default Password)',
     'fast_login_no_password' => 'Instant Quick Login (No Password)',
     'telescope_forbidden' => 'You are not authorized to access the monitoring dashboard. Platform super admins only.',
+    'monitoring_tool_disabled' => 'This monitoring dashboard is not available in this environment.',
     'too_many_requests' => 'Too many requests. Please try again shortly.',
     'quick_login_forbidden' => 'Quick login is not allowed for this account.',
     'quick_login_token_forbidden' => 'A quick-login session cannot access this area. Sign in with your password.',

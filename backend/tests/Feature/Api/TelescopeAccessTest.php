@@ -37,6 +37,9 @@ class TelescopeAccessTest extends TenantTestCase
 
         $this->seedCentralPlatformRoles();
         $this->tenant = $this->createTenant();
+        // These tests exercise the Telescope link itself. Telescope is off in the test env (and in
+        // production), where issuing a Telescope link is refused (MonitoringToolLinkTest).
+        config(['telescope.enabled' => true]);
     }
 
     private function resetAuth(): void

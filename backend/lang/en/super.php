@@ -67,6 +67,8 @@ return [
     'upgrade_now' => 'Upgrade Now',
     'app_versions' => 'App Releases (APK)',
     'nav_telescope' => 'System monitor (Telescope)',
+    'nav_pulse' => 'System performance (Pulse)',
+    'nav_horizon' => 'Queues (Horizon)',
     'platform_admin' => 'Platform Admin',
     'logout_title' => 'Logout from Super Admin Console',
     'super_admin_title' => 'Super Admin Console (Central Platform Management)',

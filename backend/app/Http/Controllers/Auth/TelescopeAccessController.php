@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Actions\Auth\ConsumeTelescopeLinkAction;
+use App\Enums\MonitoringTool;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 /**
- * GET /telescope-access?n=…&expires=…&signature=… (behind the `signed` middleware).
- * Redeems a single-use link from IssueTelescopeLinkAction and opens a `central_web` session.
+ * GET /telescope-access?n=…&t=…&expires=…&signature=… (behind the `signed` middleware).
+ * Redeems a single-use link from IssueTelescopeLinkAction, opens a `central_web` session and
+ * redirects to the dashboard named by the signed `t` (telescope | pulse | horizon; a link
+ * issued before `t` existed opens Telescope).
  */
 final class TelescopeAccessController extends Controller
 {
@@ -25,6 +28,12 @@ final class TelescopeAccessController extends Controller
             abort(404);
         }
 
+        $tool = MonitoringTool::tryFrom((string) $request->query('t', MonitoringTool::Telescope->value));
+
+        if ($tool === null || ! $tool->isEnabled()) {
+            abort(404);
+        }
+
         $user = $this->consumeTelescopeLinkAction->execute((string) $request->query('n', ''));
 
         if ($user === null) {
@@ -32,11 +41,10 @@ final class TelescopeAccessController extends Controller
         }
 
         // The operator's own session guard (IDEN-1.1), never the tenant-side `web` guard.
-        // IDEN-1.7 still has to point Telescope::auth / its middleware at `central_web`: until
-        // then /telescope stays fail-closed (viewTelescope sees no `web` user) outside local.
+        // The Telescope, Pulse and Horizon gates all read this guard.
         auth('central_web')->login($user);
         $request->session()->regenerate();
 
-        return redirect('/telescope');
+        return redirect($tool->path());
     }
 }

@@ -27,6 +27,9 @@ final class TelescopeLinkAuditTest extends TenantTestCase
         parent::setUp();
 
         $this->seedCentralPlatformRoles();
+        // These tests exercise the Telescope link itself. Telescope is off in the test env (and in
+        // production), where issuing a Telescope link is refused (MonitoringToolLinkTest).
+        config(['telescope.enabled' => true]);
     }
 
     public function test_issuing_a_link_records_a_central_audit_row_for_the_operator(): void

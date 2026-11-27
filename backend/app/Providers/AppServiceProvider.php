@@ -44,6 +44,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -152,9 +153,14 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasRole('admin') ? true : null;
         });
 
-        // Restrict Laravel Pulse dashboard strictly to Super Admin users
-        Gate::define('viewPulse', function ($user) {
-            return PlatformSuperAdmin::check($user);
+        // Laravel Pulse: same rule as Telescope and Horizon. Pulse's Authorize middleware asks
+        // the gate with the default (tenant-side `web`) guard's user, which is never a platform
+        // operator, so the operator is read from the `central_web` session that the signed
+        // /telescope-access link opens. Callable without a user so a guest gets a clean deny.
+        Gate::define('viewPulse', static function (mixed $user = null): bool {
+            $operator = $user instanceof CentralUser ? $user : Auth::guard('central_web')->user();
+
+            return PlatformSuperAdmin::can($operator, CentralPermission::MonitoringView);
         });
 
         // Register Model Observers

@@ -67,6 +67,8 @@ return [
     'upgrade_now' => 'ترقية الآن',
     'app_versions' => 'إصدارات التطبيق (APK)',
     'nav_telescope' => 'مراقب النظام (Telescope)',
+    'nav_pulse' => 'أداء النظام (Pulse)',
+    'nav_horizon' => 'الطوابير (Horizon)',
     'platform_admin' => 'مدير المنصة',
     'logout_title' => 'تسجيل الخروج من لوحة السوبر أدمن',
     'super_admin_title' => 'لوحة تحكم السوبر أدمن (إدارة المنصة المركزية)',

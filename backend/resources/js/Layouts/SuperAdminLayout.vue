@@ -18,6 +18,8 @@ import {
   Scale,
   Smartphone,
   Activity,
+  Gauge,
+  ListChecks,
   ShieldCheck,
   LogOut,
   Menu,
@@ -53,27 +55,47 @@ onMounted(() => {
 const user = computed(() => centralAuth.user || {});
 const mobileMenuOpen = ref(false);
 
-const isOpeningTelescope = ref(false);
+const openingTool = ref(null);
 
 // Asks the API for a short-lived, single-use signed link so the bearer token never lands in a URL.
-const openTelescope = async () => {
-  if (isOpeningTelescope.value) return;
-  isOpeningTelescope.value = true;
+// The link opens the operator's web session and lands on the chosen dashboard.
+const openMonitoringTool = async (tool) => {
+  if (openingTool.value) return;
+  openingTool.value = tool;
   mobileMenuOpen.value = false;
 
   try {
-    const response = await centralApi.post('/super-admin/telescope-link');
+    const response = await centralApi.post('/super-admin/telescope-link', { tool });
     window.open(response.data.data.url, '_blank', 'noopener');
   } catch (error) {
     const status = error.response?.status;
-    // 401 and 403 are already surfaced by the centralApi interceptor.
+    // 401 and 403 are already surfaced by the centralApi interceptor; 422 (dashboard turned
+    // off since the menu loaded) only carries error.userMessage, so it is shown here.
     if (status !== 401 && status !== 403) {
       notifyError(trans('auth.telescope_forbidden'), error.userMessage || '');
     }
   } finally {
-    isOpeningTelescope.value = false;
+    openingTool.value = null;
   }
 };
+
+// Only the dashboards this environment serves (Telescope is off in production), from /auth/me.
+const MONITORING_ITEMS = [
+  { tool: 'pulse', label: 'super.nav_pulse', icon: Gauge },
+  { tool: 'horizon', label: 'super.nav_horizon', icon: ListChecks },
+  { tool: 'telescope', label: 'super.nav_telescope', icon: Activity },
+];
+const monitoringNavItems = computed(() => {
+  const available = user.value.monitoring_tools || [];
+  return MONITORING_ITEMS.filter((item) => available.includes(item.tool)).map((item) => ({
+    name: trans(item.label),
+    icon: item.icon,
+    external: true,
+    tool: item.tool,
+    active: false,
+    permission: CENTRAL_PERMISSIONS.monitoringView,
+  }));
+});
 
 const navItems = computed(() =>
   [
@@ -145,7 +167,7 @@ const navItems = computed(() =>
       active: route.path.startsWith('/super-admin/settings'),
       permission: CENTRAL_PERMISSIONS.settingsView,
     },
-    { name: trans('super.nav_telescope'), icon: Activity, external: true, active: false },
+    ...monitoringNavItems.value,
   ].filter((item) => !item.permission || centralAuth.can(item.permission))
 );
 
@@ -254,9 +276,9 @@ const handleLogout = async () => {
             <button
               v-if="item.external"
               type="button"
-              :disabled="isOpeningTelescope"
-              :aria-busy="isOpeningTelescope"
-              @click="openTelescope"
+              :disabled="openingTool !== null"
+              :aria-busy="openingTool === item.tool"
+              @click="openMonitoringTool(item.tool)"
               class="w-full min-h-11 flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold text-start transition cursor-pointer disabled:opacity-60 disabled:cursor-wait text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
             >
               <DynamicIcon :name="item.icon" class="w-4 h-4 shrink-0" />
@@ -315,9 +337,9 @@ const handleLogout = async () => {
             <button
               v-if="item.external"
               type="button"
-              :disabled="isOpeningTelescope"
-              :aria-busy="isOpeningTelescope"
-              @click="openTelescope"
+              :disabled="openingTool !== null"
+              :aria-busy="openingTool === item.tool"
+              @click="openMonitoringTool(item.tool)"
               class="w-full min-h-11 flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-start transition group cursor-pointer disabled:opacity-60 disabled:cursor-wait text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
             >
               <DynamicIcon :name="item.icon" class="w-4 h-4 shrink-0" />
