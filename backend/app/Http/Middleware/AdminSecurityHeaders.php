@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Enums\MonitoringTool;
 use App\Support\Security\ContentSecurityPolicy;
 use Closure;
 use Illuminate\Http\Request;
@@ -43,7 +44,9 @@ final class AdminSecurityHeaders
         $response = $next($request);
 
         $headers = $response->headers;
-        $headers->set('Content-Security-Policy', ContentSecurityPolicy::admin($nonce));
+        $headers->set('Content-Security-Policy', self::isMonitoringPath($request)
+            ? ContentSecurityPolicy::monitoring()
+            : ContentSecurityPolicy::admin($nonce));
         $headers->set('Referrer-Policy', 'no-referrer');
         $headers->set('Strict-Transport-Security', self::HSTS);
         $headers->set('X-Frame-Options', 'DENY');
@@ -52,5 +55,27 @@ final class AdminSecurityHeaders
         $headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
 
         return $response;
+    }
+
+    /**
+     * Pulse, Horizon and Telescope dashboards (and the Livewire endpoints Pulse runs on) get
+     * ContentSecurityPolicy::monitoring(): their vendor views cannot carry our nonce.
+     */
+    private static function isMonitoringPath(Request $request): bool
+    {
+        if (RestrictLivewireToConsole::isLivewirePath($request)) {
+            return true;
+        }
+
+        $path = '/'.ltrim(strtolower($request->path()), '/');
+
+        foreach (MonitoringTool::cases() as $tool) {
+            $base = strtolower($tool->path());
+            if ($path === $base || str_starts_with($path, $base.'/')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -16,10 +16,30 @@ use Illuminate\Support\Facades\Vite;
  */
 final class ContentSecurityPolicy
 {
+    private const BUNNY_FONTS = 'https://fonts.bunny.net';
+
     /** Platform console (admin host): exact policy shipped with IDEN-1.11. */
     public static function admin(string $nonce): string
     {
         return self::render(self::baseDirectives($nonce, ["'self'", 'data:', 'blob:']));
+    }
+
+    /**
+     * Monitoring dashboards on the admin host (Pulse, Horizon, Telescope and the Livewire
+     * endpoints Pulse runs on). Their vendor views inline their compiled JS without a nonce,
+     * and Pulse's Alpine/Livewire evaluates expressions at runtime, so scripts need
+     * 'unsafe-inline' + 'unsafe-eval'; their font stylesheet comes from fonts.bunny.net.
+     * These routes are behind the super-admin-only `central_web` gates, so this relaxation
+     * never reaches tenant data or the console SPA, which keeps the strict nonce policy.
+     */
+    public static function monitoring(): string
+    {
+        $directives = self::baseDirectives('', ["'self'", 'data:', 'blob:']);
+        $directives['script-src'] = ["'self'", "'unsafe-inline'", "'unsafe-eval'"];
+        $directives['style-src'] = ["'self'", "'unsafe-inline'", self::BUNNY_FONTS];
+        $directives['font-src'] = ["'self'", 'data:', self::BUNNY_FONTS];
+
+        return self::render($directives);
     }
 
     /**

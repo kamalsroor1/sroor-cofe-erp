@@ -124,6 +124,11 @@ final class AdminHostIsolationTest extends TenantTestCase
         $response->assertHeader('Referrer-Policy', 'no-referrer');
         $response->assertHeader('X-Frame-Options', 'DENY');
         $response->assertHeader('X-Content-Type-Options', 'nosniff');
+        $this->assertCount(1, (array) $response->headers->all('Referrer-Policy'));
+        $this->assertCount(1, (array) $response->headers->all('X-Frame-Options'));
+        $this->assertCount(1, (array) $response->headers->all('X-Content-Type-Options'));
+        $this->assertCount(1, (array) $response->headers->all('Strict-Transport-Security'));
+        $this->assertCount(1, (array) $response->headers->all('Content-Security-Policy'));
         $this->assertStringContainsString('max-age=', (string) $response->headers->get('Strict-Transport-Security'));
     }
 
@@ -137,6 +142,26 @@ final class AdminHostIsolationTest extends TenantTestCase
             $first->headers->get('Content-Security-Policy'),
             $second->headers->get('Content-Security-Policy'),
         );
+    }
+
+    public function test_monitoring_dashboards_get_their_own_policy_on_the_admin_host(): void
+    {
+        foreach (['pulse', 'horizon', 'horizon/api/stats', 'telescope'] as $path) {
+            $csp = (string) $this->get($this->adminUrl($path))->headers->get('Content-Security-Policy');
+
+            // Their vendor views inline scripts without our nonce; every other directive stays strict.
+            $this->assertStringContainsString("script-src 'self' 'unsafe-inline' 'unsafe-eval'", $csp, $path);
+            $this->assertStringContainsString('https://fonts.bunny.net', $csp, $path);
+            $this->assertStringContainsString("frame-ancestors 'none'", $csp, $path);
+            $this->assertStringContainsString("object-src 'none'", $csp, $path);
+        }
+
+        // A look-alike path and the console SPA keep the strict nonce policy.
+        foreach (['pulsex', 'super-admin/dashboard'] as $path) {
+            $csp = (string) $this->get($this->adminUrl($path))->headers->get('Content-Security-Policy');
+            $this->assertStringNotContainsString('unsafe-eval', $csp, $path);
+            $this->assertMatchesRegularExpression("/script-src 'self' 'nonce-/", $csp, $path);
+        }
     }
 
     public function test_a_non_admin_host_serves_the_tenant_spa_without_the_admin_policy(): void
