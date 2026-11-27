@@ -1,0 +1,1 @@
+var e=RegExp(`^\\d{6}$`),t=Object.freeze({inputmode:`numeric`,pattern:`\\d{6}`,minlength:`6`,maxlength:`6`,placeholder:`•`.repeat(6)});function n(t,n){let r=String(t??``).trim();return e.test(r)?r===String(n??``).trim()?null:`mismatch`:`format`}export{n,t};

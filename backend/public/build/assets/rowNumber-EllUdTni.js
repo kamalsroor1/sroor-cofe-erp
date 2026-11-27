@@ -1,0 +1,1 @@
+var e=(e,t)=>{let n=Number(e);return Number.isFinite(n)&&n>=1?Math.floor(n):t};function t(t,n){let r=Number.isFinite(Number(t))?Number(t):0,i=e(n?.current_page??n?.currentPage,1),a=e(n?.per_page??n?.perPage,0);return r+1+(i-1)*a}export{t};
