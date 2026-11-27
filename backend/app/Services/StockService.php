@@ -140,6 +140,65 @@ class StockService
     }
 
     /**
+     * Load Item rows in ascending id order under the lock already acquired by lockStockRows().
+     *
+     * @param  iterable<int|string|null>  $itemIds
+     * @return array<int, Item>
+     */
+    public function loadLockedItems(iterable $itemIds): array
+    {
+        $ids = $this->sortedIds($itemIds);
+        if ($ids === []) {
+            return [];
+        }
+
+        /** @var array<int, Item> $items */
+        $items = Item::query()
+            ->whereIn('id', $ids)
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id')
+            ->all();
+
+        return $items;
+    }
+
+    /**
+     * Load StoreStock rows for one store in ascending item_id order (after lockStockRows()),
+     * materialising zero rows only for unseeded legacy items.
+     *
+     * @param  array<int, Item>  $lockedItems
+     * @return array<int, StoreStock>
+     */
+    public function loadLockedStoreStocks(int $storeId, array $lockedItems): array
+    {
+        $itemIds = array_keys($lockedItems);
+        if ($itemIds === []) {
+            return [];
+        }
+        sort($itemIds);
+
+        /** @var array<int, StoreStock> $stocks */
+        $stocks = StoreStock::withTrashed()
+            ->where('store_id', $storeId)
+            ->whereIn('item_id', $itemIds)
+            ->orderBy('item_id')
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('item_id')
+            ->all();
+
+        foreach ($itemIds as $itemId) {
+            if (! isset($stocks[$itemId])) {
+                $stocks[$itemId] = $this->createMissingStoreStock($storeId, $lockedItems[$itemId]);
+            }
+        }
+
+        return $stocks;
+    }
+
+    /**
      * Deduct stock securely with row locking (at store level and master item level)
      */
     public function deductStock(
