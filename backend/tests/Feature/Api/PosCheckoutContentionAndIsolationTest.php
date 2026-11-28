@@ -555,7 +555,7 @@ final class PosCheckoutContentionAndIsolationTest extends TenantTestCase
             $this->assertContains('stock_movements_store_created_idx', $movementIndexNames);
             $this->assertContains('stock_movements_store_type_created_idx', $movementIndexNames);
 
-            $migration = require database_path('migrations/tenant/2026_11_27_100000_add_store_date_report_indexes.php');
+            $migration = require database_path('migrations/tenant/2026_11_28_000100_add_store_date_report_indexes.php');
             $migration->up();
             $migration->down();
             $migration->up();
