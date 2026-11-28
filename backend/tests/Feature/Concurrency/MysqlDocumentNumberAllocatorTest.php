@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Concurrency;
 
 use App\Services\DocumentNumberService;
+use App\Support\Database\TransactionRetry;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Group;
 use RuntimeException;
@@ -15,6 +16,12 @@ use Tests\TenantTestCase;
  * against a REAL server. The unit test mocks the connection, which is how a reserved-word syntax
  * error (`last_value` on MySQL 8) once slipped through: this test runs the actual SQL.
  * Concurrent allocation under real checkouts is covered by BranchSalesAndTransfersRaceTest.
+ *
+ * Allocations run through TransactionRetry::run, like every real caller (checkout, expenses,
+ * payments): it sets READ COMMITTED. A bare DB::transaction stays REPEATABLE READ, and MariaDB
+ * 11.8 (innodb_snapshot_isolation=ON by default) then rejects the UPDATE of a scope row that the
+ * side connection seeded after the snapshot began (1020) — a property of the test, not of the
+ * service.
  */
 #[Group('mysql')]
 #[Group('mysql-only')]
@@ -39,7 +46,7 @@ final class MysqlDocumentNumberAllocatorTest extends TenantTestCase
             $service = app(DocumentNumberService::class);
             $issued = [];
             for ($i = 0; $i < 5; $i++) {
-                $issued[] = DB::transaction(fn (): string => $service->next('QA-SEQ', 4));
+                $issued[] = TransactionRetry::run(fn (): string => $service->next('QA-SEQ', 4));
             }
 
             return $issued;
@@ -54,10 +61,10 @@ final class MysqlDocumentNumberAllocatorTest extends TenantTestCase
 
         $numbers = $this->inTenant($tenant, function (): array {
             $service = app(DocumentNumberService::class);
-            $first = DB::transaction(fn (): string => $service->next('QA-RB', 4));
+            $first = TransactionRetry::run(fn (): string => $service->next('QA-RB', 4));
 
             try {
-                DB::transaction(function () use ($service): void {
+                TransactionRetry::run(function () use ($service): void {
                     $service->next('QA-RB', 4);
 
                     throw new RuntimeException('roll back');
@@ -66,7 +73,7 @@ final class MysqlDocumentNumberAllocatorTest extends TenantTestCase
                 // expected
             }
 
-            $after = DB::transaction(fn (): string => $service->next('QA-RB', 4));
+            $after = TransactionRetry::run(fn (): string => $service->next('QA-RB', 4));
 
             return [$first, $after];
         });
@@ -81,7 +88,7 @@ final class MysqlDocumentNumberAllocatorTest extends TenantTestCase
         $number = $this->inTenant($tenant, function (): string {
             $taken = ['QA-EX-0001', 'QA-EX-0002'];
 
-            return DB::transaction(fn (): string => app(DocumentNumberService::class)
+            return TransactionRetry::run(fn (): string => app(DocumentNumberService::class)
                 ->next('QA-EX', 4, fn (string $candidate): bool => in_array($candidate, $taken, true)));
         });
 
